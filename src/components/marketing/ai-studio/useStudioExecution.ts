@@ -57,7 +57,30 @@ export function useStudioExecution() {
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
       console.error(`[Studio] Edge function error ${response.status}:`, errText);
-      throw new Error(`Edge function returned ${response.status}: ${errText.substring(0, 200)}`);
+      
+      // Parse friendly error message from JSON response
+      let friendlyMsg = errText.substring(0, 200);
+      try {
+        const errJson = JSON.parse(errText);
+        const rawError = errJson?.error || '';
+        
+        // Extract specific API error patterns
+        if (rawError.includes('401') || rawError.includes('Incorrect API key') || rawError.includes('Unauthorized')) {
+          friendlyMsg = '🔑 Chave de API inválida ou expirada. Verifique sua chave em Configurações → APIs Pagas.';
+        } else if (rawError.includes('402') || rawError.includes('Payment') || rawError.includes('insufficient')) {
+          friendlyMsg = '💳 Créditos insuficientes no provedor. Adicione saldo na sua conta do provedor.';
+        } else if (rawError.includes('429') || rawError.includes('Rate limit')) {
+          friendlyMsg = '⏳ Limite de requisições excedido. Aguarde alguns segundos e tente novamente.';
+        } else if (rawError.includes('403') || rawError.includes('Forbidden') || rawError.includes('access')) {
+          friendlyMsg = '🚫 Sem permissão para este recurso. Verifique se sua conta tem acesso a este modelo/serviço.';
+        } else if (rawError.includes('not configured')) {
+          friendlyMsg = '⚙️ ' + rawError;
+        } else if (rawError) {
+          friendlyMsg = rawError.substring(0, 200);
+        }
+      } catch {}
+      
+      throw new Error(friendlyMsg);
     }
     // Read as text first to handle large payloads safely
     const rawText = await response.text();
