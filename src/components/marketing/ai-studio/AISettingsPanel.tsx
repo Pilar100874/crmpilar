@@ -188,7 +188,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         const { error } = await supabase.from('ai_api_keys').insert([payload] as any);
         if (error) throw error;
       }
-      setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'pending' : 'none' }));
+      setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'valid' : 'none' }));
       toast.success(`Configurações de ${provider?.name} salvas!`);
     } catch (err) {
       console.error(err);
