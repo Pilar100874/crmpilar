@@ -459,14 +459,34 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
-        const videoPrompt = combinedInput || 'A cinematic scene';
+        let videoPrompt = combinedInput || 'A cinematic scene';
         const aspectRatio = config.aspectRatio || '16:9';
         const videoModel = config.videoModel || 'free/gif-animated';
+
+        // Enrich prompt with reference descriptions (same logic as imageGen)
+        if (formatWidth && formatHeight) {
+          videoPrompt = `${videoPrompt}\n\n[FORMAT] Generate this video optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        }
+        if (referenceDescs.length > 0) {
+          const positionLabels = bucketedImages.map((b, idx) => {
+            const roleLabel: Record<string, string> = {
+              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
+              influencer: 'PERSON/INFLUENCER (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
+              pose: 'POSE REFERENCE', estilo: 'STYLE REFERENCE', paleta: 'COLOR PALETTE',
+              textura: 'TEXTURE REFERENCE', ambiente: 'ENVIRONMENT (flexible, background only)',
+            };
+            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+          });
+          const imagePositionHint = positionLabels.length > 0
+            ? `\n\n🔒 IMAGE ORDER (respect strictly):\n${positionLabels.join('\n')}`
+            : '';
+          videoPrompt = `${videoPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nUse the provided reference images to guide the video content. Maintain consistency with the references throughout the video.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+        }
         
         // === PAID VIDEO MODEL PATH ===
         if (videoModel !== 'free/gif-animated') {
           nodeResultStore.setResult(node.id, { 
-            text: `🎬 Gerando vídeo com ${videoModel.split('/').pop()}...`, 
+            text: `🎬 Gerando vídeo com ${videoModel.split('/').pop()}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
           });
           
           try {
@@ -486,7 +506,8 @@ export function useStudioExecution() {
               negativePrompt: config.videoNegativePrompt || '',
               seed: config.videoSeed,
               cfgScale: config.cfgScale ?? 7,
-              imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+              imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : (imageInputs.length > 0 ? imageInputs : undefined),
+              imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
               estabelecimentoId: estabId,
             }, 300000); // 5 min timeout for video generation
             
