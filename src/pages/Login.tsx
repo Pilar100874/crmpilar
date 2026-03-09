@@ -8,9 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoBranco from "@/assets/logo_branco.png";
+import logo from "@/assets/logo.jpg";
 import logoPreto from "@/assets/logo_preto.png";
-import logo2 from "@/assets/logo-2.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -70,32 +69,24 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-y-auto">
-      {/* Gradient header stripe - same as internal dashboards */}
+    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 bg-background relative">
       <div
-        className="absolute top-0 left-0 right-0 h-72"
+        className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
-      />
-      {/* Subtle decorative circle */}
-      <div
-        className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.08] -translate-y-1/2 translate-x-1/4"
-        style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Login Card */}
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            {/* Logo inside card */}
-            <div className="flex justify-center mb-6">
-              <div className="rounded-2xl p-5 shadow-lg" style={{ backgroundColor: '#27272a' }}>
-                <img
-                  src={logo2}
-                  alt="Logo Pilar"
-                  className="h-16 w-auto"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
-                />
-              </div>
+            <div className="flex justify-center mb-4">
+              <img
+                src={logo}
+                alt="Logo Pilar"
+                className="h-20 w-auto rounded-xl shadow-md"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = logoPreto;
+                }}
+              />
             </div>
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
