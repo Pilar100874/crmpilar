@@ -175,7 +175,7 @@ const PRESETS: Preset[] = [
   {
     id: 'kling-leaves-falling', name: 'Folhas Caindo',
     description: 'Folhas de outono caindo suavemente com luz dourada. Otimizado para Kling.',
-    prompt: 'Autumn leaves gently falling through golden sunlight in a peaceful forest, soft focus background, warm colors, nature footage style',
+    prompt: 'Folhas de outono caindo suavemente através da luz solar dourada em uma floresta pacífica, fundo com foco suave, cores quentes, estilo filmagem de natureza',
     image: fxSlowmo, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
   {
