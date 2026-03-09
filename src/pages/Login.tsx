@@ -85,13 +85,14 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md space-y-6">
         {/* Logo & Branding - on top of gradient */}
         <div className="text-center space-y-3">
-          <img
-            src={logo2}
-            alt="Logo Pilar"
-            className="h-28 w-auto mx-auto"
-            style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4)) drop-shadow(0 0 2px rgba(0,0,0,0.3))" }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
-          />
+          <div className="inline-flex items-center justify-center bg-foreground/80 rounded-2xl px-6 py-4 shadow-lg backdrop-blur-sm">
+            <img
+              src={logo2}
+              alt="Logo Pilar"
+              className="h-20 w-auto"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+            />
+          </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
               Sistema de Gestão
