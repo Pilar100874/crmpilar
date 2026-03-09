@@ -750,6 +750,185 @@ serve(async (req) => {
         });
       }
 
+      case "generate_audio": {
+        const provider = (params.provider || "elevenlabs") as string;
+        const text = params.text as string;
+        if (!text) throw new Error("Text is required for audio generation");
+
+        const estabId = params.estabelecimentoId;
+        console.log(`[generate_audio] Provider=${provider}, text length=${text.length}`);
+
+        if (provider === "elevenlabs") {
+          const apiKey = await fetchApiKey(estabId, "elevenlabs");
+          if (!apiKey) throw new Error("ElevenLabs API key not configured. Go to Settings → Paid APIs.");
+
+          // Fetch extra config from base_url field
+          let extraConfig: Record<string, any> = {};
+          try {
+            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+            const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const sb = createClient(supabaseUrl, supabaseKey);
+            const { data } = await sb.from("ai_api_keys").select("base_url").eq("estabelecimento_id", estabId).eq("provider", "elevenlabs").eq("is_active", true).limit(1).single();
+            if (data?.base_url) extraConfig = JSON.parse(data.base_url);
+          } catch {}
+
+          const voiceId = params.voiceId || extraConfig.defaultVoiceId || "JBFqnCBsd6RMkjVDRZzb";
+          const model = params.audioModel?.replace("elevenlabs/", "") || extraConfig.defaultModel || "eleven_multilingual_v2";
+          const outputFormat = extraConfig.outputFormat || "mp3_44100_128";
+
+          const ttsResp = await fetch(
+            `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${outputFormat}`,
+            {
+              method: "POST",
+              headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                text,
+                model_id: model,
+                voice_settings: {
+                  stability: extraConfig.stability ?? 0.5,
+                  similarity_boost: extraConfig.similarityBoost ?? 0.75,
+                  style: extraConfig.style ?? 0.5,
+                  use_speaker_boost: extraConfig.useSpeakerBoost ?? true,
+                  speed: extraConfig.speed ?? 1.0,
+                },
+              }),
+            }
+          );
+
+          if (!ttsResp.ok) {
+            const errText = await ttsResp.text().catch(() => "");
+            throw new Error(`ElevenLabs TTS ${ttsResp.status}: ${errText.substring(0, 200)}`);
+          }
+
+          const audioBuffer = await ttsResp.arrayBuffer();
+          // Upload to storage
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sb = createClient(supabaseUrl, supabaseKey);
+          const fileName = `studio/${crypto.randomUUID()}.mp3`;
+          await sb.storage.from("marketing-audio").upload(fileName, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+          const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
+
+          return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, voiceId, model } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (provider === "google") {
+          const apiKey = await fetchApiKey(estabId, "google");
+          if (!apiKey) throw new Error("Google API key not configured.");
+          // Google Cloud TTS
+          const ttsResp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              input: { text },
+              voice: { languageCode: params.lang || "pt-BR", ssmlGender: "FEMALE" },
+              audioConfig: { audioEncoding: "MP3" },
+            }),
+          });
+          if (!ttsResp.ok) throw new Error(`Google TTS error ${ttsResp.status}`);
+          const ttsData = await ttsResp.json();
+          const audioContent = ttsData.audioContent; // base64
+          const audioBytes = base64Decode(audioContent);
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sb = createClient(supabaseUrl, supabaseKey);
+          const fileName = `studio/${crypto.randomUUID()}.mp3`;
+          await sb.storage.from("marketing-audio").upload(fileName, audioBytes, { contentType: "audio/mpeg", upsert: true });
+          const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
+          return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, provider: "google" } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (provider === "openai") {
+          const apiKey = await fetchApiKey(estabId, "openai");
+          if (!apiKey) throw new Error("OpenAI API key not configured.");
+          const ttsResp = await fetch("https://api.openai.com/v1/audio/speech", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "tts-1-hd",
+              input: text,
+              voice: params.voice || "alloy",
+              response_format: "mp3",
+            }),
+          });
+          if (!ttsResp.ok) throw new Error(`OpenAI TTS error ${ttsResp.status}`);
+          const audioBuffer = await ttsResp.arrayBuffer();
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sb = createClient(supabaseUrl, supabaseKey);
+          const fileName = `studio/${crypto.randomUUID()}.mp3`;
+          await sb.storage.from("marketing-audio").upload(fileName, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+          const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
+          return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, provider: "openai" } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        throw new Error(`Unsupported audio provider: ${provider}`);
+      }
+
+      case "generate_music": {
+        const estabId = params.estabelecimentoId;
+        const prompt = params.prompt as string;
+        if (!prompt) throw new Error("Prompt is required for music generation");
+        const duration = params.duration || 30;
+        const provider = (params.provider || "elevenlabs") as string;
+
+        console.log(`[generate_music] Provider=${provider}, prompt="${prompt.substring(0, 60)}"`);
+
+        if (provider === "elevenlabs") {
+          const apiKey = await fetchApiKey(estabId, "elevenlabs");
+          if (!apiKey) throw new Error("ElevenLabs API key not configured. Go to Settings → Paid APIs.");
+
+          const musicResp = await fetch("https://api.elevenlabs.io/v1/music", {
+            method: "POST",
+            headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt, duration_seconds: duration }),
+          });
+          if (!musicResp.ok) {
+            const errText = await musicResp.text().catch(() => "");
+            throw new Error(`ElevenLabs Music ${musicResp.status}: ${errText.substring(0, 200)}`);
+          }
+          const audioBuffer = await musicResp.arrayBuffer();
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sb = createClient(supabaseUrl, supabaseKey);
+          const fileName = `studio/${crypto.randomUUID()}.mp3`;
+          await sb.storage.from("marketing-audio").upload(fileName, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+          const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
+          return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, duration, provider: "elevenlabs" } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (provider === "suno") {
+          const apiKey = await fetchApiKey(estabId, "suno");
+          if (!apiKey) throw new Error("Suno API key not configured. Go to Settings → Paid APIs.");
+          // Suno API v2
+          const sunoResp = await fetch("https://api.suno.ai/v2/generate", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt,
+              duration: duration,
+              make_instrumental: params.instrumental || false,
+            }),
+          });
+          if (!sunoResp.ok) throw new Error(`Suno API error ${sunoResp.status}`);
+          const sunoData = await sunoResp.json();
+          const audioUrl = sunoData.audio_url || sunoData.url;
+          return new Response(JSON.stringify({ result: { audioUrl, duration, provider: "suno" } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        throw new Error(`Unsupported music provider: ${provider}`);
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
           status: 400,
