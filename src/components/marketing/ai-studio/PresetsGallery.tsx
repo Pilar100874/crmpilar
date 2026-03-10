@@ -881,8 +881,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const handleConfirmPreset = () => {
     if (!reviewPreset) return;
-    onSelectPreset({ ...reviewPreset, prompt: editablePrompt });
+    const finalPreset = { ...reviewPreset, prompt: editablePrompt };
     setReviewPreset(null);
+    // Small delay to allow review modal to unmount before parent unmounts gallery
+    setTimeout(() => {
+      onSelectPreset(finalPreset);
+    }, 50);
   };
 
   const handleReset = () => {
