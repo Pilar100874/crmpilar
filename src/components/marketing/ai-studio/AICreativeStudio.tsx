@@ -677,7 +677,7 @@ const AICreativeStudioInner: React.FC = () => {
           'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
         };
 
-        const blocksToInsert = refBlocks.length > 0 ? refBlocks : ['productImageSelect', 'galleryInfluencer', 'galleryLogo'];
+        const blocksToInsert = refBlocks;
 
         blocksToInsert.forEach((blockType, idx) => {
           const meta = blockMeta[blockType];
