@@ -1418,21 +1418,24 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button.absolute]:hidden">
-          <button
-            onClick={() => setVideoPreviewOpen(false)}
-            className="absolute -right-3 -top-3 z-[100] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
-            aria-label="Fechar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <video
-            src={resultVideo}
-            controls
-            autoPlay
-            controlsList="nofullscreen"
-            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
-          />
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button]:hidden">
+          <div className="relative">
+            <button
+              onClick={() => setVideoPreviewOpen(false)}
+              className="absolute -right-3 -top-3 z-[200] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
+              aria-label="Fechar"
+              style={{ position: 'absolute' }}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <video
+              src={resultVideo}
+              controls
+              autoPlay
+              controlsList="nofullscreen"
+              className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+            />
+          </div>
         </DialogContent>
       </Dialog>
     )}
