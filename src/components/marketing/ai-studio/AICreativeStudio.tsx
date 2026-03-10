@@ -566,7 +566,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `productComposite_${ts}`,
         type: 'studioNode',
         position: { x: 500, y: 250 },
-        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: defaultConfig },
+        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: finalConfig },
       };
       newNodes.push(personNode, productNode, promptNode, compositeNode);
       newEdges.push(
