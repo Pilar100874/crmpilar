@@ -365,7 +365,18 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleEditPreset = (preset: PromptPreset) => {
-    setEditingPreset(preset);
+    if (!preset.isCustom) {
+      // For built-in presets, create a custom copy for editing
+      const copy: PromptPreset = {
+        ...preset,
+        id: `custom-${Date.now()}`,
+        name: `${preset.name} (cópia)`,
+        isCustom: true,
+      };
+      setEditingPreset(copy);
+    } else {
+      setEditingPreset(preset);
+    }
     setShowCreateDialog(true);
   };
 
@@ -540,15 +551,13 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleCopy(selectedPreset.prompt)}>
                 <Copy className="h-3.5 w-3.5" /> Copiar
               </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
+                <Sparkles className="h-3.5 w-3.5" /> {selectedPreset.isCustom ? 'Editar' : 'Duplicar & Editar'}
+              </Button>
               {selectedPreset.isCustom && (
-                <>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
-                    <Sparkles className="h-3.5 w-3.5" /> Editar
-                  </Button>
-                  <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </>
+                <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
               )}
               <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
                 <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
