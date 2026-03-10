@@ -121,11 +121,11 @@ const AICreativeStudioInner: React.FC = () => {
     const defaults = getStudioDefaults(estabelecimentoId);
     const imageTypes = ['imageGen', 'imageEdit', 'productComposite'];
     const videoTypes = ['videoGen'];
-    if (imageTypes.includes(nodeType) && !config.negativePrompt) {
-      return { ...config, negativePrompt: defaults.imageNegativePrompt };
+    if (imageTypes.includes(nodeType)) {
+      return { ...config, negativePrompt: config.negativePrompt || defaults.imageNegativePrompt };
     }
-    if (videoTypes.includes(nodeType) && !config.videoNegativePrompt) {
-      return { ...config, videoNegativePrompt: defaults.videoNegativePrompt };
+    if (videoTypes.includes(nodeType)) {
+      return { ...config, videoNegativePrompt: config.videoNegativePrompt || defaults.videoNegativePrompt };
     }
     return config;
   }, [estabelecimentoId]);
