@@ -144,23 +144,9 @@ const LAYERS: Layer[] = [
     emoji: '🏷️',
     description: 'Tipo de produto em destaque',
     options: [
-      { id: 'technology', label: 'Technology', emoji: '💻' },
-      { id: 'smartphones', label: 'Smartphones', emoji: '📱' },
-      { id: 'gadgets', label: 'Gadgets', emoji: '🔌' },
-      { id: 'beauty', label: 'Beauty', emoji: '💄' },
-      { id: 'skincare', label: 'Skincare', emoji: '🧴' },
-      { id: 'cosmetics', label: 'Cosmetics', emoji: '💅' },
-      { id: 'perfumes', label: 'Perfumes', emoji: '🌸' },
-      { id: 'fitness', label: 'Fitness', emoji: '💪' },
-      { id: 'supplements', label: 'Supplements', emoji: '💊' },
-      { id: 'sportswear', label: 'Sportswear', emoji: '👟' },
-      { id: 'fashion', label: 'Fashion', emoji: '👔' },
-      { id: 'accessories', label: 'Accessories', emoji: '⌚' },
-      { id: 'food', label: 'Food', emoji: '🍔' },
-      { id: 'beverages', label: 'Beverages', emoji: '🥤' },
-      { id: 'automotive', label: 'Automotive', emoji: '🚗' },
-      { id: 'home-gadgets', label: 'Home Gadgets', emoji: '🏠' },
-      { id: 'pets', label: 'Pets', emoji: '🐾' },
+      { id: 'bobinas-papel', label: 'Bobinas de Papel', emoji: '🧻' },
+      { id: 'papeis-graficos', label: 'Papéis Gráficos', emoji: '📄' },
+      { id: 'descartaveis', label: 'Produtos Descartáveis', emoji: '🥡' },
     ],
   },
   {
@@ -326,23 +312,9 @@ function generatePrompt(selections: Record<string, string[]>): string {
 
   // Product category context
   const productMap: Record<string, string> = {
-    'technology': 'The product is a cutting-edge technology device.',
-    'smartphones': 'The product is a premium smartphone.',
-    'gadgets': 'The product is an innovative tech gadget.',
-    'beauty': 'The product is a beauty item with luxurious textures.',
-    'skincare': 'The product is a skincare solution with visible results.',
-    'cosmetics': 'The product is a cosmetic with rich pigments and finishes.',
-    'perfumes': 'The product is a fragrance, evoking sensory luxury.',
-    'fitness': 'The product is fitness equipment for peak performance.',
-    'supplements': 'The product is a health supplement with science-backed benefits.',
-    'sportswear': 'The product is high-performance sportswear/athleisure.',
-    'fashion': 'The product is a fashion item with designer-level styling.',
-    'accessories': 'The product is a premium fashion accessory.',
-    'food': 'The product is a food item with appetizing textures and colors.',
-    'beverages': 'The product is a beverage with refreshing visual appeal.',
-    'automotive': 'The product is an automotive item with precision engineering.',
-    'home-gadgets': 'The product is a smart home gadget for modern living.',
-    'pets': 'The product is designed for pets, showing adorable animal interaction.',
+    'bobinas-papel': 'The product is a premium paper roll (bobina de papel), showcasing its quality, texture, and industrial-grade material.',
+    'papeis-graficos': 'The product is a high-quality graphic paper, highlighting its smooth finish, printing precision, and professional results.',
+    'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
   };
   if (selections.productCategory?.length) {
     sceneParts.push(productMap[selections.productCategory[0]] || '');
