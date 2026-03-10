@@ -255,7 +255,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Edite imagens existentes com IA',
         icon: '✨',
         color: '#ec4899',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: 'Melhore a qualidade, ajuste cores e iluminação para um visual profissional de marketing', negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído' },
+        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: 'Melhore a qualidade, ajuste cores e iluminação para um visual profissional de marketing' },
       },
       {
         type: 'productComposite',
