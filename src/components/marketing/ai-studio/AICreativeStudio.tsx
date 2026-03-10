@@ -524,6 +524,9 @@ const AICreativeStudioInner: React.FC = () => {
       defaultConfig.aspectRatio = defaultConfig.aspectRatio || '16:9';
       defaultConfig.videoModel = preset.videoModel || defaultConfig.videoModel || 'google/veo-3.1';
     }
+    if (targetType === 'imageGen') {
+      defaultConfig.imageModel = preset.imageModel || defaultConfig.imageModel;
+    }
     if (targetType === 'productComposite') {
       const modeMap: Record<string, string> = {
         'clothing-tryon': 'clothing',
