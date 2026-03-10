@@ -763,6 +763,7 @@ interface Preset {
   toolType?: string;
   isVideo?: boolean;
   videoModel?: string;
+  imageModel?: string;
   duration?: number;
   videoSubcategory?: string;
   referenceBlocks?: string[];
