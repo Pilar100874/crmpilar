@@ -488,14 +488,22 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
                     </div>
                   </div>
                 </button>
-                {/* Overlay apply button on hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 pointer-events-none">
+                {/* Overlay buttons on hover */}
+                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <Button
                     size="sm"
-                    className="gap-1.5 text-xs pointer-events-auto"
+                    className="gap-1.5 text-xs pointer-events-auto shadow-lg"
                     onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
                   >
-                    <Play className="h-3.5 w-3.5" /> Usar Prompt
+                    <Play className="h-3.5 w-3.5" /> Usar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-xs pointer-events-auto shadow-lg bg-background/90"
+                    onClick={(e) => { e.stopPropagation(); handleEditPreset(preset); }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> Editar
                   </Button>
                 </div>
               </motion.div>
