@@ -552,26 +552,145 @@ const AICreativeStudioInner: React.FC = () => {
   const handlePresetSelect = useCallback((preset: Preset) => {
     // If reloading an existing preset node, just update its config in-place
     if (reloadingPresetNodeId) {
-      setNodes((nds) =>
-        nds.map((n) => {
-          if (n.id === reloadingPresetNodeId) {
-            return {
-              ...n,
-              data: {
-                ...n.data,
-                label: `Preset: ${preset.name}`,
-                config: {
-                  ...(n.data as any).config,
-                  text: preset.prompt,
-                  presetLayerSelections: preset.layerSelections,
-                  presetName: preset.name,
-                },
-              },
-            };
+      const newRefBlocks = preset.referenceBlocks || [];
+
+      const BLOCK_META: Record<string, { labelPrefix: string; type: string }> = {
+        'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
+        'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
+        'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
+        'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
+        'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
+        'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
+        'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
+        'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
+        'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
+        'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
+      };
+
+      // Find the process node connected to this textInput
+      const connectedEdge = edges.find(e => e.source === reloadingPresetNodeId);
+      const processNodeId = connectedEdge?.target;
+
+      setNodes((nds) => {
+        // Get existing ref block types connected to the same process node
+        const existingRefNodeIds = new Set<string>();
+        const existingRefTypes = new Set<string>();
+        if (processNodeId) {
+          const refEdges = edges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
+          for (const re of refEdges) {
+            const refNode = nds.find(n => n.id === re.source);
+            if (refNode) {
+              const nodeType = (refNode.data as any).type;
+              if (BLOCK_META[nodeType]) {
+                existingRefNodeIds.add(refNode.id);
+                existingRefTypes.add(nodeType);
+              }
+            }
           }
-          return n;
-        })
-      );
+        }
+
+        // Remove ref blocks that are no longer selected
+        const blocksToRemove = new Set<string>();
+        for (const nodeId of existingRefNodeIds) {
+          const node = nds.find(n => n.id === nodeId);
+          if (node) {
+            const nodeType = (node.data as any).type;
+            if (!newRefBlocks.includes(nodeType)) {
+              blocksToRemove.add(nodeId);
+            }
+          }
+        }
+
+        // Blocks to add (not already present)
+        const blocksToAdd = newRefBlocks.filter(bt => !existingRefTypes.has(bt));
+
+        let updatedNodes = nds
+          .filter(n => !blocksToRemove.has(n.id))
+          .map(n => {
+            if (n.id === reloadingPresetNodeId) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  label: `Preset: ${preset.name}`,
+                  config: {
+                    ...(n.data as any).config,
+                    text: preset.prompt,
+                    presetLayerSelections: preset.layerSelections,
+                    presetName: preset.name,
+                  },
+                },
+              };
+            }
+            return n;
+          });
+
+        // Add new ref blocks
+        const ts = Date.now();
+        const addedNodes: StudioNode[] = [];
+        blocksToAdd.forEach((blockType, idx) => {
+          const bm = BLOCK_META[blockType];
+          if (!bm) return;
+          const nodeMeta = getNodeMeta(bm.type as any);
+          const refNode: StudioNode = {
+            id: `${bm.type}_${ts}_${idx}`,
+            type: 'studioNode',
+            position: { x: 100, y: 400 + (existingRefNodeIds.size + idx) * 200 },
+            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+          };
+          addedNodes.push(refNode);
+        });
+
+        return [...updatedNodes, ...addedNodes];
+      });
+
+      // Update edges: remove edges from removed blocks, add edges for new blocks
+      setEdges((eds) => {
+        const existingRefNodeIds = new Set<string>();
+        if (processNodeId) {
+          const currentNodes = nodes;
+          const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
+          for (const re of refEdges) {
+            const refNode = currentNodes.find(n => n.id === re.source);
+            if (refNode) {
+              const nodeType = (refNode.data as any).type;
+              if (BLOCK_META[nodeType] && !newRefBlocks.includes(nodeType)) {
+                existingRefNodeIds.add(refNode.id);
+              }
+            }
+          }
+        }
+
+        let updatedEdges = eds.filter(e => !existingRefNodeIds.has(e.source));
+
+        // Add edges for new blocks
+        const ts = Date.now();
+        const blocksToAdd = newRefBlocks.filter(bt => {
+          if (!processNodeId) return false;
+          const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
+          return !refEdges.some(re => {
+            const refNode = nodes.find(n => n.id === re.source);
+            return refNode && (refNode.data as any).type === bt;
+          });
+        });
+
+        blocksToAdd.forEach((blockType, idx) => {
+          const bm = BLOCK_META[blockType];
+          if (!bm || !processNodeId) return;
+          const newNodeId = `${bm.type}_${ts}_${idx}`;
+          updatedEdges.push({
+            id: `e_${newNodeId}_${processNodeId}`,
+            source: newNodeId,
+            target: processNodeId,
+            animated: true,
+            style: EDGE_STYLE,
+            type: 'smoothstep',
+          } as any);
+        });
+
+        return updatedEdges;
+      });
+
       setReloadingPresetNodeId(null);
       setPresetInitialSelections(undefined);
       setShowPresets(false);
@@ -677,7 +796,7 @@ const AICreativeStudioInner: React.FC = () => {
           'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
         };
 
-        const blocksToInsert = refBlocks.length > 0 ? refBlocks : ['productImageSelect', 'galleryInfluencer', 'galleryLogo'];
+        const blocksToInsert = refBlocks;
 
         blocksToInsert.forEach((blockType, idx) => {
           const meta = blockMeta[blockType];
