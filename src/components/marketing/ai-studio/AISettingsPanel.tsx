@@ -329,10 +329,30 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
               {/* Provider sidebar */}
               <div className="w-[280px] border-r border-border flex flex-col bg-muted/30">
                 <div className="p-3 pt-4">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Provedores</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Configurações</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="px-3 pb-3 space-y-1">
+                    {/* Defaults button */}
+                    <div className="mb-3">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5 px-2 flex items-center gap-1.5 font-medium">
+                        <span>⚙️</span> Padrões
+                      </p>
+                      <button
+                        onClick={() => { setSelectedSection('defaults'); setSelectedProvider(''); }}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
+                          selectedSection === 'defaults'
+                            ? 'bg-accent border-primary/30 shadow-sm'
+                            : 'bg-card border-border hover:bg-accent/50 hover:border-border'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🚫</span>
+                          <span className="text-sm font-medium text-foreground">Prompts Negativos</span>
+                        </div>
+                      </button>
+                    </div>
+
                     {Object.entries(CATEGORY_LABELS).map(([cat, { label, icon }]) => {
                       const providers = PAID_PROVIDERS.filter(p => p.category === cat);
                       if (providers.length === 0) return null;
@@ -344,9 +364,9 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                           {providers.map((provider) => (
                             <button
                               key={provider.id}
-                              onClick={() => setSelectedProvider(provider.id)}
+                              onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
                               className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
-                                selectedProvider === provider.id
+                                selectedSection === 'providers' && selectedProvider === provider.id
                                   ? 'bg-accent border-primary/30 shadow-sm'
                                   : 'bg-card border-border hover:bg-accent/50 hover:border-border'
                               }`}
