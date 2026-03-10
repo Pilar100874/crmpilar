@@ -79,6 +79,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [presetInitialSelections, setPresetInitialSelections] = useState<Record<string, string[]> | undefined>(undefined);
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
@@ -98,6 +99,19 @@ const AICreativeStudioInner: React.FC = () => {
     window.addEventListener('studio-reopen-batch', handler as EventListener);
     return () => window.removeEventListener('studio-reopen-batch', handler as EventListener);
   }, [setBatchReviewResults]);
+
+  // Listen for reload preset event from textInput node config panel
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const { selections } = e.detail || {};
+      if (selections) {
+        setPresetInitialSelections(selections);
+        setShowPresets(true);
+      }
+    };
+    window.addEventListener('studio-reload-preset', handler as EventListener);
+    return () => window.removeEventListener('studio-reload-preset', handler as EventListener);
+  }, []);
 
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
@@ -604,7 +618,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `textInput_${ts}`,
         type: 'studioNode',
         position: { x: 100, y: 200 },
-        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
+        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt, presetLayerSelections: preset.layerSelections, presetName: preset.name } },
       };
       const processNode: StudioNode = {
         id: `${targetType}_${ts}`,
@@ -792,7 +806,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         <AnimatePresence>
           {showPresets && (
-            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} estabelecimentoId={estabelecimentoId} />
+            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
           )}
         </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
@@ -998,7 +1012,7 @@ const AICreativeStudioInner: React.FC = () => {
 
           <AnimatePresence>
             {showPresets && (
-              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} estabelecimentoId={estabelecimentoId} />
+              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
             )}
           </AnimatePresence>
 

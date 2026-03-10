@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, BookOpen, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -767,22 +767,22 @@ interface Preset {
   duration?: number;
   videoSubcategory?: string;
   referenceBlocks?: string[];
+  layerSelections?: Record<string, string[]>;
 }
 
 interface PresetsGalleryProps {
   onSelectPreset: (preset: Preset) => void;
   onClose: () => void;
   estabelecimentoId?: string;
+  initialSelections?: Record<string, string[]>;
 }
 
-const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '' }) => {
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
+const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '', initialSelections }) => {
+  const [selections, setSelections] = useState<Record<string, string[]>>(initialSelections || {});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
-  const [reviewPreset, setReviewPreset] = useState<Preset | null>(null);
-  const [editablePrompt, setEditablePrompt] = useState<string>('');
   const { toast } = useToast();
 
   const visibleLayers = useMemo(() => {
@@ -872,22 +872,13 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       imageModel: !isVideo && modelId ? imageModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
+      layerSelections: { ...selections },
     };
 
-    // Open review step instead of directly applying
-    setReviewPreset(preset);
-    setEditablePrompt(preset.prompt);
+    // Apply directly to canvas (no review step)
+    onSelectPreset(preset);
   };
 
-  const handleConfirmPreset = () => {
-    if (!reviewPreset) return;
-    const finalPreset = { ...reviewPreset, prompt: editablePrompt };
-    setReviewPreset(null);
-    // Small delay to allow review modal to unmount before parent unmounts gallery
-    setTimeout(() => {
-      onSelectPreset(finalPreset);
-    }, 50);
-  };
 
   const handleReset = () => {
     setSelections({});
@@ -1295,124 +1286,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-              Revisar e Gerar
+              Aplicar no Canvas
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Review/Edit Modal */}
-      <AnimatePresence>
-        {reviewPreset && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[60] bg-background/98 backdrop-blur-sm flex flex-col"
-          >
-            <div className="flex items-center justify-between px-6 py-3 border-b">
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => setReviewPreset(null)} className="gap-1.5 text-muted-foreground">
-                  <ChevronRight className="h-3.5 w-3.5 rotate-180" /> Voltar
-                </Button>
-                <div>
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Revisar Preset
-                  </h2>
-                  <p className="text-xs text-muted-foreground">{reviewPreset.name}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto p-6 space-y-5">
-                {/* Summary */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
-                    <div key={layer.id} className="bg-muted/50 rounded-lg border p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-sm">{layer.emoji}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{layer.title}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {(selections[layer.id] || []).map(s => {
-                          const opt = layer.options.find(o => o.id === s);
-                          return <Badge key={s} className="text-[9px] px-1.5 py-0.5 bg-primary/15 text-primary border-primary/20">{opt?.emoji} {opt?.label}</Badge>;
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Model Info */}
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm">🤖</span>
-                    <span className="text-xs font-semibold">Modelo de IA</span>
-                  </div>
-                  <p className="text-sm font-medium text-primary">
-                    {reviewPreset.isVideo
-                      ? reviewPreset.videoModel || 'Padrão (será definido no canvas)'
-                      : reviewPreset.imageModel || 'Padrão (será definido no canvas)'}
-                  </p>
-                </div>
-
-                {/* Reference Blocks */}
-                {(reviewPreset.referenceBlocks || []).length > 0 && (
-                  <div className="bg-muted/30 border rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm">🧩</span>
-                      <span className="text-xs font-semibold">Blocos que serão criados no canvas</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {reviewPreset.referenceBlocks!.map(block => {
-                        const opt = LAYERS.find(l => l.id === 'referenceBlocks')?.options.find(o => o.id === block);
-                        return (
-                          <Badge key={block} variant="outline" className="text-xs px-2 py-1 gap-1">
-                            {opt?.emoji} {opt?.label || block}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-2">
-                      ⚠️ Lembre-se de selecionar uma imagem em cada bloco de referência antes de executar o workflow.
-                    </p>
-                  </div>
-                )}
-
-                {/* Editable Prompt */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground">Prompt (editável)</label>
-                    <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(editablePrompt)}>
-                      <Copy className="h-3 w-3" /> Copiar
-                    </Button>
-                  </div>
-                  <textarea
-                    value={editablePrompt}
-                    onChange={(e) => setEditablePrompt(e.target.value)}
-                    className="w-full min-h-[300px] bg-background border rounded-lg p-3 text-[11px] font-mono leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-
-            <div className="p-4 border-t flex gap-3">
-              <Button variant="outline" onClick={() => setReviewPreset(null)} className="flex-1 gap-2">
-                <ChevronRight className="h-4 w-4 rotate-180" /> Voltar e Editar
-              </Button>
-              <Button onClick={handleConfirmPreset} className="flex-1 gap-2 bg-primary text-primary-foreground">
-                {reviewPreset.isVideo ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-                Aplicar no Canvas
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Play, SkipForward, Settings2, Sparkles } from 'lucide-react';
+import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -434,6 +434,26 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1 text-sm"
               />
             </ConfigField>
+            {config.presetLayerSelections && (
+              <div className="pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-xs"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('studio-reload-preset', {
+                      detail: { selections: config.presetLayerSelections, presetName: config.presetName }
+                    }));
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Recarregar Configuração do Preset
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                  Abre o gerador com as mesmas seleções usadas para criar este prompt
+                </p>
+              </div>
+            )}
           </div>
         );
 
