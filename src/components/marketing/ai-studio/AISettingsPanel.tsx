@@ -190,8 +190,11 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   }, [estabelecimentoId]);
 
   useEffect(() => {
-    if (open) loadKeys();
-  }, [open, loadKeys]);
+    if (open) {
+      loadKeys();
+      setStudioDefaults(getStudioDefaults(estabelecimentoId));
+    }
+  }, [open, loadKeys, estabelecimentoId]);
 
   const handleSave = async (providerId: string) => {
     if (!estabelecimentoId) { toast.error('Estabelecimento não encontrado'); return; }
