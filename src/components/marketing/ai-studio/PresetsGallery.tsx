@@ -1443,6 +1443,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           </div>
         </div>
       </div>
+      )}
 
     </motion.div>
   );
