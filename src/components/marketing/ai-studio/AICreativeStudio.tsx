@@ -247,6 +247,27 @@ const AICreativeStudioInner: React.FC = () => {
   }, [selectedNode, setNodes, setEdges]);
 
   const handleExecute = useCallback(async (startFromNodeId?: string) => {
+    // Validate blocks before execution
+    const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
+    const missingBlocks: string[] = [];
+    for (const n of nodes) {
+      const nd = n.data as StudioNodeData;
+      if (nd.config?._paused) continue;
+      if (GALLERY_TYPES.includes(nd.type) && !nd.config?.selectedImageUrl) {
+        missingBlocks.push(nd.label || nd.type);
+      }
+      if (nd.type === 'productImageSelect' && !nd.config?.selectedImageUrl) {
+        missingBlocks.push(nd.label || 'Produto');
+      }
+      if (nd.type === 'imageInput' && (!nd.config?.images || nd.config.images.length === 0) && !nd.config?.selectedImageUrl) {
+        missingBlocks.push(nd.label || 'Imagem de Referência');
+      }
+    }
+    if (missingBlocks.length > 0) {
+      toast.error(`Blocos sem conteúdo selecionado: ${missingBlocks.join(', ')}. Selecione uma imagem em cada bloco antes de executar.`);
+      return;
+    }
+
     try {
       const updatedNodes = await executeWorkflow(
         nodes as StudioNode[],
