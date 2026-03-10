@@ -990,6 +990,23 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     onSelectPreset(preset);
   };
 
+  const handlePromptPresetSelect = useCallback((promptPreset: PromptPreset) => {
+    const preset: Preset = {
+      id: `prompt-${promptPreset.id}-${Date.now()}`,
+      name: promptPreset.name,
+      description: `Prompt pronto: ${promptPreset.name}`,
+      prompt: promptPreset.prompt,
+      image: promptPreset.image,
+      category: 'video',
+      toolType: 'videoGen',
+      isVideo: true,
+      referenceBlocks: promptPreset.category === 'influencer'
+        ? ['productImageSelect', 'galleryInfluencer']
+        : ['productImageSelect'],
+      layerSelections: {},
+    };
+    onSelectPreset(preset);
+  }, [onSelectPreset]);
 
   const handleReset = () => {
     setSelections({});
