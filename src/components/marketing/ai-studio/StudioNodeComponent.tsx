@@ -1418,18 +1418,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 [&>button:last-child]:hidden">
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button.absolute]:hidden">
           <button
             onClick={() => setVideoPreviewOpen(false)}
-            className="fixed right-4 top-4 z-[10000] rounded-full p-3 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
+            className="absolute -right-3 -top-3 z-[100] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
             aria-label="Fechar"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
           <video
             src={resultVideo}
             controls
             autoPlay
+            controlsList="nofullscreen"
             className="w-full h-full object-contain max-h-[85vh] rounded-lg"
           />
         </DialogContent>
