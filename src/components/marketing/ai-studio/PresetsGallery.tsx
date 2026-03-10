@@ -493,7 +493,7 @@ const orientMap: Record<string, string> = {
 
 // ─── PROMPT GENERATOR ────────────────────────────────────────────────
 
-function generatePrompt(selections: Record<string, string[]>): string {
+function generatePrompt(selections: Record<string, string[]>, negativePrompt: string): string {
   const isVideo = selections.contentType?.includes('video');
   const blocks: { label: string; text: string }[] = [];
 
