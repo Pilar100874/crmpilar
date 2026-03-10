@@ -646,7 +646,7 @@ const AICreativeStudioInner: React.FC = () => {
       id: `${nodeType}_${Date.now()}`,
       type: 'studioNode',
       position: { x: 500, y: 200 },
-      data: { label: meta.label, type: nodeType as any, config: { ...meta.defaultConfig } },
+      data: { label: meta.label, type: nodeType as any, config: applyNegativeDefaults(nodeType, { ...meta.defaultConfig }) },
     };
     const outputNode: StudioNode = {
       id: `output_${Date.now()}`,
