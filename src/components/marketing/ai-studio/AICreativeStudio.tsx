@@ -582,7 +582,7 @@ const AICreativeStudioInner: React.FC = () => {
         const existingRefNodeIds = new Set<string>();
         const existingRefTypes = new Set<string>();
         if (processNodeId) {
-          const refEdges = edges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
+          const refEdges = currentEdges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           for (const re of refEdges) {
             const refNode = nds.find(n => n.id === re.source);
             if (refNode) {
