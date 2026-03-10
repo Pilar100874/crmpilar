@@ -586,7 +586,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `${targetType}_${ts}`,
         type: 'studioNode',
         position: { x: 600, y: 200 },
-        data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
+        data: { label: meta?.label || preset.name, type: targetType, config: finalConfig },
       };
       newNodes.push(inputNode, processNode);
       newEdges.push(
