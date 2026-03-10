@@ -401,13 +401,17 @@ const productMap: Record<string, string> = {
   'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
 };
 
-const charMap: Record<string, string> = {
-  'product-only': 'No people in the scene — the product is the sole protagonist.',
-  'influencer': 'A charismatic influencer presents the product with natural confidence.',
-  'ugc-creator': 'A relatable UGC creator films casual, authentic content about the product.',
-  'narrator': 'The scene is guided by voice-over narration with no on-screen talent.',
-  'lifestyle-model': 'A lifestyle model naturally incorporates the product into their routine.',
-  'crowd': 'Multiple people interact with the product in a social setting.',
+const refBlockPromptMap: Record<string, string> = {
+  'productImageSelect': 'The product reference image is provided as visual input for accurate representation.',
+  'galleryInfluencer': 'A charismatic influencer presents the product with natural confidence. Reference photo provided.',
+  'galleryLogo': 'The brand logo is included for visual identity integration.',
+  'galleryRoupa': 'Clothing/outfit reference is provided for accurate wardrobe representation.',
+  'galleryPose': 'A pose reference is provided for body positioning and composition.',
+  'galleryAmbiente': 'An environment reference is provided for scene setting and ambiance.',
+  'galleryEstilo': 'A style reference is provided for visual aesthetic direction.',
+  'galleryTextura': 'A texture/material reference is provided for surface detail accuracy.',
+  'galleryPaleta': 'A color palette reference is provided for cohesive color direction.',
+  'imageInput': 'A custom reference image is provided as visual guidance.',
 };
 
 const goalMap: Record<string, string> = {
