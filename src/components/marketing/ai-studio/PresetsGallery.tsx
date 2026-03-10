@@ -364,11 +364,6 @@ const VIRAL_HOOKS: ViralHook[] = [
 
 // ─── MAPS ────────────────────────────────────────────────────────────
 
-const STANDARD_NEGATIVE_PROMPT = `Não gerar nenhum texto, legendas, subtítulos, logos, marcas d'água, letras, números ou tipografia em qualquer parte do vídeo ou imagem.
-Não adicionar objetos extras que não estejam descritos.
-Não gerar mãos distorcidas, rostos deformados, membros extras, artefatos ou anatomia irreal.
-Sem elementos de interface, overlays, gráficos ou nomes de marcas.`;
-
 const creativeFormatMap: Record<string, string> = {
   'ugc-ad': 'A raw, authentic UGC-style ad filmed with a smartphone feel. The creator speaks directly to camera, showing the product naturally as if sharing with friends.',
   'product-hero': 'A stunning product hero shot with the product as the absolute centerpiece, elevated on a pedestal or floating, with dramatic lighting emphasizing every detail and texture.',
