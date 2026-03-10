@@ -810,6 +810,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       isVideo,
       videoModel: isVideo && modelId ? videoModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
+      referenceBlocks: selections.referenceBlocks || [],
     };
 
     onSelectPreset(preset);
