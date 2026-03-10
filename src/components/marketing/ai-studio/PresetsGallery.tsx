@@ -19,13 +19,12 @@ interface Layer {
   emoji: string;
   description: string;
   options: LayerOption[];
-  multiple?: boolean; // allow multi-select
+  multiple?: boolean;
   required?: boolean;
   visibleWhen?: (selections: Record<string, string[]>) => boolean;
 }
 
 const LAYERS: Layer[] = [
-  // CAMADA 1 — TIPO DE CONTEÚDO
   {
     id: 'contentType',
     title: 'Tipo de Conteúdo',
@@ -37,7 +36,6 @@ const LAYERS: Layer[] = [
       { id: 'image', label: 'Image Generation', emoji: '🖼️' },
     ],
   },
-  // CAMADA 2 — MODELO DE IA (vídeo)
   {
     id: 'videoModel',
     title: 'Modelo de IA',
@@ -57,7 +55,6 @@ const LAYERS: Layer[] = [
       { id: 'svd', label: 'Stable Video Diffusion', emoji: '⚡' },
     ],
   },
-  // CAMADA 2 — MODELO DE IA (imagem)
   {
     id: 'imageModel',
     title: 'Modelo de IA',
@@ -73,7 +70,6 @@ const LAYERS: Layer[] = [
       { id: 'leonardo', label: 'Leonardo AI', emoji: '🦁' },
     ],
   },
-  // CAMADA 3 — ESTILO VISUAL
   {
     id: 'visualStyle',
     title: 'Estilo Visual',
@@ -94,7 +90,6 @@ const LAYERS: Layer[] = [
       { id: 'lifestyle', label: 'Lifestyle', emoji: '🌿' },
     ],
   },
-  // CAMADA 4 — PLATAFORMA
   {
     id: 'platform',
     title: 'Plataforma de Publicação',
@@ -111,7 +106,6 @@ const LAYERS: Layer[] = [
       { id: 'hero-section', label: 'Website Hero Section', emoji: '🖥️' },
     ],
   },
-  // CAMADA 5 — PERSONAGEM
   {
     id: 'character',
     title: 'Tipo de Personagem',
@@ -126,7 +120,6 @@ const LAYERS: Layer[] = [
       { id: 'crowd', label: 'Crowd / Multiple People', emoji: '👥' },
     ],
   },
-  // CAMADA 6 — TIPO DE CAMPANHA
   {
     id: 'campaignType',
     title: 'Tipo de Campanha',
@@ -145,7 +138,6 @@ const LAYERS: Layer[] = [
       { id: 'comparison', label: 'Comparison', emoji: '⚖️' },
     ],
   },
-  // CAMADA 7 — CATEGORIA DO PRODUTO
   {
     id: 'productCategory',
     title: 'Categoria de Produto',
@@ -171,7 +163,6 @@ const LAYERS: Layer[] = [
       { id: 'pets', label: 'Pets', emoji: '🐾' },
     ],
   },
-  // EXTRA 1 — CÂMERA
   {
     id: 'cameraStyle',
     title: 'Estilo de Câmera',
@@ -189,7 +180,6 @@ const LAYERS: Layer[] = [
       { id: 'rotation', label: 'Product Rotation', emoji: '🔄' },
     ],
   },
-  // EXTRA 2 — ILUMINAÇÃO
   {
     id: 'lighting',
     title: 'Estilo de Iluminação',
@@ -205,7 +195,6 @@ const LAYERS: Layer[] = [
       { id: 'golden-hour', label: 'Golden Hour Lighting', emoji: '🌅' },
     ],
   },
-  // EXTRA 3 — ENERGIA
   {
     id: 'energy',
     title: 'Energia do Conteúdo',
@@ -220,7 +209,6 @@ const LAYERS: Layer[] = [
       { id: 'inspirational', label: 'Inspirational', emoji: '🌟' },
     ],
   },
-  // EXTRA 4 — ORIENTAÇÃO
   {
     id: 'orientation',
     title: 'Orientação do Conteúdo',
@@ -232,171 +220,282 @@ const LAYERS: Layer[] = [
       { id: 'square', label: 'Square (1:1)', emoji: '⬜' },
     ],
   },
+  // CAMADA 13 — OBJETIVO DE MARKETING
+  {
+    id: 'marketingGoal',
+    title: 'Objetivo de Marketing',
+    emoji: '🎯',
+    description: 'Defina o objetivo do anúncio',
+    options: [
+      { id: 'product-awareness', label: 'Product Awareness', emoji: '👁️' },
+      { id: 'direct-sales', label: 'Direct Sales', emoji: '💰' },
+      { id: 'lead-generation', label: 'Lead Generation', emoji: '📋' },
+      { id: 'brand-awareness', label: 'Brand Awareness', emoji: '🏢' },
+      { id: 'app-install', label: 'App Install', emoji: '📲' },
+      { id: 'product-launch', label: 'Product Launch', emoji: '🚀' },
+      { id: 'retargeting', label: 'Retargeting', emoji: '🔁' },
+      { id: 'social-proof', label: 'Social Proof', emoji: '⭐' },
+      { id: 'educational', label: 'Educational Content', emoji: '📚' },
+      { id: 'viral-engagement', label: 'Viral Engagement', emoji: '🔥' },
+    ],
+  },
+  // CAMADA 14 — ESTILO DE GANCHO
+  {
+    id: 'hookStyle',
+    title: 'Estilo de Gancho',
+    emoji: '🪝',
+    description: 'Tipo de abertura para capturar atenção',
+    options: [
+      { id: 'pattern-interrupt', label: 'Pattern Interrupt', emoji: '⚡' },
+      { id: 'question', label: 'Question Hook', emoji: '❓' },
+      { id: 'problem', label: 'Problem Hook', emoji: '😰' },
+      { id: 'shock', label: 'Shock / Surprise', emoji: '😱' },
+      { id: 'visual-hook', label: 'Visual Hook', emoji: '👀' },
+      { id: 'fast-demo', label: 'Fast Demo', emoji: '⏩' },
+      { id: 'bold-statement', label: 'Bold Statement', emoji: '💪' },
+      { id: 'curiosity', label: 'Curiosity Hook', emoji: '🤔' },
+    ],
+  },
+  // CAMADA 15 — FORMATO CRIATIVO
+  {
+    id: 'creativeFormat',
+    title: 'Formato Criativo',
+    emoji: '🎞️',
+    description: 'Estrutura criativa do conteúdo',
+    options: [
+      { id: 'ugc-ad', label: 'UGC Ad', emoji: '📱' },
+      { id: 'product-hero', label: 'Product Hero Shot', emoji: '✨' },
+      { id: 'influencer-review', label: 'Influencer Review', emoji: '⭐' },
+      { id: 'unboxing', label: 'Unboxing', emoji: '📦' },
+      { id: 'before-after', label: 'Before and After', emoji: '🔄' },
+      { id: 'lifestyle-ad', label: 'Lifestyle Ad', emoji: '🌿' },
+      { id: 'cinematic-brand', label: 'Cinematic Brand Film', emoji: '🎬' },
+      { id: 'viral-clip', label: 'Viral Social Clip', emoji: '🔥' },
+      { id: 'testimonial', label: 'Testimonial', emoji: '💬' },
+      { id: 'product-comparison', label: 'Product Comparison', emoji: '⚖️' },
+    ],
+  },
 ];
 
-// ─── PROMPT GENERATOR ────────────────────────────────────────────────
+// ─── STRUCTURED PROMPT GENERATOR ─────────────────────────────────────
 
 function generatePrompt(selections: Record<string, string[]>): string {
-  const parts: string[] = [];
   const isVideo = selections.contentType?.includes('video');
+  const blocks: { label: string; text: string }[] = [];
 
-  // Content type
-  if (isVideo) {
-    parts.push('Create a professional video');
+  // ── SCENE DESCRIPTION ──
+  const sceneParts: string[] = [];
+  const contentWord = isVideo ? 'video' : 'image';
+
+  // Creative format sets the scene structure
+  const creativeFormatMap: Record<string, string> = {
+    'ugc-ad': `A raw, authentic UGC-style ${contentWord} ad filmed with a smartphone feel. The creator speaks directly to camera, showing the product naturally as if sharing with friends.`,
+    'product-hero': `A stunning product hero shot ${contentWord} with the product as the absolute centerpiece, elevated on a pedestal or floating, with dramatic lighting emphasizing every detail and texture.`,
+    'influencer-review': `An influencer review ${contentWord} where a charismatic creator naturally demonstrates and reviews the product, sharing genuine reactions and highlighting key features.`,
+    'unboxing': `An exciting unboxing experience ${contentWord} capturing the anticipation and reveal of the product, showing premium packaging details and the first-touch reaction.`,
+    'before-after': `A dramatic before and after transformation ${contentWord} showing the clear difference and impact of using the product, with split-screen or transition reveal.`,
+    'lifestyle-ad': `A lifestyle advertisement ${contentWord} showing the product seamlessly integrated into an aspirational daily routine, emphasizing how it enhances everyday life.`,
+    'cinematic-brand': `A premium cinematic brand film ${contentWord} with sweeping visuals, emotional narrative arc, and high-production value that elevates the brand identity.`,
+    'viral-clip': `A highly shareable viral social media ${contentWord} designed for maximum engagement, with unexpected elements, quick transitions, and thumb-stopping moments.`,
+    'testimonial': `An authentic testimonial ${contentWord} featuring a real customer sharing their genuine experience, with natural settings and honest emotional reactions.`,
+    'product-comparison': `A side-by-side product comparison ${contentWord} clearly demonstrating the advantages over competitors, with data-driven visuals and clear differentiators.`,
+  };
+
+  if (selections.creativeFormat?.length) {
+    sceneParts.push(creativeFormatMap[selections.creativeFormat[0]] || `Create a professional ${contentWord}`);
   } else {
-    parts.push('Create a professional image');
+    sceneParts.push(`Create a professional marketing ${contentWord}`);
   }
 
-  // Campaign type
+  // Campaign type enrichment
   const campaignMap: Record<string, string> = {
-    'showcase': 'showcasing the product with elegant presentation',
-    'demonstration': 'demonstrating the product features and functionality',
-    'problem-solution': 'showing a problem and how the product solves it',
-    'before-after': 'revealing a dramatic before and after transformation',
-    'storytelling': 'telling a compelling brand story',
-    'influencer-review': 'featuring an influencer reviewing and recommending the product',
-    'unboxing': 'capturing an exciting unboxing experience',
-    'lifestyle-usage': 'showing the product being used naturally in everyday life',
-    'testimonial': 'featuring authentic customer testimonial and endorsement',
-    'comparison': 'comparing the product advantages against alternatives',
+    'showcase': 'The scene showcases the product with elegant, premium presentation.',
+    'demonstration': 'The scene demonstrates the product features and real-world functionality step by step.',
+    'problem-solution': 'The narrative follows a problem-solution structure: first showing the frustration, then the product as the solution.',
+    'before-after': 'The visual narrative reveals a dramatic before-and-after transformation.',
+    'storytelling': 'The content tells a compelling emotional story connected to the brand.',
+    'influencer-review': 'An influencer reviews and recommends the product with genuine enthusiasm.',
+    'unboxing': 'The scene captures a premium unboxing experience with tactile details.',
+    'lifestyle-usage': 'The product is shown being used naturally in an aspirational everyday lifestyle setting.',
+    'testimonial': 'Authentic customer testimonial with genuine emotional connection.',
+    'comparison': 'Direct comparison highlighting the product advantages over alternatives.',
   };
   if (selections.campaignType?.length) {
-    parts.push(campaignMap[selections.campaignType[0]] || '');
+    sceneParts.push(campaignMap[selections.campaignType[0]] || '');
   }
 
-  // Product category
+  // Product category context
   const productMap: Record<string, string> = {
-    'technology': 'for a technology product',
-    'smartphones': 'for a smartphone',
-    'gadgets': 'for a tech gadget',
-    'beauty': 'for a beauty product',
-    'skincare': 'for a skincare product',
-    'cosmetics': 'for cosmetics',
-    'perfumes': 'for a perfume/fragrance',
-    'fitness': 'for fitness equipment',
-    'supplements': 'for supplements',
-    'sportswear': 'for sportswear/athleisure',
-    'fashion': 'for a fashion item',
-    'accessories': 'for a fashion accessory',
-    'food': 'for a food product',
-    'beverages': 'for a beverage',
-    'automotive': 'for an automotive product',
-    'home-gadgets': 'for a home gadget',
-    'pets': 'for a pet product',
+    'technology': 'The product is a cutting-edge technology device.',
+    'smartphones': 'The product is a premium smartphone.',
+    'gadgets': 'The product is an innovative tech gadget.',
+    'beauty': 'The product is a beauty item with luxurious textures.',
+    'skincare': 'The product is a skincare solution with visible results.',
+    'cosmetics': 'The product is a cosmetic with rich pigments and finishes.',
+    'perfumes': 'The product is a fragrance, evoking sensory luxury.',
+    'fitness': 'The product is fitness equipment for peak performance.',
+    'supplements': 'The product is a health supplement with science-backed benefits.',
+    'sportswear': 'The product is high-performance sportswear/athleisure.',
+    'fashion': 'The product is a fashion item with designer-level styling.',
+    'accessories': 'The product is a premium fashion accessory.',
+    'food': 'The product is a food item with appetizing textures and colors.',
+    'beverages': 'The product is a beverage with refreshing visual appeal.',
+    'automotive': 'The product is an automotive item with precision engineering.',
+    'home-gadgets': 'The product is a smart home gadget for modern living.',
+    'pets': 'The product is designed for pets, showing adorable animal interaction.',
   };
   if (selections.productCategory?.length) {
-    parts.push(productMap[selections.productCategory[0]] || '');
-  }
-
-  // Visual style
-  const styleMap: Record<string, string> = {
-    'cinematic': 'cinematic film look with dramatic composition and color grading',
-    'realistic': 'hyper-realistic photographic quality with natural details',
-    'ugc': 'authentic user-generated content feel, raw and relatable',
-    'luxury': 'luxury premium aesthetic with rich textures and elegant tones',
-    'minimalist': 'clean minimalist design with white space and simplicity',
-    'futuristic': 'futuristic sci-fi aesthetic with sleek technology vibes',
-    'commercial': 'polished commercial advertising quality, broadcast-ready',
-    'viral': 'eye-catching viral social media style, bold and attention-grabbing',
-    'documentary': 'documentary style with authentic and journalistic approach',
-    'high-fashion': 'high fashion editorial look with bold styling and poses',
-    'studio-photo': 'professional studio photography with controlled lighting',
-    'lifestyle': 'warm lifestyle aesthetic with natural and aspirational feel',
-  };
-  if (selections.visualStyle?.length) {
-    parts.push(`Style: ${styleMap[selections.visualStyle[0]] || selections.visualStyle[0]}`);
+    sceneParts.push(productMap[selections.productCategory[0]] || '');
   }
 
   // Character
   const charMap: Record<string, string> = {
-    'product-only': 'featuring only the product, no people',
-    'influencer': 'featuring a charismatic influencer presenting the product',
-    'ugc-creator': 'featuring a relatable UGC creator filming casual content',
-    'narrator': 'with voice-over narration guiding the viewer',
-    'lifestyle-model': 'featuring a lifestyle model naturally using the product',
-    'crowd': 'featuring multiple people interacting with the product',
+    'product-only': 'No people in the scene — the product is the sole protagonist.',
+    'influencer': 'A charismatic influencer presents the product with natural confidence.',
+    'ugc-creator': 'A relatable UGC creator films casual, authentic content about the product.',
+    'narrator': 'The scene is guided by voice-over narration with no on-screen talent.',
+    'lifestyle-model': 'A lifestyle model naturally incorporates the product into their routine.',
+    'crowd': 'Multiple people interact with the product in a social setting.',
   };
   if (selections.character?.length) {
-    parts.push(charMap[selections.character[0]] || '');
+    sceneParts.push(charMap[selections.character[0]] || '');
   }
 
-  // Platform
-  const platformMap: Record<string, string> = {
-    'tiktok': 'optimized for TikTok, fast-paced and engaging',
-    'instagram': 'optimized for Instagram feed, visually striking',
-    'instagram-reels': 'optimized for Instagram Reels, vertical and dynamic',
-    'youtube': 'optimized for YouTube, cinematic widescreen',
-    'youtube-shorts': 'optimized for YouTube Shorts, vertical quick-hit content',
-    'facebook-ads': 'optimized for Facebook Ads, conversion-focused',
-    'landing-page': 'for a landing page hero video, premium and persuasive',
-    'hero-section': 'for website hero section, looping ambient visual',
+  // Marketing goal tone
+  const goalMap: Record<string, string> = {
+    'product-awareness': 'The tone focuses on introducing and building awareness for the product, making it memorable and recognizable.',
+    'direct-sales': 'The tone is conversion-driven, emphasizing clear product benefits, urgency, and a strong call-to-action.',
+    'lead-generation': 'The content is designed to spark curiosity and drive the viewer to learn more or sign up.',
+    'brand-awareness': 'The focus is on emotional brand storytelling, building identity and long-term recognition.',
+    'app-install': 'The content showcases the app interface and key features, driving installs with a clear CTA.',
+    'product-launch': 'The tone builds excitement and anticipation for a brand-new product reveal.',
+    'retargeting': 'The content reinforces the product value proposition for viewers who have already shown interest.',
+    'social-proof': 'The content emphasizes social proof through reviews, ratings, user counts, or testimonials.',
+    'educational': 'The content educates the viewer about the product with informative, value-driven messaging.',
+    'viral-engagement': 'The content is engineered for maximum shares and engagement with trending, shareable elements.',
   };
-  if (selections.platform?.length) {
-    parts.push(platformMap[selections.platform[0]] || '');
+  if (selections.marketingGoal?.length) {
+    sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
   }
 
-  // Camera style (video only)
+  blocks.push({ label: '🎬 SCENE DESCRIPTION', text: sceneParts.filter(Boolean).join(' ') });
+
+  // ── HOOK ──
+  const hookMap: Record<string, string> = {
+    'pattern-interrupt': 'Strong pattern interrupt in the first 3 seconds — an unexpected visual or action that immediately breaks the viewer\'s scroll and demands attention.',
+    'question': 'Open with a provocative question displayed on screen or spoken directly to camera that makes the viewer pause and think.',
+    'problem': 'Start by dramatizing a relatable problem or pain point that the viewer immediately identifies with, creating urgency.',
+    'shock': 'Begin with a shocking or surprising visual reveal that creates an immediate emotional reaction and curiosity.',
+    'visual-hook': 'Open with a stunning, visually arresting shot — dramatic close-up, unexpected angle, or mesmerizing motion that captivates instantly.',
+    'fast-demo': 'Jump straight into a rapid product demonstration in the first 2 seconds, showing the product in action before the viewer can scroll.',
+    'bold-statement': 'Open with a bold, controversial, or provocative text statement on screen that challenges the viewer\'s assumptions.',
+    'curiosity': 'Create a curiosity gap in the opening — show a teaser of the result or an intriguing setup that makes the viewer need to keep watching.',
+  };
+  if (selections.hookStyle?.length) {
+    blocks.push({ label: '🪝 HOOK', text: hookMap[selections.hookStyle[0]] || '' });
+  }
+
+  // ── CAMERA SETUP ──
   if (isVideo && selections.cameraStyle?.length) {
     const cameraMap: Record<string, string> = {
-      'handheld': 'handheld camera with natural organic movement',
-      'cinematic-camera': 'smooth cinematic camera movement on dolly/gimbal',
-      'drone': 'aerial drone shot with sweeping perspective',
-      'macro': 'extreme macro close-up revealing fine details',
-      'slowmo': 'dramatic slow motion capturing every detail',
-      'tracking': 'dynamic tracking shot following the subject',
-      'pov': 'immersive POV first-person perspective',
-      'rotation': '360-degree product rotation revealing all angles',
+      'handheld': 'Handheld camera with natural organic movement, slight shake for authentic feel. Close to mid-range framing.',
+      'cinematic-camera': 'Smooth cinematic camera on gimbal or dolly. Precise, controlled movements with professional film-grade framing and depth of field.',
+      'drone': 'Aerial drone shot with sweeping, elevated perspective revealing the full scene and environment.',
+      'macro': 'Extreme macro close-up shot revealing fine textures, materials, and microscopic product details.',
+      'slowmo': 'Dramatic slow motion capture at 120-240fps, emphasizing every detail of movement and texture.',
+      'tracking': 'Dynamic tracking shot following the subject with smooth lateral or forward movement, keeping the subject perfectly framed.',
+      'pov': 'Immersive first-person POV perspective, placing the viewer directly in the scene as if experiencing it themselves.',
+      'rotation': '360-degree product rotation on turntable, revealing every angle with consistent, smooth motion.',
     };
-    parts.push(`Camera: ${cameraMap[selections.cameraStyle[0]] || ''}`);
+    blocks.push({ label: '📹 CAMERA SETUP', text: cameraMap[selections.cameraStyle[0]] || '' });
   }
 
-  // Lighting
-  const lightMap: Record<string, string> = {
-    'natural': 'natural daylight illumination',
-    'studio': 'professional studio lighting setup',
-    'dramatic': 'dramatic chiaroscuro lighting with deep shadows',
-    'neon': 'vibrant neon lighting with colorful reflections',
-    'soft-luxury': 'soft diffused luxury lighting',
-    'high-contrast': 'high contrast lighting with bold shadows',
-    'golden-hour': 'warm golden hour sunlight',
-  };
+  // ── LIGHTING ──
   if (selections.lighting?.length) {
-    parts.push(`Lighting: ${lightMap[selections.lighting[0]] || ''}`);
+    const lightMap: Record<string, string> = {
+      'natural': 'Natural daylight illumination with soft window light or outdoor sunlight, creating authentic warmth and gentle shadows.',
+      'studio': 'Professional multi-point studio lighting setup with key light, fill light, and rim light for polished, controlled illumination.',
+      'dramatic': 'Dramatic chiaroscuro lighting with deep shadows and strong directional light creating bold contrast and mood.',
+      'neon': 'Vibrant neon lighting with colorful reflections, glows, and RGB accents creating a modern, edgy atmosphere.',
+      'soft-luxury': 'Soft, diffused luxury lighting with warm tones, delicate highlights, and gentle gradients for an elegant premium feel.',
+      'high-contrast': 'High contrast lighting with bold shadows and bright highlights, creating strong graphic visual impact.',
+      'golden-hour': 'Warm golden hour sunlight with long shadows, amber tones, and a magical, dreamy atmospheric quality.',
+    };
+    blocks.push({ label: '💡 LIGHTING', text: lightMap[selections.lighting[0]] || '' });
   }
 
-  // Energy
+  // ── ACTION ──
+  const actionParts: string[] = [];
   const energyMap: Record<string, string> = {
-    'high-energy': 'high energy, fast cuts, dynamic and exciting pace',
-    'calm': 'calm, aesthetic, slow and contemplative rhythm',
-    'luxury-mood': 'luxury mood, sophisticated and premium atmosphere',
-    'dramatic-mood': 'dramatic tension, building anticipation',
-    'emotional': 'emotional and touching, connecting with the viewer',
-    'inspirational': 'inspirational and uplifting, motivating the viewer',
+    'high-energy': 'Fast-paced dynamic action with quick cuts, rapid movements, and intense rhythm. The energy is explosive and exciting.',
+    'calm': 'Slow, contemplative, and aesthetic rhythm. Gentle movements, long takes, and a serene, meditative atmosphere.',
+    'luxury-mood': 'Sophisticated, slow, and premium-paced. Every movement is deliberate, elegant, and dripping with luxury.',
+    'dramatic-mood': 'Building dramatic tension with suspenseful pacing, anticipation beats, and a powerful climactic reveal.',
+    'emotional': 'Emotionally charged pacing that connects deeply with the viewer, building warmth and genuine human connection.',
+    'inspirational': 'Uplifting and motivational rhythm with crescendo pacing, building from calm to powerful and empowering.',
   };
   if (selections.energy?.length) {
-    parts.push(`Mood: ${energyMap[selections.energy[0]] || ''}`);
+    actionParts.push(energyMap[selections.energy[0]] || '');
+  }
+  if (actionParts.length) {
+    blocks.push({ label: '🎬 ACTION', text: actionParts.filter(Boolean).join(' ') });
   }
 
-  // Orientation
-  const orientMap: Record<string, string> = {
-    'vertical': 'Vertical format 9:16 aspect ratio',
-    'horizontal': 'Horizontal format 16:9 aspect ratio',
-    'square': 'Square format 1:1 aspect ratio',
-  };
+  // ── VISUAL STYLE ──
+  if (selections.visualStyle?.length) {
+    const styleMap: Record<string, string> = {
+      'cinematic': 'Cinematic film aesthetic with wide dynamic range, film grain, anamorphic lens characteristics, and professional color grading with teal-orange tones.',
+      'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy.',
+      'ugc': 'Authentic user-generated content aesthetic — raw, unpolished, smartphone-shot feel that is relatable and trustworthy.',
+      'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined elegant composition.',
+      'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition, and typographic precision.',
+      'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek surfaces, cyber-blue tones, and technology-forward design.',
+      'commercial': 'Broadcast-quality commercial advertising polish with perfect color balance, professional retouching, and crisp resolution.',
+      'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors, bold text overlays, and thumb-stopping visual impact.',
+      'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing, observational camera work.',
+      'high-fashion': 'High fashion editorial aesthetic with bold styling, dramatic poses, avant-garde composition, and magazine-quality finish.',
+      'studio-photo': 'Professional studio photography with controlled lighting, seamless backgrounds, and commercial-grade product presentation.',
+      'lifestyle': 'Warm lifestyle aesthetic with natural tones, aspirational settings, and a genuine, lived-in visual warmth.',
+    };
+    blocks.push({ label: '🎨 VISUAL STYLE', text: styleMap[selections.visualStyle[0]] || '' });
+  }
+
+  // ── PLATFORM OPTIMIZATION ──
+  if (selections.platform?.length) {
+    const platformMap: Record<string, string> = {
+      'tiktok': 'Optimized for TikTok: vertical 9:16, fast-paced editing, trending audio-friendly, first 1-2 seconds must hook. Native, organic feel preferred over overly produced content.',
+      'instagram': 'Optimized for Instagram Feed: visually striking composition, cohesive color palette, high-impact single frame or carousel-ready.',
+      'instagram-reels': 'Optimized for Instagram Reels: vertical 9:16, dynamic transitions, text overlays, engaging within first 3 seconds. Trending format and music-synced cuts.',
+      'youtube': 'Optimized for YouTube: widescreen 16:9, cinematic quality, professional audio, structured narrative with clear beginning-middle-end.',
+      'youtube-shorts': 'Optimized for YouTube Shorts: vertical 9:16, quick-hit content under 60 seconds, immediate value delivery.',
+      'facebook-ads': 'Optimized for Facebook Ads: conversion-focused, clear product benefits, strong CTA placement, works with and without sound.',
+      'landing-page': 'Optimized for landing page hero: premium, persuasive, looping capability, ambient motion that enhances conversion without distraction.',
+      'hero-section': 'Optimized for website hero section: seamless looping ambient visual, subtle motion, premium quality that enhances page experience.',
+    };
+    blocks.push({ label: '📲 PLATFORM OPTIMIZATION', text: platformMap[selections.platform[0]] || '' });
+  }
+
+  // ── ORIENTATION ──
   if (selections.orientation?.length) {
-    parts.push(orientMap[selections.orientation[0]] || '');
+    const orientMap: Record<string, string> = {
+      'vertical': 'Vertical format 9:16 aspect ratio.',
+      'horizontal': 'Horizontal format 16:9 aspect ratio.',
+      'square': 'Square format 1:1 aspect ratio.',
+    };
+    blocks.push({ label: '📐 ORIENTATION', text: orientMap[selections.orientation[0]] || '' });
   }
 
-  // AI model mention
+  // AI model reference
   const modelKey = isVideo ? 'videoModel' : 'imageModel';
   if (selections[modelKey]?.length) {
     const modelLabel = LAYERS.find(l => l.id === modelKey)?.options.find(o => o.id === selections[modelKey][0])?.label;
-    if (modelLabel) parts.push(`Optimized for ${modelLabel}`);
+    if (modelLabel) {
+      blocks.push({ label: '🤖 MODEL', text: `Optimized for ${modelLabel}. Professional quality, 4K resolution, highly detailed.` });
+    }
   }
 
-  parts.push('Professional quality, 4K resolution, highly detailed');
-
-  return parts.filter(Boolean).join('. ') + '.';
+  // Build final structured prompt
+  return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
 }
 
 // ─── COMPONENT ───────────────────────────────────────────────────────
@@ -436,7 +535,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       const current = prev[layerId] || [];
       const layer = LAYERS.find(l => l.id === layerId);
 
-      // For content type, clear model selections when switching
       if (layerId === 'contentType') {
         const next: Record<string, string[]> = { ...prev, [layerId]: [optionId] };
         delete next.videoModel;
@@ -451,7 +549,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         return { ...prev, [layerId]: [...current, optionId] };
       }
 
-      // Single select — toggle off if same
       if (current.includes(optionId)) {
         return { ...prev, [layerId]: [] };
       }
@@ -471,7 +568,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     const modelKey = isVideo ? 'videoModel' : 'imageModel';
     const modelId = selections[modelKey]?.[0];
 
-    // Map model IDs to actual API model strings
     const videoModelMap: Record<string, string> = {
       'veo3': 'google/veo-3.1',
       'sora': 'openai/sora-2',
@@ -484,7 +580,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       'svd': 'stability/svd',
     };
 
-    // Build summary name
     const style = selections.visualStyle?.[0] || '';
     const campaign = selections.campaignType?.[0] || '';
     const platform = selections.platform?.[0] || '';
@@ -497,7 +592,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     const preset: Preset = {
       id: `custom-${Date.now()}`,
       name: nameParts.length ? nameParts.join(' • ') : (isVideo ? 'Vídeo Personalizado' : 'Imagem Personalizada'),
-      description: 'Prompt gerado automaticamente a partir das categorias selecionadas.',
+      description: 'Prompt gerado automaticamente pelo AI Creative Prompt Engine.',
       prompt: generatedPrompt,
       image: '',
       category: isVideo ? 'video' : 'image',
@@ -527,11 +622,16 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
-            Gerador de Prompts
+            AI Creative Prompt Engine
           </h2>
-          <p className="text-sm text-muted-foreground">Selecione categorias para gerar prompts profissionais</p>
+          <p className="text-sm text-muted-foreground">Combine camadas para gerar prompts profissionais de marketing</p>
         </div>
         <div className="flex items-center gap-2">
+          {selectionCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {selectionCount} camadas
+            </Badge>
+          )}
           {selectionCount > 0 && (
             <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 text-muted-foreground">
               <RotateCcw className="h-3.5 w-3.5" />
@@ -567,7 +667,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                         : 'border-border/60 hover:border-border'
                   }`}
                 >
-                  {/* Layer header */}
                   <button
                     onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
                     className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -607,7 +706,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   </button>
 
-                  {/* Layer options */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
@@ -625,9 +723,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                               return (
                                 <button
                                   key={option.id}
-                                  onClick={() => {
-                                    toggleOption(layer.id, option.id);
-                                  }}
+                                  onClick={() => toggleOption(layer.id, option.id)}
                                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
                                     isSelected
                                       ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]'
@@ -655,7 +751,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           <div className="p-4 border-b">
             <h3 className="font-semibold text-sm flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              Prompt Gerado
+              Prompt Estruturado
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               {selectionCount} {selectionCount === 1 ? 'camada selecionada' : 'camadas selecionadas'}
@@ -664,7 +760,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
-              {/* Selection summary */}
               {selectionCount > 0 && (
                 <div className="space-y-2">
                   {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
@@ -688,11 +783,10 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 </div>
               )}
 
-              {/* Generated prompt */}
               {generatedPrompt && (
                 <div className="bg-background rounded-lg border p-3 mt-3">
-                  <p className="text-xs text-muted-foreground font-medium mb-1.5">Prompt:</p>
-                  <p className="text-xs text-foreground leading-relaxed font-mono">{generatedPrompt}</p>
+                  <p className="text-xs text-muted-foreground font-medium mb-1.5">Prompt Estruturado:</p>
+                  <pre className="text-xs text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedPrompt}</pre>
                 </div>
               )}
 
@@ -705,7 +799,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </div>
           </ScrollArea>
 
-          {/* Generate button */}
           <div className="p-4 border-t">
             <Button
               className="w-full gap-2"
