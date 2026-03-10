@@ -247,7 +247,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere imagens a partir de prompts de texto',
         icon: '🖼️',
         color: '#f43f5e',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', quality: 'standard', negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído' },
+        defaultConfig: { model: 'google/gemini-2.5-flash-image', quality: 'standard' },
       },
       {
         type: 'imageEdit',
