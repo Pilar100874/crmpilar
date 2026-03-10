@@ -550,6 +550,36 @@ const AICreativeStudioInner: React.FC = () => {
   }, [handleSaveWorkflow, clearAll, fetchWorkflows]);
 
   const handlePresetSelect = useCallback((preset: Preset) => {
+    // If reloading an existing preset node, just update its config in-place
+    if (reloadingPresetNodeId) {
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === reloadingPresetNodeId) {
+            return {
+              ...n,
+              data: {
+                ...n.data,
+                label: `Preset: ${preset.name}`,
+                config: {
+                  ...(n.data as any).config,
+                  text: preset.prompt,
+                  presetLayerSelections: preset.layerSelections,
+                  presetName: preset.name,
+                },
+              },
+            };
+          }
+          return n;
+        })
+      );
+      setReloadingPresetNodeId(null);
+      setPresetInitialSelections(undefined);
+      setShowPresets(false);
+      setHasUnsavedChanges(true);
+      toast.success(`Preset "${preset.name}" atualizado no workflow!`);
+      return;
+    }
+
     const targetType = (preset.toolType || 'videoGen') as StudioNodeData['type'];
     const meta = getNodeMeta(targetType);
     const ts = Date.now();
@@ -583,7 +613,6 @@ const AICreativeStudioInner: React.FC = () => {
     const newEdges: any[] = [];
 
     if (targetType === 'productComposite') {
-      // productComposite needs: imageInput (pessoa) + textInput (prompt) -> productComposite
       const personNode: StudioNode = {
         id: `imageInput_person_${ts}`,
         type: 'studioNode',
@@ -615,7 +644,6 @@ const AICreativeStudioInner: React.FC = () => {
         { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
     } else {
-      // Standard: textInput -> processNode, with optional reference blocks for image/video
       const inputNode: StudioNode = {
         id: `textInput_${ts}`,
         type: 'studioNode',
@@ -633,11 +661,9 @@ const AICreativeStudioInner: React.FC = () => {
         { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
 
-      // For image/video generation presets, add selected reference blocks
       if (targetType === 'imageGen' || targetType === 'videoGen') {
         const refBlocks = preset.referenceBlocks || [];
         
-        // Block type to node metadata mapping
         const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
           'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
           'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
@@ -679,7 +705,7 @@ const AICreativeStudioInner: React.FC = () => {
     setShowCanvas(true);
     setHasUnsavedChanges(true);
     toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, reloadingPresetNodeId]);
 
   const handleQuickTool = useCallback((toolId: string, nodeType: string) => {
     const meta = getNodeMeta(nodeType as any);
