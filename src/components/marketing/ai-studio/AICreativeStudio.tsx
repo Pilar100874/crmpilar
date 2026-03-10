@@ -628,6 +628,46 @@ const AICreativeStudioInner: React.FC = () => {
                 },
               };
             }
+            // Also update the connected process node's type and config if toolType changed
+            if (processNodeId && n.id === processNodeId) {
+              const newTargetType = (preset.toolType || 'videoGen') as StudioNodeData['type'];
+              const currentType = (n.data as any).type;
+              if (currentType !== newTargetType) {
+                const newMeta = getNodeMeta(newTargetType);
+                const newDefaultConfig: Record<string, any> = newMeta?.defaultConfig ? { ...newMeta.defaultConfig } : {};
+                if (newTargetType === 'videoGen') {
+                  newDefaultConfig.duration = preset.duration || newDefaultConfig.duration || 5;
+                  newDefaultConfig.resolution = newDefaultConfig.resolution || '1080p';
+                  newDefaultConfig.aspectRatio = newDefaultConfig.aspectRatio || '16:9';
+                  newDefaultConfig.videoModel = preset.videoModel || newDefaultConfig.videoModel || 'google/veo-3.1';
+                }
+                if (newTargetType === 'imageGen') {
+                  newDefaultConfig.imageModel = preset.imageModel || newDefaultConfig.imageModel;
+                }
+                return {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    label: newMeta?.label || n.data.label,
+                    type: newTargetType,
+                    config: applyNegativeDefaults(newTargetType, newDefaultConfig),
+                  },
+                };
+              }
+              // Same type but update specific config (like videoModel, duration)
+              const updatedConfig = { ...(n.data as any).config };
+              if (newTargetType === 'videoGen') {
+                if (preset.videoModel) updatedConfig.videoModel = preset.videoModel;
+                if (preset.duration) updatedConfig.duration = preset.duration;
+              }
+              if (newTargetType === 'imageGen' && preset.imageModel) {
+                updatedConfig.imageModel = preset.imageModel;
+              }
+              return {
+                ...n,
+                data: { ...n.data, config: updatedConfig },
+              };
+            }
             return n;
           });
 
