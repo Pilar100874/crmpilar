@@ -571,8 +571,10 @@ const AICreativeStudioInner: React.FC = () => {
         'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
       };
 
-      // Find the process node connected to this textInput
-      const connectedEdge = edges.find(e => e.source === reloadingPresetNodeId);
+      // Find the process node connected to this textInput (use ref for fresh state)
+      const currentEdges = edgesRef.current;
+      const currentNodes = nodesRef.current;
+      const connectedEdge = currentEdges.find(e => e.source === reloadingPresetNodeId);
       const processNodeId = connectedEdge?.target;
 
       setNodes((nds) => {
