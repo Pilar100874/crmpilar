@@ -788,7 +788,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
           <div className="flex gap-2 pt-2 border-t">
             <Button variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
             <Button className="flex-1 gap-1.5" onClick={handleSave} disabled={!name.trim() || !prompt.trim()}>
-              <Save className="h-4 w-4" /> Salvar Prompt
+              <Save className="h-4 w-4" /> {isEditing ? 'Salvar Alterações' : 'Salvar Prompt'}
             </Button>
           </div>
         </div>
