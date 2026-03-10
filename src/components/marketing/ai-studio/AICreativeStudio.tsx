@@ -604,7 +604,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `textInput_${ts}`,
         type: 'studioNode',
         position: { x: 100, y: 200 },
-        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
+        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt, presetLayerSelections: preset.layerSelections, presetName: preset.name } },
       };
       const processNode: StudioNode = {
         id: `${targetType}_${ts}`,
