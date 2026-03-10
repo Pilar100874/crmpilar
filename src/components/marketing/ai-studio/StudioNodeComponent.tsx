@@ -578,6 +578,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     } finally {
       setIsSavingToGallery(false);
     }
+  }, [id, nodeData.type, nodeData.label]);
 
   return (
     <>
