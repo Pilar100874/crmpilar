@@ -89,6 +89,10 @@ const AICreativeStudioInner: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+  const edgesRef = useRef(edges);
+  edgesRef.current = edges;
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults } = useStudioExecution();
 
@@ -567,8 +571,10 @@ const AICreativeStudioInner: React.FC = () => {
         'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
       };
 
-      // Find the process node connected to this textInput
-      const connectedEdge = edges.find(e => e.source === reloadingPresetNodeId);
+      // Find the process node connected to this textInput (use ref for fresh state)
+      const currentEdges = edgesRef.current;
+      const currentNodes = nodesRef.current;
+      const connectedEdge = currentEdges.find(e => e.source === reloadingPresetNodeId);
       const processNodeId = connectedEdge?.target;
 
       setNodes((nds) => {
@@ -576,7 +582,7 @@ const AICreativeStudioInner: React.FC = () => {
         const existingRefNodeIds = new Set<string>();
         const existingRefTypes = new Set<string>();
         if (processNodeId) {
-          const refEdges = edges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
+          const refEdges = currentEdges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           for (const re of refEdges) {
             const refNode = nds.find(n => n.id === re.source);
             if (refNode) {
@@ -622,6 +628,46 @@ const AICreativeStudioInner: React.FC = () => {
                 },
               };
             }
+            // Also update the connected process node's type and config if toolType changed
+            if (processNodeId && n.id === processNodeId) {
+              const newTargetType = (preset.toolType || 'videoGen') as StudioNodeData['type'];
+              const currentType = (n.data as any).type;
+              if (currentType !== newTargetType) {
+                const newMeta = getNodeMeta(newTargetType);
+                const newDefaultConfig: Record<string, any> = newMeta?.defaultConfig ? { ...newMeta.defaultConfig } : {};
+                if (newTargetType === 'videoGen') {
+                  newDefaultConfig.duration = preset.duration || newDefaultConfig.duration || 5;
+                  newDefaultConfig.resolution = newDefaultConfig.resolution || '1080p';
+                  newDefaultConfig.aspectRatio = newDefaultConfig.aspectRatio || '16:9';
+                  newDefaultConfig.videoModel = preset.videoModel || newDefaultConfig.videoModel || 'google/veo-3.1';
+                }
+                if (newTargetType === 'imageGen') {
+                  newDefaultConfig.imageModel = preset.imageModel || newDefaultConfig.imageModel;
+                }
+                return {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    label: newMeta?.label || n.data.label,
+                    type: newTargetType,
+                    config: applyNegativeDefaults(newTargetType, newDefaultConfig),
+                  },
+                };
+              }
+              // Same type but update specific config (like videoModel, duration)
+              const updatedConfig = { ...(n.data as any).config };
+              if (newTargetType === 'videoGen') {
+                if (preset.videoModel) updatedConfig.videoModel = preset.videoModel;
+                if (preset.duration) updatedConfig.duration = preset.duration;
+              }
+              if (newTargetType === 'imageGen' && preset.imageModel) {
+                updatedConfig.imageModel = preset.imageModel;
+              }
+              return {
+                ...n,
+                data: { ...n.data, config: updatedConfig },
+              };
+            }
             return n;
           });
 
@@ -648,7 +694,6 @@ const AICreativeStudioInner: React.FC = () => {
       setEdges((eds) => {
         const existingRefNodeIds = new Set<string>();
         if (processNodeId) {
-          const currentNodes = nodes;
           const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           for (const re of refEdges) {
             const refNode = currentNodes.find(n => n.id === re.source);
@@ -669,7 +714,7 @@ const AICreativeStudioInner: React.FC = () => {
           if (!processNodeId) return false;
           const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           return !refEdges.some(re => {
-            const refNode = nodes.find(n => n.id === re.source);
+            const refNode = currentNodes.find(n => n.id === re.source);
             return refNode && (refNode.data as any).type === bt;
           });
         });
