@@ -662,7 +662,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       return;
     }
     const preset: PromptPreset = {
-      id: `custom-${Date.now()}`,
+      id: editingPreset ? editingPreset.id : `custom-${Date.now()}`,
       name: name.trim(),
       prompt: prompt.trim(),
       image: generatedImage,
@@ -674,6 +674,8 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
     };
     onSave(preset);
   };
+
+  const isEditing = !!editingPreset;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
