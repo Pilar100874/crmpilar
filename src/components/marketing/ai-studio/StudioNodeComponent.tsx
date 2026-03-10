@@ -1242,12 +1242,31 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   {/* Always-visible overlay buttons */}
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <button
-                      onClick={(e) => {
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = resultVideo;
-                        link.download = `studio-${nodeData.type}-${id}.mp4`;
-                        link.click();
+                        e.preventDefault();
+                        try {
+                          const resp = await fetch(resultVideo);
+                          const blob = await resp.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.download = `studio-${nodeData.type}-${id}.mp4`;
+                          link.target = '_blank';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                        } catch {
+                          // fallback
+                          const link = document.createElement('a');
+                          link.href = resultVideo;
+                          link.download = `studio-${nodeData.type}-${id}.mp4`;
+                          link.target = '_blank';
+                          link.click();
+                        }
                       }}
                       className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
                       title="Download"
