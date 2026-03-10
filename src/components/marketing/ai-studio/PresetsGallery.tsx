@@ -810,7 +810,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const handleGenerateVariations = useCallback(() => {
     if (selectionCount < 2) return;
-    const v = generateVariations(selections);
+    const v = generateVariations(selections, negativePromptText);
     setVariations(v);
     toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
   }, [selections, selectionCount, toast]);
