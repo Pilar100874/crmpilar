@@ -247,7 +247,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere imagens a partir de prompts de texto',
         icon: '🖼️',
         color: '#f43f5e',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', quality: 'standard' },
+        defaultConfig: { model: 'google/gemini-2.5-flash-image', quality: 'standard', negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído' },
       },
       {
         type: 'imageEdit',
@@ -255,7 +255,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Edite imagens existentes com IA',
         icon: '✨',
         color: '#ec4899',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: 'Melhore a qualidade, ajuste cores e iluminação para um visual profissional de marketing' },
+        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: 'Melhore a qualidade, ajuste cores e iluminação para um visual profissional de marketing', negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído' },
       },
       {
         type: 'productComposite',
@@ -267,6 +267,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           model: 'google/gemini-2.5-flash-image',
           compositeMode: 'clothing',
           prompt: 'Integre o produto de forma natural e realista na cena, mantendo a iluminação e proporções corretas',
+          negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído',
         },
       },
     ],
@@ -282,7 +283,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere vídeos a partir de prompts ou imagens',
         icon: '🎬',
         color: '#f59e0b',
-        defaultConfig: { duration: 5, resolution: '1080p', aspectRatio: '16:9' },
+        defaultConfig: { duration: 5, resolution: '1080p', aspectRatio: '16:9', videoNegativePrompt: 'texto na tela, marca d\'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais' },
       },
       {
         type: 'videoMerge',
