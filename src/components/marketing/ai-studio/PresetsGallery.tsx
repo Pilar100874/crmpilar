@@ -555,8 +555,10 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
     }
   }
 
-  // NEGATIVE PROMPT
-  blocks.push({ label: '🚫 PROMPT NEGATIVO', text: STANDARD_NEGATIVE_PROMPT });
+  // NEGATIVE PROMPT (from settings)
+  if (negativePrompt) {
+    blocks.push({ label: '🚫 PROMPT NEGATIVO', text: negativePrompt });
+  }
 
   return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
 }
