@@ -783,7 +783,6 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
   const { toast } = useToast();
-  const { toast } = useToast();
 
   const visibleLayers = useMemo(() => {
     return LAYERS.filter(layer => {
