@@ -28,7 +28,7 @@ import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
 import PresetsGallery, { Preset } from './PresetsGallery';
-import AISettingsPanel from './AISettingsPanel';
+import AISettingsPanel, { getStudioDefaults } from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
 import ExecutionLogPanel from './ExecutionLogPanel';
