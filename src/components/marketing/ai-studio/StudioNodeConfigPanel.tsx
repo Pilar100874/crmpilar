@@ -442,7 +442,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   className="w-full gap-2 text-xs"
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('studio-reload-preset', {
-                      detail: { selections: config.presetLayerSelections, presetName: config.presetName }
+                      detail: { selections: config.presetLayerSelections, presetName: config.presetName, nodeId: node.id }
                     }));
                   }}
                 >
