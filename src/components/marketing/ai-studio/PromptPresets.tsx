@@ -579,9 +579,10 @@ interface CreatePromptDialogProps {
   onSave: (preset: PromptPreset) => void;
   defaultMediaType: 'video' | 'image';
   defaultCategory: 'produto' | 'influencer';
+  editingPreset?: PromptPreset | null;
 }
 
-const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, onSave, defaultMediaType, defaultCategory }) => {
+const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, onSave, defaultMediaType, defaultCategory, editingPreset }) => {
   const [name, setName] = useState('');
   const [prompt, setPrompt] = useState('');
   const [mediaType, setMediaType] = useState<'video' | 'image'>(defaultMediaType);
@@ -592,18 +593,28 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  // Reset when opening
+  // Reset/populate when opening
   React.useEffect(() => {
     if (open) {
-      setName('');
-      setPrompt('');
-      setMediaType(defaultMediaType);
-      setCategory(defaultCategory);
-      setTags('');
-      setSelectedBlocks(['productImageSelect']);
-      setGeneratedImage('');
+      if (editingPreset) {
+        setName(editingPreset.name);
+        setPrompt(editingPreset.prompt);
+        setMediaType(editingPreset.mediaType);
+        setCategory(editingPreset.category);
+        setTags(editingPreset.tags.join(', '));
+        setSelectedBlocks(editingPreset.referenceBlocks || ['productImageSelect']);
+        setGeneratedImage(editingPreset.image || '');
+      } else {
+        setName('');
+        setPrompt('');
+        setMediaType(defaultMediaType);
+        setCategory(defaultCategory);
+        setTags('');
+        setSelectedBlocks(['productImageSelect']);
+        setGeneratedImage('');
+      }
     }
-  }, [open, defaultMediaType, defaultCategory]);
+  }, [open, defaultMediaType, defaultCategory, editingPreset]);
 
   const toggleBlock = (blockId: string) => {
     setSelectedBlocks(prev =>
