@@ -167,7 +167,7 @@ const AICreativeStudioInner: React.FC = () => {
       id: `${type}_${Date.now()}`,
       type: 'studioNode',
       position,
-      data: { label: meta.label, type: type as any, config: { ...meta.defaultConfig } },
+      data: { label: meta.label, type: type as any, config: applyNegativeDefaults(type, { ...meta.defaultConfig }) },
     };
     setNodes((nds) => [...nds, newNode]);
   }, [screenToFlowPosition, setNodes]);
