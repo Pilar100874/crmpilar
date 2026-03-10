@@ -530,6 +530,55 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label]);
 
+  // Save video to media_gallery
+  const handleSaveVideoToGallery = useCallback(async (videoUrl: string) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId || !videoUrl) {
+      toast.error('Erro: estabelecimento ou vídeo não encontrados');
+      return;
+    }
+    setIsSavingToGallery(true);
+    try {
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
+      const blob = await response.blob();
+      
+      const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
+      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.${ext}`;
+      const storagePath = `${estabId}/${fileName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('marketing-videos')
+        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('marketing-videos')
+        .getPublicUrl(storagePath);
+
+      const { error: dbErr } = await supabase
+        .from('media_gallery')
+        .insert({
+          estabelecimento_id: estabId,
+          tipo: 'video',
+          storage_path: storagePath,
+          public_url: publicUrl,
+          nome: `AI Studio Vídeo - ${nodeData.label}`,
+          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
+          tamanho_bytes: blob.size,
+          mime_type: blob.type || 'video/mp4',
+          origem: 'ai_studio',
+        });
+      if (dbErr) throw dbErr;
+
+      toast.success('✅ Vídeo salvo na galeria!');
+    } catch (err: any) {
+      console.error('Erro ao salvar vídeo na galeria:', err);
+      toast.error('Erro ao salvar: ' + (err.message || String(err)));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+
   return (
     <>
     <div
