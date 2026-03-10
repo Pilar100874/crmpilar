@@ -1280,6 +1280,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     >
                       <Maximize2 className="h-3 w-3 text-white" />
                     </button>
+                    <button
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (resultVideo) handleSaveVideoToGallery(resultVideo);
+                      }}
+                      disabled={isSavingToGallery}
+                      className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors"
+                      title="Salvar vídeo na galeria"
+                    >
+                      {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                    </button>
                   </div>
                 </div>
               </div>
