@@ -774,10 +774,11 @@ interface PresetsGalleryProps {
   onSelectPreset: (preset: Preset) => void;
   onClose: () => void;
   estabelecimentoId?: string;
+  initialSelections?: Record<string, string[]>;
 }
 
-const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '' }) => {
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
+const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '', initialSelections }) => {
+  const [selections, setSelections] = useState<Record<string, string[]>>(initialSelections || {});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
   const [selectedHookText, setSelectedHookText] = useState<string>('');
