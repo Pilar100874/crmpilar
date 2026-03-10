@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { getStudioDefaults } from './AISettingsPanel';
 
 // ─── LAYER DEFINITIONS ───────────────────────────────────────────────
 
@@ -363,11 +364,6 @@ const VIRAL_HOOKS: ViralHook[] = [
 
 // ─── MAPS ────────────────────────────────────────────────────────────
 
-const STANDARD_NEGATIVE_PROMPT = `Não gerar nenhum texto, legendas, subtítulos, logos, marcas d'água, letras, números ou tipografia em qualquer parte do vídeo ou imagem.
-Não adicionar objetos extras que não estejam descritos.
-Não gerar mãos distorcidas, rostos deformados, membros extras, artefatos ou anatomia irreal.
-Sem elementos de interface, overlays, gráficos ou nomes de marcas.`;
-
 const creativeFormatMap: Record<string, string> = {
   'ugc-ad': 'A raw, authentic UGC-style ad filmed with a smartphone feel. The creator speaks directly to camera, showing the product naturally as if sharing with friends.',
   'product-hero': 'A stunning product hero shot with the product as the absolute centerpiece, elevated on a pedestal or floating, with dramatic lighting emphasizing every detail and texture.',
@@ -497,7 +493,7 @@ const orientMap: Record<string, string> = {
 
 // ─── PROMPT GENERATOR ────────────────────────────────────────────────
 
-function generatePrompt(selections: Record<string, string[]>): string {
+function generatePrompt(selections: Record<string, string[]>, negativePrompt: string): string {
   const isVideo = selections.contentType?.includes('video');
   const blocks: { label: string; text: string }[] = [];
 
@@ -559,8 +555,10 @@ function generatePrompt(selections: Record<string, string[]>): string {
     }
   }
 
-  // NEGATIVE PROMPT
-  blocks.push({ label: '🚫 PROMPT NEGATIVO', text: STANDARD_NEGATIVE_PROMPT });
+  // NEGATIVE PROMPT (from settings)
+  if (negativePrompt) {
+    blocks.push({ label: '🚫 PROMPT NEGATIVO', text: negativePrompt });
+  }
 
   return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
 }
@@ -671,8 +669,8 @@ function generateScenes(selections: Record<string, string[]>): Scene[] {
 
 // ─── VARIATION GENERATOR ─────────────────────────────────────────────
 
-function generateVariations(selections: Record<string, string[]>): string[] {
-  const base = generatePrompt(selections);
+function generateVariations(selections: Record<string, string[]>, negativePrompt: string): string[] {
+  const base = generatePrompt(selections, negativePrompt);
   const variationModifiers = [
     { scene: 'ambiente urbano moderno com arquitetura contemporânea', camera: 'câmera com leve movimento de tracking lateral suave', mood: 'atmosfera clean e profissional' },
     { scene: 'cenário natural ao ar livre com vegetação exuberante', camera: 'câmera handheld orgânica com movimentos naturais', mood: 'atmosfera acolhedora e autêntica' },
@@ -707,9 +705,10 @@ interface Preset {
 interface PresetsGalleryProps {
   onSelectPreset: (preset: Preset) => void;
   onClose: () => void;
+  estabelecimentoId?: string;
 }
 
-const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose }) => {
+const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '' }) => {
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
@@ -745,10 +744,16 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const selectionCount = Object.values(selections).filter(v => v.length > 0).length;
 
+  const savedDefaults = useMemo(() => getStudioDefaults(estabelecimentoId), [estabelecimentoId]);
+  const negativePromptText = useMemo(() => {
+    const isVideo = selections.contentType?.includes('video');
+    return isVideo ? savedDefaults.videoNegativePrompt : savedDefaults.imageNegativePrompt;
+  }, [selections.contentType, savedDefaults]);
+
   const generatedPrompt = useMemo(() => {
     if (selectionCount < 2) return '';
-    return generatePrompt(selections);
-  }, [selections, selectionCount]);
+    return generatePrompt(selections, negativePromptText);
+  }, [selections, selectionCount, negativePromptText]);
 
   const generatedScript = useMemo(() => {
     if (selectionCount < 2) return '';
@@ -805,7 +810,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const handleGenerateVariations = useCallback(() => {
     if (selectionCount < 2) return;
-    const v = generateVariations(selections);
+    const v = generateVariations(selections, negativePromptText);
     setVariations(v);
     toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
   }, [selections, selectionCount, toast]);
