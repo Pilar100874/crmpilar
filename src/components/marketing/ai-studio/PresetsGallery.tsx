@@ -422,35 +422,35 @@ const campaignMap: Record<string, string> = {
 };
 
 const productMap: Record<string, string> = {
-  'bobinas-papel': 'The product is a premium paper roll (bobina de papel), showcasing its quality, texture, and industrial-grade material.',
-  'papeis-graficos': 'The product is a high-quality graphic paper, highlighting its smooth finish, printing precision, and professional results.',
-  'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
-  'technology': 'The product is a cutting-edge technology device with sleek design and innovative features.',
-  'smartphones': 'The product is a premium smartphone with stunning screen, modern design, and advanced capabilities.',
-  'gadgets': 'The product is an innovative tech gadget that solves everyday problems with smart technology.',
-  'beauty': 'The product is a beauty item with luxurious textures, rich colors, and premium packaging.',
-  'skincare': 'The product is a skincare solution with visible results, emphasizing natural ingredients and glowing skin.',
-  'cosmetics': 'The product is a cosmetic with rich pigments, elegant finishes, and professional-grade quality.',
-  'perfumes': 'The product is a fragrance, evoking sensory luxury with elegant bottle design and aromatic appeal.',
-  'fitness': 'The product is fitness equipment designed for peak performance and active lifestyles.',
-  'supplements': 'The product is a health supplement with science-backed benefits and clean formulation.',
-  'sportswear': 'The product is high-performance sportswear combining style, comfort, and athletic functionality.',
-  'fashion': 'The product is a fashion item with designer-level styling and trend-forward aesthetics.',
-  'accessories': 'The product is a premium fashion accessory that elevates any outfit with refined details.',
-  'food': 'The product is a food item with appetizing textures, vibrant colors, and gourmet presentation.',
-  'beverages': 'The product is a beverage with refreshing visual appeal, condensation details, and enticing pour shots.',
-  'automotive': 'The product is an automotive item with precision engineering, sleek lines, and powerful presence.',
-  'home-gadgets': 'The product is a smart home gadget for modern living, showcasing convenience and connectivity.',
-  'pets': 'The product is designed for pets, showing adorable animal interaction and pet-friendly features.',
-  'jewelry': 'The product is a fine jewelry piece with sparkling gemstones, metallic reflections, and luxurious detail.',
-  'furniture': 'The product is a furniture piece showcasing craftsmanship, materials, and interior design integration.',
-  'cleaning': 'The product is a cleaning solution emphasizing effectiveness, freshness, and ease of use.',
-  'health': 'The product is a health-related item focusing on wellness, safety, and medical-grade quality.',
-  'baby': 'The product is a baby/children\'s item emphasizing safety, tenderness, and family warmth.',
-  'education': 'The product is an educational course or material showcasing knowledge, growth, and transformation.',
-  'software': 'The product is a software/SaaS platform shown through sleek UI mockups and productivity benefits.',
-  'real-estate': 'The product is a real estate property showcasing architecture, interiors, and aspirational living.',
-  'travel': 'The product is a travel/tourism experience highlighting destinations, adventure, and memorable moments.',
+  'bobinas-papel': 'The product is a premium industrial paper roll (bobina de papel), designed for high-volume commercial and industrial printing applications, showcasing superior paper quality, consistent texture, and reliable material strength.',
+  'papeis-graficos': 'The product is a professional-grade graphic paper engineered for precision printing, featuring an ultra-smooth finish optimized for vivid color reproduction and sharp detail in professional publishing and design work.',
+  'descartaveis': 'The product is a single-use disposable item designed for convenience, hygiene, and practical everyday use, emphasizing its clean packaging, functional design, and effortless disposal after use.',
+  'technology': 'The product is a cutting-edge technology device with sleek industrial design, premium build materials, and innovative features that represent the latest in consumer electronics.',
+  'smartphones': 'The product is a premium smartphone featuring a stunning edge-to-edge display, precision-machined aluminum or glass body, and advanced camera system with professional-grade capabilities.',
+  'gadgets': 'The product is an innovative consumer tech gadget engineered to solve everyday problems through smart technology, compact design, and intuitive user interaction.',
+  'beauty': 'The product is a premium beauty item with luxurious textures, rich color formulations, and sophisticated packaging that communicates elegance and self-care.',
+  'skincare': 'The product is a professional skincare solution formulated with clinically proven ingredients, designed to deliver visible results such as hydration, radiance, and skin renewal.',
+  'cosmetics': 'The product is a high-performance cosmetic with rich pigment payoff, elegant finishes, and professional-grade quality suitable for both everyday and editorial use.',
+  'perfumes': 'The product is a luxury fragrance housed in an artistically designed bottle, evoking sensory sophistication through its visual presentation and aromatic character.',
+  'fitness': 'The product is professional-grade fitness equipment engineered for peak athletic performance, durability, and ergonomic comfort during intense training sessions.',
+  'supplements': 'The product is a health and wellness supplement with scientifically backed formulation, clean ingredient sourcing, and transparent labeling for informed consumers.',
+  'sportswear': 'The product is high-performance athletic sportswear combining moisture-wicking technology, ergonomic fit, and contemporary style for active lifestyles.',
+  'fashion': 'The product is a fashion garment or ensemble with designer-level tailoring, premium fabrics, and trend-forward aesthetics that define contemporary style.',
+  'accessories': 'The product is a premium fashion accessory crafted with fine materials and refined details, designed to elevate any outfit with sophistication.',
+  'food': 'The product is a gourmet food item with appetizing visual presentation, vibrant natural colors, and premium culinary quality that invites tasting.',
+  'beverages': 'The product is a premium beverage with refreshing visual appeal, realistic condensation on the container, and enticing liquid motion that communicates freshness.',
+  'automotive': 'The product is an automotive item or vehicle featuring precision engineering, aerodynamic design lines, and a powerful visual presence that conveys performance.',
+  'home-gadgets': 'The product is a smart home device designed for modern connected living, showcasing seamless integration, intuitive controls, and minimalist aesthetic.',
+  'pets': 'The product is designed specifically for pet care and comfort, shown with authentic animal interaction that highlights pet-friendly materials and thoughtful design.',
+  'jewelry': 'The product is a fine jewelry piece featuring sparkling gemstones, lustrous metallic surfaces, and intricate craftsmanship visible in every detail.',
+  'furniture': 'The product is a designer furniture piece showcasing master craftsmanship, premium materials, and harmonious integration within contemporary interior spaces.',
+  'cleaning': 'The product is a cleaning solution or tool engineered for maximum effectiveness, designed to deliver visible cleanliness with ease and efficiency.',
+  'health': 'The product is a health and medical-grade item focused on wellness, safety compliance, and clinical-quality standards for consumer confidence.',
+  'baby': 'The product is a baby or children\'s item designed with the highest safety standards, soft materials, and gentle aesthetics that communicate care and protection.',
+  'education': 'The product is an educational program, course, or learning material that showcases knowledge transformation, personal growth, and measurable skill development.',
+  'software': 'The product is a software or SaaS platform presented through polished UI mockups, demonstrating intuitive workflows, productivity gains, and modern digital design.',
+  'real-estate': 'The product is a real estate property showcasing architectural excellence, premium interior finishes, and an aspirational lifestyle setting.',
+  'travel': 'The product is a travel or tourism experience highlighting breathtaking destinations, immersive adventure, and unforgettable cultural moments.',
 };
 
 const refBlockPromptMap: Record<string, string> = {
@@ -521,18 +521,18 @@ const energyMap: Record<string, string> = {
 };
 
 const styleMap: Record<string, string> = {
-  'cinematic': 'Cinematic film aesthetic with wide dynamic range, film grain, anamorphic lens, and professional color grading with teal-orange tones.',
-  'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy.',
-  'ugc': 'Authentic user-generated content aesthetic — raw, unpolished, smartphone-shot feel.',
-  'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined composition.',
-  'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition.',
-  'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek surfaces, and cyber-blue tones.',
-  'commercial': 'Broadcast-quality commercial advertising polish with perfect color balance and crisp resolution.',
-  'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors and thumb-stopping visual impact.',
-  'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing.',
-  'high-fashion': 'High fashion editorial aesthetic with bold styling, dramatic poses, and magazine-quality finish.',
-  'studio-photo': 'Professional studio photography with controlled lighting and seamless backgrounds.',
-  'lifestyle': 'Warm lifestyle aesthetic with natural tones, aspirational settings.',
+  'cinematic': 'Cinematic film aesthetic with wide dynamic range, subtle film grain, anamorphic lens characteristics, and professional color grading with teal-orange tones.',
+  'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy. Shot on a professional DSLR or mirrorless camera.',
+  'ugc': 'Authentic user-generated content aesthetic filmed on a smartphone. Raw, unpolished, natural feel as if a real person created this content spontaneously. No professional production value — the authenticity IS the appeal.',
+  'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined composition that communicates exclusivity.',
+  'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition, and restrained color palette.',
+  'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek reflective surfaces, and cool cyber-blue tones.',
+  'commercial': 'Broadcast-quality commercial advertising with perfect color balance, crisp resolution, and polished production value.',
+  'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors, fast energy, and thumb-stopping visual impact. Smartphone-shot feel.',
+  'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing, observational camera work, and truthful representation.',
+  'high-fashion': 'High fashion editorial aesthetic with bold artistic styling, dramatic poses, avant-garde composition, and magazine-quality finish.',
+  'studio-photo': 'Professional studio photography with controlled multi-point lighting, seamless backgrounds, and precise focus for maximum product clarity.',
+  'lifestyle': 'Warm lifestyle aesthetic with natural golden tones, aspirational everyday settings, and an inviting, relatable atmosphere.',
 };
 
 const platformMap: Record<string, string> = {
@@ -552,13 +552,101 @@ const orientMap: Record<string, string> = {
   'square': 'Square format 1:1 aspect ratio.',
 };
 
+// ─── STYLE-ADAPTIVE OVERRIDES ────────────────────────────────────────
+
+interface StyleOverrides {
+  camera: string;
+  lighting: string;
+  styleTone: string;
+}
+
+function getStyleOverrides(visualStyle: string | undefined, userCamera: string | undefined, userLighting: string | undefined): StyleOverrides {
+  // UGC style overrides — camera and lighting must match the authentic feel
+  if (visualStyle === 'ugc' || visualStyle === 'viral') {
+    return {
+      camera: 'Handheld smartphone camera with natural handheld motion and slightly imperfect framing typical of real user-generated content. No gimbal, no dolly, no cinematic movements.',
+      lighting: 'Natural ambient lighting similar to indoor daylight or casual everyday environments. No studio setups, no dramatic shadows.',
+      styleTone: 'Authentic, casual, relatable, unpolished smartphone aesthetic. The content should feel like a real person filmed it spontaneously.',
+    };
+  }
+
+  // Documentary style — authentic but more intentional than UGC
+  if (visualStyle === 'documentary') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Steady handheld camera with intentional, observational framing. Natural movements that follow the subject without drawing attention to the camera work.',
+      lighting: userLighting ? lightMap[userLighting] : 'Available natural light with minimal intervention. Authentic environmental lighting that preserves the reality of the scene.',
+      styleTone: 'Journalistic, authentic, observational. The content should feel truthful and unscripted.',
+    };
+  }
+
+  // Lifestyle — warm and natural but polished
+  if (visualStyle === 'lifestyle') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Smooth handheld or light gimbal camera with gentle, organic movement. Intimate mid-range framing that feels natural and inviting.',
+      lighting: userLighting ? lightMap[userLighting] : 'Warm natural light with soft golden tones. Window light or outdoor golden hour feel that creates an aspirational, cozy atmosphere.',
+      styleTone: 'Warm, aspirational, natural. The content should feel like a beautiful moment from everyday life.',
+    };
+  }
+
+  // Cinematic / Luxury / High-Fashion — full production value
+  if (visualStyle === 'cinematic' || visualStyle === 'luxury' || visualStyle === 'high-fashion') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Professional cinema camera on gimbal or dolly with smooth, precise cinematic movements. Professional composition with shallow depth of field and carefully planned framing.',
+      lighting: userLighting ? lightMap[userLighting] : 'Dramatic cinematic lighting with controlled studio setup. Multi-point lighting with intentional shadows, rim lights, and atmospheric depth.',
+      styleTone: visualStyle === 'luxury'
+        ? 'Ultra-premium, sophisticated, aspirational. Every frame should communicate exclusivity and refined taste.'
+        : visualStyle === 'high-fashion'
+          ? 'Editorial high-fashion aesthetic with bold artistic choices, dramatic poses, and magazine-quality visual impact.'
+          : 'Premium film-like advertising aesthetic with wide dynamic range, professional color grading, and cinematic depth.',
+    };
+  }
+
+  // Commercial — broadcast quality
+  if (visualStyle === 'commercial') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Professional camera with smooth controlled movements. Broadcast-quality framing with precise focus pulls and clean composition.',
+      lighting: userLighting ? lightMap[userLighting] : 'Professional studio lighting with balanced exposure, clean whites, and perfectly controlled shadows for broadcast-ready content.',
+      styleTone: 'Polished, professional, broadcast-ready commercial quality with perfect color balance and crisp resolution.',
+    };
+  }
+
+  // Studio Photography — controlled environment
+  if (visualStyle === 'studio-photo') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Fixed or controlled camera on tripod with precise framing. Sharp focus with controlled depth of field on seamless studio background.',
+      lighting: userLighting ? lightMap[userLighting] : 'Professional multi-point studio lighting with key light, fill light, and rim light for polished, controlled illumination.',
+      styleTone: 'Clean, controlled, professional studio environment with seamless backgrounds and perfect product isolation.',
+    };
+  }
+
+  // Default: use user selections or sensible defaults
+  return {
+    camera: userCamera ? cameraMap[userCamera] : 'Professional camera with smooth, controlled movement and intentional framing.',
+    lighting: userLighting ? lightMap[userLighting] : 'Professional lighting setup optimized for the scene and subject.',
+    styleTone: '',
+  };
+}
+
 // ─── PROMPT GENERATOR ────────────────────────────────────────────────
 
 function generatePrompt(selections: Record<string, string[]>, negativePrompt: string): string {
   const isVideo = selections.contentType?.includes('video');
+  const visualStyle = selections.visualStyle?.[0];
+  const userCamera = selections.cameraStyle?.[0];
+  const userLighting = selections.lighting?.[0];
+  const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
+
   const blocks: { label: string; text: string }[] = [];
 
-  // SCENE DESCRIPTION
+  // 1. HOOK (first block — attention in first seconds)
+  if (selections.hookStyle?.length) {
+    blocks.push({ label: '🪝 HOOK', text: hookMap[selections.hookStyle[0]] || 'Strong attention-grabbing moment in the first seconds of the video.' });
+  } else if (isVideo) {
+    // Auto-inject a default hook for video content
+    blocks.push({ label: '🪝 HOOK', text: 'Strong attention-grabbing moment in the first seconds of the video that immediately captures the viewer\'s interest and stops scrolling.' });
+  }
+
+  // 2. SCENE DESCRIPTION
   const sceneParts: string[] = [];
   const contentWord = isVideo ? 'video' : 'image';
   if (selections.creativeFormat?.length) {
@@ -574,56 +662,61 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
     });
   }
   if (selections.marketingGoal?.length) sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
-  blocks.push({ label: '🎬 DESCRIÇÃO DA CENA', text: sceneParts.filter(Boolean).join(' ') });
+  blocks.push({ label: '🎬 SCENE DESCRIPTION', text: sceneParts.filter(Boolean).join(' ') });
 
-  // HOOK
-  if (selections.hookStyle?.length) {
-    blocks.push({ label: '🪝 GANCHO', text: hookMap[selections.hookStyle[0]] || '' });
+  // 3. CAMERA (adaptive based on visual style)
+  if (isVideo) {
+    blocks.push({ label: '📹 CAMERA', text: overrides.camera });
   }
 
-  // CAMERA SETUP
-  if (isVideo && selections.cameraStyle?.length) {
-    blocks.push({ label: '📹 CÂMERA', text: cameraMap[selections.cameraStyle[0]] || '' });
-  }
+  // 4. LIGHTING (adaptive based on visual style)
+  blocks.push({ label: '💡 LIGHTING', text: overrides.lighting });
 
-  // LIGHTING
-  if (selections.lighting?.length) {
-    blocks.push({ label: '💡 ILUMINAÇÃO', text: lightMap[selections.lighting[0]] || '' });
-  }
-
-  // ACTION
+  // 5. ACTION
   if (selections.energy?.length) {
-    blocks.push({ label: '🎬 AÇÃO', text: energyMap[selections.energy[0]] || '' });
+    blocks.push({ label: '🎬 ACTION', text: energyMap[selections.energy[0]] || '' });
   }
 
-  // VISUAL STYLE
-  if (selections.visualStyle?.length) {
-    blocks.push({ label: '🎨 ESTILO VISUAL', text: styleMap[selections.visualStyle[0]] || '' });
+  // 6. VISUAL STYLE (with adaptive tone)
+  if (visualStyle) {
+    const baseStyle = styleMap[visualStyle] || '';
+    const tone = overrides.styleTone;
+    const combined = tone ? `${baseStyle} ${tone}` : baseStyle;
+    blocks.push({ label: '🎨 VISUAL STYLE', text: combined });
   }
 
-  // PLATFORM OPTIMIZATION
-  if (selections.platform?.length) {
-    blocks.push({ label: '📲 OTIMIZAÇÃO DE PLATAFORMA', text: platformMap[selections.platform[0]] || '' });
-  }
-
-  // ORIENTATION
+  // 7. ORIENTATION
   if (selections.orientation?.length) {
-    blocks.push({ label: '📐 ORIENTAÇÃO', text: orientMap[selections.orientation[0]] || '' });
+    blocks.push({ label: '📐 ORIENTATION', text: orientMap[selections.orientation[0]] || '' });
   }
 
-  // MODEL
+  // 8. MODEL OPTIMIZATION
   const modelKey = isVideo ? 'videoModel' : 'imageModel';
   if (selections[modelKey]?.length) {
     const modelLabel = LAYERS.find(l => l.id === modelKey)?.options.find(o => o.id === selections[modelKey][0])?.label;
     if (modelLabel) {
-      blocks.push({ label: '🤖 MODELO', text: `Otimizado para ${modelLabel}. Qualidade profissional, 4K, altamente detalhado.` });
+      blocks.push({ label: '🤖 MODEL OPTIMIZATION', text: `Optimized for ${modelLabel}. Professional quality, 4K resolution, highly detailed, photorealistic rendering.` });
     }
   }
 
-  // NEGATIVE PROMPT (from settings)
-  if (negativePrompt) {
-    blocks.push({ label: '🚫 PROMPT NEGATIVO', text: negativePrompt });
+  // 9. PLATFORM OPTIMIZATION
+  if (selections.platform?.length) {
+    blocks.push({ label: '📲 PLATFORM OPTIMIZATION', text: platformMap[selections.platform[0]] || '' });
   }
+
+  // 10. NEGATIVE PROMPT (from settings + mandatory rules)
+  const mandatoryNegative = [
+    'Do not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks.',
+    'Use only the elements provided through the system input blocks.',
+    'Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided.',
+    'If something is not provided through the system blocks, it must not appear in the generated content.',
+    'The generated content must not contain erotic, sexual, explicit or suggestive content.',
+  ].join('\n');
+
+  const finalNegative = negativePrompt
+    ? `${negativePrompt}\n\n${mandatoryNegative}`
+    : mandatoryNegative;
+  blocks.push({ label: '🚫 NEGATIVE PROMPT', text: finalNegative });
 
   return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
 }
@@ -683,51 +776,67 @@ interface Scene {
 
 function generateScenes(selections: Record<string, string[]>): Scene[] {
   const product = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === selections.productCategory?.[0])?.label || 'o produto';
-  const cam = selections.cameraStyle?.[0] || 'cinematic-camera';
-  const light = selections.lighting?.[0] || 'natural';
+  const visualStyle = selections.visualStyle?.[0];
+  const userCamera = selections.cameraStyle?.[0];
+  const userLighting = selections.lighting?.[0];
+  const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
+
+  const isUgc = visualStyle === 'ugc' || visualStyle === 'viral';
 
   return [
     {
       title: 'Cena 1 — Gancho Inicial',
-      description: `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
-      camera: cameraMap[cam] || 'Câmera cinematográfica com movimentos suaves.',
-      lighting: lightMap[light] || 'Iluminação natural.',
-      action: 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+      description: isUgc
+        ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
+        : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+      camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie ligeiramente imperfeito.' : overrides.camera,
+      lighting: overrides.lighting,
+      action: isUgc
+        ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.'
+        : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
     },
     {
       title: 'Cena 2 — Apresentação do Problema',
       description: `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
-      camera: 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
-      lighting: 'Iluminação levemente sombria para transmitir desconforto.',
+      camera: isUgc ? 'Câmera de smartphone mostrando a situação de perto, com movimentos naturais de mão.' : 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
+      lighting: isUgc ? 'Iluminação ambiente natural do local onde está.' : 'Iluminação levemente sombria para transmitir desconforto.',
       action: 'Pessoa tentando realizar a tarefa sem sucesso, expressando frustração visível.',
     },
     {
       title: 'Cena 3 — Introdução do Produto',
-      description: `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
-      camera: 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
-      lighting: 'Iluminação premium com destaque suave no produto.',
-      action: 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
+      description: isUgc
+        ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.`
+        : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+      camera: isUgc ? 'Câmera de smartphone mostrando o produto na mão, enquadramento casual.' : 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação premium com destaque suave no produto.',
+      action: isUgc
+        ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.'
+        : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
     },
     {
       title: 'Cena 4 — Demonstração do Produto',
       description: `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
-      camera: 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
-      lighting: lightMap[light] || 'Iluminação natural e acolhedora.',
+      camera: isUgc ? 'Câmera alternando entre selfie e câmera traseira do smartphone para mostrar detalhes.' : 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
+      lighting: overrides.lighting,
       action: 'Demonstração passo a passo do uso do produto, destacando texturas, qualidade e resultados.',
     },
     {
       title: 'Cena 5 — Resultado / Benefícios',
       description: `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
-      camera: 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
-      lighting: 'Iluminação brilhante e otimista, transmitindo satisfação.',
+      camera: isUgc ? 'Câmera de smartphone mostrando o resultado final, reação genuína.' : 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação brilhante e otimista, transmitindo satisfação.',
       action: 'Reação positiva do usuário, expressão de satisfação, resultado visual claro.',
     },
     {
       title: 'Cena 6 — Fechamento com CTA',
-      description: `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
-      camera: 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
-      lighting: 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
-      action: 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
+      description: isUgc
+        ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.`
+        : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+      camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie natural.' : 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
+      action: isUgc
+        ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.'
+        : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
     },
   ];
 }
