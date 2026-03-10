@@ -393,6 +393,75 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                   <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
+                ) : selectedSection === 'defaults' ? (
+                  <ScrollArea className="flex-1">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
+                          🚫
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground">Prompts Negativos Padrão</h3>
+                          <p className="text-sm text-muted-foreground">Defina os textos negativos que serão preenchidos automaticamente em novos blocos de imagem e vídeo.</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🖼️ Prompt Negativo — Imagem
+                          </Label>
+                          <Textarea
+                            value={studioDefaults.imageNegativePrompt}
+                            onChange={(e) => setStudioDefaults(prev => ({ ...prev, imageNegativePrompt: e.target.value }))}
+                            placeholder="O que NÃO incluir nas imagens geradas..."
+                            rows={4}
+                            className="text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground">Será aplicado como valor padrão nos blocos: Gerar Imagem, Editar Imagem, Produto em Pessoa.</p>
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🎬 Prompt Negativo — Vídeo
+                          </Label>
+                          <Textarea
+                            value={studioDefaults.videoNegativePrompt}
+                            onChange={(e) => setStudioDefaults(prev => ({ ...prev, videoNegativePrompt: e.target.value }))}
+                            placeholder="O que evitar nos vídeos gerados..."
+                            rows={4}
+                            className="text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground">Será aplicado como valor padrão no bloco: Gerar Vídeo.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            saveStudioDefaults(estabelecimentoId, studioDefaults);
+                            toast.success('Prompts negativos padrão salvos!');
+                          }}
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          Salvar Padrões
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setStudioDefaults(DEFAULT_STUDIO_DEFAULTS);
+                            toast.info('Restaurado para os padrões originais. Clique em Salvar para confirmar.');
+                          }}
+                          className="gap-1.5"
+                        >
+                          Restaurar Padrão
+                        </Button>
+                      </div>
+                    </div>
+                  </ScrollArea>
                 ) : selectedProviderData ? (
                   <ScrollArea className="flex-1">
                     <div className="p-6 space-y-6">
@@ -471,8 +540,8 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                   <div className="flex-1 flex items-center justify-center text-center p-8">
                     <div>
                       <Settings2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">Selecione um Provedor</h3>
-                      <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Escolha um provedor ao lado para configurar sua API key.</p>
+                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">Selecione uma Opção</h3>
+                      <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Escolha uma opção ao lado para configurar.</p>
                     </div>
                   </div>
                 )}
