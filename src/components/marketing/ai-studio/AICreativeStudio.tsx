@@ -674,7 +674,7 @@ const AICreativeStudioInner: React.FC = () => {
           if (!processNodeId) return false;
           const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           return !refEdges.some(re => {
-            const refNode = nodes.find(n => n.id === re.source);
+            const refNode = currentNodes.find(n => n.id === re.source);
             return refNode && (refNode.data as any).type === bt;
           });
         });
