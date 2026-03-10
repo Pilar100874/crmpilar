@@ -536,6 +536,9 @@ const AICreativeStudioInner: React.FC = () => {
       defaultConfig.prompt = preset.prompt;
     }
 
+    // Apply saved negative prompt defaults
+    const finalConfig = applyNegativeDefaults(targetType, defaultConfig);
+
     const newNodes: StudioNode[] = [];
     const newEdges: any[] = [];
 
