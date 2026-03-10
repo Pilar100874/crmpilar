@@ -28,7 +28,7 @@ import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
 import PresetsGallery, { Preset } from './PresetsGallery';
-import AISettingsPanel from './AISettingsPanel';
+import AISettingsPanel, { getStudioDefaults } from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
 import ExecutionLogPanel from './ExecutionLogPanel';
@@ -116,6 +116,20 @@ const AICreativeStudioInner: React.FC = () => {
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
+  // Helper to apply saved negative prompt defaults to node configs
+  const applyNegativeDefaults = useCallback((nodeType: string, config: Record<string, any>): Record<string, any> => {
+    const defaults = getStudioDefaults(estabelecimentoId);
+    const imageTypes = ['imageGen', 'imageEdit', 'productComposite'];
+    const videoTypes = ['videoGen'];
+    if (imageTypes.includes(nodeType) && !config.negativePrompt) {
+      return { ...config, negativePrompt: defaults.imageNegativePrompt };
+    }
+    if (videoTypes.includes(nodeType) && !config.videoNegativePrompt) {
+      return { ...config, videoNegativePrompt: defaults.videoNegativePrompt };
+    }
+    return config;
+  }, [estabelecimentoId]);
+
   // Fetch saved workflows on mount and when returning to landing
   const fetchWorkflows = useCallback(async () => {
     if (!estabelecimentoId) return;
@@ -153,7 +167,7 @@ const AICreativeStudioInner: React.FC = () => {
       id: `${type}_${Date.now()}`,
       type: 'studioNode',
       position,
-      data: { label: meta.label, type: type as any, config: { ...meta.defaultConfig } },
+      data: { label: meta.label, type: type as any, config: applyNegativeDefaults(type, { ...meta.defaultConfig }) },
     };
     setNodes((nds) => [...nds, newNode]);
   }, [screenToFlowPosition, setNodes]);
@@ -285,7 +299,7 @@ const AICreativeStudioInner: React.FC = () => {
           data: {
             label: scene.mediaType === 'video' ? `🎬 Vídeo: ${scene.title}` : `🖼️ Imagem: ${scene.title}`,
             type: mediaType,
-            config: { ...meta?.defaultConfig, ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}) },
+            config: applyNegativeDefaults(mediaType, { ...meta?.defaultConfig, ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}) }),
           },
         });
         newEdges.push({ id: `e_${promptId}_${mediaId}`, source: promptId, target: mediaId, animated: true, style: EDGE_STYLE, type: 'smoothstep' });
@@ -522,6 +536,9 @@ const AICreativeStudioInner: React.FC = () => {
       defaultConfig.prompt = preset.prompt;
     }
 
+    // Apply saved negative prompt defaults
+    const finalConfig = applyNegativeDefaults(targetType, defaultConfig);
+
     const newNodes: StudioNode[] = [];
     const newEdges: any[] = [];
 
@@ -549,7 +566,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `productComposite_${ts}`,
         type: 'studioNode',
         position: { x: 500, y: 250 },
-        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: defaultConfig },
+        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: finalConfig },
       };
       newNodes.push(personNode, productNode, promptNode, compositeNode);
       newEdges.push(
@@ -569,7 +586,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `${targetType}_${ts}`,
         type: 'studioNode',
         position: { x: 600, y: 200 },
-        data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
+        data: { label: meta?.label || preset.name, type: targetType, config: finalConfig },
       };
       newNodes.push(inputNode, processNode);
       newEdges.push(
@@ -629,7 +646,7 @@ const AICreativeStudioInner: React.FC = () => {
       id: `${nodeType}_${Date.now()}`,
       type: 'studioNode',
       position: { x: 500, y: 200 },
-      data: { label: meta.label, type: nodeType as any, config: { ...meta.defaultConfig } },
+      data: { label: meta.label, type: nodeType as any, config: applyNegativeDefaults(nodeType, { ...meta.defaultConfig }) },
     };
     const outputNode: StudioNode = {
       id: `output_${Date.now()}`,

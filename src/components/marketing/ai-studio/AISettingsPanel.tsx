@@ -104,6 +104,32 @@ const DEFAULT_EL_CONFIG: ELConfig = {
   speed: 1.0,
 };
 
+// ── Defaults helpers ───────────────────────────────────────────────────────
+
+const DEFAULTS_STORAGE_KEY = 'ai-studio-defaults';
+
+export interface StudioDefaults {
+  imageNegativePrompt: string;
+  videoNegativePrompt: string;
+}
+
+export const DEFAULT_STUDIO_DEFAULTS: StudioDefaults = {
+  imageNegativePrompt: "texto, marca d'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído",
+  videoNegativePrompt: "texto na tela, marca d'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais",
+};
+
+export const getStudioDefaults = (estabelecimentoId: string): StudioDefaults => {
+  try {
+    const raw = localStorage.getItem(`${DEFAULTS_STORAGE_KEY}-${estabelecimentoId}`);
+    if (raw) return { ...DEFAULT_STUDIO_DEFAULTS, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...DEFAULT_STUDIO_DEFAULTS };
+};
+
+export const saveStudioDefaults = (estabelecimentoId: string, defaults: StudioDefaults) => {
+  localStorage.setItem(`${DEFAULTS_STORAGE_KEY}-${estabelecimentoId}`, JSON.stringify(defaults));
+};
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 interface Props {
@@ -113,6 +139,7 @@ interface Props {
 
 const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [selectedProvider, setSelectedProvider] = useState<string>('elevenlabs');
+  const [selectedSection, setSelectedSection] = useState<'providers' | 'defaults'>('providers');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
@@ -125,6 +152,8 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [testAudioUrl, setTestAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  const [studioDefaults, setStudioDefaults] = useState<StudioDefaults>(DEFAULT_STUDIO_DEFAULTS);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -161,8 +190,11 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   }, [estabelecimentoId]);
 
   useEffect(() => {
-    if (open) loadKeys();
-  }, [open, loadKeys]);
+    if (open) {
+      loadKeys();
+      setStudioDefaults(getStudioDefaults(estabelecimentoId));
+    }
+  }, [open, loadKeys, estabelecimentoId]);
 
   const handleSave = async (providerId: string) => {
     if (!estabelecimentoId) { toast.error('Estabelecimento não encontrado'); return; }
@@ -297,10 +329,30 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
               {/* Provider sidebar */}
               <div className="w-[280px] border-r border-border flex flex-col bg-muted/30">
                 <div className="p-3 pt-4">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Provedores</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Configurações</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="px-3 pb-3 space-y-1">
+                    {/* Defaults button */}
+                    <div className="mb-3">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5 px-2 flex items-center gap-1.5 font-medium">
+                        <span>⚙️</span> Padrões
+                      </p>
+                      <button
+                        onClick={() => { setSelectedSection('defaults'); setSelectedProvider(''); }}
+                        className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
+                          selectedSection === 'defaults'
+                            ? 'bg-accent border-primary/30 shadow-sm'
+                            : 'bg-card border-border hover:bg-accent/50 hover:border-border'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🚫</span>
+                          <span className="text-sm font-medium text-foreground">Prompts Negativos</span>
+                        </div>
+                      </button>
+                    </div>
+
                     {Object.entries(CATEGORY_LABELS).map(([cat, { label, icon }]) => {
                       const providers = PAID_PROVIDERS.filter(p => p.category === cat);
                       if (providers.length === 0) return null;
@@ -312,9 +364,9 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                           {providers.map((provider) => (
                             <button
                               key={provider.id}
-                              onClick={() => setSelectedProvider(provider.id)}
+                              onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
                               className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
-                                selectedProvider === provider.id
+                                selectedSection === 'providers' && selectedProvider === provider.id
                                   ? 'bg-accent border-primary/30 shadow-sm'
                                   : 'bg-card border-border hover:bg-accent/50 hover:border-border'
                               }`}
@@ -341,6 +393,75 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                   <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
+                ) : selectedSection === 'defaults' ? (
+                  <ScrollArea className="flex-1">
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
+                          🚫
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground">Prompts Negativos Padrão</h3>
+                          <p className="text-sm text-muted-foreground">Defina os textos negativos que serão preenchidos automaticamente em novos blocos de imagem e vídeo.</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🖼️ Prompt Negativo — Imagem
+                          </Label>
+                          <Textarea
+                            value={studioDefaults.imageNegativePrompt}
+                            onChange={(e) => setStudioDefaults(prev => ({ ...prev, imageNegativePrompt: e.target.value }))}
+                            placeholder="O que NÃO incluir nas imagens geradas..."
+                            rows={4}
+                            className="text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground">Será aplicado como valor padrão nos blocos: Gerar Imagem, Editar Imagem, Produto em Pessoa.</p>
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🎬 Prompt Negativo — Vídeo
+                          </Label>
+                          <Textarea
+                            value={studioDefaults.videoNegativePrompt}
+                            onChange={(e) => setStudioDefaults(prev => ({ ...prev, videoNegativePrompt: e.target.value }))}
+                            placeholder="O que evitar nos vídeos gerados..."
+                            rows={4}
+                            className="text-sm"
+                          />
+                          <p className="text-[11px] text-muted-foreground">Será aplicado como valor padrão no bloco: Gerar Vídeo.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            saveStudioDefaults(estabelecimentoId, studioDefaults);
+                            toast.success('Prompts negativos padrão salvos!');
+                          }}
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          Salvar Padrões
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setStudioDefaults(DEFAULT_STUDIO_DEFAULTS);
+                            toast.info('Restaurado para os padrões originais. Clique em Salvar para confirmar.');
+                          }}
+                          className="gap-1.5"
+                        >
+                          Restaurar Padrão
+                        </Button>
+                      </div>
+                    </div>
+                  </ScrollArea>
                 ) : selectedProviderData ? (
                   <ScrollArea className="flex-1">
                     <div className="p-6 space-y-6">
@@ -419,8 +540,8 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                   <div className="flex-1 flex items-center justify-center text-center p-8">
                     <div>
                       <Settings2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">Selecione um Provedor</h3>
-                      <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Escolha um provedor ao lado para configurar sua API key.</p>
+                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">Selecione uma Opção</h3>
+                      <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Escolha uma opção ao lado para configurar.</p>
                     </div>
                   </div>
                 )}
