@@ -1045,18 +1045,39 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <Wand2 className="h-5 w-5 text-primary" />
-            AI Creative Studio
-          </h2>
-          <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Wand2 className="h-5 w-5 text-primary" />
+              AI Creative Studio
+            </h2>
+            <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+          </div>
+          {/* Mode Toggle */}
+          <div className="flex items-center bg-muted rounded-lg p-0.5">
+            <button
+              onClick={() => setMode('wizard')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                mode === 'wizard' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Wand2 className="h-3.5 w-3.5" /> Wizard
+            </button>
+            <button
+              onClick={() => setMode('prompts')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                mode === 'prompts' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {selectionCount > 0 && (
+          {mode === 'wizard' && selectionCount > 0 && (
             <Badge variant="secondary" className="text-xs">{selectionCount} camadas</Badge>
           )}
-          {selectionCount > 0 && (
+          {mode === 'wizard' && selectionCount > 0 && (
             <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 text-muted-foreground">
               <RotateCcw className="h-3.5 w-3.5" /> Limpar
             </Button>
@@ -1067,6 +1088,9 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         </div>
       </div>
 
+      {mode === 'prompts' ? (
+        <PromptPresets onSelect={handlePromptPresetSelect} />
+      ) : (
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left — Layers */}
         <ScrollArea className="flex-1 lg:max-w-[45%]">
