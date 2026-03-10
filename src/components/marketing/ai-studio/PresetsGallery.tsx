@@ -844,6 +844,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       'dream-machine': 'luma/dream-machine', 'seed-video': 'seed/video-01', 'svd': 'stability/svd',
     };
 
+    const imageModelMap: Record<string, string> = {
+      'midjourney': 'midjourney/v6', 'stable-diffusion': 'stability/sdxl', 'flux': 'flux/1.1-pro',
+      'dall-e': 'openai/dall-e-3', 'leonardo': 'leonardo/phoenix',
+    };
+
     const style = selections.visualStyle?.[0] || '';
     const campaign = selections.campaignType?.[0] || '';
     const platform = selections.platform?.[0] || '';
@@ -863,11 +868,20 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       toolType: isVideo ? 'videoGen' : 'imageGen',
       isVideo,
       videoModel: isVideo && modelId ? videoModelMap[modelId] : undefined,
+      imageModel: !isVideo && modelId ? imageModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
     };
 
-    onSelectPreset(preset);
+    // Open review step instead of directly applying
+    setReviewPreset(preset);
+    setEditablePrompt(preset.prompt);
+  };
+
+  const handleConfirmPreset = () => {
+    if (!reviewPreset) return;
+    onSelectPreset({ ...reviewPreset, prompt: editablePrompt });
+    setReviewPreset(null);
   };
 
   const handleReset = () => {
