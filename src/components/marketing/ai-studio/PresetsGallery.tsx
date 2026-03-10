@@ -552,13 +552,101 @@ const orientMap: Record<string, string> = {
   'square': 'Square format 1:1 aspect ratio.',
 };
 
+// ─── STYLE-ADAPTIVE OVERRIDES ────────────────────────────────────────
+
+interface StyleOverrides {
+  camera: string;
+  lighting: string;
+  styleTone: string;
+}
+
+function getStyleOverrides(visualStyle: string | undefined, userCamera: string | undefined, userLighting: string | undefined): StyleOverrides {
+  // UGC style overrides — camera and lighting must match the authentic feel
+  if (visualStyle === 'ugc' || visualStyle === 'viral') {
+    return {
+      camera: 'Handheld smartphone camera with natural handheld motion and slightly imperfect framing typical of real user-generated content. No gimbal, no dolly, no cinematic movements.',
+      lighting: 'Natural ambient lighting similar to indoor daylight or casual everyday environments. No studio setups, no dramatic shadows.',
+      styleTone: 'Authentic, casual, relatable, unpolished smartphone aesthetic. The content should feel like a real person filmed it spontaneously.',
+    };
+  }
+
+  // Documentary style — authentic but more intentional than UGC
+  if (visualStyle === 'documentary') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Steady handheld camera with intentional, observational framing. Natural movements that follow the subject without drawing attention to the camera work.',
+      lighting: userLighting ? lightMap[userLighting] : 'Available natural light with minimal intervention. Authentic environmental lighting that preserves the reality of the scene.',
+      styleTone: 'Journalistic, authentic, observational. The content should feel truthful and unscripted.',
+    };
+  }
+
+  // Lifestyle — warm and natural but polished
+  if (visualStyle === 'lifestyle') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Smooth handheld or light gimbal camera with gentle, organic movement. Intimate mid-range framing that feels natural and inviting.',
+      lighting: userLighting ? lightMap[userLighting] : 'Warm natural light with soft golden tones. Window light or outdoor golden hour feel that creates an aspirational, cozy atmosphere.',
+      styleTone: 'Warm, aspirational, natural. The content should feel like a beautiful moment from everyday life.',
+    };
+  }
+
+  // Cinematic / Luxury / High-Fashion — full production value
+  if (visualStyle === 'cinematic' || visualStyle === 'luxury' || visualStyle === 'high-fashion') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Professional cinema camera on gimbal or dolly with smooth, precise cinematic movements. Professional composition with shallow depth of field and carefully planned framing.',
+      lighting: userLighting ? lightMap[userLighting] : 'Dramatic cinematic lighting with controlled studio setup. Multi-point lighting with intentional shadows, rim lights, and atmospheric depth.',
+      styleTone: visualStyle === 'luxury'
+        ? 'Ultra-premium, sophisticated, aspirational. Every frame should communicate exclusivity and refined taste.'
+        : visualStyle === 'high-fashion'
+          ? 'Editorial high-fashion aesthetic with bold artistic choices, dramatic poses, and magazine-quality visual impact.'
+          : 'Premium film-like advertising aesthetic with wide dynamic range, professional color grading, and cinematic depth.',
+    };
+  }
+
+  // Commercial — broadcast quality
+  if (visualStyle === 'commercial') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Professional camera with smooth controlled movements. Broadcast-quality framing with precise focus pulls and clean composition.',
+      lighting: userLighting ? lightMap[userLighting] : 'Professional studio lighting with balanced exposure, clean whites, and perfectly controlled shadows for broadcast-ready content.',
+      styleTone: 'Polished, professional, broadcast-ready commercial quality with perfect color balance and crisp resolution.',
+    };
+  }
+
+  // Studio Photography — controlled environment
+  if (visualStyle === 'studio-photo') {
+    return {
+      camera: userCamera ? cameraMap[userCamera] : 'Fixed or controlled camera on tripod with precise framing. Sharp focus with controlled depth of field on seamless studio background.',
+      lighting: userLighting ? lightMap[userLighting] : 'Professional multi-point studio lighting with key light, fill light, and rim light for polished, controlled illumination.',
+      styleTone: 'Clean, controlled, professional studio environment with seamless backgrounds and perfect product isolation.',
+    };
+  }
+
+  // Default: use user selections or sensible defaults
+  return {
+    camera: userCamera ? cameraMap[userCamera] : 'Professional camera with smooth, controlled movement and intentional framing.',
+    lighting: userLighting ? lightMap[userLighting] : 'Professional lighting setup optimized for the scene and subject.',
+    styleTone: '',
+  };
+}
+
 // ─── PROMPT GENERATOR ────────────────────────────────────────────────
 
 function generatePrompt(selections: Record<string, string[]>, negativePrompt: string): string {
   const isVideo = selections.contentType?.includes('video');
+  const visualStyle = selections.visualStyle?.[0];
+  const userCamera = selections.cameraStyle?.[0];
+  const userLighting = selections.lighting?.[0];
+  const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
+
   const blocks: { label: string; text: string }[] = [];
 
-  // SCENE DESCRIPTION
+  // 1. HOOK (first block — attention in first seconds)
+  if (selections.hookStyle?.length) {
+    blocks.push({ label: '🪝 HOOK', text: hookMap[selections.hookStyle[0]] || 'Strong attention-grabbing moment in the first seconds of the video.' });
+  } else if (isVideo) {
+    // Auto-inject a default hook for video content
+    blocks.push({ label: '🪝 HOOK', text: 'Strong attention-grabbing moment in the first seconds of the video that immediately captures the viewer\'s interest and stops scrolling.' });
+  }
+
+  // 2. SCENE DESCRIPTION
   const sceneParts: string[] = [];
   const contentWord = isVideo ? 'video' : 'image';
   if (selections.creativeFormat?.length) {
@@ -574,56 +662,61 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
     });
   }
   if (selections.marketingGoal?.length) sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
-  blocks.push({ label: '🎬 DESCRIÇÃO DA CENA', text: sceneParts.filter(Boolean).join(' ') });
+  blocks.push({ label: '🎬 SCENE DESCRIPTION', text: sceneParts.filter(Boolean).join(' ') });
 
-  // HOOK
-  if (selections.hookStyle?.length) {
-    blocks.push({ label: '🪝 GANCHO', text: hookMap[selections.hookStyle[0]] || '' });
+  // 3. CAMERA (adaptive based on visual style)
+  if (isVideo) {
+    blocks.push({ label: '📹 CAMERA', text: overrides.camera });
   }
 
-  // CAMERA SETUP
-  if (isVideo && selections.cameraStyle?.length) {
-    blocks.push({ label: '📹 CÂMERA', text: cameraMap[selections.cameraStyle[0]] || '' });
-  }
+  // 4. LIGHTING (adaptive based on visual style)
+  blocks.push({ label: '💡 LIGHTING', text: overrides.lighting });
 
-  // LIGHTING
-  if (selections.lighting?.length) {
-    blocks.push({ label: '💡 ILUMINAÇÃO', text: lightMap[selections.lighting[0]] || '' });
-  }
-
-  // ACTION
+  // 5. ACTION
   if (selections.energy?.length) {
-    blocks.push({ label: '🎬 AÇÃO', text: energyMap[selections.energy[0]] || '' });
+    blocks.push({ label: '🎬 ACTION', text: energyMap[selections.energy[0]] || '' });
   }
 
-  // VISUAL STYLE
-  if (selections.visualStyle?.length) {
-    blocks.push({ label: '🎨 ESTILO VISUAL', text: styleMap[selections.visualStyle[0]] || '' });
+  // 6. VISUAL STYLE (with adaptive tone)
+  if (visualStyle) {
+    const baseStyle = styleMap[visualStyle] || '';
+    const tone = overrides.styleTone;
+    const combined = tone ? `${baseStyle} ${tone}` : baseStyle;
+    blocks.push({ label: '🎨 VISUAL STYLE', text: combined });
   }
 
-  // PLATFORM OPTIMIZATION
-  if (selections.platform?.length) {
-    blocks.push({ label: '📲 OTIMIZAÇÃO DE PLATAFORMA', text: platformMap[selections.platform[0]] || '' });
-  }
-
-  // ORIENTATION
+  // 7. ORIENTATION
   if (selections.orientation?.length) {
-    blocks.push({ label: '📐 ORIENTAÇÃO', text: orientMap[selections.orientation[0]] || '' });
+    blocks.push({ label: '📐 ORIENTATION', text: orientMap[selections.orientation[0]] || '' });
   }
 
-  // MODEL
+  // 8. MODEL OPTIMIZATION
   const modelKey = isVideo ? 'videoModel' : 'imageModel';
   if (selections[modelKey]?.length) {
     const modelLabel = LAYERS.find(l => l.id === modelKey)?.options.find(o => o.id === selections[modelKey][0])?.label;
     if (modelLabel) {
-      blocks.push({ label: '🤖 MODELO', text: `Otimizado para ${modelLabel}. Qualidade profissional, 4K, altamente detalhado.` });
+      blocks.push({ label: '🤖 MODEL OPTIMIZATION', text: `Optimized for ${modelLabel}. Professional quality, 4K resolution, highly detailed, photorealistic rendering.` });
     }
   }
 
-  // NEGATIVE PROMPT (from settings)
-  if (negativePrompt) {
-    blocks.push({ label: '🚫 PROMPT NEGATIVO', text: negativePrompt });
+  // 9. PLATFORM OPTIMIZATION
+  if (selections.platform?.length) {
+    blocks.push({ label: '📲 PLATFORM OPTIMIZATION', text: platformMap[selections.platform[0]] || '' });
   }
+
+  // 10. NEGATIVE PROMPT (from settings + mandatory rules)
+  const mandatoryNegative = [
+    'Do not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks.',
+    'Use only the elements provided through the system input blocks.',
+    'Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided.',
+    'If something is not provided through the system blocks, it must not appear in the generated content.',
+    'The generated content must not contain erotic, sexual, explicit or suggestive content.',
+  ].join('\n');
+
+  const finalNegative = negativePrompt
+    ? `${negativePrompt}\n\n${mandatoryNegative}`
+    : mandatoryNegative;
+  blocks.push({ label: '🚫 NEGATIVE PROMPT', text: finalNegative });
 
   return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
 }
