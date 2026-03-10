@@ -873,11 +873,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       imageModel: !isVideo && modelId ? imageModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
+      layerSelections: { ...selections },
     };
 
-    // Open review step instead of directly applying
-    setReviewPreset(preset);
-    setEditablePrompt(preset.prompt);
+    // Apply directly to canvas (no review step)
+    onSelectPreset(preset);
   };
 
   const handleConfirmPreset = () => {
