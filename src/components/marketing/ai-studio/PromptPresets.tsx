@@ -365,7 +365,18 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleEditPreset = (preset: PromptPreset) => {
-    setEditingPreset(preset);
+    if (!preset.isCustom) {
+      // For built-in presets, create a custom copy for editing
+      const copy: PromptPreset = {
+        ...preset,
+        id: `custom-${Date.now()}`,
+        name: `${preset.name} (cópia)`,
+        isCustom: true,
+      };
+      setEditingPreset(copy);
+    } else {
+      setEditingPreset(preset);
+    }
     setShowCreateDialog(true);
   };
 
