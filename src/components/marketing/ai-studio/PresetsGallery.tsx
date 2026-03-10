@@ -669,8 +669,8 @@ function generateScenes(selections: Record<string, string[]>): Scene[] {
 
 // ─── VARIATION GENERATOR ─────────────────────────────────────────────
 
-function generateVariations(selections: Record<string, string[]>): string[] {
-  const base = generatePrompt(selections);
+function generateVariations(selections: Record<string, string[]>, negativePrompt: string): string[] {
+  const base = generatePrompt(selections, negativePrompt);
   const variationModifiers = [
     { scene: 'ambiente urbano moderno com arquitetura contemporânea', camera: 'câmera com leve movimento de tracking lateral suave', mood: 'atmosfera clean e profissional' },
     { scene: 'cenário natural ao ar livre com vegetação exuberante', camera: 'câmera handheld orgânica com movimentos naturais', mood: 'atmosfera acolhedora e autêntica' },
