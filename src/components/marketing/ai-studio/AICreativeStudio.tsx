@@ -116,6 +116,20 @@ const AICreativeStudioInner: React.FC = () => {
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
+  // Helper to apply saved negative prompt defaults to node configs
+  const applyNegativeDefaults = useCallback((nodeType: string, config: Record<string, any>): Record<string, any> => {
+    const defaults = getStudioDefaults(estabelecimentoId);
+    const imageTypes = ['imageGen', 'imageEdit', 'productComposite'];
+    const videoTypes = ['videoGen'];
+    if (imageTypes.includes(nodeType) && !config.negativePrompt) {
+      return { ...config, negativePrompt: defaults.imageNegativePrompt };
+    }
+    if (videoTypes.includes(nodeType) && !config.videoNegativePrompt) {
+      return { ...config, videoNegativePrompt: defaults.videoNegativePrompt };
+    }
+    return config;
+  }, [estabelecimentoId]);
+
   // Fetch saved workflows on mount and when returning to landing
   const fetchWorkflows = useCallback(async () => {
     if (!estabelecimentoId) return;
