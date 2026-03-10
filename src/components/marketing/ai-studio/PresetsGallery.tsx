@@ -705,9 +705,10 @@ interface Preset {
 interface PresetsGalleryProps {
   onSelectPreset: (preset: Preset) => void;
   onClose: () => void;
+  estabelecimentoId?: string;
 }
 
-const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose }) => {
+const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '' }) => {
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
