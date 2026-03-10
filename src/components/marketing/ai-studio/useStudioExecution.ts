@@ -1008,6 +1008,11 @@ export function useStudioExecution() {
     onNodesUpdateRef.current = onNodesUpdate || null;
 
     const order = getExecutionOrder(nodes, edges);
+    console.log('[Studio] Execution order:', order.map(id => {
+      const n = nodes.find(nn => nn.id === id);
+      return `${id} (${(n?.data as any)?.type || '?'})`;
+    }));
+    console.log('[Studio] Total nodes:', nodes.length, 'Total edges:', edges.length);
     const results = new Map<string, any>();
     let updatedNodes = [...nodes];
 
