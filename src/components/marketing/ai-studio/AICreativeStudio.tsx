@@ -593,32 +593,41 @@ const AICreativeStudioInner: React.FC = () => {
         { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
 
-      // For image/video generation presets, add helper reference blocks
+      // For image/video generation presets, add selected reference blocks
       if (targetType === 'imageGen' || targetType === 'videoGen') {
-        const productNode: StudioNode = {
-          id: `productSelect_${ts}`,
-          type: 'studioNode',
-          position: { x: 100, y: 400 },
-          data: { label: '📦 Produto (opcional)', type: 'productImageSelect', config: {} },
+        const refBlocks = preset.referenceBlocks || [];
+        
+        // Block type to node metadata mapping
+        const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
+          'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
+          'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
+          'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
+          'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
+          'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
+          'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
+          'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
+          'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
+          'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
+          'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
         };
-        const influencerNode: StudioNode = {
-          id: `galleryInfluencer_${ts}`,
-          type: 'studioNode',
-          position: { x: 100, y: 600 },
-          data: { label: '🧑 Influencer', type: 'galleryInfluencer', config: {} },
-        };
-        const logoNode: StudioNode = {
-          id: `galleryLogo_${ts}`,
-          type: 'studioNode',
-          position: { x: 100, y: 800 },
-          data: { label: '🏷️ Logo', type: 'galleryLogo', config: {} },
-        };
-        newNodes.push(productNode, influencerNode, logoNode);
-        newEdges.push(
-          { id: `e_${productNode.id}_${processNode.id}`, source: productNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-          { id: `e_${influencerNode.id}_${processNode.id}`, source: influencerNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-          { id: `e_${logoNode.id}_${processNode.id}`, source: logoNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-        );
+
+        const blocksToInsert = refBlocks.length > 0 ? refBlocks : ['productImageSelect', 'galleryInfluencer', 'galleryLogo'];
+
+        blocksToInsert.forEach((blockType, idx) => {
+          const meta = blockMeta[blockType];
+          if (!meta) return;
+          const nodeMeta = getNodeMeta(meta.type as any);
+          const refNode: StudioNode = {
+            id: `${meta.type}_${ts}_${idx}`,
+            type: 'studioNode',
+            position: { x: 100, y: 400 + idx * 200 },
+            data: { label: meta.labelPrefix, type: meta.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+          };
+          newNodes.push(refNode);
+          newEdges.push(
+            { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+          );
+        });
       }
     }
 
