@@ -1481,16 +1481,28 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button]:hidden">
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 [&>button]:hidden">
           <div className="relative">
-            <button
-              onClick={() => setVideoPreviewOpen(false)}
-              className="absolute -right-3 -top-3 z-[200] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
-              aria-label="Fechar"
-              style={{ position: 'absolute' }}
-            >
-              <X className="h-5 w-5" />
-            </button>
+            {/* Top-right action buttons overlaid on the video */}
+            <div className="absolute top-3 right-3 z-[200] flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  if (resultVideo) handleSaveVideoToGallery(resultVideo);
+                }}
+                disabled={isSavingToGallery}
+                className="rounded-full p-2.5 bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition-colors"
+                title="Salvar na galeria"
+              >
+                {isSavingToGallery ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+              </button>
+              <button
+                onClick={() => setVideoPreviewOpen(false)}
+                className="rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
             <video
               src={resultVideo}
               controls
