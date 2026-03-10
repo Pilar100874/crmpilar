@@ -516,7 +516,11 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
   }
   if (selections.campaignType?.length) sceneParts.push(campaignMap[selections.campaignType[0]] || '');
   if (selections.productCategory?.length) sceneParts.push(productMap[selections.productCategory[0]] || '');
-  if (selections.character?.length) sceneParts.push(charMap[selections.character[0]] || '');
+  if (selections.referenceBlocks?.length) {
+    selections.referenceBlocks.forEach(blockId => {
+      if (refBlockPromptMap[blockId]) sceneParts.push(refBlockPromptMap[blockId]);
+    });
+  }
   if (selections.marketingGoal?.length) sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
   blocks.push({ label: '🎬 DESCRIÇÃO DA CENA', text: sceneParts.filter(Boolean).join(' ') });
 
