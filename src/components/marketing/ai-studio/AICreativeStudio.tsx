@@ -79,6 +79,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [presetInitialSelections, setPresetInitialSelections] = useState<Record<string, string[]> | undefined>(undefined);
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
