@@ -530,6 +530,56 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label]);
 
+  // Save video to media_gallery
+  const handleSaveVideoToGallery = useCallback(async (videoUrl: string) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId || !videoUrl) {
+      toast.error('Erro: estabelecimento ou vídeo não encontrados');
+      return;
+    }
+    setIsSavingToGallery(true);
+    try {
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
+      const blob = await response.blob();
+      
+      const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
+      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.${ext}`;
+      const storagePath = `${estabId}/${fileName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('marketing-videos')
+        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('marketing-videos')
+        .getPublicUrl(storagePath);
+
+      const { error: dbErr } = await supabase
+        .from('media_gallery')
+        .insert({
+          estabelecimento_id: estabId,
+          tipo: 'video',
+          storage_path: storagePath,
+          public_url: publicUrl,
+          nome: `AI Studio Vídeo - ${nodeData.label}`,
+          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
+          tamanho_bytes: blob.size,
+          mime_type: blob.type || 'video/mp4',
+          origem: 'ai_studio',
+        });
+      if (dbErr) throw dbErr;
+
+      toast.success('✅ Vídeo salvo na galeria!');
+    } catch (err: any) {
+      console.error('Erro ao salvar vídeo na galeria:', err);
+      toast.error('Erro ao salvar: ' + (err.message || String(err)));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+  }, [id, nodeData.type, nodeData.label]);
+
   return (
     <>
     <div
@@ -1280,6 +1330,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     >
                       <Maximize2 className="h-3 w-3 text-white" />
                     </button>
+                    <button
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (resultVideo) handleSaveVideoToGallery(resultVideo);
+                      }}
+                      disabled={isSavingToGallery}
+                      className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors"
+                      title="Salvar vídeo na galeria"
+                    >
+                      {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1418,21 +1481,24 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button.absolute]:hidden">
-          <button
-            onClick={() => setVideoPreviewOpen(false)}
-            className="absolute -right-3 -top-3 z-[100] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
-            aria-label="Fechar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <video
-            src={resultVideo}
-            controls
-            autoPlay
-            controlsList="nofullscreen"
-            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
-          />
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 overflow-visible [&>button]:hidden">
+          <div className="relative">
+            <button
+              onClick={() => setVideoPreviewOpen(false)}
+              className="absolute -right-3 -top-3 z-[200] rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
+              aria-label="Fechar"
+              style={{ position: 'absolute' }}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <video
+              src={resultVideo}
+              controls
+              autoPlay
+              controlsList="nofullscreen"
+              className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+            />
+          </div>
         </DialogContent>
       </Dialog>
     )}
