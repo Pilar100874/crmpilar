@@ -521,18 +521,18 @@ const energyMap: Record<string, string> = {
 };
 
 const styleMap: Record<string, string> = {
-  'cinematic': 'Cinematic film aesthetic with wide dynamic range, film grain, anamorphic lens, and professional color grading with teal-orange tones.',
-  'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy.',
-  'ugc': 'Authentic user-generated content aesthetic — raw, unpolished, smartphone-shot feel.',
-  'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined composition.',
-  'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition.',
-  'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek surfaces, and cyber-blue tones.',
-  'commercial': 'Broadcast-quality commercial advertising polish with perfect color balance and crisp resolution.',
-  'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors and thumb-stopping visual impact.',
-  'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing.',
-  'high-fashion': 'High fashion editorial aesthetic with bold styling, dramatic poses, and magazine-quality finish.',
-  'studio-photo': 'Professional studio photography with controlled lighting and seamless backgrounds.',
-  'lifestyle': 'Warm lifestyle aesthetic with natural tones, aspirational settings.',
+  'cinematic': 'Cinematic film aesthetic with wide dynamic range, subtle film grain, anamorphic lens characteristics, and professional color grading with teal-orange tones.',
+  'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy. Shot on a professional DSLR or mirrorless camera.',
+  'ugc': 'Authentic user-generated content aesthetic filmed on a smartphone. Raw, unpolished, natural feel as if a real person created this content spontaneously. No professional production value — the authenticity IS the appeal.',
+  'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined composition that communicates exclusivity.',
+  'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition, and restrained color palette.',
+  'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek reflective surfaces, and cool cyber-blue tones.',
+  'commercial': 'Broadcast-quality commercial advertising with perfect color balance, crisp resolution, and polished production value.',
+  'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors, fast energy, and thumb-stopping visual impact. Smartphone-shot feel.',
+  'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing, observational camera work, and truthful representation.',
+  'high-fashion': 'High fashion editorial aesthetic with bold artistic styling, dramatic poses, avant-garde composition, and magazine-quality finish.',
+  'studio-photo': 'Professional studio photography with controlled multi-point lighting, seamless backgrounds, and precise focus for maximum product clarity.',
+  'lifestyle': 'Warm lifestyle aesthetic with natural golden tones, aspirational everyday settings, and an inviting, relatable atmosphere.',
 };
 
 const platformMap: Record<string, string> = {
