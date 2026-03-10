@@ -744,10 +744,16 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const selectionCount = Object.values(selections).filter(v => v.length > 0).length;
 
+  const savedDefaults = useMemo(() => getStudioDefaults(estabelecimentoId), [estabelecimentoId]);
+  const negativePromptText = useMemo(() => {
+    const isVideo = selections.contentType?.includes('video');
+    return isVideo ? savedDefaults.videoNegativePrompt : savedDefaults.imageNegativePrompt;
+  }, [selections.contentType, savedDefaults]);
+
   const generatedPrompt = useMemo(() => {
     if (selectionCount < 2) return '';
-    return generatePrompt(selections);
-  }, [selections, selectionCount]);
+    return generatePrompt(selections, negativePromptText);
+  }, [selections, selectionCount, negativePromptText]);
 
   const generatedScript = useMemo(() => {
     if (selectionCount < 2) return '';
