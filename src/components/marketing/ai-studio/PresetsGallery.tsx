@@ -776,51 +776,67 @@ interface Scene {
 
 function generateScenes(selections: Record<string, string[]>): Scene[] {
   const product = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === selections.productCategory?.[0])?.label || 'o produto';
-  const cam = selections.cameraStyle?.[0] || 'cinematic-camera';
-  const light = selections.lighting?.[0] || 'natural';
+  const visualStyle = selections.visualStyle?.[0];
+  const userCamera = selections.cameraStyle?.[0];
+  const userLighting = selections.lighting?.[0];
+  const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
+
+  const isUgc = visualStyle === 'ugc' || visualStyle === 'viral';
 
   return [
     {
       title: 'Cena 1 — Gancho Inicial',
-      description: `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
-      camera: cameraMap[cam] || 'Câmera cinematográfica com movimentos suaves.',
-      lighting: lightMap[light] || 'Iluminação natural.',
-      action: 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+      description: isUgc
+        ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
+        : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+      camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie ligeiramente imperfeito.' : overrides.camera,
+      lighting: overrides.lighting,
+      action: isUgc
+        ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.'
+        : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
     },
     {
       title: 'Cena 2 — Apresentação do Problema',
       description: `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
-      camera: 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
-      lighting: 'Iluminação levemente sombria para transmitir desconforto.',
+      camera: isUgc ? 'Câmera de smartphone mostrando a situação de perto, com movimentos naturais de mão.' : 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
+      lighting: isUgc ? 'Iluminação ambiente natural do local onde está.' : 'Iluminação levemente sombria para transmitir desconforto.',
       action: 'Pessoa tentando realizar a tarefa sem sucesso, expressando frustração visível.',
     },
     {
       title: 'Cena 3 — Introdução do Produto',
-      description: `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
-      camera: 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
-      lighting: 'Iluminação premium com destaque suave no produto.',
-      action: 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
+      description: isUgc
+        ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.`
+        : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+      camera: isUgc ? 'Câmera de smartphone mostrando o produto na mão, enquadramento casual.' : 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação premium com destaque suave no produto.',
+      action: isUgc
+        ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.'
+        : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
     },
     {
       title: 'Cena 4 — Demonstração do Produto',
       description: `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
-      camera: 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
-      lighting: lightMap[light] || 'Iluminação natural e acolhedora.',
+      camera: isUgc ? 'Câmera alternando entre selfie e câmera traseira do smartphone para mostrar detalhes.' : 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
+      lighting: overrides.lighting,
       action: 'Demonstração passo a passo do uso do produto, destacando texturas, qualidade e resultados.',
     },
     {
       title: 'Cena 5 — Resultado / Benefícios',
       description: `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
-      camera: 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
-      lighting: 'Iluminação brilhante e otimista, transmitindo satisfação.',
+      camera: isUgc ? 'Câmera de smartphone mostrando o resultado final, reação genuína.' : 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação brilhante e otimista, transmitindo satisfação.',
       action: 'Reação positiva do usuário, expressão de satisfação, resultado visual claro.',
     },
     {
       title: 'Cena 6 — Fechamento com CTA',
-      description: `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
-      camera: 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
-      lighting: 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
-      action: 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
+      description: isUgc
+        ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.`
+        : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+      camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie natural.' : 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
+      lighting: isUgc ? overrides.lighting : 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
+      action: isUgc
+        ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.'
+        : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
     },
   ];
 }
