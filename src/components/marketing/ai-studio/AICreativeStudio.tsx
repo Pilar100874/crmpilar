@@ -80,6 +80,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const [presetInitialSelections, setPresetInitialSelections] = useState<Record<string, string[]> | undefined>(undefined);
+  const [reloadingPresetNodeId, setReloadingPresetNodeId] = useState<string | null>(null);
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
