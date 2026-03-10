@@ -1012,7 +1012,7 @@ const AICreativeStudioInner: React.FC = () => {
 
           <AnimatePresence>
             {showPresets && (
-              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} estabelecimentoId={estabelecimentoId} />
+              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
             )}
           </AnimatePresence>
 
