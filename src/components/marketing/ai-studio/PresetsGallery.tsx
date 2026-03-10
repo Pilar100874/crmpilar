@@ -438,7 +438,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
       // For content type, clear model selections when switching
       if (layerId === 'contentType') {
-        const next = { ...prev, [layerId]: [optionId] };
+        const next: Record<string, string[]> = { ...prev, [layerId]: [optionId] };
         delete next.videoModel;
         delete next.imageModel;
         return next;
