@@ -110,17 +110,22 @@ const LAYERS: Layer[] = [
     ],
   },
   {
-    id: 'character',
-    title: 'Tipo de Personagem',
-    emoji: '🧑',
-    description: 'Quem aparece no conteúdo',
+    id: 'referenceBlocks',
+    title: 'Blocos de Referência',
+    emoji: '🧩',
+    description: 'Selecione os blocos que deseja inserir no workflow (múltipla seleção)',
+    multiple: true,
     options: [
-      { id: 'product-only', label: 'Product Only', emoji: '📦' },
-      { id: 'influencer', label: 'Influencer', emoji: '⭐' },
-      { id: 'ugc-creator', label: 'UGC Creator', emoji: '📱' },
-      { id: 'narrator', label: 'Narrator / Voice Over', emoji: '🎙️' },
-      { id: 'lifestyle-model', label: 'Lifestyle Model', emoji: '🧑‍🤝‍🧑' },
-      { id: 'crowd', label: 'Crowd / Multiple People', emoji: '👥' },
+      { id: 'productImageSelect', label: 'Produto', emoji: '📦' },
+      { id: 'galleryInfluencer', label: 'Influencer', emoji: '👤' },
+      { id: 'galleryLogo', label: 'Logo / Marca', emoji: '🏷️' },
+      { id: 'galleryRoupa', label: 'Roupa / Vestuário', emoji: '👗' },
+      { id: 'galleryPose', label: 'Ref. Pose', emoji: '🤸' },
+      { id: 'galleryAmbiente', label: 'Ref. Ambiente', emoji: '🏔️' },
+      { id: 'galleryEstilo', label: 'Ref. Estilo', emoji: '🎨' },
+      { id: 'galleryTextura', label: 'Textura / Material', emoji: '🧱' },
+      { id: 'galleryPaleta', label: 'Paleta de Cores', emoji: '🎨' },
+      { id: 'imageInput', label: 'Imagem de Referência', emoji: '🖼️' },
     ],
   },
   {
@@ -396,13 +401,17 @@ const productMap: Record<string, string> = {
   'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
 };
 
-const charMap: Record<string, string> = {
-  'product-only': 'No people in the scene — the product is the sole protagonist.',
-  'influencer': 'A charismatic influencer presents the product with natural confidence.',
-  'ugc-creator': 'A relatable UGC creator films casual, authentic content about the product.',
-  'narrator': 'The scene is guided by voice-over narration with no on-screen talent.',
-  'lifestyle-model': 'A lifestyle model naturally incorporates the product into their routine.',
-  'crowd': 'Multiple people interact with the product in a social setting.',
+const refBlockPromptMap: Record<string, string> = {
+  'productImageSelect': 'The product reference image is provided as visual input for accurate representation.',
+  'galleryInfluencer': 'A charismatic influencer presents the product with natural confidence. Reference photo provided.',
+  'galleryLogo': 'The brand logo is included for visual identity integration.',
+  'galleryRoupa': 'Clothing/outfit reference is provided for accurate wardrobe representation.',
+  'galleryPose': 'A pose reference is provided for body positioning and composition.',
+  'galleryAmbiente': 'An environment reference is provided for scene setting and ambiance.',
+  'galleryEstilo': 'A style reference is provided for visual aesthetic direction.',
+  'galleryTextura': 'A texture/material reference is provided for surface detail accuracy.',
+  'galleryPaleta': 'A color palette reference is provided for cohesive color direction.',
+  'imageInput': 'A custom reference image is provided as visual guidance.',
 };
 
 const goalMap: Record<string, string> = {
@@ -507,7 +516,11 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
   }
   if (selections.campaignType?.length) sceneParts.push(campaignMap[selections.campaignType[0]] || '');
   if (selections.productCategory?.length) sceneParts.push(productMap[selections.productCategory[0]] || '');
-  if (selections.character?.length) sceneParts.push(charMap[selections.character[0]] || '');
+  if (selections.referenceBlocks?.length) {
+    selections.referenceBlocks.forEach(blockId => {
+      if (refBlockPromptMap[blockId]) sceneParts.push(refBlockPromptMap[blockId]);
+    });
+  }
   if (selections.marketingGoal?.length) sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
   blocks.push({ label: '🎬 DESCRIÇÃO DA CENA', text: sceneParts.filter(Boolean).join(' ') });
 
@@ -700,6 +713,7 @@ interface Preset {
   videoModel?: string;
   duration?: number;
   videoSubcategory?: string;
+  referenceBlocks?: string[];
 }
 
 interface PresetsGalleryProps {
@@ -796,6 +810,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       isVideo,
       videoModel: isVideo && modelId ? videoModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
+      referenceBlocks: selections.referenceBlocks || [],
     };
 
     onSelectPreset(preset);
