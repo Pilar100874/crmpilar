@@ -713,6 +713,7 @@ interface Preset {
   videoModel?: string;
   duration?: number;
   videoSubcategory?: string;
+  referenceBlocks?: string[];
 }
 
 interface PresetsGalleryProps {
