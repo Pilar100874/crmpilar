@@ -316,6 +316,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [customPresets, setCustomPresets] = useState<PromptPreset[]>(loadCustomPresets);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
 
   const allPresets = useMemo(() => [...BUILT_IN_PRESETS, ...customPresets], [customPresets]);
@@ -348,11 +349,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleSaveCustom = (preset: PromptPreset) => {
-    const updated = [...customPresets, preset];
+    const existingIndex = customPresets.findIndex(p => p.id === preset.id);
+    let updated: PromptPreset[];
+    if (existingIndex >= 0) {
+      updated = [...customPresets];
+      updated[existingIndex] = preset;
+    } else {
+      updated = [...customPresets, preset];
+    }
     setCustomPresets(updated);
     saveCustomPresets(updated);
     setShowCreateDialog(false);
-    toast({ title: 'Salvo!', description: `Prompt "${preset.name}" criado com sucesso.` });
+    setEditingPreset(null);
+    toast({ title: 'Salvo!', description: `Prompt "${preset.name}" salvo com sucesso.` });
+  };
+
+  const handleEditPreset = (preset: PromptPreset) => {
+    setEditingPreset(preset);
+    setShowCreateDialog(true);
   };
 
   const countByMediaAndCat = (media: 'video' | 'image', cat: 'produto' | 'influencer') =>
@@ -379,7 +393,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
           <Image className="h-3.5 w-3.5" /> Imagem
         </Button>
         <div className="flex-1" />
-        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowCreateDialog(true)}>
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => { setEditingPreset(null); setShowCreateDialog(true); }}>
           <Plus className="h-3.5 w-3.5" /> Criar Prompt
         </Button>
       </div>
@@ -414,52 +428,66 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
         <ScrollArea className="flex-1">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4">
             {filtered.map((preset, i) => (
-              <motion.button
+              <motion.div
                 key={preset.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                onClick={() => setSelectedId(preset.id)}
-                className={`group relative rounded-xl overflow-hidden border-2 transition-all text-left ${
+                className={`group relative rounded-xl overflow-hidden border-2 transition-all ${
                   selectedId === preset.id
                     ? 'border-primary ring-2 ring-primary/20'
                     : 'border-border/50 hover:border-primary/30'
                 }`}
               >
-                <div className="aspect-square relative overflow-hidden">
-                  {preset.image ? (
-                    <img src={preset.image} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-muted-foreground/40" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <div className="absolute top-2 left-2 flex gap-1">
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/50 text-white border-0">
-                      {preset.mediaType === 'video' ? '🎥' : '📷'}
-                    </Badge>
-                    {preset.isCustom && (
-                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-primary/80 text-white border-0">
-                        Custom
+                <button
+                  onClick={() => setSelectedId(preset.id)}
+                  className="w-full text-left"
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    {preset.image ? (
+                      <img src={preset.image} alt={preset.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Sparkles className="h-8 w-8 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute top-2 left-2 flex gap-1">
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/50 text-white border-0">
+                        {preset.mediaType === 'video' ? '🎥' : '📷'}
                       </Badge>
+                      {preset.isCustom && (
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-primary/80 text-white border-0">
+                          Custom
+                        </Badge>
+                      )}
+                    </div>
+                    {selectedId === preset.id && (
+                      <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      </div>
                     )}
                   </div>
-                  {selectedId === preset.id && (
-                    <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                      <Check className="h-3 w-3 text-primary-foreground" />
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                    <p className="text-xs font-semibold text-white truncate">{preset.name}</p>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {preset.tags.slice(0, 2).map(tag => (
+                        <span key={tag} className="text-[9px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">{tag}</span>
+                      ))}
                     </div>
-                  )}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                  <p className="text-xs font-semibold text-white truncate">{preset.name}</p>
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    {preset.tags.slice(0, 2).map(tag => (
-                      <span key={tag} className="text-[9px] bg-white/20 text-white/80 px-1.5 py-0.5 rounded-full">{tag}</span>
-                    ))}
                   </div>
+                </button>
+                {/* Overlay apply button on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 pointer-events-none">
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs pointer-events-auto"
+                    onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
+                  >
+                    <Play className="h-3.5 w-3.5" /> Usar Prompt
+                  </Button>
                 </div>
-              </motion.button>
+              </motion.div>
             ))}
           </div>
         </ScrollArea>
@@ -509,13 +537,18 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
               </pre>
             </ScrollArea>
             <div className="p-3 border-t flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => handleCopy(selectedPreset.prompt)}>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleCopy(selectedPreset.prompt)}>
                 <Copy className="h-3.5 w-3.5" /> Copiar
               </Button>
               {selectedPreset.isCustom && (
-                <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
+                    <Sparkles className="h-3.5 w-3.5" /> Editar
+                  </Button>
+                  <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
               <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
                 <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
@@ -525,13 +558,14 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
         )}
       </div>
 
-      {/* Create Dialog */}
+      {/* Create/Edit Dialog */}
       <CreatePromptDialog
         open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
+        onClose={() => { setShowCreateDialog(false); setEditingPreset(null); }}
         onSave={handleSaveCustom}
         defaultMediaType={activeMediaType}
         defaultCategory={activeCategory}
+        editingPreset={editingPreset}
       />
     </div>
   );
