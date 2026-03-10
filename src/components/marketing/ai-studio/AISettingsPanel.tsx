@@ -104,6 +104,32 @@ const DEFAULT_EL_CONFIG: ELConfig = {
   speed: 1.0,
 };
 
+// ── Defaults helpers ───────────────────────────────────────────────────────
+
+const DEFAULTS_STORAGE_KEY = 'ai-studio-defaults';
+
+export interface StudioDefaults {
+  imageNegativePrompt: string;
+  videoNegativePrompt: string;
+}
+
+export const DEFAULT_STUDIO_DEFAULTS: StudioDefaults = {
+  imageNegativePrompt: "texto, marca d'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído",
+  videoNegativePrompt: "texto na tela, marca d'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais",
+};
+
+export const getStudioDefaults = (estabelecimentoId: string): StudioDefaults => {
+  try {
+    const raw = localStorage.getItem(`${DEFAULTS_STORAGE_KEY}-${estabelecimentoId}`);
+    if (raw) return { ...DEFAULT_STUDIO_DEFAULTS, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...DEFAULT_STUDIO_DEFAULTS };
+};
+
+export const saveStudioDefaults = (estabelecimentoId: string, defaults: StudioDefaults) => {
+  localStorage.setItem(`${DEFAULTS_STORAGE_KEY}-${estabelecimentoId}`, JSON.stringify(defaults));
+};
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 interface Props {
