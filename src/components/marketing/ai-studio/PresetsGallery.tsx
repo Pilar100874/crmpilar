@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2 } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, BookOpen, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 // ─── LAYER DEFINITIONS ───────────────────────────────────────────────
 
@@ -206,7 +208,6 @@ const LAYERS: Layer[] = [
       { id: 'square', label: 'Square (1:1)', emoji: '⬜' },
     ],
   },
-  // CAMADA 13 — OBJETIVO DE MARKETING
   {
     id: 'marketingGoal',
     title: 'Objetivo de Marketing',
@@ -225,7 +226,6 @@ const LAYERS: Layer[] = [
       { id: 'viral-engagement', label: 'Viral Engagement', emoji: '🔥' },
     ],
   },
-  // CAMADA 14 — ESTILO DE GANCHO
   {
     id: 'hookStyle',
     title: 'Estilo de Gancho',
@@ -242,7 +242,6 @@ const LAYERS: Layer[] = [
       { id: 'curiosity', label: 'Curiosity Hook', emoji: '🤔' },
     ],
   },
-  // CAMADA 15 — FORMATO CRIATIVO
   {
     id: 'creativeFormat',
     title: 'Formato Criativo',
@@ -263,211 +262,430 @@ const LAYERS: Layer[] = [
   },
 ];
 
-// ─── STRUCTURED PROMPT GENERATOR ─────────────────────────────────────
+// ─── VIRAL HOOK LIBRARY ──────────────────────────────────────────────
+
+interface ViralHook {
+  category: string;
+  emoji: string;
+  hooks: string[];
+}
+
+const VIRAL_HOOKS: ViralHook[] = [
+  {
+    category: 'Pattern Interrupt',
+    emoji: '⚡',
+    hooks: [
+      'Espera... ninguém te conta isso sobre esse produto.',
+      'Pare tudo o que você está fazendo e veja isso.',
+      'Isso não deveria funcionar assim... mas funciona.',
+      'Eu apostei que não ia funcionar. Estava errado.',
+      'Isso muda tudo que você sabe sobre esse assunto.',
+    ],
+  },
+  {
+    category: 'Question Hook',
+    emoji: '❓',
+    hooks: [
+      'Você sabia que está usando isso do jeito errado?',
+      'Por que ninguém fala sobre isso?',
+      'Qual desses dois produtos é realmente melhor?',
+      'Você pagaria R$10 por isso? E se eu te disser o preço real...',
+      'O que acontece quando você combina esses dois produtos?',
+    ],
+  },
+  {
+    category: 'Problem Hook',
+    emoji: '😰',
+    hooks: [
+      'Cansado de desperdiçar dinheiro com produtos que não funcionam?',
+      'Se você tem esse problema, precisa ver isso.',
+      'O maior erro que as pessoas cometem com isso.',
+      'Eu sofri com isso por anos até descobrir a solução.',
+      'Isso pode estar custando muito mais do que você imagina.',
+    ],
+  },
+  {
+    category: 'Shock Hook',
+    emoji: '😱',
+    hooks: [
+      'Eu não acreditei quando vi o resultado.',
+      'Isso vai te chocar — mas é 100% real.',
+      'Veja o que aconteceu quando testei isso.',
+      'O resultado superou todas as expectativas.',
+      'Você nunca mais vai olhar para isso da mesma forma.',
+    ],
+  },
+  {
+    category: 'Curiosity Hook',
+    emoji: '🤔',
+    hooks: [
+      'Assista até o final para ver o resultado.',
+      'O segredo que as grandes marcas não querem que você saiba.',
+      'Tem uma coisa sobre esse produto que muda tudo...',
+      'Vou te mostrar algo que pouca gente conhece.',
+      'Existe um truque simples que ninguém usa — até agora.',
+    ],
+  },
+  {
+    category: 'Bold Statement',
+    emoji: '💪',
+    hooks: [
+      'Esse é o melhor produto que eu já testei. Ponto final.',
+      'Isso mudou minha rotina completamente.',
+      'Se você não está usando isso, está perdendo tempo.',
+      'Sem dúvida, a melhor compra que fiz esse ano.',
+      'Depois de testar 50 marcas, essa é a vencedora.',
+    ],
+  },
+  {
+    category: 'Visual Hook',
+    emoji: '👀',
+    hooks: [
+      'Olha essa textura... incrível.',
+      'Assista de perto — cada detalhe importa.',
+      'Zoom no detalhe que faz toda a diferença.',
+      'Presta atenção nessa transformação.',
+      'Visual satisfatório que você vai querer assistir de novo.',
+    ],
+  },
+  {
+    category: 'Fast Demo',
+    emoji: '⏩',
+    hooks: [
+      'Em 10 segundos você vai entender porque isso é tão bom.',
+      'Demonstração rápida — resultado impressionante.',
+      'Veja como funciona em tempo real.',
+      'Teste prático: antes e depois em segundos.',
+      'Rápido, simples e eficiente. Veja como.',
+    ],
+  },
+];
+
+// ─── MAPS ────────────────────────────────────────────────────────────
+
+const STANDARD_NEGATIVE_PROMPT = `Não gerar nenhum texto, legendas, subtítulos, logos, marcas d'água, letras, números ou tipografia em qualquer parte do vídeo ou imagem.
+Não adicionar objetos extras que não estejam descritos.
+Não gerar mãos distorcidas, rostos deformados, membros extras, artefatos ou anatomia irreal.
+Sem elementos de interface, overlays, gráficos ou nomes de marcas.`;
+
+const creativeFormatMap: Record<string, string> = {
+  'ugc-ad': 'A raw, authentic UGC-style ad filmed with a smartphone feel. The creator speaks directly to camera, showing the product naturally as if sharing with friends.',
+  'product-hero': 'A stunning product hero shot with the product as the absolute centerpiece, elevated on a pedestal or floating, with dramatic lighting emphasizing every detail and texture.',
+  'influencer-review': 'An influencer review where a charismatic creator naturally demonstrates and reviews the product, sharing genuine reactions and highlighting key features.',
+  'unboxing': 'An exciting unboxing experience capturing the anticipation and reveal of the product, showing premium packaging details and the first-touch reaction.',
+  'before-after': 'A dramatic before and after transformation showing the clear difference and impact of using the product, with split-screen or transition reveal.',
+  'lifestyle-ad': 'A lifestyle advertisement showing the product seamlessly integrated into an aspirational daily routine, emphasizing how it enhances everyday life.',
+  'cinematic-brand': 'A premium cinematic brand film with sweeping visuals, emotional narrative arc, and high-production value that elevates the brand identity.',
+  'viral-clip': 'A highly shareable viral social media clip designed for maximum engagement, with unexpected elements, quick transitions, and thumb-stopping moments.',
+  'testimonial': 'An authentic testimonial featuring a real customer sharing their genuine experience, with natural settings and honest emotional reactions.',
+  'product-comparison': 'A side-by-side product comparison clearly demonstrating the advantages over competitors, with data-driven visuals and clear differentiators.',
+};
+
+const campaignMap: Record<string, string> = {
+  'showcase': 'The scene showcases the product with elegant, premium presentation.',
+  'demonstration': 'The scene demonstrates the product features and real-world functionality step by step.',
+  'problem-solution': 'The narrative follows a problem-solution structure: first showing the frustration, then the product as the solution.',
+  'before-after': 'The visual narrative reveals a dramatic before-and-after transformation.',
+  'storytelling': 'The content tells a compelling emotional story connected to the brand.',
+  'influencer-review': 'An influencer reviews and recommends the product with genuine enthusiasm.',
+  'unboxing': 'The scene captures a premium unboxing experience with tactile details.',
+  'lifestyle-usage': 'The product is shown being used naturally in an aspirational everyday lifestyle setting.',
+  'testimonial': 'Authentic customer testimonial with genuine emotional connection.',
+  'comparison': 'Direct comparison highlighting the product advantages over alternatives.',
+};
+
+const productMap: Record<string, string> = {
+  'bobinas-papel': 'The product is a premium paper roll (bobina de papel), showcasing its quality, texture, and industrial-grade material.',
+  'papeis-graficos': 'The product is a high-quality graphic paper, highlighting its smooth finish, printing precision, and professional results.',
+  'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
+};
+
+const charMap: Record<string, string> = {
+  'product-only': 'No people in the scene — the product is the sole protagonist.',
+  'influencer': 'A charismatic influencer presents the product with natural confidence.',
+  'ugc-creator': 'A relatable UGC creator films casual, authentic content about the product.',
+  'narrator': 'The scene is guided by voice-over narration with no on-screen talent.',
+  'lifestyle-model': 'A lifestyle model naturally incorporates the product into their routine.',
+  'crowd': 'Multiple people interact with the product in a social setting.',
+};
+
+const goalMap: Record<string, string> = {
+  'product-awareness': 'The tone focuses on introducing and building awareness for the product, making it memorable and recognizable.',
+  'direct-sales': 'The tone is conversion-driven, emphasizing clear product benefits, urgency, and a strong call-to-action.',
+  'lead-generation': 'The content is designed to spark curiosity and drive the viewer to learn more or sign up.',
+  'brand-awareness': 'The focus is on emotional brand storytelling, building identity and long-term recognition.',
+  'app-install': 'The content showcases the app interface and key features, driving installs with a clear CTA.',
+  'product-launch': 'The tone builds excitement and anticipation for a brand-new product reveal.',
+  'retargeting': 'The content reinforces the product value proposition for viewers who have already shown interest.',
+  'social-proof': 'The content emphasizes social proof through reviews, ratings, user counts, or testimonials.',
+  'educational': 'The content educates the viewer about the product with informative, value-driven messaging.',
+  'viral-engagement': 'The content is engineered for maximum shares and engagement with trending, shareable elements.',
+};
+
+const hookMap: Record<string, string> = {
+  'pattern-interrupt': 'Strong pattern interrupt in the first 3 seconds — an unexpected visual or action that immediately breaks the viewer\'s scroll and demands attention.',
+  'question': 'Open with a provocative question displayed on screen or spoken directly to camera that makes the viewer pause and think.',
+  'problem': 'Start by dramatizing a relatable problem or pain point that the viewer immediately identifies with, creating urgency.',
+  'shock': 'Begin with a shocking or surprising visual reveal that creates an immediate emotional reaction and curiosity.',
+  'visual-hook': 'Open with a stunning, visually arresting shot — dramatic close-up, unexpected angle, or mesmerizing motion that captivates instantly.',
+  'fast-demo': 'Jump straight into a rapid product demonstration in the first 2 seconds, showing the product in action before the viewer can scroll.',
+  'bold-statement': 'Open with a bold, controversial, or provocative text statement on screen that challenges the viewer\'s assumptions.',
+  'curiosity': 'Create a curiosity gap in the opening — show a teaser of the result or an intriguing setup that makes the viewer need to keep watching.',
+};
+
+const cameraMap: Record<string, string> = {
+  'handheld': 'Handheld camera with natural organic movement, slight shake for authentic feel. Close to mid-range framing.',
+  'cinematic-camera': 'Smooth cinematic camera on gimbal or dolly. Precise, controlled movements with professional film-grade framing and depth of field.',
+  'drone': 'Aerial drone shot with sweeping, elevated perspective revealing the full scene and environment.',
+  'macro': 'Extreme macro close-up shot revealing fine textures, materials, and microscopic product details.',
+  'slowmo': 'Dramatic slow motion capture at 120-240fps, emphasizing every detail of movement and texture.',
+  'tracking': 'Dynamic tracking shot following the subject with smooth lateral or forward movement, keeping the subject perfectly framed.',
+  'pov': 'Immersive first-person POV perspective, placing the viewer directly in the scene as if experiencing it themselves.',
+  'rotation': '360-degree product rotation on turntable, revealing every angle with consistent, smooth motion.',
+};
+
+const lightMap: Record<string, string> = {
+  'natural': 'Natural daylight illumination with soft window light or outdoor sunlight, creating authentic warmth and gentle shadows.',
+  'studio': 'Professional multi-point studio lighting setup with key light, fill light, and rim light for polished, controlled illumination.',
+  'dramatic': 'Dramatic chiaroscuro lighting with deep shadows and strong directional light creating bold contrast and mood.',
+  'neon': 'Vibrant neon lighting with colorful reflections, glows, and RGB accents creating a modern, edgy atmosphere.',
+  'soft-luxury': 'Soft, diffused luxury lighting with warm tones, delicate highlights, and gentle gradients for an elegant premium feel.',
+  'high-contrast': 'High contrast lighting with bold shadows and bright highlights, creating strong graphic visual impact.',
+  'golden-hour': 'Warm golden hour sunlight with long shadows, amber tones, and a magical, dreamy atmospheric quality.',
+};
+
+const energyMap: Record<string, string> = {
+  'high-energy': 'Fast-paced dynamic action with quick cuts, rapid movements, and intense rhythm.',
+  'calm': 'Slow, contemplative, and aesthetic rhythm. Gentle movements, long takes, and a serene atmosphere.',
+  'luxury-mood': 'Sophisticated, slow, and premium-paced. Every movement is deliberate and elegant.',
+  'dramatic-mood': 'Building dramatic tension with suspenseful pacing and a powerful climactic reveal.',
+  'emotional': 'Emotionally charged pacing that connects deeply with the viewer.',
+  'inspirational': 'Uplifting and motivational rhythm building from calm to powerful and empowering.',
+};
+
+const styleMap: Record<string, string> = {
+  'cinematic': 'Cinematic film aesthetic with wide dynamic range, film grain, anamorphic lens, and professional color grading with teal-orange tones.',
+  'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy.',
+  'ugc': 'Authentic user-generated content aesthetic — raw, unpolished, smartphone-shot feel.',
+  'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined composition.',
+  'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition.',
+  'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek surfaces, and cyber-blue tones.',
+  'commercial': 'Broadcast-quality commercial advertising polish with perfect color balance and crisp resolution.',
+  'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors and thumb-stopping visual impact.',
+  'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing.',
+  'high-fashion': 'High fashion editorial aesthetic with bold styling, dramatic poses, and magazine-quality finish.',
+  'studio-photo': 'Professional studio photography with controlled lighting and seamless backgrounds.',
+  'lifestyle': 'Warm lifestyle aesthetic with natural tones, aspirational settings.',
+};
+
+const platformMap: Record<string, string> = {
+  'tiktok': 'Optimized for TikTok: vertical 9:16, fast-paced editing, first 1-2 seconds must hook.',
+  'instagram': 'Optimized for Instagram Feed: visually striking composition, cohesive color palette.',
+  'instagram-reels': 'Optimized for Instagram Reels: vertical 9:16, dynamic transitions, engaging within first 3 seconds.',
+  'youtube': 'Optimized for YouTube: widescreen 16:9, cinematic quality, structured narrative.',
+  'youtube-shorts': 'Optimized for YouTube Shorts: vertical 9:16, quick-hit content under 60 seconds.',
+  'facebook-ads': 'Optimized for Facebook Ads: conversion-focused, clear product benefits, strong CTA.',
+  'landing-page': 'Optimized for landing page hero: premium, persuasive, looping capability.',
+  'hero-section': 'Optimized for website hero section: seamless looping ambient visual, subtle motion.',
+};
+
+const orientMap: Record<string, string> = {
+  'vertical': 'Vertical format 9:16 aspect ratio.',
+  'horizontal': 'Horizontal format 16:9 aspect ratio.',
+  'square': 'Square format 1:1 aspect ratio.',
+};
+
+// ─── PROMPT GENERATOR ────────────────────────────────────────────────
 
 function generatePrompt(selections: Record<string, string[]>): string {
   const isVideo = selections.contentType?.includes('video');
   const blocks: { label: string; text: string }[] = [];
 
-  // ── SCENE DESCRIPTION ──
+  // SCENE DESCRIPTION
   const sceneParts: string[] = [];
   const contentWord = isVideo ? 'video' : 'image';
-
-  // Creative format sets the scene structure
-  const creativeFormatMap: Record<string, string> = {
-    'ugc-ad': `A raw, authentic UGC-style ${contentWord} ad filmed with a smartphone feel. The creator speaks directly to camera, showing the product naturally as if sharing with friends.`,
-    'product-hero': `A stunning product hero shot ${contentWord} with the product as the absolute centerpiece, elevated on a pedestal or floating, with dramatic lighting emphasizing every detail and texture.`,
-    'influencer-review': `An influencer review ${contentWord} where a charismatic creator naturally demonstrates and reviews the product, sharing genuine reactions and highlighting key features.`,
-    'unboxing': `An exciting unboxing experience ${contentWord} capturing the anticipation and reveal of the product, showing premium packaging details and the first-touch reaction.`,
-    'before-after': `A dramatic before and after transformation ${contentWord} showing the clear difference and impact of using the product, with split-screen or transition reveal.`,
-    'lifestyle-ad': `A lifestyle advertisement ${contentWord} showing the product seamlessly integrated into an aspirational daily routine, emphasizing how it enhances everyday life.`,
-    'cinematic-brand': `A premium cinematic brand film ${contentWord} with sweeping visuals, emotional narrative arc, and high-production value that elevates the brand identity.`,
-    'viral-clip': `A highly shareable viral social media ${contentWord} designed for maximum engagement, with unexpected elements, quick transitions, and thumb-stopping moments.`,
-    'testimonial': `An authentic testimonial ${contentWord} featuring a real customer sharing their genuine experience, with natural settings and honest emotional reactions.`,
-    'product-comparison': `A side-by-side product comparison ${contentWord} clearly demonstrating the advantages over competitors, with data-driven visuals and clear differentiators.`,
-  };
-
   if (selections.creativeFormat?.length) {
     sceneParts.push(creativeFormatMap[selections.creativeFormat[0]] || `Create a professional ${contentWord}`);
   } else {
     sceneParts.push(`Create a professional marketing ${contentWord}`);
   }
+  if (selections.campaignType?.length) sceneParts.push(campaignMap[selections.campaignType[0]] || '');
+  if (selections.productCategory?.length) sceneParts.push(productMap[selections.productCategory[0]] || '');
+  if (selections.character?.length) sceneParts.push(charMap[selections.character[0]] || '');
+  if (selections.marketingGoal?.length) sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
+  blocks.push({ label: '🎬 DESCRIÇÃO DA CENA', text: sceneParts.filter(Boolean).join(' ') });
 
-  // Campaign type enrichment
-  const campaignMap: Record<string, string> = {
-    'showcase': 'The scene showcases the product with elegant, premium presentation.',
-    'demonstration': 'The scene demonstrates the product features and real-world functionality step by step.',
-    'problem-solution': 'The narrative follows a problem-solution structure: first showing the frustration, then the product as the solution.',
-    'before-after': 'The visual narrative reveals a dramatic before-and-after transformation.',
-    'storytelling': 'The content tells a compelling emotional story connected to the brand.',
-    'influencer-review': 'An influencer reviews and recommends the product with genuine enthusiasm.',
-    'unboxing': 'The scene captures a premium unboxing experience with tactile details.',
-    'lifestyle-usage': 'The product is shown being used naturally in an aspirational everyday lifestyle setting.',
-    'testimonial': 'Authentic customer testimonial with genuine emotional connection.',
-    'comparison': 'Direct comparison highlighting the product advantages over alternatives.',
-  };
-  if (selections.campaignType?.length) {
-    sceneParts.push(campaignMap[selections.campaignType[0]] || '');
-  }
-
-  // Product category context
-  const productMap: Record<string, string> = {
-    'bobinas-papel': 'The product is a premium paper roll (bobina de papel), showcasing its quality, texture, and industrial-grade material.',
-    'papeis-graficos': 'The product is a high-quality graphic paper, highlighting its smooth finish, printing precision, and professional results.',
-    'descartaveis': 'The product is a disposable item (produto descartável), emphasizing convenience, hygiene, and practical everyday use.',
-  };
-  if (selections.productCategory?.length) {
-    sceneParts.push(productMap[selections.productCategory[0]] || '');
-  }
-
-  // Character
-  const charMap: Record<string, string> = {
-    'product-only': 'No people in the scene — the product is the sole protagonist.',
-    'influencer': 'A charismatic influencer presents the product with natural confidence.',
-    'ugc-creator': 'A relatable UGC creator films casual, authentic content about the product.',
-    'narrator': 'The scene is guided by voice-over narration with no on-screen talent.',
-    'lifestyle-model': 'A lifestyle model naturally incorporates the product into their routine.',
-    'crowd': 'Multiple people interact with the product in a social setting.',
-  };
-  if (selections.character?.length) {
-    sceneParts.push(charMap[selections.character[0]] || '');
-  }
-
-  // Marketing goal tone
-  const goalMap: Record<string, string> = {
-    'product-awareness': 'The tone focuses on introducing and building awareness for the product, making it memorable and recognizable.',
-    'direct-sales': 'The tone is conversion-driven, emphasizing clear product benefits, urgency, and a strong call-to-action.',
-    'lead-generation': 'The content is designed to spark curiosity and drive the viewer to learn more or sign up.',
-    'brand-awareness': 'The focus is on emotional brand storytelling, building identity and long-term recognition.',
-    'app-install': 'The content showcases the app interface and key features, driving installs with a clear CTA.',
-    'product-launch': 'The tone builds excitement and anticipation for a brand-new product reveal.',
-    'retargeting': 'The content reinforces the product value proposition for viewers who have already shown interest.',
-    'social-proof': 'The content emphasizes social proof through reviews, ratings, user counts, or testimonials.',
-    'educational': 'The content educates the viewer about the product with informative, value-driven messaging.',
-    'viral-engagement': 'The content is engineered for maximum shares and engagement with trending, shareable elements.',
-  };
-  if (selections.marketingGoal?.length) {
-    sceneParts.push(goalMap[selections.marketingGoal[0]] || '');
-  }
-
-  blocks.push({ label: '🎬 SCENE DESCRIPTION', text: sceneParts.filter(Boolean).join(' ') });
-
-  // ── HOOK ──
-  const hookMap: Record<string, string> = {
-    'pattern-interrupt': 'Strong pattern interrupt in the first 3 seconds — an unexpected visual or action that immediately breaks the viewer\'s scroll and demands attention.',
-    'question': 'Open with a provocative question displayed on screen or spoken directly to camera that makes the viewer pause and think.',
-    'problem': 'Start by dramatizing a relatable problem or pain point that the viewer immediately identifies with, creating urgency.',
-    'shock': 'Begin with a shocking or surprising visual reveal that creates an immediate emotional reaction and curiosity.',
-    'visual-hook': 'Open with a stunning, visually arresting shot — dramatic close-up, unexpected angle, or mesmerizing motion that captivates instantly.',
-    'fast-demo': 'Jump straight into a rapid product demonstration in the first 2 seconds, showing the product in action before the viewer can scroll.',
-    'bold-statement': 'Open with a bold, controversial, or provocative text statement on screen that challenges the viewer\'s assumptions.',
-    'curiosity': 'Create a curiosity gap in the opening — show a teaser of the result or an intriguing setup that makes the viewer need to keep watching.',
-  };
+  // HOOK
   if (selections.hookStyle?.length) {
-    blocks.push({ label: '🪝 HOOK', text: hookMap[selections.hookStyle[0]] || '' });
+    blocks.push({ label: '🪝 GANCHO', text: hookMap[selections.hookStyle[0]] || '' });
   }
 
-  // ── CAMERA SETUP ──
+  // CAMERA SETUP
   if (isVideo && selections.cameraStyle?.length) {
-    const cameraMap: Record<string, string> = {
-      'handheld': 'Handheld camera with natural organic movement, slight shake for authentic feel. Close to mid-range framing.',
-      'cinematic-camera': 'Smooth cinematic camera on gimbal or dolly. Precise, controlled movements with professional film-grade framing and depth of field.',
-      'drone': 'Aerial drone shot with sweeping, elevated perspective revealing the full scene and environment.',
-      'macro': 'Extreme macro close-up shot revealing fine textures, materials, and microscopic product details.',
-      'slowmo': 'Dramatic slow motion capture at 120-240fps, emphasizing every detail of movement and texture.',
-      'tracking': 'Dynamic tracking shot following the subject with smooth lateral or forward movement, keeping the subject perfectly framed.',
-      'pov': 'Immersive first-person POV perspective, placing the viewer directly in the scene as if experiencing it themselves.',
-      'rotation': '360-degree product rotation on turntable, revealing every angle with consistent, smooth motion.',
-    };
-    blocks.push({ label: '📹 CAMERA SETUP', text: cameraMap[selections.cameraStyle[0]] || '' });
+    blocks.push({ label: '📹 CÂMERA', text: cameraMap[selections.cameraStyle[0]] || '' });
   }
 
-  // ── LIGHTING ──
+  // LIGHTING
   if (selections.lighting?.length) {
-    const lightMap: Record<string, string> = {
-      'natural': 'Natural daylight illumination with soft window light or outdoor sunlight, creating authentic warmth and gentle shadows.',
-      'studio': 'Professional multi-point studio lighting setup with key light, fill light, and rim light for polished, controlled illumination.',
-      'dramatic': 'Dramatic chiaroscuro lighting with deep shadows and strong directional light creating bold contrast and mood.',
-      'neon': 'Vibrant neon lighting with colorful reflections, glows, and RGB accents creating a modern, edgy atmosphere.',
-      'soft-luxury': 'Soft, diffused luxury lighting with warm tones, delicate highlights, and gentle gradients for an elegant premium feel.',
-      'high-contrast': 'High contrast lighting with bold shadows and bright highlights, creating strong graphic visual impact.',
-      'golden-hour': 'Warm golden hour sunlight with long shadows, amber tones, and a magical, dreamy atmospheric quality.',
-    };
-    blocks.push({ label: '💡 LIGHTING', text: lightMap[selections.lighting[0]] || '' });
+    blocks.push({ label: '💡 ILUMINAÇÃO', text: lightMap[selections.lighting[0]] || '' });
   }
 
-  // ── ACTION ──
-  const actionParts: string[] = [];
-  const energyMap: Record<string, string> = {
-    'high-energy': 'Fast-paced dynamic action with quick cuts, rapid movements, and intense rhythm. The energy is explosive and exciting.',
-    'calm': 'Slow, contemplative, and aesthetic rhythm. Gentle movements, long takes, and a serene, meditative atmosphere.',
-    'luxury-mood': 'Sophisticated, slow, and premium-paced. Every movement is deliberate, elegant, and dripping with luxury.',
-    'dramatic-mood': 'Building dramatic tension with suspenseful pacing, anticipation beats, and a powerful climactic reveal.',
-    'emotional': 'Emotionally charged pacing that connects deeply with the viewer, building warmth and genuine human connection.',
-    'inspirational': 'Uplifting and motivational rhythm with crescendo pacing, building from calm to powerful and empowering.',
-  };
+  // ACTION
   if (selections.energy?.length) {
-    actionParts.push(energyMap[selections.energy[0]] || '');
-  }
-  if (actionParts.length) {
-    blocks.push({ label: '🎬 ACTION', text: actionParts.filter(Boolean).join(' ') });
+    blocks.push({ label: '🎬 AÇÃO', text: energyMap[selections.energy[0]] || '' });
   }
 
-  // ── VISUAL STYLE ──
+  // VISUAL STYLE
   if (selections.visualStyle?.length) {
-    const styleMap: Record<string, string> = {
-      'cinematic': 'Cinematic film aesthetic with wide dynamic range, film grain, anamorphic lens characteristics, and professional color grading with teal-orange tones.',
-      'realistic': 'Hyper-realistic photographic quality with natural skin tones, authentic textures, and true-to-life color accuracy.',
-      'ugc': 'Authentic user-generated content aesthetic — raw, unpolished, smartphone-shot feel that is relatable and trustworthy.',
-      'luxury': 'Ultra-premium luxury visual language with rich metallic textures, deep blacks, golds, and refined elegant composition.',
-      'minimalist': 'Clean minimalist design with abundant white space, simple geometric composition, and typographic precision.',
-      'futuristic': 'Futuristic sci-fi aesthetic with holographic elements, sleek surfaces, cyber-blue tones, and technology-forward design.',
-      'commercial': 'Broadcast-quality commercial advertising polish with perfect color balance, professional retouching, and crisp resolution.',
-      'viral': 'Bold, attention-grabbing viral social media style with oversaturated colors, bold text overlays, and thumb-stopping visual impact.',
-      'documentary': 'Documentary style with authentic, journalistic visual approach. Natural framing, observational camera work.',
-      'high-fashion': 'High fashion editorial aesthetic with bold styling, dramatic poses, avant-garde composition, and magazine-quality finish.',
-      'studio-photo': 'Professional studio photography with controlled lighting, seamless backgrounds, and commercial-grade product presentation.',
-      'lifestyle': 'Warm lifestyle aesthetic with natural tones, aspirational settings, and a genuine, lived-in visual warmth.',
-    };
-    blocks.push({ label: '🎨 VISUAL STYLE', text: styleMap[selections.visualStyle[0]] || '' });
+    blocks.push({ label: '🎨 ESTILO VISUAL', text: styleMap[selections.visualStyle[0]] || '' });
   }
 
-  // ── PLATFORM OPTIMIZATION ──
+  // PLATFORM OPTIMIZATION
   if (selections.platform?.length) {
-    const platformMap: Record<string, string> = {
-      'tiktok': 'Optimized for TikTok: vertical 9:16, fast-paced editing, trending audio-friendly, first 1-2 seconds must hook. Native, organic feel preferred over overly produced content.',
-      'instagram': 'Optimized for Instagram Feed: visually striking composition, cohesive color palette, high-impact single frame or carousel-ready.',
-      'instagram-reels': 'Optimized for Instagram Reels: vertical 9:16, dynamic transitions, text overlays, engaging within first 3 seconds. Trending format and music-synced cuts.',
-      'youtube': 'Optimized for YouTube: widescreen 16:9, cinematic quality, professional audio, structured narrative with clear beginning-middle-end.',
-      'youtube-shorts': 'Optimized for YouTube Shorts: vertical 9:16, quick-hit content under 60 seconds, immediate value delivery.',
-      'facebook-ads': 'Optimized for Facebook Ads: conversion-focused, clear product benefits, strong CTA placement, works with and without sound.',
-      'landing-page': 'Optimized for landing page hero: premium, persuasive, looping capability, ambient motion that enhances conversion without distraction.',
-      'hero-section': 'Optimized for website hero section: seamless looping ambient visual, subtle motion, premium quality that enhances page experience.',
-    };
-    blocks.push({ label: '📲 PLATFORM OPTIMIZATION', text: platformMap[selections.platform[0]] || '' });
+    blocks.push({ label: '📲 OTIMIZAÇÃO DE PLATAFORMA', text: platformMap[selections.platform[0]] || '' });
   }
 
-  // ── ORIENTATION ──
+  // ORIENTATION
   if (selections.orientation?.length) {
-    const orientMap: Record<string, string> = {
-      'vertical': 'Vertical format 9:16 aspect ratio.',
-      'horizontal': 'Horizontal format 16:9 aspect ratio.',
-      'square': 'Square format 1:1 aspect ratio.',
-    };
-    blocks.push({ label: '📐 ORIENTATION', text: orientMap[selections.orientation[0]] || '' });
+    blocks.push({ label: '📐 ORIENTAÇÃO', text: orientMap[selections.orientation[0]] || '' });
   }
 
-  // AI model reference
+  // MODEL
   const modelKey = isVideo ? 'videoModel' : 'imageModel';
   if (selections[modelKey]?.length) {
     const modelLabel = LAYERS.find(l => l.id === modelKey)?.options.find(o => o.id === selections[modelKey][0])?.label;
     if (modelLabel) {
-      blocks.push({ label: '🤖 MODEL', text: `Optimized for ${modelLabel}. Professional quality, 4K resolution, highly detailed.` });
+      blocks.push({ label: '🤖 MODELO', text: `Otimizado para ${modelLabel}. Qualidade profissional, 4K, altamente detalhado.` });
     }
   }
 
-  // Build final structured prompt
+  // NEGATIVE PROMPT
+  blocks.push({ label: '🚫 PROMPT NEGATIVO', text: STANDARD_NEGATIVE_PROMPT });
+
   return blocks.map(b => `[${b.label}]\n${b.text}`).join('\n\n');
+}
+
+// ─── SCRIPT GENERATOR ────────────────────────────────────────────────
+
+function generateScript(selections: Record<string, string[]>, selectedHookText?: string): string {
+  const product = selections.productCategory?.[0];
+  const productLabel = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === product)?.label || 'o produto';
+  const goal = selections.marketingGoal?.[0] || '';
+  const platform = selections.platform?.[0] || '';
+
+  const isShort = ['tiktok', 'instagram-reels', 'youtube-shorts'].includes(platform);
+
+  const hookText = selectedHookText || 'Espera... você precisa ver isso antes de tomar qualquer decisão.';
+
+  const ctaMap: Record<string, string> = {
+    'direct-sales': 'Compre agora e aproveite a oferta por tempo limitado. Link na bio.',
+    'lead-generation': 'Clique no link e descubra mais. Cadastre-se gratuitamente.',
+    'product-awareness': 'Conheça mais sobre nosso produto. Link na descrição.',
+    'brand-awareness': 'Siga-nos para mais conteúdo exclusivo.',
+    'app-install': 'Baixe o app agora — link na bio.',
+    'product-launch': 'Lançamento oficial! Garanta o seu agora.',
+    'retargeting': 'Ainda pensando? Aproveite antes que acabe.',
+    'social-proof': 'Milhares de clientes já aprovaram. Veja os depoimentos.',
+    'educational': 'Quer aprender mais? Siga para mais dicas.',
+    'viral-engagement': 'Marque alguém que precisa ver isso! Compartilhe.',
+  };
+
+  const sections = [
+    { label: '🪝 GANCHO (Primeiros 3 segundos)', text: `"${hookText}"` },
+    { label: '😰 PROBLEMA', text: `"Muitas pessoas enfrentam dificuldades e não encontram a solução certa para ${productLabel}. Gastam dinheiro, tempo e energia sem resultado."` },
+    { label: '📦 INTRODUÇÃO DO PRODUTO', text: `"Apresentamos ${productLabel} — a solução que resolve isso de forma simples e eficiente."` },
+    { label: '🔍 DEMONSTRAÇÃO', text: `"Mostrar ${productLabel} sendo utilizado em um cenário real. Destacar a facilidade de uso, a qualidade do material e os resultados visíveis."` },
+    { label: '✨ BENEFÍCIOS', text: `"Destaque os principais benefícios: qualidade superior, praticidade, custo-benefício e resultados comprovados."` },
+    { label: '📣 CHAMADA PARA AÇÃO', text: `"${ctaMap[goal] || 'Saiba mais — link na descrição.'}"` },
+  ];
+
+  if (isShort) {
+    return sections.map(s => `[${s.label}]\n${s.text}`).join('\n\n') +
+      '\n\n⏱️ Formato: Roteiro curto (15-60 segundos) — ritmo rápido e direto.';
+  }
+
+  return sections.map(s => `[${s.label}]\n${s.text}`).join('\n\n') +
+    '\n\n⏱️ Formato: Roteiro completo — com narrativa estruturada.';
+}
+
+// ─── SCENE GENERATOR ─────────────────────────────────────────────────
+
+interface Scene {
+  title: string;
+  description: string;
+  camera: string;
+  lighting: string;
+  action: string;
+}
+
+function generateScenes(selections: Record<string, string[]>): Scene[] {
+  const product = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === selections.productCategory?.[0])?.label || 'o produto';
+  const cam = selections.cameraStyle?.[0] || 'cinematic-camera';
+  const light = selections.lighting?.[0] || 'natural';
+
+  return [
+    {
+      title: 'Cena 1 — Gancho Inicial',
+      description: `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+      camera: cameraMap[cam] || 'Câmera cinematográfica com movimentos suaves.',
+      lighting: lightMap[light] || 'Iluminação natural.',
+      action: 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+    },
+    {
+      title: 'Cena 2 — Apresentação do Problema',
+      description: `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
+      camera: 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
+      lighting: 'Iluminação levemente sombria para transmitir desconforto.',
+      action: 'Pessoa tentando realizar a tarefa sem sucesso, expressando frustração visível.',
+    },
+    {
+      title: 'Cena 3 — Introdução do Produto',
+      description: `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+      camera: 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
+      lighting: 'Iluminação premium com destaque suave no produto.',
+      action: 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
+    },
+    {
+      title: 'Cena 4 — Demonstração do Produto',
+      description: `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
+      camera: 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
+      lighting: lightMap[light] || 'Iluminação natural e acolhedora.',
+      action: 'Demonstração passo a passo do uso do produto, destacando texturas, qualidade e resultados.',
+    },
+    {
+      title: 'Cena 5 — Resultado / Benefícios',
+      description: `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
+      camera: 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
+      lighting: 'Iluminação brilhante e otimista, transmitindo satisfação.',
+      action: 'Reação positiva do usuário, expressão de satisfação, resultado visual claro.',
+    },
+    {
+      title: 'Cena 6 — Fechamento com CTA',
+      description: `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+      camera: 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
+      lighting: 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
+      action: 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
+    },
+  ];
+}
+
+// ─── VARIATION GENERATOR ─────────────────────────────────────────────
+
+function generateVariations(selections: Record<string, string[]>): string[] {
+  const base = generatePrompt(selections);
+  const variationModifiers = [
+    { scene: 'ambiente urbano moderno com arquitetura contemporânea', camera: 'câmera com leve movimento de tracking lateral suave', mood: 'atmosfera clean e profissional' },
+    { scene: 'cenário natural ao ar livre com vegetação exuberante', camera: 'câmera handheld orgânica com movimentos naturais', mood: 'atmosfera acolhedora e autêntica' },
+    { scene: 'estúdio minimalista com fundo infinito branco', camera: 'câmera fixa com zoom lento e cinematográfico', mood: 'atmosfera premium e sofisticada' },
+    { scene: 'ambiente industrial com texturas metálicas e concreto', camera: 'drone shot revelando o cenário de cima', mood: 'atmosfera ousada e impactante' },
+    { scene: 'espaço criativo colorido com elementos visuais dinâmicos', camera: 'câmera POV imersiva seguindo a ação', mood: 'atmosfera energética e viral' },
+  ];
+
+  return variationModifiers.map((mod, i) => {
+    return `═══════════════════════════════════════\n🎬 VARIAÇÃO ${i + 1}\n═══════════════════════════════════════\n\n` +
+      base +
+      `\n\n[🔀 MODIFICADORES DA VARIAÇÃO ${i + 1}]\nCenário: ${mod.scene}\nCâmera: ${mod.camera}\nAtmosfera: ${mod.mood}`;
+  });
 }
 
 // ─── COMPONENT ───────────────────────────────────────────────────────
@@ -494,6 +712,10 @@ interface PresetsGalleryProps {
 const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose }) => {
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
+  const [activeTab, setActiveTab] = useState<string>('prompt');
+  const [selectedHookText, setSelectedHookText] = useState<string>('');
+  const [variations, setVariations] = useState<string[]>([]);
+  const { toast } = useToast();
 
   const visibleLayers = useMemo(() => {
     return LAYERS.filter(layer => {
@@ -506,24 +728,17 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setSelections(prev => {
       const current = prev[layerId] || [];
       const layer = LAYERS.find(l => l.id === layerId);
-
       if (layerId === 'contentType') {
         const next: Record<string, string[]> = { ...prev, [layerId]: [optionId] };
         delete next.videoModel;
         delete next.imageModel;
         return next;
       }
-
       if (layer?.multiple) {
-        if (current.includes(optionId)) {
-          return { ...prev, [layerId]: current.filter(id => id !== optionId) };
-        }
+        if (current.includes(optionId)) return { ...prev, [layerId]: current.filter(id => id !== optionId) };
         return { ...prev, [layerId]: [...current, optionId] };
       }
-
-      if (current.includes(optionId)) {
-        return { ...prev, [layerId]: [] };
-      }
+      if (current.includes(optionId)) return { ...prev, [layerId]: [] };
       return { ...prev, [layerId]: [optionId] };
     });
   };
@@ -535,21 +750,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     return generatePrompt(selections);
   }, [selections, selectionCount]);
 
+  const generatedScript = useMemo(() => {
+    if (selectionCount < 2) return '';
+    return generateScript(selections, selectedHookText || undefined);
+  }, [selections, selectionCount, selectedHookText]);
+
+  const generatedScenes = useMemo(() => {
+    if (selectionCount < 2) return [];
+    return generateScenes(selections);
+  }, [selections, selectionCount]);
+
   const handleGenerate = () => {
     const isVideo = selections.contentType?.includes('video');
     const modelKey = isVideo ? 'videoModel' : 'imageModel';
     const modelId = selections[modelKey]?.[0];
 
     const videoModelMap: Record<string, string> = {
-      'veo3': 'google/veo-3.1',
-      'sora': 'openai/sora-2',
-      'kling': 'kling/v2.1',
-      'gen4': 'runway/gen4',
-      'hailuo': 'hailuo/minimax-video-01',
-      'pika': 'pika/v2',
-      'dream-machine': 'luma/dream-machine',
-      'seed-video': 'seed/video-01',
-      'svd': 'stability/svd',
+      'veo3': 'google/veo-3.1', 'sora': 'openai/sora-2', 'kling': 'kling/v2.1',
+      'gen4': 'runway/gen4', 'hailuo': 'hailuo/minimax-video-01', 'pika': 'pika/v2',
+      'dream-machine': 'luma/dream-machine', 'seed-video': 'seed/video-01', 'svd': 'stability/svd',
     };
 
     const style = selections.visualStyle?.[0] || '';
@@ -564,12 +783,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     const preset: Preset = {
       id: `custom-${Date.now()}`,
       name: nameParts.length ? nameParts.join(' • ') : (isVideo ? 'Vídeo Personalizado' : 'Imagem Personalizada'),
-      description: 'Prompt gerado automaticamente pelo AI Creative Prompt Engine.',
+      description: 'Prompt gerado pelo AI Creative Prompt Engine.',
       prompt: generatedPrompt,
       image: '',
       category: isVideo ? 'video' : 'image',
       toolType: isVideo ? 'videoGen' : 'imageGen',
-      isVideo: isVideo,
+      isVideo,
       videoModel: isVideo && modelId ? videoModelMap[modelId] : undefined,
       duration: isVideo ? 6 : undefined,
     };
@@ -580,7 +799,30 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const handleReset = () => {
     setSelections({});
     setExpandedLayer('contentType');
+    setSelectedHookText('');
+    setVariations([]);
   };
+
+  const handleGenerateVariations = useCallback(() => {
+    if (selectionCount < 2) return;
+    const v = generateVariations(selections);
+    setVariations(v);
+    toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
+  }, [selections, selectionCount, toast]);
+
+  const handleCopyText = useCallback((text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copiado!', description: 'Texto copiado para a área de transferência.' });
+  }, [toast]);
+
+  const handleSelectRandomHook = useCallback(() => {
+    const all = VIRAL_HOOKS.flatMap(h => h.hooks);
+    const random = all[Math.floor(Math.random() * all.length)];
+    setSelectedHookText(random);
+    toast({ title: 'Gancho Selecionado', description: random });
+  }, [toast]);
+
+  // ─── RENDER ──────────────────────────────────────────────────────────
 
   return (
     <motion.div
@@ -590,24 +832,21 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
+      <div className="flex items-center justify-between px-6 py-3 border-b">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <h2 className="text-lg font-bold flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
-            AI Creative Prompt Engine
+            AI Creative Studio
           </h2>
-          <p className="text-sm text-muted-foreground">Combine camadas para gerar prompts profissionais de marketing</p>
+          <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
         </div>
         <div className="flex items-center gap-2">
           {selectionCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {selectionCount} camadas
-            </Badge>
+            <Badge variant="secondary" className="text-xs">{selectionCount} camadas</Badge>
           )}
           {selectionCount > 0 && (
             <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 text-muted-foreground">
-              <RotateCcw className="h-3.5 w-3.5" />
-              Limpar
+              <RotateCcw className="h-3.5 w-3.5" /> Limpar
             </Button>
           )}
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -618,8 +857,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left — Layers */}
-        <ScrollArea className="flex-1 lg:max-w-[65%]">
-          <div className="p-4 space-y-2">
+        <ScrollArea className="flex-1 lg:max-w-[45%]">
+          <div className="p-3 space-y-1.5">
             {visibleLayers.map((layer, idx) => {
               const isExpanded = expandedLayer === layer.id;
               const selected = selections[layer.id] || [];
@@ -630,8 +869,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   key={layer.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.03 }}
-                  className={`rounded-xl border transition-all ${
+                  transition={{ delay: idx * 0.02 }}
+                  className={`rounded-lg border transition-all ${
                     isExpanded
                       ? 'border-primary/40 bg-primary/5 shadow-sm'
                       : hasSelection
@@ -641,25 +880,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 >
                   <button
                     onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-left"
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">{layer.emoji}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-base">{layer.emoji}</span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">{layer.title}</span>
+                          <span className="font-semibold text-xs">{layer.title}</span>
                           {layer.required && !hasSelection && (
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-destructive/40 text-destructive">
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 border-destructive/40 text-destructive">
                               Obrigatório
                             </Badge>
                           )}
                         </div>
                         {!isExpanded && hasSelection && (
-                          <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="flex flex-wrap gap-1 mt-0.5">
                             {selected.map(s => {
                               const opt = layer.options.find(o => o.id === s);
                               return (
-                                <Badge key={s} className="text-[10px] px-1.5 py-0 bg-primary/15 text-primary border-primary/20">
+                                <Badge key={s} className="text-[9px] px-1 py-0 bg-primary/15 text-primary border-primary/20">
                                   {opt?.emoji} {opt?.label}
                                 </Badge>
                               );
@@ -668,13 +907,13 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {hasSelection && (
-                        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="h-3 w-3 text-primary-foreground" />
+                        <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-2.5 w-2.5 text-primary-foreground" />
                         </div>
                       )}
-                      <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                     </div>
                   </button>
 
@@ -687,22 +926,22 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <div className="px-4 pb-4">
-                          <p className="text-xs text-muted-foreground mb-3">{layer.description}</p>
-                          <div className="flex flex-wrap gap-2">
+                        <div className="px-3 pb-3">
+                          <p className="text-[10px] text-muted-foreground mb-2">{layer.description}</p>
+                          <div className="flex flex-wrap gap-1.5">
                             {layer.options.map((option) => {
                               const isSelected = selected.includes(option.id);
                               return (
                                 <button
                                   key={option.id}
                                   onClick={() => toggleOption(layer.id, option.id)}
-                                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all border ${
                                     isSelected
-                                      ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-[1.02]'
+                                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                                       : 'bg-background text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
                                   }`}
                                 >
-                                  <span className="text-base">{option.emoji}</span>
+                                  <span className="text-sm">{option.emoji}</span>
                                   {option.label}
                                 </button>
                               );
@@ -718,71 +957,251 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           </div>
         </ScrollArea>
 
-        {/* Right — Preview */}
-        <div className="lg:w-[35%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold text-sm flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Prompt Estruturado
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {selectionCount} {selectionCount === 1 ? 'camada selecionada' : 'camadas selecionadas'}
-            </p>
-          </div>
+        {/* Right — Modules */}
+        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+            <div className="border-b px-3 pt-2">
+              <TabsList className="h-8 w-full grid grid-cols-5 bg-muted/50">
+                <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <Sparkles className="h-3 w-3" /> Prompt
+                </TabsTrigger>
+                <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <Library className="h-3 w-3" /> Ganchos
+                </TabsTrigger>
+                <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <FileText className="h-3 w-3" /> Roteiro
+                </TabsTrigger>
+                <TabsTrigger value="scenes" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <Clapperboard className="h-3 w-3" /> Cenas
+                </TabsTrigger>
+                <TabsTrigger value="variations" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <Layers className="h-3 w-3" /> Variações
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {selectionCount > 0 && (
-                <div className="space-y-2">
-                  {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
-                    <div key={layer.id} className="flex items-start gap-2">
-                      <span className="text-sm mt-0.5">{layer.emoji}</span>
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{layer.title}</span>
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          {(selections[layer.id] || []).map(s => {
-                            const opt = layer.options.find(o => o.id === s);
-                            return (
-                              <Badge key={s} variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {opt?.label}
-                              </Badge>
-                            );
-                          })}
+            {/* TAB: Prompt */}
+            <TabsContent value="prompt" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <ScrollArea className="flex-1">
+                <div className="p-4 space-y-3">
+                  {selectionCount > 0 && (
+                    <div className="space-y-1.5">
+                      {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
+                        <div key={layer.id} className="flex items-start gap-2">
+                          <span className="text-xs mt-0.5">{layer.emoji}</span>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{layer.title}</span>
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {(selections[layer.id] || []).map(s => {
+                                const opt = layer.options.find(o => o.id === s);
+                                return <Badge key={s} variant="secondary" className="text-[9px] px-1 py-0">{opt?.label}</Badge>;
+                              })}
+                            </div>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {generatedPrompt && (
+                    <div className="bg-background rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs text-muted-foreground font-medium">Prompt Estruturado:</p>
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedPrompt)}>
+                          <Copy className="h-3 w-3" /> Copiar
+                        </Button>
+                      </div>
+                      <pre className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedPrompt}</pre>
+                    </div>
+                  )}
+
+                  {selectionCount < 2 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Wand2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Selecione pelo menos 2 camadas para gerar o prompt</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* TAB: Viral Hooks */}
+            <TabsContent value="hooks" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <div className="p-3 border-b flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={handleSelectRandomHook}>
+                  <Shuffle className="h-3 w-3" /> Gancho Aleatório
+                </Button>
+                {selectedHookText && (
+                  <Badge className="text-[9px] px-2 bg-primary/15 text-primary border-primary/20 max-w-[300px] truncate">
+                    ✅ {selectedHookText}
+                  </Badge>
+                )}
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-4">
+                  {VIRAL_HOOKS.map(category => (
+                    <div key={category.category}>
+                      <h4 className="text-xs font-semibold flex items-center gap-1.5 mb-2">
+                        <span>{category.emoji}</span> {category.category}
+                      </h4>
+                      <div className="space-y-1">
+                        {category.hooks.map((hook, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSelectedHookText(hook)}
+                            className={`w-full text-left px-3 py-2 rounded-md text-xs border transition-all ${
+                              selectedHookText === hook
+                                ? 'border-primary bg-primary/10 text-primary font-medium'
+                                : 'border-border/40 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground'
+                            }`}
+                          >
+                            "{hook}"
+                          </button>
+                        ))}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </ScrollArea>
+            </TabsContent>
 
-              {generatedPrompt && (
-                <div className="bg-background rounded-lg border p-3 mt-3">
-                  <p className="text-xs text-muted-foreground font-medium mb-1.5">Prompt Estruturado:</p>
-                  <pre className="text-xs text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedPrompt}</pre>
+            {/* TAB: Script */}
+            <TabsContent value="script" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  {selectionCount >= 2 ? (
+                    <div className="bg-background rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 text-primary" /> Roteiro Gerado
+                        </p>
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedScript)}>
+                          <Copy className="h-3 w-3" /> Copiar
+                        </Button>
+                      </div>
+                      <pre className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedScript}</pre>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Selecione pelo menos 2 camadas para gerar o roteiro</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </ScrollArea>
+            </TabsContent>
 
-              {selectionCount < 2 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Wand2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Selecione pelo menos 2 camadas para gerar o prompt</p>
+            {/* TAB: Scenes / Storyboard */}
+            <TabsContent value="scenes" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {selectionCount >= 2 ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold flex items-center gap-1.5">
+                          <Clapperboard className="h-3.5 w-3.5 text-primary" /> Storyboard — {generatedScenes.length} Cenas
+                        </p>
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => {
+                          const text = generatedScenes.map(s => `${s.title}\nDescrição: ${s.description}\nCâmera: ${s.camera}\nIluminação: ${s.lighting}\nAção: ${s.action}`).join('\n\n---\n\n');
+                          handleCopyText(text);
+                        }}>
+                          <Copy className="h-3 w-3" /> Copiar Tudo
+                        </Button>
+                      </div>
+                      {generatedScenes.map((scene, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="bg-background rounded-lg border p-3 space-y-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
+                              {i + 1}
+                            </div>
+                            <h4 className="text-xs font-semibold">{scene.title}</h4>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">{scene.description}</p>
+                          <div className="grid grid-cols-1 gap-1.5 text-[10px]">
+                            <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
+                              <span className="text-muted-foreground font-medium min-w-[70px]">📹 Câmera:</span>
+                              <span>{scene.camera}</span>
+                            </div>
+                            <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
+                              <span className="text-muted-foreground font-medium min-w-[70px]">💡 Iluminação:</span>
+                              <span>{scene.lighting}</span>
+                            </div>
+                            <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
+                              <span className="text-muted-foreground font-medium min-w-[70px]">🎬 Ação:</span>
+                              <span>{scene.action}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Clapperboard className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Selecione pelo menos 2 camadas para gerar o storyboard</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            </TabsContent>
 
-          <div className="p-4 border-t">
+            {/* TAB: Variations */}
+            <TabsContent value="variations" className="flex-1 flex flex-col overflow-hidden mt-0">
+              <div className="p-3 border-b">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5"
+                  onClick={handleGenerateVariations}
+                  disabled={selectionCount < 2}
+                >
+                  <RefreshCw className="h-3 w-3" /> Gerar 5 Variações
+                </Button>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-3">
+                  {variations.length > 0 ? (
+                    variations.map((v, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="bg-background rounded-lg border p-3"
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <Badge variant="outline" className="text-[9px]">Variação {i + 1}</Badge>
+                          <Button variant="ghost" size="sm" className="h-5 text-[9px] gap-1" onClick={() => handleCopyText(v)}>
+                            <Copy className="h-2.5 w-2.5" /> Copiar
+                          </Button>
+                        </div>
+                        <pre className="text-[10px] text-foreground leading-relaxed font-mono whitespace-pre-wrap max-h-[200px] overflow-auto">{v}</pre>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Layers className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Clique em "Gerar 5 Variações" para criar prompts alternativos</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+
+          <div className="p-3 border-t">
             <Button
               className="w-full gap-2"
               size="lg"
               disabled={selectionCount < 2 || !selections.contentType?.length}
               onClick={handleGenerate}
             >
-              {selections.contentType?.includes('video') ? (
-                <Video className="h-4 w-4" />
-              ) : (
-                <Image className="h-4 w-4" />
-              )}
+              {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
               Gerar com este Prompt
             </Button>
           </div>
