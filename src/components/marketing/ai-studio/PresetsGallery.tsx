@@ -1296,7 +1296,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-              Revisar e Gerar
+              Aplicar no Canvas
             </Button>
           </div>
         </div>
