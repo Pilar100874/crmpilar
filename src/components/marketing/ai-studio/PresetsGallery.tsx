@@ -782,8 +782,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [activeTab, setActiveTab] = useState<string>('prompt');
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
-  const [reviewPreset, setReviewPreset] = useState<Preset | null>(null);
-  const [editablePrompt, setEditablePrompt] = useState<string>('');
+  const { toast } = useToast();
   const { toast } = useToast();
 
   const visibleLayers = useMemo(() => {
