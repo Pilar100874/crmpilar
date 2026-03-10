@@ -282,7 +282,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere vídeos a partir de prompts ou imagens',
         icon: '🎬',
         color: '#f59e0b',
-        defaultConfig: { duration: 5, resolution: '1080p', aspectRatio: '16:9', videoNegativePrompt: 'texto na tela, marca d\'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais' },
+        defaultConfig: { duration: 5, resolution: '1080p', aspectRatio: '16:9' },
       },
       {
         type: 'videoMerge',
