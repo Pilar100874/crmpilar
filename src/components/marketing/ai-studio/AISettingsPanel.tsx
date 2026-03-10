@@ -139,6 +139,7 @@ interface Props {
 
 const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [selectedProvider, setSelectedProvider] = useState<string>('elevenlabs');
+  const [selectedSection, setSelectedSection] = useState<'providers' | 'defaults'>('providers');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
@@ -151,6 +152,8 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [testAudioUrl, setTestAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  const [studioDefaults, setStudioDefaults] = useState<StudioDefaults>(DEFAULT_STUDIO_DEFAULTS);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
