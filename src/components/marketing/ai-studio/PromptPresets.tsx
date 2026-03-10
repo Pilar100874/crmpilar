@@ -682,7 +682,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5 text-primary" /> Criar Prompt Personalizado
+            <Plus className="h-5 w-5 text-primary" /> {isEditing ? 'Editar Prompt' : 'Criar Prompt Personalizado'}
           </DialogTitle>
         </DialogHeader>
 
