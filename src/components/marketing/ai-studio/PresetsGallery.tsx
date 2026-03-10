@@ -767,6 +767,7 @@ interface Preset {
   duration?: number;
   videoSubcategory?: string;
   referenceBlocks?: string[];
+  layerSelections?: Record<string, string[]>;
 }
 
 interface PresetsGalleryProps {
