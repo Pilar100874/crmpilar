@@ -992,9 +992,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
   const handlePromptPresetSelect = useCallback((promptPreset: PromptPreset) => {
     const isVideo = promptPreset.mediaType === 'video';
-    const referenceBlocks = promptPreset.category === 'influencer'
-      ? ['productImageSelect', 'galleryInfluencer']
-      : ['productImageSelect'];
+    const referenceBlocks = promptPreset.referenceBlocks || (
+      promptPreset.category === 'influencer'
+        ? ['productImageSelect', 'galleryInfluencer']
+        : ['productImageSelect']
+    );
 
     const preset: Preset = {
       id: `prompt-${promptPreset.id}-${Date.now()}`,
