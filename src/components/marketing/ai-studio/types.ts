@@ -267,7 +267,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           model: 'google/gemini-2.5-flash-image',
           compositeMode: 'clothing',
           prompt: 'Integre o produto de forma natural e realista na cena, mantendo a iluminação e proporções corretas',
-          negativePrompt: 'texto, marca d\'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído',
         },
       },
     ],
