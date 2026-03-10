@@ -100,6 +100,19 @@ const AICreativeStudioInner: React.FC = () => {
     return () => window.removeEventListener('studio-reopen-batch', handler as EventListener);
   }, [setBatchReviewResults]);
 
+  // Listen for reload preset event from textInput node config panel
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const { selections } = e.detail || {};
+      if (selections) {
+        setPresetInitialSelections(selections);
+        setShowPresets(true);
+      }
+    };
+    window.addEventListener('studio-reload-preset', handler as EventListener);
+    return () => window.removeEventListener('studio-reload-preset', handler as EventListener);
+  }, []);
+
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const [currentWorkflowName, setCurrentWorkflowName] = useState('');
