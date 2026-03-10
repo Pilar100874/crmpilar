@@ -104,9 +104,10 @@ const AICreativeStudioInner: React.FC = () => {
   // Listen for reload preset event from textInput node config panel
   useEffect(() => {
     const handler = (e: CustomEvent) => {
-      const { selections } = e.detail || {};
+      const { selections, nodeId } = e.detail || {};
       if (selections) {
         setPresetInitialSelections(selections);
+        setReloadingPresetNodeId(nodeId || null);
         setShowPresets(true);
       }
     };
