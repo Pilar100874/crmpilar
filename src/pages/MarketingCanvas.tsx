@@ -69,6 +69,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const [productData, setProductData] = useState<any>(null);
   const [projectName, setProjectName] = useState("Novo Design");
   const isMobile = useIsMobile();
+  const galleryImageLoadedRef = useRef(false);
 
   const handlePlatformSelect = (preset: PlatformPreset) => {
     setPlatformPreset(preset);
