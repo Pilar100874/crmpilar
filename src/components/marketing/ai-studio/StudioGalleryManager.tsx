@@ -506,7 +506,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
       {/* Image Preview Modal */}
       <AnimatePresence>
-        {previewItem && !isVideoUrl(previewItem.image_url) && (
+        {previewItem && !isVideoUrl(previewItem.image_url, previewItem.tipo) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
