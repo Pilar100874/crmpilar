@@ -967,7 +967,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     return isVideo ? savedDefaults.videoNegativePrompt : savedDefaults.imageNegativePrompt;
   }, [selections.contentType, savedDefaults]);
 
-  const generatedPrompt = useMemo(() => {
+  // Auto-update variations when selections change and variations tab is active
+  useEffect(() => {
+    if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
+      const v = generateVariations(selections, negativePromptText);
+      setVariations(v);
+    }
+  }, [selections, negativePromptText]);
+
     if (selectionCount < 2) return '';
     return generatePrompt(selections, negativePromptText);
   }, [selections, selectionCount, negativePromptText]);
