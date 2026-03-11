@@ -1,9 +1,8 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { 
-  Play, Pause, SkipBack, SkipForward, Scissors, Save, 
-  Loader2, Volume2, VolumeX, RotateCcw
+  Play, Pause, Scissors, Save, Undo2,
+  Loader2, Volume2, VolumeX, RotateCcw, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,6 +11,13 @@ interface VideoTrimmerProps {
   onSaveTrimmed: (blob: Blob, startTime: number, endTime: number) => Promise<void>;
   onSaveOriginal: () => void;
   isSaving?: boolean;
+}
+
+/** A cut = a removed segment */
+interface CutSegment {
+  id: string;
+  start: number; // seconds
+  end: number;   // seconds
 }
 
 const formatTime = (seconds: number): string => {
@@ -23,29 +29,62 @@ const formatTime = (seconds: number): string => {
 
 const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, onSaveOriginal, isSaving }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const previewVideoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [trimRange, setTrimRange] = useState<[number, number]>([0, 100]);
-  const [isTrimming, setIsTrimming] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isTrimming, setIsTrimming] = useState(false);
   const [trimProgress, setTrimProgress] = useState(0);
-  const animRef = useRef<number | null>(null);
-  const abortRef = useRef(false);
 
-  const trimStart = (trimRange[0] / 100) * duration;
-  const trimEnd = (trimRange[1] / 100) * duration;
-  const trimmedDuration = trimEnd - trimStart;
+  // Selection state: the user drags on the timeline to select a region to cut
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Cut segments (removed regions) and undo history
+  const [cuts, setCuts] = useState<CutSegment[]>([]);
+  const [undoStack, setUndoStack] = useState<CutSegment[][]>([]);
+
+  // Preview mode: plays only kept segments
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const previewRef = useRef(false);
+
+  const animRef = useRef<number | null>(null);
+
+  // Sort selection
+  const selStart = selectionStart !== null && selectionEnd !== null ? Math.min(selectionStart, selectionEnd) : null;
+  const selEnd = selectionStart !== null && selectionEnd !== null ? Math.max(selectionStart, selectionEnd) : null;
+  const hasSelection = selStart !== null && selEnd !== null && (selEnd - selStart) > 0.05;
+
+  // Compute kept segments (inverse of cuts)
+  const keptSegments = useMemo(() => {
+    if (duration <= 0) return [];
+    const sorted = [...cuts].sort((a, b) => a.start - b.start);
+    const kept: { start: number; end: number }[] = [];
+    let cursor = 0;
+    for (const cut of sorted) {
+      if (cut.start > cursor) {
+        kept.push({ start: cursor, end: cut.start });
+      }
+      cursor = Math.max(cursor, cut.end);
+    }
+    if (cursor < duration) {
+      kept.push({ start: cursor, end: duration });
+    }
+    return kept;
+  }, [cuts, duration]);
+
+  const totalKeptDuration = useMemo(() => 
+    keptSegments.reduce((sum, s) => sum + (s.end - s.start), 0), [keptSegments]);
 
   const handleLoadedMetadata = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     setDuration(video.duration);
-    setTrimRange([0, 100]);
     setVideoReady(true);
   }, []);
 
@@ -56,13 +95,18 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
 
     const tick = () => {
       setCurrentTime(video.currentTime);
-      if (video.currentTime >= trimEnd && (isPlaying || isPreviewing)) {
-        video.pause();
-        video.currentTime = trimStart;
-        setIsPlaying(false);
-        setIsPreviewing(false);
+
+      // In preview mode, skip over cut regions
+      if (previewRef.current && video.currentTime >= 0) {
+        for (const cut of cuts) {
+          if (video.currentTime >= cut.start && video.currentTime < cut.end) {
+            video.currentTime = cut.end;
+            break;
+          }
+        }
       }
-      if (isPlaying || isPreviewing) {
+
+      if (!video.paused && !video.ended) {
         animRef.current = requestAnimationFrame(tick);
       }
     };
@@ -73,22 +117,26 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [isPlaying, isPreviewing, trimEnd, trimStart]);
+  }, [isPlaying, isPreviewing, cuts]);
+
+  const stopPlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (video) video.pause();
+    setIsPlaying(false);
+    setIsPreviewing(false);
+    previewRef.current = false;
+  }, []);
 
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPlaying) {
-      video.pause();
-      setIsPlaying(false);
+    if (isPlaying || isPreviewing) {
+      stopPlayback();
     } else {
-      if (video.currentTime >= trimEnd - 0.1 || video.currentTime < trimStart) {
-        video.currentTime = trimStart;
-      }
       video.play();
       setIsPlaying(true);
     }
-  }, [isPlaying, trimStart, trimEnd]);
+  }, [isPlaying, isPreviewing, stopPlayback]);
 
   const seekTo = useCallback((time: number) => {
     const video = videoRef.current;
@@ -97,163 +145,222 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
     setCurrentTime(time);
   }, []);
 
-  const handleTrimRangeChange = useCallback((values: number[]) => {
-    setTrimRange([values[0], values[1]]);
-    const newStart = (values[0] / 100) * duration;
-    seekTo(newStart);
-  }, [duration, seekTo]);
+  // --- Timeline mouse interaction for selection ---
+  const getTimeFromMouse = useCallback((e: React.MouseEvent | MouseEvent) => {
+    const el = timelineRef.current;
+    if (!el || duration <= 0) return 0;
+    const rect = el.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    return (x / rect.width) * duration;
+  }, [duration]);
 
-  const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = x / rect.width;
-    const time = percent * duration;
-    seekTo(Math.max(trimStart, Math.min(trimEnd, time)));
-  }, [duration, trimStart, trimEnd, seekTo]);
+  const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const time = getTimeFromMouse(e);
+    setSelectionStart(time);
+    setSelectionEnd(time);
+    setIsDragging(true);
+    seekTo(time);
+  }, [getTimeFromMouse, seekTo]);
 
-  const resetTrim = useCallback(() => {
-    setTrimRange([0, 100]);
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMove = (e: MouseEvent) => {
+      const time = getTimeFromMouse(e);
+      setSelectionEnd(time);
+    };
+    const handleUp = () => {
+      setIsDragging(false);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [isDragging, getTimeFromMouse]);
+
+  // --- Cut action ---
+  const handleCut = useCallback(() => {
+    if (!hasSelection || selStart === null || selEnd === null) return;
+    stopPlayback();
+
+    // Save current state for undo
+    setUndoStack(prev => [...prev, [...cuts]]);
+
+    const newCut: CutSegment = {
+      id: Date.now().toString(),
+      start: selStart,
+      end: selEnd,
+    };
+
+    // Merge overlapping cuts
+    const allCuts = [...cuts, newCut].sort((a, b) => a.start - b.start);
+    const merged: CutSegment[] = [];
+    for (const c of allCuts) {
+      const last = merged[merged.length - 1];
+      if (last && c.start <= last.end) {
+        last.end = Math.max(last.end, c.end);
+      } else {
+        merged.push({ ...c });
+      }
+    }
+
+    setCuts(merged);
+    setSelectionStart(null);
+    setSelectionEnd(null);
+    toast.success(`Cortado: ${formatTime(selStart)} → ${formatTime(selEnd)}`);
+  }, [hasSelection, selStart, selEnd, cuts, stopPlayback]);
+
+  // --- Undo ---
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    stopPlayback();
+    const prev = undoStack[undoStack.length - 1];
+    setCuts(prev);
+    setUndoStack(s => s.slice(0, -1));
+    toast.info('Corte desfeito');
+  }, [undoStack, stopPlayback]);
+
+  // --- Reset all ---
+  const handleResetAll = useCallback(() => {
+    stopPlayback();
+    setUndoStack(prev => [...prev, [...cuts]]);
+    setCuts([]);
+    setSelectionStart(null);
+    setSelectionEnd(null);
     seekTo(0);
-  }, [seekTo]);
+    toast.info('Todos os cortes foram removidos');
+  }, [cuts, stopPlayback, seekTo]);
 
-  // Preview trimmed section
+  // --- Preview (plays video skipping cut regions) ---
   const handlePreview = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.pause();
-    setIsPlaying(false);
-    video.currentTime = trimStart;
-    setCurrentTime(trimStart);
-    
+    if (cuts.length === 0) {
+      toast.info('Nenhum corte para simular');
+      return;
+    }
+    stopPlayback();
+    seekTo(0);
     setTimeout(() => {
-      video.play();
+      const video = videoRef.current;
+      if (!video) return;
+      previewRef.current = true;
       setIsPreviewing(true);
+      video.play();
     }, 100);
-  }, [trimStart]);
+  }, [cuts, stopPlayback, seekTo]);
 
-  // Export trimmed video - download original and re-encode
-  const handleExportTrimmed = useCallback(async () => {
+  // --- Export: record only the kept segments ---
+  const handleExport = useCallback(async () => {
+    if (cuts.length === 0) {
+      toast.info('Nenhum corte foi feito');
+      return;
+    }
     setIsTrimming(true);
     setTrimProgress(0);
-    abortRef.current = false;
-    toast.info('Processando corte do vídeo...');
+    toast.info('Processando vídeo cortado...');
 
     try {
-      // Fetch the video as blob to avoid CORS issues with canvas
+      // Fetch video as blob for CORS safety
       const response = await fetch(videoUrl);
       if (!response.ok) throw new Error('Falha ao carregar vídeo');
       const sourceBlob = await response.blob();
       const localUrl = URL.createObjectURL(sourceBlob);
 
-      // Create a hidden video element for recording
-      const offscreenVideo = document.createElement('video');
-      offscreenVideo.src = localUrl;
-      offscreenVideo.muted = false;
-      offscreenVideo.playsInline = true;
-      offscreenVideo.preload = 'auto';
+      const offscreen = document.createElement('video');
+      offscreen.src = localUrl;
+      offscreen.playsInline = true;
+      offscreen.preload = 'auto';
 
       await new Promise<void>((resolve, reject) => {
-        offscreenVideo.onloadedmetadata = () => resolve();
-        offscreenVideo.onerror = () => reject(new Error('Erro ao carregar vídeo para corte'));
-        setTimeout(() => reject(new Error('Timeout ao carregar vídeo')), 15000);
+        offscreen.onloadedmetadata = () => resolve();
+        offscreen.onerror = () => reject(new Error('Erro ao carregar vídeo'));
+        setTimeout(() => reject(new Error('Timeout')), 15000);
       });
 
-      // Setup canvas
-      const canvas = canvasRef.current || document.createElement('canvas');
-      canvas.width = offscreenVideo.videoWidth || 1280;
-      canvas.height = offscreenVideo.videoHeight || 720;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas context indisponível');
+      const canvas = document.createElement('canvas');
+      canvas.width = offscreen.videoWidth || 1280;
+      canvas.height = offscreen.videoHeight || 720;
+      const ctx = canvas.getContext('2d')!;
 
-      // Seek to start
-      offscreenVideo.currentTime = trimStart;
-      await new Promise<void>((resolve) => {
-        offscreenVideo.onseeked = () => resolve();
-      });
-
-      // Setup stream from canvas
       const canvasStream = canvas.captureStream(30);
 
-      // Try to add audio
+      // Try audio
       let audioCtx: AudioContext | null = null;
       try {
         audioCtx = new AudioContext();
-        const source = audioCtx.createMediaElementSource(offscreenVideo);
+        const source = audioCtx.createMediaElementSource(offscreen);
         const dest = audioCtx.createMediaStreamDestination();
         source.connect(dest);
         source.connect(audioCtx.destination);
         dest.stream.getAudioTracks().forEach(t => canvasStream.addTrack(t));
-      } catch {
-        // Audio capture may fail, continue without
-      }
+      } catch { /* no audio */ }
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
-        : MediaRecorder.isTypeSupported('video/webm')
-          ? 'video/webm'
-          : 'video/mp4';
+        : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
 
       const recorder = new MediaRecorder(canvasStream, { mimeType, videoBitsPerSecond: 5_000_000 });
       const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 
       const recordingDone = new Promise<Blob>((resolve, reject) => {
-        recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: mimeType });
-          resolve(blob);
-        };
+        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
         recorder.onerror = () => reject(new Error('Erro no MediaRecorder'));
       });
 
+      // Process each kept segment sequentially
+      const segments = [...keptSegments];
+      let processedTime = 0;
+
       recorder.start(100);
-      await offscreenVideo.play();
 
-      // Draw frames
-      const drawFrame = () => {
-        if (abortRef.current) {
-          offscreenVideo.pause();
-          recorder.stop();
-          return;
-        }
-        if (offscreenVideo.currentTime >= trimEnd || offscreenVideo.paused || offscreenVideo.ended) {
-          offscreenVideo.pause();
-          recorder.stop();
-          return;
-        }
-        ctx.drawImage(offscreenVideo, 0, 0, canvas.width, canvas.height);
-        // Update progress
-        const elapsed = offscreenVideo.currentTime - trimStart;
-        const total = trimEnd - trimStart;
-        setTrimProgress(Math.min(100, (elapsed / total) * 100));
-        requestAnimationFrame(drawFrame);
-      };
-      drawFrame();
+      for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        offscreen.currentTime = seg.start;
+        await new Promise<void>(r => { offscreen.onseeked = () => r(); });
+        
+        await offscreen.play();
 
-      const blob = await recordingDone;
-      
-      // Cleanup
-      URL.revokeObjectURL(localUrl);
-      offscreenVideo.remove();
-      if (audioCtx) audioCtx.close().catch(() => {});
-
-      if (blob.size < 100) {
-        throw new Error('O vídeo cortado ficou vazio. Tente ajustar a seleção.');
+        await new Promise<void>((resolve) => {
+          const draw = () => {
+            if (offscreen.currentTime >= seg.end || offscreen.paused || offscreen.ended) {
+              offscreen.pause();
+              resolve();
+              return;
+            }
+            ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+            processedTime = (offscreen.currentTime - seg.start);
+            const totalProcessed = segments.slice(0, i).reduce((s, sg) => s + (sg.end - sg.start), 0) + processedTime;
+            setTrimProgress(Math.min(100, (totalProcessed / totalKeptDuration) * 100));
+            requestAnimationFrame(draw);
+          };
+          draw();
+        });
       }
 
-      await onSaveTrimmed(blob, trimStart, trimEnd);
+      recorder.stop();
+      const blob = await recordingDone;
+
+      URL.revokeObjectURL(localUrl);
+      offscreen.remove();
+      if (audioCtx) audioCtx.close().catch(() => {});
+
+      if (blob.size < 100) throw new Error('O vídeo cortado ficou vazio');
+
+      // Use 0 and totalKeptDuration as the range for the callback
+      await onSaveTrimmed(blob, 0, totalKeptDuration);
       toast.success('✅ Vídeo cortado e salvo!');
     } catch (err: any) {
       console.error('[VideoTrimmer] Export error:', err);
-      toast.error('Erro ao cortar vídeo: ' + (err.message || String(err)));
+      toast.error('Erro ao exportar: ' + (err.message || String(err)));
     } finally {
       setIsTrimming(false);
       setTrimProgress(0);
     }
-  }, [trimStart, trimEnd, videoUrl, onSaveTrimmed]);
+  }, [cuts, keptSegments, totalKeptDuration, videoUrl, onSaveTrimmed]);
 
-  const hasTrimChanges = trimRange[0] > 0.5 || trimRange[1] < 99.5;
+  const hasCuts = cuts.length > 0;
 
   return (
     <div className="flex flex-col w-full">
@@ -263,124 +370,146 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
           ref={videoRef}
           src={videoUrl}
           onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => { setIsPlaying(false); setIsPreviewing(false); }}
+          onEnded={() => { setIsPlaying(false); setIsPreviewing(false); previewRef.current = false; }}
           muted={isMuted}
-          className="w-full max-h-[55vh] object-contain"
+          className="w-full max-h-[50vh] object-contain"
           playsInline
           preload="auto"
         />
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      {/* Timeline / trim bar */}
-      <div className="bg-card border-t border-border px-4 pt-3 pb-2 space-y-3">
-        {/* Time markers */}
+      {/* Controls panel */}
+      <div className="bg-card border-t border-border px-4 pt-3 pb-3 space-y-3">
+        
+        {/* Instructions */}
+        <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+          <Scissors className="h-3.5 w-3.5 shrink-0" />
+          <span>Clique e arraste na timeline para selecionar a parte que deseja <strong>remover</strong>, depois clique em "Cortar".</span>
+        </div>
+
+        {/* Timeline */}
         <div className="relative">
+          {/* Time markers */}
           <div className="flex justify-between text-[10px] text-muted-foreground mb-1 font-mono">
-            <span>{formatTime(trimStart)}</span>
+            <span>{formatTime(0)}</span>
             <span className="text-primary font-semibold">{formatTime(currentTime)}</span>
-            <span>{formatTime(trimEnd)}</span>
+            <span>{formatTime(duration)}</span>
           </div>
 
           {/* Visual timeline */}
-          <div 
-            className="relative h-10 bg-muted/50 rounded-md cursor-pointer overflow-hidden border"
-            onClick={handleTimelineClick}
+          <div
+            ref={timelineRef}
+            className="relative h-12 bg-muted/50 rounded-md cursor-crosshair overflow-hidden border select-none"
+            onMouseDown={handleTimelineMouseDown}
           >
-            {/* Trim region */}
-            <div 
-              className="absolute top-0 bottom-0 bg-primary/15 border-x-2 border-primary/40"
-              style={{ left: `${trimRange[0]}%`, width: `${trimRange[1] - trimRange[0]}%` }}
-            />
-            <div className="absolute top-0 bottom-0 left-0 bg-black/30" style={{ width: `${trimRange[0]}%` }} />
-            <div className="absolute top-0 bottom-0 right-0 bg-black/30" style={{ width: `${100 - trimRange[1]}%` }} />
-
             {/* Faux waveform */}
             <div className="absolute inset-0 flex items-end px-0.5 gap-px pointer-events-none">
-              {Array.from({ length: 80 }).map((_, i) => {
-                const pos = (i / 80) * 100;
-                const inRange = pos >= trimRange[0] && pos <= trimRange[1];
+              {Array.from({ length: 100 }).map((_, i) => {
+                const pos = (i / 100) * duration;
+                const isCut = cuts.some(c => pos >= c.start && pos < c.end);
                 return (
                   <div
                     key={i}
                     className="flex-1 rounded-t-sm transition-colors"
                     style={{
                       height: `${20 + Math.sin(i * 0.5) * 30 + Math.sin(i * 1.3) * 20}%`,
-                      backgroundColor: inRange ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--muted-foreground) / 0.15)',
+                      backgroundColor: isCut
+                        ? 'hsl(var(--destructive) / 0.25)'
+                        : 'hsl(var(--primary) / 0.3)',
                     }}
                   />
                 );
               })}
             </div>
 
+            {/* Cut regions (removed) */}
+            {cuts.map((cut) => (
+              <div
+                key={cut.id}
+                className="absolute top-0 bottom-0 bg-destructive/20 border-x border-destructive/40 pointer-events-none z-[5]"
+                style={{
+                  left: `${(cut.start / duration) * 100}%`,
+                  width: `${((cut.end - cut.start) / duration) * 100}%`,
+                }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[9px] text-destructive font-medium bg-background/70 px-1 rounded">
+                    CORTE
+                  </span>
+                </div>
+                {/* Striped overlay */}
+                <div className="absolute inset-0 opacity-20" style={{
+                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, hsl(var(--destructive)) 3px, hsl(var(--destructive)) 4px)',
+                }} />
+              </div>
+            ))}
+
+            {/* Current selection (being dragged) */}
+            {hasSelection && selStart !== null && selEnd !== null && (
+              <div
+                className="absolute top-0 bottom-0 bg-destructive/30 border-x-2 border-destructive/60 pointer-events-none z-[6]"
+                style={{
+                  left: `${(selStart / duration) * 100}%`,
+                  width: `${((selEnd - selStart) / duration) * 100}%`,
+                }}
+              />
+            )}
+
             {/* Playhead */}
             {duration > 0 && (
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10 pointer-events-none"
-                style={{ left: `${(currentTime / duration) * 100}%` }}
+                className="absolute top-0 bottom-0 w-0.5 z-10 pointer-events-none"
+                style={{
+                  left: `${(currentTime / duration) * 100}%`,
+                  backgroundColor: 'hsl(var(--primary))',
+                }}
               >
-                <div className="absolute -top-1 -left-1.5 w-3.5 h-2 bg-red-500 rounded-b-sm" 
-                  style={{ clipPath: 'polygon(0 0, 100% 0, 50% 100%)' }} />
+                <div
+                  className="absolute -top-0.5 -left-[5px] w-[11px] h-2.5"
+                  style={{
+                    clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+                    backgroundColor: 'hsl(var(--primary))',
+                  }}
+                />
               </div>
             )}
           </div>
-
-          {/* Dual-thumb trim slider */}
-          <div className="mt-2">
-            <Slider
-              value={trimRange}
-              onValueChange={handleTrimRangeChange}
-              min={0}
-              max={100}
-              step={0.1}
-              minStepsBetweenThumbs={2}
-              className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-2.5 [&_[role=slider]]:rounded-sm [&_[role=slider]]:border-primary"
-            />
-          </div>
         </div>
 
-        {/* Duration info + progress */}
+        {/* Selection + Duration info */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span>Duração original: <strong className="text-foreground">{formatTime(duration)}</strong></span>
-            {hasTrimChanges && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span>Original: <strong className="text-foreground">{formatTime(duration)}</strong></span>
+            {hasCuts && (
               <span className="text-primary">
-                Selecionado: <strong>{formatTime(trimmedDuration)}</strong>
+                Resultado: <strong>{formatTime(totalKeptDuration)}</strong>
+              </span>
+            )}
+            {hasCuts && (
+              <span className="text-destructive">
+                {cuts.length} corte{cuts.length > 1 ? 's' : ''}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {isTrimming && (
-              <span className="text-primary text-xs font-medium">{Math.round(trimProgress)}%</span>
-            )}
-            {hasTrimChanges && !isTrimming && (
-              <button 
-                onClick={resetTrim}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <RotateCcw className="h-3 w-3" />
-                Resetar
-              </button>
-            )}
-          </div>
+          {hasSelection && selStart !== null && selEnd !== null && (
+            <span className="text-destructive font-medium">
+              Seleção: {formatTime(selStart)} → {formatTime(selEnd)} ({formatTime(selEnd - selStart)})
+            </span>
+          )}
         </div>
 
-        {/* Progress bar during trimming */}
+        {/* Progress bar */}
         {isTrimming && (
           <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${trimProgress}%` }}
-            />
+            <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${trimProgress}%` }} />
           </div>
         )}
 
         {/* Controls */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Left: playback */}
           <div className="flex items-center gap-1.5">
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => seekTo(trimStart)} title="Ir para início">
-              <SkipBack className="h-4 w-4" />
-            </Button>
             <Button
               size="icon"
               variant={isPlaying ? 'default' : 'outline'}
@@ -388,40 +517,74 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
               onClick={togglePlay}
               disabled={!videoReady || isTrimming}
             >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isPlaying || isPreviewing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => seekTo(trimEnd)} title="Ir para fim">
-              <SkipForward className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsMuted(!isMuted)} title={isMuted ? 'Ativar som' : 'Silenciar'}>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsMuted(!isMuted)}>
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
-            {hasTrimChanges && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 text-xs"
-                  onClick={handlePreview}
-                  disabled={isTrimming || isSaving || isPreviewing}
-                >
-                  <Play className="h-3.5 w-3.5" />
-                  {isPreviewing ? 'Simulando...' : 'Simular Corte'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="gap-1.5 text-xs"
-                  onClick={handleExportTrimmed}
-                  disabled={isTrimming || isSaving}
-                >
-                  {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
-                  {isTrimming ? 'Cortando...' : 'Cortar e Salvar'}
-                </Button>
-              </>
+          {/* Center: cut actions */}
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="destructive"
+              className="gap-1.5 text-xs"
+              onClick={handleCut}
+              disabled={!hasSelection || isTrimming}
+            >
+              <Scissors className="h-3.5 w-3.5" />
+              Cortar Seleção
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              onClick={handleUndo}
+              disabled={undoStack.length === 0 || isTrimming}
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+              Desfazer
+            </Button>
+            {hasCuts && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1.5 text-xs"
+                onClick={handleResetAll}
+                disabled={isTrimming}
+              >
+                <RotateCcw className="h-3 w-3" />
+                Limpar
+              </Button>
+            )}
+          </div>
+
+          {/* Right: preview + save */}
+          <div className="flex items-center gap-1.5">
+            {hasCuts && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={handlePreview}
+                disabled={isTrimming || isSaving}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Simular
+              </Button>
+            )}
+            {hasCuts && (
+              <Button
+                size="sm"
+                variant="default"
+                className="gap-1.5 text-xs"
+                onClick={handleExport}
+                disabled={isTrimming || isSaving}
+              >
+                {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
+                {isTrimming ? `Processando ${Math.round(trimProgress)}%` : 'Salvar Cortado'}
+              </Button>
             )}
             <Button
               size="sm"
