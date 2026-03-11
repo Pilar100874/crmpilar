@@ -229,7 +229,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-luxury-still', name: 'Luxury Still Life', mediaType: 'image', category: 'produto',
     tags: ['luxury', 'marble', 'elegant'], image: imgProdLuxury,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Luxury still life product photography on a polished marble surface. Elegant composition with fresh flowers, gold accents, and premium decorative elements. Soft diffused lighting creating delicate shadows and subtle reflections on the marble. Premium fashion brand aesthetic with refined color palette. Camera: Hasselblad X2D, 80mm lens, medium format quality.${NEGATIVE_BLOCK}`,
   },
   {
