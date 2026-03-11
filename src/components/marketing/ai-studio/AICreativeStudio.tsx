@@ -146,6 +146,12 @@ const AICreativeStudioInner: React.FC = () => {
   const [draggingWorkflowId, setDraggingWorkflowId] = useState<string | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
+  const [manualFolders, setManualFolders] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`studio_folders_${localStorage.getItem('estabelecimentoId') || ''}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -544,8 +550,16 @@ const AICreativeStudioInner: React.FC = () => {
     return Array.from(types);
   }, []);
 
-  // Get unique folders from workflows
-  const folders = Array.from(new Set(savedWorkflows.map(w => w.pasta).filter(Boolean))) as string[];
+  // Get unique folders from workflows + manually created ones
+  const folders = Array.from(new Set([
+    ...savedWorkflows.map(w => w.pasta).filter(Boolean),
+    ...manualFolders
+  ])) as string[];
+
+  const saveManualFolders = useCallback((newFolders: string[]) => {
+    setManualFolders(newFolders);
+    localStorage.setItem(`studio_folders_${estabelecimentoId}`, JSON.stringify(newFolders));
+  }, [estabelecimentoId]);
 
   // Filtered workflows based on active folder
   const filteredWorkflows = activeFolder
@@ -580,18 +594,15 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleCreateStandaloneFolder = useCallback(() => {
     if (!createFolderName.trim()) return;
-    // We create the folder by moving a placeholder — but folders are implicit.
-    // To make it appear, we just need at least one workflow referencing it.
-    // For now, just add a toast — real creation happens on drop or move.
-    // We'll keep track by checking if folder name already exists.
     if (folders.includes(createFolderName.trim())) {
       toast.error('Pasta já existe');
     } else {
-      toast.success(`Pasta "${createFolderName.trim()}" criada. Arraste workflows para ela!`);
+      saveManualFolders([...manualFolders, createFolderName.trim()]);
+      toast.success(`Pasta "${createFolderName.trim()}" criada!`);
     }
     setShowCreateFolderDialog(false);
     setCreateFolderName('');
-  }, [createFolderName, folders]);
+  }, [createFolderName, folders, manualFolders, saveManualFolders]);
 
   const handleFolderDrop = useCallback(async (folder: string | null) => {
     if (!draggingWorkflowId) return;
@@ -601,7 +612,6 @@ const AICreativeStudioInner: React.FC = () => {
   }, [draggingWorkflowId, handleMoveToFolder]);
 
   const handleDeleteFolder = useCallback(async (folder: string) => {
-    // Move all workflows in this folder to root
     const workflowsInFolder = savedWorkflows.filter(w => w.pasta === folder);
     for (const w of workflowsInFolder) {
       await supabase
@@ -609,11 +619,13 @@ const AICreativeStudioInner: React.FC = () => {
         .update({ pasta: null } as any)
         .eq('id', w.id);
     }
+    // Also remove from manual folders
+    saveManualFolders(manualFolders.filter(f => f !== folder));
     toast.success(`Pasta "${folder}" excluída. Workflows movidos para raiz.`);
     setDeleteFolderConfirm(null);
     if (activeFolder === folder) setActiveFolder(null);
     fetchWorkflows();
-  }, [savedWorkflows, activeFolder, fetchWorkflows]);
+  }, [savedWorkflows, activeFolder, fetchWorkflows, manualFolders, saveManualFolders]);
 
 
   const handleCloseCanvas = useCallback(() => {
@@ -1807,36 +1819,15 @@ const AICreativeStudioInner: React.FC = () => {
             value={createFolderName}
             onChange={(e) => setCreateFolderName(e.target.value)}
             placeholder="Nome da pasta..."
+            autoFocus
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && createFolderName.trim()) {
-                // Create folder by moving nothing — folder becomes visible when a workflow is moved to it
-                // For now just show it as a tab
-                if (folders.includes(createFolderName.trim())) {
-                  toast.error('Pasta já existe');
-                } else {
-                  // Create a dummy entry — we need at least one workflow. Let's use the move dialog approach instead.
-                  toast.success(`Pasta "${createFolderName.trim()}" pronta! Arraste workflows para organizá-los.`);
-                  // We need to persist the folder even without workflows. Let's create via a placeholder approach.
-                  // Actually, we just add it to a local state list for display purposes.
-                }
-                setShowCreateFolderDialog(false);
-                setCreateFolderName('');
-              }
+              if (e.key === 'Enter') handleCreateStandaloneFolder();
             }}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateFolderDialog(false)}>Cancelar</Button>
             <Button
-              onClick={() => {
-                if (!createFolderName.trim()) return;
-                if (folders.includes(createFolderName.trim())) {
-                  toast.error('Pasta já existe');
-                  return;
-                }
-                toast.success(`Pasta "${createFolderName.trim()}" criada!`);
-                setShowCreateFolderDialog(false);
-                setCreateFolderName('');
-              }}
+              onClick={handleCreateStandaloneFolder}
               disabled={!createFolderName.trim()}
               className="gap-1"
             >
