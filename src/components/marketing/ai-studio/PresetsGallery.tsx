@@ -305,7 +305,7 @@ interface ViralHook {
 
 const VIRAL_HOOKS: ViralHook[] = [
   {
-    category: 'Pattern Interrupt',
+    category: 'Quebra de Padrão',
     emoji: '⚡',
     hooks: [
       'Espera... ninguém te conta isso sobre esse produto.',
