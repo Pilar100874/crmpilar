@@ -167,7 +167,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-unboxing', name: 'Unboxing Experience', mediaType: 'video', category: 'influencer',
     tags: ['unboxing', 'reveal', 'youtube'], image: imgInfluencerUnboxing,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Ultra realistic unboxing video. Influencer opening the product packaging slowly. Close-up shots of textures and details. Warm lighting and excitement reaction. YouTube style product reveal.${NEGATIVE_BLOCK}`,
   },
   {
