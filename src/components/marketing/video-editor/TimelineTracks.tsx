@@ -1,6 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { TimelineState, TimelineClip, TRACK_COLORS } from './types';
-import { Scissors } from 'lucide-react';
 
 interface Props {
   state: TimelineState;
@@ -12,7 +11,14 @@ interface Props {
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState<{ clipId: string; type: 'move' | 'resize-start' | 'resize-end'; startX: number; originalStart: number; originalDuration: number } | null>(null);
+  const draggingRef = useRef<{
+    clipId: string;
+    type: 'move' | 'resize-start' | 'resize-end';
+    startX: number;
+    originalStart: number;
+    originalDuration: number;
+    originalTrimStart: number;
+  } | null>(null);
 
   const totalWidth = state.duration * state.zoom;
 
@@ -29,35 +35,37 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: TimelineClip, type: 'move' | 'resize-start' | 'resize-end') => {
     if (clip.locked) return;
     e.stopPropagation();
+    e.preventDefault();
     onSelectClip(clip.id, e.ctrlKey || e.metaKey);
 
-    setDragging({
-      clipId: clip.id,
-      type,
-      startX: e.clientX,
-      originalStart: clip.startTime,
-      originalDuration: clip.duration,
-    });
+    const startX = e.clientX;
+    const originalStart = clip.startTime;
+    const originalDuration = clip.duration;
+    const originalTrimStart = clip.trimStart;
+
+    draggingRef.current = { clipId: clip.id, type, startX, originalStart, originalDuration, originalTrimStart };
 
     const handleMouseMove = (me: MouseEvent) => {
-      const dx = me.clientX - e.clientX;
+      const dx = me.clientX - startX;
       const dt = dx / state.zoom;
 
       if (type === 'move') {
-        const newStart = Math.max(0, clip.startTime + dt);
-        onUpdateClip(clip.id, { startTime: newStart });
+        onUpdateClip(clip.id, { startTime: Math.max(0, originalStart + dt) });
       } else if (type === 'resize-end') {
-        const newDuration = Math.max(0.5, clip.duration + dt);
-        onUpdateClip(clip.id, { duration: newDuration });
+        onUpdateClip(clip.id, { duration: Math.max(0.5, originalDuration + dt) });
       } else if (type === 'resize-start') {
-        const newStart = Math.max(0, clip.startTime + dt);
-        const newDuration = Math.max(0.5, clip.duration - dt);
-        onUpdateClip(clip.id, { startTime: newStart, duration: newDuration, trimStart: clip.trimStart + dt });
+        const newDt = Math.min(dt, originalDuration - 0.5);
+        const clampedDt = Math.max(-originalStart, newDt);
+        onUpdateClip(clip.id, {
+          startTime: originalStart + clampedDt,
+          duration: originalDuration - clampedDt,
+          trimStart: Math.max(0, originalTrimStart + clampedDt),
+        });
       }
     };
 
     const handleMouseUp = () => {
-      setDragging(null);
+      draggingRef.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -65,6 +73,49 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
   }, [state.zoom, onSelectClip, onUpdateClip]);
+
+  // Memoize waveform bars to prevent re-render flicker
+  const renderWaveform = useCallback((clip: TimelineClip, width: number, trackColor: string) => {
+    if (clip.type === 'audio') {
+      const barCount = Math.min(Math.floor(width / 3), 80);
+      return (
+        <div className="flex items-end gap-px h-full w-full py-1">
+          {Array.from({ length: barCount }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-sm"
+              style={{
+                backgroundColor: `${clip.color || trackColor}60`,
+                height: `${20 + Math.sin(i * 0.7 + clip.startTime) * 30 + Math.sin(i * 1.5) * 20}%`,
+                minWidth: 1,
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+    if (clip.type === 'video') {
+      const thumbCount = Math.min(Math.floor(width / 30), 12);
+      return (
+        <div className="flex gap-0.5 h-full w-full py-1 overflow-hidden">
+          {Array.from({ length: thumbCount }).map((_, i) => (
+            <div
+              key={i}
+              className="h-full rounded-sm shrink-0"
+              style={{
+                width: 28,
+                backgroundColor: `${clip.color || trackColor}${30 + (i % 3) * 10}`,
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+    if (clip.type === 'text') {
+      return <span className="text-[9px] text-muted-foreground italic truncate">{clip.name}</span>;
+    }
+    return null;
+  }, []);
 
   return (
     <div
@@ -82,10 +133,8 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               className="relative border-b"
               style={{ height: track.height, opacity: track.visible ? 1 : 0.3 }}
             >
-              {/* Track background pattern */}
               <div className="absolute inset-0 bg-muted/10" />
 
-              {/* Clips */}
               {trackClips.map((clip) => {
                 const left = clip.startTime * state.zoom;
                 const width = clip.duration * state.zoom;
@@ -109,7 +158,6 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                     }}
                     onMouseDown={(e) => handleClipMouseDown(e, clip, 'move')}
                   >
-                    {/* Clip header */}
                     <div
                       className="px-1.5 py-0.5 text-[10px] font-medium truncate flex items-center gap-1"
                       style={{ backgroundColor: `${clip.color || trackColor}40`, color: 'hsl(var(--foreground))' }}
@@ -123,43 +171,10 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       {clip.muted && <span className="text-destructive">🔇</span>}
                     </div>
 
-                    {/* Waveform / content preview */}
                     <div className="flex-1 px-1 flex items-center">
-                      {clip.type === 'audio' && (
-                        <div className="flex items-end gap-px h-full w-full py-1">
-                          {Array.from({ length: Math.min(Math.floor(width / 3), 80) }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="flex-1 rounded-sm"
-                              style={{
-                                backgroundColor: `${clip.color || trackColor}60`,
-                                height: `${20 + Math.random() * 60}%`,
-                                minWidth: 1,
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {clip.type === 'video' && (
-                        <div className="flex gap-0.5 h-full w-full py-1 overflow-hidden">
-                          {Array.from({ length: Math.min(Math.floor(width / 30), 12) }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="h-full rounded-sm shrink-0"
-                              style={{
-                                width: 28,
-                                backgroundColor: `${clip.color || trackColor}${30 + (i % 3) * 10}`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {clip.type === 'text' && (
-                        <span className="text-[9px] text-muted-foreground italic truncate">{clip.name}</span>
-                      )}
+                      {renderWaveform(clip, width, trackColor)}
                     </div>
 
-                    {/* Transition indicator */}
                     {clip.transition && clip.transition.type !== 'none' && (
                       <div
                         className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-yellow-500/30 to-transparent flex items-center pl-1"
@@ -169,15 +184,14 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       </div>
                     )}
 
-                    {/* Resize handles */}
                     {!clip.locked && (
                       <>
                         <div
-                          className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-white/30 rounded-l"
+                          className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-l"
                           onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-start')}
                         />
                         <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-white/30 rounded-r"
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-r"
                           onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-end')}
                         />
                       </>
@@ -189,9 +203,8 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           );
         })}
 
-        {/* Playhead line */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none"
+          className="absolute top-0 bottom-0 w-0.5 bg-destructive z-30 pointer-events-none"
           style={{ left: state.currentTime * state.zoom }}
         />
       </div>

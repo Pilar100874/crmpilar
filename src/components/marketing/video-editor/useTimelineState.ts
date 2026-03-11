@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { TimelineState, TimelineClip, TimelineTrack, DEFAULT_TRACKS, VideoFilter } from './types';
 
 const generateId = () => `clip_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -9,7 +9,7 @@ export function useTimelineState() {
     clips: [],
     currentTime: 0,
     duration: 60,
-    zoom: 40, // pixels per second
+    zoom: 40,
     scrollX: 0,
     scrollY: 0,
     isPlaying: false,
@@ -20,6 +20,16 @@ export function useTimelineState() {
 
   const playIntervalRef = useRef<number | null>(null);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playIntervalRef.current) {
+        window.clearInterval(playIntervalRef.current);
+        playIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   const updateState = useCallback((partial: Partial<TimelineState>) => {
     setState((prev) => ({ ...prev, ...partial }));
   }, []);
@@ -27,32 +37,37 @@ export function useTimelineState() {
   // Playback
   const play = useCallback(() => {
     if (playIntervalRef.current) return;
-    updateState({ isPlaying: true });
-    const interval = 1000 / 30; // 30fps playback
+    setState((prev) => ({ ...prev, isPlaying: true }));
+    const interval = 1000 / 30;
     playIntervalRef.current = window.setInterval(() => {
       setState((prev) => {
         const next = prev.currentTime + 1 / 30;
         if (next >= prev.duration) {
-          window.clearInterval(playIntervalRef.current!);
-          playIntervalRef.current = null;
+          if (playIntervalRef.current) {
+            window.clearInterval(playIntervalRef.current);
+            playIntervalRef.current = null;
+          }
           return { ...prev, currentTime: 0, isPlaying: false };
         }
         return { ...prev, currentTime: next };
       });
     }, interval);
-  }, [updateState]);
+  }, []);
 
   const pause = useCallback(() => {
     if (playIntervalRef.current) {
       window.clearInterval(playIntervalRef.current);
       playIntervalRef.current = null;
     }
-    updateState({ isPlaying: false });
-  }, [updateState]);
+    setState((prev) => ({ ...prev, isPlaying: false }));
+  }, []);
 
   const seekTo = useCallback((time: number) => {
-    updateState({ currentTime: Math.max(0, Math.min(time, state.duration)) });
-  }, [updateState, state.duration]);
+    setState((prev) => ({
+      ...prev,
+      currentTime: Math.max(0, Math.min(time, prev.duration)),
+    }));
+  }, []);
 
   // Clips
   const addClip = useCallback((clip: Omit<TimelineClip, 'id'>) => {
@@ -91,8 +106,8 @@ export function useTimelineState() {
   }, []);
 
   const deselectAll = useCallback(() => {
-    updateState({ selectedClipIds: [] });
-  }, [updateState]);
+    setState((prev) => ({ ...prev, selectedClipIds: [] }));
+  }, []);
 
   const splitClip = useCallback((id: string, atTime: number) => {
     setState((prev) => {
@@ -100,7 +115,7 @@ export function useTimelineState() {
       if (!clip) return prev;
 
       const relativeTime = atTime - clip.startTime;
-      if (relativeTime <= 0 || relativeTime >= clip.duration) return prev;
+      if (relativeTime <= 0.1 || relativeTime >= clip.duration - 0.1) return prev;
 
       const clip1: TimelineClip = {
         ...clip,
@@ -120,6 +135,7 @@ export function useTimelineState() {
       return {
         ...prev,
         clips: prev.clips.map((c) => (c.id === id ? clip1 : c)).concat(clip2),
+        selectedClipIds: [clip2.id],
       };
     });
   }, []);
@@ -134,7 +150,8 @@ export function useTimelineState() {
         startTime: clip.startTime + clip.duration + 0.5,
         transition: undefined,
       };
-      return { ...prev, clips: [...prev.clips, newClip] };
+      const newDuration = Math.max(prev.duration, newClip.startTime + newClip.duration + 10);
+      return { ...prev, clips: [...prev.clips, newClip], duration: newDuration, selectedClipIds: [newClip.id] };
     });
   }, []);
 
