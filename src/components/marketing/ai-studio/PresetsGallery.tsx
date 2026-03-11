@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -303,7 +303,19 @@ interface ViralHook {
   hooks: string[];
 }
 
-const VIRAL_HOOKS: ViralHook[] = [
+// Map hookStyle option IDs to their VIRAL_HOOKS category
+const HOOK_STYLE_CATEGORY_MAP: Record<string, string> = {
+  'pattern-interrupt': 'Quebra de Padrão',
+  'question': 'Gancho de Pergunta',
+  'problem': 'Gancho de Problema',
+  'shock': 'Gancho de Choque',
+  'curiosity': 'Gancho de Curiosidade',
+  'bold-statement': 'Declaração Impactante',
+  'visual-hook': 'Gancho Visual',
+  'fast-demo': 'Demo Rápida',
+};
+
+const DEFAULT_VIRAL_HOOKS: ViralHook[] = [
   {
     category: 'Quebra de Padrão',
     emoji: '⚡',
@@ -895,7 +907,28 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [activeTab, setActiveTab] = useState<string>('prompt');
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
+  const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
+  const [editingHook, setEditingHook] = useState<{ catIdx: number; hookIdx: number } | null>(null);
+  const [editingHookText, setEditingHookText] = useState('');
   const { toast } = useToast();
+
+  
+
+  // If hookStyle is deselected while on hooks tab, redirect
+  const hasHookStyleSelected = (selections.hookStyle || []).length > 0;
+  useEffect(() => {
+    if (activeTab === 'hooks' && !hasHookStyleSelected) {
+      setActiveTab('prompt');
+    }
+  }, [hasHookStyleSelected, activeTab]);
+
+  // Filter hooks based on selected hookStyle
+  const filteredHooks = useMemo(() => {
+    const selectedStyles = selections.hookStyle || [];
+    if (selectedStyles.length === 0) return [];
+    const allowedCategories = selectedStyles.map(s => HOOK_STYLE_CATEGORY_MAP[s]).filter(Boolean);
+    return viralHooks.filter(h => allowedCategories.includes(h.category));
+  }, [selections.hookStyle, viralHooks]);
 
   const visibleLayers = useMemo(() => {
     return LAYERS.filter(layer => {
@@ -933,6 +966,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     const isVideo = selections.contentType?.includes('video');
     return isVideo ? savedDefaults.videoNegativePrompt : savedDefaults.imageNegativePrompt;
   }, [selections.contentType, savedDefaults]);
+
+  // Auto-update variations when selections change and variations tab is active
+  useEffect(() => {
+    if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
+      const v = generateVariations(selections, negativePromptText);
+      setVariations(v);
+    }
+  }, [selections, negativePromptText]);
 
   const generatedPrompt = useMemo(() => {
     if (selectionCount < 2) return '';
@@ -1041,11 +1082,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   }, [toast]);
 
   const handleSelectRandomHook = useCallback(() => {
-    const all = VIRAL_HOOKS.flatMap(h => h.hooks);
+    const all = filteredHooks.flatMap(h => h.hooks);
+    if (all.length === 0) return;
     const random = all[Math.floor(Math.random() * all.length)];
     setSelectedHookText(random);
     toast({ title: 'Gancho Selecionado', description: random });
-  }, [toast]);
+  }, [filteredHooks, toast]);
 
   // ─── RENDER ──────────────────────────────────────────────────────────
 
@@ -1217,13 +1259,23 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               }
             }} className="flex flex-col flex-1 overflow-hidden">
             <div className="border-b px-3 pt-2">
-              <TabsList className={`h-8 w-full grid bg-muted/50 ${selections.contentType?.includes('video') ? 'grid-cols-5' : 'grid-cols-3'}`}>
+              <TabsList className={`h-8 w-full grid bg-muted/50 ${
+                (() => {
+                  const isVideo = selections.contentType?.includes('video');
+                  const hasHook = hasHookStyleSelected;
+                  if (isVideo && hasHook) return 'grid-cols-5';
+                  if (isVideo || hasHook) return 'grid-cols-4';
+                  return 'grid-cols-2';
+                })()
+              }`}>
                 <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
-                <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
-                  <Library className="h-3 w-3" /> Ganchos
-                </TabsTrigger>
+                {hasHookStyleSelected && (
+                  <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                    <Library className="h-3 w-3" /> Ganchos
+                  </TabsTrigger>
+                )}
                 {selections.contentType?.includes('video') && (
                   <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                     <FileText className="h-3 w-3" /> Roteiro
@@ -1299,28 +1351,95 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-4">
-                  {VIRAL_HOOKS.map(category => (
-                    <div key={category.category}>
-                      <h4 className="text-xs font-semibold flex items-center gap-1.5 mb-2">
-                        <span>{category.emoji}</span> {category.category}
-                      </h4>
-                      <div className="space-y-1">
-                        {category.hooks.map((hook, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setSelectedHookText(hook)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-xs border transition-all ${
-                              selectedHookText === hook
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-border/40 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground'
-                            }`}
-                          >
-                            "{hook}"
-                          </button>
-                        ))}
+                  {filteredHooks.map((category) => {
+                    const catIdx = viralHooks.findIndex(h => h.category === category.category);
+                    return (
+                      <div key={category.category}>
+                        <h4 className="text-xs font-semibold flex items-center gap-1.5 mb-2">
+                          <span>{category.emoji}</span> {category.category}
+                        </h4>
+                        <div className="space-y-1">
+                          {category.hooks.map((hook, i) => {
+                            const isEditing = editingHook?.catIdx === catIdx && editingHook?.hookIdx === i;
+                            return (
+                              <div key={i} className="flex items-center gap-1">
+                                {isEditing ? (
+                                  <div className="flex-1 flex items-center gap-1">
+                                    <input
+                                      className="flex-1 px-3 py-2 rounded-md text-xs border border-primary bg-background focus:outline-none"
+                                      value={editingHookText}
+                                      onChange={(e) => setEditingHookText(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          setViralHooks(prev => {
+                                            const updated = [...prev];
+                                            updated[catIdx] = { ...updated[catIdx], hooks: [...updated[catIdx].hooks] };
+                                            updated[catIdx].hooks[i] = editingHookText;
+                                            return updated;
+                                          });
+                                          setEditingHook(null);
+                                          toast({ title: 'Gancho atualizado!' });
+                                        }
+                                        if (e.key === 'Escape') setEditingHook(null);
+                                      }}
+                                      autoFocus
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        setViralHooks(prev => {
+                                          const updated = [...prev];
+                                          updated[catIdx] = { ...updated[catIdx], hooks: [...updated[catIdx].hooks] };
+                                          updated[catIdx].hooks[i] = editingHookText;
+                                          return updated;
+                                        });
+                                        setEditingHook(null);
+                                        toast({ title: 'Gancho atualizado!' });
+                                      }}
+                                    >
+                                      <Save className="h-3 w-3 text-primary" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedHookText(hook)}
+                                      className={`flex-1 text-left px-3 py-2 rounded-md text-xs border transition-all ${
+                                        selectedHookText === hook
+                                          ? 'border-primary bg-primary/10 text-primary font-medium'
+                                          : 'border-border/40 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground'
+                                      }`}
+                                    >
+                                      "{hook}"
+                                    </button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 opacity-40 hover:opacity-100"
+                                      onClick={() => {
+                                        setEditingHook({ catIdx, hookIdx: i });
+                                        setEditingHookText(hook);
+                                      }}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+                    );
+                  })}
+                  {filteredHooks.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Selecione um Estilo de Gancho para ver as frases</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>
