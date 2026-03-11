@@ -10028,6 +10028,7 @@ export type Database = {
           id: string
           image_url: string
           nome: string | null
+          pasta: string | null
           storage_path: string | null
           tags: string[] | null
           updated_at: string
@@ -10040,6 +10041,7 @@ export type Database = {
           id?: string
           image_url: string
           nome?: string | null
+          pasta?: string | null
           storage_path?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -10052,6 +10054,7 @@ export type Database = {
           id?: string
           image_url?: string
           nome?: string | null
+          pasta?: string | null
           storage_path?: string | null
           tags?: string[] | null
           updated_at?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.studio_gallery_images ADD COLUMN pasta text DEFAULT NULL;
