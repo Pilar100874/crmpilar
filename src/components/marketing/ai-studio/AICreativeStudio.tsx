@@ -140,6 +140,11 @@ const AICreativeStudioInner: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [moveToFolderWorkflow, setMoveToFolderWorkflow] = useState<SavedWorkflow | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [createFolderName, setCreateFolderName] = useState('');
+  const [draggingWorkflowId, setDraggingWorkflowId] = useState<string | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
