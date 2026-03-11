@@ -580,7 +580,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+        .upload(storagePath, blob, { contentType: 'video/mp4' });
       if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
