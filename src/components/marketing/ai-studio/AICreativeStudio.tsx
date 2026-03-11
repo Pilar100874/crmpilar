@@ -594,18 +594,15 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleCreateStandaloneFolder = useCallback(() => {
     if (!createFolderName.trim()) return;
-    // We create the folder by moving a placeholder — but folders are implicit.
-    // To make it appear, we just need at least one workflow referencing it.
-    // For now, just add a toast — real creation happens on drop or move.
-    // We'll keep track by checking if folder name already exists.
     if (folders.includes(createFolderName.trim())) {
       toast.error('Pasta já existe');
     } else {
-      toast.success(`Pasta "${createFolderName.trim()}" criada. Arraste workflows para ela!`);
+      saveManualFolders([...manualFolders, createFolderName.trim()]);
+      toast.success(`Pasta "${createFolderName.trim()}" criada!`);
     }
     setShowCreateFolderDialog(false);
     setCreateFolderName('');
-  }, [createFolderName, folders]);
+  }, [createFolderName, folders, manualFolders, saveManualFolders]);
 
   const handleFolderDrop = useCallback(async (folder: string | null) => {
     if (!draggingWorkflowId) return;
@@ -615,7 +612,6 @@ const AICreativeStudioInner: React.FC = () => {
   }, [draggingWorkflowId, handleMoveToFolder]);
 
   const handleDeleteFolder = useCallback(async (folder: string) => {
-    // Move all workflows in this folder to root
     const workflowsInFolder = savedWorkflows.filter(w => w.pasta === folder);
     for (const w of workflowsInFolder) {
       await supabase
@@ -623,11 +619,13 @@ const AICreativeStudioInner: React.FC = () => {
         .update({ pasta: null } as any)
         .eq('id', w.id);
     }
+    // Also remove from manual folders
+    saveManualFolders(manualFolders.filter(f => f !== folder));
     toast.success(`Pasta "${folder}" excluída. Workflows movidos para raiz.`);
     setDeleteFolderConfirm(null);
     if (activeFolder === folder) setActiveFolder(null);
     fetchWorkflows();
-  }, [savedWorkflows, activeFolder, fetchWorkflows]);
+  }, [savedWorkflows, activeFolder, fetchWorkflows, manualFolders, saveManualFolders]);
 
 
   const handleCloseCanvas = useCallback(() => {
