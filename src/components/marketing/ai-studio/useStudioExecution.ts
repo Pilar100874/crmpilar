@@ -27,6 +27,7 @@ export function useStudioExecution() {
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [batchReviewResults, setBatchReviewResults] = useState<BatchReviewItem[]>([]);
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000) => {
     console.log(`[Studio] Calling edge function: action=${action}`, params);
@@ -1008,6 +1009,7 @@ export function useStudioExecution() {
     onNodesUpdate?: (nodes: StudioNode[]) => void
   ): Promise<StudioNode[]> => {
     setIsExecuting(true);
+    abortRef.current = new AbortController();
     onNodesUpdateRef.current = onNodesUpdate || null;
 
     const order = getExecutionOrder(nodes, edges);
@@ -1078,6 +1080,16 @@ export function useStudioExecution() {
 
     try {
       for (let i = startIndex; i < order.length; i++) {
+        // Check if execution was cancelled
+        if (abortRef.current?.signal.aborted) {
+          // Mark remaining nodes as skipped
+          for (let j = i; j < order.length; j++) {
+            updateLog(order[j], { status: 'skipped' });
+          }
+          toast.info('⏹️ Execução cancelada pelo usuário.');
+          break;
+        }
+
         const nodeId = order[i];
         const node = nodes.find((n) => n.id === nodeId);
         if (!node) continue;
@@ -1151,6 +1163,11 @@ export function useStudioExecution() {
 
             // 4. Loop through each product
             for (let pi = 0; pi < products.length; pi++) {
+              // Check cancellation inside batch loop
+              if (abortRef.current?.signal.aborted) {
+                toast.info(`⏹️ Lote cancelado após ${pi}/${products.length} produtos.`);
+                break;
+              }
               const product = products[pi];
               const productName = product.nome || `Produto ${pi + 1}`;
 
@@ -1283,14 +1300,21 @@ export function useStudioExecution() {
     } finally {
       setIsExecuting(false);
       setCurrentNodeId(null);
+      abortRef.current = null;
     }
 
     return updatedNodes;
+  }, []);
+
+  const cancelExecution = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
   }, []);
 
   const clearLog = useCallback(() => {
     setExecutionLog([]);
   }, []);
 
-  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults };
+  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, cancelExecution, batchReviewResults, setBatchReviewResults };
 }

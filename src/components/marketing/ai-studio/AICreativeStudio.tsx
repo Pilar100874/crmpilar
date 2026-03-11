@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
@@ -94,7 +94,7 @@ const AICreativeStudioInner: React.FC = () => {
   const edgesRef = useRef(edges);
   edgesRef.current = edges;
   const { screenToFlowPosition } = useReactFlow();
-  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults } = useStudioExecution();
+  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, cancelExecution, batchReviewResults, setBatchReviewResults } = useStudioExecution();
 
   // Listen for reopen batch review event from loopOutput node
   useEffect(() => {
@@ -1163,6 +1163,18 @@ const AICreativeStudioInner: React.FC = () => {
             <span className="hidden xs:inline">{isExecuting ? 'Executando...' : 'Executar'}</span>
             <span className="xs:hidden">{isExecuting ? '...' : '▶'}</span>
           </Button>
+          {isExecuting && (
+            <Button
+              size="sm"
+              onClick={cancelExecution}
+              variant="destructive"
+              className="gap-1.5 sm:gap-2 rounded-lg text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 animate-pulse"
+            >
+              <Square className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+              <span className="hidden xs:inline">Cancelar</span>
+              <span className="xs:hidden">⏹</span>
+            </Button>
+          )}
           {selectedNode && (
             <Button
               size="sm"
