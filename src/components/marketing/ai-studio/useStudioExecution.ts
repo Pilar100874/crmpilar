@@ -27,6 +27,7 @@ export function useStudioExecution() {
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const [batchReviewResults, setBatchReviewResults] = useState<BatchReviewItem[]>([]);
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000) => {
     console.log(`[Studio] Calling edge function: action=${action}`, params);
