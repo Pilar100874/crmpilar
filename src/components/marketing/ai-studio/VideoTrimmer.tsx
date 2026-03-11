@@ -21,6 +21,10 @@ interface CutSegment {
 }
 
 const formatTime = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return '00:00.0';
+  }
+
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   const ms = Math.floor((seconds % 1) * 10);
