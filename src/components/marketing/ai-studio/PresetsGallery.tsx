@@ -2080,7 +2080,15 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           </div>
                         </motion.div>
                       ))}
-                      <div className="flex items-center gap-2 pt-2">
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleAddScene}
+                        >
+                          <Plus className="h-3 w-3" /> Adicionar Cena
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
