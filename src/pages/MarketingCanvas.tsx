@@ -64,7 +64,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
-  const [showPlatformDialog, setShowPlatformDialog] = useState(true);
+  const hasGalleryImage = !!sessionStorage.getItem('marketingCanvasInitialImage');
+  const [showPlatformDialog, setShowPlatformDialog] = useState(!hasGalleryImage);
   const [platformPreset, setPlatformPreset] = useState<PlatformPreset | null>(null);
   const [productData, setProductData] = useState<any>(null);
   const [projectName, setProjectName] = useState("Novo Design");
