@@ -57,6 +57,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<GalleryImage | null>(null);
   const [previewItem, setPreviewItem] = useState<GalleryImage | null>(null);
+  const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   const fetchImages = useCallback(async () => {
