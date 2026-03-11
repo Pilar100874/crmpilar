@@ -287,14 +287,45 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     }
   }, [estabelecimentoId, activeCategory, fetchImages]);
 
-  const handleDownload = useCallback((img: GalleryImage) => {
-    const a = document.createElement('a');
-    a.href = img.image_url;
-    a.download = img.nome || 'download';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = useCallback(async (img: GalleryImage) => {
+    try {
+      const response = await fetch(img.image_url);
+      const originalBlob = await response.blob();
+      const isVideo = (img as any).mime_type?.startsWith('video') || img.image_url?.includes('/marketing-videos/') || img.nome?.endsWith('.mp4') || img.nome?.endsWith('.webm');
+      const isAudio = (img as any).mime_type?.startsWith('audio') || img.image_url?.includes('/marketing-audio/');
+      
+      let downloadBlob: Blob;
+      let ext: string;
+      if (isVideo) {
+        downloadBlob = new Blob([originalBlob], { type: 'video/mp4' });
+        ext = '.mp4';
+      } else if (isAudio) {
+        downloadBlob = new Blob([originalBlob], { type: 'audio/mpeg' });
+        ext = '.mp3';
+      } else {
+        downloadBlob = originalBlob;
+        ext = '.png';
+      }
+      
+      const baseName = (img.nome || 'download').replace(/\.\w+$/, '');
+      const url = URL.createObjectURL(downloadBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${baseName}${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      console.error('Download error:', err);
+      const a = document.createElement('a');
+      a.href = img.image_url;
+      a.download = img.nome || 'download';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }, []);
 
   // Folder handlers

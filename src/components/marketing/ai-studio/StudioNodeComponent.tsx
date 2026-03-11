@@ -1331,12 +1331,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                         e.preventDefault();
                         try {
                           const resp = await fetch(resultVideo);
-                          const blob = await resp.blob();
-                          const blobUrl = URL.createObjectURL(blob);
+                          const originalBlob = await resp.blob();
+                          const mp4Blob = new Blob([originalBlob], { type: 'video/mp4' });
+                          const blobUrl = URL.createObjectURL(mp4Blob);
                           const link = document.createElement('a');
                           link.href = blobUrl;
                           link.download = `studio-${nodeData.type}-${id}.mp4`;
-                          link.target = '_blank';
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
