@@ -387,7 +387,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {filtered.map((img) => {
-                    const isVideo = isVideoUrl(img.image_url);
+                    const isVideo = isVideoUrl(img.image_url, img.tipo);
                     return (
                       <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square cursor-pointer" onClick={() => setPreviewItem(img)}>
                         {isVideo ? (
