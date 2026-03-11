@@ -1227,6 +1227,36 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setEditedScenes(null);
   }, []);
 
+  const handleAddScene = useCallback(() => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      const num = scenes.length + 1;
+      scenes.push({
+        title: `Cena ${num} — Nova Cena`,
+        description: 'Descreva o que acontece visualmente nesta cena...',
+        camera: 'Defina o enquadramento e movimento de câmera...',
+        lighting: 'Defina a iluminação da cena...',
+        action: 'Descreva a ação principal...',
+      });
+      return scenes;
+    });
+    toast({ title: 'Cena adicionada!' });
+  }, [generatedScenesBase, toast]);
+
+  const handleRemoveScene = useCallback((index: number) => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      if (scenes.length <= 1) return scenes;
+      const updated = scenes.filter((_, i) => i !== index);
+      // Renumber titles
+      return updated.map((s, i) => ({
+        ...s,
+        title: s.title.replace(/^Cena \d+/, `Cena ${i + 1}`),
+      }));
+    });
+    toast({ title: 'Cena removida!' });
+  }, [generatedScenesBase, toast]);
+
   const handleGenerate = () => {
     const isVideo = selections.contentType?.includes('video');
     const modelKey = isVideo ? 'videoModel' : 'imageModel';
