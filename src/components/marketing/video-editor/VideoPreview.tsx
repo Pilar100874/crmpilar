@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { TimelineClip, TimelineTrack } from './types';
 
 interface Props {
   clips: TimelineClip[];
   currentTime: number;
   tracks: TimelineTrack[];
+  isPlaying?: boolean;
+  selectedClipIds?: string[];
+  onUpdateClip?: (id: string, updates: Partial<TimelineClip>) => void;
+  onSelectClip?: (id: string) => void;
 }
 
-const VideoPreview: React.FC<Props> = ({ clips, currentTime, tracks }) => {
+const CANVAS_W = 480;
+const CANVAS_H = 270;
+
+const VideoPreview: React.FC<Props> = ({
+  clips, currentTime, tracks, isPlaying,
+  selectedClipIds = [], onUpdateClip, onSelectClip,
+}) => {
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
+
   // Find active clips at current time
   const activeClips = clips.filter((c) => {
     const track = tracks.find((t) => t.id === c.trackId);
@@ -15,10 +28,24 @@ const VideoPreview: React.FC<Props> = ({ clips, currentTime, tracks }) => {
     return currentTime >= c.startTime && currentTime < c.startTime + c.duration;
   });
 
-  const activeVideo = activeClips.find((c) => c.type === 'video' || c.type === 'image');
-  const activeText = activeClips.find((c) => c.type === 'text');
+  const activeVisuals = activeClips.filter((c) => c.type === 'video' || c.type === 'image');
+  const activeTexts = activeClips.filter((c) => c.type === 'text');
 
-  // Build CSS filter from clip filters
+  // Sync video currentTime
+  useEffect(() => {
+    activeVisuals.forEach((clip) => {
+      const vid = videoRefs.current[clip.id];
+      if (vid && clip.src && clip.type === 'video') {
+        const clipTime = currentTime - clip.startTime + (clip.trimStart || 0);
+        if (Math.abs(vid.currentTime - clipTime) > 0.3) {
+          vid.currentTime = clipTime;
+        }
+        if (isPlaying && vid.paused) vid.play().catch(() => {});
+        if (!isPlaying && !vid.paused) vid.pause();
+      }
+    });
+  }, [currentTime, isPlaying, activeVisuals]);
+
   const buildFilter = (clip?: TimelineClip) => {
     if (!clip?.filters?.length) return 'none';
     return clip.filters
@@ -39,42 +66,135 @@ const VideoPreview: React.FC<Props> = ({ clips, currentTime, tracks }) => {
       .join(' ');
   };
 
+  // Drag & resize handlers
+  const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize') => {
+    e.stopPropagation();
+    e.preventDefault();
+    const clip = clips.find(c => c.id === clipId);
+    if (!clip || clip.locked) return;
+    onSelectClip?.(clipId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setDragging({
+      clipId,
+      mode,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: clip.x ?? 0,
+      origY: clip.y ?? 0,
+      origW: clip.w ?? 100,
+      origH: clip.h ?? 100,
+    });
+  }, [clips, onSelectClip]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging || !onUpdateClip) return;
+    const dx = ((e.clientX - dragging.startX) / CANVAS_W) * 100;
+    const dy = ((e.clientY - dragging.startY) / CANVAS_H) * 100;
+
+    if (dragging.mode === 'move') {
+      const newX = Math.max(-50, Math.min(150, dragging.origX + dx));
+      const newY = Math.max(-50, Math.min(150, dragging.origY + dy));
+      onUpdateClip(dragging.clipId, { x: newX, y: newY });
+    } else {
+      const newW = Math.max(10, Math.min(200, dragging.origW + dx));
+      const newH = Math.max(10, Math.min(200, dragging.origH + dy));
+      onUpdateClip(dragging.clipId, { w: newW, h: newH });
+    }
+  }, [dragging, onUpdateClip]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(null);
+  }, []);
+
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center"
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
       <div
-        className="relative bg-black rounded-md overflow-hidden"
-        style={{ width: 480, height: 270, aspectRatio: '16/9' }}
+        className="relative rounded-md overflow-hidden"
+        style={{ width: CANVAS_W, height: CANVAS_H }}
       >
-        {activeVideo ? (
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{
-              filter: buildFilter(activeVideo),
-              opacity: activeVideo.opacity ?? 1,
-            }}
-          >
-            {activeVideo.src ? (
-              activeVideo.type === 'video' ? (
-                <video src={activeVideo.src} className="w-full h-full object-cover" muted />
-              ) : (
-                <img src={activeVideo.src} className="w-full h-full object-cover" alt="" />
-              )
-            ) : (
+        {/* Output area background */}
+        <div className="absolute inset-0 bg-black" />
+
+        {/* Safe zone border */}
+        <div className="absolute inset-0 pointer-events-none z-30">
+          <div className="absolute inset-[5%] border border-dashed border-white/20 rounded-sm" />
+          <span className="absolute top-[3%] left-[5%] text-[8px] text-white/25 font-mono">ÁREA SEGURA</span>
+        </div>
+
+        {/* Output area boundary */}
+        <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
+
+        {/* Visual clips */}
+        {activeVisuals.length > 0 ? (
+          activeVisuals.map((clip) => {
+            const cx = clip.x ?? 0;
+            const cy = clip.y ?? 0;
+            const cw = clip.w ?? 100;
+            const ch = clip.h ?? 100;
+            const isSelected = selectedClipIds.includes(clip.id);
+
+            return (
               <div
-                className="w-full h-full flex items-center justify-center"
+                key={clip.id}
+                className="absolute z-10 cursor-move"
                 style={{
-                  background: `linear-gradient(135deg, ${activeVideo.color}40, ${activeVideo.color}20)`,
+                  left: `${cx}%`,
+                  top: `${cy}%`,
+                  width: `${cw}%`,
+                  height: `${ch}%`,
+                  filter: buildFilter(clip),
+                  opacity: clip.opacity ?? 1,
+                  outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
+                  outlineOffset: '-1px',
                 }}
+                onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
               >
-                <div className="text-center">
-                  <span className="text-4xl">🎬</span>
-                  <p className="text-white/60 text-sm mt-2">{activeVideo.name}</p>
-                </div>
+                {clip.src ? (
+                  clip.type === 'video' ? (
+                    <video
+                      ref={(el) => { videoRefs.current[clip.id] = el; }}
+                      src={clip.src}
+                      className="w-full h-full object-contain"
+                      muted={clip.muted}
+                      playsInline
+                      preload="auto"
+                    />
+                  ) : (
+                    <img src={clip.src} className="w-full h-full object-contain" alt="" draggable={false} />
+                  )
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{
+                      background: `linear-gradient(135deg, ${clip.color}40, ${clip.color}20)`,
+                    }}
+                  >
+                    <div className="text-center">
+                      <span className="text-4xl">🎬</span>
+                      <p className="text-white/60 text-sm mt-2">{clip.name}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resize handle */}
+                {isSelected && (
+                  <div
+                    className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20"
+                    onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')}
+                  >
+                    <svg viewBox="0 0 16 16" className="w-full h-full text-primary-foreground p-0.5">
+                      <path d="M14 2v12H2" fill="none" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="text-center">
               <span className="text-3xl">📽️</span>
               <p className="text-white/40 text-xs mt-2">Sem conteúdo neste ponto</p>
@@ -82,18 +202,23 @@ const VideoPreview: React.FC<Props> = ({ clips, currentTime, tracks }) => {
           </div>
         )}
 
-        {/* Text overlay */}
-        {activeText && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {/* Text overlays */}
+        {activeTexts.map((clip) => (
+          <div key={clip.id} className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <p className="text-white text-2xl font-bold drop-shadow-lg px-4 text-center">
-              {activeText.name}
+              {clip.name}
             </p>
           </div>
-        )}
+        ))}
 
         {/* Time overlay */}
-        <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-white/80 text-[10px] font-mono">
+        <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-white/80 text-[10px] font-mono z-40">
           {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
+        </div>
+
+        {/* Resolution indicator */}
+        <div className="absolute top-2 left-2 bg-black/50 px-1.5 py-0.5 rounded text-white/50 text-[8px] font-mono z-40">
+          1920×1080
         </div>
       </div>
     </div>

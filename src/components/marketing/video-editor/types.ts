@@ -18,6 +18,11 @@ export interface TimelineClip {
   transition?: ClipTransition;
   locked?: boolean;
   muted?: boolean;
+  // Position and scale in the preview canvas (0-100 percentage based)
+  x?: number; // left position (%)
+  y?: number; // top position (%)
+  w?: number; // width (%)
+  h?: number; // height (%)
 }
 
 export interface VideoFilter {

@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
-  ZoomIn, ZoomOut, Volume2, VolumeX, Plus, Upload, Film,
-  Music, Type, Sparkles, Layers, Maximize2, Settings2, Magnet
+  ZoomIn, ZoomOut, Film,
+  Music, Type, Sparkles, Layers, Maximize2, Settings2, Magnet, Upload
 } from 'lucide-react';
 import { useTimelineState } from './useTimelineState';
 import TimelineTracks from './TimelineTracks';
@@ -16,6 +14,13 @@ import MediaBin from './MediaBin';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import { TRACK_COLORS } from './types';
+
+interface MediaItem {
+  type: 'video' | 'audio' | 'image';
+  name: string;
+  src: string;
+  duration?: number;
+}
 
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
@@ -34,7 +39,7 @@ const VideoTimelineEditor: React.FC = () => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(f).padStart(2, '0')}`;
   };
 
-  const handleAddClip = (type: 'video' | 'audio' | 'image' | 'text') => {
+  const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem) => {
     const trackId = state.tracks.find((t) => {
       if (type === 'audio') return t.type === 'audio';
       if (type === 'text') return t.type === 'text';
@@ -48,28 +53,34 @@ const VideoTimelineEditor: React.FC = () => {
 
     const startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
     const color = TRACK_COLORS[type === 'image' ? 'video' : type] || TRACK_COLORS.video;
+    const clipDuration = media?.duration || (type === 'text' ? 3 : type === 'audio' ? 10 : 5);
 
     timeline.addClip({
       trackId,
       type,
-      name: `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${state.clips.length + 1}`,
+      name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${state.clips.length + 1}`,
       startTime,
-      duration: type === 'text' ? 3 : type === 'audio' ? 10 : 5,
+      duration: clipDuration,
       trimStart: 0,
       trimEnd: 0,
       color,
       volume: 1,
       opacity: 1,
       filters: [],
+      src: media?.src,
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 100,
     });
-  };
+  }, [state.tracks, state.clips, timeline]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] border rounded-xl overflow-hidden bg-background">
       {/* Top toolbar */}
       <div className="flex items-center gap-1 px-3 py-2 border-b bg-card/80 backdrop-blur">
         <div className="flex items-center gap-1 mr-4">
-          <Button size="icon" variant="ghost" onClick={() => handleAddClip('video')} title="Adicionar vídeo">
+          <Button size="icon" variant="ghost" onClick={() => handleAddClip('video')} title="Adicionar vídeo vazio">
             <Film className="h-4 w-4" />
           </Button>
           <Button size="icon" variant="ghost" onClick={() => handleAddClip('audio')} title="Adicionar áudio">
@@ -184,11 +195,15 @@ const VideoTimelineEditor: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Preview */}
           {!previewCollapsed && (
-            <div className="h-[280px] border-b bg-black/90 flex items-center justify-center relative shrink-0">
+            <div className="h-[300px] border-b bg-black/95 flex items-center justify-center relative shrink-0">
               <VideoPreview
                 clips={state.clips}
                 currentTime={state.currentTime}
                 tracks={state.tracks}
+                isPlaying={state.isPlaying}
+                selectedClipIds={state.selectedClipIds}
+                onUpdateClip={timeline.updateClip}
+                onSelectClip={(id) => timeline.selectClip(id)}
               />
               <Button
                 size="icon"
