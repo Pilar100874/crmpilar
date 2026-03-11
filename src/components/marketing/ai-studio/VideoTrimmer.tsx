@@ -1,15 +1,16 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Play, Pause, Scissors, Save, Undo2,
-  Loader2, Volume2, VolumeX, RotateCcw, Eye
+  Loader2, Volume2, VolumeX, RotateCcw, Eye, ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 interface VideoTrimmerProps {
   videoUrl: string;
-  onSaveTrimmed: (blob: Blob, startTime: number, endTime: number) => Promise<void>;
-  onSaveOriginal: () => void;
+  onSaveTrimmed: (blob: Blob, startTime: number, endTime: number, withAudio: boolean) => Promise<void>;
+  onSaveOriginal: (withAudio: boolean) => void | Promise<void>;
   isSaving?: boolean;
 }
 
