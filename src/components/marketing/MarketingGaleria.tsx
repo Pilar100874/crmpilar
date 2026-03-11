@@ -417,6 +417,64 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         </ScrollArea>
       )}
 
+      {/* Video Editor Dialog */}
+      {editingVideo && editingVideo.content_url && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingVideo(null); }}>
+          <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
+            <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
+              <button
+                onClick={() => setEditingVideo(null)}
+                className="absolute top-3 right-3 z-[200] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <VideoTrimmer
+                videoUrl={editingVideo.content_url}
+                isSaving={isSavingTrimmed}
+                onSaveTrimmed={async (blob, startTime, endTime) => {
+                  setIsSavingTrimmed(true);
+                  const estabId = localStorage.getItem('estabelecimentoId');
+                  if (!estabId) { toast.error('Estabelecimento não encontrado'); setIsSavingTrimmed(false); return; }
+                  try {
+                    const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
+                    const fileName = `trimmed_${Date.now()}.${ext}`;
+                    const path = `${estabId}/${fileName}`;
+                    const { error: upErr } = await supabase.storage
+                      .from('marketing-videos')
+                      .upload(path, blob, { contentType: blob.type || 'video/mp4' });
+                    if (upErr) throw upErr;
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('marketing-videos')
+                      .getPublicUrl(path);
+                    await supabase.from('media_gallery').insert({
+                      estabelecimento_id: estabId,
+                      tipo: 'video',
+                      public_url: publicUrl,
+                      storage_path: path,
+                      nome: `${editingVideo.resource_name || 'Vídeo'} (cortado)`,
+                      tamanho_bytes: blob.size,
+                      mime_type: blob.type || 'video/mp4',
+                      origem: 'galeria-trimmed',
+                    });
+                    toast.success('✅ Vídeo cortado salvo na galeria!');
+                    loadContent();
+                  } catch (err: any) {
+                    toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
+                  } finally {
+                    setIsSavingTrimmed(false);
+                  }
+                }}
+                onSaveOriginal={() => {
+                  toast.success('Vídeo original mantido');
+                  setEditingVideo(null);
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
