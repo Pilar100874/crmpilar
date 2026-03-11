@@ -830,4 +830,4 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
 };
 
 export default PromptPresets;
-export { BUILT_IN_PRESETS as PROMPT_PRESETS };
+export { DEFAULT_PRESETS as PROMPT_PRESETS };
