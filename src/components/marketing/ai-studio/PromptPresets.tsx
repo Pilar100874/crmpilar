@@ -82,12 +82,12 @@ export interface PromptPreset {
 
 const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
 
-const BUILT_IN_PRESETS: PromptPreset[] = [
+const DEFAULT_PRESETS: PromptPreset[] = [
   // ═══ VIDEO — PRODUTOS ═══
   {
     id: 'vp-cinematic-studio', name: 'Cinematic Studio', mediaType: 'video', category: 'produto',
     tags: ['studio', 'tech', 'luxury'], image: imgCinematicStudio,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Ultra cinematic commercial of a modern tech product on a minimalist black studio background. Slow rotating product on glossy reflective surface. Macro shots showing premium materials and textures. Soft volumetric lighting, rim light highlighting the edges. Camera: ARRI Alexa 35, 85mm lens, shallow depth of field. Ultra realistic reflections, luxury advertising aesthetic, smooth motion. Background fades into elegant gradient lighting. Final scene: product centered with subtle glow and dramatic lighting, text space for branding.${NEGATIVE_BLOCK}`,
   },
   {
