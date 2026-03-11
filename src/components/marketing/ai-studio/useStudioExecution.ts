@@ -1080,6 +1080,16 @@ export function useStudioExecution() {
 
     try {
       for (let i = startIndex; i < order.length; i++) {
+        // Check if execution was cancelled
+        if (abortRef.current?.signal.aborted) {
+          // Mark remaining nodes as skipped
+          for (let j = i; j < order.length; j++) {
+            updateLog(order[j], { status: 'skipped' });
+          }
+          toast.info('⏹️ Execução cancelada pelo usuário.');
+          break;
+        }
+
         const nodeId = order[i];
         const node = nodes.find((n) => n.id === nodeId);
         if (!node) continue;
