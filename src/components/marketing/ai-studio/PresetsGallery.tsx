@@ -823,7 +823,7 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
 
 // ─── SCRIPT GENERATOR ────────────────────────────────────────────────
 
-function generateScript(selections: Record<string, string[]>, selectedHookText?: string): string {
+function generateScript(selections: Record<string, string[]>, selectedHookText?: string, variationSeed?: number): string {
   const product = selections.productCategory?.[0];
   const productLabel = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === product)?.label || 'o produto';
   const goal = selections.marketingGoal?.[0] || '';
@@ -831,28 +831,73 @@ function generateScript(selections: Record<string, string[]>, selectedHookText?:
 
   const isShort = ['tiktok', 'instagram-reels', 'youtube-shorts'].includes(platform);
 
-  const hookText = selectedHookText || 'Espera... você precisa ver isso antes de tomar qualquer decisão.';
+  const hookVariations = [
+    'Espera... você precisa ver isso antes de tomar qualquer decisão.',
+    'Você não vai acreditar no que eu descobri...',
+    'Para tudo! Isso muda completamente o jogo.',
+    'Se você ainda não conhece isso, está perdendo tempo.',
+    'Eu testei e o resultado foi SURREAL.',
+    'Atenção: isso pode mudar sua rotina para sempre.',
+    'Todo mundo está falando sobre isso — e com razão.',
+    'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
+  ];
 
-  const ctaMap: Record<string, string> = {
-    'direct-sales': 'Compre agora e aproveite a oferta por tempo limitado. Link na bio.',
-    'lead-generation': 'Clique no link e descubra mais. Cadastre-se gratuitamente.',
-    'product-awareness': 'Conheça mais sobre nosso produto. Link na descrição.',
-    'brand-awareness': 'Siga-nos para mais conteúdo exclusivo.',
-    'app-install': 'Baixe o app agora — link na bio.',
-    'product-launch': 'Lançamento oficial! Garanta o seu agora.',
-    'retargeting': 'Ainda pensando? Aproveite antes que acabe.',
-    'social-proof': 'Milhares de clientes já aprovaram. Veja os depoimentos.',
-    'educational': 'Quer aprender mais? Siga para mais dicas.',
-    'viral-engagement': 'Marque alguém que precisa ver isso! Compartilhe.',
+  const problemVariations = [
+    `Muitas pessoas enfrentam dificuldades e não encontram a solução certa para ${productLabel}. Gastam dinheiro, tempo e energia sem resultado.`,
+    `Cansou de tentar alternativas que não funcionam? O problema com ${productLabel} é que ninguém te conta a verdade.`,
+    `Você já passou horas pesquisando sobre ${productLabel} e sempre acabou frustrado? Isso é mais comum do que imagina.`,
+    `O maior erro que as pessoas cometem com ${productLabel} é não saber por onde começar. E isso custa caro.`,
+  ];
+
+  const introVariations = [
+    `Apresentamos ${productLabel} — a solução que resolve isso de forma simples e eficiente.`,
+    `Conheça ${productLabel}: desenvolvido para quem quer resultado de verdade, sem complicação.`,
+    `${productLabel} chegou para transformar a sua experiência. Simples, direto e eficaz.`,
+    `Depois de meses de desenvolvimento, ${productLabel} está pronto para mudar o jogo.`,
+  ];
+
+  const demoVariations = [
+    `Mostrar ${productLabel} sendo utilizado em um cenário real. Destacar a facilidade de uso, a qualidade do material e os resultados visíveis.`,
+    `Demonstração prática de ${productLabel}: veja como funciona na vida real, passo a passo, sem edição.`,
+    `Acompanhe o uso de ${productLabel} do início ao fim. Cada detalhe faz diferença no resultado.`,
+    `Teste ao vivo com ${productLabel}: sem roteiro, sem filtro — apenas o produto funcionando.`,
+  ];
+
+  const benefitVariations = [
+    `Destaque os principais benefícios: qualidade superior, praticidade, custo-benefício e resultados comprovados.`,
+    `Por que escolher ${productLabel}? Economia de tempo, qualidade garantida e satisfação imediata.`,
+    `Os resultados falam por si: mais eficiência, menos desperdício e uma experiência incomparável.`,
+    `Clientes reais já comprovaram: ${productLabel} entrega tudo o que promete — e mais.`,
+  ];
+
+  const ctaMap: Record<string, string[]> = {
+    'direct-sales': ['Compre agora e aproveite a oferta por tempo limitado. Link na bio.', 'Garanta o seu antes que acabe! Clique no link agora.', 'Oferta exclusiva — só hoje. Não perca, link na descrição.'],
+    'lead-generation': ['Clique no link e descubra mais. Cadastre-se gratuitamente.', 'Quer saber mais? Deixe seu contato e receba tudo em primeira mão.', 'Cadastro grátis por tempo limitado. Acesse o link agora.'],
+    'product-awareness': ['Conheça mais sobre nosso produto. Link na descrição.', 'Descubra tudo sobre ${productLabel}. Acesse o link.', 'Saiba por que ${productLabel} está conquistando milhares de pessoas.'],
+    'brand-awareness': ['Siga-nos para mais conteúdo exclusivo.', 'Acompanhe nossas novidades — siga agora!', 'Fique por dentro de tudo. Siga e ative as notificações.'],
+    'app-install': ['Baixe o app agora — link na bio.', 'App disponível para download. Comece agora mesmo!', 'Instale gratuitamente e transforme sua rotina.'],
+    'product-launch': ['Lançamento oficial! Garanta o seu agora.', 'Acabou de sair! Seja um dos primeiros a experimentar.', 'Novo lançamento disponível — não fique de fora!'],
+    'retargeting': ['Ainda pensando? Aproveite antes que acabe.', 'Última chance de garantir o seu. Não deixe escapar!', 'Você viu, gostou — agora é hora de agir.'],
+    'social-proof': ['Milhares de clientes já aprovaram. Veja os depoimentos.', 'Junte-se a quem já transformou sua experiência.', '+10.000 clientes satisfeitos. Faça parte desse grupo.'],
+    'educational': ['Quer aprender mais? Siga para mais dicas.', 'Conteúdo novo toda semana. Siga e aprenda!', 'Gostou? Salve esse vídeo e compartilhe com quem precisa.'],
+    'viral-engagement': ['Marque alguém que precisa ver isso! Compartilhe.', 'Desafio: compartilhe com 3 amigos e veja a reação deles!', 'Se isso te surpreendeu, imagina quem ainda não viu?'],
   };
+
+  const pick = (arr: string[], seed?: number) => {
+    const idx = seed !== undefined ? Math.abs(seed) % arr.length : 0;
+    return arr[idx];
+  };
+
+  const hookText = selectedHookText || pick(hookVariations, variationSeed);
+  const ctaOptions = ctaMap[goal] || ['Saiba mais — link na descrição.'];
 
   const sections = [
     { label: '🪝 GANCHO (Primeiros 3 segundos)', text: `"${hookText}"` },
-    { label: '😰 PROBLEMA', text: `"Muitas pessoas enfrentam dificuldades e não encontram a solução certa para ${productLabel}. Gastam dinheiro, tempo e energia sem resultado."` },
-    { label: '📦 INTRODUÇÃO DO PRODUTO', text: `"Apresentamos ${productLabel} — a solução que resolve isso de forma simples e eficiente."` },
-    { label: '🔍 DEMONSTRAÇÃO', text: `"Mostrar ${productLabel} sendo utilizado em um cenário real. Destacar a facilidade de uso, a qualidade do material e os resultados visíveis."` },
-    { label: '✨ BENEFÍCIOS', text: `"Destaque os principais benefícios: qualidade superior, praticidade, custo-benefício e resultados comprovados."` },
-    { label: '📣 CHAMADA PARA AÇÃO', text: `"${ctaMap[goal] || 'Saiba mais — link na descrição.'}"` },
+    { label: '😰 PROBLEMA', text: `"${pick(problemVariations, variationSeed !== undefined ? variationSeed + 1 : undefined)}"` },
+    { label: '📦 INTRODUÇÃO DO PRODUTO', text: `"${pick(introVariations, variationSeed !== undefined ? variationSeed + 2 : undefined)}"` },
+    { label: '🔍 DEMONSTRAÇÃO', text: `"${pick(demoVariations, variationSeed !== undefined ? variationSeed + 3 : undefined)}"` },
+    { label: '✨ BENEFÍCIOS', text: `"${pick(benefitVariations, variationSeed !== undefined ? variationSeed + 4 : undefined)}"` },
+    { label: '📣 CHAMADA PARA AÇÃO', text: `"${pick(ctaOptions, variationSeed !== undefined ? variationSeed + 5 : undefined)}"` },
   ];
 
   if (isShort) {
@@ -874,7 +919,7 @@ interface Scene {
   action: string;
 }
 
-function generateScenes(selections: Record<string, string[]>): Scene[] {
+function generateScenes(selections: Record<string, string[]>, variationSeed?: number): Scene[] {
   const product = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === selections.productCategory?.[0])?.label || 'o produto';
   const visualStyle = selections.visualStyle?.[0];
   const userCamera = selections.cameraStyle?.[0];
@@ -882,61 +927,100 @@ function generateScenes(selections: Record<string, string[]>): Scene[] {
   const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
 
   const isUgc = visualStyle === 'ugc' || visualStyle === 'viral';
+  const seed = variationSeed || 0;
+
+  const hookDescriptions = [
+    isUgc
+      ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
+      : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+    isUgc
+      ? `Alguém segura ${product} e faz uma expressão de surpresa genuína, como se acabasse de descobrir algo incrível.`
+      : `Cena de mistério: ${product} é mostrado parcialmente, criando curiosidade. O espectador quer saber mais.`,
+    isUgc
+      ? `A pessoa está em um ambiente do dia a dia e começa: "Gente, eu preciso contar uma coisa sobre ${product}..."`
+      : `Transição rápida e criativa revela ${product} de forma inesperada — um corte seco que prende o olhar.`,
+  ];
+
+  const problemDescriptions = [
+    `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
+    `Cenário antes vs depois: a realidade sem ${product} é frustrante. Pequenos erros se acumulam e geram insatisfação.`,
+    `Pessoa tenta resolver o problema da forma tradicional e falha. A frustração é visível e identificável.`,
+  ];
+
+  const introDescriptions = [
+    isUgc ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.` : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+    isUgc ? `Com entusiasmo natural, a pessoa tira ${product} de uma caixa: "Olha o que chegou!"` : `Transição cinematográfica revela ${product} em câmera lenta com iluminação dramática.`,
+    isUgc ? `A pessoa segura ${product} e diz: "Isso aqui mudou tudo pra mim. Deixa eu te mostrar."` : `${product} emerge de um fundo escuro com iluminação gradual, criando tensão e expectativa.`,
+  ];
+
+  const demoDescriptions = [
+    `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
+    `Demonstração detalhada de ${product}: cada funcionalidade é mostrada com foco nos detalhes que impressionam.`,
+    `Teste prático ao vivo: ${product} é colocado à prova em condições reais, sem edição ou filtros.`,
+  ];
+
+  const resultDescriptions = [
+    `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
+    `Comparação lado a lado: antes e depois com ${product}. A diferença é impressionante.`,
+    `Reação genuína de satisfação ao ver os resultados de ${product}. O impacto é imediato.`,
+  ];
+
+  const ctaDescriptions = [
+    isUgc ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.` : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+    isUgc ? `"Se você quer experimentar, o link tá na bio. Confia em mim, vale muito a pena!"` : `Logo da marca aparece com slogan. QR code ou link destacado em tela.`,
+    isUgc ? `Pessoa sorri e diz: "Depois não diga que eu não avisei! Link na bio, corre lá."` : `Montagem final com os melhores momentos + CTA animado e profissional.`,
+  ];
+
+  const pick = (arr: string[], offset: number) => arr[Math.abs(seed + offset) % arr.length];
+
+  const hookActions = [
+    isUgc ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.' : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+    isUgc ? 'Pessoa gesticula enquanto fala, mostrando energia e autenticidade.' : 'Corte rápido entre 3 ângulos diferentes do produto em menos de 2 segundos.',
+    isUgc ? 'Pessoa para o que está fazendo, olha para a câmera e começa a falar com empolgação.' : 'Câmera inicia em macro no produto e faz zoom out revelando o cenário completo.',
+  ];
 
   return [
     {
       title: 'Cena 1 — Gancho Inicial',
-      description: isUgc
-        ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
-        : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+      description: pick(hookDescriptions, 0),
       camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie ligeiramente imperfeito.' : overrides.camera,
       lighting: overrides.lighting,
-      action: isUgc
-        ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.'
-        : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+      action: pick(hookActions, 0),
     },
     {
       title: 'Cena 2 — Apresentação do Problema',
-      description: `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
+      description: pick(problemDescriptions, 1),
       camera: isUgc ? 'Câmera de smartphone mostrando a situação de perto, com movimentos naturais de mão.' : 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
       lighting: isUgc ? 'Iluminação ambiente natural do local onde está.' : 'Iluminação levemente sombria para transmitir desconforto.',
       action: 'Pessoa tentando realizar a tarefa sem sucesso, expressando frustração visível.',
     },
     {
       title: 'Cena 3 — Introdução do Produto',
-      description: isUgc
-        ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.`
-        : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+      description: pick(introDescriptions, 2),
       camera: isUgc ? 'Câmera de smartphone mostrando o produto na mão, enquadramento casual.' : 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
       lighting: isUgc ? overrides.lighting : 'Iluminação premium com destaque suave no produto.',
-      action: isUgc
-        ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.'
-        : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
+      action: isUgc ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.' : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
     },
     {
       title: 'Cena 4 — Demonstração do Produto',
-      description: `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
+      description: pick(demoDescriptions, 3),
       camera: isUgc ? 'Câmera alternando entre selfie e câmera traseira do smartphone para mostrar detalhes.' : 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
       lighting: overrides.lighting,
       action: 'Demonstração passo a passo do uso do produto, destacando texturas, qualidade e resultados.',
     },
     {
       title: 'Cena 5 — Resultado / Benefícios',
-      description: `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
+      description: pick(resultDescriptions, 4),
       camera: isUgc ? 'Câmera de smartphone mostrando o resultado final, reação genuína.' : 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
       lighting: isUgc ? overrides.lighting : 'Iluminação brilhante e otimista, transmitindo satisfação.',
       action: 'Reação positiva do usuário, expressão de satisfação, resultado visual claro.',
     },
     {
       title: 'Cena 6 — Fechamento com CTA',
-      description: isUgc
-        ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.`
-        : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+      description: pick(ctaDescriptions, 5),
       camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie natural.' : 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
       lighting: isUgc ? overrides.lighting : 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
-      action: isUgc
-        ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.'
-        : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
+      action: isUgc ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.' : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
     },
   ];
 }
@@ -1100,29 +1184,48 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const generatedScript = editedScript || generatedScriptBase;
 
   const handleSuggestNewScript = useCallback(() => {
-    // Generate variations by shuffling hook and CTA
-    const hooks = [
-      'Espera... você precisa ver isso antes de tomar qualquer decisão.',
-      'Você não vai acreditar no que eu descobri...',
-      'Para tudo! Isso muda completamente o jogo.',
-      'Se você ainda não conhece isso, está perdendo tempo.',
-      'Eu testei e o resultado foi SURREAL.',
-      'Atenção: isso pode mudar sua rotina para sempre.',
-      'Todo mundo está falando sobre isso — e com razão.',
-      'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
-    ];
-    const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
-    const newScript = generateScript(selections, randomHook);
+    const seed = Math.floor(Math.random() * 100) + 1;
+    const newScript = generateScript(selections, undefined, seed);
     setEditedScript(newScript);
     setScriptVersion(v => v + 1);
     setIsEditingScript(false);
     toast({ title: 'Novo roteiro sugerido!' });
-  }, [selections]);
+  }, [selections, toast]);
 
-  const generatedScenes = useMemo(() => {
+  const generatedScenesBase = useMemo(() => {
     if (selectionCount < 2) return [];
     return generateScenes(selections);
   }, [selections, selectionCount]);
+
+  const [editedScenes, setEditedScenes] = useState<Scene[] | null>(null);
+  const [scenesVersion, setScenesVersion] = useState(0);
+
+  // Sync scenes when base changes
+  useEffect(() => {
+    setEditedScenes(null);
+  }, [generatedScenesBase]);
+
+  const currentScenes = editedScenes || generatedScenesBase;
+
+  const handleUpdateScene = useCallback((index: number, field: keyof Scene, value: string) => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      scenes[index] = { ...scenes[index], [field]: value };
+      return scenes;
+    });
+  }, [generatedScenesBase]);
+
+  const handleSuggestNewScenes = useCallback(() => {
+    const seed = Math.floor(Math.random() * 100) + 1;
+    const newScenes = generateScenes(selections, seed);
+    setEditedScenes(newScenes);
+    setScenesVersion(v => v + 1);
+    toast({ title: 'Nova sequência de cenas gerada!' });
+  }, [selections, toast]);
+
+  const handleResetScenes = useCallback(() => {
+    setEditedScenes(null);
+  }, []);
 
   const handleGenerate = () => {
     const isVideo = selections.contentType?.includes('video');
@@ -1876,18 +1979,18 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     <>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold flex items-center gap-1.5">
-                          <Clapperboard className="h-3.5 w-3.5 text-primary" /> Storyboard — {generatedScenes.length} Cenas
+                          <Clapperboard className="h-3.5 w-3.5 text-primary" /> Storyboard — {currentScenes.length} Cenas
                         </p>
                         <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => {
-                          const text = generatedScenes.map(s => `${s.title}\nDescrição: ${s.description}\nCâmera: ${s.camera}\nIluminação: ${s.lighting}\nAção: ${s.action}`).join('\n\n---\n\n');
+                          const text = currentScenes.map(s => `${s.title}\nDescrição: ${s.description}\nCâmera: ${s.camera}\nIluminação: ${s.lighting}\nAção: ${s.action}`).join('\n\n---\n\n');
                           handleCopyText(text);
                         }}>
                           <Copy className="h-3 w-3" /> Copiar Tudo
                         </Button>
                       </div>
-                      {generatedScenes.map((scene, i) => (
+                      {currentScenes.map((scene, i) => (
                         <motion.div
-                          key={i}
+                          key={`${scenesVersion}-${i}`}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
@@ -1897,25 +2000,66 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                             <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
                               {i + 1}
                             </div>
-                            <h4 className="text-xs font-semibold">{scene.title}</h4>
+                            <input
+                              className="text-xs font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none flex-1 py-0.5 transition-colors"
+                              value={scene.title}
+                              onChange={(e) => handleUpdateScene(i, 'title', e.target.value)}
+                            />
                           </div>
-                          <p className="text-[11px] text-muted-foreground">{scene.description}</p>
+                          <Textarea
+                            value={scene.description}
+                            onChange={(e) => handleUpdateScene(i, 'description', e.target.value)}
+                            rows={2}
+                            className="text-[11px] text-muted-foreground bg-muted/30 border-border/50 min-h-[50px] resize-y"
+                          />
                           <div className="grid grid-cols-1 gap-1.5 text-[10px]">
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">📹 Câmera:</span>
-                              <span>{scene.camera}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">📹 Câmera:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.camera}
+                                onChange={(e) => handleUpdateScene(i, 'camera', e.target.value)}
+                              />
                             </div>
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">💡 Iluminação:</span>
-                              <span>{scene.lighting}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">💡 Iluminação:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.lighting}
+                                onChange={(e) => handleUpdateScene(i, 'lighting', e.target.value)}
+                              />
                             </div>
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">🎬 Ação:</span>
-                              <span>{scene.action}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">🎬 Ação:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.action}
+                                onChange={(e) => handleUpdateScene(i, 'action', e.target.value)}
+                              />
                             </div>
                           </div>
                         </motion.div>
                       ))}
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleSuggestNewScenes}
+                        >
+                          <Sparkles className="h-3 w-3" /> Gerar nova sequência
+                        </Button>
+                        {editedScenes && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[10px] gap-1 h-7 text-muted-foreground"
+                            onClick={handleResetScenes}
+                          >
+                            Restaurar original
+                          </Button>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
