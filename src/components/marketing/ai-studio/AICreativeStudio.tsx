@@ -85,7 +85,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
-  
+  const [pendingPreset, setPendingPreset] = useState<Preset | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
