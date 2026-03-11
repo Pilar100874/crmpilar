@@ -1167,6 +1167,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setExpandedLayer('contentType');
     setSelectedHookText('');
     setVariations([]);
+    setWizardStep(1);
   };
 
   const handleGenerateVariations = useCallback(() => {
