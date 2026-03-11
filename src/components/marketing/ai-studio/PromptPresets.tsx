@@ -615,6 +615,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
         defaultCategory={activeCategory}
         editingPreset={editingPreset}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir prompt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este prompt? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirmId && handleDeleteCustom(deleteConfirmId)}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
