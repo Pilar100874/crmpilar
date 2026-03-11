@@ -552,21 +552,37 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   </div>
                 </button>
                 {/* Overlay buttons on hover */}
-                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <Button
                     size="sm"
-                    className="gap-1.5 text-xs pointer-events-auto shadow-lg"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
                     onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
                   >
-                    <Play className="h-3.5 w-3.5" /> Usar
+                    <Play className="h-3 w-3" /> Usar
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 text-xs pointer-events-auto shadow-lg bg-background/90"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
                     onClick={(e) => { e.stopPropagation(); handleEditPreset(preset); }}
                   >
-                    <Sparkles className="h-3.5 w-3.5" /> Editar
+                    <Sparkles className="h-3 w-3" /> Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
+                    onClick={(e) => { e.stopPropagation(); handleDuplicatePreset(preset); }}
+                  >
+                    <CopyPlus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(preset.id); }}
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </motion.div>
