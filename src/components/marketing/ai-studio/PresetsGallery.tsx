@@ -1898,10 +1898,31 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             >
               {selections.contentType?.includes('video') ? <Video className="h-4.5 w-4.5" /> : <Image className="h-4.5 w-4.5" />}
               {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
-              <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 gap-2 h-12 rounded-xl font-bold text-sm"
+                size="lg"
+                onClick={() => setWizardStep(1)}
+              >
+                <ChevronRight className="h-4 w-4 rotate-180" />
+                Voltar
+              </Button>
+              <Button
+                className="flex-[2] gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
+                size="lg"
+                disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
+                onClick={handleGenerate}
+              >
+                {selections.contentType?.includes('video') ? <Video className="h-4.5 w-4.5" /> : <Image className="h-4.5 w-4.5" />}
+                {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
+                <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </motion.div>
+        )}
+        </AnimatePresence>
       </div>
       )}
 
