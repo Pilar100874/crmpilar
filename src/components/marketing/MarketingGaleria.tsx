@@ -624,13 +624,32 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
                                 Abrir
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDownload(item)}
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </Button>
+                              {item.content_type === 'video' ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="sm" variant="outline" className="gap-1">
+                                      <Download className="h-3.5 w-3.5" />
+                                      <ChevronDown className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleDownload(item, true)}>
+                                      <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownload(item, false)}>
+                                      <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownload(item)}
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                             </>
                           )}
                           <Button
