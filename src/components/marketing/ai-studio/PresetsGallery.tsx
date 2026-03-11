@@ -327,7 +327,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Problem Hook',
+    category: 'Gancho de Problema',
     emoji: '😰',
     hooks: [
       'Cansado de desperdiçar dinheiro com produtos que não funcionam?',
