@@ -987,7 +987,7 @@ interface PresetsGalleryProps {
 }
 
 const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose, estabelecimentoId = '', initialSelections }) => {
-  const [mode, setMode] = useState<'wizard' | 'prompts'>(initialSelections ? 'wizard' : 'wizard');
+  const [mode, setMode] = useState<'choose' | 'wizard' | 'prompts'>(initialSelections ? 'wizard' : 'choose');
   const [selections, setSelections] = useState<Record<string, string[]>>(initialSelections || {});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
