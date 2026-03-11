@@ -1693,11 +1693,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText)}
+              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-              {activeTab === 'variations' && variations.length > 0 ? `Aplicar 5 Variações no Canvas` : 'Aplicar no Canvas'}
+              {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
             </Button>
           </div>
         </div>
