@@ -235,7 +235,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-neon-glow', name: 'Neon Glow', mediaType: 'image', category: 'produto',
     tags: ['neon', 'futuristic', 'tech'], image: imgProdNeon,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Futuristic product photography with vibrant neon RGB lighting. The product on a glossy reflective surface with colorful neon reflections. Purple, blue, and pink neon accents creating a cyberpunk aesthetic. High-tech environment feel with glowing light strips in the background. Ultra detailed reflections and materials. Camera: Sony A7S III, 85mm lens, wide open aperture.${NEGATIVE_BLOCK}`,
   },
 
