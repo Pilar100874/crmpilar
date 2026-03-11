@@ -193,7 +193,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-white-studio', name: 'White Studio Clean', mediaType: 'image', category: 'produto',
     tags: ['e-commerce', 'clean', 'minimal'], image: imgProdWhite,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Professional product photography on a clean white seamless background. The product is centered with perfect symmetry. Soft diffused studio lighting from multiple angles eliminating harsh shadows. High-key photography style optimized for e-commerce and catalog use. Sharp focus across the entire product. Ultra high resolution, 4K detail, photorealistic rendering. Camera: Phase One IQ4, 120mm macro lens.${NEGATIVE_BLOCK}`,
   },
   {
