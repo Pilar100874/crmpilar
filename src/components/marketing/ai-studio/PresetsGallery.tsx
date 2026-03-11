@@ -36,8 +36,8 @@ const LAYERS: Layer[] = [
     description: 'Escolha entre vídeo ou imagem',
     required: true,
     options: [
-      { id: 'video', label: 'Video Generation', emoji: '🎥' },
-      { id: 'image', label: 'Image Generation', emoji: '🖼️' },
+      { id: 'video', label: 'Geração de Vídeo', emoji: '🎥' },
+      { id: 'image', label: 'Geração de Imagem', emoji: '🖼️' },
     ],
   },
   {
@@ -80,18 +80,18 @@ const LAYERS: Layer[] = [
     emoji: '🎨',
     description: 'Defina a estética do conteúdo',
     options: [
-      { id: 'cinematic', label: 'Cinematic', emoji: '🎬' },
-      { id: 'realistic', label: 'Realistic', emoji: '📸' },
+      { id: 'cinematic', label: 'Cinematográfico', emoji: '🎬' },
+      { id: 'realistic', label: 'Realista', emoji: '📸' },
       { id: 'ugc', label: 'UGC', emoji: '📱' },
-      { id: 'luxury', label: 'Luxury', emoji: '💎' },
-      { id: 'minimalist', label: 'Minimalist', emoji: '◻️' },
-      { id: 'futuristic', label: 'Futuristic', emoji: '🚀' },
-      { id: 'commercial', label: 'Commercial Advertising', emoji: '📺' },
-      { id: 'viral', label: 'Viral Social Media', emoji: '🔥' },
-      { id: 'documentary', label: 'Documentary Style', emoji: '🎥' },
-      { id: 'high-fashion', label: 'High Fashion', emoji: '👗' },
-      { id: 'studio-photo', label: 'Studio Photography', emoji: '📷' },
-      { id: 'lifestyle', label: 'Lifestyle', emoji: '🌿' },
+      { id: 'luxury', label: 'Luxo', emoji: '💎' },
+      { id: 'minimalist', label: 'Minimalista', emoji: '◻️' },
+      { id: 'futuristic', label: 'Futurista', emoji: '🚀' },
+      { id: 'commercial', label: 'Publicidade Comercial', emoji: '📺' },
+      { id: 'viral', label: 'Viral Redes Sociais', emoji: '🔥' },
+      { id: 'documentary', label: 'Estilo Documentário', emoji: '🎥' },
+      { id: 'high-fashion', label: 'Alta Moda', emoji: '👗' },
+      { id: 'studio-photo', label: 'Fotografia de Estúdio', emoji: '📷' },
+      { id: 'lifestyle', label: 'Estilo de Vida', emoji: '🌿' },
     ],
   },
   {
@@ -106,8 +106,8 @@ const LAYERS: Layer[] = [
       { id: 'youtube', label: 'YouTube', emoji: '▶️' },
       { id: 'youtube-shorts', label: 'YouTube Shorts', emoji: '⚡' },
       { id: 'facebook-ads', label: 'Facebook Ads', emoji: '📘' },
-      { id: 'landing-page', label: 'Landing Page Video', emoji: '🌐' },
-      { id: 'hero-section', label: 'Website Hero Section', emoji: '🖥️' },
+      { id: 'landing-page', label: 'Vídeo para Landing Page', emoji: '🌐' },
+      { id: 'hero-section', label: 'Seção Hero do Site', emoji: '🖥️' },
     ],
   },
   {
@@ -135,16 +135,16 @@ const LAYERS: Layer[] = [
     emoji: '🎯',
     description: 'Formato da narrativa publicitária',
     options: [
-      { id: 'showcase', label: 'Product Showcase', emoji: '✨' },
-      { id: 'demonstration', label: 'Product Demonstration', emoji: '🔍' },
-      { id: 'problem-solution', label: 'Problem → Solution', emoji: '💡' },
-      { id: 'before-after', label: 'Before and After', emoji: '🔄' },
-      { id: 'storytelling', label: 'Storytelling', emoji: '📖' },
-      { id: 'influencer-review', label: 'Influencer Review', emoji: '⭐' },
+      { id: 'showcase', label: 'Vitrine de Produto', emoji: '✨' },
+      { id: 'demonstration', label: 'Demonstração de Produto', emoji: '🔍' },
+      { id: 'problem-solution', label: 'Problema → Solução', emoji: '💡' },
+      { id: 'before-after', label: 'Antes e Depois', emoji: '🔄' },
+      { id: 'storytelling', label: 'Narrativa', emoji: '📖' },
+      { id: 'influencer-review', label: 'Avaliação de Influencer', emoji: '⭐' },
       { id: 'unboxing', label: 'Unboxing', emoji: '📦' },
-      { id: 'lifestyle-usage', label: 'Lifestyle Usage', emoji: '🌿' },
-      { id: 'testimonial', label: 'Testimonial', emoji: '💬' },
-      { id: 'comparison', label: 'Comparison', emoji: '⚖️' },
+      { id: 'lifestyle-usage', label: 'Uso no Dia a Dia', emoji: '🌿' },
+      { id: 'testimonial', label: 'Depoimento', emoji: '💬' },
+      { id: 'comparison', label: 'Comparação', emoji: '⚖️' },
     ],
   },
   {
@@ -191,14 +191,14 @@ const LAYERS: Layer[] = [
     description: 'Movimento e enquadramento',
     visibleWhen: (s) => s.contentType?.includes('video'),
     options: [
-      { id: 'handheld', label: 'Handheld', emoji: '🤳' },
-      { id: 'cinematic-camera', label: 'Cinematic Camera', emoji: '🎬' },
-      { id: 'drone', label: 'Drone Shot', emoji: '🚁' },
-      { id: 'macro', label: 'Macro Shot', emoji: '🔬' },
-      { id: 'slowmo', label: 'Slow Motion', emoji: '🐌' },
-      { id: 'tracking', label: 'Tracking Shot', emoji: '🏃' },
-      { id: 'pov', label: 'POV Camera', emoji: '👁️' },
-      { id: 'rotation', label: 'Product Rotation', emoji: '🔄' },
+      { id: 'handheld', label: 'Câmera na Mão', emoji: '🤳' },
+      { id: 'cinematic-camera', label: 'Câmera Cinematográfica', emoji: '🎬' },
+      { id: 'drone', label: 'Tomada de Drone', emoji: '🚁' },
+      { id: 'macro', label: 'Tomada Macro', emoji: '🔬' },
+      { id: 'slowmo', label: 'Câmera Lenta', emoji: '🐌' },
+      { id: 'tracking', label: 'Câmera de Acompanhamento', emoji: '🏃' },
+      { id: 'pov', label: 'Câmera POV', emoji: '👁️' },
+      { id: 'rotation', label: 'Rotação de Produto', emoji: '🔄' },
     ],
   },
   {
@@ -207,13 +207,13 @@ const LAYERS: Layer[] = [
     emoji: '💡',
     description: 'Tom e atmosfera da luz',
     options: [
-      { id: 'natural', label: 'Natural Light', emoji: '☀️' },
-      { id: 'studio', label: 'Studio Lighting', emoji: '💡' },
-      { id: 'dramatic', label: 'Dramatic Lighting', emoji: '🌑' },
-      { id: 'neon', label: 'Neon Lighting', emoji: '🟣' },
-      { id: 'soft-luxury', label: 'Soft Luxury Lighting', emoji: '✨' },
-      { id: 'high-contrast', label: 'High Contrast Lighting', emoji: '⬛' },
-      { id: 'golden-hour', label: 'Golden Hour Lighting', emoji: '🌅' },
+      { id: 'natural', label: 'Luz Natural', emoji: '☀️' },
+      { id: 'studio', label: 'Iluminação de Estúdio', emoji: '💡' },
+      { id: 'dramatic', label: 'Iluminação Dramática', emoji: '🌑' },
+      { id: 'neon', label: 'Iluminação Neon', emoji: '🟣' },
+      { id: 'soft-luxury', label: 'Iluminação Suave de Luxo', emoji: '✨' },
+      { id: 'high-contrast', label: 'Alto Contraste', emoji: '⬛' },
+      { id: 'golden-hour', label: 'Hora Dourada', emoji: '🌅' },
     ],
   },
   {
@@ -222,12 +222,12 @@ const LAYERS: Layer[] = [
     emoji: '⚡',
     description: 'Ritmo e sensação geral',
     options: [
-      { id: 'high-energy', label: 'High Energy', emoji: '🔥' },
-      { id: 'calm', label: 'Calm / Aesthetic', emoji: '🌿' },
-      { id: 'luxury-mood', label: 'Luxury Mood', emoji: '💎' },
-      { id: 'dramatic-mood', label: 'Dramatic', emoji: '🎭' },
-      { id: 'emotional', label: 'Emotional', emoji: '💖' },
-      { id: 'inspirational', label: 'Inspirational', emoji: '🌟' },
+      { id: 'high-energy', label: 'Alta Energia', emoji: '🔥' },
+      { id: 'calm', label: 'Calmo / Estético', emoji: '🌿' },
+      { id: 'luxury-mood', label: 'Atmosfera de Luxo', emoji: '💎' },
+      { id: 'dramatic-mood', label: 'Dramático', emoji: '🎭' },
+      { id: 'emotional', label: 'Emocional', emoji: '💖' },
+      { id: 'inspirational', label: 'Inspiracional', emoji: '🌟' },
     ],
   },
   {
@@ -238,7 +238,7 @@ const LAYERS: Layer[] = [
     options: [
       { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
       { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
-      { id: 'square', label: 'Square (1:1)', emoji: '⬜' },
+      { id: 'square', label: 'Quadrado (1:1)', emoji: '⬜' },
     ],
   },
   {
@@ -247,16 +247,16 @@ const LAYERS: Layer[] = [
     emoji: '🎯',
     description: 'Defina o objetivo do anúncio',
     options: [
-      { id: 'product-awareness', label: 'Product Awareness', emoji: '👁️' },
-      { id: 'direct-sales', label: 'Direct Sales', emoji: '💰' },
-      { id: 'lead-generation', label: 'Lead Generation', emoji: '📋' },
-      { id: 'brand-awareness', label: 'Brand Awareness', emoji: '🏢' },
-      { id: 'app-install', label: 'App Install', emoji: '📲' },
-      { id: 'product-launch', label: 'Product Launch', emoji: '🚀' },
+      { id: 'product-awareness', label: 'Conhecimento do Produto', emoji: '👁️' },
+      { id: 'direct-sales', label: 'Vendas Diretas', emoji: '💰' },
+      { id: 'lead-generation', label: 'Geração de Leads', emoji: '📋' },
+      { id: 'brand-awareness', label: 'Conhecimento de Marca', emoji: '🏢' },
+      { id: 'app-install', label: 'Instalação de App', emoji: '📲' },
+      { id: 'product-launch', label: 'Lançamento de Produto', emoji: '🚀' },
       { id: 'retargeting', label: 'Retargeting', emoji: '🔁' },
-      { id: 'social-proof', label: 'Social Proof', emoji: '⭐' },
-      { id: 'educational', label: 'Educational Content', emoji: '📚' },
-      { id: 'viral-engagement', label: 'Viral Engagement', emoji: '🔥' },
+      { id: 'social-proof', label: 'Prova Social', emoji: '⭐' },
+      { id: 'educational', label: 'Conteúdo Educativo', emoji: '📚' },
+      { id: 'viral-engagement', label: 'Engajamento Viral', emoji: '🔥' },
     ],
   },
   {
@@ -265,14 +265,14 @@ const LAYERS: Layer[] = [
     emoji: '🪝',
     description: 'Tipo de abertura para capturar atenção',
     options: [
-      { id: 'pattern-interrupt', label: 'Pattern Interrupt', emoji: '⚡' },
-      { id: 'question', label: 'Question Hook', emoji: '❓' },
-      { id: 'problem', label: 'Problem Hook', emoji: '😰' },
-      { id: 'shock', label: 'Shock / Surprise', emoji: '😱' },
-      { id: 'visual-hook', label: 'Visual Hook', emoji: '👀' },
-      { id: 'fast-demo', label: 'Fast Demo', emoji: '⏩' },
-      { id: 'bold-statement', label: 'Bold Statement', emoji: '💪' },
-      { id: 'curiosity', label: 'Curiosity Hook', emoji: '🤔' },
+      { id: 'pattern-interrupt', label: 'Quebra de Padrão', emoji: '⚡' },
+      { id: 'question', label: 'Gancho de Pergunta', emoji: '❓' },
+      { id: 'problem', label: 'Gancho de Problema', emoji: '😰' },
+      { id: 'shock', label: 'Choque / Surpresa', emoji: '😱' },
+      { id: 'visual-hook', label: 'Gancho Visual', emoji: '👀' },
+      { id: 'fast-demo', label: 'Demo Rápida', emoji: '⏩' },
+      { id: 'bold-statement', label: 'Declaração Impactante', emoji: '💪' },
+      { id: 'curiosity', label: 'Gancho de Curiosidade', emoji: '🤔' },
     ],
   },
   {
@@ -281,16 +281,16 @@ const LAYERS: Layer[] = [
     emoji: '🎞️',
     description: 'Estrutura criativa do conteúdo',
     options: [
-      { id: 'ugc-ad', label: 'UGC Ad', emoji: '📱' },
-      { id: 'product-hero', label: 'Product Hero Shot', emoji: '✨' },
-      { id: 'influencer-review', label: 'Influencer Review', emoji: '⭐' },
+      { id: 'ugc-ad', label: 'Anúncio UGC', emoji: '📱' },
+      { id: 'product-hero', label: 'Destaque do Produto', emoji: '✨' },
+      { id: 'influencer-review', label: 'Avaliação de Influencer', emoji: '⭐' },
       { id: 'unboxing', label: 'Unboxing', emoji: '📦' },
-      { id: 'before-after', label: 'Before and After', emoji: '🔄' },
-      { id: 'lifestyle-ad', label: 'Lifestyle Ad', emoji: '🌿' },
-      { id: 'cinematic-brand', label: 'Cinematic Brand Film', emoji: '🎬' },
-      { id: 'viral-clip', label: 'Viral Social Clip', emoji: '🔥' },
-      { id: 'testimonial', label: 'Testimonial', emoji: '💬' },
-      { id: 'product-comparison', label: 'Product Comparison', emoji: '⚖️' },
+      { id: 'before-after', label: 'Antes e Depois', emoji: '🔄' },
+      { id: 'lifestyle-ad', label: 'Anúncio Estilo de Vida', emoji: '🌿' },
+      { id: 'cinematic-brand', label: 'Filme de Marca Cinematográfico', emoji: '🎬' },
+      { id: 'viral-clip', label: 'Clipe Viral para Redes', emoji: '🔥' },
+      { id: 'testimonial', label: 'Depoimento', emoji: '💬' },
+      { id: 'product-comparison', label: 'Comparação de Produtos', emoji: '⚖️' },
     ],
   },
 ];
@@ -305,7 +305,7 @@ interface ViralHook {
 
 const VIRAL_HOOKS: ViralHook[] = [
   {
-    category: 'Pattern Interrupt',
+    category: 'Quebra de Padrão',
     emoji: '⚡',
     hooks: [
       'Espera... ninguém te conta isso sobre esse produto.',
@@ -316,7 +316,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Question Hook',
+    category: 'Gancho de Pergunta',
     emoji: '❓',
     hooks: [
       'Você sabia que está usando isso do jeito errado?',
@@ -327,7 +327,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Problem Hook',
+    category: 'Gancho de Problema',
     emoji: '😰',
     hooks: [
       'Cansado de desperdiçar dinheiro com produtos que não funcionam?',
@@ -338,7 +338,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Shock Hook',
+    category: 'Gancho de Choque',
     emoji: '😱',
     hooks: [
       'Eu não acreditei quando vi o resultado.',
@@ -349,7 +349,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Curiosity Hook',
+    category: 'Gancho de Curiosidade',
     emoji: '🤔',
     hooks: [
       'Assista até o final para ver o resultado.',
@@ -360,7 +360,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Bold Statement',
+    category: 'Declaração Impactante',
     emoji: '💪',
     hooks: [
       'Esse é o melhor produto que eu já testei. Ponto final.',
@@ -371,7 +371,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Visual Hook',
+    category: 'Gancho Visual',
     emoji: '👀',
     hooks: [
       'Olha essa textura... incrível.',
@@ -382,7 +382,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Fast Demo',
+    category: 'Demo Rápida',
     emoji: '⏩',
     hooks: [
       'Em 10 segundos você vai entender porque isso é tão bom.',
@@ -1058,8 +1058,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Wand2 className="h-5 w-5 text-primary" />
               AI Creative Studio
-            </h2>
-            <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+1061:             </h2>
+1062:             <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
           </div>
           {/* Mode Toggle */}
           <div className="flex items-center bg-muted rounded-lg p-0.5">
@@ -1069,7 +1069,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 mode === 'wizard' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Wand2 className="h-3.5 w-3.5" /> Wizard
+              <Wand2 className="h-3.5 w-3.5" /> Assistente
             </button>
             <button
               onClick={() => setMode('prompts')}
