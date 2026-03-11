@@ -579,6 +579,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
 
       {/* Create/Edit Dialog */}
       <CreatePromptDialog
+        key={editingPreset?.id || 'new'}
         open={showCreateDialog}
         onClose={() => { setShowCreateDialog(false); setEditingPreset(null); }}
         onSave={handleSaveCustom}
