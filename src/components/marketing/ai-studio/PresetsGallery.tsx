@@ -912,7 +912,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [editingHookText, setEditingHookText] = useState('');
   const { toast } = useToast();
 
-  // Auto-update variations moved below negativePromptText declaration
+  
 
   // If hookStyle is deselected while on hooks tab, redirect
   const hasHookStyleSelected = (selections.hookStyle || []).length > 0;
