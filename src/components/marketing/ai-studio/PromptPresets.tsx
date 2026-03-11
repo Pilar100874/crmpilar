@@ -261,7 +261,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-beauty', name: 'Beauty Close-Up', mediaType: 'image', category: 'influencer',
     tags: ['beauty', 'skincare', 'close-up'], image: imgInfBeauty,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Professional beauty photography. Close-up of hands elegantly holding a skincare or beauty product. Soft beauty lighting with diffused fill creating flawless illumination. Clean minimal background. Focus on product details and natural skin texture. Cosmetics advertising aesthetic with premium feel. Camera: Canon R5, 100mm macro lens, f/4.0.${NEGATIVE_BLOCK}`,
   },
   {
