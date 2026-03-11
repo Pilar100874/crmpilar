@@ -24,6 +24,7 @@ export interface WorkflowCardProps {
   className?: string;
   menuOpen?: boolean;
   mediaTypes?: ('image' | 'video')[];
+  draggable?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
   onEdit?: () => void;
   onRename?: () => void;
@@ -33,6 +34,7 @@ export interface WorkflowCardProps {
   onDelete?: () => void;
   onOpenEditor?: () => void;
   onMoveToFolder?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
   customContent?: ReactNode;
   showDefaultOption?: boolean;
   deleteDisabled?: boolean;
@@ -51,6 +53,7 @@ export const WorkflowCard = ({
   className,
   menuOpen,
   mediaTypes,
+  draggable,
   onMenuOpenChange,
   onEdit,
   onRename,
@@ -60,6 +63,7 @@ export const WorkflowCard = ({
   onDelete,
   onOpenEditor,
   onMoveToFolder,
+  onDragStart,
   customContent,
   showDefaultOption = false,
   deleteDisabled = false,
@@ -69,39 +73,20 @@ export const WorkflowCard = ({
 
   return (
     <div
+      draggable={draggable}
+      onDragStart={onDragStart}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl",
         "bg-card [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
         "transform-gpu dark:[border:1px_solid_rgba(255,255,255,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]",
         "transition-all duration-300 hover:shadow-lg hover:scale-[1.02]",
+        draggable && "cursor-grab active:cursor-grabbing",
         isDefault && "ring-2 ring-primary",
         className
       )}
     >
       {/* Hover overlay */}
       <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-black/[.02] group-hover:dark:bg-neutral-800/10" />
-
-      {/* Media type icons */}
-      {mediaTypes && mediaTypes.length > 0 && (
-        <div className="absolute top-3 right-12 z-20 flex items-center gap-1">
-          {hasImage && hasVideo ? (
-            <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px] bg-background/80 backdrop-blur-sm">
-              <Film className="h-3 w-3 text-purple-500" />
-              <span>Misto</span>
-            </Badge>
-          ) : hasVideo ? (
-            <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px] bg-background/80 backdrop-blur-sm">
-              <Video className="h-3 w-3 text-blue-500" />
-              <span>Vídeo</span>
-            </Badge>
-          ) : hasImage ? (
-            <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px] bg-background/80 backdrop-blur-sm">
-              <Image className="h-3 w-3 text-green-500" />
-              <span>Imagem</span>
-            </Badge>
-          ) : null}
-        </div>
-      )}
 
       {/* Header */}
       <div className="relative z-10 p-4 pb-3">
@@ -191,7 +176,7 @@ export const WorkflowCard = ({
 
       {/* Content */}
       <div className="relative z-10 px-4 pb-4 space-y-3 flex-1">
-        {/* Status and blocks */}
+        {/* Status, blocks and media type */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant={isActive ? "default" : "secondary"}>
@@ -203,9 +188,31 @@ export const WorkflowCard = ({
               </span>
             )}
           </div>
-          {typeof priority === "number" && (
-            <Badge variant="outline">Prioridade: {priority}</Badge>
-          )}
+          <div className="flex items-center gap-1">
+            {typeof priority === "number" && (
+              <Badge variant="outline">Prioridade: {priority}</Badge>
+            )}
+            {mediaTypes && mediaTypes.length > 0 && (
+              <>
+                {hasImage && hasVideo ? (
+                  <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px]">
+                    <Film className="h-3 w-3 text-purple-500" />
+                    Misto
+                  </Badge>
+                ) : hasVideo ? (
+                  <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px]">
+                    <Video className="h-3 w-3 text-blue-500" />
+                    Vídeo
+                  </Badge>
+                ) : hasImage ? (
+                  <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[10px]">
+                    <Image className="h-3 w-3 text-green-500" />
+                    Imagem
+                  </Badge>
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Custom content slot */}
