@@ -1239,8 +1239,11 @@ Deno.serve(async (req) => {
     }
   } catch (e: any) {
     console.error("ai-creative-studio error:", e);
-    const status = e?.status || 500;
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    let status = e?.status || 500;
+    if (msg.includes("429") || msg.includes("quota")) status = 429;
+    if (msg.includes("402") || msg.includes("billing")) status = 402;
+    return new Response(JSON.stringify({ error: msg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
