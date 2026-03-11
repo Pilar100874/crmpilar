@@ -1430,6 +1430,22 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                               </div>
                             );
                           })}
+                          {/* Add new hook button */}
+                          <button
+                            onClick={() => {
+                              setViralHooks(prev => {
+                                const updated = [...prev];
+                                updated[catIdx] = { ...updated[catIdx], hooks: [...updated[catIdx].hooks, ''] };
+                                return updated;
+                              });
+                              const newIdx = category.hooks.length;
+                              setEditingHook({ catIdx, hookIdx: newIdx });
+                              setEditingHookText('');
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-md text-xs border border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/5 text-muted-foreground transition-all flex items-center gap-1.5"
+                          >
+                            <span className="text-sm">＋</span> Adicionar nova frase de gancho
+                          </button>
                         </div>
                       </div>
                     );
@@ -1573,11 +1589,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </TabsContent>
           </Tabs>
 
-          <div className="p-3 border-t">
+          <div className="p-3 border-t space-y-1.5">
+            {hasHookStyleSelected && !selectedHookText && (
+              <p className="text-[10px] text-destructive font-medium text-center">⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.</p>
+            )}
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={selectionCount < 2 || !selections.contentType?.length}
+              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText)}
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
