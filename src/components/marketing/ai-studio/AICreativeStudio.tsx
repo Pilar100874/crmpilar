@@ -17,9 +17,10 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images, Square } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images, Square, FolderPlus, Folder, FolderOpen, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
@@ -46,6 +47,7 @@ interface SavedWorkflow {
   edges_data: any;
   created_at: string;
   updated_at: string;
+  pasta: string | null;
 }
 
 interface ContextMenuState {
@@ -133,6 +135,11 @@ const AICreativeStudioInner: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [moveToFolderWorkflow, setMoveToFolderWorkflow] = useState<SavedWorkflow | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -518,6 +525,53 @@ const AICreativeStudioInner: React.FC = () => {
       fetchWorkflows();
     }
   }, [fetchWorkflows, estabelecimentoId]);
+
+  // Helper: detect media types from workflow nodes
+  const getWorkflowMediaTypes = useCallback((nodesData: any): ('image' | 'video')[] => {
+    if (!Array.isArray(nodesData)) return [];
+    const types = new Set<'image' | 'video'>();
+    for (const node of nodesData) {
+      const nodeType = node?.data?.type || node?.type || '';
+      if (['imageGen', 'imageEdit', 'productComposite'].includes(nodeType)) types.add('image');
+      if (nodeType === 'videoGen') types.add('video');
+    }
+    return Array.from(types);
+  }, []);
+
+  // Get unique folders from workflows
+  const folders = Array.from(new Set(savedWorkflows.map(w => w.pasta).filter(Boolean))) as string[];
+
+  // Filtered workflows based on active folder
+  const filteredWorkflows = activeFolder
+    ? savedWorkflows.filter(w => w.pasta === activeFolder)
+    : savedWorkflows.filter(w => !w.pasta);
+
+  const handleMoveToFolder = useCallback(async (workflowId: string, folder: string | null) => {
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .update({ pasta: folder } as any)
+      .eq('id', workflowId);
+    if (error) {
+      toast.error('Erro ao mover workflow');
+    } else {
+      toast.success(folder ? `Movido para "${folder}"` : 'Removido da pasta');
+      fetchWorkflows();
+    }
+    setShowMoveDialog(false);
+    setMoveToFolderWorkflow(null);
+  }, [fetchWorkflows]);
+
+  const handleCreateFolder = useCallback(() => {
+    if (!newFolderName.trim()) return;
+    // Folder is created implicitly by assigning a workflow to it
+    // But we can pre-create by moving current moveToFolderWorkflow
+    if (moveToFolderWorkflow) {
+      handleMoveToFolder(moveToFolderWorkflow.id, newFolderName.trim());
+    }
+    setShowFolderDialog(false);
+    setNewFolderName('');
+  }, [newFolderName, moveToFolderWorkflow, handleMoveToFolder]);
+
 
   const handleCloseCanvas = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -1035,7 +1089,7 @@ const AICreativeStudioInner: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Saved Workflows */}
+          {/* Saved Workflows with Folders */}
           {savedWorkflows.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1044,9 +1098,56 @@ const AICreativeStudioInner: React.FC = () => {
               className="relative z-10 w-full max-w-5xl mb-10"
             >
               <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Meus Workflows</p>
+              
+              {/* Folder navigation */}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <Button
+                  variant={activeFolder === null ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full gap-1.5 text-xs"
+                  onClick={() => setActiveFolder(null)}
+                >
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  Todos
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                    {savedWorkflows.filter(w => !w.pasta).length}
+                  </Badge>
+                </Button>
+                {folders.map((folder) => (
+                  <Button
+                    key={folder}
+                    variant={activeFolder === folder ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full gap-1.5 text-xs"
+                    onClick={() => setActiveFolder(folder)}
+                  >
+                    <Folder className="h-3.5 w-3.5" />
+                    {folder}
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                      {savedWorkflows.filter(w => w.pasta === folder).length}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+
+              {/* Active folder breadcrumb */}
+              {activeFolder && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" onClick={() => setActiveFolder(null)}>
+                    <ChevronLeft className="h-3 w-3" />
+                    Voltar
+                  </Button>
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <Folder className="h-4 w-4 text-primary" />
+                    {activeFolder}
+                  </span>
+                </div>
+              )}
+
               <WorkflowCardGrid>
-                {savedWorkflows.map((w) => {
+                {filteredWorkflows.map((w) => {
                   const nodesCount = Array.isArray(w.nodes_data) ? w.nodes_data.length : 0;
+                  const mediaTypes = getWorkflowMediaTypes(w.nodes_data);
                   return (
                     <WorkflowCard
                       key={w.id}
@@ -1056,14 +1157,22 @@ const AICreativeStudioInner: React.FC = () => {
                       isActive={true}
                       blocksCount={nodesCount}
                       createdAt={w.created_at}
+                      mediaTypes={mediaTypes}
                       onOpenEditor={() => handleOpenWorkflow(w)}
                       onRename={() => { setRenameDialog({ id: w.id, nome: w.nome }); setRenameValue(w.nome); }}
                       onDuplicate={() => handleDuplicateWorkflow(w)}
                       onDelete={() => setDeleteConfirm({ id: w.id, nome: w.nome })}
+                      onMoveToFolder={() => { setMoveToFolderWorkflow(w); setShowMoveDialog(true); }}
                     />
                   );
                 })}
               </WorkflowCardGrid>
+
+              {filteredWorkflows.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  {activeFolder ? `Nenhum workflow na pasta "${activeFolder}"` : 'Nenhum workflow sem pasta'}
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -1555,6 +1664,56 @@ const AICreativeStudioInner: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Move to Folder dialog */}
+      <Dialog open={showMoveDialog} onOpenChange={(open) => { if (!open) { setShowMoveDialog(false); setMoveToFolderWorkflow(null); } }}>
+        <DialogContent className="z-[10001]">
+          <DialogHeader>
+            <DialogTitle>Mover para Pasta</DialogTitle>
+            <DialogDescription>
+              Escolha uma pasta existente ou crie uma nova.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {/* Remove from folder option */}
+            {moveToFolderWorkflow?.pasta && (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 text-sm"
+                onClick={() => moveToFolderWorkflow && handleMoveToFolder(moveToFolderWorkflow.id, null)}
+              >
+                <X className="h-4 w-4 text-destructive" />
+                Remover da pasta
+              </Button>
+            )}
+            {/* Existing folders */}
+            {folders.map((folder) => (
+              <Button
+                key={folder}
+                variant={moveToFolderWorkflow?.pasta === folder ? "default" : "outline"}
+                className="w-full justify-start gap-2 text-sm"
+                onClick={() => moveToFolderWorkflow && handleMoveToFolder(moveToFolderWorkflow.id, folder)}
+                disabled={moveToFolderWorkflow?.pasta === folder}
+              >
+                <Folder className="h-4 w-4" />
+                {folder}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Nome da nova pasta..."
+              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+            />
+            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()} size="sm" className="gap-1">
+              <FolderPlus className="h-4 w-4" />
+              Criar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

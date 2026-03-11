@@ -361,6 +361,7 @@ export type Database = {
           id: string
           nodes_data: Json
           nome: string
+          pasta: string | null
           thumbnail: string | null
           updated_at: string
         }
@@ -372,6 +373,7 @@ export type Database = {
           id?: string
           nodes_data?: Json
           nome: string
+          pasta?: string | null
           thumbnail?: string | null
           updated_at?: string
         }
@@ -383,6 +385,7 @@ export type Database = {
           id?: string
           nodes_data?: Json
           nome?: string
+          pasta?: string | null
           thumbnail?: string | null
           updated_at?: string
         }
