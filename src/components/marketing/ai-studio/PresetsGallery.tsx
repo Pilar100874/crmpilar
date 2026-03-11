@@ -1184,24 +1184,13 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const generatedScript = editedScript || generatedScriptBase;
 
   const handleSuggestNewScript = useCallback(() => {
-    // Generate variations by shuffling hook and CTA
-    const hooks = [
-      'Espera... você precisa ver isso antes de tomar qualquer decisão.',
-      'Você não vai acreditar no que eu descobri...',
-      'Para tudo! Isso muda completamente o jogo.',
-      'Se você ainda não conhece isso, está perdendo tempo.',
-      'Eu testei e o resultado foi SURREAL.',
-      'Atenção: isso pode mudar sua rotina para sempre.',
-      'Todo mundo está falando sobre isso — e com razão.',
-      'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
-    ];
-    const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
-    const newScript = generateScript(selections, randomHook);
+    const seed = Math.floor(Math.random() * 100) + 1;
+    const newScript = generateScript(selections, undefined, seed);
     setEditedScript(newScript);
     setScriptVersion(v => v + 1);
     setIsEditingScript(false);
     toast({ title: 'Novo roteiro sugerido!' });
-  }, [selections]);
+  }, [selections, toast]);
 
   const generatedScenes = useMemo(() => {
     if (selectionCount < 2) return [];
