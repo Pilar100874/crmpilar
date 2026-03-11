@@ -376,6 +376,12 @@ const MultiProductSelectInline: React.FC<{ config: Record<string, any>; onUpdate
   );
 };
 
+const formatTimestamp = (s: number) => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+};
+
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
