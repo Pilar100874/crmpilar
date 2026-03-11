@@ -70,10 +70,9 @@ async function transcodeToWhatsappMp4(inputBlob: Blob, keepAudio: boolean): Prom
   if (typeof outputData === 'string') {
     blobPart = new TextEncoder().encode(outputData);
   } else {
-    blobPart = outputData.buffer.slice(
-      outputData.byteOffset,
-      outputData.byteOffset + outputData.byteLength,
-    );
+    const copied = new Uint8Array(outputData.byteLength);
+    copied.set(outputData);
+    blobPart = copied.buffer;
   }
 
   try {
