@@ -199,7 +199,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-flatlay', name: 'Flat Lay Lifestyle', mediaType: 'image', category: 'produto',
     tags: ['flatlay', 'instagram', 'lifestyle'], image: imgProdFlatlay,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Aesthetic flat lay product photography shot from directly above. The product arranged with complementary lifestyle accessories on a clean surface. Warm natural lighting from a window. Carefully curated composition with balanced negative space. Instagram-optimized aesthetic with cohesive color palette. Camera: Canon R5, 35mm lens, top-down angle.${NEGATIVE_BLOCK}`,
   },
   {
