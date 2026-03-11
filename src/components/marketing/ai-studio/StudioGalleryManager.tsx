@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { 
-  Images, Upload, Trash2, Search, X, Plus, 
-  User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen
+  Images, Upload, Trash2, Search, X, Plus, Copy,
+  User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen,
+  ZoomIn, Download, Play, Pause
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -35,6 +36,13 @@ export const GALLERY_CATEGORIES = [
 
 export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];
 
+// Helper to detect if URL is a video
+function isVideoUrl(url: string): boolean {
+  const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+  const lower = url.toLowerCase().split('?')[0];
+  return videoExts.some(ext => lower.endsWith(ext));
+}
+
 interface StudioGalleryManagerProps {
   open: boolean;
   onClose: () => void;
@@ -47,6 +55,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<GalleryImage | null>(null);
+  const [previewItem, setPreviewItem] = useState<GalleryImage | null>(null);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   const fetchImages = useCallback(async () => {
@@ -54,12 +63,11 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     setLoading(true);
     
     if (activeCategory === 'salvas') {
-      // Fetch from media_gallery (system-wide saved images)
       const { data, error } = await supabase
         .from('media_gallery')
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
-        .in('tipo', ['imagem', 'image'])
+        .in('tipo', ['imagem', 'image', 'video'])
         .order('created_at', { ascending: false })
         .limit(200);
       if (!error) {
@@ -131,7 +139,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     });
 
     await Promise.all(uploadPromises);
-    toast.success(`${files.length} imagem(ns) enviada(s)!`);
+    toast.success(`${files.length} arquivo(s) enviado(s)!`);
     fetchImages();
     setUploading(false);
   }, [estabelecimentoId, activeCategory, fetchImages]);
@@ -139,7 +147,6 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const handleDelete = useCallback(async (img: GalleryImage) => {
     try {
       if (activeCategory === 'salvas') {
-        // Delete from media_gallery
         if (img.storage_path) {
           await supabase.storage.from('media_gallery').remove([img.storage_path]);
         }
@@ -158,15 +165,83 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           return;
         }
       }
-      toast.success('Imagem removida');
+      toast.success('Item removido');
+      if (previewItem?.id === img.id) setPreviewItem(null);
       fetchImages();
     } catch (err) {
       console.error('Erro ao excluir:', err);
-      toast.error('Erro ao remover imagem');
+      toast.error('Erro ao remover');
     } finally {
       setDeleteConfirm(null);
     }
-  }, [activeCategory, fetchImages]);
+  }, [activeCategory, fetchImages, previewItem]);
+
+  const handleDuplicate = useCallback(async (img: GalleryImage) => {
+    if (!estabelecimentoId) return;
+    try {
+      if (activeCategory === 'salvas') {
+        // Duplicate in media_gallery — copy storage file + insert new row
+        const newPath = img.storage_path 
+          ? img.storage_path.replace(/(\.[^.]+)$/, `_copy_${Date.now()}$1`)
+          : null;
+        
+        if (img.storage_path && newPath) {
+          await supabase.storage.from('media_gallery').copy(img.storage_path, newPath);
+        }
+
+        const { data: { publicUrl } } = newPath
+          ? supabase.storage.from('media_gallery').getPublicUrl(newPath)
+          : { data: { publicUrl: img.image_url } };
+
+        await supabase.from('media_gallery').insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: `${img.nome || 'Item'} (cópia)`,
+          descricao: img.descricao,
+          public_url: publicUrl,
+          storage_path: newPath,
+          tipo: isVideoUrl(img.image_url) ? 'video' : 'imagem',
+        });
+      } else {
+        // Duplicate in studio_gallery_images
+        const newPath = img.storage_path 
+          ? img.storage_path.replace(/(\.[^.]+)$/, `_copy_${Date.now()}$1`)
+          : null;
+
+        if (img.storage_path && newPath) {
+          await supabase.storage.from('studio-gallery').copy(img.storage_path, newPath);
+        }
+
+        const { data: { publicUrl } } = newPath
+          ? supabase.storage.from('studio-gallery').getPublicUrl(newPath)
+          : { data: { publicUrl: img.image_url } };
+
+        await supabase.from('studio_gallery_images').insert({
+          estabelecimento_id: estabelecimentoId,
+          categoria: activeCategory,
+          nome: `${img.nome || 'Item'} (cópia)`,
+          descricao: img.descricao,
+          image_url: publicUrl,
+          storage_path: newPath,
+          tags: img.tags,
+        });
+      }
+      toast.success('Item duplicado!');
+      fetchImages();
+    } catch (err) {
+      console.error('Erro ao duplicar:', err);
+      toast.error('Erro ao duplicar');
+    }
+  }, [estabelecimentoId, activeCategory, fetchImages]);
+
+  const handleDownload = useCallback((img: GalleryImage) => {
+    const a = document.createElement('a');
+    a.href = img.image_url;
+    a.download = img.nome || 'download';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, []);
 
   const filtered = images.filter(img => 
     !search || img.nome?.toLowerCase().includes(search.toLowerCase())
@@ -199,7 +274,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
             </div>
             <div>
               <h2 className="text-lg font-semibold">Galeria de Referências</h2>
-              <p className="text-xs text-muted-foreground">Organize imagens por categoria para usar nos workflows</p>
+              <p className="text-xs text-muted-foreground">Organize imagens e vídeos por categoria para usar nos workflows</p>
             </div>
           </div>
           <Button size="icon" variant="ghost" onClick={onClose}>
@@ -252,7 +327,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <label className="cursor-pointer">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     className="hidden"
                     onChange={(e) => e.target.files && handleUpload(e.target.files)}
@@ -277,42 +352,81 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   <div className="p-4 rounded-2xl bg-muted/30 mb-4">
                     {React.createElement(activeCat.icon, { className: 'h-8 w-8 text-muted-foreground/40' })}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">Nenhuma imagem em "{activeCat.label}"</p>
+                  <p className="text-sm text-muted-foreground mb-1">Nenhum item em "{activeCat.label}"</p>
                   <p className="text-xs text-muted-foreground/60">{activeCat.desc}</p>
-                  <label className="cursor-pointer mt-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => e.target.files && handleUpload(e.target.files)}
-                    />
-                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
-                      <span>
-                        <Plus className="h-3.5 w-3.5" />
-                        Adicionar imagens
-                      </span>
-                    </Button>
-                  </label>
+                  {activeCategory !== 'salvas' && (
+                    <label className="cursor-pointer mt-4">
+                      <input
+                        type="file"
+                        accept="image/*,video/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => e.target.files && handleUpload(e.target.files)}
+                      />
+                      <Button size="sm" variant="outline" className="gap-1.5 text-xs" asChild>
+                        <span>
+                          <Plus className="h-3.5 w-3.5" />
+                          Adicionar arquivos
+                        </span>
+                      </Button>
+                    </label>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                  {filtered.map((img) => (
-                    <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square">
-                      <img src={img.image_url} alt={img.nome || ''} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-white truncate">{img.nome}</p>
+                  {filtered.map((img) => {
+                    const isVideo = isVideoUrl(img.image_url);
+                    return (
+                      <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square cursor-pointer" onClick={() => setPreviewItem(img)}>
+                        {isVideo ? (
+                          <div className="w-full h-full flex items-center justify-center bg-black/80">
+                            <Play className="h-8 w-8 text-white/70" />
+                          </div>
+                        ) : (
+                          <img src={img.image_url} alt={img.nome || ''} className="w-full h-full object-cover" loading="lazy" />
+                        )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                          {/* Top actions */}
+                          <div className="flex justify-end gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPreviewItem(img); }}
+                              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                              title="Visualizar"
+                            >
+                              <ZoomIn className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDuplicate(img); }}
+                              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                              title="Duplicar"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDownload(img); }}
+                              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                              title="Download"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
+                          </div>
+                          {/* Bottom info + delete */}
+                          <div className="flex items-end justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] text-white truncate">{img.nome}</p>
+                              {isVideo && <p className="text-[8px] text-white/60">Vídeo</p>}
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirm(img); }}
+                              className="p-1.5 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-white transition-colors shrink-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => setDeleteConfirm(img)}
-                          className="p-1.5 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-white transition-colors shrink-0"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -320,12 +434,92 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
       </motion.div>
 
-      {/* Delete confirm - rendered with portal via AlertDialog */}
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setPreviewItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Preview actions bar */}
+              <div className="absolute -top-12 right-0 flex items-center gap-2 z-10">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white border-0"
+                  onClick={() => handleDuplicate(previewItem)}
+                >
+                  <Copy className="h-3.5 w-3.5" /> Duplicar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white border-0"
+                  onClick={() => handleDownload(previewItem)}
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border-0"
+                  onClick={() => { setDeleteConfirm(previewItem); }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Excluir
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-lg text-white hover:bg-white/20"
+                  onClick={() => setPreviewItem(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Media content */}
+              {isVideoUrl(previewItem.image_url) ? (
+                <video
+                  src={previewItem.image_url}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl"
+                  controlsList="nofullscreen"
+                />
+              ) : (
+                <img
+                  src={previewItem.image_url}
+                  alt={previewItem.nome || ''}
+                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
+                />
+              )}
+
+              {/* Title */}
+              {previewItem.nome && (
+                <p className="mt-3 text-sm text-white/80 font-medium">{previewItem.nome}</p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirm */}
       {deleteConfirm && (
         <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
-          <AlertDialogContent className="z-[200]" onClick={(e) => e.stopPropagation()}>
+          <AlertDialogContent className="z-[300]" onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Remover imagem</AlertDialogTitle>
+              <AlertDialogTitle>Remover item</AlertDialogTitle>
               <AlertDialogDescription>
                 Tem certeza que deseja remover "{deleteConfirm.nome}"? Esta ação não pode ser desfeita.
               </AlertDialogDescription>
