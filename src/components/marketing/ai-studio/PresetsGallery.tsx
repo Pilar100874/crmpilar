@@ -1009,9 +1009,9 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         const newPlatform = current.includes(optionId) ? undefined : optionId;
         const allowed = newPlatform ? PLATFORM_ORIENTATION_MAP[newPlatform] : null;
         const currentOrientation = prev.orientation?.[0];
-        const next = { ...prev, [layerId]: current.includes(optionId) ? [] : [optionId] };
+        const next: Record<string, string[]> = { ...prev, [layerId]: current.includes(optionId) ? [] : [optionId] };
         if (allowed && currentOrientation && !allowed.includes(currentOrientation)) {
-          next.orientation = [];
+          next['orientation'] = [];
         }
         return next;
       }
