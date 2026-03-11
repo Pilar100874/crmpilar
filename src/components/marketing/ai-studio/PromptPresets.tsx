@@ -123,7 +123,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-fashion', name: 'High Fashion', mediaType: 'video', category: 'produto',
     tags: ['fashion', 'luxury', 'cinematic'], image: imgFashion,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `High fashion cinematic commercial. Elegant influencer walking through a luxurious environment (marble floors, dramatic lighting). Close-ups of the product in slow motion. Soft smoke and light rays in the background. Camera slow motion, 60fps cinematic look. Fashion magazine advertising style.${NEGATIVE_BLOCK}`,
   },
   {
