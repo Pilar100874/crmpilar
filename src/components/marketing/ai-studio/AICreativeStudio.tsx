@@ -1462,40 +1462,42 @@ const AICreativeStudioInner: React.FC = () => {
 
       {/* Preset canvas conflict dialog */}
       <AlertDialog open={!!pendingPreset} onOpenChange={(open) => !open && setPendingPreset(null)}>
-        <AlertDialogContent className="z-[10001] max-w-md">
+        <AlertDialogContent className="z-[10001] max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Canvas já possui blocos</AlertDialogTitle>
             <AlertDialogDescription>
               O canvas já contém blocos. Deseja adicionar o preset junto com os blocos existentes ou limpar o canvas e criar um novo workflow?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
-            <AlertDialogCancel onClick={() => setPendingPreset(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-primary hover:bg-primary/90"
-              onClick={() => {
-                if (pendingPreset) {
-                  handlePresetSelect(pendingPreset);
-                  setPendingPreset(null);
-                }
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" /> Adicionar ao existente
-            </AlertDialogAction>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              onClick={() => {
-                if (pendingPreset) {
-                  nodeResultStore.clearAll();
-                  setNodes([]);
-                  setEdges([]);
-                  setTimeout(() => handlePresetSelect(pendingPreset), 50);
-                  setPendingPreset(null);
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-1" /> Limpar e criar novo
-            </AlertDialogAction>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <AlertDialogAction
+                className="bg-primary hover:bg-primary/90 flex-1"
+                onClick={() => {
+                  if (pendingPreset) {
+                    handlePresetSelect(pendingPreset);
+                    setPendingPreset(null);
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1 shrink-0" /> Adicionar ao existente
+              </AlertDialogAction>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground flex-1"
+                onClick={() => {
+                  if (pendingPreset) {
+                    nodeResultStore.clearAll();
+                    setNodes([]);
+                    setEdges([]);
+                    setTimeout(() => handlePresetSelect(pendingPreset), 50);
+                    setPendingPreset(null);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-1 shrink-0" /> Limpar e criar novo
+              </AlertDialogAction>
+            </div>
+            <AlertDialogCancel className="sm:mt-0" onClick={() => setPendingPreset(null)}>Cancelar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
