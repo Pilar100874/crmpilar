@@ -576,8 +576,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     setIsSavingToGallery(true);
     try {
       const blob = await downloadAsBlob(videoUrl);
-      const mp4Blob = await convertVideoToWhatsappMp4(blob);
-      const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+      const finalBlob = withAudio
+        ? await convertVideoToWhatsappMp4(blob)
+        : await removeAudioFromVideo(blob);
 
       const fileName = `studio-video-${nodeData.type}-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;

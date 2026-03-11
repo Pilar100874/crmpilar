@@ -241,8 +241,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
 
       let downloadBlob: Blob;
       if (isVideo) {
-        const mp4Blob = await convertVideoToWhatsappMp4(blob);
-        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+        downloadBlob = withAudio
+          ? await convertVideoToWhatsappMp4(blob)
+          : await removeAudioFromVideo(blob);
       } else if (item.content_type === 'audio') {
         downloadBlob = new Blob([blob], { type: 'audio/mpeg' });
       } else {

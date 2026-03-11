@@ -300,8 +300,9 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       let downloadBlob: Blob;
       let ext: string;
       if (isVideo) {
-        const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
-        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+        downloadBlob = withAudio
+          ? await convertVideoToWhatsappMp4(originalBlob)
+          : await removeAudioFromVideo(originalBlob);
         ext = withAudio ? '.mp4' : '_sem-audio.mp4';
       } else if (isAudio) {
         downloadBlob = new Blob([originalBlob], { type: 'audio/mpeg' });
