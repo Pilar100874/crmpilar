@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { 
   Images, Upload, Trash2, Search, X, Plus, Copy,
   User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen,
-  ZoomIn, Download, Play, Pause
+  ZoomIn, Download, Play, Pause, Scissors
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
