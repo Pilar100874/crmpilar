@@ -382,7 +382,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Fast Demo',
+    category: 'Demo Rápida',
     emoji: '⏩',
     hooks: [
       'Em 10 segundos você vai entender porque isso é tão bom.',
