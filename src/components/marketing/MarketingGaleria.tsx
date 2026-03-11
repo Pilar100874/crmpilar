@@ -80,13 +80,53 @@ const MarketingGaleria: React.FC = () => {
   const loadContent = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const estabId = localStorage.getItem('estabelecimentoId');
+
+      // Fetch from marketing_content
+      const { data: mcData, error: mcError } = await supabase
         .from('marketing_content')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setContent(data || []);
+      if (mcError) throw mcError;
+
+      const mcItems: MarketingContentItem[] = (mcData || []).map((item: any) => ({
+        ...item,
+        _source: 'marketing_content' as const,
+      }));
+
+      // Fetch from media_gallery
+      let mgItems: MarketingContentItem[] = [];
+      if (estabId) {
+        const { data: mgData, error: mgError } = await supabase
+          .from('media_gallery')
+          .select('*')
+          .eq('estabelecimento_id', estabId)
+          .order('created_at', { ascending: false });
+
+        if (!mgError && mgData) {
+          mgItems = mgData.map((item: any) => ({
+            id: item.id,
+            resource_id: null,
+            resource_name: item.nome || 'Mídia',
+            content_type: item.tipo || 'image',
+            content_url: item.public_url,
+            text_content: item.descricao || null,
+            input_data: null,
+            channels: null,
+            status: null,
+            created_at: item.created_at || new Date().toISOString(),
+            _source: 'media_gallery' as const,
+          }));
+        }
+      }
+
+      // Merge and sort by date descending
+      const merged = [...mcItems, ...mgItems].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setContent(merged);
     } catch (error) {
       console.error('Error loading content:', error);
       toast.error('Erro ao carregar conteúdo');
