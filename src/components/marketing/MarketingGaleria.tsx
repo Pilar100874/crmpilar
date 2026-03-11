@@ -235,8 +235,12 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       const isVideo = item.content_type === 'video';
       const ext = isVideo ? 'mp4' : (item.content_type === 'audio' ? 'mp3' : 'png');
       const fileName = `${item.resource_name || 'download'}.${ext}`;
-      
-      const url = URL.createObjectURL(isVideo ? new Blob([blob], { type: 'video/mp4' }) : blob);
+
+      const downloadBlob = isVideo
+        ? await convertVideoToWhatsappMp4(blob)
+        : (item.content_type === 'audio' ? new Blob([blob], { type: 'audio/mpeg' }) : blob);
+
+      const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
@@ -246,7 +250,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      // Fallback
+      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
       const a = document.createElement('a');
       a.href = item.content_url;
       a.download = item.resource_name || 'download';
