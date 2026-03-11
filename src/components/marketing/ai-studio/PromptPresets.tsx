@@ -591,8 +591,11 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
                 <Sparkles className="h-3.5 w-3.5" /> Editar
               </Button>
-              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
-                <X className="h-3.5 w-3.5" />
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleDuplicatePreset(selectedPreset)}>
+                <CopyPlus className="h-3.5 w-3.5" /> Duplicar
+              </Button>
+              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => setDeleteConfirmId(selectedPreset.id)}>
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
                 <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
