@@ -1532,8 +1532,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
                 setIsSavingToGallery(true);
                 try {
-                  const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-                  const fileName = `studio-trimmed-${id}-${Date.now()}.${ext}`;
+                  const fileName = `studio-trimmed-${id}-${Date.now()}.mp4`;
                   const storagePath = `${estabId}/${fileName}`;
                   const { error: uploadErr } = await supabase.storage
                     .from('marketing-videos')
