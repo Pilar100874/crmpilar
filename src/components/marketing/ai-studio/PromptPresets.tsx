@@ -362,12 +362,29 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
     toast({ title: 'Copiado!', description: 'Prompt copiado para a área de transferência.' });
   };
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const handleDeleteCustom = (id: string) => {
     const updated = allPresets.filter(p => p.id !== id);
     setAllPresets(updated);
     saveCustomPresets(updated);
     setSelectedId(null);
+    setDeleteConfirmId(null);
     toast({ title: 'Removido', description: 'Prompt removido.' });
+  };
+
+  const handleDuplicatePreset = (preset: PromptPreset) => {
+    const copy: PromptPreset = {
+      ...preset,
+      id: `custom-${Date.now()}`,
+      name: `${preset.name} (cópia)`,
+      isCustom: true,
+    };
+    const updated = [...allPresets, copy];
+    setAllPresets(updated);
+    saveCustomPresets(updated);
+    setSelectedId(copy.id);
+    toast({ title: 'Duplicado!', description: `Prompt "${copy.name}" criado.` });
   };
 
   const handleSaveCustom = (preset: PromptPreset) => {
