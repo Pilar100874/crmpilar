@@ -26,7 +26,20 @@ interface Layer {
   multiple?: boolean;
   required?: boolean;
   visibleWhen?: (selections: Record<string, string[]>) => boolean;
+  filterOptions?: (options: LayerOption[], selections: Record<string, string[]>) => LayerOption[];
 }
+
+// Map platform IDs to their compatible orientation IDs
+const PLATFORM_ORIENTATION_MAP: Record<string, string[]> = {
+  'tiktok': ['vertical', 'tiktok'],
+  'instagram': ['square', 'ig-feed', 'ig-carousel', 'horizontal'],
+  'instagram-reels': ['vertical', 'ig-reels'],
+  'youtube': ['horizontal', 'youtube-thumb'],
+  'youtube-shorts': ['vertical', 'youtube-shorts'],
+  'facebook-ads': ['facebook-feed', 'square', 'vertical', 'horizontal'],
+  'landing-page': ['horizontal', 'square'],
+  'hero-section': ['horizontal', 'banner-web'],
+};
 
 const LAYERS: Layer[] = [
   {
@@ -234,7 +247,13 @@ const LAYERS: Layer[] = [
     id: 'orientation',
     title: 'Orientação do Conteúdo',
     emoji: '📐',
-    description: 'Proporção e formato',
+    filterOptions: (options, selections) => {
+      const platform = selections.platform?.[0];
+      if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
+      const allowed = PLATFORM_ORIENTATION_MAP[platform];
+      return options.filter(o => allowed.includes(o.id));
+    },
+    description: 'Proporção e formato (filtrado pela plataforma selecionada)',
     options: [
       { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
       { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
@@ -985,6 +1004,17 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         }
         return next;
       }
+      // When platform changes, clear orientation if it's no longer valid
+      if (layerId === 'platform') {
+        const newPlatform = current.includes(optionId) ? undefined : optionId;
+        const allowed = newPlatform ? PLATFORM_ORIENTATION_MAP[newPlatform] : null;
+        const currentOrientation = prev.orientation?.[0];
+        const next: Record<string, string[]> = { ...prev, [layerId]: current.includes(optionId) ? [] : [optionId] };
+        if (allowed && currentOrientation && !allowed.includes(currentOrientation)) {
+          next['orientation'] = [];
+        }
+        return next;
+      }
       if (layer?.multiple) {
         if (current.includes(optionId)) return { ...prev, [layerId]: current.filter(id => id !== optionId) };
         return { ...prev, [layerId]: [...current, optionId] };
@@ -1297,7 +1327,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           <div className="px-3.5 pb-3.5 pt-0">
                             <div className="h-px bg-gradient-to-r from-primary/20 via-primary/10 to-transparent mb-3 ml-11" />
                             <div className="flex flex-wrap gap-2 pl-11">
-                              {layer.options.map((option) => {
+                              {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
                                 const isSelected = selected.includes(option.id);
                                 return (
                                   <motion.button
