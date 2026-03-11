@@ -1069,7 +1069,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 mode === 'wizard' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Wand2 className="h-3.5 w-3.5" /> Wizard
+              <Wand2 className="h-3.5 w-3.5" /> Assistente
             </button>
             <button
               onClick={() => setMode('prompts')}
