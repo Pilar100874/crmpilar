@@ -371,7 +371,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Visual Hook',
+    category: 'Gancho Visual',
     emoji: '👀',
     hooks: [
       'Olha essa textura... incrível.',
