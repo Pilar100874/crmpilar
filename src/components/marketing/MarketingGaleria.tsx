@@ -11,7 +11,8 @@ import {
   Filter,
   Search,
   Play,
-  Download
+  Download,
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
