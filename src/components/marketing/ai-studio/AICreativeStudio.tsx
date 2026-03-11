@@ -85,7 +85,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
-  
+  const [pendingPreset, setPendingPreset] = useState<Preset | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -861,15 +861,45 @@ const AICreativeStudioInner: React.FC = () => {
       }
     }
 
-    setNodes((nds) => [...nds, ...newNodes]);
-    setEdges((eds) => [...eds, ...newEdges]);
+    applyPresetToCanvas(newNodes, newEdges, preset.name, false);
+  }, [setNodes, setEdges, reloadingPresetNodeId]);
+
+  // Apply preset nodes/edges to canvas (append or replace)
+  const applyPresetToCanvas = useCallback((newNodes: StudioNode[], newEdges: any[], presetName: string, clearFirst: boolean) => {
+    if (clearFirst) {
+      nodeResultStore.clearAll();
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } else {
+      setNodes((nds) => [...nds, ...newNodes]);
+      setEdges((eds) => [...eds, ...newEdges]);
+    }
     setShowPresets(false);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
     setShowCanvas(true);
     setHasUnsavedChanges(true);
-    toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
-  }, [setNodes, setEdges, reloadingPresetNodeId]);
+    toast.success(`Preset "${presetName}" aplicado ao workflow!`);
+  }, [setNodes, setEdges]);
+
+  // Wrapper that checks if canvas has existing nodes before applying
+  const handlePresetSelectWithCheck = useCallback((preset: Preset) => {
+    // If reloading, delegate directly (no clearing needed)
+    if (reloadingPresetNodeId) {
+      handlePresetSelect(preset);
+      return;
+    }
+
+    // Build the preset nodes/edges first via handlePresetSelect logic
+    // but check if canvas already has nodes
+    const currentNodes = nodesRef.current;
+    if (currentNodes.length > 0) {
+      setPendingPreset(preset);
+      return;
+    }
+
+    handlePresetSelect(preset);
+  }, [handlePresetSelect, reloadingPresetNodeId]);
 
   const handleQuickTool = useCallback((toolId: string, nodeType: string) => {
     const meta = getNodeMeta(nodeType as any);
@@ -998,7 +1028,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         <AnimatePresence>
           {showPresets && (
-            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
+            <PresetsGallery onSelectPreset={handlePresetSelectWithCheck} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
           )}
         </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
@@ -1204,7 +1234,7 @@ const AICreativeStudioInner: React.FC = () => {
 
           <AnimatePresence>
             {showPresets && (
-              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
+              <PresetsGallery onSelectPreset={handlePresetSelectWithCheck} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
             )}
           </AnimatePresence>
 
@@ -1429,6 +1459,48 @@ const AICreativeStudioInner: React.FC = () => {
         onClose={() => setBatchReviewResults([])}
         results={batchReviewResults}
       />
+
+      {/* Preset canvas conflict dialog */}
+      <AlertDialog open={!!pendingPreset} onOpenChange={(open) => !open && setPendingPreset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Canvas já possui blocos</AlertDialogTitle>
+            <AlertDialogDescription>
+              O canvas já contém blocos. Deseja adicionar o preset junto com os blocos existentes ou limpar o canvas e criar um novo workflow?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => setPendingPreset(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => {
+                if (pendingPreset) {
+                  handlePresetSelect(pendingPreset);
+                  setPendingPreset(null);
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Adicionar ao existente
+            </AlertDialogAction>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => {
+                if (pendingPreset) {
+                  // Clear canvas then apply
+                  nodeResultStore.clearAll();
+                  setNodes([]);
+                  setEdges([]);
+                  // Small delay to let state settle, then apply
+                  setTimeout(() => handlePresetSelect(pendingPreset), 50);
+                  setPendingPreset(null);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Limpar e criar novo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
