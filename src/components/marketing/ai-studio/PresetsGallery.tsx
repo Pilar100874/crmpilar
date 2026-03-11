@@ -316,7 +316,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Question Hook',
+    category: 'Gancho de Pergunta',
     emoji: '❓',
     hooks: [
       'Você sabia que está usando isso do jeito errado?',
