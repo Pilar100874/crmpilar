@@ -211,7 +211,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-splash', name: 'Dynamic Splash', mediaType: 'image', category: 'produto',
     tags: ['splash', 'dynamic', 'energy'], image: imgProdSplash,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `High-speed product photography with dynamic liquid splash effects. The product appears to float with water, paint, or liquid droplets frozen in mid-air around it. Clean gradient background. Dramatic strobe lighting capturing every droplet in sharp detail. Commercial advertising style with vibrant energy. Camera: Nikon Z9, 1/8000s shutter speed, 85mm lens.${NEGATIVE_BLOCK}`,
   },
   {
