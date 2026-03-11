@@ -338,7 +338,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Shock Hook',
+    category: 'Gancho de Choque',
     emoji: '😱',
     hooks: [
       'Eu não acreditei quando vi o resultado.',
