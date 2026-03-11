@@ -394,6 +394,11 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const handleDeleteCustom = (id: string) => {
+    if (presetsInUse.has(id)) {
+      toast({ title: 'Não é possível excluir', description: 'Este prompt está em uso em um workflow salvo.', variant: 'destructive' });
+      setDeleteConfirmId(null);
+      return;
+    }
     const updated = allPresets.filter(p => p.id !== id);
     setAllPresets(updated);
     saveCustomPresets(updated);
