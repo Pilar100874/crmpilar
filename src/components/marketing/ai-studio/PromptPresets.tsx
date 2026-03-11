@@ -111,7 +111,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-athletic', name: 'Athletic Energy', mediaType: 'video', category: 'produto',
     tags: ['sports', 'energy', 'dynamic'], image: imgAthletic,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `High-energy cinematic commercial. Athletic influencer using the product in motion. Dynamic tracking shots and slow motion action. Urban environment with dramatic sunset lighting. Sweat particles and dust visible in backlight. Camera: RED Komodo, 50mm lens. Epic advertising vibe similar to Nike commercials.${NEGATIVE_BLOCK}`,
   },
   {
