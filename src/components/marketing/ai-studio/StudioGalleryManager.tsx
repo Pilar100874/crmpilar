@@ -512,7 +512,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                         await supabase.from('media_gallery').insert({
                           estabelecimento_id: estabelecimentoId,
                           tipo: 'video',
-                          url: publicUrl,
+                          public_url: publicUrl,
+                          storage_path: path,
                           nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
                           origem: 'studio-trimmed',
                         });
