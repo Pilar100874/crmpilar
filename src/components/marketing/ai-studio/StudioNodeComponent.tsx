@@ -1514,8 +1514,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-hidden [&>button]:hidden">
-          <div className="relative">
+        <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden">
+          <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
             {/* Close button */}
             <button
               onClick={() => setVideoPreviewOpen(false)}
