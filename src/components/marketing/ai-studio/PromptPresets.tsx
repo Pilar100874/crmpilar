@@ -82,60 +82,60 @@ export interface PromptPreset {
 
 const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
 
-const BUILT_IN_PRESETS: PromptPreset[] = [
+const DEFAULT_PRESETS: PromptPreset[] = [
   // ═══ VIDEO — PRODUTOS ═══
   {
     id: 'vp-cinematic-studio', name: 'Cinematic Studio', mediaType: 'video', category: 'produto',
     tags: ['studio', 'tech', 'luxury'], image: imgCinematicStudio,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Ultra cinematic commercial of a modern tech product on a minimalist black studio background. Slow rotating product on glossy reflective surface. Macro shots showing premium materials and textures. Soft volumetric lighting, rim light highlighting the edges. Camera: ARRI Alexa 35, 85mm lens, shallow depth of field. Ultra realistic reflections, luxury advertising aesthetic, smooth motion. Background fades into elegant gradient lighting. Final scene: product centered with subtle glow and dramatic lighting, text space for branding.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-luxury-reveal', name: 'Luxury Reveal', mediaType: 'video', category: 'produto',
     tags: ['luxury', 'dramatic', 'particles'], image: imgLuxuryReveal,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Luxury product reveal commercial. A dark cinematic environment with particles floating in the air. The product slowly emerges from shadows with dramatic lighting. High-speed slow motion, 120fps look. Camera pushes in slowly with macro lens. Hyper realistic textures, cinematic color grading, premium advertising style similar to high-end perfume ads. Moody atmosphere with soft fog and light rays.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-influencer-vlog', name: 'Influencer Vlog Style', mediaType: 'video', category: 'produto',
     tags: ['ugc', 'vlog', 'lifestyle'], image: imgInfluencerVlog,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Realistic influencer-style commercial video. A charismatic young influencer speaking to the camera while demonstrating a product. Modern aesthetic apartment with natural lighting from large windows. Camera handheld vlog style but cinematic stabilization. Authentic social media advertising tone. Camera: Sony FX6, 35mm lens. Warm natural light, realistic skin tones, lifestyle advertising.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-scifi', name: 'Sci-Fi Lab', mediaType: 'video', category: 'produto',
     tags: ['futuristic', 'neon', 'tech'], image: imgScifi,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Futuristic product commercial in a sci-fi environment. The product floating in a high-tech laboratory with holographic interface elements around it. Neon blue and purple lighting. Camera slowly orbiting around the product. Hyper realistic reflections, ultra detailed materials. Cinematic sci-fi atmosphere similar to Blade Runner advertising style.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-athletic', name: 'Athletic Energy', mediaType: 'video', category: 'produto',
     tags: ['sports', 'energy', 'dynamic'], image: imgAthletic,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `High-energy cinematic commercial. Athletic influencer using the product in motion. Dynamic tracking shots and slow motion action. Urban environment with dramatic sunset lighting. Sweat particles and dust visible in backlight. Camera: RED Komodo, 50mm lens. Epic advertising vibe similar to Nike commercials.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-minimalist', name: 'Minimalist Luxury', mediaType: 'video', category: 'produto',
     tags: ['minimal', 'clean', 'fashion'], image: imgMinimalist,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Minimalist luxury product commercial. Clean white studio background with soft gradient lighting. The product placed on a marble surface. Slow camera dolly movement and macro shots revealing texture. Soft shadows, premium fashion brand aesthetic. Ultra realistic studio lighting and reflections.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-fashion', name: 'High Fashion', mediaType: 'video', category: 'produto',
     tags: ['fashion', 'luxury', 'cinematic'], image: imgFashion,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `High fashion cinematic commercial. Elegant influencer walking through a luxurious environment (marble floors, dramatic lighting). Close-ups of the product in slow motion. Soft smoke and light rays in the background. Camera slow motion, 60fps cinematic look. Fashion magazine advertising style.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-hero', name: 'Epic Hero Shot', mediaType: 'video', category: 'produto',
     tags: ['hero', 'dramatic', 'premium'], image: imgHero,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Epic hero shot product commercial. The product placed on a reflective black surface with dramatic lighting from behind. Particles floating in the air. Camera slowly pushing in. Ultra high contrast cinematic lighting. Premium brand reveal aesthetic.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vp-storytelling', name: 'Cinematic Storytelling', mediaType: 'video', category: 'produto',
     tags: ['story', 'emotional', 'lifestyle'], image: imgStorytelling,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Cinematic storytelling commercial. A person using the product in an emotional everyday moment. Warm lighting inside a home during sunset. Close-up shots of hands interacting with the product. Natural acting, authentic lifestyle tone. Camera: ARRI Alexa Mini LF. Beautiful cinematic color grading and soft film grain.${NEGATIVE_BLOCK}`,
   },
 
@@ -143,49 +143,49 @@ const BUILT_IN_PRESETS: PromptPreset[] = [
   {
     id: 'vi-review', name: 'Tech Review', mediaType: 'video', category: 'influencer',
     tags: ['review', 'youtube', 'tech'], image: imgInfluencerReview,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Ultra realistic influencer review video. A confident tech influencer holding the product and explaining its benefits directly to camera. Studio setup with soft LED lighting and blurred background. Camera: Sony A7S III, 35mm lens. Authentic YouTube review style but cinematic quality.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-vertical', name: 'Vertical Viral', mediaType: 'video', category: 'influencer',
     tags: ['vertical', 'tiktok', 'viral'], image: imgInfluencerVertical,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Vertical video influencer style commercial. Energetic influencer demonstrating the product quickly. Fast jump cuts, dynamic camera movements. Bright modern room, vibrant lighting. Social media viral advertising vibe.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-luxury', name: 'Luxury Penthouse', mediaType: 'video', category: 'influencer',
     tags: ['luxury', 'night', 'fashion'], image: imgInfluencerLuxury,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Luxury influencer showcasing the product in an elegant penthouse. Night city lights visible through large windows. Soft cinematic lighting and elegant movements. Fashion commercial atmosphere.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-fitness', name: 'Fitness Workout', mediaType: 'video', category: 'influencer',
     tags: ['fitness', 'gym', 'energy'], image: imgInfluencerFitness,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Fitness influencer using the product during workout. Gym environment with dramatic lighting and slow motion. Sweat and motion emphasized with backlight. High energy commercial vibe.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-unboxing', name: 'Unboxing Experience', mediaType: 'video', category: 'influencer',
     tags: ['unboxing', 'reveal', 'youtube'], image: imgInfluencerUnboxing,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Ultra realistic unboxing video. Influencer opening the product packaging slowly. Close-up shots of textures and details. Warm lighting and excitement reaction. YouTube style product reveal.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-fashion', name: 'Street Fashion', mediaType: 'video', category: 'influencer',
     tags: ['fashion', 'urban', 'editorial'], image: imgInfluencerFashion,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Fashion influencer showcasing the product as part of their outfit. Stylish urban environment. Smooth camera tracking shots. High fashion editorial style.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-cafe', name: 'Café Lifestyle', mediaType: 'video', category: 'influencer',
     tags: ['cafe', 'cozy', 'lifestyle'], image: imgInfluencerCafe,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Influencer sitting in a cozy café using the product naturally. Soft window light, cinematic depth of field. Relaxed lifestyle commercial tone.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'vi-storytelling', name: 'Personal Story', mediaType: 'video', category: 'influencer',
     tags: ['story', 'emotional', 'authentic'], image: imgInfluencerStorytelling,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Influencer telling a personal story about how the product improved their life. Natural emotional acting. Warm cinematic lighting. Authentic lifestyle advertising narrative.${NEGATIVE_BLOCK}`,
   },
 
@@ -193,49 +193,49 @@ const BUILT_IN_PRESETS: PromptPreset[] = [
   {
     id: 'ip-white-studio', name: 'White Studio Clean', mediaType: 'image', category: 'produto',
     tags: ['e-commerce', 'clean', 'minimal'], image: imgProdWhite,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Professional product photography on a clean white seamless background. The product is centered with perfect symmetry. Soft diffused studio lighting from multiple angles eliminating harsh shadows. High-key photography style optimized for e-commerce and catalog use. Sharp focus across the entire product. Ultra high resolution, 4K detail, photorealistic rendering. Camera: Phase One IQ4, 120mm macro lens.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-flatlay', name: 'Flat Lay Lifestyle', mediaType: 'image', category: 'produto',
     tags: ['flatlay', 'instagram', 'lifestyle'], image: imgProdFlatlay,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Aesthetic flat lay product photography shot from directly above. The product arranged with complementary lifestyle accessories on a clean surface. Warm natural lighting from a window. Carefully curated composition with balanced negative space. Instagram-optimized aesthetic with cohesive color palette. Camera: Canon R5, 35mm lens, top-down angle.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-dark-moody', name: 'Dark Moody', mediaType: 'image', category: 'produto',
     tags: ['dark', 'dramatic', 'premium'], image: imgProdDark,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Dark moody product photography on a matte black surface. Dramatic rim lighting from behind creates a subtle glow outline around the product. Soft smoke wisps in the background. High contrast chiaroscuro lighting with deep shadows. Premium luxury advertising aesthetic. Ultra detailed textures visible. Camera: Sony A1, 90mm macro lens, f/2.8.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-splash', name: 'Dynamic Splash', mediaType: 'image', category: 'produto',
     tags: ['splash', 'dynamic', 'energy'], image: imgProdSplash,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `High-speed product photography with dynamic liquid splash effects. The product appears to float with water, paint, or liquid droplets frozen in mid-air around it. Clean gradient background. Dramatic strobe lighting capturing every droplet in sharp detail. Commercial advertising style with vibrant energy. Camera: Nikon Z9, 1/8000s shutter speed, 85mm lens.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-macro', name: 'Macro Texture', mediaType: 'image', category: 'produto',
     tags: ['macro', 'detail', 'texture'], image: imgProdMacro,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Extreme macro product photography revealing fine textures, materials, and craftsmanship details. Ultra close-up showing surface quality, stitching, grain, or material composition. Very shallow depth of field with creamy bokeh. Professional studio lighting highlighting micro-details. Camera: Canon MP-E 65mm macro lens, 5:1 magnification, focus stacked for maximum sharpness.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-outdoor', name: 'Outdoor Natural', mediaType: 'image', category: 'produto',
     tags: ['outdoor', 'natural', 'golden-hour'], image: imgProdOutdoor,
-    referenceBlocks: ['productImageSelect', 'galleryAmbiente'],
+    referenceBlocks: ['productImageSelect', 'galleryAmbiente'], isCustom: true,
     prompt: `Product photography in a beautiful natural outdoor setting during golden hour. The product placed on a natural surface (wood, stone, or earth) surrounded by botanical elements. Warm golden sunlight creating long soft shadows and a magical atmospheric quality. Organic lifestyle aesthetic with earthy tones. Camera: Sony A7R V, 50mm lens, f/1.8 for beautiful bokeh.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-luxury-still', name: 'Luxury Still Life', mediaType: 'image', category: 'produto',
     tags: ['luxury', 'marble', 'elegant'], image: imgProdLuxury,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Luxury still life product photography on a polished marble surface. Elegant composition with fresh flowers, gold accents, and premium decorative elements. Soft diffused lighting creating delicate shadows and subtle reflections on the marble. Premium fashion brand aesthetic with refined color palette. Camera: Hasselblad X2D, 80mm lens, medium format quality.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ip-neon-glow', name: 'Neon Glow', mediaType: 'image', category: 'produto',
     tags: ['neon', 'futuristic', 'tech'], image: imgProdNeon,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Futuristic product photography with vibrant neon RGB lighting. The product on a glossy reflective surface with colorful neon reflections. Purple, blue, and pink neon accents creating a cyberpunk aesthetic. High-tech environment feel with glowing light strips in the background. Ultra detailed reflections and materials. Camera: Sony A7S III, 85mm lens, wide open aperture.${NEGATIVE_BLOCK}`,
   },
 
@@ -243,61 +243,83 @@ const BUILT_IN_PRESETS: PromptPreset[] = [
   {
     id: 'ii-portrait', name: 'Studio Portrait', mediaType: 'image', category: 'influencer',
     tags: ['portrait', 'studio', 'professional'], image: imgInfPortrait,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Professional influencer portrait photography holding the product. Soft LED studio lighting with beautiful catchlights in the eyes. Slightly blurred background with subtle bokeh. Confident and natural pose. The product held at chest level for clear visibility. Warm skin tones, professional retouching aesthetic. Camera: Canon R5, 85mm f/1.4 lens.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-lifestyle', name: 'Lifestyle Candid', mediaType: 'image', category: 'influencer',
     tags: ['candid', 'natural', 'home'], image: imgInfLifestyle,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Candid lifestyle photography of an influencer naturally using the product at home. Warm natural window light illuminating the scene. Cozy interior setting with tasteful decor. Authentic, unposed moment captured in a relaxed environment. Soft warm color palette with gentle shadows. Camera: Sony A7 IV, 35mm lens, f/2.0 for environmental context with subject isolation.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-editorial', name: 'Fashion Editorial', mediaType: 'image', category: 'influencer',
     tags: ['editorial', 'fashion', 'dramatic'], image: imgInfEditorial,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `High fashion editorial photography featuring an influencer with the product. Dramatic directional lighting creating bold shadows and highlights. Avant-garde composition with strong visual impact. Magazine-quality finish with rich color grading. The product integrated naturally into the styling. Camera: Hasselblad X2D, 100mm lens, controlled studio environment with colored gels.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-beauty', name: 'Beauty Close-Up', mediaType: 'image', category: 'influencer',
     tags: ['beauty', 'skincare', 'close-up'], image: imgInfBeauty,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Professional beauty photography. Close-up of hands elegantly holding a skincare or beauty product. Soft beauty lighting with diffused fill creating flawless illumination. Clean minimal background. Focus on product details and natural skin texture. Cosmetics advertising aesthetic with premium feel. Camera: Canon R5, 100mm macro lens, f/4.0.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-fitness', name: 'Fitness Action', mediaType: 'image', category: 'influencer',
     tags: ['fitness', 'gym', 'action'], image: imgInfFitness,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Dynamic fitness photography of an athletic person with the product in a gym environment. Dramatic backlight creating rim light effect on the body. Action pose frozen in mid-movement. Visible energy and determination. High contrast lighting emphasizing muscle definition and product visibility. Camera: Nikon Z9, 70-200mm f/2.8, 1/2000s shutter speed.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-street', name: 'Street Style', mediaType: 'image', category: 'influencer',
     tags: ['street', 'urban', 'fashion'], image: imgInfStreet,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Street style photography of a fashionable influencer with the product in an urban setting. Modern architecture and city environment as backdrop. Candid walking shot with natural movement. The product integrated seamlessly into the outfit or held naturally. Editorial fashion photography style with cinematic color grading. Camera: Sony A7R V, 50mm f/1.4, natural light.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-studio-brand', name: 'Brand Ambassador', mediaType: 'image', category: 'influencer',
     tags: ['studio', 'brand', 'commercial'], image: imgInfStudio,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryLogo'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryLogo'], isCustom: true,
     prompt: `Professional studio portrait of a brand ambassador with the product. Clean seamless backdrop with multi-point lighting setup. Confident expression and natural smile. The product prominently displayed. Commercial advertising quality with perfect color balance. Professional retouching with natural skin tones preserved. Camera: Phase One IQ4, 120mm lens, controlled lighting.${NEGATIVE_BLOCK}`,
   },
   {
     id: 'ii-cozy', name: 'Cozy Indoor', mediaType: 'image', category: 'influencer',
     tags: ['cozy', 'warm', 'indoor'], image: imgInfCozy,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Cozy indoor photography of a person naturally using the product in a warm living room. Soft ambient lighting from candles and warm light sources. Comfortable setting with blankets, cushions, and warm decor. Hygge aesthetic with golden warm tones. Authentic relaxed moment. Camera: Sony A7 IV, 35mm f/1.8, low-light optimized with warm white balance.${NEGATIVE_BLOCK}`,
   },
 ];
 
 // ─── Local storage for custom presets ────────────────────────────────
 const CUSTOM_PRESETS_KEY = 'ai-studio-custom-prompt-presets';
+const SEEDED_VERSION_KEY = 'ai-studio-presets-seeded-v';
+const CURRENT_SEED_VERSION = '2';
 
-function loadCustomPresets(): PromptPreset[] {
+function loadAllPresets(): PromptPreset[] {
   try {
     const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    const saved: PromptPreset[] = raw ? JSON.parse(raw) : [];
+    const seededVersion = localStorage.getItem(SEEDED_VERSION_KEY);
+
+    if (seededVersion === CURRENT_SEED_VERSION && saved.length > 0) {
+      // Merge: ensure any NEW defaults not yet in saved are added
+      const savedIds = new Set(saved.map(p => p.id));
+      const missing = DEFAULT_PRESETS.filter(p => !savedIds.has(p.id));
+      if (missing.length > 0) {
+        const merged = [...saved, ...missing];
+        localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(merged));
+        return merged;
+      }
+      return saved;
+    }
+
+    // First load or version upgrade: seed defaults, preserve user-created (custom-*) presets
+    const userCreated = saved.filter(p => p.id.startsWith('custom-'));
+    const seeded = [...DEFAULT_PRESETS, ...userCreated];
+    localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(seeded));
+    localStorage.setItem(SEEDED_VERSION_KEY, CURRENT_SEED_VERSION);
+    return seeded;
+  } catch { return [...DEFAULT_PRESETS]; }
 }
 
 function saveCustomPresets(presets: PromptPreset[]) {
@@ -315,12 +337,10 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [activeCategory, setActiveCategory] = useState<'produto' | 'influencer'>('produto');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [customPresets, setCustomPresets] = useState<PromptPreset[]>(loadCustomPresets);
+  const [allPresets, setAllPresets] = useState<PromptPreset[]>(loadAllPresets);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
-
-  const allPresets = useMemo(() => [...BUILT_IN_PRESETS, ...customPresets], [customPresets]);
 
   const filtered = useMemo(() => {
     return allPresets.filter(p => {
@@ -342,23 +362,23 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleDeleteCustom = (id: string) => {
-    const updated = customPresets.filter(p => p.id !== id);
-    setCustomPresets(updated);
+    const updated = allPresets.filter(p => p.id !== id);
+    setAllPresets(updated);
     saveCustomPresets(updated);
     setSelectedId(null);
-    toast({ title: 'Removido', description: 'Prompt personalizado removido.' });
+    toast({ title: 'Removido', description: 'Prompt removido.' });
   };
 
   const handleSaveCustom = (preset: PromptPreset) => {
-    const existingIndex = customPresets.findIndex(p => p.id === preset.id);
+    const existingIndex = allPresets.findIndex(p => p.id === preset.id);
     let updated: PromptPreset[];
     if (existingIndex >= 0) {
-      updated = [...customPresets];
+      updated = [...allPresets];
       updated[existingIndex] = preset;
     } else {
-      updated = [...customPresets, preset];
+      updated = [...allPresets, preset];
     }
-    setCustomPresets(updated);
+    setAllPresets(updated);
     saveCustomPresets(updated);
     setShowCreateDialog(false);
     setEditingPreset(null);
@@ -367,18 +387,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleEditPreset = (preset: PromptPreset) => {
-    if (!preset.isCustom) {
-      // For built-in presets, create a custom copy for editing
-      const copy: PromptPreset = {
-        ...preset,
-        id: `custom-${Date.now()}`,
-        name: `${preset.name} (cópia)`,
-        isCustom: true,
-      };
-      setEditingPreset(copy);
-    } else {
-      setEditingPreset(preset);
-    }
+    setEditingPreset(preset);
     setShowCreateDialog(true);
   };
 
@@ -562,13 +571,11 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
                 <Copy className="h-3.5 w-3.5" /> Copiar
               </Button>
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
-                <Sparkles className="h-3.5 w-3.5" /> {selectedPreset.isCustom ? 'Editar' : 'Duplicar & Editar'}
+                <Sparkles className="h-3.5 w-3.5" /> Editar
               </Button>
-              {selectedPreset.isCustom && (
-                <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              )}
+              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
               <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
                 <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
               </Button>
@@ -821,4 +828,4 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
 };
 
 export default PromptPresets;
-export { BUILT_IN_PRESETS as PROMPT_PRESETS };
+export { DEFAULT_PRESETS as PROMPT_PRESETS };
