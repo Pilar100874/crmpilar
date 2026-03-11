@@ -94,7 +94,7 @@ const AICreativeStudioInner: React.FC = () => {
   const edgesRef = useRef(edges);
   edgesRef.current = edges;
   const { screenToFlowPosition } = useReactFlow();
-  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults } = useStudioExecution();
+  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, cancelExecution, batchReviewResults, setBatchReviewResults } = useStudioExecution();
 
   // Listen for reopen batch review event from loopOutput node
   useEffect(() => {
