@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CanvasProvider, useCanvas } from "@/contexts/CanvasContext";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
