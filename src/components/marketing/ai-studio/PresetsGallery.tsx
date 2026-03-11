@@ -106,8 +106,8 @@ const LAYERS: Layer[] = [
       { id: 'youtube', label: 'YouTube', emoji: '▶️' },
       { id: 'youtube-shorts', label: 'YouTube Shorts', emoji: '⚡' },
       { id: 'facebook-ads', label: 'Facebook Ads', emoji: '📘' },
-      { id: 'landing-page', label: 'Landing Page Video', emoji: '🌐' },
-      { id: 'hero-section', label: 'Website Hero Section', emoji: '🖥️' },
+      { id: 'landing-page', label: 'Vídeo para Landing Page', emoji: '🌐' },
+      { id: 'hero-section', label: 'Seção Hero do Site', emoji: '🖥️' },
     ],
   },
   {
