@@ -72,12 +72,14 @@ interface MarketingGaleriaProps {
   onEditVideo?: (videoUrl: string, resourceName?: string) => void;
 }
 
-const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
+const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEditVideo }) => {
   const [content, setContent] = useState<MarketingContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<MarketingContentItem | null>(null);
+  const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
 
   useEffect(() => {
     loadContent();
