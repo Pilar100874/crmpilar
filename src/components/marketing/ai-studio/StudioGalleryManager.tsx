@@ -22,6 +22,7 @@ export interface GalleryImage {
   storage_path: string | null;
   tags: string[] | null;
   created_at: string;
+  tipo?: string;
 }
 
 export const GALLERY_CATEGORIES = [
