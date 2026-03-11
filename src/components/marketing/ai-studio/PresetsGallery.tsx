@@ -975,6 +975,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     }
   }, [selections, negativePromptText]);
 
+  const generatedPrompt = useMemo(() => {
     if (selectionCount < 2) return '';
     return generatePrompt(selections, negativePromptText);
   }, [selections, selectionCount, negativePromptText]);
