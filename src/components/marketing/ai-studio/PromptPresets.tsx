@@ -362,6 +362,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
     saveCustomPresets(updated);
     setShowCreateDialog(false);
     setEditingPreset(null);
+    setSelectedId(preset.id);
     toast({ title: 'Salvo!', description: `Prompt "${preset.name}" salvo com sucesso.` });
   };
 
