@@ -708,11 +708,12 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 onSaveTrimmed={async (blob, startTime, endTime) => {
                   setIsSavingTrimmed(true);
                   try {
+                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
                     const fileName = `trimmed_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, blob, { contentType: 'video/mp4' });
+                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -724,8 +725,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                       storage_path: path,
                       nome: `${editItem.nome || 'Vídeo'} (cortado)`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: blob.size,
-                      mime_type: blob.type || 'video/mp4',
+                      tamanho_bytes: convertedBlob.size,
+                      mime_type: 'video/mp4',
                       origem: 'studio-trimmed',
                     });
                     toast.success('✅ Vídeo cortado salvo na galeria!');

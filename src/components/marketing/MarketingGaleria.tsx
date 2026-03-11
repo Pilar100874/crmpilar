@@ -664,11 +664,12 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                   const estabId = localStorage.getItem('estabelecimentoId');
                   if (!estabId) { toast.error('Estabelecimento não encontrado'); setIsSavingTrimmed(false); return; }
                   try {
+                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
                     const fileName = `trimmed_${Date.now()}.mp4`;
                     const path = `${estabId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, blob, { contentType: 'video/mp4' });
+                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -679,7 +680,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                       public_url: publicUrl,
                       storage_path: path,
                       nome: `${editingVideo.resource_name || 'Vídeo'} (cortado)`,
-                      tamanho_bytes: blob.size,
+                      tamanho_bytes: convertedBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'galeria-trimmed',
                     });
