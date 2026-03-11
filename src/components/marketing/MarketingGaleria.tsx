@@ -353,7 +353,18 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
                           </div>
                         )}
 
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1 flex-wrap">
+                          {item.content_url && (item.content_type === 'image' || item.content_type === 'video') && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="flex-1"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Editar
+                            </Button>
+                          )}
                           {item.content_url && (
                             <>
                               <Button
