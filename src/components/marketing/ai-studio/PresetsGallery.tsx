@@ -1074,11 +1074,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   }, [toast]);
 
   const handleSelectRandomHook = useCallback(() => {
-    const all = VIRAL_HOOKS.flatMap(h => h.hooks);
+    const all = filteredHooks.flatMap(h => h.hooks);
+    if (all.length === 0) return;
     const random = all[Math.floor(Math.random() * all.length)];
     setSelectedHookText(random);
     toast({ title: 'Gancho Selecionado', description: random });
-  }, [toast]);
+  }, [filteredHooks, toast]);
 
   // ─── RENDER ──────────────────────────────────────────────────────────
 
