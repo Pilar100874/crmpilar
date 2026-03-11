@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,28 @@ import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import pilarBrand from "@/assets/pilar-brand.png";
 import fallbackBrand from "@/assets/pilar-brand-fallback.jpg";
+
+function usePreloadedImage(primary: string, fallback: string) {
+  const [src, setSrc] = useState<string | null>(null);
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (attempted.current) return;
+    attempted.current = true;
+
+    const img = new Image();
+    img.onload = () => setSrc(primary);
+    img.onerror = () => {
+      const fb = new Image();
+      fb.onload = () => setSrc(fallback);
+      fb.onerror = () => setSrc(fallback);
+      fb.src = fallback;
+    };
+    img.src = primary;
+  }, [primary, fallback]);
+
+  return src;
+}
 
 export default function Login() {
   const navigate = useNavigate();
