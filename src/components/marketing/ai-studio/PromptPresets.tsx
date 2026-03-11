@@ -285,7 +285,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-cozy', name: 'Cozy Indoor', mediaType: 'image', category: 'influencer',
     tags: ['cozy', 'warm', 'indoor'], image: imgInfCozy,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Cozy indoor photography of a person naturally using the product in a warm living room. Soft ambient lighting from candles and warm light sources. Comfortable setting with blankets, cushions, and warm decor. Hygge aesthetic with golden warm tones. Authentic relaxed moment. Camera: Sony A7 IV, 35mm f/1.8, low-light optimized with warm white balance.${NEGATIVE_BLOCK}`,
   },
 ];
