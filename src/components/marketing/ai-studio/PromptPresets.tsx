@@ -292,12 +292,34 @@ const DEFAULT_PRESETS: PromptPreset[] = [
 
 // ─── Local storage for custom presets ────────────────────────────────
 const CUSTOM_PRESETS_KEY = 'ai-studio-custom-prompt-presets';
+const SEEDED_VERSION_KEY = 'ai-studio-presets-seeded-v';
+const CURRENT_SEED_VERSION = '2';
 
-function loadCustomPresets(): PromptPreset[] {
+function loadAllPresets(): PromptPreset[] {
   try {
     const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    const saved: PromptPreset[] = raw ? JSON.parse(raw) : [];
+    const seededVersion = localStorage.getItem(SEEDED_VERSION_KEY);
+
+    if (seededVersion === CURRENT_SEED_VERSION && saved.length > 0) {
+      // Merge: ensure any NEW defaults not yet in saved are added
+      const savedIds = new Set(saved.map(p => p.id));
+      const missing = DEFAULT_PRESETS.filter(p => !savedIds.has(p.id));
+      if (missing.length > 0) {
+        const merged = [...saved, ...missing];
+        localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(merged));
+        return merged;
+      }
+      return saved;
+    }
+
+    // First load or version upgrade: seed defaults, preserve user-created (custom-*) presets
+    const userCreated = saved.filter(p => p.id.startsWith('custom-'));
+    const seeded = [...DEFAULT_PRESETS, ...userCreated];
+    localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(seeded));
+    localStorage.setItem(SEEDED_VERSION_KEY, CURRENT_SEED_VERSION);
+    return seeded;
+  } catch { return [...DEFAULT_PRESETS]; }
 }
 
 function saveCustomPresets(presets: PromptPreset[]) {
@@ -315,12 +337,10 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [activeCategory, setActiveCategory] = useState<'produto' | 'influencer'>('produto');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [customPresets, setCustomPresets] = useState<PromptPreset[]>(loadCustomPresets);
+  const [allPresets, setAllPresets] = useState<PromptPreset[]>(loadAllPresets);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
-
-  const allPresets = useMemo(() => [...BUILT_IN_PRESETS, ...customPresets], [customPresets]);
 
   const filtered = useMemo(() => {
     return allPresets.filter(p => {
