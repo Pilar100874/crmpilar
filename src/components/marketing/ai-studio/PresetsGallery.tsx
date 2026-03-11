@@ -1259,13 +1259,23 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               }
             }} className="flex flex-col flex-1 overflow-hidden">
             <div className="border-b px-3 pt-2">
-              <TabsList className={`h-8 w-full grid bg-muted/50 ${selections.contentType?.includes('video') ? 'grid-cols-5' : 'grid-cols-3'}`}>
+              <TabsList className={`h-8 w-full grid bg-muted/50 ${
+                (() => {
+                  const isVideo = selections.contentType?.includes('video');
+                  const hasHook = hasHookStyleSelected;
+                  if (isVideo && hasHook) return 'grid-cols-5';
+                  if (isVideo || hasHook) return 'grid-cols-4';
+                  return 'grid-cols-2';
+                })()
+              }`}>
                 <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
-                <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
-                  <Library className="h-3 w-3" /> Ganchos
-                </TabsTrigger>
+                {hasHookStyleSelected && (
+                  <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                    <Library className="h-3 w-3" /> Ganchos
+                  </TabsTrigger>
+                )}
                 {selections.contentType?.includes('video') && (
                   <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                     <FileText className="h-3 w-3" /> Roteiro
