@@ -1300,20 +1300,27 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                       className="w-full flex items-center justify-between px-3.5 py-3 text-left group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`relative h-8 w-8 rounded-xl flex items-center justify-center text-base transition-all ${
-                          hasSelection
-                            ? 'bg-gradient-to-br from-primary/20 to-primary/5 shadow-sm shadow-primary/10'
-                            : isExpanded
-                              ? 'bg-primary/10'
-                              : 'bg-muted/50 group-hover:bg-muted/80'
-                        }`}>
-                          {layer.emoji}
-                          {hasSelection && (
-                            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary flex items-center justify-center shadow-sm shadow-primary/30">
-                              <Check className="h-2 w-2 text-primary-foreground" />
+                        {(() => {
+                          const IconComp = layer.icon;
+                          return (
+                            <div className={`relative h-9 w-9 rounded-xl flex items-center justify-center transition-all ${
+                              hasSelection
+                                ? `bg-gradient-to-br ${layer.iconColor} shadow-md`
+                                : isExpanded
+                                  ? `bg-gradient-to-br ${layer.iconColor} shadow-sm opacity-80`
+                                  : 'bg-muted/60 group-hover:bg-muted/90'
+                            }`}>
+                              <IconComp className={`h-4 w-4 transition-colors ${
+                                hasSelection || isExpanded ? 'text-white' : 'text-muted-foreground'
+                              }`} />
+                              {hasSelection && (
+                                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-background border-2 border-primary flex items-center justify-center shadow-sm">
+                                  <Check className="h-2.5 w-2.5 text-primary" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-[13px] text-foreground">{layer.title}</span>
