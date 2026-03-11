@@ -679,7 +679,32 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     }
   }
 
-  console.log(`[generate_video] Provider=${provider}, Model=${model}`);
+  // AUTO-NORMALIZE duration per provider to avoid API validation errors
+  const rawDur = Number(params.duration) || 6;
+  switch (provider) {
+    case "google":
+      // Google Veo accepts 4-8 inclusive
+      params.duration = Math.min(8, Math.max(4, Math.round(rawDur)));
+      break;
+    case "openai":
+      // Sora accepts only 4, 8, or 12
+      params.duration = [4, 8, 12].reduce((prev, curr) => Math.abs(curr - rawDur) < Math.abs(prev - rawDur) ? curr : prev);
+      break;
+    case "runway":
+      // Runway accepts 5 or 10
+      params.duration = rawDur <= 7 ? 5 : 10;
+      break;
+    case "kling":
+      // Kling accepts 5 or 10
+      params.duration = rawDur <= 7 ? 5 : 10;
+      break;
+    default:
+      // Luma, Stability, etc. — keep as-is or default
+      params.duration = Math.max(4, Math.round(rawDur));
+      break;
+  }
+
+  console.log(`[generate_video] Provider=${provider}, Model=${model}, Duration=${params.duration}s`);
   
   switch (provider) {
     case "google": return generateVideoGoogle(apiKey, params);
