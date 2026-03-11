@@ -531,22 +531,22 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Preview actions bar */}
-              <div className="absolute -top-12 right-0 flex items-center gap-2 z-10">
+              {/* Preview actions bar - overlaid on top */}
+              <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                 {isVideoUrl(previewItem.image_url, previewItem.tipo) && (
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="gap-1.5 text-xs h-8 rounded-lg bg-primary/30 hover:bg-primary/50 text-white border-0"
+                    className="gap-1.5 text-xs h-8 rounded-lg bg-primary/70 hover:bg-primary/90 text-white border-0 shadow-lg"
                     onClick={() => { setEditItem(previewItem); setPreviewItem(null); }}
                   >
-                    <Scissors className="h-3.5 w-3.5" /> Editar
+                    <Scissors className="h-3.5 w-3.5" /> Editar / Cortar
                   </Button>
                 )}
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white border-0"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
                   onClick={() => handleDuplicate(previewItem)}
                 >
                   <Copy className="h-3.5 w-3.5" /> Duplicar
@@ -554,7 +554,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white border-0"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
                   onClick={() => handleDownload(previewItem)}
                 >
                   <Download className="h-3.5 w-3.5" /> Download
@@ -562,7 +562,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border-0"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-red-500/50 hover:bg-red-500/70 text-white border-0 shadow-lg"
                   onClick={() => { setDeleteConfirm(previewItem); }}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Excluir
@@ -570,7 +570,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-lg text-white hover:bg-white/20"
+                  className="h-8 w-8 rounded-lg text-white bg-black/50 hover:bg-black/70 shadow-lg"
                   onClick={() => setPreviewItem(null)}
                 >
                   <X className="h-4 w-4" />
