@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import GallerySelectInline from './GallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
+import VideoTrimmer from './VideoTrimmer';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X
+  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -373,6 +374,12 @@ const MultiProductSelectInline: React.FC<{ config: Record<string, any>; onUpdate
       )}
     </div>
   );
+};
+
+const formatTimestamp = (s: number) => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 };
 
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
@@ -1507,34 +1514,56 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/95 [&>button]:hidden">
+        <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-hidden [&>button]:hidden">
           <div className="relative">
-            {/* Top-right action buttons overlaid on the video */}
-            <div className="absolute top-3 right-3 z-[200] flex items-center gap-2">
-              <button
-                onClick={async () => {
-                  if (resultVideo) handleSaveVideoToGallery(resultVideo);
-                }}
-                disabled={isSavingToGallery}
-                className="rounded-full p-2.5 bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition-colors"
-                title="Salvar na galeria"
-              >
-                {isSavingToGallery ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-              </button>
-              <button
-                onClick={() => setVideoPreviewOpen(false)}
-                className="rounded-full p-2.5 bg-white text-black shadow-lg hover:bg-gray-200 transition-colors"
-                aria-label="Fechar"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <video
-              src={resultVideo}
-              controls
-              autoPlay
-              controlsList="nofullscreen"
-              className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+            {/* Close button */}
+            <button
+              onClick={() => setVideoPreviewOpen(false)}
+              className="absolute top-3 right-3 z-[200] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <VideoTrimmer
+              videoUrl={resultVideo}
+              isSaving={isSavingToGallery}
+              onSaveOriginal={() => handleSaveVideoToGallery(resultVideo)}
+              onSaveTrimmed={async (blob, startTime, endTime) => {
+                const estabId = localStorage.getItem('estabelecimentoId');
+                if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+                setIsSavingToGallery(true);
+                try {
+                  const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
+                  const fileName = `studio-trimmed-${id}-${Date.now()}.${ext}`;
+                  const storagePath = `${estabId}/${fileName}`;
+                  const { error: uploadErr } = await supabase.storage
+                    .from('marketing-videos')
+                    .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+                  if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('marketing-videos')
+                    .getPublicUrl(storagePath);
+                  const { error: dbErr } = await supabase
+                    .from('media_gallery')
+                    .insert({
+                      estabelecimento_id: estabId,
+                      tipo: 'video',
+                      storage_path: storagePath,
+                      public_url: publicUrl,
+                      nome: `AI Studio Vídeo (Cortado) - ${nodeData.label}`,
+                      descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
+                      tamanho_bytes: blob.size,
+                      mime_type: blob.type || 'video/mp4',
+                      origem: 'ai_studio',
+                    });
+                  if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
+                } catch (err: any) {
+                  console.error('[Studio] Erro ao salvar vídeo cortado:', err);
+                  toast.error('Erro ao salvar: ' + (err.message || String(err)));
+                } finally {
+                  setIsSavingToGallery(false);
+                }
+              }}
             />
           </div>
         </DialogContent>

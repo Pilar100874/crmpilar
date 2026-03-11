@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Film, Music, Type, Image, Upload, FolderOpen, Play, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
-  onAddClip: (type: 'video' | 'audio' | 'image' | 'text', url?: string, name?: string) => void;
+  onAddClip: (type: 'video' | 'audio' | 'image' | 'text') => void;
 }
 
 interface GalleryVideo {
@@ -19,7 +19,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
   const [savedVideos, setSavedVideos] = useState<GalleryVideo[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchSavedVideos = async () => {
+  const fetchSavedVideos = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) return;
     setLoading(true);
@@ -35,9 +35,20 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchSavedVideos(); }, []);
+  useEffect(() => { fetchSavedVideos(); }, [fetchSavedVideos]);
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      if (file.type.startsWith('video/')) onAddClip('video');
+      else if (file.type.startsWith('audio/')) onAddClip('audio');
+      else if (file.type.startsWith('image/')) onAddClip('image');
+    }
+    e.target.value = '';
+  }, [onAddClip]);
 
   return (
     <div className="flex flex-col h-full">
@@ -50,19 +61,19 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
 
       <div className="p-3 space-y-2">
         <Button onClick={() => onAddClip('video')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Film className="h-4 w-4 text-blue-500" />
+          <Film className="h-4 w-4 text-primary" />
           Adicionar Cena de Vídeo
         </Button>
         <Button onClick={() => onAddClip('image')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Image className="h-4 w-4 text-purple-500" />
+          <Image className="h-4 w-4 text-primary" />
           Adicionar Imagem / Frame
         </Button>
         <Button onClick={() => onAddClip('audio')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Music className="h-4 w-4 text-green-500" />
+          <Music className="h-4 w-4 text-primary" />
           Adicionar Áudio / SFX
         </Button>
         <Button onClick={() => onAddClip('text')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Type className="h-4 w-4 text-yellow-500" />
+          <Type className="h-4 w-4 text-primary" />
           Adicionar Texto / Legenda
         </Button>
       </div>
@@ -92,13 +103,13 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
               {savedVideos.map((video) => (
                 <button
                   key={video.id}
-                  onClick={() => onAddClip('video', video.public_url, video.nome)}
+                  onClick={() => onAddClip('video')}
                   className="w-full flex items-center gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors text-left group"
                 >
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 relative overflow-hidden">
                     <video src={video.public_url} className="w-full h-full object-cover" muted preload="metadata" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="h-4 w-4 text-white" />
+                      <Play className="h-4 w-4 text-foreground" />
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -120,7 +131,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
           <Upload className="h-8 w-8 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">Arraste ou clique para importar</span>
           <span className="text-[10px] text-muted-foreground">MP4, MOV, MP3, WAV, PNG, JPG</span>
-          <input type="file" className="hidden" accept="video/*,audio/*,image/*" multiple />
+          <input type="file" className="hidden" accept="video/*,audio/*,image/*" multiple onChange={handleFileUpload} />
         </label>
       </div>
     </div>
