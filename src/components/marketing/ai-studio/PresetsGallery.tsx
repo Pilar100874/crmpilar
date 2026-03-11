@@ -1534,12 +1534,19 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   )}
 
                   {selectionCount < 2 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <div className="h-16 w-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
-                        <Wand2 className="h-7 w-7 opacity-30" />
-                      </div>
-                      <p className="text-sm font-medium">Selecione pelo menos 2 camadas</p>
-                      <p className="text-[11px] text-muted-foreground/60 mt-1">para gerar o prompt estruturado</p>
+                    <div className="text-center py-16 text-muted-foreground">
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                        className="h-20 w-20 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-5 border border-primary/10"
+                      >
+                        <Wand2 className="h-8 w-8 text-primary/40" />
+                      </motion.div>
+                      <p className="text-base font-semibold text-foreground/80">Quase lá! ✨</p>
+                      <p className="text-[12px] text-muted-foreground/60 mt-1.5 max-w-[240px] mx-auto">
+                        Selecione pelo menos 2 camadas no painel ao lado para gerar seu prompt
+                      </p>
                     </div>
                   )}
                 </div>
