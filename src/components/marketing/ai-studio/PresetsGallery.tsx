@@ -912,13 +912,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [editingHookText, setEditingHookText] = useState('');
   const { toast } = useToast();
 
-  // Auto-update variations when selections change and variations tab is active
-  useEffect(() => {
-    if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
-      const v = generateVariations(selections, negativePromptText);
-      setVariations(v);
-    }
-  }, [selections, negativePromptText]);
+  // Auto-update variations moved below negativePromptText declaration
 
   // If hookStyle is deselected while on hooks tab, redirect
   const hasHookStyleSelected = (selections.hookStyle || []).length > 0;
