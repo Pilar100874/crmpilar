@@ -155,7 +155,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-luxury', name: 'Luxury Penthouse', mediaType: 'video', category: 'influencer',
     tags: ['luxury', 'night', 'fashion'], image: imgInfluencerLuxury,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Luxury influencer showcasing the product in an elegant penthouse. Night city lights visible through large windows. Soft cinematic lighting and elegant movements. Fashion commercial atmosphere.${NEGATIVE_BLOCK}`,
   },
   {
