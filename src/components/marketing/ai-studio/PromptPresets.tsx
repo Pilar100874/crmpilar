@@ -331,9 +331,10 @@ function saveCustomPresets(presets: PromptPreset[]) {
 
 interface PromptPresetsProps {
   onSelect: (preset: PromptPreset) => void;
+  estabelecimentoId?: string;
 }
 
-const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
+const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimentoId }) => {
   const [activeMediaType, setActiveMediaType] = useState<'video' | 'image'>('video');
   const [activeCategory, setActiveCategory] = useState<'produto' | 'influencer'>('produto');
   const [search, setSearch] = useState('');
@@ -341,7 +342,35 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [allPresets, setAllPresets] = useState<PromptPreset[]>(loadAllPresets);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
+  const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  // Load which presets are in use by saved workflows
+  React.useEffect(() => {
+    const fetchPresetsInUse = async () => {
+      if (!estabelecimentoId) return;
+      const { data } = await supabase
+        .from('ai_studio_workflows')
+        .select('nodes_data')
+        .eq('estabelecimento_id', estabelecimentoId);
+      if (!data) return;
+      const usedNames = new Set<string>();
+      data.forEach((w: any) => {
+        const nodes = Array.isArray(w.nodes_data) ? w.nodes_data : [];
+        nodes.forEach((n: any) => {
+          const name = n?.data?.config?.presetName;
+          if (name) usedNames.add(name);
+        });
+      });
+      // Map names back to preset IDs
+      const usedIds = new Set<string>();
+      allPresets.forEach(p => {
+        if (usedNames.has(p.name)) usedIds.add(p.id);
+      });
+      setPresetsInUse(usedIds);
+    };
+    fetchPresetsInUse();
+  }, [estabelecimentoId, allPresets]);
 
   const filtered = useMemo(() => {
     return allPresets.filter(p => {
