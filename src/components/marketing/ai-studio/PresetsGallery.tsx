@@ -1718,12 +1718,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </TabsContent>
           </Tabs>
 
-          <div className="p-3 border-t space-y-1.5">
+          <div className="p-4 border-t border-border/40 bg-background/80 backdrop-blur-sm space-y-2">
             {hasHookStyleSelected && !selectedHookText && (
-              <p className="text-[10px] text-destructive font-medium text-center">⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.</p>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-destructive font-medium bg-destructive/5 rounded-lg px-3 py-1.5 border border-destructive/15">
+                ⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.
+              </div>
             )}
             <Button
-              className="w-full gap-2"
+              className="w-full gap-2 h-11 rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
               size="lg"
               disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
               onClick={handleGenerate}
