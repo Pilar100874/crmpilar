@@ -39,6 +39,7 @@ export default function Login() {
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
+  const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
     const clearSession = async () => {
