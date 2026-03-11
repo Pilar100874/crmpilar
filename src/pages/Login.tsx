@@ -42,11 +42,26 @@ export default function Login() {
   const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
-    const clearSession = async () => {
-      await supabase.auth.signOut();
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Já tem sessão ativa, verificar se o usuário existe no sistema
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("id, estabelecimento_id")
+          .eq("auth_user_id", session.user.id)
+          .maybeSingle();
+
+        if (usuario) {
+          localStorage.setItem("userType", "user");
+          localStorage.setItem("userId", usuario.id);
+          localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
+          navigate("/dashboard");
+        }
+      }
     };
-    clearSession();
-  }, []);
+    checkExistingSession();
+  }, [navigate]);
 
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
