@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import GallerySelectInline from './GallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
+import VideoTrimmer from './VideoTrimmer';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X
+  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
