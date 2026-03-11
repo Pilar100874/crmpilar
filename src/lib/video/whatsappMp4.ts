@@ -65,7 +65,16 @@ async function transcodeToWhatsappMp4(inputBlob: Blob, keepAudio: boolean): Prom
   await ffmpeg.exec(args);
 
   const outputData = await ffmpeg.readFile(outputName);
-  const bytes = outputData instanceof Uint8Array ? outputData : new Uint8Array(outputData as ArrayBuffer);
+  let blobPart: BlobPart;
+
+  if (typeof outputData === 'string') {
+    blobPart = new TextEncoder().encode(outputData);
+  } else {
+    blobPart = outputData.buffer.slice(
+      outputData.byteOffset,
+      outputData.byteOffset + outputData.byteLength,
+    );
+  }
 
   try {
     await ffmpeg.deleteFile(inputName);
@@ -74,7 +83,7 @@ async function transcodeToWhatsappMp4(inputBlob: Blob, keepAudio: boolean): Prom
     // noop cleanup
   }
 
-  return new Blob([bytes], { type: 'video/mp4' });
+  return new Blob([blobPart], { type: 'video/mp4' });
 }
 
 export async function convertVideoToWhatsappMp4(inputBlob: Blob): Promise<Blob> {
