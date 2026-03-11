@@ -2,8 +2,44 @@ import { toast } from 'sonner';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
+const FFMPEG_BASE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+const FFMPEG_LOAD_TIMEOUT_MS = 45_000;
+const FFMPEG_EXEC_TIMEOUT_MS = 120_000;
+
 let ffmpegInstance: FFmpeg | null = null;
 let ffmpegLoadPromise: Promise<FFmpeg> | null = null;
+let transcodeQueue: Promise<void> = Promise.resolve();
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  }) as Promise<T>;
+}
+
+function runQueued<T>(job: () => Promise<T>): Promise<T> {
+  const run = transcodeQueue.then(job, job);
+  transcodeQueue = run.then(() => undefined, () => undefined);
+  return run;
+}
+
+function resetFfmpeg() {
+  if (ffmpegInstance) {
+    try {
+      ffmpegInstance.terminate();
+    } catch {
+      // noop
+    }
+  }
+
+  ffmpegInstance = null;
+  ffmpegLoadPromise = null;
+}
 
 async function getFfmpeg(): Promise<FFmpeg> {
   if (ffmpegInstance) return ffmpegInstance;
@@ -11,78 +47,118 @@ async function getFfmpeg(): Promise<FFmpeg> {
 
   ffmpegLoadPromise = (async () => {
     const ffmpeg = new FFmpeg();
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
 
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
+    try {
+      const [coreURL, wasmURL, workerURL] = await Promise.all([
+        toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
+        toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
+        toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.worker.js`, 'text/javascript'),
+      ]);
 
-    ffmpegInstance = ffmpeg;
-    return ffmpeg;
+      await withTimeout(
+        ffmpeg.load({ coreURL, wasmURL, workerURL }),
+        FFMPEG_LOAD_TIMEOUT_MS,
+        'Timeout ao carregar o conversor de vídeo.'
+      );
+
+      ffmpegInstance = ffmpeg;
+      return ffmpeg;
+    } catch (error) {
+      try {
+        ffmpeg.terminate();
+      } catch {
+        // noop
+      }
+      ffmpegLoadPromise = null;
+      throw error;
+    }
   })();
 
   return ffmpegLoadPromise;
 }
 
 async function transcodeToWhatsappMp4(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
-  const ffmpeg = await getFfmpeg();
-  const inputName = `input-${Date.now()}.webm`;
-  const outputName = `output-${Date.now()}.mp4`;
+  return runQueued(async () => {
+    const ffmpeg = await getFfmpeg();
+    const inputExt = inputBlob.type.includes('mp4') ? 'mp4' : 'webm';
+    const uniqueId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  await ffmpeg.writeFile(inputName, await fetchFile(inputBlob));
+    const inputName = `input-${uniqueId}.${inputExt}`;
+    const outputName = `output-${uniqueId}.mp4`;
 
-  const baseArgs = [
-    '-i', inputName,
-    '-map', '0:v:0',
-    '-c:v', 'libx264',
-    '-preset', 'veryfast',
-    '-profile:v', 'baseline',
-    '-level', '3.1',
-    '-pix_fmt', 'yuv420p',
-    '-movflags', '+faststart',
-    '-r', '30',
-  ];
+    try {
+      await ffmpeg.writeFile(inputName, await fetchFile(inputBlob));
 
-  const args = keepAudio
-    ? [
-        ...baseArgs,
-        '-map', '0:a:0?',
-        '-c:a', 'aac',
-        '-b:a', '128k',
-        '-ar', '44100',
-        '-ac', '2',
-        '-y',
-        outputName,
-      ]
-    : [
-        ...baseArgs,
-        '-an',
-        '-y',
-        outputName,
+      const baseArgs = [
+        '-hide_banner',
+        '-i', inputName,
+        '-map', '0:v:0',
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-profile:v', 'baseline',
+        '-level', '3.1',
+        '-pix_fmt', 'yuv420p',
+        '-vf', 'scale=w=1280:h=-2:force_original_aspect_ratio=decrease,format=yuv420p',
+        '-movflags', '+faststart',
+        '-r', '30',
+        '-crf', '28',
+        '-threads', '1',
+        '-maxrate', '2500k',
+        '-bufsize', '5000k',
       ];
 
-  await ffmpeg.exec(args);
+      const args = keepAudio
+        ? [
+            ...baseArgs,
+            '-map', '0:a:0?',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-ar', '44100',
+            '-ac', '2',
+            '-y',
+            outputName,
+          ]
+        : [
+            ...baseArgs,
+            '-an',
+            '-y',
+            outputName,
+          ];
 
-  const outputData = await ffmpeg.readFile(outputName);
-  let blobPart: BlobPart;
+      const exitCode = await withTimeout(
+        ffmpeg.exec(args),
+        FFMPEG_EXEC_TIMEOUT_MS,
+        'A conversão demorou demais e foi interrompida.'
+      );
 
-  if (typeof outputData === 'string') {
-    blobPart = new TextEncoder().encode(outputData);
-  } else {
-    const copied = new Uint8Array(outputData.byteLength);
-    copied.set(outputData);
-    blobPart = copied.buffer;
-  }
+      if (exitCode !== 0) {
+        throw new Error(`Falha na conversão (código ${exitCode}).`);
+      }
 
-  try {
-    await ffmpeg.deleteFile(inputName);
-    await ffmpeg.deleteFile(outputName);
-  } catch {
-    // noop cleanup
-  }
+      const outputData = await ffmpeg.readFile(outputName);
+      if (typeof outputData === 'string') {
+        throw new Error('Saída inválida do conversor de vídeo.');
+      }
 
-  return new Blob([blobPart], { type: 'video/mp4' });
+      return new Blob([new Uint8Array(outputData)], { type: 'video/mp4' });
+    } catch (error) {
+      resetFfmpeg();
+      throw error;
+    } finally {
+      try {
+        await ffmpeg.deleteFile(inputName);
+      } catch {
+        // noop
+      }
+      try {
+        await ffmpeg.deleteFile(outputName);
+      } catch {
+        // noop
+      }
+    }
+  });
 }
 
 export async function convertVideoToWhatsappMp4(inputBlob: Blob): Promise<Blob> {

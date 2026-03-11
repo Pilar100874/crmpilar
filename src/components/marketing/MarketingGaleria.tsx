@@ -693,8 +693,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                   const estabId = localStorage.getItem('estabelecimentoId');
                   if (!estabId) { toast.error('Estabelecimento não encontrado'); setIsSavingTrimmed(false); return; }
                   try {
-                    const mp4Blob = await convertVideoToWhatsappMp4(blob);
-                    const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                    const finalBlob = withAudio
+                      ? await convertVideoToWhatsappMp4(blob)
+                      : await removeAudioFromVideo(blob);
                     const fileName = `trimmed_${withAudio ? 'audio' : 'sem-audio'}_${Date.now()}.mp4`;
                     const path = `${estabId}/${fileName}`;
                     const { error: upErr } = await supabase.storage

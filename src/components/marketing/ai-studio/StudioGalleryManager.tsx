@@ -734,8 +734,9 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                   setIsSavingTrimmed(true);
                   try {
-                    const mp4Blob = await convertVideoToWhatsappMp4(blob);
-                    const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                    const finalBlob = withAudio
+                      ? await convertVideoToWhatsappMp4(blob)
+                      : await removeAudioFromVideo(blob);
                     const fileName = `trimmed_${withAudio ? 'audio' : 'sem-audio'}_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage

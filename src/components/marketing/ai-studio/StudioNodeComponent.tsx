@@ -1571,8 +1571,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
                 setIsSavingToGallery(true);
                 try {
-                  const mp4Blob = await convertVideoToWhatsappMp4(blob);
-                  const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                  const finalBlob = withAudio
+                    ? await convertVideoToWhatsappMp4(blob)
+                    : await removeAudioFromVideo(blob);
                   const fileName = `studio-trimmed-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
                   const storagePath = `${estabId}/${fileName}`;
                   const { error: uploadErr } = await supabase.storage
