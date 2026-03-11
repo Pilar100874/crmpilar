@@ -238,7 +238,7 @@ const LAYERS: Layer[] = [
     options: [
       { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
       { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
-      { id: 'square', label: 'Square (1:1)', emoji: '⬜' },
+      { id: 'square', label: 'Quadrado (1:1)', emoji: '⬜' },
     ],
   },
   {
