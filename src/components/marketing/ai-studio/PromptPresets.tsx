@@ -255,7 +255,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-editorial', name: 'Fashion Editorial', mediaType: 'image', category: 'influencer',
     tags: ['editorial', 'fashion', 'dramatic'], image: imgInfEditorial,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `High fashion editorial photography featuring an influencer with the product. Dramatic directional lighting creating bold shadows and highlights. Avant-garde composition with strong visual impact. Magazine-quality finish with rich color grading. The product integrated naturally into the styling. Camera: Hasselblad X2D, 100mm lens, controlled studio environment with colored gels.${NEGATIVE_BLOCK}`,
   },
   {
