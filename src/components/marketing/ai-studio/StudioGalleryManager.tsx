@@ -90,6 +90,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           storage_path: item.storage_path,
           tags: null,
           created_at: item.created_at,
+          tipo: item.tipo,
         })));
       }
     } else {
