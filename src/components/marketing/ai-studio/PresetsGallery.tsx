@@ -944,6 +944,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
   const [editingHook, setEditingHook] = useState<{ catIdx: number; hookIdx: number } | null>(null);
   const [editingHookText, setEditingHookText] = useState('');
+  const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   
