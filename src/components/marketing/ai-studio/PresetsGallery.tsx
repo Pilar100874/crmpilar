@@ -1573,11 +1573,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </TabsContent>
           </Tabs>
 
-          <div className="p-3 border-t">
+          <div className="p-3 border-t space-y-1.5">
+            {hasHookStyleSelected && !selectedHookText && (
+              <p className="text-[10px] text-destructive font-medium text-center">⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.</p>
+            )}
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={selectionCount < 2 || !selections.contentType?.length}
+              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText)}
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
