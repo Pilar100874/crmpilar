@@ -1192,12 +1192,26 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       ) : (
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left — Layers Panel */}
-        <div className="flex-1 lg:max-w-[45%] flex flex-col">
-          <div className="px-4 pt-3 pb-2">
-            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/70">Camadas de Configuração</p>
+        <div className="flex-1 lg:max-w-[45%] flex flex-col bg-gradient-to-b from-background to-muted/20">
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <Layers className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Camadas de Configuração</p>
+                <p className="text-[9px] text-muted-foreground">Personalize cada aspecto do seu criativo</p>
+              </div>
+            </div>
+            {selectionCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[9px] font-bold text-primary">{selectionCount}/{visibleLayers.length}</span>
+              </div>
+            )}
           </div>
           <ScrollArea className="flex-1">
-            <div className="px-3 pb-3 space-y-1">
+            <div className="px-3 pb-4 space-y-1.5">
               {visibleLayers.map((layer, idx) => {
                 const isExpanded = expandedLayer === layer.id;
                 const selected = selections[layer.id] || [];
@@ -1210,66 +1224,65 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.025, type: 'spring', stiffness: 300, damping: 30 }}
-                    className={`rounded-xl border transition-all duration-200 ${
+                    className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                       isExpanded
-                        ? 'border-primary/50 bg-gradient-to-br from-primary/[0.06] to-primary/[0.02] shadow-md shadow-primary/5 ring-1 ring-primary/10'
+                        ? 'border-primary/40 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent shadow-lg shadow-primary/[0.08] ring-1 ring-primary/15'
                         : hasSelection
-                          ? 'border-primary/20 bg-primary/[0.02] hover:shadow-sm'
-                          : 'border-border/40 hover:border-border/70 hover:shadow-sm'
+                          ? 'border-primary/20 bg-gradient-to-r from-primary/[0.03] to-transparent hover:shadow-sm hover:border-primary/30'
+                          : 'border-border/30 bg-background/60 hover:border-border/60 hover:bg-background/80 hover:shadow-sm'
                     }`}
                   >
                     <button
                       onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 text-left group"
+                      className="w-full flex items-center justify-between px-3.5 py-3 text-left group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-sm transition-all ${
+                        <div className={`relative h-8 w-8 rounded-xl flex items-center justify-center text-base transition-all ${
                           hasSelection
-                            ? 'bg-primary/15 shadow-sm'
-                            : 'bg-muted/60'
+                            ? 'bg-gradient-to-br from-primary/20 to-primary/5 shadow-sm shadow-primary/10'
+                            : isExpanded
+                              ? 'bg-primary/10'
+                              : 'bg-muted/50 group-hover:bg-muted/80'
                         }`}>
                           {layer.emoji}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-xs">{layer.title}</span>
-                            {layer.required && !hasSelection && (
-                              <Badge variant="outline" className="text-[7px] px-1.5 py-0 border-destructive/30 text-destructive bg-destructive/5 font-bold uppercase tracking-wider">
-                                Obrigatório
-                              </Badge>
-                            )}
-                          </div>
-                          {!isExpanded && hasSelection && (
-                            <div className="flex flex-wrap gap-1 mt-0.5">
-                              {selected.slice(0, 3).map(s => {
-                                const opt = layer.options.find(o => o.id === s);
-                                return (
-                                  <Badge key={s} className="text-[8px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15 font-medium">
-                                    {opt?.emoji} {opt?.label}
-                                  </Badge>
-                                );
-                              })}
-                              {selected.length > 3 && (
-                                <Badge className="text-[8px] px-1.5 py-0 bg-muted text-muted-foreground border-border/40">
-                                  +{selected.length - 3}
-                                </Badge>
-                              )}
+                          {hasSelection && (
+                            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary flex items-center justify-center shadow-sm shadow-primary/30">
+                              <Check className="h-2 w-2 text-primary-foreground" />
                             </div>
                           )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-[13px] text-foreground">{layer.title}</span>
+                            {layer.required && !hasSelection && (
+                              <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold uppercase tracking-wider border border-destructive/20">
+                                Obrigatório
+                              </span>
+                            )}
+                          </div>
+                          {!isExpanded && hasSelection && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {selected.slice(0, 3).map(s => {
+                                const opt = layer.options.find(o => o.id === s);
+                                return (
+                                  <span key={s} className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium border border-primary/15">
+                                    {opt?.emoji} {opt?.label}
+                                  </span>
+                                );
+                              })}
+                              {selected.length > 3 && (
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                                  +{selected.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {!isExpanded && !hasSelection && (
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{layer.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {hasSelection && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm"
-                          >
-                            <Check className="h-3 w-3 text-primary-foreground" />
-                          </motion.div>
-                        )}
-                        <ChevronRight className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${isExpanded ? 'rotate-90' : 'group-hover:translate-x-0.5'}`} />
-                      </div>
+                      <ChevronRight className={`h-4 w-4 text-muted-foreground/40 transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-90 text-primary' : 'group-hover:translate-x-0.5'}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1281,25 +1294,26 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           transition={{ duration: 0.25, ease: 'easeInOut' }}
                           className="overflow-hidden"
                         >
-                          <div className="px-3 pb-3 pt-0.5">
-                            <p className="text-[10px] text-muted-foreground mb-2.5 pl-10">{layer.description}</p>
-                            <div className="flex flex-wrap gap-1.5 pl-10">
+                          <div className="px-3.5 pb-3.5 pt-0">
+                            <div className="h-px bg-gradient-to-r from-primary/20 via-primary/10 to-transparent mb-3 ml-11" />
+                            <div className="flex flex-wrap gap-2 pl-11">
                               {layer.options.map((option) => {
                                 const isSelected = selected.includes(option.id);
                                 return (
                                   <motion.button
                                     key={option.id}
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ scale: 1.04, y: -1 }}
+                                    whileTap={{ scale: 0.96 }}
                                     onClick={() => toggleOption(layer.id, option.id)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
                                       isSelected
-                                        ? 'bg-gradient-to-r from-primary to-primary/90 text-primary-foreground border-primary shadow-md shadow-primary/15'
-                                        : 'bg-background text-foreground border-border/50 hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm'
+                                        ? 'bg-gradient-to-r from-primary to-primary/85 text-primary-foreground border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/30'
+                                        : 'bg-background text-foreground border-border/40 hover:border-primary/30 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-primary/5'
                                     }`}
                                   >
                                     <span className="text-sm">{option.emoji}</span>
-                                    {option.label}
+                                    <span>{option.label}</span>
+                                    {isSelected && <Check className="h-3 w-3 ml-0.5 opacity-80" />}
                                   </motion.button>
                                 );
                               })}
