@@ -1004,6 +1004,17 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         }
         return next;
       }
+      // When platform changes, clear orientation if it's no longer valid
+      if (layerId === 'platform') {
+        const newPlatform = current.includes(optionId) ? undefined : optionId;
+        const allowed = newPlatform ? PLATFORM_ORIENTATION_MAP[newPlatform] : null;
+        const currentOrientation = prev.orientation?.[0];
+        const next = { ...prev, [layerId]: current.includes(optionId) ? [] : [optionId] };
+        if (allowed && currentOrientation && !allowed.includes(currentOrientation)) {
+          next.orientation = [];
+        }
+        return next;
+      }
       if (layer?.multiple) {
         if (current.includes(optionId)) return { ...prev, [layerId]: current.filter(id => id !== optionId) };
         return { ...prev, [layerId]: [...current, optionId] };
