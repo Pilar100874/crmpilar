@@ -43,7 +43,9 @@ import { ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG, PublishChannel } from '
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 import VideoTrimmer from './ai-studio/VideoTrimmer';
-import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
 interface MarketingContentItem {
   id: string;
@@ -227,18 +229,25 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     window.open(item.content_url, '_blank');
   };
 
-  const handleDownload = useCallback(async (item: MarketingContentItem) => {
+  const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
     try {
       const response = await fetch(item.content_url);
       const blob = await response.blob();
       const isVideo = item.content_type === 'video';
       const ext = isVideo ? 'mp4' : (item.content_type === 'audio' ? 'mp3' : 'png');
-      const fileName = `${item.resource_name || 'download'}.${ext}`;
+      const suffix = isVideo && !withAudio ? '_sem-audio' : '';
+      const fileName = `${item.resource_name || 'download'}${suffix}.${ext}`;
 
-      const downloadBlob = isVideo
-        ? await convertVideoToWhatsappMp4(blob)
-        : (item.content_type === 'audio' ? new Blob([blob], { type: 'audio/mpeg' }) : blob);
+      let downloadBlob: Blob;
+      if (isVideo) {
+        const mp4Blob = await convertVideoToWhatsappMp4(blob);
+        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+      } else if (item.content_type === 'audio') {
+        downloadBlob = new Blob([blob], { type: 'audio/mpeg' });
+      } else {
+        downloadBlob = blob;
+      }
 
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
@@ -250,7 +259,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
+      toast.error('Não foi possível baixar o arquivo.');
       const a = document.createElement('a');
       a.href = item.content_url;
       a.download = item.resource_name || 'download';
@@ -615,13 +624,32 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
                                 Abrir
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDownload(item)}
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </Button>
+                              {item.content_type === 'video' ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="sm" variant="outline" className="gap-1">
+                                      <Download className="h-3.5 w-3.5" />
+                                      <ChevronDown className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleDownload(item, true)}>
+                                      <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownload(item, false)}>
+                                      <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownload(item)}
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                             </>
                           )}
                           <Button

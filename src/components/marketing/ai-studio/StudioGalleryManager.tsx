@@ -12,7 +12,9 @@ import {
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
-import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
 export interface GalleryImage {
   id: string;
@@ -288,7 +290,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     }
   }, [estabelecimentoId, activeCategory, fetchImages]);
 
-  const handleDownload = useCallback(async (img: GalleryImage) => {
+  const handleDownload = useCallback(async (img: GalleryImage, withAudio: boolean = true) => {
     try {
       const response = await fetch(img.image_url);
       const originalBlob = await response.blob();
@@ -298,8 +300,9 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       let downloadBlob: Blob;
       let ext: string;
       if (isVideo) {
-        downloadBlob = await convertVideoToWhatsappMp4(originalBlob);
-        ext = '.mp4';
+        const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+        ext = withAudio ? '.mp4' : '_sem-audio.mp4';
       } else if (isAudio) {
         downloadBlob = new Blob([originalBlob], { type: 'audio/mpeg' });
         ext = '.mp3';
@@ -319,7 +322,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
+      toast.error('Não foi possível baixar o arquivo.');
       const a = document.createElement('a');
       a.href = img.image_url;
       a.download = img.nome || 'download';
@@ -658,13 +661,35 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                             >
                               <Copy className="h-3 w-3" />
                             </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDownload(img); }}
-                              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
-                              title="Download"
-                            >
-                              <Download className="h-3 w-3" />
-                            </button>
+                            {isVideo ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                                    title="Download"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenuItem onClick={() => handleDownload(img, true)}>
+                                    <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDownload(img, false)}>
+                                    <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDownload(img); }}
+                                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                                title="Download"
+                              >
+                                <Download className="h-3 w-3" />
+                              </button>
+                            )}
                           </div>
                           {/* Bottom info + delete */}
                           <div className="flex items-end justify-between">
@@ -785,14 +810,36 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 >
                   <Copy className="h-3.5 w-3.5" /> Duplicar
                 </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
-                  onClick={() => handleDownload(previewItem)}
-                >
-                  <Download className="h-3.5 w-3.5" /> Download
-                </Button>
+                {isVideoUrl(previewItem.image_url, previewItem.tipo) ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleDownload(previewItem, true)}>
+                        <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload(previewItem, false)}>
+                        <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
+                    onClick={() => handleDownload(previewItem)}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="secondary"
