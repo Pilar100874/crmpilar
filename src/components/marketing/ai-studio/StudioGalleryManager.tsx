@@ -45,6 +45,12 @@ function isVideoUrl(url: string): boolean {
   return videoExts.some(ext => lower.endsWith(ext));
 }
 
+function formatTimestamp(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 interface StudioGalleryManagerProps {
   open: boolean;
   onClose: () => void;
