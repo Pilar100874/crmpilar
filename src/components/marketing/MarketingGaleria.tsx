@@ -164,6 +164,17 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
     }
   };
 
+  const handleEdit = (item: MarketingContentItem) => {
+    if (!item.content_url) return;
+
+    if (item.content_type === 'image' && onEditImage) {
+      onEditImage(item.content_url, item.resource_name);
+      return;
+    }
+
+    window.open(item.content_url, '_blank');
+  };
+
   const filteredContent = content.filter(item => {
     const matchesSearch = item.resource_name.toLowerCase().includes(search.toLowerCase());
     const matchesType = filterType === 'all' || item.content_type === filterType;
