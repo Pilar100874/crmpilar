@@ -235,7 +235,7 @@ export function useStudioExecution() {
         const roleDescMap: Record<string, string> = {
           influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral.',
           logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
-          produto: '[PRODUTO - NÃO ALTERAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência.',
+          produto: '[PRODUTO - PROIBIDO MODIFICAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência. NÃO altere cores, formato, rótulo, logotipo, tipografia, embalagem ou proporções. NÃO invente elementos novos, NÃO redesenhe, NÃO substitua. O produto na referência é REAL e deve ser reproduzido como uma fotografia fiel.',
           ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário/fundo.',
           estilo: 'Use como referência de estilo visual.',
           paleta: 'Use como referência de paleta de cores.',
@@ -265,7 +265,7 @@ export function useStudioExecution() {
             imageUrls: [config.selectedImageUrl], 
             imageUrl: config.selectedImageUrl,
             _referenceRole: 'produto',
-            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${config.productName || 'selecionado'}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo e proporções. NÃO modifique, substitua ou reimagine o produto de forma alguma.`,
+            _referenceDesc: `[PRODUTO - PROIBIDO MODIFICAR] Este é o produto "${config.productName || 'selecionado'}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo, tipografia e proporções. NÃO modifique, substitua, redesenhe ou reimagine o produto de forma alguma. NÃO invente elementos novos que não existem na foto original. Trate a imagem do produto como uma FOTOGRAFIA REAL que deve ser inserida na cena sem alterações.`,
           };
         }
         // If downstream has randomPick, skip validation - randomPick will load its own images
@@ -429,7 +429,9 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
-            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. É o MESMO produto.`,
+            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
+            `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
+            `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
@@ -545,8 +547,9 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
-            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. É o MESMO produto.`,
-            `   - Se a IA gerar uma embalagem diferente, o resultado está ERRADO.`,
+            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
+            `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
+            `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             ``,
