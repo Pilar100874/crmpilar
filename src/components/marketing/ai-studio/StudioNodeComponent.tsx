@@ -1391,19 +1391,28 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     >
                       <Maximize2 className="h-3 w-3 text-white" />
                     </button>
-                    <button
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (resultVideo) handleSaveVideoToGallery(resultVideo);
-                      }}
-                      disabled={isSavingToGallery}
-                      className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors"
-                      title="Salvar vídeo na galeria"
-                    >
-                      {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          disabled={isSavingToGallery}
+                          className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors disabled:opacity-60"
+                          title="Salvar vídeo na galeria"
+                        >
+                          {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, true)}>
+                          <Volume2 className="h-3.5 w-3.5 mr-2" /> Salvar com áudio
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, false)}>
+                          <VolumeX className="h-3.5 w-3.5 mr-2" /> Salvar sem áudio
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
