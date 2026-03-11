@@ -1067,7 +1067,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
       layerSelections: { ...selections },
-      variationPrompts: isVariationsTab ? variations : undefined,
+      variationPrompts: isVariationsTab ? variations.filter((_, i) => selectedVariations.has(i)) : undefined,
     };
 
     // Apply directly to canvas (no review step)
