@@ -42,7 +42,7 @@ export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];
 function isVideoUrl(url: string): boolean {
   const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
   const lower = url.toLowerCase().split('?')[0];
-  return videoExts.some(ext => lower.endsWith(ext));
+  return videoExts.some(ext => lower.endsWith(ext)) || lower.includes('marketing-videos') || lower.includes('/video');
 }
 
 function formatTimestamp(seconds: number): string {
