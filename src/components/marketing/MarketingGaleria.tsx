@@ -69,6 +69,7 @@ const contentTypeColors: Record<string, string> = {
 
 interface MarketingGaleriaProps {
   onEditImage?: (imageUrl: string, resourceName?: string) => void;
+  onEditVideo?: (videoUrl: string, resourceName?: string) => void;
 }
 
 const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
