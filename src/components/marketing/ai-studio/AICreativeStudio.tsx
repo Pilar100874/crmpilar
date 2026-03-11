@@ -1459,6 +1459,49 @@ const AICreativeStudioInner: React.FC = () => {
         onClose={() => setBatchReviewResults([])}
         results={batchReviewResults}
       />
+
+      {/* Preset canvas conflict dialog */}
+      <AlertDialog open={!!pendingPreset} onOpenChange={(open) => !open && setPendingPreset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Canvas já possui blocos</AlertDialogTitle>
+            <AlertDialogDescription>
+              O canvas já contém blocos. Deseja adicionar o preset junto com os blocos existentes ou limpar o canvas e criar um novo workflow?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => setPendingPreset(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => {
+                if (pendingPreset) {
+                  handlePresetSelect(pendingPreset);
+                  setPendingPreset(null);
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Adicionar ao existente
+            </AlertDialogAction>
+            <AlertDialogAction
+              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingPreset) {
+                  // Clear canvas then apply
+                  nodeResultStore.clearAll();
+                  setNodes([]);
+                  setEdges([]);
+                  // Small delay to let state settle, then apply
+                  setTimeout(() => handlePresetSelect(pendingPreset), 50);
+                  setPendingPreset(null);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Limpar e criar novo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
