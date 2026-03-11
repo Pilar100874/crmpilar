@@ -137,10 +137,13 @@ const MarketingGaleria: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
+    const item = content.find(c => c.id === deleteId);
+    if (!item) return;
 
     try {
+      const table = item._source === 'media_gallery' ? 'media_gallery' : 'marketing_content';
       const { error } = await supabase
-        .from('marketing_content')
+        .from(table)
         .delete()
         .eq('id', deleteId);
 
