@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,35 @@ import { Lock, Mail } from "lucide-react";
 import pilarBrand from "@/assets/pilar-brand.png";
 import fallbackBrand from "@/assets/pilar-brand-fallback.jpg";
 
+function usePreloadedImage(primary: string, fallback: string) {
+  const [src, setSrc] = useState<string | null>(null);
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (attempted.current) return;
+    attempted.current = true;
+
+    const img = new Image();
+    img.onload = () => setSrc(primary);
+    img.onerror = () => {
+      const fb = new Image();
+      fb.onload = () => setSrc(fallback);
+      fb.onerror = () => setSrc(fallback);
+      fb.src = fallback;
+    };
+    img.src = primary;
+  }, [primary, fallback]);
+
+  return src;
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
+  const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
     const clearSession = async () => {
@@ -78,19 +101,15 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         <div className="text-center">
           <div className="inline-flex min-h-28 min-w-60 items-center justify-center rounded-2xl bg-primary-foreground border border-primary-foreground/60 shadow-lg p-3">
-            <img
-              src={pilarBrand}
-              alt="Marca Pilar"
-              className="h-20 md:h-24 w-auto object-contain"
-              loading="eager"
-              decoding="sync"
-              onError={(e) => {
-                const img = e.currentTarget as HTMLImageElement;
-                if (img.src !== fallbackBrand) {
-                  img.src = fallbackBrand;
-                }
-              }}
-            />
+            {brandSrc ? (
+              <img
+                src={brandSrc}
+                alt="Marca Pilar"
+                className="h-20 md:h-24 w-auto object-contain"
+              />
+            ) : (
+              <div className="h-20 md:h-24 w-40 animate-pulse rounded bg-muted" />
+            )}
           </div>
           <h1 className="text-3xl font-semibold text-primary-foreground mt-4">Sistema de Gestão</h1>
           <p className="text-sm text-primary-foreground/80 mt-1">Plataforma Omnicanal</p>
