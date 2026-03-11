@@ -617,27 +617,51 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
               </Button>
             )}
             {hasCuts && (
-              <Button
-                size="sm"
-                variant="default"
-                className="gap-1.5 text-xs"
-                onClick={handleExport}
-                disabled={isTrimming || isSaving}
-              >
-                {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
-                {isTrimming ? `Processando ${Math.round(trimProgress)}%` : 'Salvar Cortado'}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="gap-1.5 text-xs"
+                    disabled={isTrimming || isSaving}
+                  >
+                    {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
+                    {isTrimming ? `Processando ${Math.round(trimProgress)}%` : 'Salvar Cortado'}
+                    {!isTrimming && <ChevronDown className="h-3 w-3" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport(true)}>
+                    <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport(false)}>
+                    <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              onClick={onSaveOriginal}
-              disabled={isSaving || isTrimming}
-            >
-              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              Salvar Original
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs"
+                  disabled={isSaving || isTrimming}
+                >
+                  {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  Salvar Original
+                  {!isSaving && !isTrimming && <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onSaveOriginal(true)}>
+                  <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSaveOriginal(false)}>
+                  <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
