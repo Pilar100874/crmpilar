@@ -146,6 +146,12 @@ const AICreativeStudioInner: React.FC = () => {
   const [draggingWorkflowId, setDraggingWorkflowId] = useState<string | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
+  const [manualFolders, setManualFolders] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`studio_folders_${localStorage.getItem('estabelecimentoId') || ''}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
