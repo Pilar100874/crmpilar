@@ -1483,7 +1483,7 @@ const AICreativeStudioInner: React.FC = () => {
               <Plus className="h-4 w-4 mr-1" /> Adicionar ao existente
             </AlertDialogAction>
             <AlertDialogAction
-              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               className="bg-destructive hover:bg-destructive/90"
               onClick={() => {
                 if (pendingPreset) {
