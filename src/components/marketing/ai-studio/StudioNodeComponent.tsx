@@ -467,6 +467,43 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     dispatchConfigUpdate(id, { [key]: value });
   }, [id]);
 
+  // Helper: extract bucket and path from supabase storage URL
+  const parseSupabaseStorageUrl = useCallback((url: string): { bucket: string; path: string } | null => {
+    try {
+      const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+      if (match) return { bucket: match[1], path: match[2] };
+    } catch {}
+    return null;
+  }, []);
+
+  // Helper: download blob from URL (handles supabase storage + external + base64)
+  const downloadAsBlob = useCallback(async (url: string): Promise<Blob> => {
+    // Base64 data URLs
+    if (url.startsWith('data:')) {
+      const [header, b64] = url.split(',');
+      const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new Blob([bytes], { type: mime });
+    }
+
+    // Supabase storage URLs - use SDK download to avoid CORS
+    const parsed = parseSupabaseStorageUrl(url);
+    if (parsed) {
+      const { data, error } = await supabase.storage
+        .from(parsed.bucket)
+        .download(parsed.path);
+      if (error) throw new Error(`Storage download falhou: ${error.message}`);
+      if (data) return data;
+    }
+
+    // Fallback: regular fetch
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
+    return await response.blob();
+  }, [parseSupabaseStorageUrl]);
+
   // Save image to media_gallery (system-wide gallery for catalogs, attachments, etc.)
   const handleSaveToMediaGallery = useCallback(async (imageUrl: string) => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -474,22 +511,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       toast.error('Erro: estabelecimento ou imagem não encontrados');
       return;
     }
+    console.log('[Studio] Salvando imagem na galeria...', imageUrl.substring(0, 100));
     setIsSavingToGallery(true);
     try {
-      let blob: Blob;
-      // Handle base64 data URLs directly
-      if (imageUrl.startsWith('data:')) {
-        const [header, b64] = imageUrl.split(',');
-        const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
-        const binary = atob(b64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        blob = new Blob([bytes], { type: mime });
-      } else {
-        const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
-        blob = await response.blob();
-      }
+      const blob = await downloadAsBlob(imageUrl);
       
       const ext = blob.type?.includes('png') ? 'png' : blob.type?.includes('gif') ? 'gif' : 'jpg';
       const fileName = `studio-${nodeData.type}-${id}-${Date.now()}.${ext}`;
@@ -499,7 +524,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       const { error: uploadErr } = await supabase.storage
         .from('marketing-images')
         .upload(storagePath, blob, { contentType: blob.type || 'image/png' });
-      if (uploadErr) throw uploadErr;
+      if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
         .from('marketing-images')
@@ -519,16 +544,17 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           mime_type: blob.type || 'image/png',
           origem: 'ai_studio',
         });
-      if (dbErr) throw dbErr;
+      if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
 
+      console.log('[Studio] Imagem salva com sucesso na galeria!');
       toast.success('✅ Imagem salva! Disponível no bloco "Imagens Salvas".');
     } catch (err: any) {
-      console.error('Erro ao salvar na galeria:', err);
+      console.error('[Studio] Erro ao salvar na galeria:', err);
       toast.error('Erro ao salvar: ' + (err.message || String(err)));
     } finally {
       setIsSavingToGallery(false);
     }
-  }, [id, nodeData.type, nodeData.label]);
+  }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
   // Save video to media_gallery
   const handleSaveVideoToGallery = useCallback(async (videoUrl: string) => {
@@ -537,11 +563,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       toast.error('Erro: estabelecimento ou vídeo não encontrados');
       return;
     }
+    console.log('[Studio] Salvando vídeo na galeria...', videoUrl.substring(0, 100));
     setIsSavingToGallery(true);
     try {
-      const response = await fetch(videoUrl);
-      if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
-      const blob = await response.blob();
+      const blob = await downloadAsBlob(videoUrl);
       
       const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
       const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.${ext}`;
@@ -550,7 +575,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
         .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
-      if (uploadErr) throw uploadErr;
+      if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
         .from('marketing-videos')
@@ -569,16 +594,17 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           mime_type: blob.type || 'video/mp4',
           origem: 'ai_studio',
         });
-      if (dbErr) throw dbErr;
+      if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
 
+      console.log('[Studio] Vídeo salvo com sucesso na galeria!');
       toast.success('✅ Vídeo salvo na galeria!');
     } catch (err: any) {
-      console.error('Erro ao salvar vídeo na galeria:', err);
+      console.error('[Studio] Erro ao salvar vídeo na galeria:', err);
       toast.error('Erro ao salvar: ' + (err.message || String(err)));
     } finally {
       setIsSavingToGallery(false);
     }
-  }, [id, nodeData.type, nodeData.label]);
+  }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
   return (
     <>
