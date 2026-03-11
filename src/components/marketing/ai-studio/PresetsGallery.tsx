@@ -1330,7 +1330,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         </div>
 
         {/* Right — Modules Panel */}
-        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-muted/10 to-muted/30 flex flex-col">
+        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/30 bg-gradient-to-br from-muted/5 via-background to-muted/15 flex flex-col">
           <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
               if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
@@ -1340,8 +1340,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
               }
             }} className="flex flex-col flex-1 overflow-hidden">
-            <div className="border-b border-border/40 px-4 pt-2.5 pb-0.5">
-              <TabsList className={`h-9 w-full grid bg-muted/40 rounded-xl p-0.5 ${
+            <div className="border-b border-border/30 px-4 pt-3 pb-1">
+              <TabsList className={`h-10 w-full grid bg-muted/30 rounded-xl p-1 border border-border/20 ${
                 (() => {
                   const isVideo = selections.contentType?.includes('video');
                   const hasHook = hasHookStyleSelected;
@@ -1350,25 +1350,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   return 'grid-cols-2';
                 })()
               }`}>
-                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
                 {hasHookStyleSelected && (
-                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
                     <Library className="h-3 w-3" /> Ganchos
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
                     <FileText className="h-3 w-3" /> Roteiro
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
                     <Clapperboard className="h-3 w-3" /> Cenas
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
                   <Layers className="h-3 w-3" /> Variações
                 </TabsTrigger>
               </TabsList>
@@ -1377,42 +1377,62 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             {/* TAB: Prompt */}
             <TabsContent value="prompt" className="flex-1 flex flex-col overflow-hidden mt-0">
               <ScrollArea className="flex-1">
-                <div className="p-4 space-y-3">
+                <div className="p-5 space-y-4">
                   {selectionCount > 0 && (
-                    <div className="space-y-1.5">
-                      {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
-                        <div key={layer.id} className="flex items-start gap-2">
-                          <span className="text-xs mt-0.5">{layer.emoji}</span>
-                          <div>
-                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{layer.title}</span>
-                            <div className="flex flex-wrap gap-1 mt-0.5">
-                              {(selections[layer.id] || []).map(s => {
-                                const opt = layer.options.find(o => o.id === s);
-                                return <Badge key={s} variant="secondary" className="text-[9px] px-1 py-0">{opt?.label}</Badge>;
-                              })}
+                    <div className="rounded-xl border border-border/30 bg-gradient-to-br from-muted/20 to-muted/5 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="h-5 w-5 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Layers className="h-3 w-3 text-primary" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Configurações Ativas</span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {visibleLayers.filter(l => (selections[l.id] || []).length > 0).map(layer => (
+                          <div key={layer.id} className="flex items-start gap-2.5">
+                            <span className="text-sm mt-0.5">{layer.emoji}</span>
+                            <div className="flex-1">
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-bold">{layer.title}</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {(selections[layer.id] || []).map(s => {
+                                  const opt = layer.options.find(o => o.id === s);
+                                  return (
+                                    <span key={s} className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-primary/8 text-primary/90 font-medium border border-primary/10">
+                                      {opt?.emoji} {opt?.label}
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {generatedPrompt && (
-                    <div className="bg-background rounded-lg border p-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-xs text-muted-foreground font-medium">Prompt Estruturado:</p>
-                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedPrompt)}>
+                    <div className="rounded-xl border border-border/30 bg-background shadow-sm overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/20 bg-gradient-to-r from-primary/[0.06] to-transparent">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-3.5 w-3.5 text-primary" />
+                          <p className="text-xs font-bold text-foreground">Prompt Estruturado</p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1.5 rounded-lg hover:bg-primary/10" onClick={() => handleCopyText(generatedPrompt)}>
                           <Copy className="h-3 w-3" /> Copiar
                         </Button>
                       </div>
-                      <pre className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedPrompt}</pre>
+                      <div className="p-4">
+                        <pre className="text-[11px] text-foreground/90 leading-[1.7] font-mono whitespace-pre-wrap">{generatedPrompt}</pre>
+                      </div>
                     </div>
                   )}
 
                   {selectionCount < 2 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Wand2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">Selecione pelo menos 2 camadas para gerar o prompt</p>
+                    <div className="text-center py-12 text-muted-foreground">
+                      <div className="h-16 w-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+                        <Wand2 className="h-7 w-7 opacity-30" />
+                      </div>
+                      <p className="text-sm font-medium">Selecione pelo menos 2 camadas</p>
+                      <p className="text-[11px] text-muted-foreground/60 mt-1">para gerar o prompt estruturado</p>
                     </div>
                   )}
                 </div>
