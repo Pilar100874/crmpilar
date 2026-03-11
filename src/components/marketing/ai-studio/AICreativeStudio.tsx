@@ -1024,10 +1024,6 @@ const AICreativeStudioInner: React.FC = () => {
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Workflow
               </Button>
-              <Button onClick={() => setShowPresets(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                <Clapperboard className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                <span className="truncate">Presets</span>
-              </Button>
               <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm">
                 <Settings2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 <span className="truncate">Config</span>
