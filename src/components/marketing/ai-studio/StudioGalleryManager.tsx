@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
+import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
 
 export interface GalleryImage {
   id: string;

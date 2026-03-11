@@ -17,6 +17,7 @@ import {
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
   Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
+import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
 
 const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,

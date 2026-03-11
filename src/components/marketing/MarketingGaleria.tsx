@@ -43,6 +43,7 @@ import { ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG, PublishChannel } from '
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 import VideoTrimmer from './ai-studio/VideoTrimmer';
+import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
 
 interface MarketingContentItem {
   id: string;
