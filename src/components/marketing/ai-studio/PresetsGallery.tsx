@@ -577,9 +577,26 @@ const platformMap: Record<string, string> = {
 };
 
 const orientMap: Record<string, string> = {
-  'vertical': 'Vertical format 9:16 aspect ratio.',
-  'horizontal': 'Horizontal format 16:9 aspect ratio.',
-  'square': 'Square format 1:1 aspect ratio.',
+  'vertical': 'Vertical format 9:16 aspect ratio (1080x1920).',
+  'horizontal': 'Horizontal format 16:9 aspect ratio (1920x1080).',
+  'square': 'Square format 1:1 aspect ratio (1080x1080).',
+  'ig-feed': 'Instagram Feed format 4:5 aspect ratio (1080x1350). Optimized for maximum feed visibility.',
+  'ig-reels': 'Instagram Reels format 9:16 vertical (1080x1920). Full-screen immersive vertical video.',
+  'ig-stories': 'Instagram Stories format 9:16 vertical (1080x1920). Ephemeral full-screen content.',
+  'ig-carousel': 'Instagram Carousel format 1:1 square (1080x1080). Multi-slide swipeable content.',
+  'whatsapp-status': 'WhatsApp Status format 9:16 vertical (1080x1920). Full-screen status update.',
+  'whatsapp-catalog': 'WhatsApp Catalog format 1:1 square (1080x1080). Product catalog thumbnail.',
+  'tiktok': 'TikTok format 9:16 vertical (1080x1920). Fast-paced, attention-grabbing vertical content.',
+  'facebook-feed': 'Facebook Feed format 1.91:1 landscape (1200x628). Optimized for news feed engagement.',
+  'facebook-stories': 'Facebook Stories format 9:16 vertical (1080x1920). Full-screen story content.',
+  'facebook-cover': 'Facebook Cover Photo format (820x312). Banner-style header image.',
+  'youtube-thumb': 'YouTube Thumbnail format 16:9 (1280x720). High-impact clickable thumbnail.',
+  'youtube-shorts': 'YouTube Shorts format 9:16 vertical (1080x1920). Short-form vertical video.',
+  'linkedin-feed': 'LinkedIn Feed format 1.91:1 landscape (1200x628). Professional content optimized for engagement.',
+  'linkedin-stories': 'LinkedIn Stories format 9:16 vertical (1080x1920). Professional story content.',
+  'pinterest': 'Pinterest Pin format 2:3 vertical (1000x1500). Tall format optimized for Pinterest feed.',
+  'twitter-post': 'X/Twitter Post format 16:9 (1200x675). Optimized for timeline visibility.',
+  'banner-web': 'Web Banner format (728x90). Standard leaderboard display ad.',
 };
 
 // ─── STYLE-ADAPTIVE OVERRIDES ────────────────────────────────────────
