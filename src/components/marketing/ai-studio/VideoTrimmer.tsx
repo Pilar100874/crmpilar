@@ -408,11 +408,12 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
           ref={videoRef}
           src={videoUrl}
           onLoadedMetadata={handleLoadedMetadata}
+          onDurationChange={handleLoadedMetadata}
           onEnded={() => { setIsPlaying(false); setIsPreviewing(false); previewRef.current = false; }}
           muted={isMuted}
           className="w-full max-h-[50vh] object-contain"
           playsInline
-          preload="auto"
+          preload="metadata"
         />
         <canvas ref={canvasRef} className="hidden" />
       </div>
