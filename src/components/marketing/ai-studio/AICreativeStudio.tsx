@@ -1664,6 +1664,56 @@ const AICreativeStudioInner: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Move to Folder dialog */}
+      <Dialog open={showMoveDialog} onOpenChange={(open) => { if (!open) { setShowMoveDialog(false); setMoveToFolderWorkflow(null); } }}>
+        <DialogContent className="z-[10001]">
+          <DialogHeader>
+            <DialogTitle>Mover para Pasta</DialogTitle>
+            <DialogDescription>
+              Escolha uma pasta existente ou crie uma nova.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {/* Remove from folder option */}
+            {moveToFolderWorkflow?.pasta && (
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 text-sm"
+                onClick={() => moveToFolderWorkflow && handleMoveToFolder(moveToFolderWorkflow.id, null)}
+              >
+                <X className="h-4 w-4 text-destructive" />
+                Remover da pasta
+              </Button>
+            )}
+            {/* Existing folders */}
+            {folders.map((folder) => (
+              <Button
+                key={folder}
+                variant={moveToFolderWorkflow?.pasta === folder ? "default" : "outline"}
+                className="w-full justify-start gap-2 text-sm"
+                onClick={() => moveToFolderWorkflow && handleMoveToFolder(moveToFolderWorkflow.id, folder)}
+                disabled={moveToFolderWorkflow?.pasta === folder}
+              >
+                <Folder className="h-4 w-4" />
+                {folder}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Nome da nova pasta..."
+              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+            />
+            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()} size="sm" className="gap-1">
+              <FolderPlus className="h-4 w-4" />
+              Criar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
