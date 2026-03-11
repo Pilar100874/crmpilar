@@ -1752,20 +1752,21 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </TabsContent>
           </Tabs>
 
-          <div className="p-4 border-t border-border/40 bg-background/80 backdrop-blur-sm space-y-2">
+          <div className="p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm space-y-2.5">
             {hasHookStyleSelected && !selectedHookText && (
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-destructive font-medium bg-destructive/5 rounded-lg px-3 py-1.5 border border-destructive/15">
-                ⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.
+              <div className="flex items-center justify-center gap-2 text-[10px] text-destructive font-semibold bg-destructive/5 rounded-xl px-3 py-2 border border-destructive/15">
+                <span className="text-sm">⚠️</span> Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.
               </div>
             )}
             <Button
-              className="w-full gap-2 h-11 rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+              className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
               size="lg"
               disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
               onClick={handleGenerate}
             >
-              {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
+              {selections.contentType?.includes('video') ? <Video className="h-4.5 w-4.5" /> : <Image className="h-4.5 w-4.5" />}
               {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
+              <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
             </Button>
           </div>
         </div>
