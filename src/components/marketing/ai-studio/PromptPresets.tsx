@@ -273,7 +273,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-street', name: 'Street Style', mediaType: 'image', category: 'influencer',
     tags: ['street', 'urban', 'fashion'], image: imgInfStreet,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Street style photography of a fashionable influencer with the product in an urban setting. Modern architecture and city environment as backdrop. Candid walking shot with natural movement. The product integrated seamlessly into the outfit or held naturally. Editorial fashion photography style with cinematic color grading. Camera: Sony A7R V, 50mm f/1.4, natural light.${NEGATIVE_BLOCK}`,
   },
   {
