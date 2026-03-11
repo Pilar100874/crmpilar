@@ -661,13 +661,35 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                             >
                               <Copy className="h-3 w-3" />
                             </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDownload(img); }}
-                              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
-                              title="Download"
-                            >
-                              <Download className="h-3 w-3" />
-                            </button>
+                            {isVideo ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                                    title="Download"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenuItem onClick={() => handleDownload(img, true)}>
+                                    <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDownload(img, false)}>
+                                    <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDownload(img); }}
+                                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                                title="Download"
+                              >
+                                <Download className="h-3 w-3" />
+                              </button>
+                            )}
                           </div>
                           {/* Bottom info + delete */}
                           <div className="flex items-end justify-between">
