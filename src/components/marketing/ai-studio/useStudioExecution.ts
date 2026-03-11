@@ -1163,6 +1163,11 @@ export function useStudioExecution() {
 
             // 4. Loop through each product
             for (let pi = 0; pi < products.length; pi++) {
+              // Check cancellation inside batch loop
+              if (abortRef.current?.signal.aborted) {
+                toast.info(`⏹️ Lote cancelado após ${pi}/${products.length} produtos.`);
+                break;
+              }
               const product = products[pi];
               const productName = product.nome || `Produto ${pi + 1}`;
 
