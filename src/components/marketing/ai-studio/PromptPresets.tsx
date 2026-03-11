@@ -143,7 +143,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-review', name: 'Tech Review', mediaType: 'video', category: 'influencer',
     tags: ['review', 'youtube', 'tech'], image: imgInfluencerReview,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Ultra realistic influencer review video. A confident tech influencer holding the product and explaining its benefits directly to camera. Studio setup with soft LED lighting and blurred background. Camera: Sony A7S III, 35mm lens. Authentic YouTube review style but cinematic quality.${NEGATIVE_BLOCK}`,
   },
   {
