@@ -135,7 +135,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-storytelling', name: 'Cinematic Storytelling', mediaType: 'video', category: 'produto',
     tags: ['story', 'emotional', 'lifestyle'], image: imgStorytelling,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Cinematic storytelling commercial. A person using the product in an emotional everyday moment. Warm lighting inside a home during sunset. Close-up shots of hands interacting with the product. Natural acting, authentic lifestyle tone. Camera: ARRI Alexa Mini LF. Beautiful cinematic color grading and soft film grain.${NEGATIVE_BLOCK}`,
   },
 
