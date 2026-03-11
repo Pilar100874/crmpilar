@@ -82,8 +82,13 @@ export default function Login() {
               src={pilarBrand}
               alt="Marca Pilar"
               className="h-20 md:h-24 w-auto object-contain"
+              loading="eager"
+              decoding="sync"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = fallbackBrand;
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.src !== fallbackBrand) {
+                  img.src = fallbackBrand;
+                }
               }}
             />
           </div>
