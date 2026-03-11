@@ -46,6 +46,7 @@ interface SavedWorkflow {
   edges_data: any;
   created_at: string;
   updated_at: string;
+  pasta: string | null;
 }
 
 interface ContextMenuState {
