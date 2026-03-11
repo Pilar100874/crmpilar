@@ -763,8 +763,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                     setIsSavingTrimmed(false);
                   }
                 }}
-                onSaveOriginal={() => {
-                  toast.success('Vídeo original mantido');
+                onSaveOriginal={(withAudio) => {
+                  toast.success(withAudio ? 'Vídeo original mantido' : 'Escolha "Salvar Cortado > Sem áudio" para gerar uma versão sem áudio.');
                   setEditItem(null);
                 }}
               />

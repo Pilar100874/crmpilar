@@ -1564,17 +1564,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             <VideoTrimmer
               videoUrl={resultVideo}
               isSaving={isSavingToGallery}
-              onSaveOriginal={() => handleSaveVideoToGallery(resultVideo)}
-              onSaveTrimmed={async (blob, startTime, endTime) => {
+              onSaveOriginal={(withAudio) => handleSaveVideoToGallery(resultVideo, withAudio)}
+              onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                 const estabId = localStorage.getItem('estabelecimentoId');
                 if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
                 setIsSavingToGallery(true);
                 try {
-                  const fileName = `studio-trimmed-${id}-${Date.now()}.mp4`;
+                  const mp4Blob = await convertVideoToWhatsappMp4(blob);
+                  const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                  const fileName = `studio-trimmed-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
                   const storagePath = `${estabId}/${fileName}`;
                   const { error: uploadErr } = await supabase.storage
                     .from('marketing-videos')
-                    .upload(storagePath, blob, { contentType: 'video/mp4' });
+                    .upload(storagePath, finalBlob, { contentType: 'video/mp4' });
                   if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
                   const { data: { publicUrl } } = supabase.storage
                     .from('marketing-videos')
@@ -1586,13 +1588,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       tipo: 'video',
                       storage_path: storagePath,
                       public_url: publicUrl,
-                      nome: `AI Studio Vídeo (Cortado) - ${nodeData.label}`,
+                      nome: `AI Studio Vídeo (${withAudio ? 'Cortado' : 'Cortado Sem Áudio'}) - ${nodeData.label}`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: blob.size,
+                      tamanho_bytes: finalBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'ai_studio',
                     });
                   if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
+                  toast.success(`✅ Vídeo cortado salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
                 } catch (err: any) {
                   console.error('[Studio] Erro ao salvar vídeo cortado:', err);
                   toast.error('Erro ao salvar: ' + (err.message || String(err)));
