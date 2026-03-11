@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
