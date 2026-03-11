@@ -437,9 +437,67 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
       </motion.div>
 
-      {/* Preview Modal */}
+      {/* Video Editor Dialog - same as StudioNodeComponent */}
+      {previewItem && isVideoUrl(previewItem.image_url) && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
+          <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
+            <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
+              {/* Close button */}
+              <button
+                onClick={() => setPreviewItem(null)}
+                className="absolute top-3 right-3 z-[200] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <VideoTrimmer
+                videoUrl={previewItem.image_url}
+                isSaving={isSavingTrimmed}
+                onSaveTrimmed={async (blob, startTime, endTime) => {
+                  setIsSavingTrimmed(true);
+                  try {
+                    const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
+                    const fileName = `trimmed_${Date.now()}.${ext}`;
+                    const path = `${estabelecimentoId}/${fileName}`;
+                    const { error: upErr } = await supabase.storage
+                      .from('marketing-videos')
+                      .upload(path, blob, { contentType: blob.type || 'video/mp4' });
+                    if (upErr) throw upErr;
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('marketing-videos')
+                      .getPublicUrl(path);
+                    await supabase.from('media_gallery').insert({
+                      estabelecimento_id: estabelecimentoId,
+                      tipo: 'video',
+                      public_url: publicUrl,
+                      storage_path: path,
+                      nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
+                      descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
+                      tamanho_bytes: blob.size,
+                      mime_type: blob.type || 'video/mp4',
+                      origem: 'studio-trimmed',
+                    });
+                    toast.success('✅ Vídeo cortado salvo na galeria!');
+                    fetchImages();
+                  } catch (err: any) {
+                    toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
+                  } finally {
+                    setIsSavingTrimmed(false);
+                  }
+                }}
+                onSaveOriginal={() => {
+                  toast.success('Vídeo original mantido');
+                  setPreviewItem(null);
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Image Preview Modal */}
       <AnimatePresence>
-        {previewItem && (
+        {previewItem && !isVideoUrl(previewItem.image_url) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -491,56 +549,12 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 </Button>
               </div>
 
-              {/* Media content */}
-              {isVideoUrl(previewItem.image_url) ? (
-                <div className="w-full max-w-4xl">
-                  <VideoTrimmer
-                    videoUrl={previewItem.image_url}
-                    isSaving={isSavingTrimmed}
-                    onSaveTrimmed={async (blob) => {
-                      setIsSavingTrimmed(true);
-                      try {
-                        const fileName = `trimmed_${Date.now()}.webm`;
-                        const path = `${estabelecimentoId}/${fileName}`;
-                        const { error: upErr } = await supabase.storage
-                          .from('marketing-videos')
-                          .upload(path, blob, { contentType: 'video/webm' });
-                        if (upErr) throw upErr;
-                        const { data: urlData } = supabase.storage
-                          .from('marketing-videos')
-                          .getPublicUrl(path);
-                        const publicUrl = urlData?.publicUrl || '';
-                        await supabase.from('media_gallery').insert({
-                          estabelecimento_id: estabelecimentoId,
-                          tipo: 'video',
-                          public_url: publicUrl,
-                          storage_path: path,
-                          nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
-                          origem: 'studio-trimmed',
-                        });
-                        toast.success('✅ Vídeo cortado salvo na galeria!');
-                        fetchImages();
-                      } catch (err: any) {
-                        toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
-                      } finally {
-                        setIsSavingTrimmed(false);
-                      }
-                    }}
-                    onSaveOriginal={() => {
-                      toast.success('Vídeo original mantido');
-                      setPreviewItem(null);
-                    }}
-                  />
-                </div>
-              ) : (
-                <img
-                  src={previewItem.image_url}
-                  alt={previewItem.nome || ''}
-                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
-                />
-              )}
+              <img
+                src={previewItem.image_url}
+                alt={previewItem.nome || ''}
+                className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
+              />
 
-              {/* Title */}
               {previewItem.nome && (
                 <p className="mt-3 text-sm text-white/80 font-medium">{previewItem.nome}</p>
               )}
