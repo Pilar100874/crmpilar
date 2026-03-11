@@ -173,7 +173,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-fashion', name: 'Street Fashion', mediaType: 'video', category: 'influencer',
     tags: ['fashion', 'urban', 'editorial'], image: imgInfluencerFashion,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryRoupa'], isCustom: true,
     prompt: `Fashion influencer showcasing the product as part of their outfit. Stylish urban environment. Smooth camera tracking shots. High fashion editorial style.${NEGATIVE_BLOCK}`,
   },
   {
