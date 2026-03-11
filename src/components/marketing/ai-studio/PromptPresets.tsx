@@ -185,7 +185,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-storytelling', name: 'Personal Story', mediaType: 'video', category: 'influencer',
     tags: ['story', 'emotional', 'authentic'], image: imgInfluencerStorytelling,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Influencer telling a personal story about how the product improved their life. Natural emotional acting. Warm cinematic lighting. Authentic lifestyle advertising narrative.${NEGATIVE_BLOCK}`,
   },
 
