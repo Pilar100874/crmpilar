@@ -93,7 +93,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-luxury-reveal', name: 'Luxury Reveal', mediaType: 'video', category: 'produto',
     tags: ['luxury', 'dramatic', 'particles'], image: imgLuxuryReveal,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Luxury product reveal commercial. A dark cinematic environment with particles floating in the air. The product slowly emerges from shadows with dramatic lighting. High-speed slow motion, 120fps look. Camera pushes in slowly with macro lens. Hyper realistic textures, cinematic color grading, premium advertising style similar to high-end perfume ads. Moody atmosphere with soft fog and light rays.${NEGATIVE_BLOCK}`,
   },
   {
