@@ -878,6 +878,7 @@ interface Preset {
   videoSubcategory?: string;
   referenceBlocks?: string[];
   layerSelections?: Record<string, string[]>;
+  variationPrompts?: string[];
 }
 
 interface PresetsGalleryProps {
