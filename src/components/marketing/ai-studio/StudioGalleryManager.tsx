@@ -10,6 +10,7 @@ import {
   ZoomIn, Download, Play, Pause
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import VideoTrimmer from './VideoTrimmer';
 
 export interface GalleryImage {
   id: string;
