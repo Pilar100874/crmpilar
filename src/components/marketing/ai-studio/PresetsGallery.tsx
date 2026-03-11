@@ -349,7 +349,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Curiosity Hook',
+    category: 'Gancho de Curiosidade',
     emoji: '🤔',
     hooks: [
       'Assista até o final para ver o resultado.',
