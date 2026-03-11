@@ -919,7 +919,7 @@ interface Scene {
   action: string;
 }
 
-function generateScenes(selections: Record<string, string[]>): Scene[] {
+function generateScenes(selections: Record<string, string[]>, variationSeed?: number): Scene[] {
   const product = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === selections.productCategory?.[0])?.label || 'o produto';
   const visualStyle = selections.visualStyle?.[0];
   const userCamera = selections.cameraStyle?.[0];
@@ -927,61 +927,100 @@ function generateScenes(selections: Record<string, string[]>): Scene[] {
   const overrides = getStyleOverrides(visualStyle, userCamera, userLighting);
 
   const isUgc = visualStyle === 'ugc' || visualStyle === 'viral';
+  const seed = variationSeed || 0;
+
+  const hookDescriptions = [
+    isUgc
+      ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
+      : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+    isUgc
+      ? `Alguém segura ${product} e faz uma expressão de surpresa genuína, como se acabasse de descobrir algo incrível.`
+      : `Cena de mistério: ${product} é mostrado parcialmente, criando curiosidade. O espectador quer saber mais.`,
+    isUgc
+      ? `A pessoa está em um ambiente do dia a dia e começa: "Gente, eu preciso contar uma coisa sobre ${product}..."`
+      : `Transição rápida e criativa revela ${product} de forma inesperada — um corte seco que prende o olhar.`,
+  ];
+
+  const problemDescriptions = [
+    `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
+    `Cenário antes vs depois: a realidade sem ${product} é frustrante. Pequenos erros se acumulam e geram insatisfação.`,
+    `Pessoa tenta resolver o problema da forma tradicional e falha. A frustração é visível e identificável.`,
+  ];
+
+  const introDescriptions = [
+    isUgc ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.` : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+    isUgc ? `Com entusiasmo natural, a pessoa tira ${product} de uma caixa: "Olha o que chegou!"` : `Transição cinematográfica revela ${product} em câmera lenta com iluminação dramática.`,
+    isUgc ? `A pessoa segura ${product} e diz: "Isso aqui mudou tudo pra mim. Deixa eu te mostrar."` : `${product} emerge de um fundo escuro com iluminação gradual, criando tensão e expectativa.`,
+  ];
+
+  const demoDescriptions = [
+    `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
+    `Demonstração detalhada de ${product}: cada funcionalidade é mostrada com foco nos detalhes que impressionam.`,
+    `Teste prático ao vivo: ${product} é colocado à prova em condições reais, sem edição ou filtros.`,
+  ];
+
+  const resultDescriptions = [
+    `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
+    `Comparação lado a lado: antes e depois com ${product}. A diferença é impressionante.`,
+    `Reação genuína de satisfação ao ver os resultados de ${product}. O impacto é imediato.`,
+  ];
+
+  const ctaDescriptions = [
+    isUgc ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.` : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+    isUgc ? `"Se você quer experimentar, o link tá na bio. Confia em mim, vale muito a pena!"` : `Logo da marca aparece com slogan. QR code ou link destacado em tela.`,
+    isUgc ? `Pessoa sorri e diz: "Depois não diga que eu não avisei! Link na bio, corre lá."` : `Montagem final com os melhores momentos + CTA animado e profissional.`,
+  ];
+
+  const pick = (arr: string[], offset: number) => arr[Math.abs(seed + offset) % arr.length];
+
+  const hookActions = [
+    isUgc ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.' : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+    isUgc ? 'Pessoa gesticula enquanto fala, mostrando energia e autenticidade.' : 'Corte rápido entre 3 ângulos diferentes do produto em menos de 2 segundos.',
+    isUgc ? 'Pessoa para o que está fazendo, olha para a câmera e começa a falar com empolgação.' : 'Câmera inicia em macro no produto e faz zoom out revelando o cenário completo.',
+  ];
 
   return [
     {
       title: 'Cena 1 — Gancho Inicial',
-      description: isUgc
-        ? `Abertura casual e autêntica que captura a atenção. Uma pessoa real olha para a câmera do smartphone e começa a falar sobre ${product} como se estivesse compartilhando com um amigo.`
-        : `Abertura impactante que captura a atenção do espectador nos primeiros 3 segundos. Um visual inesperado ou ação disruptiva relacionada a ${product}.`,
+      description: pick(hookDescriptions, 0),
       camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie ligeiramente imperfeito.' : overrides.camera,
       lighting: overrides.lighting,
-      action: isUgc
-        ? 'Pessoa olha para a câmera com expressão de surpresa ou entusiasmo, começa a falar naturalmente.'
-        : 'Movimento rápido de abertura, zoom dramático ou revelação visual que prende a atenção imediatamente.',
+      action: pick(hookActions, 0),
     },
     {
       title: 'Cena 2 — Apresentação do Problema',
-      description: `Mostrar a frustração ou dificuldade do dia a dia sem ${product}. O espectador se identifica com a situação.`,
+      description: pick(problemDescriptions, 1),
       camera: isUgc ? 'Câmera de smartphone mostrando a situação de perto, com movimentos naturais de mão.' : 'Close-up nos detalhes da frustração, expressões faciais ou produto problemático.',
       lighting: isUgc ? 'Iluminação ambiente natural do local onde está.' : 'Iluminação levemente sombria para transmitir desconforto.',
       action: 'Pessoa tentando realizar a tarefa sem sucesso, expressando frustração visível.',
     },
     {
       title: 'Cena 3 — Introdução do Produto',
-      description: isUgc
-        ? `A pessoa mostra ${product} casualmente, tirando da bolsa, mesa ou prateleira. Apresentação natural e não ensaiada.`
-        : `Reveal dramático de ${product}. O produto entra em cena como a solução definitiva.`,
+      description: pick(introDescriptions, 2),
       camera: isUgc ? 'Câmera de smartphone mostrando o produto na mão, enquadramento casual.' : 'Câmera em slow motion focando no produto, com profundidade de campo rasa.',
       lighting: isUgc ? overrides.lighting : 'Iluminação premium com destaque suave no produto.',
-      action: isUgc
-        ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.'
-        : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
+      action: isUgc ? 'Pessoa segura o produto e mostra para a câmera, explicando o que é.' : 'Produto sendo revelado com impacto visual — pode ser unboxing, colocação na mesa ou transição criativa.',
     },
     {
       title: 'Cena 4 — Demonstração do Produto',
-      description: `${product} sendo utilizado em um cenário real, mostrando funcionalidades e facilidade de uso.`,
+      description: pick(demoDescriptions, 3),
       camera: isUgc ? 'Câmera alternando entre selfie e câmera traseira do smartphone para mostrar detalhes.' : 'Ângulos múltiplos: close-up nos detalhes, plano médio mostrando uso, plano geral do contexto.',
       lighting: overrides.lighting,
       action: 'Demonstração passo a passo do uso do produto, destacando texturas, qualidade e resultados.',
     },
     {
       title: 'Cena 5 — Resultado / Benefícios',
-      description: `O resultado final após o uso de ${product}. A transformação é visível e impactante.`,
+      description: pick(resultDescriptions, 4),
       camera: isUgc ? 'Câmera de smartphone mostrando o resultado final, reação genuína.' : 'Plano aberto mostrando o resultado, seguido de close-up nos detalhes.',
       lighting: isUgc ? overrides.lighting : 'Iluminação brilhante e otimista, transmitindo satisfação.',
       action: 'Reação positiva do usuário, expressão de satisfação, resultado visual claro.',
     },
     {
       title: 'Cena 6 — Fechamento com CTA',
-      description: isUgc
-        ? `Pessoa olha para a câmera e faz a recomendação final de ${product}, incentivando o espectador a experimentar.`
-        : `Encerramento com chamada para ação. Packshot do produto ou composição final com identidade de marca.`,
+      description: pick(ctaDescriptions, 5),
       camera: isUgc ? 'Câmera frontal de smartphone, enquadramento selfie natural.' : 'Câmera estável em plano fixo, enquadramento central do produto ou logo.',
       lighting: isUgc ? overrides.lighting : 'Iluminação limpa e profissional, fundo neutro ou com identidade visual.',
-      action: isUgc
-        ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.'
-        : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
+      action: isUgc ? 'Pessoa fala diretamente para a câmera com entusiasmo genuíno, faz CTA natural.' : 'Produto centralizado, texto de CTA aparece, logo da marca em destaque.',
     },
   ];
 }
