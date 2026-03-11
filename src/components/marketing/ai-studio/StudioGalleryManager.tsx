@@ -447,7 +447,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       </motion.div>
 
       {/* Video Editor Dialog - same as StudioNodeComponent */}
-      {previewItem && isVideoUrl(previewItem.image_url) && (
+      {previewItem && isVideoUrl(previewItem.image_url, previewItem.tipo) && (
         <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
           <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
             <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
