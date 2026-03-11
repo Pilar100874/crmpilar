@@ -878,6 +878,7 @@ interface Preset {
   videoSubcategory?: string;
   referenceBlocks?: string[];
   layerSelections?: Record<string, string[]>;
+  variationPrompts?: string[];
 }
 
 interface PresetsGalleryProps {
@@ -973,6 +974,9 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       platform && LAYERS.find(l => l.id === 'platform')?.options.find(o => o.id === platform)?.label,
     ].filter(Boolean);
 
+    // If on variations tab and we have variations, include them
+    const isVariationsTab = activeTab === 'variations' && variations.length > 0;
+
     const preset: Preset = {
       id: `custom-${Date.now()}`,
       name: nameParts.length ? nameParts.join(' • ') : (isVideo ? 'Vídeo Personalizado' : 'Imagem Personalizada'),
@@ -987,6 +991,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
       layerSelections: { ...selections },
+      variationPrompts: isVariationsTab ? variations : undefined,
     };
 
     // Apply directly to canvas (no review step)
@@ -1457,7 +1462,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-              Aplicar no Canvas
+              {activeTab === 'variations' && variations.length > 0 ? `Aplicar 5 Variações no Canvas` : 'Aplicar no Canvas'}
             </Button>
           </div>
         </div>
