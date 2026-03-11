@@ -137,6 +137,42 @@ const LAYERS: Layer[] = [
     ],
   },
   {
+    id: 'orientation',
+    title: 'Orientação do Conteúdo',
+    emoji: '📐',
+    icon: RectangleHorizontal,
+    iconColor: 'from-sky-500 to-blue-500',
+    filterOptions: (options, selections) => {
+      const platform = selections.platform?.[0];
+      if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
+      const allowed = PLATFORM_ORIENTATION_MAP[platform];
+      return options.filter(o => allowed.includes(o.id));
+    },
+    description: 'Proporção e formato (filtrado pela plataforma selecionada)',
+    options: [
+      { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
+      { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
+      { id: 'square', label: 'Quadrado (1:1)', emoji: '⬜' },
+      { id: 'ig-feed', label: 'Instagram Feed (4:5)', emoji: '📸' },
+      { id: 'ig-reels', label: 'Instagram Reels (9:16)', emoji: '🎞️' },
+      { id: 'ig-stories', label: 'Instagram Stories (9:16)', emoji: '📖' },
+      { id: 'ig-carousel', label: 'Instagram Carrossel (1:1)', emoji: '🔄' },
+      { id: 'whatsapp-status', label: 'WhatsApp Status (9:16)', emoji: '💬' },
+      { id: 'whatsapp-catalog', label: 'WhatsApp Catálogo (1:1)', emoji: '🛍️' },
+      { id: 'tiktok', label: 'TikTok (9:16)', emoji: '🎵' },
+      { id: 'facebook-feed', label: 'Facebook Feed (1.91:1)', emoji: '📘' },
+      { id: 'facebook-stories', label: 'Facebook Stories (9:16)', emoji: '📗' },
+      { id: 'facebook-cover', label: 'Facebook Capa (820x312)', emoji: '🖼️' },
+      { id: 'youtube-thumb', label: 'YouTube Thumbnail (16:9)', emoji: '▶️' },
+      { id: 'youtube-shorts', label: 'YouTube Shorts (9:16)', emoji: '⚡' },
+      { id: 'linkedin-feed', label: 'LinkedIn Feed (1.91:1)', emoji: '💼' },
+      { id: 'linkedin-stories', label: 'LinkedIn Stories (9:16)', emoji: '📊' },
+      { id: 'pinterest', label: 'Pinterest (2:3)', emoji: '📌' },
+      { id: 'twitter-post', label: 'X / Twitter Post (16:9)', emoji: '🐦' },
+      { id: 'banner-web', label: 'Banner Web (728x90)', emoji: '🌐' },
+    ],
+  },
+  {
     id: 'referenceBlocks',
     title: 'Blocos de Referência',
     emoji: '🧩',
@@ -266,42 +302,6 @@ const LAYERS: Layer[] = [
       { id: 'dramatic-mood', label: 'Dramático', emoji: '🎭' },
       { id: 'emotional', label: 'Emocional', emoji: '💖' },
       { id: 'inspirational', label: 'Inspiracional', emoji: '🌟' },
-    ],
-  },
-  {
-    id: 'orientation',
-    title: 'Orientação do Conteúdo',
-    emoji: '📐',
-    icon: RectangleHorizontal,
-    iconColor: 'from-sky-500 to-blue-500',
-    filterOptions: (options, selections) => {
-      const platform = selections.platform?.[0];
-      if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
-      const allowed = PLATFORM_ORIENTATION_MAP[platform];
-      return options.filter(o => allowed.includes(o.id));
-    },
-    description: 'Proporção e formato (filtrado pela plataforma selecionada)',
-    options: [
-      { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
-      { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
-      { id: 'square', label: 'Quadrado (1:1)', emoji: '⬜' },
-      { id: 'ig-feed', label: 'Instagram Feed (4:5)', emoji: '📸' },
-      { id: 'ig-reels', label: 'Instagram Reels (9:16)', emoji: '🎞️' },
-      { id: 'ig-stories', label: 'Instagram Stories (9:16)', emoji: '📖' },
-      { id: 'ig-carousel', label: 'Instagram Carrossel (1:1)', emoji: '🔄' },
-      { id: 'whatsapp-status', label: 'WhatsApp Status (9:16)', emoji: '💬' },
-      { id: 'whatsapp-catalog', label: 'WhatsApp Catálogo (1:1)', emoji: '🛍️' },
-      { id: 'tiktok', label: 'TikTok (9:16)', emoji: '🎵' },
-      { id: 'facebook-feed', label: 'Facebook Feed (1.91:1)', emoji: '📘' },
-      { id: 'facebook-stories', label: 'Facebook Stories (9:16)', emoji: '📗' },
-      { id: 'facebook-cover', label: 'Facebook Capa (820x312)', emoji: '🖼️' },
-      { id: 'youtube-thumb', label: 'YouTube Thumbnail (16:9)', emoji: '▶️' },
-      { id: 'youtube-shorts', label: 'YouTube Shorts (9:16)', emoji: '⚡' },
-      { id: 'linkedin-feed', label: 'LinkedIn Feed (1.91:1)', emoji: '💼' },
-      { id: 'linkedin-stories', label: 'LinkedIn Stories (9:16)', emoji: '📊' },
-      { id: 'pinterest', label: 'Pinterest (2:3)', emoji: '📌' },
-      { id: 'twitter-post', label: 'X / Twitter Post (16:9)', emoji: '🐦' },
-      { id: 'banner-web', label: 'Banner Web (728x90)', emoji: '🌐' },
     ],
   },
   {
