@@ -88,8 +88,42 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
   const handleLoadedMetadata = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    setDuration(video.duration);
-    setVideoReady(true);
+
+    const rawDuration = video.duration;
+    if (Number.isFinite(rawDuration) && rawDuration > 0) {
+      setDuration(rawDuration);
+      setVideoReady(true);
+      return;
+    }
+
+    const finalizeDuration = () => {
+      const resolvedDuration = video.duration;
+      if (Number.isFinite(resolvedDuration) && resolvedDuration > 0) {
+        setDuration(resolvedDuration);
+        setVideoReady(true);
+      }
+    };
+
+    const handleDurationChange = () => {
+      finalizeDuration();
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        video.removeEventListener('durationchange', handleDurationChange);
+      }
+    };
+
+    video.addEventListener('durationchange', handleDurationChange);
+
+    try {
+      const previousTime = video.currentTime;
+      video.currentTime = 1e101;
+      setTimeout(() => {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) {
+          video.currentTime = previousTime || 0;
+        }
+      }, 200);
+    } catch {
+      finalizeDuration();
+    }
   }, []);
 
   // Sync current time
