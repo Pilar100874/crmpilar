@@ -911,6 +911,9 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         const next: Record<string, string[]> = { ...prev, [layerId]: [optionId] };
         delete next.videoModel;
         delete next.imageModel;
+        if (optionId !== 'video' && (activeTab === 'script' || activeTab === 'scenes')) {
+          setActiveTab('prompt');
+        }
         return next;
       }
       if (layer?.multiple) {
