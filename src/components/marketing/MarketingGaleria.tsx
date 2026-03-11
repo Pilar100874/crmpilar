@@ -687,17 +687,18 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
               <VideoTrimmer
                 videoUrl={editingVideo.content_url}
                 isSaving={isSavingTrimmed}
-                onSaveTrimmed={async (blob, startTime, endTime) => {
+                onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                   setIsSavingTrimmed(true);
                   const estabId = localStorage.getItem('estabelecimentoId');
                   if (!estabId) { toast.error('Estabelecimento não encontrado'); setIsSavingTrimmed(false); return; }
                   try {
-                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
-                    const fileName = `trimmed_${Date.now()}.mp4`;
+                    const mp4Blob = await convertVideoToWhatsappMp4(blob);
+                    const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                    const fileName = `trimmed_${withAudio ? 'audio' : 'sem-audio'}_${Date.now()}.mp4`;
                     const path = `${estabId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
+                      .upload(path, finalBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -707,12 +708,12 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                       tipo: 'video',
                       public_url: publicUrl,
                       storage_path: path,
-                      nome: `${editingVideo.resource_name || 'Vídeo'} (cortado)`,
-                      tamanho_bytes: convertedBlob.size,
+                      nome: `${editingVideo.resource_name || 'Vídeo'} (${withAudio ? 'cortado' : 'cortado sem áudio'})`,
+                      tamanho_bytes: finalBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'galeria-trimmed',
                     });
-                    toast.success('✅ Vídeo cortado salvo na galeria!');
+                    toast.success(`✅ Vídeo cortado salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
                     loadContent();
                   } catch (err: any) {
                     toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
@@ -720,8 +721,8 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                     setIsSavingTrimmed(false);
                   }
                 }}
-                onSaveOriginal={() => {
-                  toast.success('Vídeo original mantido');
+                onSaveOriginal={(withAudio) => {
+                  toast.success(withAudio ? 'Vídeo original mantido' : 'Escolha "Salvar Cortado > Sem áudio" para gerar uma versão sem áudio.');
                   setEditingVideo(null);
                 }}
               />

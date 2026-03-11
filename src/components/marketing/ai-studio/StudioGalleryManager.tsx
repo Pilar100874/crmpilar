@@ -730,15 +730,16 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               <VideoTrimmer
                 videoUrl={editItem.image_url}
                 isSaving={isSavingTrimmed}
-                onSaveTrimmed={async (blob, startTime, endTime) => {
+                onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                   setIsSavingTrimmed(true);
                   try {
-                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
-                    const fileName = `trimmed_${Date.now()}.mp4`;
+                    const mp4Blob = await convertVideoToWhatsappMp4(blob);
+                    const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                    const fileName = `trimmed_${withAudio ? 'audio' : 'sem-audio'}_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
+                      .upload(path, finalBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
