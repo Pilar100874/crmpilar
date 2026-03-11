@@ -49,6 +49,8 @@ const LAYERS: Layer[] = [
     id: 'contentType',
     title: 'Tipo de Conteúdo',
     emoji: '🎬',
+    icon: Play,
+    iconColor: 'from-violet-500 to-purple-600',
     description: 'Escolha entre vídeo ou imagem',
     required: true,
     options: [
@@ -60,6 +62,8 @@ const LAYERS: Layer[] = [
     id: 'videoModel',
     title: 'Modelo de IA',
     emoji: '🤖',
+    icon: Bot,
+    iconColor: 'from-blue-500 to-cyan-500',
     description: 'Selecione o modelo de vídeo',
     required: true,
     visibleWhen: (s) => s.contentType?.includes('video'),
@@ -79,6 +83,8 @@ const LAYERS: Layer[] = [
     id: 'imageModel',
     title: 'Modelo de IA',
     emoji: '🤖',
+    icon: Bot,
+    iconColor: 'from-blue-500 to-cyan-500',
     description: 'Selecione o modelo de imagem',
     required: true,
     visibleWhen: (s) => s.contentType?.includes('image'),
@@ -94,6 +100,8 @@ const LAYERS: Layer[] = [
     id: 'visualStyle',
     title: 'Estilo Visual',
     emoji: '🎨',
+    icon: Palette,
+    iconColor: 'from-pink-500 to-rose-500',
     description: 'Defina a estética do conteúdo',
     options: [
       { id: 'cinematic', label: 'Cinematográfico', emoji: '🎬' },
@@ -114,6 +122,8 @@ const LAYERS: Layer[] = [
     id: 'platform',
     title: 'Plataforma de Publicação',
     emoji: '📲',
+    icon: Smartphone,
+    iconColor: 'from-green-500 to-emerald-500',
     description: 'Onde o conteúdo será publicado',
     options: [
       { id: 'tiktok', label: 'TikTok', emoji: '🎵' },
@@ -130,6 +140,8 @@ const LAYERS: Layer[] = [
     id: 'referenceBlocks',
     title: 'Blocos de Referência',
     emoji: '🧩',
+    icon: Puzzle,
+    iconColor: 'from-amber-500 to-orange-500',
     description: 'Selecione os blocos que deseja inserir no workflow (múltipla seleção)',
     multiple: true,
     options: [
@@ -149,6 +161,8 @@ const LAYERS: Layer[] = [
     id: 'campaignType',
     title: 'Tipo de Campanha',
     emoji: '🎯',
+    icon: Target,
+    iconColor: 'from-red-500 to-rose-500',
     description: 'Formato da narrativa publicitária',
     options: [
       { id: 'showcase', label: 'Vitrine de Produto', emoji: '✨' },
@@ -167,6 +181,8 @@ const LAYERS: Layer[] = [
     id: 'productCategory',
     title: 'Categoria de Produto',
     emoji: '🏷️',
+    icon: Tag,
+    iconColor: 'from-teal-500 to-cyan-500',
     description: 'Tipo de produto em destaque',
     options: [
       { id: 'bobinas-papel', label: 'Bobinas de Papel', emoji: '🧻' },
@@ -204,6 +220,8 @@ const LAYERS: Layer[] = [
     id: 'cameraStyle',
     title: 'Estilo de Câmera',
     emoji: '📹',
+    icon: Camera,
+    iconColor: 'from-indigo-500 to-violet-500',
     description: 'Movimento e enquadramento',
     visibleWhen: (s) => s.contentType?.includes('video'),
     options: [
@@ -221,6 +239,8 @@ const LAYERS: Layer[] = [
     id: 'lighting',
     title: 'Estilo de Iluminação',
     emoji: '💡',
+    icon: Sun,
+    iconColor: 'from-yellow-500 to-amber-500',
     description: 'Tom e atmosfera da luz',
     options: [
       { id: 'natural', label: 'Luz Natural', emoji: '☀️' },
@@ -236,6 +256,8 @@ const LAYERS: Layer[] = [
     id: 'energy',
     title: 'Energia do Conteúdo',
     emoji: '⚡',
+    icon: Zap,
+    iconColor: 'from-orange-500 to-red-500',
     description: 'Ritmo e sensação geral',
     options: [
       { id: 'high-energy', label: 'Alta Energia', emoji: '🔥' },
@@ -250,6 +272,8 @@ const LAYERS: Layer[] = [
     id: 'orientation',
     title: 'Orientação do Conteúdo',
     emoji: '📐',
+    icon: RectangleHorizontal,
+    iconColor: 'from-sky-500 to-blue-500',
     filterOptions: (options, selections) => {
       const platform = selections.platform?.[0];
       if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
@@ -284,6 +308,8 @@ const LAYERS: Layer[] = [
     id: 'marketingGoal',
     title: 'Objetivo de Marketing',
     emoji: '🎯',
+    icon: Crosshair,
+    iconColor: 'from-fuchsia-500 to-pink-500',
     description: 'Defina o objetivo do anúncio',
     options: [
       { id: 'product-awareness', label: 'Conhecimento do Produto', emoji: '👁️' },
@@ -302,6 +328,8 @@ const LAYERS: Layer[] = [
     id: 'hookStyle',
     title: 'Estilo de Gancho',
     emoji: '🪝',
+    icon: Anchor,
+    iconColor: 'from-lime-500 to-green-500',
     description: 'Tipo de abertura para capturar atenção',
     options: [
       { id: 'pattern-interrupt', label: 'Quebra de Padrão', emoji: '⚡' },
@@ -318,6 +346,8 @@ const LAYERS: Layer[] = [
     id: 'creativeFormat',
     title: 'Formato Criativo',
     emoji: '🎞️',
+    icon: Tv,
+    iconColor: 'from-slate-500 to-zinc-600',
     description: 'Estrutura criativa do conteúdo',
     options: [
       { id: 'ugc-ad', label: 'Anúncio UGC', emoji: '📱' },
