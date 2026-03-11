@@ -2027,7 +2027,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           className="bg-background rounded-lg border p-3 space-y-2"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
+                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                               {i + 1}
                             </div>
                             <input
@@ -2035,6 +2035,16 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                               value={scene.title}
                               onChange={(e) => handleUpdateScene(i, 'title', e.target.value)}
                             />
+                            {currentScenes.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive/50 hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                onClick={() => handleRemoveScene(i)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                           <Textarea
                             value={scene.description}
