@@ -229,18 +229,25 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     window.open(item.content_url, '_blank');
   };
 
-  const handleDownload = useCallback(async (item: MarketingContentItem) => {
+  const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
     try {
       const response = await fetch(item.content_url);
       const blob = await response.blob();
       const isVideo = item.content_type === 'video';
       const ext = isVideo ? 'mp4' : (item.content_type === 'audio' ? 'mp3' : 'png');
-      const fileName = `${item.resource_name || 'download'}.${ext}`;
+      const suffix = isVideo && !withAudio ? '_sem-audio' : '';
+      const fileName = `${item.resource_name || 'download'}${suffix}.${ext}`;
 
-      const downloadBlob = isVideo
-        ? await convertVideoToWhatsappMp4(blob)
-        : (item.content_type === 'audio' ? new Blob([blob], { type: 'audio/mpeg' }) : blob);
+      let downloadBlob: Blob;
+      if (isVideo) {
+        const mp4Blob = await convertVideoToWhatsappMp4(blob);
+        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+      } else if (item.content_type === 'audio') {
+        downloadBlob = new Blob([blob], { type: 'audio/mpeg' });
+      } else {
+        downloadBlob = blob;
+      }
 
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
@@ -252,7 +259,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
+      toast.error('Não foi possível baixar o arquivo.');
       const a = document.createElement('a');
       a.href = item.content_url;
       a.download = item.resource_name || 'download';
