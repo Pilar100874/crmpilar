@@ -40,7 +40,8 @@ export const GALLERY_CATEGORIES = [
 export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];
 
 // Helper to detect if URL is a video
-function isVideoUrl(url: string): boolean {
+function isVideoUrl(url: string, tipo?: string): boolean {
+  if (tipo === 'video') return true;
   const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
   const lower = url.toLowerCase().split('?')[0];
   return videoExts.some(ext => lower.endsWith(ext)) || lower.includes('marketing-videos') || lower.includes('/video');
