@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Play, Check, Package, Users, Search, Video, Image, Plus, Loader2, Sparkles, X, Save } from 'lucide-react';
+import { Copy, Play, Check, Package, Users, Search, Video, Image, Plus, Loader2, Sparkles, X, Save, Trash2, CopyPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -361,12 +362,29 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
     toast({ title: 'Copiado!', description: 'Prompt copiado para a área de transferência.' });
   };
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const handleDeleteCustom = (id: string) => {
     const updated = allPresets.filter(p => p.id !== id);
     setAllPresets(updated);
     saveCustomPresets(updated);
     setSelectedId(null);
+    setDeleteConfirmId(null);
     toast({ title: 'Removido', description: 'Prompt removido.' });
+  };
+
+  const handleDuplicatePreset = (preset: PromptPreset) => {
+    const copy: PromptPreset = {
+      ...preset,
+      id: `custom-${Date.now()}`,
+      name: `${preset.name} (cópia)`,
+      isCustom: true,
+    };
+    const updated = [...allPresets, copy];
+    setAllPresets(updated);
+    saveCustomPresets(updated);
+    setSelectedId(copy.id);
+    toast({ title: 'Duplicado!', description: `Prompt "${copy.name}" criado.` });
   };
 
   const handleSaveCustom = (preset: PromptPreset) => {
@@ -573,8 +591,11 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
                 <Sparkles className="h-3.5 w-3.5" /> Editar
               </Button>
-              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => handleDeleteCustom(selectedPreset.id)}>
-                <X className="h-3.5 w-3.5" />
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleDuplicatePreset(selectedPreset)}>
+                <CopyPlus className="h-3.5 w-3.5" /> Duplicar
+              </Button>
+              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => setDeleteConfirmId(selectedPreset.id)}>
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
                 <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
@@ -594,6 +615,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
         defaultCategory={activeCategory}
         editingPreset={editingPreset}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir prompt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este prompt? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirmId && handleDeleteCustom(deleteConfirmId)}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
