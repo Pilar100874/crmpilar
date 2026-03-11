@@ -807,6 +807,63 @@ const AICreativeStudioInner: React.FC = () => {
         { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
         { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
+    } else if (preset.variationPrompts && preset.variationPrompts.length > 0) {
+      // Create 5 parallel chains — one for each variation
+      const variationCount = preset.variationPrompts.length;
+      const rowHeight = 300;
+      const startY = 50;
+
+      preset.variationPrompts.forEach((varPrompt, vIdx) => {
+        const yPos = startY + vIdx * rowHeight;
+        const inputNode: StudioNode = {
+          id: `textInput_v${vIdx}_${ts}`,
+          type: 'studioNode',
+          position: { x: 100, y: yPos },
+          data: { label: `Variação ${vIdx + 1}`, type: 'textInput', config: { text: varPrompt, presetLayerSelections: preset.layerSelections, presetName: `${preset.name} — V${vIdx + 1}` } },
+        };
+        const processNode: StudioNode = {
+          id: `${targetType}_v${vIdx}_${ts}`,
+          type: 'studioNode',
+          position: { x: 600, y: yPos },
+          data: { label: `${meta?.label || preset.name} V${vIdx + 1}`, type: targetType, config: { ...finalConfig } },
+        };
+        newNodes.push(inputNode, processNode);
+        newEdges.push(
+          { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        );
+
+        // Add reference blocks for each variation
+        if (targetType === 'imageGen' || targetType === 'videoGen') {
+          const refBlocks = preset.referenceBlocks || [];
+          const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
+            'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
+            'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
+            'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
+            'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
+            'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
+            'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
+            'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
+            'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
+            'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
+            'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
+          };
+          refBlocks.forEach((blockType, idx) => {
+            const bm = blockMeta[blockType];
+            if (!bm) return;
+            const nodeMeta = getNodeMeta(bm.type as any);
+            const refNode: StudioNode = {
+              id: `${bm.type}_v${vIdx}_${ts}_${idx}`,
+              type: 'studioNode',
+              position: { x: 100, y: yPos + 120 + idx * 100 },
+              data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            };
+            newNodes.push(refNode);
+            newEdges.push(
+              { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+            );
+          });
+        }
+      });
     } else {
       const inputNode: StudioNode = {
         id: `textInput_${ts}`,
@@ -841,17 +898,15 @@ const AICreativeStudioInner: React.FC = () => {
           'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
         };
 
-        const blocksToInsert = refBlocks;
-
-        blocksToInsert.forEach((blockType, idx) => {
-          const meta = blockMeta[blockType];
-          if (!meta) return;
-          const nodeMeta = getNodeMeta(meta.type as any);
+        refBlocks.forEach((blockType, idx) => {
+          const bm = blockMeta[blockType];
+          if (!bm) return;
+          const nodeMeta = getNodeMeta(bm.type as any);
           const refNode: StudioNode = {
-            id: `${meta.type}_${ts}_${idx}`,
+            id: `${bm.type}_${ts}_${idx}`,
             type: 'studioNode',
             position: { x: 100, y: 400 + idx * 200 },
-            data: { label: meta.labelPrefix, type: meta.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
           };
           newNodes.push(refNode);
           newEdges.push(
