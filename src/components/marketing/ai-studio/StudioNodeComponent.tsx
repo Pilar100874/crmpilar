@@ -575,8 +575,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     try {
       const blob = await downloadAsBlob(videoUrl);
       
-      const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.${ext}`;
+      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;
 
       const { error: uploadErr } = await supabase.storage
