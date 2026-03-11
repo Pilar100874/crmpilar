@@ -709,14 +709,22 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       if (error) throw error;
       const imageUrl = data?.imageUrl || data?.result;
       if (imageUrl) {
-        setGeneratedImage(imageUrl);
-        toast({ title: 'Imagem gerada!', description: 'Imagem de referência criada automaticamente.' });
+        // Add cache-buster for storage URLs to force refresh
+        const bustUrl = imageUrl.includes('?') ? `${imageUrl}&_t=${Date.now()}` : `${imageUrl}?_t=${Date.now()}`;
+        setGeneratedImage(bustUrl);
+        toast({ title: 'Imagem gerada!', description: 'Imagem de referência atualizada.' });
       } else {
-        throw new Error('No image returned');
+        console.warn('No image in response:', JSON.stringify(data).slice(0, 300));
+        toast({ title: 'Imagem não retornada', description: 'O modelo não gerou uma imagem. Tente reformular o prompt.', variant: 'destructive' });
       }
     } catch (err: any) {
       console.error('Failed to generate reference image:', err);
-      toast({ title: 'Erro ao gerar imagem', description: err?.message || 'Tente novamente.', variant: 'destructive' });
+      const msg = err?.message || 'Tente novamente.';
+      if (msg.includes('429') || msg.includes('quota')) {
+        toast({ title: 'Limite de requisições', description: 'Aguarde alguns segundos e tente novamente.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Erro ao gerar imagem', description: msg, variant: 'destructive' });
+      }
     } finally {
       setIsGenerating(false);
     }
