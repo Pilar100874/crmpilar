@@ -164,7 +164,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
         img.scale(scale);
 
         fabricCanvas.add(img);
-        fabricCanvas.setActiveObject(img);
+        fabricCanvas.discardActiveObject();
         fabricCanvas.renderAll();
 
         galleryImageLoadedRef.current = true;
