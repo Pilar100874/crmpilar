@@ -148,7 +148,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         }],
         parameters: {
           aspectRatio: params.aspectRatio || "16:9",
-          durationSeconds: params.duration || 8,
+          durationSeconds: Math.min(8, Math.max(4, Math.round(Number(params.duration) || 6))),
           ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
         },
       }),
