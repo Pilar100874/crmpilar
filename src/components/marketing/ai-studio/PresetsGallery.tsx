@@ -1203,7 +1203,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
         {/* Right — Modules */}
         <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={(val) => {
+              setActiveTab(val);
+              if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
+                const v = generateVariations(selections, negativePromptText);
+                setVariations(v);
+                toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
+              }
+            }} className="flex flex-col flex-1 overflow-hidden">
             <div className="border-b px-3 pt-2">
               <TabsList className={`h-8 w-full grid bg-muted/50 ${selections.contentType?.includes('video') ? 'grid-cols-5' : 'grid-cols-3'}`}>
                 <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
