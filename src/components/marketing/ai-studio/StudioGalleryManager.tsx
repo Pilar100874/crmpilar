@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
+import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
 
 export interface GalleryImage {
   id: string;
@@ -291,13 +292,13 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     try {
       const response = await fetch(img.image_url);
       const originalBlob = await response.blob();
-      const isVideo = (img as any).mime_type?.startsWith('video') || img.image_url?.includes('/marketing-videos/') || img.nome?.endsWith('.mp4') || img.nome?.endsWith('.webm');
-      const isAudio = (img as any).mime_type?.startsWith('audio') || img.image_url?.includes('/marketing-audio/');
-      
+      const isVideo = img.image_url?.includes('/marketing-videos/') || img.nome?.endsWith('.mp4') || img.nome?.endsWith('.webm');
+      const isAudio = img.image_url?.includes('/marketing-audio/');
+
       let downloadBlob: Blob;
       let ext: string;
       if (isVideo) {
-        downloadBlob = new Blob([originalBlob], { type: 'video/mp4' });
+        downloadBlob = await convertVideoToWhatsappMp4(originalBlob);
         ext = '.mp4';
       } else if (isAudio) {
         downloadBlob = new Blob([originalBlob], { type: 'audio/mpeg' });
@@ -306,7 +307,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         downloadBlob = originalBlob;
         ext = '.png';
       }
-      
+
       const baseName = (img.nome || 'download').replace(/\.\w+$/, '');
       const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
@@ -318,6 +319,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
       console.error('Download error:', err);
+      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
       const a = document.createElement('a');
       a.href = img.image_url;
       a.download = img.nome || 'download';
@@ -706,11 +708,12 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 onSaveTrimmed={async (blob, startTime, endTime) => {
                   setIsSavingTrimmed(true);
                   try {
+                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
                     const fileName = `trimmed_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, blob, { contentType: 'video/mp4' });
+                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -722,8 +725,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                       storage_path: path,
                       nome: `${editItem.nome || 'Vídeo'} (cortado)`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: blob.size,
-                      mime_type: blob.type || 'video/mp4',
+                      tamanho_bytes: convertedBlob.size,
+                      mime_type: 'video/mp4',
                       origem: 'studio-trimmed',
                     });
                     toast.success('✅ Vídeo cortado salvo na galeria!');

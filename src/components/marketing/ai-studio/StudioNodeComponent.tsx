@@ -17,6 +17,7 @@ import {
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
   Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
+import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
 
 const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,
@@ -574,13 +575,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     setIsSavingToGallery(true);
     try {
       const blob = await downloadAsBlob(videoUrl);
-      
+      const convertedBlob = await convertVideoToWhatsappMp4(blob);
+
       const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, blob, { contentType: 'video/mp4' });
+        .upload(storagePath, convertedBlob, { contentType: 'video/mp4' });
       if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
@@ -596,7 +598,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           public_url: publicUrl,
           nome: `AI Studio Vídeo - ${nodeData.label}`,
           descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
-          tamanho_bytes: blob.size,
+          tamanho_bytes: convertedBlob.size,
           mime_type: 'video/mp4',
           origem: 'ai_studio',
         });
