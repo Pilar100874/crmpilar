@@ -46,6 +46,7 @@ interface MarketingContentItem {
   channels: string[] | null;
   status: string | null;
   created_at: string;
+  _source?: 'marketing_content' | 'media_gallery';
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
