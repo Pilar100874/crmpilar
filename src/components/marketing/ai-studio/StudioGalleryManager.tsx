@@ -290,7 +290,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     }
   }, [estabelecimentoId, activeCategory, fetchImages]);
 
-  const handleDownload = useCallback(async (img: GalleryImage) => {
+  const handleDownload = useCallback(async (img: GalleryImage, withAudio: boolean = true) => {
     try {
       const response = await fetch(img.image_url);
       const originalBlob = await response.blob();
@@ -300,8 +300,9 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       let downloadBlob: Blob;
       let ext: string;
       if (isVideo) {
-        downloadBlob = await convertVideoToWhatsappMp4(originalBlob);
-        ext = '.mp4';
+        const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+        downloadBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+        ext = withAudio ? '.mp4' : '_sem-audio.mp4';
       } else if (isAudio) {
         downloadBlob = new Blob([originalBlob], { type: 'audio/mpeg' });
         ext = '.mp3';
@@ -321,7 +322,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível converter para MP4 compatível com WhatsApp.');
+      toast.error('Não foi possível baixar o arquivo.');
       const a = document.createElement('a');
       a.href = img.image_url;
       a.download = img.nome || 'download';
