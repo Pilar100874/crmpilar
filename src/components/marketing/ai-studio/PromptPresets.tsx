@@ -279,7 +279,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-studio-brand', name: 'Brand Ambassador', mediaType: 'image', category: 'influencer',
     tags: ['studio', 'brand', 'commercial'], image: imgInfStudio,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryLogo'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer', 'galleryLogo'], isCustom: true,
     prompt: `Professional studio portrait of a brand ambassador with the product. Clean seamless backdrop with multi-point lighting setup. Confident expression and natural smile. The product prominently displayed. Commercial advertising quality with perfect color balance. Professional retouching with natural skin tones preserved. Camera: Phase One IQ4, 120mm lens, controlled lighting.${NEGATIVE_BLOCK}`,
   },
   {
