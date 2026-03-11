@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { 
   Images, Upload, Trash2, Search, X, Plus, Copy,
   User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen,
-  ZoomIn, Download, Play, Pause, Scissors
+  ZoomIn, Download, Play, Pause, Scissors, Folder, FolderPlus
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
@@ -23,6 +23,8 @@ export interface GalleryImage {
   tags: string[] | null;
   created_at: string;
   tipo?: string;
+  pasta?: string | null;
+  _source?: string;
 }
 
 export const GALLERY_CATEGORIES = [
@@ -39,7 +41,6 @@ export const GALLERY_CATEGORIES = [
 
 export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];
 
-// Helper to detect if URL is a video
 function isVideoUrl(url: string, tipo?: string): boolean {
   if (tipo === 'video') return true;
   const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
@@ -70,6 +71,38 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
+  // Folder system state
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [isCreatingFolderInline, setIsCreatingFolderInline] = useState(false);
+  const [createFolderName, setCreateFolderName] = useState('');
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
+  const [manualFolders, setManualFolders] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`gallery_folders_${localStorage.getItem('estabelecimentoId') || ''}_${localStorage.getItem('__gallery_active_cat') || 'influencer'}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  // Reload manual folders when category changes
+  useEffect(() => {
+    if (activeCategory === 'salvas') {
+      setManualFolders([]);
+      return;
+    }
+    try {
+      const stored = localStorage.getItem(`gallery_folders_${estabelecimentoId}_${activeCategory}`);
+      setManualFolders(stored ? JSON.parse(stored) : []);
+    } catch { setManualFolders([]); }
+    setActiveFolder(null);
+  }, [activeCategory, estabelecimentoId]);
+
+  const saveManualFolders = useCallback((newFolders: string[]) => {
+    setManualFolders(newFolders);
+    localStorage.setItem(`gallery_folders_${estabelecimentoId}_${activeCategory}`, JSON.stringify(newFolders));
+  }, [estabelecimentoId, activeCategory]);
+
   const fetchImages = useCallback(async () => {
     if (!estabelecimentoId) return;
     setLoading(true);
@@ -93,6 +126,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           tags: null,
           created_at: item.created_at,
           tipo: item.tipo,
+          pasta: null,
+          _source: 'media_gallery',
         })));
       }
     } else {
@@ -102,7 +137,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('categoria', activeCategory)
         .order('created_at', { ascending: false });
-      if (!error) setImages((data as GalleryImage[]) || []);
+      if (!error) setImages((data as any[] || []).map(item => ({ ...item, _source: 'studio_gallery' })));
     }
     setLoading(false);
   }, [estabelecimentoId, activeCategory]);
@@ -110,6 +145,25 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   useEffect(() => {
     if (open) fetchImages();
   }, [open, fetchImages]);
+
+  // Derive folders from images + manual folders
+  const folders = activeCategory !== 'salvas' 
+    ? Array.from(new Set([
+        ...images.map(i => i.pasta).filter(Boolean) as string[],
+        ...manualFolders
+      ]))
+    : [];
+
+  // Filter images by active folder
+  const folderFilteredImages = activeCategory !== 'salvas'
+    ? (activeFolder === null
+        ? images.filter(i => !i.pasta)
+        : images.filter(i => i.pasta === activeFolder))
+    : images;
+
+  const filtered = folderFilteredImages.filter(img => 
+    !search || img.nome?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleUpload = useCallback(async (files: FileList) => {
     if (!estabelecimentoId || files.length === 0) return;
@@ -142,7 +196,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           nome: file.name.replace(/\.[^.]+$/, ''),
           image_url: publicUrl,
           storage_path: path,
-        });
+          pasta: activeFolder,
+        } as any);
 
       if (dbError) {
         toast.error(`Erro ao salvar ${file.name}`);
@@ -155,7 +210,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     toast.success(`${files.length} arquivo(s) enviado(s)!`);
     fetchImages();
     setUploading(false);
-  }, [estabelecimentoId, activeCategory, fetchImages]);
+  }, [estabelecimentoId, activeCategory, activeFolder, fetchImages]);
 
   const handleDelete = useCallback(async (img: GalleryImage) => {
     try {
@@ -164,19 +219,13 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           await supabase.storage.from('media_gallery').remove([img.storage_path]);
         }
         const { error } = await supabase.from('media_gallery').delete().eq('id', img.id);
-        if (error) {
-          toast.error('Erro ao remover imagem');
-          return;
-        }
+        if (error) { toast.error('Erro ao remover imagem'); return; }
       } else {
         if (img.storage_path) {
           await supabase.storage.from('studio-gallery').remove([img.storage_path]);
         }
         const { error } = await supabase.from('studio_gallery_images').delete().eq('id', img.id);
-        if (error) {
-          toast.error('Erro ao remover imagem');
-          return;
-        }
+        if (error) { toast.error('Erro ao remover imagem'); return; }
       }
       toast.success('Item removido');
       if (previewItem?.id === img.id) setPreviewItem(null);
@@ -193,19 +242,15 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     if (!estabelecimentoId) return;
     try {
       if (activeCategory === 'salvas') {
-        // Duplicate in media_gallery — copy storage file + insert new row
         const newPath = img.storage_path 
           ? img.storage_path.replace(/(\.[^.]+)$/, `_copy_${Date.now()}$1`)
           : null;
-        
         if (img.storage_path && newPath) {
           await supabase.storage.from('media_gallery').copy(img.storage_path, newPath);
         }
-
         const { data: { publicUrl } } = newPath
           ? supabase.storage.from('media_gallery').getPublicUrl(newPath)
           : { data: { publicUrl: img.image_url } };
-
         await supabase.from('media_gallery').insert({
           estabelecimento_id: estabelecimentoId,
           nome: `${img.nome || 'Item'} (cópia)`,
@@ -215,19 +260,15 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           tipo: isVideoUrl(img.image_url, img.tipo) ? 'video' : 'imagem',
         });
       } else {
-        // Duplicate in studio_gallery_images
         const newPath = img.storage_path 
           ? img.storage_path.replace(/(\.[^.]+)$/, `_copy_${Date.now()}$1`)
           : null;
-
         if (img.storage_path && newPath) {
           await supabase.storage.from('studio-gallery').copy(img.storage_path, newPath);
         }
-
         const { data: { publicUrl } } = newPath
           ? supabase.storage.from('studio-gallery').getPublicUrl(newPath)
           : { data: { publicUrl: img.image_url } };
-
         await supabase.from('studio_gallery_images').insert({
           estabelecimento_id: estabelecimentoId,
           categoria: activeCategory,
@@ -256,9 +297,53 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     document.body.removeChild(a);
   }, []);
 
-  const filtered = images.filter(img => 
-    !search || img.nome?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Folder handlers
+  const handleMoveToFolder = useCallback(async (itemId: string, folder: string | null) => {
+    const { error } = await supabase
+      .from('studio_gallery_images')
+      .update({ pasta: folder } as any)
+      .eq('id', itemId);
+    if (error) {
+      toast.error('Erro ao mover item');
+      return;
+    }
+    toast.success(folder ? `Movido para "${folder}"` : 'Movido para raiz');
+    fetchImages();
+  }, [fetchImages]);
+
+  const handleFolderDrop = useCallback(async (folder: string | null) => {
+    if (!draggingItemId) return;
+    setDragOverFolder(null);
+    await handleMoveToFolder(draggingItemId, folder);
+    setDraggingItemId(null);
+  }, [draggingItemId, handleMoveToFolder]);
+
+  const handleCreateFolder = useCallback(() => {
+    const folderName = createFolderName.trim();
+    if (!folderName) return;
+    if (folders.includes(folderName)) {
+      toast.info('Pasta já existe');
+    } else {
+      saveManualFolders([...manualFolders, folderName]);
+      setActiveFolder(folderName);
+      toast.success(`Pasta "${folderName}" criada!`);
+    }
+    setIsCreatingFolderInline(false);
+    setCreateFolderName('');
+  }, [createFolderName, folders, manualFolders, saveManualFolders]);
+
+  const handleDeleteFolder = useCallback(async (folder: string) => {
+    // Move all items in folder to root
+    const itemsInFolder = images.filter(i => i.pasta === folder);
+    for (const item of itemsInFolder) {
+      await supabase.from('studio_gallery_images').update({ pasta: null } as any).eq('id', item.id);
+    }
+    saveManualFolders(manualFolders.filter(f => f !== folder));
+    toast.success(`Pasta "${folder}" excluída. Itens movidos para raiz.`);
+    setDeleteFolderConfirm(null);
+    if (activeFolder === folder) setActiveFolder(null);
+    fetchImages();
+  }, [images, activeFolder, fetchImages, manualFolders, saveManualFolders]);
 
   const activeCat = GALLERY_CATEGORIES.find(c => c.id === activeCategory)!;
 
@@ -296,7 +381,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
 
         <div className="flex flex-1 min-h-0">
-          {/* Sidebar - Categories */}
+          {/* Sidebar - Categories + Folders */}
           <div className="w-56 border-r border-border p-3 space-y-1 overflow-y-auto shrink-0">
             {GALLERY_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
@@ -304,7 +389,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
+                  onClick={() => { setActiveCategory(cat.id); setActiveFolder(null); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-sm ${
                     isActive 
                       ? 'bg-primary/10 text-primary font-medium' 
@@ -316,6 +401,99 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 </button>
               );
             })}
+
+            {/* Folder section - only for non-salvas categories */}
+            {activeCategory !== 'salvas' && (
+              <>
+                <div className="border-t border-border my-2 pt-2">
+                  <div className="flex items-center justify-between px-2 mb-1">
+                    <span className="text-[10px] font-medium uppercase text-muted-foreground tracking-wider">Pastas</span>
+                    <button
+                      onClick={() => { setIsCreatingFolderInline(true); setCreateFolderName(''); }}
+                      className="p-1 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Nova Pasta"
+                    >
+                      <FolderPlus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Inline folder creation */}
+                  {isCreatingFolderInline && (
+                    <div className="flex flex-col gap-1.5 p-2 bg-card/60 border border-border rounded-xl mb-1">
+                      <Input
+                        value={createFolderName}
+                        onChange={(e) => setCreateFolderName(e.target.value)}
+                        placeholder="Nome da pasta..."
+                        className="h-7 text-xs"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleCreateFolder();
+                          if (e.key === 'Escape') { setIsCreatingFolderInline(false); setCreateFolderName(''); }
+                        }}
+                      />
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="h-6 text-[10px] flex-1" onClick={() => { setIsCreatingFolderInline(false); setCreateFolderName(''); }}>
+                          Cancelar
+                        </Button>
+                        <Button size="sm" className="h-6 text-[10px] flex-1 gap-1" onClick={handleCreateFolder} disabled={!createFolderName.trim()}>
+                          <FolderPlus className="h-3 w-3" />
+                          Criar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Root folder */}
+                  <button
+                    onClick={() => setActiveFolder(null)}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverFolder('__root__'); }}
+                    onDragLeave={() => setDragOverFolder(null)}
+                    onDrop={(e) => { e.preventDefault(); handleFolderDrop(null); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all text-xs ${
+                      activeFolder === null
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    } ${dragOverFolder === '__root__' ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
+                  >
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    <span className="truncate">Raiz</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">
+                      {images.filter(i => !i.pasta).length}
+                    </span>
+                  </button>
+
+                  {/* Custom folders */}
+                  {folders.map((folder) => (
+                    <div key={folder} className="group relative">
+                      <button
+                        onClick={() => setActiveFolder(folder)}
+                        onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
+                        onDragLeave={() => setDragOverFolder(null)}
+                        onDrop={(e) => { e.preventDefault(); handleFolderDrop(folder); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all text-xs ${
+                          activeFolder === folder
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        } ${dragOverFolder === folder ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
+                      >
+                        <Folder className="h-3.5 w-3.5" />
+                        <span className="truncate flex-1">{folder}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {images.filter(i => i.pasta === folder).length}
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteFolderConfirm(folder); }}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-all"
+                        title="Excluir pasta"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Content */}
@@ -326,6 +504,12 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 {React.createElement(activeCat.icon, { className: 'h-3 w-3' })}
                 {activeCat.label}
               </div>
+              {activeFolder && (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                  <Folder className="h-3 w-3" />
+                  {activeFolder}
+                </div>
+              )}
               <div className="relative flex-1 max-w-xs">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
@@ -365,8 +549,10 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   <div className="p-4 rounded-2xl bg-muted/30 mb-4">
                     {React.createElement(activeCat.icon, { className: 'h-8 w-8 text-muted-foreground/40' })}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">Nenhum item em "{activeCat.label}"</p>
-                  <p className="text-xs text-muted-foreground/60">{activeCat.desc}</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {activeFolder ? `Nenhum item na pasta "${activeFolder}"` : `Nenhum item em "${activeCat.label}"`}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60">{activeFolder ? 'Arraste itens para cá ou adicione novos' : activeCat.desc}</p>
                   {activeCategory !== 'salvas' && (
                     <label className="cursor-pointer mt-4">
                       <input
@@ -389,8 +575,23 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {filtered.map((img) => {
                     const isVideo = isVideoUrl(img.image_url, img.tipo);
+                    const isDraggable = activeCategory !== 'salvas';
                     return (
-                      <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square cursor-pointer" onClick={() => setPreviewItem(img)}>
+                      <div
+                        key={img.id}
+                        className={`group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square cursor-pointer ${
+                          draggingItemId === img.id ? 'opacity-50 ring-2 ring-primary' : ''
+                        }`}
+                        onClick={() => setPreviewItem(img)}
+                        draggable={isDraggable}
+                        onDragStart={(e) => {
+                          if (!isDraggable) return;
+                          setDraggingItemId(img.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          e.dataTransfer.setData('text/plain', img.id);
+                        }}
+                        onDragEnd={() => setDraggingItemId(null)}
+                      >
                         {isVideo ? (
                           <div className="w-full h-full flex items-center justify-center bg-black/80">
                             <Play className="h-8 w-8 text-white/70" />
@@ -440,7 +641,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                             </div>
                             <button
                               onClick={(e) => { e.stopPropagation(); setDeleteConfirm(img); }}
-                              className="p-1.5 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-white transition-colors shrink-0"
+                              className="p-1.5 rounded-lg bg-destructive/30 hover:bg-destructive/50 text-white transition-colors shrink-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -456,7 +657,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
       </motion.div>
 
-      {/* Video Editor Dialog - opens via edit button */}
+      {/* Video Editor Dialog */}
       {editItem && isVideoUrl(editItem.image_url, editItem.tipo) && (
         <Dialog open={true} onOpenChange={(open) => { if (!open) setEditItem(null); }}>
           <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
@@ -513,7 +714,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </Dialog>
       )}
 
-      {/* Fullscreen Preview Modal (zoom) - images and videos */}
+      {/* Fullscreen Preview Modal */}
       <AnimatePresence>
         {previewItem && (
           <motion.div
@@ -531,7 +732,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Preview actions bar - overlaid on top */}
+              {/* Preview actions bar */}
               <div className="absolute top-3 right-3 flex items-center gap-2 z-[210]">
                 {isVideoUrl(previewItem.image_url, previewItem.tipo) && (
                   <Button
@@ -562,7 +763,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-red-500/50 hover:bg-red-500/70 text-white border-0 shadow-lg"
+                  className="gap-1.5 text-xs h-8 rounded-lg bg-destructive/50 hover:bg-destructive/70 text-white border-0 shadow-lg"
                   onClick={() => { setDeleteConfirm(previewItem); }}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Excluir
@@ -586,7 +787,6 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   controlsList="nofullscreen nodownload"
                   disablePictureInPicture
                   onDoubleClick={(e) => e.preventDefault()}
-                  style={{ pointerEvents: 'auto' }}
                 />
               ) : (
                 <img
@@ -604,7 +804,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         )}
       </AnimatePresence>
 
-      {/* Delete confirm */}
+      {/* Delete item confirm */}
       {deleteConfirm && (
         <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
           <AlertDialogContent className="z-[300]" onClick={(e) => e.stopPropagation()}>
@@ -624,6 +824,32 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 }}
               >
                 Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Delete folder confirm */}
+      {deleteFolderConfirm && (
+        <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteFolderConfirm(null); }}>
+          <AlertDialogContent className="z-[300]" onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir pasta "{deleteFolderConfirm}"?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Os itens dentro desta pasta serão movidos para a raiz. Nenhum arquivo será excluído.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteFolderConfirm(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteFolder(deleteFolderConfirm);
+                }}
+              >
+                Excluir Pasta
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
