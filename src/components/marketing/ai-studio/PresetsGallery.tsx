@@ -1425,6 +1425,22 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                                     >
                                       <Pencil className="h-3 w-3" />
                                     </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 opacity-40 hover:opacity-100 text-destructive"
+                                      onClick={() => {
+                                        if (selectedHookText === hook) setSelectedHookText('');
+                                        setViralHooks(prev => {
+                                          const updated = [...prev];
+                                          updated[catIdx] = { ...updated[catIdx], hooks: updated[catIdx].hooks.filter((_, idx) => idx !== i) };
+                                          return updated;
+                                        });
+                                        toast({ title: 'Gancho removido!' });
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
                                   </>
                                 )}
                               </div>
