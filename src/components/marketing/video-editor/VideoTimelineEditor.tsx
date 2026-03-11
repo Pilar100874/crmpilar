@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
@@ -27,10 +27,33 @@ const VideoTimelineEditor: React.FC = () => {
   const { state } = timeline;
   const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media'>('media');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = state.selectedClipIds.length === 1
     ? state.clips.find((c) => c.id === state.selectedClipIds[0])
     : null;
+
+  // Keyboard shortcuts (Delete/Backspace to remove clips)
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't capture if user is typing in an input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const ids = stateRef.current.selectedClipIds;
+        if (ids.length > 0) {
+          timeline.deleteClips(ids);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [timeline]);
 
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
@@ -39,15 +62,24 @@ const VideoTimelineEditor: React.FC = () => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:${String(f).padStart(2, '0')}`;
   };
 
+  // Use refs to avoid stale closure in handleAddClip
+  const tracksRef = useRef(state.tracks);
+  tracksRef.current = state.tracks;
+  const clipsRef = useRef(state.clips);
+  clipsRef.current = state.clips;
+
   const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem) => {
-    const trackId = state.tracks.find((t) => {
+    const tracks = tracksRef.current;
+    const clips = clipsRef.current;
+
+    const trackId = tracks.find((t) => {
       if (type === 'audio') return t.type === 'audio';
       if (type === 'text') return t.type === 'text';
       return t.type === 'video';
     })?.id;
     if (!trackId) return;
 
-    const lastClip = state.clips
+    const lastClip = clips
       .filter((c) => c.trackId === trackId)
       .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
 
@@ -58,7 +90,7 @@ const VideoTimelineEditor: React.FC = () => {
     timeline.addClip({
       trackId,
       type,
-      name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${state.clips.length + 1}`,
+      name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${clips.length + 1}`,
       startTime,
       duration: clipDuration,
       trimStart: 0,
@@ -73,10 +105,10 @@ const VideoTimelineEditor: React.FC = () => {
       w: 100,
       h: 100,
     });
-  }, [state.tracks, state.clips, timeline]);
+  }, [timeline]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] border rounded-xl overflow-hidden bg-background">
+    <div ref={containerRef} className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] border rounded-xl overflow-hidden bg-background" tabIndex={0}>
       {/* Top toolbar */}
       <div className="flex items-center gap-1 px-3 py-2 border-b bg-card/80 backdrop-blur">
         <div className="flex items-center gap-1 mr-4">

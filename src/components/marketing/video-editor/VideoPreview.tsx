@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { TimelineClip, TimelineTrack } from './types';
 
 interface Props {
@@ -21,32 +21,57 @@ const VideoPreview: React.FC<Props> = ({
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
 
-  // Find active clips at current time
-  const activeClips = clips.filter((c) => {
-    const track = tracks.find((t) => t.id === c.trackId);
-    if (!track || !track.visible || track.muted) return false;
-    return currentTime >= c.startTime && currentTime < c.startTime + c.duration;
-  });
+  // Memoize active clips to avoid infinite re-render loops
+  const activeClipIds = useMemo(() => {
+    return clips
+      .filter((c) => {
+        const track = tracks.find((t) => t.id === c.trackId);
+        if (!track || !track.visible || track.muted) return false;
+        return currentTime >= c.startTime && currentTime < c.startTime + c.duration;
+      })
+      .map(c => c.id);
+  }, [clips, tracks, currentTime]);
 
-  const activeVisuals = activeClips.filter((c) => c.type === 'video' || c.type === 'image');
-  const activeTexts = activeClips.filter((c) => c.type === 'text');
+  const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
+  const activeVisuals = useMemo(() => activeClips.filter((c) => c.type === 'video' || c.type === 'image'), [activeClips]);
+  const activeTexts = useMemo(() => activeClips.filter((c) => c.type === 'text'), [activeClips]);
 
-  // Sync video currentTime
+  // Stable key for video sync effect - only re-run when clip IDs or play state change
+  const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
+
+  // Sync video currentTime - use refs to avoid dependency on clips array
+  const clipsRef = useRef(clips);
+  clipsRef.current = clips;
+
   useEffect(() => {
-    activeVisuals.forEach((clip) => {
-      const vid = videoRefs.current[clip.id];
-      if (vid && clip.src && clip.type === 'video') {
+    const ids = activeVideoIds.split(',').filter(Boolean);
+    ids.forEach((clipId) => {
+      const vid = videoRefs.current[clipId];
+      const clip = clipsRef.current.find(c => c.id === clipId);
+      if (vid && clip?.src) {
         const clipTime = currentTime - clip.startTime + (clip.trimStart || 0);
-        if (Math.abs(vid.currentTime - clipTime) > 0.3) {
+        if (Math.abs(vid.currentTime - clipTime) > 0.5) {
           vid.currentTime = clipTime;
         }
-        if (isPlaying && vid.paused) vid.play().catch(() => {});
-        if (!isPlaying && !vid.paused) vid.pause();
       }
     });
-  }, [currentTime, isPlaying, activeVisuals]);
+  }, [currentTime, activeVideoIds]);
 
-  const buildFilter = (clip?: TimelineClip) => {
+  // Separate effect for play/pause to avoid constant toggling
+  useEffect(() => {
+    const ids = activeVideoIds.split(',').filter(Boolean);
+    ids.forEach((clipId) => {
+      const vid = videoRefs.current[clipId];
+      if (!vid) return;
+      if (isPlaying && vid.paused) {
+        vid.play().catch(() => {});
+      } else if (!isPlaying && !vid.paused) {
+        vid.pause();
+      }
+    });
+  }, [isPlaying, activeVideoIds]);
+
+  const buildFilter = useCallback((clip?: TimelineClip) => {
     if (!clip?.filters?.length) return 'none';
     return clip.filters
       .filter((f) => f.enabled)
@@ -64,13 +89,12 @@ const VideoPreview: React.FC<Props> = ({
         }
       })
       .join(' ');
-  };
+  }, []);
 
-  // Drag & resize handlers
   const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize') => {
     e.stopPropagation();
     e.preventDefault();
-    const clip = clips.find(c => c.id === clipId);
+    const clip = clipsRef.current.find(c => c.id === clipId);
     if (!clip || clip.locked) return;
     onSelectClip?.(clipId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -84,7 +108,7 @@ const VideoPreview: React.FC<Props> = ({
       origW: clip.w ?? 100,
       origH: clip.h ?? 100,
     });
-  }, [clips, onSelectClip]);
+  }, [onSelectClip]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragging || !onUpdateClip) return;
@@ -92,13 +116,15 @@ const VideoPreview: React.FC<Props> = ({
     const dy = ((e.clientY - dragging.startY) / CANVAS_H) * 100;
 
     if (dragging.mode === 'move') {
-      const newX = Math.max(-50, Math.min(150, dragging.origX + dx));
-      const newY = Math.max(-50, Math.min(150, dragging.origY + dy));
-      onUpdateClip(dragging.clipId, { x: newX, y: newY });
+      onUpdateClip(dragging.clipId, {
+        x: Math.max(-50, Math.min(150, dragging.origX + dx)),
+        y: Math.max(-50, Math.min(150, dragging.origY + dy)),
+      });
     } else {
-      const newW = Math.max(10, Math.min(200, dragging.origW + dx));
-      const newH = Math.max(10, Math.min(200, dragging.origH + dy));
-      onUpdateClip(dragging.clipId, { w: newW, h: newH });
+      onUpdateClip(dragging.clipId, {
+        w: Math.max(10, Math.min(200, dragging.origW + dx)),
+        h: Math.max(10, Math.min(200, dragging.origH + dy)),
+      });
     }
   }, [dragging, onUpdateClip]);
 
@@ -115,7 +141,6 @@ const VideoPreview: React.FC<Props> = ({
         className="relative rounded-md overflow-hidden"
         style={{ width: CANVAS_W, height: CANVAS_H }}
       >
-        {/* Output area background */}
         <div className="absolute inset-0 bg-black" />
 
         {/* Safe zone border */}
@@ -124,10 +149,8 @@ const VideoPreview: React.FC<Props> = ({
           <span className="absolute top-[3%] left-[5%] text-[8px] text-white/25 font-mono">ÁREA SEGURA</span>
         </div>
 
-        {/* Output area boundary */}
         <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
 
-        {/* Visual clips */}
         {activeVisuals.length > 0 ? (
           activeVisuals.map((clip) => {
             const cx = clip.x ?? 0;
@@ -157,20 +180,18 @@ const VideoPreview: React.FC<Props> = ({
                     <video
                       ref={(el) => { videoRefs.current[clip.id] = el; }}
                       src={clip.src}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain pointer-events-none"
                       muted={clip.muted}
                       playsInline
-                      preload="auto"
+                      preload="metadata"
                     />
                   ) : (
-                    <img src={clip.src} className="w-full h-full object-contain" alt="" draggable={false} />
+                    <img src={clip.src} className="w-full h-full object-contain pointer-events-none" alt="" draggable={false} />
                   )
                 ) : (
                   <div
                     className="w-full h-full flex items-center justify-center"
-                    style={{
-                      background: `linear-gradient(135deg, ${clip.color}40, ${clip.color}20)`,
-                    }}
+                    style={{ background: `linear-gradient(135deg, ${clip.color}40, ${clip.color}20)` }}
                   >
                     <div className="text-center">
                       <span className="text-4xl">🎬</span>
@@ -179,7 +200,6 @@ const VideoPreview: React.FC<Props> = ({
                   </div>
                 )}
 
-                {/* Resize handle */}
                 {isSelected && (
                   <div
                     className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20"
@@ -202,7 +222,6 @@ const VideoPreview: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Text overlays */}
         {activeTexts.map((clip) => (
           <div key={clip.id} className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <p className="text-white text-2xl font-bold drop-shadow-lg px-4 text-center">
@@ -211,12 +230,10 @@ const VideoPreview: React.FC<Props> = ({
           </div>
         ))}
 
-        {/* Time overlay */}
         <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-white/80 text-[10px] font-mono z-40">
           {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
         </div>
 
-        {/* Resolution indicator */}
         <div className="absolute top-2 left-2 bg-black/50 px-1.5 py-0.5 rounded text-white/50 text-[8px] font-mono z-40">
           1920×1080
         </div>
@@ -225,4 +242,4 @@ const VideoPreview: React.FC<Props> = ({
   );
 };
 
-export default VideoPreview;
+export default React.memo(VideoPreview);
