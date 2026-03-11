@@ -222,12 +222,12 @@ const LAYERS: Layer[] = [
     emoji: '⚡',
     description: 'Ritmo e sensação geral',
     options: [
-      { id: 'high-energy', label: 'High Energy', emoji: '🔥' },
-      { id: 'calm', label: 'Calm / Aesthetic', emoji: '🌿' },
-      { id: 'luxury-mood', label: 'Luxury Mood', emoji: '💎' },
-      { id: 'dramatic-mood', label: 'Dramatic', emoji: '🎭' },
-      { id: 'emotional', label: 'Emotional', emoji: '💖' },
-      { id: 'inspirational', label: 'Inspirational', emoji: '🌟' },
+      { id: 'high-energy', label: 'Alta Energia', emoji: '🔥' },
+      { id: 'calm', label: 'Calmo / Estético', emoji: '🌿' },
+      { id: 'luxury-mood', label: 'Atmosfera de Luxo', emoji: '💎' },
+      { id: 'dramatic-mood', label: 'Dramático', emoji: '🎭' },
+      { id: 'emotional', label: 'Emocional', emoji: '💖' },
+      { id: 'inspirational', label: 'Inspiracional', emoji: '🌟' },
     ],
   },
   {
