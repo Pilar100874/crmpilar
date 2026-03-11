@@ -67,7 +67,11 @@ const contentTypeColors: Record<string, string> = {
   text: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
 };
 
-const MarketingGaleria: React.FC = () => {
+interface MarketingGaleriaProps {
+  onEditImage?: (imageUrl: string, resourceName?: string) => void;
+}
+
+const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
   const [content, setContent] = useState<MarketingContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
