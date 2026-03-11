@@ -1192,10 +1192,40 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     toast({ title: 'Novo roteiro sugerido!' });
   }, [selections, toast]);
 
-  const generatedScenes = useMemo(() => {
+  const generatedScenesBase = useMemo(() => {
     if (selectionCount < 2) return [];
     return generateScenes(selections);
   }, [selections, selectionCount]);
+
+  const [editedScenes, setEditedScenes] = useState<Scene[] | null>(null);
+  const [scenesVersion, setScenesVersion] = useState(0);
+
+  // Sync scenes when base changes
+  useEffect(() => {
+    setEditedScenes(null);
+  }, [generatedScenesBase]);
+
+  const currentScenes = editedScenes || generatedScenesBase;
+
+  const handleUpdateScene = useCallback((index: number, field: keyof Scene, value: string) => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      scenes[index] = { ...scenes[index], [field]: value };
+      return scenes;
+    });
+  }, [generatedScenesBase]);
+
+  const handleSuggestNewScenes = useCallback(() => {
+    const seed = Math.floor(Math.random() * 100) + 1;
+    const newScenes = generateScenes(selections, seed);
+    setEditedScenes(newScenes);
+    setScenesVersion(v => v + 1);
+    toast({ title: 'Nova sequência de cenas gerada!' });
+  }, [selections, toast]);
+
+  const handleResetScenes = useCallback(() => {
+    setEditedScenes(null);
+  }, []);
 
   const handleGenerate = () => {
     const isVideo = selections.contentType?.includes('video');
