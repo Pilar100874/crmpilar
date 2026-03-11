@@ -55,7 +55,7 @@ const tabItems: TabItem[] = [
   { id: 'ai-studio', label: 'AI Creative Studio', icon: Sparkles, description: 'Crie conteúdo com IA: imagens, vídeos, áudio e música' },
   { id: 'video-editor', label: 'Editor de Vídeo', icon: Clapperboard, description: 'Timeline completa com efeitos, cortes e transições' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
-  { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
+  
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
   { id: 'n8n-generator', label: 'Gerador n8n', icon: Workflow, description: 'Gere workflows n8n com IA' },
@@ -66,7 +66,7 @@ const tabItems: TabItem[] = [
   { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
   { id: 'elevenlabs', label: 'ElevenLabs', icon: Mic, description: 'Configurar áudio e voz via ElevenLabs' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
-  { id: 'n8n-editor', label: 'Editor n8n', icon: GitBranch, description: 'Crie workflows visuais estilo n8n' },
+  
 ];
 
 const MarketingHub: React.FC = () => {
