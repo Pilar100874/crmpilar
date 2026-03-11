@@ -1234,7 +1234,7 @@ const AICreativeStudioInner: React.FC = () => {
 
           <AnimatePresence>
             {showPresets && (
-              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
+              <PresetsGallery onSelectPreset={handlePresetSelectWithCheck} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
             )}
           </AnimatePresence>
 
