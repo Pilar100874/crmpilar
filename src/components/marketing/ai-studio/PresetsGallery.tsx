@@ -26,7 +26,20 @@ interface Layer {
   multiple?: boolean;
   required?: boolean;
   visibleWhen?: (selections: Record<string, string[]>) => boolean;
+  filterOptions?: (options: LayerOption[], selections: Record<string, string[]>) => LayerOption[];
 }
+
+// Map platform IDs to their compatible orientation IDs
+const PLATFORM_ORIENTATION_MAP: Record<string, string[]> = {
+  'tiktok': ['vertical', 'tiktok'],
+  'instagram': ['square', 'ig-feed', 'ig-carousel', 'horizontal'],
+  'instagram-reels': ['vertical', 'ig-reels'],
+  'youtube': ['horizontal', 'youtube-thumb'],
+  'youtube-shorts': ['vertical', 'youtube-shorts'],
+  'facebook-ads': ['facebook-feed', 'square', 'vertical', 'horizontal'],
+  'landing-page': ['horizontal', 'square'],
+  'hero-section': ['horizontal', 'banner-web'],
+};
 
 const LAYERS: Layer[] = [
   {
