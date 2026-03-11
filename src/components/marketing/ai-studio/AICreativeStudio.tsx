@@ -1073,11 +1073,6 @@ const AICreativeStudioInner: React.FC = () => {
 
         </div>
 
-        <AnimatePresence>
-          {showPresets && (
-            <PresetsGallery onSelectPreset={handlePresetSelectWithCheck} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
-          )}
-        </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
         <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
