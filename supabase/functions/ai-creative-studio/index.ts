@@ -1141,7 +1141,7 @@ Deno.serve(async (req) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: `Generate speech audio for the following text in ${params.lang || "pt-BR"}: "${text}"` }] }],
+              contents: [{ parts: [{ text: `Generate speech audio in Brazilian Portuguese (pt-BR). Speak the following text naturally in Portuguese: "${text}"` }] }],
               generationConfig: { response_modalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
             }),
           });

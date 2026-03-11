@@ -836,7 +836,8 @@ export function useStudioExecution() {
       }
 
       case 'musicGen': {
-        const musicPrompt = combinedInput || config.prompt || 'Música ambiente corporativa';
+        const rawMusicPrompt = combinedInput || config.prompt || 'Música ambiente corporativa';
+        const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil/i) ? rawMusicPrompt : `${rawMusicPrompt} (em português brasileiro / Brazilian Portuguese)`;
         const estabId = localStorage.getItem('estabelecimentoId');
         let musicProvider: string | null = null;
 
