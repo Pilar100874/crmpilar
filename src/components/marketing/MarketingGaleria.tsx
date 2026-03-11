@@ -175,6 +175,11 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       return;
     }
 
+    if (item.content_type === 'video') {
+      setEditingVideo(item);
+      return;
+    }
+
     window.open(item.content_url, '_blank');
   };
 
