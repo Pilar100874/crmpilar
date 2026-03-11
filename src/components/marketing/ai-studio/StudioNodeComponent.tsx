@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { VolumeX, ChevronDown } from 'lucide-react';
+import { VolumeX } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,
