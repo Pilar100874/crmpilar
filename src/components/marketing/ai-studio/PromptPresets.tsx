@@ -117,7 +117,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-minimalist', name: 'Minimalist Luxury', mediaType: 'video', category: 'produto',
     tags: ['minimal', 'clean', 'fashion'], image: imgMinimalist,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Minimalist luxury product commercial. Clean white studio background with soft gradient lighting. The product placed on a marble surface. Slow camera dolly movement and macro shots revealing texture. Soft shadows, premium fashion brand aesthetic. Ultra realistic studio lighting and reflections.${NEGATIVE_BLOCK}`,
   },
   {
