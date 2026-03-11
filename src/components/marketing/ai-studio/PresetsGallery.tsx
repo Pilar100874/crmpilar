@@ -1202,19 +1202,23 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
             <div className="border-b px-3 pt-2">
-              <TabsList className="h-8 w-full grid grid-cols-5 bg-muted/50">
+              <TabsList className={`h-8 w-full grid bg-muted/50 ${selections.contentType?.includes('video') ? 'grid-cols-5' : 'grid-cols-3'}`}>
                 <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
                 <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                   <Library className="h-3 w-3" /> Ganchos
                 </TabsTrigger>
-                <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
-                  <FileText className="h-3 w-3" /> Roteiro
-                </TabsTrigger>
-                <TabsTrigger value="scenes" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
-                  <Clapperboard className="h-3 w-3" /> Cenas
-                </TabsTrigger>
+                {selections.contentType?.includes('video') && (
+                  <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                    <FileText className="h-3 w-3" /> Roteiro
+                  </TabsTrigger>
+                )}
+                {selections.contentType?.includes('video') && (
+                  <TabsTrigger value="scenes" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                    <Clapperboard className="h-3 w-3" /> Cenas
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="variations" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
                   <Layers className="h-3 w-3" /> Variações
                 </TabsTrigger>
