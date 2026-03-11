@@ -944,6 +944,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
   const [editingHook, setEditingHook] = useState<{ catIdx: number; hookIdx: number } | null>(null);
   const [editingHookText, setEditingHookText] = useState('');
+  const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   
@@ -1006,6 +1007,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
       const v = generateVariations(selections, negativePromptText);
       setVariations(v);
+      setSelectedVariations(new Set(v.map((_, i) => i)));
     }
   }, [selections, negativePromptText]);
 
@@ -1066,7 +1068,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       duration: isVideo ? 6 : undefined,
       referenceBlocks: selections.referenceBlocks || [],
       layerSelections: { ...selections },
-      variationPrompts: isVariationsTab ? variations : undefined,
+      variationPrompts: isVariationsTab ? variations.filter((_, i) => selectedVariations.has(i)) : undefined,
     };
 
     // Apply directly to canvas (no review step)
@@ -1107,6 +1109,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     if (selectionCount < 2) return;
     const v = generateVariations(selections, negativePromptText);
     setVariations(v);
+    setSelectedVariations(new Set(v.map((_, i) => i)));
     toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
   }, [selections, selectionCount, toast]);
 
@@ -1597,7 +1600,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
             {/* TAB: Variations */}
             <TabsContent value="variations" className="flex-1 flex flex-col overflow-hidden mt-0">
-              <div className="p-3 border-b">
+              <div className="p-3 border-b flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1607,27 +1610,72 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 >
                   <RefreshCw className="h-3 w-3" /> Gerar 5 Variações
                 </Button>
+                {variations.length > 0 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setSelectedVariations(new Set(variations.map((_, i) => i)))}
+                    >
+                      Selecionar Todas
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setSelectedVariations(new Set())}
+                    >
+                      Limpar
+                    </Button>
+                    <Badge variant="secondary" className="text-[9px]">
+                      {selectedVariations.size}/{variations.length} selecionadas
+                    </Badge>
+                  </>
+                )}
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-3">
                   {variations.length > 0 ? (
-                    variations.map((v, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="bg-background rounded-lg border p-3"
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <Badge variant="outline" className="text-[9px]">Variação {i + 1}</Badge>
-                          <Button variant="ghost" size="sm" className="h-5 text-[9px] gap-1" onClick={() => handleCopyText(v)}>
-                            <Copy className="h-2.5 w-2.5" /> Copiar
-                          </Button>
-                        </div>
-                        <pre className="text-[10px] text-foreground leading-relaxed font-mono whitespace-pre-wrap max-h-[200px] overflow-auto">{v}</pre>
-                      </motion.div>
-                    ))
+                    variations.map((v, i) => {
+                      const isSelected = selectedVariations.has(i);
+                      return (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onClick={() => {
+                            setSelectedVariations(prev => {
+                              const next = new Set(prev);
+                              if (next.has(i)) next.delete(i);
+                              else next.add(i);
+                              return next;
+                            });
+                          }}
+                          className={`bg-background rounded-lg border p-3 cursor-pointer transition-all ${
+                            isSelected
+                              ? 'border-primary ring-2 ring-primary/20'
+                              : 'border-border/40 opacity-60 hover:opacity-80'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className={`h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${
+                                isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                              }`}>
+                                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                              </div>
+                              <Badge variant="outline" className="text-[9px]">Variação {i + 1}</Badge>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-5 text-[9px] gap-1" onClick={(e) => { e.stopPropagation(); handleCopyText(v); }}>
+                              <Copy className="h-2.5 w-2.5" /> Copiar
+                            </Button>
+                          </div>
+                          <pre className="text-[10px] text-foreground leading-relaxed font-mono whitespace-pre-wrap max-h-[200px] overflow-auto">{v}</pre>
+                        </motion.div>
+                      );
+                    })
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       <Layers className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -1646,11 +1694,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText)}
+              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
               onClick={handleGenerate}
             >
               {selections.contentType?.includes('video') ? <Video className="h-4 w-4" /> : <Image className="h-4 w-4" />}
-              {activeTab === 'variations' && variations.length > 0 ? `Aplicar 5 Variações no Canvas` : 'Aplicar no Canvas'}
+              {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
             </Button>
           </div>
         </div>
