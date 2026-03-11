@@ -823,7 +823,7 @@ function generatePrompt(selections: Record<string, string[]>, negativePrompt: st
 
 // ─── SCRIPT GENERATOR ────────────────────────────────────────────────
 
-function generateScript(selections: Record<string, string[]>, selectedHookText?: string): string {
+function generateScript(selections: Record<string, string[]>, selectedHookText?: string, variationSeed?: number): string {
   const product = selections.productCategory?.[0];
   const productLabel = LAYERS.find(l => l.id === 'productCategory')?.options.find(o => o.id === product)?.label || 'o produto';
   const goal = selections.marketingGoal?.[0] || '';
@@ -831,28 +831,73 @@ function generateScript(selections: Record<string, string[]>, selectedHookText?:
 
   const isShort = ['tiktok', 'instagram-reels', 'youtube-shorts'].includes(platform);
 
-  const hookText = selectedHookText || 'Espera... você precisa ver isso antes de tomar qualquer decisão.';
+  const hookVariations = [
+    'Espera... você precisa ver isso antes de tomar qualquer decisão.',
+    'Você não vai acreditar no que eu descobri...',
+    'Para tudo! Isso muda completamente o jogo.',
+    'Se você ainda não conhece isso, está perdendo tempo.',
+    'Eu testei e o resultado foi SURREAL.',
+    'Atenção: isso pode mudar sua rotina para sempre.',
+    'Todo mundo está falando sobre isso — e com razão.',
+    'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
+  ];
 
-  const ctaMap: Record<string, string> = {
-    'direct-sales': 'Compre agora e aproveite a oferta por tempo limitado. Link na bio.',
-    'lead-generation': 'Clique no link e descubra mais. Cadastre-se gratuitamente.',
-    'product-awareness': 'Conheça mais sobre nosso produto. Link na descrição.',
-    'brand-awareness': 'Siga-nos para mais conteúdo exclusivo.',
-    'app-install': 'Baixe o app agora — link na bio.',
-    'product-launch': 'Lançamento oficial! Garanta o seu agora.',
-    'retargeting': 'Ainda pensando? Aproveite antes que acabe.',
-    'social-proof': 'Milhares de clientes já aprovaram. Veja os depoimentos.',
-    'educational': 'Quer aprender mais? Siga para mais dicas.',
-    'viral-engagement': 'Marque alguém que precisa ver isso! Compartilhe.',
+  const problemVariations = [
+    `Muitas pessoas enfrentam dificuldades e não encontram a solução certa para ${productLabel}. Gastam dinheiro, tempo e energia sem resultado.`,
+    `Cansou de tentar alternativas que não funcionam? O problema com ${productLabel} é que ninguém te conta a verdade.`,
+    `Você já passou horas pesquisando sobre ${productLabel} e sempre acabou frustrado? Isso é mais comum do que imagina.`,
+    `O maior erro que as pessoas cometem com ${productLabel} é não saber por onde começar. E isso custa caro.`,
+  ];
+
+  const introVariations = [
+    `Apresentamos ${productLabel} — a solução que resolve isso de forma simples e eficiente.`,
+    `Conheça ${productLabel}: desenvolvido para quem quer resultado de verdade, sem complicação.`,
+    `${productLabel} chegou para transformar a sua experiência. Simples, direto e eficaz.`,
+    `Depois de meses de desenvolvimento, ${productLabel} está pronto para mudar o jogo.`,
+  ];
+
+  const demoVariations = [
+    `Mostrar ${productLabel} sendo utilizado em um cenário real. Destacar a facilidade de uso, a qualidade do material e os resultados visíveis.`,
+    `Demonstração prática de ${productLabel}: veja como funciona na vida real, passo a passo, sem edição.`,
+    `Acompanhe o uso de ${productLabel} do início ao fim. Cada detalhe faz diferença no resultado.`,
+    `Teste ao vivo com ${productLabel}: sem roteiro, sem filtro — apenas o produto funcionando.`,
+  ];
+
+  const benefitVariations = [
+    `Destaque os principais benefícios: qualidade superior, praticidade, custo-benefício e resultados comprovados.`,
+    `Por que escolher ${productLabel}? Economia de tempo, qualidade garantida e satisfação imediata.`,
+    `Os resultados falam por si: mais eficiência, menos desperdício e uma experiência incomparável.`,
+    `Clientes reais já comprovaram: ${productLabel} entrega tudo o que promete — e mais.`,
+  ];
+
+  const ctaMap: Record<string, string[]> = {
+    'direct-sales': ['Compre agora e aproveite a oferta por tempo limitado. Link na bio.', 'Garanta o seu antes que acabe! Clique no link agora.', 'Oferta exclusiva — só hoje. Não perca, link na descrição.'],
+    'lead-generation': ['Clique no link e descubra mais. Cadastre-se gratuitamente.', 'Quer saber mais? Deixe seu contato e receba tudo em primeira mão.', 'Cadastro grátis por tempo limitado. Acesse o link agora.'],
+    'product-awareness': ['Conheça mais sobre nosso produto. Link na descrição.', 'Descubra tudo sobre ${productLabel}. Acesse o link.', 'Saiba por que ${productLabel} está conquistando milhares de pessoas.'],
+    'brand-awareness': ['Siga-nos para mais conteúdo exclusivo.', 'Acompanhe nossas novidades — siga agora!', 'Fique por dentro de tudo. Siga e ative as notificações.'],
+    'app-install': ['Baixe o app agora — link na bio.', 'App disponível para download. Comece agora mesmo!', 'Instale gratuitamente e transforme sua rotina.'],
+    'product-launch': ['Lançamento oficial! Garanta o seu agora.', 'Acabou de sair! Seja um dos primeiros a experimentar.', 'Novo lançamento disponível — não fique de fora!'],
+    'retargeting': ['Ainda pensando? Aproveite antes que acabe.', 'Última chance de garantir o seu. Não deixe escapar!', 'Você viu, gostou — agora é hora de agir.'],
+    'social-proof': ['Milhares de clientes já aprovaram. Veja os depoimentos.', 'Junte-se a quem já transformou sua experiência.', '+10.000 clientes satisfeitos. Faça parte desse grupo.'],
+    'educational': ['Quer aprender mais? Siga para mais dicas.', 'Conteúdo novo toda semana. Siga e aprenda!', 'Gostou? Salve esse vídeo e compartilhe com quem precisa.'],
+    'viral-engagement': ['Marque alguém que precisa ver isso! Compartilhe.', 'Desafio: compartilhe com 3 amigos e veja a reação deles!', 'Se isso te surpreendeu, imagina quem ainda não viu?'],
   };
+
+  const pick = (arr: string[], seed?: number) => {
+    const idx = seed !== undefined ? Math.abs(seed) % arr.length : 0;
+    return arr[idx];
+  };
+
+  const hookText = selectedHookText || pick(hookVariations, variationSeed);
+  const ctaOptions = ctaMap[goal] || ['Saiba mais — link na descrição.'];
 
   const sections = [
     { label: '🪝 GANCHO (Primeiros 3 segundos)', text: `"${hookText}"` },
-    { label: '😰 PROBLEMA', text: `"Muitas pessoas enfrentam dificuldades e não encontram a solução certa para ${productLabel}. Gastam dinheiro, tempo e energia sem resultado."` },
-    { label: '📦 INTRODUÇÃO DO PRODUTO', text: `"Apresentamos ${productLabel} — a solução que resolve isso de forma simples e eficiente."` },
-    { label: '🔍 DEMONSTRAÇÃO', text: `"Mostrar ${productLabel} sendo utilizado em um cenário real. Destacar a facilidade de uso, a qualidade do material e os resultados visíveis."` },
-    { label: '✨ BENEFÍCIOS', text: `"Destaque os principais benefícios: qualidade superior, praticidade, custo-benefício e resultados comprovados."` },
-    { label: '📣 CHAMADA PARA AÇÃO', text: `"${ctaMap[goal] || 'Saiba mais — link na descrição.'}"` },
+    { label: '😰 PROBLEMA', text: `"${pick(problemVariations, variationSeed !== undefined ? variationSeed + 1 : undefined)}"` },
+    { label: '📦 INTRODUÇÃO DO PRODUTO', text: `"${pick(introVariations, variationSeed !== undefined ? variationSeed + 2 : undefined)}"` },
+    { label: '🔍 DEMONSTRAÇÃO', text: `"${pick(demoVariations, variationSeed !== undefined ? variationSeed + 3 : undefined)}"` },
+    { label: '✨ BENEFÍCIOS', text: `"${pick(benefitVariations, variationSeed !== undefined ? variationSeed + 4 : undefined)}"` },
+    { label: '📣 CHAMADA PARA AÇÃO', text: `"${pick(ctaOptions, variationSeed !== undefined ? variationSeed + 5 : undefined)}"` },
   ];
 
   if (isShort) {
