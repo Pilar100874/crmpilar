@@ -623,7 +623,46 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         return (
           <div className="space-y-2.5">
             <ConfigField label="Modelo de Imagem">
-              <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
+              <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
+                update('model', v);
+                // Auto-fill optimal params per image model
+                if (v.startsWith('google/')) {
+                  // Gemini image models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7.5);
+                  update('steps', 30);
+                } else if (v.startsWith('openai/')) {
+                  // DALL-E models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 50);
+                } else if (v.startsWith('stability/')) {
+                  // Stable Diffusion
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 30);
+                } else if (v.startsWith('flux/') || v.startsWith('black-forest-labs/')) {
+                  // Flux models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'hd');
+                  update('guidanceScale', 3.5);
+                  update('steps', 28);
+                } else if (v.startsWith('ideogram/')) {
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 30);
+                } else {
+                  // Default
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7.5);
+                  update('steps', 30);
+                }
+              }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
                   {filteredImage.map((m) => (
