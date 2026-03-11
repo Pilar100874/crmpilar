@@ -593,13 +593,19 @@ const AICreativeStudioInner: React.FC = () => {
   }, [newFolderName, moveToFolderWorkflow, handleMoveToFolder]);
 
   const handleCreateStandaloneFolder = useCallback(() => {
-    if (!createFolderName.trim()) return;
-    if (folders.includes(createFolderName.trim())) {
+    const folderName = createFolderName.trim();
+    if (!folderName) return;
+
+    if (folders.includes(folderName)) {
       toast.error('Pasta já existe');
+      setActiveFolder(folderName);
     } else {
-      saveManualFolders([...manualFolders, createFolderName.trim()]);
-      toast.success(`Pasta "${createFolderName.trim()}" criada!`);
+      saveManualFolders([...manualFolders, folderName]);
+      setActiveFolder(folderName);
+      toast.success(`Pasta "${folderName}" criada!`);
     }
+
+    setIsCreatingFolderInline(false);
     setShowCreateFolderDialog(false);
     setCreateFolderName('');
   }, [createFolderName, folders, manualFolders, saveManualFolders]);
