@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   ZoomIn, Download, Play, Pause
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import VideoTrimmer from './VideoTrimmer';
 
 export interface GalleryImage {
   id: string;
@@ -56,6 +57,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<GalleryImage | null>(null);
   const [previewItem, setPreviewItem] = useState<GalleryImage | null>(null);
+  const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   const fetchImages = useCallback(async () => {
@@ -490,13 +492,45 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
               {/* Media content */}
               {isVideoUrl(previewItem.image_url) ? (
-                <video
-                  src={previewItem.image_url}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl"
-                  controlsList="nofullscreen"
-                />
+                <div className="w-full max-w-4xl">
+                  <VideoTrimmer
+                    videoUrl={previewItem.image_url}
+                    isSaving={isSavingTrimmed}
+                    onSaveTrimmed={async (blob) => {
+                      setIsSavingTrimmed(true);
+                      try {
+                        const fileName = `trimmed_${Date.now()}.webm`;
+                        const path = `${estabelecimentoId}/${fileName}`;
+                        const { error: upErr } = await supabase.storage
+                          .from('marketing-videos')
+                          .upload(path, blob, { contentType: 'video/webm' });
+                        if (upErr) throw upErr;
+                        const { data: urlData } = supabase.storage
+                          .from('marketing-videos')
+                          .getPublicUrl(path);
+                        const publicUrl = urlData?.publicUrl || '';
+                        await supabase.from('media_gallery').insert({
+                          estabelecimento_id: estabelecimentoId,
+                          tipo: 'video',
+                          public_url: publicUrl,
+                          storage_path: path,
+                          nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
+                          origem: 'studio-trimmed',
+                        });
+                        toast.success('✅ Vídeo cortado salvo na galeria!');
+                        fetchImages();
+                      } catch (err: any) {
+                        toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
+                      } finally {
+                        setIsSavingTrimmed(false);
+                      }
+                    }}
+                    onSaveOriginal={() => {
+                      toast.success('Vídeo original mantido');
+                      setPreviewItem(null);
+                    }}
+                  />
+                </div>
               ) : (
                 <img
                   src={previewItem.image_url}
