@@ -4,6 +4,7 @@ import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film,
 import type { LucideIcon } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -1080,10 +1081,43 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     return generatePrompt(selections, negativePromptText);
   }, [selections, selectionCount, negativePromptText]);
 
-  const generatedScript = useMemo(() => {
+  const generatedScriptBase = useMemo(() => {
     if (selectionCount < 2) return '';
     return generateScript(selections, selectedHookText || undefined);
   }, [selections, selectionCount, selectedHookText]);
+
+  const [editedScript, setEditedScript] = useState('');
+  const [scriptVersion, setScriptVersion] = useState(0);
+  const [isEditingScript, setIsEditingScript] = useState(false);
+
+  // Sync editedScript when base changes (new selections)
+  useEffect(() => {
+    if (!isEditingScript) {
+      setEditedScript(generatedScriptBase);
+    }
+  }, [generatedScriptBase, isEditingScript]);
+
+  const generatedScript = editedScript || generatedScriptBase;
+
+  const handleSuggestNewScript = useCallback(() => {
+    // Generate variations by shuffling hook and CTA
+    const hooks = [
+      'Espera... você precisa ver isso antes de tomar qualquer decisão.',
+      'Você não vai acreditar no que eu descobri...',
+      'Para tudo! Isso muda completamente o jogo.',
+      'Se você ainda não conhece isso, está perdendo tempo.',
+      'Eu testei e o resultado foi SURREAL.',
+      'Atenção: isso pode mudar sua rotina para sempre.',
+      'Todo mundo está falando sobre isso — e com razão.',
+      'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
+    ];
+    const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
+    const newScript = generateScript(selections, randomHook);
+    setEditedScript(newScript);
+    setScriptVersion(v => v + 1);
+    setIsEditingScript(false);
+    toast({ title: 'Novo roteiro sugerido!' });
+  }, [selections]);
 
   const generatedScenes = useMemo(() => {
     if (selectionCount < 2) return [];
@@ -1791,11 +1825,38 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                         <p className="text-xs font-semibold flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5 text-primary" /> Roteiro Gerado
                         </p>
-                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedScript)}>
-                          <Copy className="h-3 w-3" /> Copiar
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedScript)}>
+                            <Copy className="h-3 w-3" /> Copiar
+                          </Button>
+                        </div>
                       </div>
-                      <pre className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedScript}</pre>
+                      <Textarea
+                        value={generatedScript}
+                        onChange={(e) => { setEditedScript(e.target.value); setIsEditingScript(true); }}
+                        className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap bg-muted/30 border-border/50 min-h-[300px] resize-y"
+                        placeholder="O roteiro aparecerá aqui..."
+                      />
+                      <div className="flex items-center gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleSuggestNewScript}
+                        >
+                          <Sparkles className="h-3 w-3" /> Sugerir outro roteiro
+                        </Button>
+                        {isEditingScript && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[10px] gap-1 h-7 text-muted-foreground"
+                            onClick={() => { setEditedScript(generatedScriptBase); setIsEditingScript(false); }}
+                          >
+                            Restaurar original
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
