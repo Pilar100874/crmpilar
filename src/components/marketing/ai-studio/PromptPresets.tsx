@@ -757,7 +757,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
         },
       });
       if (error) throw error;
-      const rawUrl = data?.imageUrl || data?.result;
+      const rawUrl = data?.imageUrl || data?.result?.imageUrl || (typeof data?.result === 'string' ? data.result : null);
       const imageUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.url || rawUrl?.image_url?.url || '');
       if (imageUrl) {
         // Add cache-buster for storage URLs to force refresh
