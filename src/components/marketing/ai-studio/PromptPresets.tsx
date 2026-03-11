@@ -149,7 +149,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-vertical', name: 'Vertical Viral', mediaType: 'video', category: 'influencer',
     tags: ['vertical', 'tiktok', 'viral'], image: imgInfluencerVertical,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Vertical video influencer style commercial. Energetic influencer demonstrating the product quickly. Fast jump cuts, dynamic camera movements. Bright modern room, vibrant lighting. Social media viral advertising vibe.${NEGATIVE_BLOCK}`,
   },
   {
