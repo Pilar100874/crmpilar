@@ -420,9 +420,8 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
 
       {/* Video Editor Dialog */}
       {editingVideo && editingVideo.content_url && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingVideo(null); }} modal={false}>
-          <div className="fixed inset-0 z-[199]" onClick={() => setEditingVideo(null)} />
-          <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingVideo(null); }}>
+          <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200] [&~div[data-state]]:bg-transparent">
             <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
               <button
                 onClick={() => setEditingVideo(null)}
