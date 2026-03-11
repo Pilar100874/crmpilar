@@ -1007,6 +1007,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
       const v = generateVariations(selections, negativePromptText);
       setVariations(v);
+      setSelectedVariations(new Set(v.map((_, i) => i)));
     }
   }, [selections, negativePromptText]);
 
