@@ -408,6 +408,15 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                             >
                               <ZoomIn className="h-3 w-3" />
                             </button>
+                            {isVideo && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditItem(img); }}
+                                className="p-1.5 rounded-lg bg-primary/40 hover:bg-primary/60 text-white transition-colors"
+                                title="Editar / Cortar"
+                              >
+                                <Scissors className="h-3 w-3" />
+                              </button>
+                            )}
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDuplicate(img); }}
                               className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
