@@ -11,7 +11,8 @@ import {
   Filter,
   Search,
   Play,
-  Download
+  Download,
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,7 +67,11 @@ const contentTypeColors: Record<string, string> = {
   text: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
 };
 
-const MarketingGaleria: React.FC = () => {
+interface MarketingGaleriaProps {
+  onEditImage?: (imageUrl: string, resourceName?: string) => void;
+}
+
+const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage }) => {
   const [content, setContent] = useState<MarketingContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -157,6 +162,17 @@ const MarketingGaleria: React.FC = () => {
     } finally {
       setDeleteId(null);
     }
+  };
+
+  const handleEdit = (item: MarketingContentItem) => {
+    if (!item.content_url) return;
+
+    if (item.content_type === 'image' && onEditImage) {
+      onEditImage(item.content_url, item.resource_name);
+      return;
+    }
+
+    window.open(item.content_url, '_blank');
   };
 
   const filteredContent = content.filter(item => {
@@ -337,7 +353,18 @@ const MarketingGaleria: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1 flex-wrap">
+                          {item.content_url && (item.content_type === 'image' || item.content_type === 'video') && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="flex-1"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="h-3.5 w-3.5 mr-1" />
+                              Editar
+                            </Button>
+                          )}
                           {item.content_url && (
                             <>
                               <Button

@@ -74,6 +74,14 @@ const MarketingHub: React.FC = () => {
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
+  const handleEditImageFromGallery = (imageUrl: string, resourceName?: string) => {
+    sessionStorage.setItem('marketingCanvasInitialImage', JSON.stringify({
+      url: imageUrl,
+      resourceName: resourceName || 'Imagem da Galeria',
+    }));
+    setActiveTab('canvas');
+  };
+
   const renderTabContent = (tabId: string) => {
     switch (tabId) {
       case 'ai-studio':
@@ -85,7 +93,7 @@ const MarketingHub: React.FC = () => {
       case 'recursos':
         return <MarketingRecursos />;
       case 'galeria':
-        return <MarketingGaleria />;
+        return <MarketingGaleria onEditImage={handleEditImageFromGallery} />;
       case 'catalogo':
         return <MarketingCatalogo />;
       case 'n8n-generator':

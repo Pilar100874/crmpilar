@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CanvasProvider, useCanvas } from "@/contexts/CanvasContext";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
@@ -69,6 +69,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const [productData, setProductData] = useState<any>(null);
   const [projectName, setProjectName] = useState("Novo Design");
   const isMobile = useIsMobile();
+  const galleryImageLoadedRef = useRef(false);
 
   const handlePlatformSelect = (preset: PlatformPreset) => {
     setPlatformPreset(preset);
@@ -113,6 +114,74 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
+
+  useEffect(() => {
+    if (showPlatformDialog || galleryImageLoadedRef.current) return;
+
+    const raw = sessionStorage.getItem('marketingCanvasInitialImage');
+    if (!raw) return;
+
+    let payload: { url: string; resourceName?: string } | null = null;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      sessionStorage.removeItem('marketingCanvasInitialImage');
+      return;
+    }
+
+    if (!payload?.url) {
+      sessionStorage.removeItem('marketingCanvasInitialImage');
+      return;
+    }
+
+    let cancelled = false;
+
+    const injectImage = async (attempt = 0) => {
+      if (cancelled) return;
+
+      const fabricCanvas = (window as any).fabricCanvas;
+      if (!fabricCanvas) {
+        if (attempt < 40) setTimeout(() => injectImage(attempt + 1), 250);
+        return;
+      }
+
+      try {
+        const img = await FabricImage.fromURL(payload!.url, { crossOrigin: 'anonymous' });
+        const canvasW = fabricCanvas.width || 1080;
+        const canvasH = fabricCanvas.height || 1080;
+        const imgW = img.width || canvasW * 0.7;
+        const imgH = img.height || canvasH * 0.7;
+        const scale = Math.min((canvasW * 0.8) / imgW, (canvasH * 0.8) / imgH, 1);
+
+        img.set({
+          left: canvasW / 2,
+          top: canvasH / 2,
+          originX: 'center',
+          originY: 'center',
+          name: payload?.resourceName || 'galeria-image',
+        });
+        img.scale(scale);
+
+        fabricCanvas.add(img);
+        fabricCanvas.setActiveObject(img);
+        fabricCanvas.renderAll();
+
+        galleryImageLoadedRef.current = true;
+        sessionStorage.removeItem('marketingCanvasInitialImage');
+        toast.success('Imagem aberta no editor de design');
+      } catch (error) {
+        console.error('Erro ao abrir imagem da galeria no editor:', error);
+        sessionStorage.removeItem('marketingCanvasInitialImage');
+        toast.error('Não foi possível abrir a imagem no editor');
+      }
+    };
+
+    injectImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showPlatformDialog]);
 
   const handleNavigateAway = (navFunction: () => void) => {
     if (hasCanvasContent()) {
