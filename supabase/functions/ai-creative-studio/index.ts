@@ -637,19 +637,30 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     const googleKey = await fetchApiKey(estabelecimentoId, "google");
     if (googleKey) {
       console.log(`[generate_video] AUTO-ROUTING: Switching from Sora (text-only) to Google Veo (image-to-video) for better fidelity`);
-      provider = "google";
-      params.model = "google/veo-3";
-      // Use Google key directly
-      const heroFrameUrl = await generateHeroFrame(params);
-      if (heroFrameUrl) {
-        console.log(`[generate_video] Using hero frame as starting image for google`);
-        params.imageUrls = [heroFrameUrl];
+      try {
+        const savedModel = params.model;
+        provider = "google";
+        params.model = "google/veo-3";
+        const heroFrameUrl = await generateHeroFrame(params);
+        if (heroFrameUrl) {
+          console.log(`[generate_video] Using hero frame as starting image for google`);
+          params.imageUrls = [heroFrameUrl];
+        }
+        console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
+        return await generateVideoGoogle(googleKey, params);
+      } catch (veoErr: any) {
+        const is429 = veoErr?.message?.includes("429") || veoErr?.message?.includes("quota");
+        if (is429) {
+          console.warn(`[generate_video] Google Veo quota exceeded (429). Falling back to original provider (Sora).`);
+          provider = "openai";
+          params.model = model;
+          // Continue to Sora below
+        } else {
+          throw veoErr;
+        }
       }
-      console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
-      return generateVideoGoogle(googleKey, params);
     } else {
       console.warn(`[generate_video] Sora is text-only and cannot use reference images. Google Veo key not found for fallback.`);
-      // Proceed with Sora text-only (no hero frame, it's wasted)
     }
   }
 
