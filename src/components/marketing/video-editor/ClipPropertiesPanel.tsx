@@ -101,6 +101,65 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
           />
         </div>
 
+        {/* Position & Size */}
+        {(clip.type === 'video' || clip.type === 'image') && (
+          <div>
+            <Label className="text-xs font-semibold">Posição e Tamanho</Label>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <div>
+                <Label className="text-[10px]">X (%)</Label>
+                <Input
+                  type="number"
+                  value={(clip.x ?? 0).toFixed(0)}
+                  onChange={(e) => onUpdateClip(clip.id, { x: Number(e.target.value) })}
+                  className="mt-1 text-xs h-8"
+                  step={1}
+                />
+              </div>
+              <div>
+                <Label className="text-[10px]">Y (%)</Label>
+                <Input
+                  type="number"
+                  value={(clip.y ?? 0).toFixed(0)}
+                  onChange={(e) => onUpdateClip(clip.id, { y: Number(e.target.value) })}
+                  className="mt-1 text-xs h-8"
+                  step={1}
+                />
+              </div>
+              <div>
+                <Label className="text-[10px]">Largura (%)</Label>
+                <Input
+                  type="number"
+                  value={(clip.w ?? 100).toFixed(0)}
+                  onChange={(e) => onUpdateClip(clip.id, { w: Number(e.target.value) })}
+                  className="mt-1 text-xs h-8"
+                  step={1}
+                  min={10}
+                />
+              </div>
+              <div>
+                <Label className="text-[10px]">Altura (%)</Label>
+                <Input
+                  type="number"
+                  value={(clip.h ?? 100).toFixed(0)}
+                  onChange={(e) => onUpdateClip(clip.id, { h: Number(e.target.value) })}
+                  className="mt-1 text-xs h-8"
+                  step={1}
+                  min={10}
+                />
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs"
+              onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
+            >
+              Resetar para tela cheia
+            </Button>
+          </div>
+        )}
+
         {/* Trim */}
         <div className="grid grid-cols-2 gap-2">
           <div>
