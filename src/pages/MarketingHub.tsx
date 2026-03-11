@@ -66,7 +66,7 @@ const tabItems: TabItem[] = [
   { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
   { id: 'elevenlabs', label: 'ElevenLabs', icon: Mic, description: 'Configurar áudio e voz via ElevenLabs' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
-  { id: 'n8n-editor', label: 'Editor n8n', icon: GitBranch, description: 'Crie workflows visuais estilo n8n' },
+  
 ];
 
 const MarketingHub: React.FC = () => {
