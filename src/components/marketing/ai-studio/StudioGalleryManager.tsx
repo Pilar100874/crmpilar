@@ -211,7 +211,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           descricao: img.descricao,
           public_url: publicUrl,
           storage_path: newPath,
-          tipo: isVideoUrl(img.image_url) ? 'video' : 'imagem',
+          tipo: isVideoUrl(img.image_url, img.tipo) ? 'video' : 'imagem',
         });
       } else {
         // Duplicate in studio_gallery_images
