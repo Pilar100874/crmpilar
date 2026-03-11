@@ -812,7 +812,8 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             </Button>
           </div>
         </div>
-      </DialogContent>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
     </Dialog>
   );
 };
