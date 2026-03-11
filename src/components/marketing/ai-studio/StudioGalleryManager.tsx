@@ -532,7 +532,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               onClick={(e) => e.stopPropagation()}
             >
               {/* Preview actions bar - overlaid on top */}
-              <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+              <div className="absolute top-3 right-3 flex items-center gap-2 z-[210]">
                 {isVideoUrl(previewItem.image_url, previewItem.tipo) && (
                   <Button
                     size="sm"
