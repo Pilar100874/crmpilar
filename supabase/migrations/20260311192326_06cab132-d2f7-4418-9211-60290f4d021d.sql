@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_studio_workflows ADD COLUMN IF NOT EXISTS pasta TEXT DEFAULT NULL;
