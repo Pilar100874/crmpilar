@@ -1102,6 +1102,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 text,
                 model_id: model,
+                language_code: params.lang || "pt",
                 voice_settings: {
                   stability: extraConfig.stability ?? 0.5,
                   similarity_boost: extraConfig.similarityBoost ?? 0.75,
