@@ -1351,28 +1351,95 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-3 space-y-4">
-                  {VIRAL_HOOKS.map(category => (
-                    <div key={category.category}>
-                      <h4 className="text-xs font-semibold flex items-center gap-1.5 mb-2">
-                        <span>{category.emoji}</span> {category.category}
-                      </h4>
-                      <div className="space-y-1">
-                        {category.hooks.map((hook, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setSelectedHookText(hook)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-xs border transition-all ${
-                              selectedHookText === hook
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-border/40 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground'
-                            }`}
-                          >
-                            "{hook}"
-                          </button>
-                        ))}
+                  {filteredHooks.map((category) => {
+                    const catIdx = viralHooks.findIndex(h => h.category === category.category);
+                    return (
+                      <div key={category.category}>
+                        <h4 className="text-xs font-semibold flex items-center gap-1.5 mb-2">
+                          <span>{category.emoji}</span> {category.category}
+                        </h4>
+                        <div className="space-y-1">
+                          {category.hooks.map((hook, i) => {
+                            const isEditing = editingHook?.catIdx === catIdx && editingHook?.hookIdx === i;
+                            return (
+                              <div key={i} className="flex items-center gap-1">
+                                {isEditing ? (
+                                  <div className="flex-1 flex items-center gap-1">
+                                    <input
+                                      className="flex-1 px-3 py-2 rounded-md text-xs border border-primary bg-background focus:outline-none"
+                                      value={editingHookText}
+                                      onChange={(e) => setEditingHookText(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          setViralHooks(prev => {
+                                            const updated = [...prev];
+                                            updated[catIdx] = { ...updated[catIdx], hooks: [...updated[catIdx].hooks] };
+                                            updated[catIdx].hooks[i] = editingHookText;
+                                            return updated;
+                                          });
+                                          setEditingHook(null);
+                                          toast({ title: 'Gancho atualizado!' });
+                                        }
+                                        if (e.key === 'Escape') setEditingHook(null);
+                                      }}
+                                      autoFocus
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        setViralHooks(prev => {
+                                          const updated = [...prev];
+                                          updated[catIdx] = { ...updated[catIdx], hooks: [...updated[catIdx].hooks] };
+                                          updated[catIdx].hooks[i] = editingHookText;
+                                          return updated;
+                                        });
+                                        setEditingHook(null);
+                                        toast({ title: 'Gancho atualizado!' });
+                                      }}
+                                    >
+                                      <Save className="h-3 w-3 text-primary" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedHookText(hook)}
+                                      className={`flex-1 text-left px-3 py-2 rounded-md text-xs border transition-all ${
+                                        selectedHookText === hook
+                                          ? 'border-primary bg-primary/10 text-primary font-medium'
+                                          : 'border-border/40 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground'
+                                      }`}
+                                    >
+                                      "{hook}"
+                                    </button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 opacity-40 hover:opacity-100"
+                                      onClick={() => {
+                                        setEditingHook({ catIdx, hookIdx: i });
+                                        setEditingHookText(hook);
+                                      }}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+                    );
+                  })}
+                  {filteredHooks.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Selecione um Estilo de Gancho para ver as frases</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>
