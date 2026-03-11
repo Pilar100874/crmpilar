@@ -991,6 +991,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [selections, setSelections] = useState<Record<string, string[]>>(initialSelections || {});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
+  const [wizardStep, setWizardStep] = useState<1 | 2>(1);
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
   const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
@@ -1166,6 +1167,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setExpandedLayer('contentType');
     setSelectedHookText('');
     setVariations([]);
+    setWizardStep(1);
   };
 
   const handleGenerateVariations = useCallback(() => {
@@ -1253,9 +1255,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       {mode === 'prompts' ? (
         <PromptPresets onSelect={handlePromptPresetSelect} estabelecimentoId={estabelecimentoId} />
       ) : (
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left — Layers Panel */}
-        <div className="flex-1 lg:max-w-[45%] flex flex-col bg-gradient-to-b from-background to-muted/10">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Step 1 — Layers Panel */}
+        <AnimatePresence mode="wait">
+        {wizardStep === 1 ? (
+        <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-background to-muted/10">
           {/* Friendly header with progress */}
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between mb-3">
@@ -1434,10 +1438,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               })}
             </div>
           </ScrollArea>
-        </div>
-
-        {/* Right — Modules Panel */}
-        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/30 bg-gradient-to-br from-muted/5 via-background to-muted/15 flex flex-col">
+          {/* Step 1 Footer — Avançar button */}
+          <div className="p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
+            <Button
+              className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
+              size="lg"
+              disabled={selectionCount < 2 || !selections.contentType?.length}
+              onClick={() => setWizardStep(2)}
+            >
+              <Sparkles className="h-4.5 w-4.5" />
+              Ver Prompt Gerado
+              <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+            </Button>
+            {selectionCount < 2 && (
+              <p className="text-[10px] text-muted-foreground text-center mt-2">Selecione pelo menos 2 camadas para avançar</p>
+            )}
+          </div>
+        </motion.div>
+        ) : (
+        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-muted/5 via-background to-muted/15">
           <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
               if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
@@ -1872,18 +1891,31 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 <span className="text-sm">⚠️</span> Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.
               </div>
             )}
-            <Button
-              className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
-              size="lg"
-              disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
-              onClick={handleGenerate}
-            >
-              {selections.contentType?.includes('video') ? <Video className="h-4.5 w-4.5" /> : <Image className="h-4.5 w-4.5" />}
-              {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
-              <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 gap-2 h-12 rounded-xl font-bold text-sm"
+                size="lg"
+                onClick={() => setWizardStep(1)}
+              >
+                <ChevronRight className="h-4 w-4 rotate-180" />
+                Voltar
+              </Button>
+              <Button
+                className="flex-[2] gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
+                size="lg"
+                disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
+                onClick={handleGenerate}
+              >
+                {selections.contentType?.includes('video') ? <Video className="h-4.5 w-4.5" /> : <Image className="h-4.5 w-4.5" />}
+                {activeTab === 'variations' && variations.length > 0 ? `Aplicar ${selectedVariations.size} Variação${selectedVariations.size !== 1 ? 'ões' : ''} no Canvas` : 'Aplicar no Canvas'}
+                <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </motion.div>
+        )}
+        </AnimatePresence>
       </div>
       )}
 
