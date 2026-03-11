@@ -1080,10 +1080,43 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     return generatePrompt(selections, negativePromptText);
   }, [selections, selectionCount, negativePromptText]);
 
-  const generatedScript = useMemo(() => {
+  const generatedScriptBase = useMemo(() => {
     if (selectionCount < 2) return '';
     return generateScript(selections, selectedHookText || undefined);
   }, [selections, selectionCount, selectedHookText]);
+
+  const [editedScript, setEditedScript] = useState('');
+  const [scriptVersion, setScriptVersion] = useState(0);
+  const [isEditingScript, setIsEditingScript] = useState(false);
+
+  // Sync editedScript when base changes (new selections)
+  useEffect(() => {
+    if (!isEditingScript) {
+      setEditedScript(generatedScriptBase);
+    }
+  }, [generatedScriptBase, isEditingScript]);
+
+  const generatedScript = editedScript || generatedScriptBase;
+
+  const handleSuggestNewScript = useCallback(() => {
+    // Generate variations by shuffling hook and CTA
+    const hooks = [
+      'Espera... você precisa ver isso antes de tomar qualquer decisão.',
+      'Você não vai acreditar no que eu descobri...',
+      'Para tudo! Isso muda completamente o jogo.',
+      'Se você ainda não conhece isso, está perdendo tempo.',
+      'Eu testei e o resultado foi SURREAL.',
+      'Atenção: isso pode mudar sua rotina para sempre.',
+      'Todo mundo está falando sobre isso — e com razão.',
+      'Você estava fazendo errado esse tempo todo. Descubra o porquê.',
+    ];
+    const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
+    const newScript = generateScript(selections, randomHook);
+    setEditedScript(newScript);
+    setScriptVersion(v => v + 1);
+    setIsEditingScript(false);
+    toast.success('Novo roteiro sugerido!');
+  }, [selections]);
 
   const generatedScenes = useMemo(() => {
     if (selectionCount < 2) return [];
