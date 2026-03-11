@@ -1058,8 +1058,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Wand2 className="h-5 w-5 text-primary" />
               AI Creative Studio
-            </h2>
-            <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+1061:             </h2>
+1062:             <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
           </div>
           {/* Mode Toggle */}
           <div className="flex items-center bg-muted rounded-lg p-0.5">
