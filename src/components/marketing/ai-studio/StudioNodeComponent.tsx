@@ -575,13 +575,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     try {
       const blob = await downloadAsBlob(videoUrl);
       
-      const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.${ext}`;
+      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+        .upload(storagePath, blob, { contentType: 'video/mp4' });
       if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
@@ -598,7 +597,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           nome: `AI Studio Vídeo - ${nodeData.label}`,
           descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
           tamanho_bytes: blob.size,
-          mime_type: blob.type || 'video/mp4',
+          mime_type: 'video/mp4',
           origem: 'ai_studio',
         });
       if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
@@ -1533,12 +1532,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
                 setIsSavingToGallery(true);
                 try {
-                  const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-                  const fileName = `studio-trimmed-${id}-${Date.now()}.${ext}`;
+                  const fileName = `studio-trimmed-${id}-${Date.now()}.mp4`;
                   const storagePath = `${estabId}/${fileName}`;
                   const { error: uploadErr } = await supabase.storage
                     .from('marketing-videos')
-                    .upload(storagePath, blob, { contentType: blob.type || 'video/mp4' });
+                    .upload(storagePath, blob, { contentType: 'video/mp4' });
                   if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
                   const { data: { publicUrl } } = supabase.storage
                     .from('marketing-videos')
@@ -1553,7 +1551,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       nome: `AI Studio Vídeo (Cortado) - ${nodeData.label}`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
                       tamanho_bytes: blob.size,
-                      mime_type: blob.type || 'video/mp4',
+                      mime_type: 'video/mp4',
                       origem: 'ai_studio',
                     });
                   if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);

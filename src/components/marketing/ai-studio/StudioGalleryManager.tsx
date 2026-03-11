@@ -675,12 +675,11 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 onSaveTrimmed={async (blob, startTime, endTime) => {
                   setIsSavingTrimmed(true);
                   try {
-                    const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-                    const fileName = `trimmed_${Date.now()}.${ext}`;
+                    const fileName = `trimmed_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, blob, { contentType: blob.type || 'video/mp4' });
+                      .upload(path, blob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
