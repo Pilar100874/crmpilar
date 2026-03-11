@@ -249,7 +249,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-lifestyle', name: 'Lifestyle Candid', mediaType: 'image', category: 'influencer',
     tags: ['candid', 'natural', 'home'], image: imgInfLifestyle,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Candid lifestyle photography of an influencer naturally using the product at home. Warm natural window light illuminating the scene. Cozy interior setting with tasteful decor. Authentic, unposed moment captured in a relaxed environment. Soft warm color palette with gentle shadows. Camera: Sony A7 IV, 35mm lens, f/2.0 for environmental context with subject isolation.${NEGATIVE_BLOCK}`,
   },
   {
