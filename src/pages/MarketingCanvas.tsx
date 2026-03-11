@@ -408,7 +408,10 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
       return <FontPanel />;
     }
     if (selectedObjectType === 'image') {
-      return <ImageEffectsPanel />;
+      if (activePanel === 'effects') {
+        return <ImageEffectsPanel />;
+      }
+      return <PropertiesPanel />;
     }
     if (selectedObjectType && selectedObjectType !== 'textbox' && selectedObjectType !== 'text' && selectedObjectType !== 'i-text' && selectedObjectType !== 'image') {
       return <ColorPanel />;
