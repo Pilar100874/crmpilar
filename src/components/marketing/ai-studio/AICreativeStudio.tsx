@@ -144,6 +144,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [isCreatingFolderInline, setIsCreatingFolderInline] = useState(false);
   const [createFolderName, setCreateFolderName] = useState('');
+  const [draggingWorkflowId, setDraggingWorkflowId] = useState<string | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
   const [manualFolders, setManualFolders] = useState<string[]>(() => {
