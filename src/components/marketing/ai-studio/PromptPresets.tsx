@@ -362,23 +362,23 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleDeleteCustom = (id: string) => {
-    const updated = customPresets.filter(p => p.id !== id);
-    setCustomPresets(updated);
+    const updated = allPresets.filter(p => p.id !== id);
+    setAllPresets(updated);
     saveCustomPresets(updated);
     setSelectedId(null);
-    toast({ title: 'Removido', description: 'Prompt personalizado removido.' });
+    toast({ title: 'Removido', description: 'Prompt removido.' });
   };
 
   const handleSaveCustom = (preset: PromptPreset) => {
-    const existingIndex = customPresets.findIndex(p => p.id === preset.id);
+    const existingIndex = allPresets.findIndex(p => p.id === preset.id);
     let updated: PromptPreset[];
     if (existingIndex >= 0) {
-      updated = [...customPresets];
+      updated = [...allPresets];
       updated[existingIndex] = preset;
     } else {
-      updated = [...customPresets, preset];
+      updated = [...allPresets, preset];
     }
-    setCustomPresets(updated);
+    setAllPresets(updated);
     saveCustomPresets(updated);
     setShowCreateDialog(false);
     setEditingPreset(null);
@@ -387,18 +387,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   };
 
   const handleEditPreset = (preset: PromptPreset) => {
-    if (!preset.isCustom) {
-      // For built-in presets, create a custom copy for editing
-      const copy: PromptPreset = {
-        ...preset,
-        id: `custom-${Date.now()}`,
-        name: `${preset.name} (cópia)`,
-        isCustom: true,
-      };
-      setEditingPreset(copy);
-    } else {
-      setEditingPreset(preset);
-    }
+    setEditingPreset(preset);
     setShowCreateDialog(true);
   };
 
