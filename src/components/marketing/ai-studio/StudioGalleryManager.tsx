@@ -291,8 +291,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     try {
       const response = await fetch(img.image_url);
       const originalBlob = await response.blob();
-      const isVideo = img.mime_type?.startsWith('video') || img.image_url?.includes('/marketing-videos/') || img.nome?.endsWith('.mp4') || img.nome?.endsWith('.webm');
-      const isAudio = img.mime_type?.startsWith('audio') || img.image_url?.includes('/marketing-audio/');
+      const isVideo = (img as any).mime_type?.startsWith('video') || img.image_url?.includes('/marketing-videos/') || img.nome?.endsWith('.mp4') || img.nome?.endsWith('.webm');
+      const isAudio = (img as any).mime_type?.startsWith('audio') || img.image_url?.includes('/marketing-audio/');
       
       let downloadBlob: Blob;
       let ext: string;
