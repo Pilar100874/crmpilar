@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save, Trash2, Play, ImageIcon, Bot, Palette, Smartphone, Puzzle, Target, Tag, Camera, Sun, Zap, RectangleHorizontal, Crosshair, Megaphone, Anchor, Tv } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save, Trash2, Play, ImageIcon, Bot, Palette, Smartphone, Puzzle, Target, Tag, Camera, Sun, Zap, RectangleHorizontal, Crosshair, Megaphone, Anchor, Tv, Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
@@ -1227,6 +1227,36 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setEditedScenes(null);
   }, []);
 
+  const handleAddScene = useCallback(() => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      const num = scenes.length + 1;
+      scenes.push({
+        title: `Cena ${num} — Nova Cena`,
+        description: 'Descreva o que acontece visualmente nesta cena...',
+        camera: 'Defina o enquadramento e movimento de câmera...',
+        lighting: 'Defina a iluminação da cena...',
+        action: 'Descreva a ação principal...',
+      });
+      return scenes;
+    });
+    toast({ title: 'Cena adicionada!' });
+  }, [generatedScenesBase, toast]);
+
+  const handleRemoveScene = useCallback((index: number) => {
+    setEditedScenes(prev => {
+      const scenes = prev ? [...prev] : [...generatedScenesBase];
+      if (scenes.length <= 1) return scenes;
+      const updated = scenes.filter((_, i) => i !== index);
+      // Renumber titles
+      return updated.map((s, i) => ({
+        ...s,
+        title: s.title.replace(/^Cena \d+/, `Cena ${i + 1}`),
+      }));
+    });
+    toast({ title: 'Cena removida!' });
+  }, [generatedScenesBase, toast]);
+
   const handleGenerate = () => {
     const isVideo = selections.contentType?.includes('video');
     const modelKey = isVideo ? 'videoModel' : 'imageModel';
@@ -1997,7 +2027,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           className="bg-background rounded-lg border p-3 space-y-2"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
+                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                               {i + 1}
                             </div>
                             <input
@@ -2005,6 +2035,16 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                               value={scene.title}
                               onChange={(e) => handleUpdateScene(i, 'title', e.target.value)}
                             />
+                            {currentScenes.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive/50 hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                onClick={() => handleRemoveScene(i)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                           <Textarea
                             value={scene.description}
@@ -2040,7 +2080,15 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           </div>
                         </motion.div>
                       ))}
-                      <div className="flex items-center gap-2 pt-2">
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleAddScene}
+                        >
+                          <Plus className="h-3 w-3" /> Adicionar Cena
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
