@@ -134,6 +134,11 @@ const AICreativeStudioInner: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [moveToFolderWorkflow, setMoveToFolderWorkflow] = useState<SavedWorkflow | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
