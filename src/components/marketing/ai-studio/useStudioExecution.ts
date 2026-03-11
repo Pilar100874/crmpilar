@@ -1009,6 +1009,7 @@ export function useStudioExecution() {
     onNodesUpdate?: (nodes: StudioNode[]) => void
   ): Promise<StudioNode[]> => {
     setIsExecuting(true);
+    abortRef.current = new AbortController();
     onNodesUpdateRef.current = onNodesUpdate || null;
 
     const order = getExecutionOrder(nodes, edges);
