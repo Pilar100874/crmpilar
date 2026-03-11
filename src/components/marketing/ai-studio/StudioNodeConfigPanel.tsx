@@ -623,7 +623,46 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         return (
           <div className="space-y-2.5">
             <ConfigField label="Modelo de Imagem">
-              <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
+              <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
+                update('model', v);
+                // Auto-fill optimal params per image model
+                if (v.startsWith('google/')) {
+                  // Gemini image models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7.5);
+                  update('steps', 30);
+                } else if (v.startsWith('openai/')) {
+                  // DALL-E models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 50);
+                } else if (v.startsWith('stability/')) {
+                  // Stable Diffusion
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 30);
+                } else if (v.startsWith('flux/') || v.startsWith('black-forest-labs/')) {
+                  // Flux models
+                  update('imageSize', '1024x1024');
+                  update('quality', 'hd');
+                  update('guidanceScale', 3.5);
+                  update('steps', 28);
+                } else if (v.startsWith('ideogram/')) {
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7);
+                  update('steps', 30);
+                } else {
+                  // Default
+                  update('imageSize', '1024x1024');
+                  update('quality', 'standard');
+                  update('guidanceScale', 7.5);
+                  update('steps', 30);
+                }
+              }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
                   {filteredImage.map((m) => (
@@ -755,10 +794,61 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             <ConfigField label="Modelo de Vídeo">
               <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => {
                 update('videoModel', v);
+                // Auto-fill minimum required params per model
                 if (v === 'free/gif-animated') {
                   update('frameCount', 4);
                   update('fps', 3);
                   update('resolution', '480p');
+                  update('duration', 4);
+                } else if (v.startsWith('google/')) {
+                  // Google Veo: duration 4-8s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('openai/')) {
+                  // Sora: duration 4, 8, 12
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('runway/')) {
+                  // Runway: duration 5 or 10
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('kling/')) {
+                  // Kling: duration 5 or 10
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('luma/')) {
+                  // Luma: automatic duration ~4s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('stability/')) {
+                  // Stability: fixed ~4s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 2.5);
+                } else {
+                  // Default
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
                 }
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -860,7 +950,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   if (isSora) { minDur = 4; maxDur = 12; stepDur = 4; defaultDur = 4; durationNote = 'Sora: 4s, 8s ou 12s'; }
                   else if (isRunway) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 10; durationNote = 'Runway: 5s ou 10s'; }
                   else if (isKling) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 5; durationNote = 'Kling: 5s ou 10s'; }
-                  else if (isGoogle) { minDur = 5; maxDur = 8; stepDur = 1; defaultDur = 8; durationNote = 'Veo: 5-8 segundos'; }
+                  else if (isGoogle) { minDur = 4; maxDur = 8; stepDur = 1; defaultDur = 4; durationNote = 'Veo: 4-8 segundos'; }
                   else if (isLuma) { durationNote = 'Luma: duração automática (~4s)'; }
                   else if (isStability) { durationNote = 'Stability: duração fixa (~4s)'; }
                   else { maxDur = 30; defaultDur = 5; }
