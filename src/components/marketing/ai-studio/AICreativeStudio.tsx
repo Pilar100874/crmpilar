@@ -1164,12 +1164,48 @@ const AICreativeStudioInner: React.FC = () => {
                   variant="outline"
                   size="sm"
                   className="gap-1.5 text-xs rounded-full"
-                  onClick={() => { setCreateFolderName(''); setShowCreateFolderDialog(true); }}
+                  onClick={() => {
+                    setCreateFolderName('');
+                    setIsCreatingFolderInline((prev) => !prev);
+                  }}
                 >
                   <FolderPlus className="h-3.5 w-3.5" />
                   Nova Pasta
                 </Button>
               </div>
+
+              {isCreatingFolderInline && (
+                <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-border bg-card/60 p-3 sm:flex-row sm:items-center">
+                  <Input
+                    value={createFolderName}
+                    onChange={(e) => setCreateFolderName(e.target.value)}
+                    placeholder="Nome da nova pasta..."
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateStandaloneFolder();
+                      if (e.key === 'Escape') {
+                        setIsCreatingFolderInline(false);
+                        setCreateFolderName('');
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsCreatingFolderInline(false);
+                        setCreateFolderName('');
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleCreateStandaloneFolder} disabled={!createFolderName.trim()} className="gap-1">
+                      <FolderPlus className="h-4 w-4" />
+                      Criar Pasta
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               {/* Folder navigation with drop targets */}
               <div className="flex items-center gap-2 mb-4 flex-wrap">
