@@ -1139,36 +1139,67 @@ const AICreativeStudioInner: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative z-10 w-full max-w-5xl mb-10"
             >
-              <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Meus Workflows</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">Meus Workflows</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs rounded-full"
+                  onClick={() => { setCreateFolderName(''); setShowCreateFolderDialog(true); }}
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                  Nova Pasta
+                </Button>
+              </div>
               
-              {/* Folder navigation */}
+              {/* Folder navigation with drop targets */}
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <Button
                   variant={activeFolder === null ? "default" : "outline"}
                   size="sm"
-                  className="rounded-full gap-1.5 text-xs"
+                  className={cn(
+                    "rounded-full gap-1.5 text-xs transition-all",
+                    dragOverFolder === '__root__' && "ring-2 ring-primary scale-105"
+                  )}
                   onClick={() => setActiveFolder(null)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverFolder('__root__'); }}
+                  onDragLeave={() => setDragOverFolder(null)}
+                  onDrop={(e) => { e.preventDefault(); handleFolderDrop(null); }}
                 >
                   <FolderOpen className="h-3.5 w-3.5" />
-                  Todos
+                  Raiz
                   <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
                     {savedWorkflows.filter(w => !w.pasta).length}
                   </Badge>
                 </Button>
                 {folders.map((folder) => (
-                  <Button
-                    key={folder}
-                    variant={activeFolder === folder ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full gap-1.5 text-xs"
-                    onClick={() => setActiveFolder(folder)}
-                  >
-                    <Folder className="h-3.5 w-3.5" />
-                    {folder}
-                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-                      {savedWorkflows.filter(w => w.pasta === folder).length}
-                    </Badge>
-                  </Button>
+                  <div key={folder} className="relative group/folder">
+                    <Button
+                      variant={activeFolder === folder ? "default" : "outline"}
+                      size="sm"
+                      className={cn(
+                        "rounded-full gap-1.5 text-xs transition-all pr-7",
+                        dragOverFolder === folder && "ring-2 ring-primary scale-105 bg-primary/10"
+                      )}
+                      onClick={() => setActiveFolder(folder)}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
+                      onDragLeave={() => setDragOverFolder(null)}
+                      onDrop={(e) => { e.preventDefault(); handleFolderDrop(folder); }}
+                    >
+                      <Folder className="h-3.5 w-3.5" />
+                      {folder}
+                      <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                        {savedWorkflows.filter(w => w.pasta === folder).length}
+                      </Badge>
+                    </Button>
+                    <button
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/folder:opacity-100 transition-opacity h-4 w-4 flex items-center justify-center rounded-full hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setDeleteFolderConfirm(folder); }}
+                      title="Excluir pasta"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 ))}
               </div>
 
@@ -1200,6 +1231,12 @@ const AICreativeStudioInner: React.FC = () => {
                       blocksCount={nodesCount}
                       createdAt={w.created_at}
                       mediaTypes={mediaTypes}
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggingWorkflowId(w.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', w.id);
+                      }}
                       onOpenEditor={() => handleOpenWorkflow(w)}
                       onRename={() => { setRenameDialog({ id: w.id, nome: w.nome }); setRenameValue(w.nome); }}
                       onDuplicate={() => handleDuplicateWorkflow(w)}
