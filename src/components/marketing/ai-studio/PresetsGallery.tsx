@@ -22,6 +22,8 @@ interface Layer {
   id: string;
   title: string;
   emoji: string;
+  icon: LucideIcon;
+  iconColor: string; // tailwind gradient classes
   description: string;
   options: LayerOption[];
   multiple?: boolean;
