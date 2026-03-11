@@ -22,6 +22,7 @@ export interface GalleryImage {
   storage_path: string | null;
   tags: string[] | null;
   created_at: string;
+  tipo?: string;
 }
 
 export const GALLERY_CATEGORIES = [
@@ -39,10 +40,11 @@ export const GALLERY_CATEGORIES = [
 export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];
 
 // Helper to detect if URL is a video
-function isVideoUrl(url: string): boolean {
+function isVideoUrl(url: string, tipo?: string): boolean {
+  if (tipo === 'video') return true;
   const videoExts = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
   const lower = url.toLowerCase().split('?')[0];
-  return videoExts.some(ext => lower.endsWith(ext));
+  return videoExts.some(ext => lower.endsWith(ext)) || lower.includes('marketing-videos') || lower.includes('/video');
 }
 
 function formatTimestamp(seconds: number): string {
@@ -89,6 +91,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           storage_path: item.storage_path,
           tags: null,
           created_at: item.created_at,
+          tipo: item.tipo,
         })));
       }
     } else {
@@ -208,7 +211,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           descricao: img.descricao,
           public_url: publicUrl,
           storage_path: newPath,
-          tipo: isVideoUrl(img.image_url) ? 'video' : 'imagem',
+          tipo: isVideoUrl(img.image_url, img.tipo) ? 'video' : 'imagem',
         });
       } else {
         // Duplicate in studio_gallery_images
@@ -384,7 +387,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {filtered.map((img) => {
-                    const isVideo = isVideoUrl(img.image_url);
+                    const isVideo = isVideoUrl(img.image_url, img.tipo);
                     return (
                       <div key={img.id} className="group relative rounded-xl overflow-hidden border border-border/50 bg-muted/20 aspect-square cursor-pointer" onClick={() => setPreviewItem(img)}>
                         {isVideo ? (
@@ -444,7 +447,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       </motion.div>
 
       {/* Video Editor Dialog - same as StudioNodeComponent */}
-      {previewItem && isVideoUrl(previewItem.image_url) && (
+      {previewItem && isVideoUrl(previewItem.image_url, previewItem.tipo) && (
         <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
           <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
             <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
@@ -503,7 +506,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
       {/* Image Preview Modal */}
       <AnimatePresence>
-        {previewItem && !isVideoUrl(previewItem.image_url) && (
+        {previewItem && !isVideoUrl(previewItem.image_url, previewItem.tipo) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
