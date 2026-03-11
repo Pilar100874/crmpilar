@@ -907,7 +907,34 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [activeTab, setActiveTab] = useState<string>('prompt');
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
+  const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
+  const [editingHook, setEditingHook] = useState<{ catIdx: number; hookIdx: number } | null>(null);
+  const [editingHookText, setEditingHookText] = useState('');
   const { toast } = useToast();
+
+  // Auto-update variations when selections change and variations tab is active
+  useEffect(() => {
+    if (activeTab === 'variations' && variations.length > 0 && selectionCount >= 2) {
+      const v = generateVariations(selections, negativePromptText);
+      setVariations(v);
+    }
+  }, [selections, negativePromptText]);
+
+  // If hookStyle is deselected while on hooks tab, redirect
+  const hasHookStyleSelected = (selections.hookStyle || []).length > 0;
+  useEffect(() => {
+    if (activeTab === 'hooks' && !hasHookStyleSelected) {
+      setActiveTab('prompt');
+    }
+  }, [hasHookStyleSelected, activeTab]);
+
+  // Filter hooks based on selected hookStyle
+  const filteredHooks = useMemo(() => {
+    const selectedStyles = selections.hookStyle || [];
+    if (selectedStyles.length === 0) return [];
+    const allowedCategories = selectedStyles.map(s => HOOK_STYLE_CATEGORY_MAP[s]).filter(Boolean);
+    return viralHooks.filter(h => allowedCategories.includes(h.category));
+  }, [selections.hookStyle, viralHooks]);
 
   const visibleLayers = useMemo(() => {
     return LAYERS.filter(layer => {
