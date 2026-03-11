@@ -205,7 +205,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-dark-moody', name: 'Dark Moody', mediaType: 'image', category: 'produto',
     tags: ['dark', 'dramatic', 'premium'], image: imgProdDark,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Dark moody product photography on a matte black surface. Dramatic rim lighting from behind creates a subtle glow outline around the product. Soft smoke wisps in the background. High contrast chiaroscuro lighting with deep shadows. Premium luxury advertising aesthetic. Ultra detailed textures visible. Camera: Sony A1, 90mm macro lens, f/2.8.${NEGATIVE_BLOCK}`,
   },
   {
