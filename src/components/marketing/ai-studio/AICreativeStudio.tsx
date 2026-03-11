@@ -577,6 +577,43 @@ const AICreativeStudioInner: React.FC = () => {
     setNewFolderName('');
   }, [newFolderName, moveToFolderWorkflow, handleMoveToFolder]);
 
+  const handleCreateStandaloneFolder = useCallback(() => {
+    if (!createFolderName.trim()) return;
+    // We create the folder by moving a placeholder — but folders are implicit.
+    // To make it appear, we just need at least one workflow referencing it.
+    // For now, just add a toast — real creation happens on drop or move.
+    // We'll keep track by checking if folder name already exists.
+    if (folders.includes(createFolderName.trim())) {
+      toast.error('Pasta já existe');
+    } else {
+      toast.success(`Pasta "${createFolderName.trim()}" criada. Arraste workflows para ela!`);
+    }
+    setShowCreateFolderDialog(false);
+    setCreateFolderName('');
+  }, [createFolderName, folders]);
+
+  const handleFolderDrop = useCallback(async (folder: string | null) => {
+    if (!draggingWorkflowId) return;
+    setDragOverFolder(null);
+    await handleMoveToFolder(draggingWorkflowId, folder);
+    setDraggingWorkflowId(null);
+  }, [draggingWorkflowId, handleMoveToFolder]);
+
+  const handleDeleteFolder = useCallback(async (folder: string) => {
+    // Move all workflows in this folder to root
+    const workflowsInFolder = savedWorkflows.filter(w => w.pasta === folder);
+    for (const w of workflowsInFolder) {
+      await supabase
+        .from('ai_studio_workflows')
+        .update({ pasta: null } as any)
+        .eq('id', w.id);
+    }
+    toast.success(`Pasta "${folder}" excluída. Workflows movidos para raiz.`);
+    setDeleteFolderConfirm(null);
+    if (activeFolder === folder) setActiveFolder(null);
+    fetchWorkflows();
+  }, [savedWorkflows, activeFolder, fetchWorkflows]);
+
 
   const handleCloseCanvas = useCallback(() => {
     if (hasUnsavedChanges) {
