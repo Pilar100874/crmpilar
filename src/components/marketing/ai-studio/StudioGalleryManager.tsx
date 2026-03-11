@@ -532,7 +532,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               onClick={(e) => e.stopPropagation()}
             >
               {/* Preview actions bar - overlaid on top */}
-              <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+              <div className="absolute top-3 right-3 flex items-center gap-2 z-[210]">
                 {isVideoUrl(previewItem.image_url, previewItem.tipo) && (
                   <Button
                     size="sm"
@@ -582,8 +582,11 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   src={previewItem.image_url}
                   controls
                   autoPlay
-                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl"
-                  controlsList="nofullscreen"
+                  className="max-w-full max-h-[70vh] rounded-xl shadow-2xl mt-14 studio-video-no-fullscreen"
+                  controlsList="nofullscreen nodownload"
+                  disablePictureInPicture
+                  onDoubleClick={(e) => e.preventDefault()}
+                  style={{ pointerEvents: 'auto' }}
                 />
               ) : (
                 <img
