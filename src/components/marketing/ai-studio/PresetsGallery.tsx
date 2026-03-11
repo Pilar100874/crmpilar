@@ -1133,50 +1133,57 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col"
+      className="absolute inset-0 z-50 bg-background flex flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b">
-        <div className="flex items-center gap-4">
-          <div>
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Wand2 className="h-5 w-5 text-primary" />
-              AI Creative Studio
-1061:             </h2>
-1062:             <p className="text-xs text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+      {/* Header — gradient accent bar */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
+        <div className="relative flex items-center justify-between px-6 py-3 border-b border-border/50">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <Wand2 className="h-4.5 w-4.5 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold tracking-tight">AI Creative Studio</h2>
+                <p className="text-[10px] text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+              </div>
+            </div>
+            {/* Mode Toggle */}
+            <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-xl p-0.5 border border-border/40">
+              <button
+                onClick={() => setMode('wizard')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  mode === 'wizard' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Wand2 className="h-3.5 w-3.5" /> Assistente
+              </button>
+              <button
+                onClick={() => setMode('prompts')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  mode === 'prompts' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
+              </button>
+            </div>
           </div>
-          {/* Mode Toggle */}
-          <div className="flex items-center bg-muted rounded-lg p-0.5">
-            <button
-              onClick={() => setMode('wizard')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
-                mode === 'wizard' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Wand2 className="h-3.5 w-3.5" /> Assistente
-            </button>
-            <button
-              onClick={() => setMode('prompts')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
-                mode === 'prompts' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {mode === 'wizard' && selectionCount > 0 && (
-            <Badge variant="secondary" className="text-xs">{selectionCount} camadas</Badge>
-          )}
-          {mode === 'wizard' && selectionCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 text-muted-foreground">
-              <RotateCcw className="h-3.5 w-3.5" /> Limpar
+          <div className="flex items-center gap-2">
+            {mode === 'wizard' && selectionCount > 0 && (
+              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold">
+                {selectionCount} camadas selecionadas
+              </Badge>
+            )}
+            {mode === 'wizard' && selectionCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5 text-xs h-8 rounded-lg border-border/50">
+                <RotateCcw className="h-3 w-3" /> Limpar
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl hover:bg-destructive/10 hover:text-destructive">
+              <X className="h-5 w-5" />
             </Button>
-          )}
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
+          </div>
         </div>
       </div>
 
@@ -1184,119 +1191,143 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         <PromptPresets onSelect={handlePromptPresetSelect} estabelecimentoId={estabelecimentoId} />
       ) : (
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left — Layers */}
-        <ScrollArea className="flex-1 lg:max-w-[45%]">
-          <div className="p-3 space-y-1.5">
-            {visibleLayers.map((layer, idx) => {
-              const isExpanded = expandedLayer === layer.id;
-              const selected = selections[layer.id] || [];
-              const hasSelection = selected.length > 0;
+        {/* Left — Layers Panel */}
+        <div className="flex-1 lg:max-w-[45%] flex flex-col">
+          <div className="px-4 pt-3 pb-2">
+            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/70">Camadas de Configuração</p>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="px-3 pb-3 space-y-1">
+              {visibleLayers.map((layer, idx) => {
+                const isExpanded = expandedLayer === layer.id;
+                const selected = selections[layer.id] || [];
+                const hasSelection = selected.length > 0;
+                const stepNumber = idx + 1;
 
-              return (
-                <motion.div
-                  key={layer.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className={`rounded-lg border transition-all ${
-                    isExpanded
-                      ? 'border-primary/40 bg-primary/5 shadow-sm'
-                      : hasSelection
-                        ? 'border-primary/20 bg-primary/[0.02]'
-                        : 'border-border/60 hover:border-border'
-                  }`}
-                >
-                  <button
-                    onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left"
+                return (
+                  <motion.div
+                    key={layer.id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.025, type: 'spring', stiffness: 300, damping: 30 }}
+                    className={`rounded-xl border transition-all duration-200 ${
+                      isExpanded
+                        ? 'border-primary/50 bg-gradient-to-br from-primary/[0.06] to-primary/[0.02] shadow-md shadow-primary/5 ring-1 ring-primary/10'
+                        : hasSelection
+                          ? 'border-primary/20 bg-primary/[0.02] hover:shadow-sm'
+                          : 'border-border/40 hover:border-border/70 hover:shadow-sm'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-base">{layer.emoji}</span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-xs">{layer.title}</span>
-                          {layer.required && !hasSelection && (
-                            <Badge variant="outline" className="text-[8px] px-1 py-0 border-destructive/40 text-destructive">
-                              Obrigatório
-                            </Badge>
+                    <button
+                      onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 text-left group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-sm transition-all ${
+                          hasSelection
+                            ? 'bg-primary/15 shadow-sm'
+                            : 'bg-muted/60'
+                        }`}>
+                          {layer.emoji}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-xs">{layer.title}</span>
+                            {layer.required && !hasSelection && (
+                              <Badge variant="outline" className="text-[7px] px-1.5 py-0 border-destructive/30 text-destructive bg-destructive/5 font-bold uppercase tracking-wider">
+                                Obrigatório
+                              </Badge>
+                            )}
+                          </div>
+                          {!isExpanded && hasSelection && (
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {selected.slice(0, 3).map(s => {
+                                const opt = layer.options.find(o => o.id === s);
+                                return (
+                                  <Badge key={s} className="text-[8px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15 font-medium">
+                                    {opt?.emoji} {opt?.label}
+                                  </Badge>
+                                );
+                              })}
+                              {selected.length > 3 && (
+                                <Badge className="text-[8px] px-1.5 py-0 bg-muted text-muted-foreground border-border/40">
+                                  +{selected.length - 3}
+                                </Badge>
+                              )}
+                            </div>
                           )}
                         </div>
-                        {!isExpanded && hasSelection && (
-                          <div className="flex flex-wrap gap-1 mt-0.5">
-                            {selected.map(s => {
-                              const opt = layer.options.find(o => o.id === s);
-                              return (
-                                <Badge key={s} className="text-[9px] px-1 py-0 bg-primary/15 text-primary border-primary/20">
-                                  {opt?.emoji} {opt?.label}
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {hasSelection && (
-                        <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="h-2.5 w-2.5 text-primary-foreground" />
-                        </div>
-                      )}
-                      <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                    </div>
-                  </button>
+                      <div className="flex items-center gap-2">
+                        {hasSelection && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="h-5 w-5 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm"
+                          >
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
+                        <ChevronRight className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${isExpanded ? 'rotate-90' : 'group-hover:translate-x-0.5'}`} />
+                      </div>
+                    </button>
 
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-3 pb-3">
-                          <p className="text-[10px] text-muted-foreground mb-2">{layer.description}</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {layer.options.map((option) => {
-                              const isSelected = selected.includes(option.id);
-                              return (
-                                <button
-                                  key={option.id}
-                                  onClick={() => toggleOption(layer.id, option.id)}
-                                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all border ${
-                                    isSelected
-                                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                                      : 'bg-background text-foreground border-border/60 hover:border-primary/40 hover:bg-primary/5'
-                                  }`}
-                                >
-                                  <span className="text-sm">{option.emoji}</span>
-                                  {option.label}
-                                </button>
-                              );
-                            })}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 pt-0.5">
+                            <p className="text-[10px] text-muted-foreground mb-2.5 pl-10">{layer.description}</p>
+                            <div className="flex flex-wrap gap-1.5 pl-10">
+                              {layer.options.map((option) => {
+                                const isSelected = selected.includes(option.id);
+                                return (
+                                  <motion.button
+                                    key={option.id}
+                                    whileHover={{ scale: 1.03 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    onClick={() => toggleOption(layer.id, option.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                                      isSelected
+                                        ? 'bg-gradient-to-r from-primary to-primary/90 text-primary-foreground border-primary shadow-md shadow-primary/15'
+                                        : 'bg-background text-foreground border-border/50 hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm'
+                                    }`}
+                                  >
+                                    <span className="text-sm">{option.emoji}</span>
+                                    {option.label}
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </div>
 
-        {/* Right — Modules */}
-        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
+        {/* Right — Modules Panel */}
+        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-muted/10 to-muted/30 flex flex-col">
           <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
               if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
                 const v = generateVariations(selections, negativePromptText);
                 setVariations(v);
+                setSelectedVariations(new Set(v.map((_, i) => i)));
                 toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
               }
             }} className="flex flex-col flex-1 overflow-hidden">
-            <div className="border-b px-3 pt-2">
-              <TabsList className={`h-8 w-full grid bg-muted/50 ${
+            <div className="border-b border-border/40 px-4 pt-2.5 pb-0.5">
+              <TabsList className={`h-9 w-full grid bg-muted/40 rounded-xl p-0.5 ${
                 (() => {
                   const isVideo = selections.contentType?.includes('video');
                   const hasHook = hasHookStyleSelected;
@@ -1305,25 +1336,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   return 'grid-cols-2';
                 })()
               }`}>
-                <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
                 {hasHookStyleSelected && (
-                  <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <Library className="h-3 w-3" /> Ganchos
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <FileText className="h-3 w-3" /> Roteiro
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="scenes" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <Clapperboard className="h-3 w-3" /> Cenas
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="variations" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                   <Layers className="h-3 w-3" /> Variações
                 </TabsTrigger>
               </TabsList>
@@ -1687,12 +1718,14 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </TabsContent>
           </Tabs>
 
-          <div className="p-3 border-t space-y-1.5">
+          <div className="p-4 border-t border-border/40 bg-background/80 backdrop-blur-sm space-y-2">
             {hasHookStyleSelected && !selectedHookText && (
-              <p className="text-[10px] text-destructive font-medium text-center">⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.</p>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-destructive font-medium bg-destructive/5 rounded-lg px-3 py-1.5 border border-destructive/15">
+                ⚠️ Selecione uma frase de gancho na aba "Ganchos" antes de aplicar.
+              </div>
             )}
             <Button
-              className="w-full gap-2"
+              className="w-full gap-2 h-11 rounded-xl font-semibold text-sm shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
               size="lg"
               disabled={selectionCount < 2 || !selections.contentType?.length || (hasHookStyleSelected && !selectedHookText) || (activeTab === 'variations' && selectedVariations.size === 0)}
               onClick={handleGenerate}
