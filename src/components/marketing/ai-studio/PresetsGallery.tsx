@@ -360,7 +360,7 @@ const VIRAL_HOOKS: ViralHook[] = [
     ],
   },
   {
-    category: 'Bold Statement',
+    category: 'Declaração Impactante',
     emoji: '💪',
     hooks: [
       'Esse é o melhor produto que eu já testei. Ponto final.',
