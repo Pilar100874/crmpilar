@@ -303,7 +303,19 @@ interface ViralHook {
   hooks: string[];
 }
 
-const VIRAL_HOOKS: ViralHook[] = [
+// Map hookStyle option IDs to their VIRAL_HOOKS category
+const HOOK_STYLE_CATEGORY_MAP: Record<string, string> = {
+  'pattern-interrupt': 'Quebra de Padrão',
+  'question': 'Gancho de Pergunta',
+  'problem': 'Gancho de Problema',
+  'shock': 'Gancho de Choque',
+  'curiosity': 'Gancho de Curiosidade',
+  'bold-statement': 'Declaração Impactante',
+  'visual-hook': 'Gancho Visual',
+  'fast-demo': 'Demo Rápida',
+};
+
+const DEFAULT_VIRAL_HOOKS: ViralHook[] = [
   {
     category: 'Quebra de Padrão',
     emoji: '⚡',
