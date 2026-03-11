@@ -1437,10 +1437,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
               })}
             </div>
           </ScrollArea>
-        </div>
-
-        {/* Right — Modules Panel */}
-        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/30 bg-gradient-to-br from-muted/5 via-background to-muted/15 flex flex-col">
+          {/* Step 1 Footer — Avançar button */}
+          <div className="p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
+            <Button
+              className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
+              size="lg"
+              disabled={selectionCount < 2 || !selections.contentType?.length}
+              onClick={() => setWizardStep(2)}
+            >
+              <Sparkles className="h-4.5 w-4.5" />
+              Ver Prompt Gerado
+              <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+            </Button>
+            {selectionCount < 2 && (
+              <p className="text-[10px] text-muted-foreground text-center mt-2">Selecione pelo menos 2 camadas para avançar</p>
+            )}
+          </div>
+        </motion.div>
+        ) : (
+        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-muted/5 via-background to-muted/15">
           <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
               if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
