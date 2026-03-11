@@ -1824,11 +1824,38 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                         <p className="text-xs font-semibold flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5 text-primary" /> Roteiro Gerado
                         </p>
-                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedScript)}>
-                          <Copy className="h-3 w-3" /> Copiar
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => handleCopyText(generatedScript)}>
+                            <Copy className="h-3 w-3" /> Copiar
+                          </Button>
+                        </div>
                       </div>
-                      <pre className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap">{generatedScript}</pre>
+                      <Textarea
+                        value={generatedScript}
+                        onChange={(e) => { setEditedScript(e.target.value); setIsEditingScript(true); }}
+                        className="text-[11px] text-foreground leading-relaxed font-mono whitespace-pre-wrap bg-muted/30 border-border/50 min-h-[300px] resize-y"
+                        placeholder="O roteiro aparecerá aqui..."
+                      />
+                      <div className="flex items-center gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleSuggestNewScript}
+                        >
+                          <Sparkles className="h-3 w-3" /> Sugerir outro roteiro
+                        </Button>
+                        {isEditingScript && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[10px] gap-1 h-7 text-muted-foreground"
+                            onClick={() => { setEditedScript(generatedScriptBase); setIsEditingScript(false); }}
+                          >
+                            Restaurar original
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
