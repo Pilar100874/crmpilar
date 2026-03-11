@@ -418,14 +418,15 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         </ScrollArea>
       )}
 
-      {/* Video Editor Dialog */}
+      {/* Video Editor */}
       {editingVideo && editingVideo.content_url && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingVideo(null); }}>
-          <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
-            <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/10" onClick={() => setEditingVideo(null)} />
+          <div className="relative max-w-[900px] w-full max-h-[90vh] bg-card border border-border rounded-2xl shadow-2xl z-[201]">
+            <div className="relative overflow-y-auto max-h-[90vh] rounded-2xl">
               <button
                 onClick={() => setEditingVideo(null)}
-                className="absolute top-3 right-3 z-[200] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
+                className="absolute top-3 right-3 z-[210] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -472,8 +473,8 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                 }}
               />
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}
