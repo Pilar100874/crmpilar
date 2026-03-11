@@ -550,8 +550,16 @@ const AICreativeStudioInner: React.FC = () => {
     return Array.from(types);
   }, []);
 
-  // Get unique folders from workflows
-  const folders = Array.from(new Set(savedWorkflows.map(w => w.pasta).filter(Boolean))) as string[];
+  // Get unique folders from workflows + manually created ones
+  const folders = Array.from(new Set([
+    ...savedWorkflows.map(w => w.pasta).filter(Boolean),
+    ...manualFolders
+  ])) as string[];
+
+  const saveManualFolders = useCallback((newFolders: string[]) => {
+    setManualFolders(newFolders);
+    localStorage.setItem(`studio_folders_${estabelecimentoId}`, JSON.stringify(newFolders));
+  }, [estabelecimentoId]);
 
   // Filtered workflows based on active folder
   const filteredWorkflows = activeFolder
