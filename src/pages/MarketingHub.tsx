@@ -58,8 +58,6 @@ const tabItems: TabItem[] = [
   
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
-  { id: 'n8n-generator', label: 'Gerador n8n', icon: Workflow, description: 'Gere workflows n8n com IA' },
-  { id: 'railway-env', label: 'Variáveis Railway', icon: Server, description: 'Variáveis de ambiente para n8n' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
