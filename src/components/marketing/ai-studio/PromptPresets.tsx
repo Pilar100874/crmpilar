@@ -105,7 +105,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-scifi', name: 'Sci-Fi Lab', mediaType: 'video', category: 'produto',
     tags: ['futuristic', 'neon', 'tech'], image: imgScifi,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Futuristic product commercial in a sci-fi environment. The product floating in a high-tech laboratory with holographic interface elements around it. Neon blue and purple lighting. Camera slowly orbiting around the product. Hyper realistic reflections, ultra detailed materials. Cinematic sci-fi atmosphere similar to Blade Runner advertising style.${NEGATIVE_BLOCK}`,
   },
   {
