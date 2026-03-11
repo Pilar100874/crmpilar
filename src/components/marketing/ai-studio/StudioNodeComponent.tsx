@@ -1551,7 +1551,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       nome: `AI Studio Vídeo (Cortado) - ${nodeData.label}`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
                       tamanho_bytes: blob.size,
-                      mime_type: blob.type || 'video/mp4',
+                      mime_type: 'video/mp4',
                       origem: 'ai_studio',
                     });
                   if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
