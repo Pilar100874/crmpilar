@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
