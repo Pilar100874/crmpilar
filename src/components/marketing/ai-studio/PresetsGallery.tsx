@@ -1094,7 +1094,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       </div>
 
       {mode === 'prompts' ? (
-        <PromptPresets onSelect={handlePromptPresetSelect} />
+        <PromptPresets onSelect={handlePromptPresetSelect} estabelecimentoId={estabelecimentoId} />
       ) : (
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left — Layers */}

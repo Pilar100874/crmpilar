@@ -331,9 +331,10 @@ function saveCustomPresets(presets: PromptPreset[]) {
 
 interface PromptPresetsProps {
   onSelect: (preset: PromptPreset) => void;
+  estabelecimentoId?: string;
 }
 
-const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
+const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimentoId }) => {
   const [activeMediaType, setActiveMediaType] = useState<'video' | 'image'>('video');
   const [activeCategory, setActiveCategory] = useState<'produto' | 'influencer'>('produto');
   const [search, setSearch] = useState('');
@@ -341,7 +342,35 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [allPresets, setAllPresets] = useState<PromptPreset[]>(loadAllPresets);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
+  const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  // Load which presets are in use by saved workflows
+  React.useEffect(() => {
+    const fetchPresetsInUse = async () => {
+      if (!estabelecimentoId) return;
+      const { data } = await supabase
+        .from('ai_studio_workflows')
+        .select('nodes_data')
+        .eq('estabelecimento_id', estabelecimentoId);
+      if (!data) return;
+      const usedNames = new Set<string>();
+      data.forEach((w: any) => {
+        const nodes = Array.isArray(w.nodes_data) ? w.nodes_data : [];
+        nodes.forEach((n: any) => {
+          const name = n?.data?.config?.presetName;
+          if (name) usedNames.add(name);
+        });
+      });
+      // Map names back to preset IDs
+      const usedIds = new Set<string>();
+      allPresets.forEach(p => {
+        if (usedNames.has(p.name)) usedIds.add(p.id);
+      });
+      setPresetsInUse(usedIds);
+    };
+    fetchPresetsInUse();
+  }, [estabelecimentoId, allPresets]);
 
   const filtered = useMemo(() => {
     return allPresets.filter(p => {
@@ -365,6 +394,11 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const handleDeleteCustom = (id: string) => {
+    if (presetsInUse.has(id)) {
+      toast({ title: 'Não é possível excluir', description: 'Este prompt está em uso em um workflow salvo.', variant: 'destructive' });
+      setDeleteConfirmId(null);
+      return;
+    }
     const updated = allPresets.filter(p => p.id !== id);
     setAllPresets(updated);
     saveCustomPresets(updated);
@@ -518,21 +552,37 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect }) => {
                   </div>
                 </button>
                 {/* Overlay buttons on hover */}
-                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <Button
                     size="sm"
-                    className="gap-1.5 text-xs pointer-events-auto shadow-lg"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
                     onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
                   >
-                    <Play className="h-3.5 w-3.5" /> Usar
+                    <Play className="h-3 w-3" /> Usar
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 text-xs pointer-events-auto shadow-lg bg-background/90"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
                     onClick={(e) => { e.stopPropagation(); handleEditPreset(preset); }}
                   >
-                    <Sparkles className="h-3.5 w-3.5" /> Editar
+                    <Sparkles className="h-3 w-3" /> Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
+                    onClick={(e) => { e.stopPropagation(); handleDuplicatePreset(preset); }}
+                  >
+                    <CopyPlus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(preset.id); }}
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </motion.div>
