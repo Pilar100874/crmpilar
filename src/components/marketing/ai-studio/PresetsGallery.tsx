@@ -1340,21 +1340,21 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
                 {hasHookStyleSelected && (
-                  <TabsTrigger value="hooks" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <Library className="h-3 w-3" /> Ganchos
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="script" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <FileText className="h-3 w-3" /> Roteiro
                   </TabsTrigger>
                 )}
                 {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="scenes" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                     <Clapperboard className="h-3 w-3" /> Cenas
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="variations" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                   <Layers className="h-3 w-3" /> Variações
                 </TabsTrigger>
               </TabsList>
