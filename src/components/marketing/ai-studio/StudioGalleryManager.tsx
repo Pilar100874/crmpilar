@@ -730,15 +730,16 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
               <VideoTrimmer
                 videoUrl={editItem.image_url}
                 isSaving={isSavingTrimmed}
-                onSaveTrimmed={async (blob, startTime, endTime) => {
+                onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                   setIsSavingTrimmed(true);
                   try {
-                    const convertedBlob = await convertVideoToWhatsappMp4(blob);
-                    const fileName = `trimmed_${Date.now()}.mp4`;
+                    const mp4Blob = await convertVideoToWhatsappMp4(blob);
+                    const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                    const fileName = `trimmed_${withAudio ? 'audio' : 'sem-audio'}_${Date.now()}.mp4`;
                     const path = `${estabelecimentoId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, convertedBlob, { contentType: 'video/mp4' });
+                      .upload(path, finalBlob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -748,13 +749,13 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                       tipo: 'video',
                       public_url: publicUrl,
                       storage_path: path,
-                      nome: `${editItem.nome || 'Vídeo'} (cortado)`,
+                      nome: `${editItem.nome || 'Vídeo'} (${withAudio ? 'cortado' : 'cortado sem áudio'})`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: convertedBlob.size,
+                      tamanho_bytes: finalBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'studio-trimmed',
                     });
-                    toast.success('✅ Vídeo cortado salvo na galeria!');
+                    toast.success(`✅ Vídeo cortado salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
                     fetchImages();
                   } catch (err: any) {
                     toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
@@ -762,8 +763,8 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                     setIsSavingTrimmed(false);
                   }
                 }}
-                onSaveOriginal={() => {
-                  toast.success('Vídeo original mantido');
+                onSaveOriginal={(withAudio) => {
+                  toast.success(withAudio ? 'Vídeo original mantido' : 'Escolha "Salvar Cortado > Sem áudio" para gerar uma versão sem áudio.');
                   setEditItem(null);
                 }}
               />

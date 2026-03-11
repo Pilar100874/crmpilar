@@ -1,15 +1,16 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Play, Pause, Scissors, Save, Undo2,
-  Loader2, Volume2, VolumeX, RotateCcw, Eye
+  Loader2, Volume2, VolumeX, RotateCcw, Eye, ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 interface VideoTrimmerProps {
   videoUrl: string;
-  onSaveTrimmed: (blob: Blob, startTime: number, endTime: number) => Promise<void>;
-  onSaveOriginal: () => void;
+  onSaveTrimmed: (blob: Blob, startTime: number, endTime: number, withAudio: boolean) => Promise<void>;
+  onSaveOriginal: (withAudio: boolean) => void | Promise<void>;
   isSaving?: boolean;
 }
 
@@ -289,17 +290,16 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
   }, [cuts, stopPlayback, seekTo]);
 
   // --- Export: record only the kept segments ---
-  const handleExport = useCallback(async () => {
+  const handleExport = useCallback(async (withAudio: boolean) => {
     if (cuts.length === 0) {
       toast.info('Nenhum corte foi feito');
       return;
     }
     setIsTrimming(true);
     setTrimProgress(0);
-    toast.info('Processando vídeo cortado...');
+    toast.info(`Processando vídeo cortado ${withAudio ? 'com áudio' : 'sem áudio'}...`);
 
     try {
-      // Fetch video as blob for CORS safety
       const response = await fetch(videoUrl);
       if (!response.ok) throw new Error('Falha ao carregar vídeo');
       const sourceBlob = await response.blob();
@@ -309,6 +309,7 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
       offscreen.src = localUrl;
       offscreen.playsInline = true;
       offscreen.preload = 'auto';
+      offscreen.muted = !withAudio;
 
       await new Promise<void>((resolve, reject) => {
         offscreen.onloadedmetadata = () => resolve();
@@ -323,16 +324,17 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
 
       const canvasStream = canvas.captureStream(30);
 
-      // Try audio
       let audioCtx: AudioContext | null = null;
-      try {
-        audioCtx = new AudioContext();
-        const source = audioCtx.createMediaElementSource(offscreen);
-        const dest = audioCtx.createMediaStreamDestination();
-        source.connect(dest);
-        source.connect(audioCtx.destination);
-        dest.stream.getAudioTracks().forEach(t => canvasStream.addTrack(t));
-      } catch { /* no audio */ }
+      if (withAudio) {
+        try {
+          audioCtx = new AudioContext();
+          const source = audioCtx.createMediaElementSource(offscreen);
+          const dest = audioCtx.createMediaStreamDestination();
+          source.connect(dest);
+          source.connect(audioCtx.destination);
+          dest.stream.getAudioTracks().forEach(t => canvasStream.addTrack(t));
+        } catch { /* no audio */ }
+      }
 
       const mimeType = MediaRecorder.isTypeSupported('video/mp4')
         ? 'video/mp4'
@@ -349,7 +351,6 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
         recorder.onerror = () => reject(new Error('Erro no MediaRecorder'));
       });
 
-      // Process each kept segment sequentially
       const segments = [...keptSegments];
       let processedTime = 0;
 
@@ -359,7 +360,7 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
         const seg = segments[i];
         offscreen.currentTime = seg.start;
         await new Promise<void>(r => { offscreen.onseeked = () => r(); });
-        
+
         await offscreen.play();
 
         await new Promise<void>((resolve) => {
@@ -388,9 +389,8 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
 
       if (blob.size < 100) throw new Error('O vídeo cortado ficou vazio');
 
-      // Use 0 and totalKeptDuration as the range for the callback
-      await onSaveTrimmed(blob, 0, totalKeptDuration);
-      toast.success('✅ Vídeo cortado e salvo!');
+      await onSaveTrimmed(blob, 0, totalKeptDuration, withAudio);
+      toast.success(`✅ Vídeo cortado e salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
     } catch (err: any) {
       console.error('[VideoTrimmer] Export error:', err);
       toast.error('Erro ao exportar: ' + (err.message || String(err)));
@@ -616,27 +616,51 @@ const VideoTrimmer: React.FC<VideoTrimmerProps> = ({ videoUrl, onSaveTrimmed, on
               </Button>
             )}
             {hasCuts && (
-              <Button
-                size="sm"
-                variant="default"
-                className="gap-1.5 text-xs"
-                onClick={handleExport}
-                disabled={isTrimming || isSaving}
-              >
-                {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
-                {isTrimming ? `Processando ${Math.round(trimProgress)}%` : 'Salvar Cortado'}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="gap-1.5 text-xs"
+                    disabled={isTrimming || isSaving}
+                  >
+                    {isTrimming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Scissors className="h-3.5 w-3.5" />}
+                    {isTrimming ? `Processando ${Math.round(trimProgress)}%` : 'Salvar Cortado'}
+                    {!isTrimming && <ChevronDown className="h-3 w-3" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport(true)}>
+                    <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport(false)}>
+                    <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              onClick={onSaveOriginal}
-              disabled={isSaving || isTrimming}
-            >
-              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              Salvar Original
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs"
+                  disabled={isSaving || isTrimming}
+                >
+                  {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  Salvar Original
+                  {!isSaving && !isTrimming && <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onSaveOriginal(true)}>
+                  <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSaveOriginal(false)}>
+                  <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

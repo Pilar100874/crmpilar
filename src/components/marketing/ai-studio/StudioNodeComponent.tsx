@@ -566,8 +566,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
-  // Save video to media_gallery
-  const handleSaveVideoToGallery = useCallback(async (videoUrl: string) => {
+  const handleSaveVideoToGallery = useCallback(async (videoUrl: string, withAudio: boolean = true) => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId || !videoUrl) {
       toast.error('Erro: estabelecimento ou vídeo não encontrados');
@@ -577,14 +576,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     setIsSavingToGallery(true);
     try {
       const blob = await downloadAsBlob(videoUrl);
-      const convertedBlob = await convertVideoToWhatsappMp4(blob);
+      const mp4Blob = await convertVideoToWhatsappMp4(blob);
+      const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
 
-      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.mp4`;
+      const fileName = `studio-video-${nodeData.type}-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, convertedBlob, { contentType: 'video/mp4' });
+        .upload(storagePath, finalBlob, { contentType: 'video/mp4' });
       if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
@@ -598,16 +598,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           tipo: 'video',
           storage_path: storagePath,
           public_url: publicUrl,
-          nome: `AI Studio Vídeo - ${nodeData.label}`,
-          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
-          tamanho_bytes: convertedBlob.size,
+          nome: `AI Studio Vídeo ${withAudio ? '' : '(Sem Áudio) '} - ${nodeData.label}`,
+          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type}) ${withAudio ? 'com áudio' : 'sem áudio'}`,
+          tamanho_bytes: finalBlob.size,
           mime_type: 'video/mp4',
           origem: 'ai_studio',
         });
       if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
 
       console.log('[Studio] Vídeo salvo com sucesso na galeria!');
-      toast.success('✅ Vídeo salvo na galeria!');
+      toast.success(`✅ Vídeo salvo na galeria ${withAudio ? 'com áudio' : 'sem áudio'}!`);
     } catch (err: any) {
       console.error('[Studio] Erro ao salvar vídeo na galeria:', err);
       toast.error('Erro ao salvar: ' + (err.message || String(err)));
@@ -1391,19 +1391,28 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     >
                       <Maximize2 className="h-3 w-3 text-white" />
                     </button>
-                    <button
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (resultVideo) handleSaveVideoToGallery(resultVideo);
-                      }}
-                      disabled={isSavingToGallery}
-                      className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors"
-                      title="Salvar vídeo na galeria"
-                    >
-                      {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          disabled={isSavingToGallery}
+                          className="p-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 transition-colors disabled:opacity-60"
+                          title="Salvar vídeo na galeria"
+                        >
+                          {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, true)}>
+                          <Volume2 className="h-3.5 w-3.5 mr-2" /> Salvar com áudio
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => resultVideo && handleSaveVideoToGallery(resultVideo, false)}>
+                          <VolumeX className="h-3.5 w-3.5 mr-2" /> Salvar sem áudio
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -1555,17 +1564,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             <VideoTrimmer
               videoUrl={resultVideo}
               isSaving={isSavingToGallery}
-              onSaveOriginal={() => handleSaveVideoToGallery(resultVideo)}
-              onSaveTrimmed={async (blob, startTime, endTime) => {
+              onSaveOriginal={(withAudio) => handleSaveVideoToGallery(resultVideo, withAudio)}
+              onSaveTrimmed={async (blob, startTime, endTime, withAudio) => {
                 const estabId = localStorage.getItem('estabelecimentoId');
                 if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
                 setIsSavingToGallery(true);
                 try {
-                  const fileName = `studio-trimmed-${id}-${Date.now()}.mp4`;
+                  const mp4Blob = await convertVideoToWhatsappMp4(blob);
+                  const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
+                  const fileName = `studio-trimmed-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
                   const storagePath = `${estabId}/${fileName}`;
                   const { error: uploadErr } = await supabase.storage
                     .from('marketing-videos')
-                    .upload(storagePath, blob, { contentType: 'video/mp4' });
+                    .upload(storagePath, finalBlob, { contentType: 'video/mp4' });
                   if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
                   const { data: { publicUrl } } = supabase.storage
                     .from('marketing-videos')
@@ -1577,13 +1588,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       tipo: 'video',
                       storage_path: storagePath,
                       public_url: publicUrl,
-                      nome: `AI Studio Vídeo (Cortado) - ${nodeData.label}`,
+                      nome: `AI Studio Vídeo (${withAudio ? 'Cortado' : 'Cortado Sem Áudio'}) - ${nodeData.label}`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: blob.size,
+                      tamanho_bytes: finalBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'ai_studio',
                     });
                   if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
+                  toast.success(`✅ Vídeo cortado salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
                 } catch (err: any) {
                   console.error('[Studio] Erro ao salvar vídeo cortado:', err);
                   toast.error('Erro ao salvar: ' + (err.message || String(err)));
