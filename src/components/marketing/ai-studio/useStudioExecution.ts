@@ -235,7 +235,7 @@ export function useStudioExecution() {
         const roleDescMap: Record<string, string> = {
           influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral.',
           logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
-          produto: '[PRODUTO - NÃO ALTERAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência.',
+          produto: '[PRODUTO - PROIBIDO MODIFICAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência. NÃO altere cores, formato, rótulo, logotipo, tipografia, embalagem ou proporções. NÃO invente elementos novos, NÃO redesenhe, NÃO substitua. O produto na referência é REAL e deve ser reproduzido como uma fotografia fiel.',
           ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário/fundo.',
           estilo: 'Use como referência de estilo visual.',
           paleta: 'Use como referência de paleta de cores.',
