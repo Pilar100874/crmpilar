@@ -179,7 +179,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-cafe', name: 'Café Lifestyle', mediaType: 'video', category: 'influencer',
     tags: ['cafe', 'cozy', 'lifestyle'], image: imgInfluencerCafe,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Influencer sitting in a cozy café using the product naturally. Soft window light, cinematic depth of field. Relaxed lifestyle commercial tone.${NEGATIVE_BLOCK}`,
   },
   {
