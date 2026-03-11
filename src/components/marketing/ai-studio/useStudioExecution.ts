@@ -1300,14 +1300,21 @@ export function useStudioExecution() {
     } finally {
       setIsExecuting(false);
       setCurrentNodeId(null);
+      abortRef.current = null;
     }
 
     return updatedNodes;
+  }, []);
+
+  const cancelExecution = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
   }, []);
 
   const clearLog = useCallback(() => {
     setExecutionLog([]);
   }, []);
 
-  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults };
+  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, cancelExecution, batchReviewResults, setBatchReviewResults };
 }
