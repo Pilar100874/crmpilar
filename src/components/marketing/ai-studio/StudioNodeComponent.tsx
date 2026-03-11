@@ -1327,38 +1327,63 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   />
                   {/* Always-visible overlay buttons */}
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
-                    <button
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        try {
-                          const resp = await fetch(resultVideo);
-                          const originalBlob = await resp.blob();
-                          const mp4Blob = new Blob([originalBlob], { type: 'video/mp4' });
-                          const blobUrl = URL.createObjectURL(mp4Blob);
-                          const link = document.createElement('a');
-                          link.href = blobUrl;
-                          link.download = `studio-${nodeData.type}-${id}.mp4`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-                        } catch {
-                          // fallback
-                          const link = document.createElement('a');
-                          link.href = resultVideo;
-                          link.download = `studio-${nodeData.type}-${id}.mp4`;
-                          link.target = '_blank';
-                          link.click();
-                        }
-                      }}
-                      className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
-                      title="Download"
-                    >
-                      <Download className="h-3 w-3 text-white" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
+                          title="Download"
+                        >
+                          <Download className="h-3 w-3 text-white" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={async () => {
+                          try {
+                            const resp = await fetch(resultVideo);
+                            const originalBlob = await resp.blob();
+                            const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+                            const blobUrl = URL.createObjectURL(mp4Blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = `studio-${nodeData.type}-${id}.mp4`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                          } catch {
+                            const link = document.createElement('a');
+                            link.href = resultVideo;
+                            link.download = `studio-${nodeData.type}-${id}.mp4`;
+                            link.target = '_blank';
+                            link.click();
+                          }
+                        }}>
+                          <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={async () => {
+                          try {
+                            const resp = await fetch(resultVideo);
+                            const originalBlob = await resp.blob();
+                            const mp4Blob = await removeAudioFromVideo(originalBlob);
+                            const blobUrl = URL.createObjectURL(mp4Blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = `studio-${nodeData.type}-${id}_sem-audio.mp4`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                          } catch {
+                            toast.error('Não foi possível remover o áudio.');
+                          }
+                        }}>
+                          <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <button
                       onClick={(e) => { e.stopPropagation(); setVideoPreviewOpen(true); }}
                       className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
