@@ -36,8 +36,8 @@ const LAYERS: Layer[] = [
     description: 'Escolha entre vídeo ou imagem',
     required: true,
     options: [
-      { id: 'video', label: 'Video Generation', emoji: '🎥' },
-      { id: 'image', label: 'Image Generation', emoji: '🖼️' },
+      { id: 'video', label: 'Geração de Vídeo', emoji: '🎥' },
+      { id: 'image', label: 'Geração de Imagem', emoji: '🖼️' },
     ],
   },
   {
