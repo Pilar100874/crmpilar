@@ -1200,7 +1200,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       exit={{ opacity: 0 }}
       className="absolute inset-0 z-50 bg-background flex flex-col"
     >
-      {/* Header — gradient accent bar */}
+      {/* Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
         <div className="relative flex items-center justify-between px-6 py-3 border-b border-border/50">
@@ -1214,25 +1214,27 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 <p className="text-[10px] text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
               </div>
             </div>
-            {/* Mode Toggle */}
-            <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-xl p-0.5 border border-border/40">
-              <button
-                onClick={() => setMode('wizard')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
-                  mode === 'wizard' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Wand2 className="h-3.5 w-3.5" /> Assistente
-              </button>
-              <button
-                onClick={() => setMode('prompts')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
-                  mode === 'prompts' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
-              </button>
-            </div>
+            {/* Mode Toggle — only when not on choose screen */}
+            {mode !== 'choose' && (
+              <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-xl p-0.5 border border-border/40">
+                <button
+                  onClick={() => setMode('wizard')}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                    mode === 'wizard' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Wand2 className="h-3.5 w-3.5" /> Assistente
+                </button>
+                <button
+                  onClick={() => setMode('prompts')}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                    mode === 'prompts' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {mode === 'wizard' && selectionCount > 0 && (
@@ -1252,7 +1254,75 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         </div>
       </div>
 
-      {mode === 'prompts' ? (
+      {/* Choose Mode Screen */}
+      {mode === 'choose' ? (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-xl w-full space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+              className="text-center space-y-3"
+            >
+              <div className="h-16 w-16 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto border border-primary/10">
+                <Sparkles className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">Como deseja criar?</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">Escolha entre montar seu criativo passo a passo ou usar um prompt pronto da biblioteca</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <motion.button
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 25 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setMode('wizard')}
+                className="group relative overflow-hidden rounded-2xl border-2 border-border/30 bg-background p-6 text-left transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                    <Wand2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-foreground mb-1">Assistente</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Monte seu criativo passo a passo escolhendo tipo, estilo, plataforma e mais opções</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                    Começar <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 25 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setMode('prompts')}
+                className="group relative overflow-hidden rounded-2xl border-2 border-border/30 bg-background p-6 text-left transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <BookOpen className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-foreground mb-1">Prompts Prontos</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Use prompts profissionais prontos da biblioteca para aplicar diretamente no canvas</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                    Explorar <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      ) : mode === 'prompts' ? (
         <PromptPresets onSelect={handlePromptPresetSelect} estabelecimentoId={estabelecimentoId} />
       ) : (
       <div className="flex-1 flex flex-col overflow-hidden">
