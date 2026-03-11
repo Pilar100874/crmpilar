@@ -1315,18 +1315,19 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           </ScrollArea>
         </div>
 
-        {/* Right — Modules */}
-        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l bg-muted/20 flex flex-col">
+        {/* Right — Modules Panel */}
+        <div className="lg:w-[55%] border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-muted/10 to-muted/30 flex flex-col">
           <Tabs value={activeTab} onValueChange={(val) => {
               setActiveTab(val);
               if (val === 'variations' && variations.length === 0 && selectionCount >= 2) {
                 const v = generateVariations(selections, negativePromptText);
                 setVariations(v);
+                setSelectedVariations(new Set(v.map((_, i) => i)));
                 toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
               }
             }} className="flex flex-col flex-1 overflow-hidden">
-            <div className="border-b px-3 pt-2">
-              <TabsList className={`h-8 w-full grid bg-muted/50 ${
+            <div className="border-b border-border/40 px-4 pt-2.5 pb-0.5">
+              <TabsList className={`h-9 w-full grid bg-muted/40 rounded-xl p-0.5 ${
                 (() => {
                   const isVideo = selections.contentType?.includes('video');
                   const hasHook = hasHookStyleSelected;
@@ -1335,7 +1336,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   return 'grid-cols-2';
                 })()
               }`}>
-                <TabsTrigger value="prompt" className="text-[10px] gap-1 px-1 data-[state=active]:text-primary">
+                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-semibold data-[state=active]:text-primary data-[state=active]:shadow-sm">
                   <Sparkles className="h-3 w-3" /> Prompt
                 </TabsTrigger>
                 {hasHookStyleSelected && (
