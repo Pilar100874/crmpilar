@@ -243,7 +243,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-portrait', name: 'Studio Portrait', mediaType: 'image', category: 'influencer',
     tags: ['portrait', 'studio', 'professional'], image: imgInfPortrait,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Professional influencer portrait photography holding the product. Soft LED studio lighting with beautiful catchlights in the eyes. Slightly blurred background with subtle bokeh. Confident and natural pose. The product held at chest level for clear visibility. Warm skin tones, professional retouching aesthetic. Camera: Canon R5, 85mm f/1.4 lens.${NEGATIVE_BLOCK}`,
   },
   {
