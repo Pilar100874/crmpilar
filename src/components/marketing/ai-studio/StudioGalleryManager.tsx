@@ -492,13 +492,44 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
               {/* Media content */}
               {isVideoUrl(previewItem.image_url) ? (
-                <video
-                  src={previewItem.image_url}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl"
-                  controlsList="nofullscreen"
-                />
+                <div className="w-full max-w-4xl">
+                  <VideoTrimmer
+                    videoUrl={previewItem.image_url}
+                    isSaving={isSavingTrimmed}
+                    onSaveTrimmed={async (blob) => {
+                      setIsSavingTrimmed(true);
+                      try {
+                        const fileName = `trimmed_${Date.now()}.webm`;
+                        const path = `${estabelecimentoId}/${fileName}`;
+                        const { error: upErr } = await supabase.storage
+                          .from('marketing-videos')
+                          .upload(path, blob, { contentType: 'video/webm' });
+                        if (upErr) throw upErr;
+                        const { data: urlData } = supabase.storage
+                          .from('marketing-videos')
+                          .getPublicUrl(path);
+                        const publicUrl = urlData?.publicUrl || '';
+                        await supabase.from('media_gallery').insert({
+                          estabelecimento_id: estabelecimentoId,
+                          tipo: 'video',
+                          url: publicUrl,
+                          nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
+                          origem: 'studio-trimmed',
+                        });
+                        toast.success('✅ Vídeo cortado salvo na galeria!');
+                        fetchImages();
+                      } catch (err: any) {
+                        toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
+                      } finally {
+                        setIsSavingTrimmed(false);
+                      }
+                    }}
+                    onSaveOriginal={() => {
+                      toast.success('Vídeo original mantido');
+                      setPreviewItem(null);
+                    }}
+                  />
+                </div>
               ) : (
                 <img
                   src={previewItem.image_url}
