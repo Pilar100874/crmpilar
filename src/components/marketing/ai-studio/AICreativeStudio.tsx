@@ -861,15 +861,45 @@ const AICreativeStudioInner: React.FC = () => {
       }
     }
 
-    setNodes((nds) => [...nds, ...newNodes]);
-    setEdges((eds) => [...eds, ...newEdges]);
+    applyPresetToCanvas(newNodes, newEdges, preset.name, false);
+  }, [setNodes, setEdges, reloadingPresetNodeId]);
+
+  // Apply preset nodes/edges to canvas (append or replace)
+  const applyPresetToCanvas = useCallback((newNodes: StudioNode[], newEdges: any[], presetName: string, clearFirst: boolean) => {
+    if (clearFirst) {
+      nodeResultStore.clearAll();
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } else {
+      setNodes((nds) => [...nds, ...newNodes]);
+      setEdges((eds) => [...eds, ...newEdges]);
+    }
     setShowPresets(false);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
     setShowCanvas(true);
     setHasUnsavedChanges(true);
-    toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
-  }, [setNodes, setEdges, reloadingPresetNodeId]);
+    toast.success(`Preset "${presetName}" aplicado ao workflow!`);
+  }, [setNodes, setEdges]);
+
+  // Wrapper that checks if canvas has existing nodes before applying
+  const handlePresetSelectWithCheck = useCallback((preset: Preset) => {
+    // If reloading, delegate directly (no clearing needed)
+    if (reloadingPresetNodeId) {
+      handlePresetSelect(preset);
+      return;
+    }
+
+    // Build the preset nodes/edges first via handlePresetSelect logic
+    // but check if canvas already has nodes
+    const currentNodes = nodesRef.current;
+    if (currentNodes.length > 0) {
+      setPendingPreset(preset);
+      return;
+    }
+
+    handlePresetSelect(preset);
+  }, [handlePresetSelect, reloadingPresetNodeId]);
 
   const handleQuickTool = useCallback((toolId: string, nodeType: string) => {
     const meta = getNodeMeta(nodeType as any);
