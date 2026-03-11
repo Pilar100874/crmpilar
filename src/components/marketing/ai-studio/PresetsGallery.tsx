@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save, Trash2 } from 'lucide-react';
+import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film, LayoutList, Copy, Shuffle, Library, FileText, Clapperboard, Layers, RefreshCw, BookOpen, Pencil, Save, Trash2, Play, ImageIcon, Bot, Palette, Smartphone, Puzzle, Target, Tag, Camera, Sun, Zap, RectangleHorizontal, Crosshair, Megaphone, Anchor, Tv } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,8 @@ interface Layer {
   id: string;
   title: string;
   emoji: string;
+  icon: LucideIcon;
+  iconColor: string; // tailwind gradient classes
   description: string;
   options: LayerOption[];
   multiple?: boolean;
@@ -46,6 +49,8 @@ const LAYERS: Layer[] = [
     id: 'contentType',
     title: 'Tipo de Conteúdo',
     emoji: '🎬',
+    icon: Play,
+    iconColor: 'from-violet-500 to-purple-600',
     description: 'Escolha entre vídeo ou imagem',
     required: true,
     options: [
@@ -57,6 +62,8 @@ const LAYERS: Layer[] = [
     id: 'videoModel',
     title: 'Modelo de IA',
     emoji: '🤖',
+    icon: Bot,
+    iconColor: 'from-blue-500 to-cyan-500',
     description: 'Selecione o modelo de vídeo',
     required: true,
     visibleWhen: (s) => s.contentType?.includes('video'),
@@ -76,6 +83,8 @@ const LAYERS: Layer[] = [
     id: 'imageModel',
     title: 'Modelo de IA',
     emoji: '🤖',
+    icon: Bot,
+    iconColor: 'from-blue-500 to-cyan-500',
     description: 'Selecione o modelo de imagem',
     required: true,
     visibleWhen: (s) => s.contentType?.includes('image'),
@@ -91,6 +100,8 @@ const LAYERS: Layer[] = [
     id: 'visualStyle',
     title: 'Estilo Visual',
     emoji: '🎨',
+    icon: Palette,
+    iconColor: 'from-pink-500 to-rose-500',
     description: 'Defina a estética do conteúdo',
     options: [
       { id: 'cinematic', label: 'Cinematográfico', emoji: '🎬' },
@@ -111,6 +122,8 @@ const LAYERS: Layer[] = [
     id: 'platform',
     title: 'Plataforma de Publicação',
     emoji: '📲',
+    icon: Smartphone,
+    iconColor: 'from-green-500 to-emerald-500',
     description: 'Onde o conteúdo será publicado',
     options: [
       { id: 'tiktok', label: 'TikTok', emoji: '🎵' },
@@ -127,6 +140,8 @@ const LAYERS: Layer[] = [
     id: 'referenceBlocks',
     title: 'Blocos de Referência',
     emoji: '🧩',
+    icon: Puzzle,
+    iconColor: 'from-amber-500 to-orange-500',
     description: 'Selecione os blocos que deseja inserir no workflow (múltipla seleção)',
     multiple: true,
     options: [
@@ -146,6 +161,8 @@ const LAYERS: Layer[] = [
     id: 'campaignType',
     title: 'Tipo de Campanha',
     emoji: '🎯',
+    icon: Target,
+    iconColor: 'from-red-500 to-rose-500',
     description: 'Formato da narrativa publicitária',
     options: [
       { id: 'showcase', label: 'Vitrine de Produto', emoji: '✨' },
@@ -164,6 +181,8 @@ const LAYERS: Layer[] = [
     id: 'productCategory',
     title: 'Categoria de Produto',
     emoji: '🏷️',
+    icon: Tag,
+    iconColor: 'from-teal-500 to-cyan-500',
     description: 'Tipo de produto em destaque',
     options: [
       { id: 'bobinas-papel', label: 'Bobinas de Papel', emoji: '🧻' },
@@ -201,6 +220,8 @@ const LAYERS: Layer[] = [
     id: 'cameraStyle',
     title: 'Estilo de Câmera',
     emoji: '📹',
+    icon: Camera,
+    iconColor: 'from-indigo-500 to-violet-500',
     description: 'Movimento e enquadramento',
     visibleWhen: (s) => s.contentType?.includes('video'),
     options: [
@@ -218,6 +239,8 @@ const LAYERS: Layer[] = [
     id: 'lighting',
     title: 'Estilo de Iluminação',
     emoji: '💡',
+    icon: Sun,
+    iconColor: 'from-yellow-500 to-amber-500',
     description: 'Tom e atmosfera da luz',
     options: [
       { id: 'natural', label: 'Luz Natural', emoji: '☀️' },
@@ -233,6 +256,8 @@ const LAYERS: Layer[] = [
     id: 'energy',
     title: 'Energia do Conteúdo',
     emoji: '⚡',
+    icon: Zap,
+    iconColor: 'from-orange-500 to-red-500',
     description: 'Ritmo e sensação geral',
     options: [
       { id: 'high-energy', label: 'Alta Energia', emoji: '🔥' },
@@ -247,6 +272,8 @@ const LAYERS: Layer[] = [
     id: 'orientation',
     title: 'Orientação do Conteúdo',
     emoji: '📐',
+    icon: RectangleHorizontal,
+    iconColor: 'from-sky-500 to-blue-500',
     filterOptions: (options, selections) => {
       const platform = selections.platform?.[0];
       if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
@@ -281,6 +308,8 @@ const LAYERS: Layer[] = [
     id: 'marketingGoal',
     title: 'Objetivo de Marketing',
     emoji: '🎯',
+    icon: Crosshair,
+    iconColor: 'from-fuchsia-500 to-pink-500',
     description: 'Defina o objetivo do anúncio',
     options: [
       { id: 'product-awareness', label: 'Conhecimento do Produto', emoji: '👁️' },
@@ -299,6 +328,8 @@ const LAYERS: Layer[] = [
     id: 'hookStyle',
     title: 'Estilo de Gancho',
     emoji: '🪝',
+    icon: Anchor,
+    iconColor: 'from-lime-500 to-green-500',
     description: 'Tipo de abertura para capturar atenção',
     options: [
       { id: 'pattern-interrupt', label: 'Quebra de Padrão', emoji: '⚡' },
@@ -315,6 +346,8 @@ const LAYERS: Layer[] = [
     id: 'creativeFormat',
     title: 'Formato Criativo',
     emoji: '🎞️',
+    icon: Tv,
+    iconColor: 'from-slate-500 to-zinc-600',
     description: 'Estrutura criativa do conteúdo',
     options: [
       { id: 'ugc-ad', label: 'Anúncio UGC', emoji: '📱' },
@@ -1267,20 +1300,27 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                       className="w-full flex items-center justify-between px-3.5 py-3 text-left group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`relative h-8 w-8 rounded-xl flex items-center justify-center text-base transition-all ${
-                          hasSelection
-                            ? 'bg-gradient-to-br from-primary/20 to-primary/5 shadow-sm shadow-primary/10'
-                            : isExpanded
-                              ? 'bg-primary/10'
-                              : 'bg-muted/50 group-hover:bg-muted/80'
-                        }`}>
-                          {layer.emoji}
-                          {hasSelection && (
-                            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary flex items-center justify-center shadow-sm shadow-primary/30">
-                              <Check className="h-2 w-2 text-primary-foreground" />
+                        {(() => {
+                          const IconComp = layer.icon;
+                          return (
+                            <div className={`relative h-9 w-9 rounded-xl flex items-center justify-center transition-all ${
+                              hasSelection
+                                ? `bg-gradient-to-br ${layer.iconColor} shadow-md`
+                                : isExpanded
+                                  ? `bg-gradient-to-br ${layer.iconColor} shadow-sm opacity-80`
+                                  : 'bg-muted/60 group-hover:bg-muted/90'
+                            }`}>
+                              <IconComp className={`h-4 w-4 transition-colors ${
+                                hasSelection || isExpanded ? 'text-white' : 'text-muted-foreground'
+                              }`} />
+                              {hasSelection && (
+                                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-background border-2 border-primary flex items-center justify-center shadow-sm">
+                                  <Check className="h-2.5 w-2.5 text-primary" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-[13px] text-foreground">{layer.title}</span>
