@@ -810,14 +810,36 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 >
                   <Copy className="h-3.5 w-3.5" /> Duplicar
                 </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
-                  onClick={() => handleDownload(previewItem)}
-                >
-                  <Download className="h-3.5 w-3.5" /> Download
-                </Button>
+                {isVideoUrl(previewItem.image_url, previewItem.tipo) ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleDownload(previewItem, true)}>
+                        <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload(previewItem, false)}>
+                        <VolumeX className="h-3.5 w-3.5 mr-2" /> Sem áudio
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="gap-1.5 text-xs h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 shadow-lg"
+                    onClick={() => handleDownload(previewItem)}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="secondary"
