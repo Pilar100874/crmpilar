@@ -223,7 +223,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-outdoor', name: 'Outdoor Natural', mediaType: 'image', category: 'produto',
     tags: ['outdoor', 'natural', 'golden-hour'], image: imgProdOutdoor,
-    referenceBlocks: ['productImageSelect', 'galleryAmbiente'],
+    referenceBlocks: ['productImageSelect', 'galleryAmbiente'], isCustom: true,
     prompt: `Product photography in a beautiful natural outdoor setting during golden hour. The product placed on a natural surface (wood, stone, or earth) surrounded by botanical elements. Warm golden sunlight creating long soft shadows and a magical atmospheric quality. Organic lifestyle aesthetic with earthy tones. Camera: Sony A7R V, 50mm lens, f/1.8 for beautiful bokeh.${NEGATIVE_BLOCK}`,
   },
   {
