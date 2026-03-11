@@ -247,7 +247,13 @@ const LAYERS: Layer[] = [
     id: 'orientation',
     title: 'Orientação do Conteúdo',
     emoji: '📐',
-    description: 'Proporção e formato',
+    filterOptions: (options, selections) => {
+      const platform = selections.platform?.[0];
+      if (!platform || !PLATFORM_ORIENTATION_MAP[platform]) return options;
+      const allowed = PLATFORM_ORIENTATION_MAP[platform];
+      return options.filter(o => allowed.includes(o.id));
+    },
+    description: 'Proporção e formato (filtrado pela plataforma selecionada)',
     options: [
       { id: 'vertical', label: 'Vertical (9:16)', emoji: '📱' },
       { id: 'horizontal', label: 'Horizontal (16:9)', emoji: '🖥️' },
