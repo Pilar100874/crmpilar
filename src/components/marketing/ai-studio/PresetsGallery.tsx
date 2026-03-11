@@ -1116,7 +1116,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
     setEditedScript(newScript);
     setScriptVersion(v => v + 1);
     setIsEditingScript(false);
-    toast.success('Novo roteiro sugerido!');
+    toast({ title: 'Novo roteiro sugerido!' });
   }, [selections]);
 
   const generatedScenes = useMemo(() => {
