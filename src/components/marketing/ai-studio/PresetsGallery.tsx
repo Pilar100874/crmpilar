@@ -1316,7 +1316,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                           <div className="px-3.5 pb-3.5 pt-0">
                             <div className="h-px bg-gradient-to-r from-primary/20 via-primary/10 to-transparent mb-3 ml-11" />
                             <div className="flex flex-wrap gap-2 pl-11">
-                              {layer.options.map((option) => {
+                              {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
                                 const isSelected = selected.includes(option.id);
                                 return (
                                   <motion.button
