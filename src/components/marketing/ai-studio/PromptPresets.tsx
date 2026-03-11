@@ -161,7 +161,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vi-fitness', name: 'Fitness Workout', mediaType: 'video', category: 'influencer',
     tags: ['fitness', 'gym', 'energy'], image: imgInfluencerFitness,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Fitness influencer using the product during workout. Gym environment with dramatic lighting and slow motion. Sweat and motion emphasized with backlight. High energy commercial vibe.${NEGATIVE_BLOCK}`,
   },
   {
