@@ -217,7 +217,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ip-macro', name: 'Macro Texture', mediaType: 'image', category: 'produto',
     tags: ['macro', 'detail', 'texture'], image: imgProdMacro,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Extreme macro product photography revealing fine textures, materials, and craftsmanship details. Ultra close-up showing surface quality, stitching, grain, or material composition. Very shallow depth of field with creamy bokeh. Professional studio lighting highlighting micro-details. Camera: Canon MP-E 65mm macro lens, 5:1 magnification, focus stacked for maximum sharpness.${NEGATIVE_BLOCK}`,
   },
   {
