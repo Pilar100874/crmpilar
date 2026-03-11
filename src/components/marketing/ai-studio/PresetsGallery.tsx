@@ -1255,143 +1255,180 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       ) : (
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left — Layers Panel */}
-        <div className="flex-1 lg:max-w-[45%] flex flex-col bg-gradient-to-b from-background to-muted/20">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Layers className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-foreground">Camadas de Configuração</p>
-                <p className="text-[9px] text-muted-foreground">Personalize cada aspecto do seu criativo</p>
+        <div className="flex-1 lg:max-w-[45%] flex flex-col bg-gradient-to-b from-background to-muted/10">
+          {/* Friendly header with progress */}
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/10">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Monte seu criativo</p>
+                  <p className="text-[11px] text-muted-foreground">Escolha as opções abaixo para montar o prompt perfeito</p>
+                </div>
               </div>
             </div>
-            {selectionCount > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="text-[9px] font-bold text-primary">{selectionCount}/{visibleLayers.length}</span>
+            {/* Progress bar */}
+            <div className="relative">
+              <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-primary via-primary/90 to-primary/70"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((selectionCount / Math.max(visibleLayers.length, 1)) * 100, 100)}%` }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                />
               </div>
-            )}
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {selectionCount === 0 ? '👋 Comece selecionando abaixo' : `${selectionCount} de ${visibleLayers.length} configurado${selectionCount !== 1 ? 's' : ''}`}
+                </span>
+                {selectionCount >= 2 && (
+                  <span className="text-[10px] text-primary font-semibold flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Pronto para gerar!
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
           <ScrollArea className="flex-1">
-            <div className="px-3 pb-4 space-y-1.5">
+            <div className="px-4 pb-5 space-y-2">
               {visibleLayers.map((layer, idx) => {
                 const isExpanded = expandedLayer === layer.id;
                 const selected = selections[layer.id] || [];
                 const hasSelection = selected.length > 0;
                 const stepNumber = idx + 1;
+                const IconComp = layer.icon;
 
                 return (
                   <motion.div
                     key={layer.id}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.025, type: 'spring', stiffness: 300, damping: 30 }}
-                    className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-                      isExpanded
-                        ? 'border-primary/40 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent shadow-lg shadow-primary/[0.08] ring-1 ring-primary/15'
-                        : hasSelection
-                          ? 'border-primary/20 bg-gradient-to-r from-primary/[0.03] to-transparent hover:shadow-sm hover:border-primary/30'
-                          : 'border-border/30 bg-background/60 hover:border-border/60 hover:bg-background/80 hover:shadow-sm'
-                    }`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03, type: 'spring', stiffness: 300, damping: 30 }}
                   >
-                    <button
-                      onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
-                      className="w-full flex items-center justify-between px-3.5 py-3 text-left group"
+                    <div
+                      className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+                        isExpanded
+                          ? 'border-primary/30 bg-gradient-to-br from-primary/[0.06] via-background to-primary/[0.02] shadow-xl shadow-primary/[0.06]'
+                          : hasSelection
+                            ? 'border-primary/15 bg-gradient-to-r from-primary/[0.03] to-transparent hover:border-primary/25 hover:shadow-md'
+                            : 'border-border/20 bg-background/80 hover:border-border/40 hover:shadow-md hover:bg-background'
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        {(() => {
-                          const IconComp = layer.icon;
-                          return (
-                            <div className={`relative h-9 w-9 rounded-xl flex items-center justify-center transition-all ${
-                              hasSelection
-                                ? `bg-gradient-to-br ${layer.iconColor} shadow-md`
-                                : isExpanded
-                                  ? `bg-gradient-to-br ${layer.iconColor} shadow-sm opacity-80`
-                                  : 'bg-muted/60 group-hover:bg-muted/90'
-                            }`}>
-                              <IconComp className={`h-4 w-4 transition-colors ${
-                                hasSelection || isExpanded ? 'text-white' : 'text-muted-foreground'
-                              }`} />
-                              {hasSelection && (
-                                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-background border-2 border-primary flex items-center justify-center shadow-sm">
-                                  <Check className="h-2.5 w-2.5 text-primary" />
-                                </div>
-                              )}
+                      <button
+                        onClick={() => setExpandedLayer(isExpanded ? '' : layer.id)}
+                        className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left group"
+                      >
+                        {/* Step number + icon */}
+                        <div className="relative flex-shrink-0">
+                          <div className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                            hasSelection
+                              ? `bg-gradient-to-br ${layer.iconColor} shadow-lg`
+                              : isExpanded
+                                ? `bg-gradient-to-br ${layer.iconColor} shadow-md opacity-90`
+                                : 'bg-muted/40 group-hover:bg-muted/70'
+                          }`}>
+                            <IconComp className={`h-5 w-5 transition-colors ${
+                              hasSelection || isExpanded ? 'text-white' : 'text-muted-foreground/70'
+                            }`} />
+                          </div>
+                          {hasSelection && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/30"
+                            >
+                              <Check className="h-3 w-3 text-primary-foreground" />
+                            </motion.div>
+                          )}
+                          {!hasSelection && (
+                            <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                              <span className="text-[8px] font-bold text-muted-foreground">{stepNumber}</span>
                             </div>
-                          );
-                        })()}
+                          )}
+                        </div>
+
+                        {/* Title + description / selection pills */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-[13px] text-foreground">{layer.title}</span>
+                            <span className="font-bold text-sm text-foreground">{layer.title}</span>
                             {layer.required && !hasSelection && (
-                              <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold uppercase tracking-wider border border-destructive/20">
+                              <span className="text-[8px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold uppercase tracking-wider border border-destructive/15">
                                 Obrigatório
+                              </span>
+                            )}
+                            {layer.multiple && (
+                              <span className="text-[8px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-medium">
+                                Múltiplo
                               </span>
                             )}
                           </div>
                           {!isExpanded && hasSelection && (
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
                               {selected.slice(0, 3).map(s => {
                                 const opt = layer.options.find(o => o.id === s);
                                 return (
-                                  <span key={s} className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium border border-primary/15">
+                                  <span key={s} className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-primary/10 text-primary font-semibold border border-primary/10">
                                     {opt?.emoji} {opt?.label}
                                   </span>
                                 );
                               })}
                               {selected.length > 3 && (
-                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">
                                   +{selected.length - 3}
                                 </span>
                               )}
                             </div>
                           )}
                           {!isExpanded && !hasSelection && (
-                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{layer.description}</p>
+                            <p className="text-[11px] text-muted-foreground/60 mt-0.5">{layer.description}</p>
                           )}
                         </div>
-                      </div>
-                      <ChevronRight className={`h-4 w-4 text-muted-foreground/40 transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-90 text-primary' : 'group-hover:translate-x-0.5'}`} />
-                    </button>
 
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25, ease: 'easeInOut' }}
-                          className="overflow-hidden"
-                        >
-                          <div className="px-3.5 pb-3.5 pt-0">
-                            <div className="h-px bg-gradient-to-r from-primary/20 via-primary/10 to-transparent mb-3 ml-11" />
-                            <div className="flex flex-wrap gap-2 pl-11">
-                              {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
-                                const isSelected = selected.includes(option.id);
-                                return (
-                                  <motion.button
-                                    key={option.id}
-                                    whileHover={{ scale: 1.04, y: -1 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    onClick={() => toggleOption(layer.id, option.id)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
-                                      isSelected
-                                        ? 'bg-gradient-to-r from-primary to-primary/85 text-primary-foreground border-primary shadow-lg shadow-primary/20 ring-1 ring-primary/30'
-                                        : 'bg-background text-foreground border-border/40 hover:border-primary/30 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-primary/5'
-                                    }`}
-                                  >
-                                    <span className="text-sm">{option.emoji}</span>
-                                    <span>{option.label}</span>
-                                    {isSelected && <Check className="h-3 w-3 ml-0.5 opacity-80" />}
-                                  </motion.button>
-                                );
-                              })}
+                        <ChevronRight className={`h-4 w-4 text-muted-foreground/30 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-90 text-primary' : 'group-hover:translate-x-0.5'}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 pb-4 pt-0">
+                              <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent mb-3" />
+                              <p className="text-[11px] text-muted-foreground mb-3 pl-1">{layer.description}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
+                                  const isSelected = selected.includes(option.id);
+                                  return (
+                                    <motion.button
+                                      key={option.id}
+                                      whileHover={{ scale: 1.03, y: -1 }}
+                                      whileTap={{ scale: 0.97 }}
+                                      onClick={() => toggleOption(layer.id, option.id)}
+                                      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 border-2 ${
+                                        isSelected
+                                          ? `bg-gradient-to-br ${layer.iconColor} text-white border-transparent shadow-lg shadow-primary/15`
+                                          : 'bg-background text-foreground border-border/20 hover:border-primary/20 hover:bg-primary/[0.03] hover:shadow-sm'
+                                      }`}
+                                    >
+                                      <span className="text-base">{option.emoji}</span>
+                                      <span>{option.label}</span>
+                                      {isSelected && <Check className="h-3.5 w-3.5 ml-0.5 opacity-90" />}
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 );
               })}
