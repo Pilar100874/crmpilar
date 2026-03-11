@@ -1462,14 +1462,14 @@ const AICreativeStudioInner: React.FC = () => {
 
       {/* Preset canvas conflict dialog */}
       <AlertDialog open={!!pendingPreset} onOpenChange={(open) => !open && setPendingPreset(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[10001] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Canvas já possui blocos</AlertDialogTitle>
             <AlertDialogDescription>
               O canvas já contém blocos. Deseja adicionar o preset junto com os blocos existentes ou limpar o canvas e criar um novo workflow?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
             <AlertDialogCancel onClick={() => setPendingPreset(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-primary hover:bg-primary/90"
@@ -1486,11 +1486,9 @@ const AICreativeStudioInner: React.FC = () => {
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => {
                 if (pendingPreset) {
-                  // Clear canvas then apply
                   nodeResultStore.clearAll();
                   setNodes([]);
                   setEdges([]);
-                  // Small delay to let state settle, then apply
                   setTimeout(() => handlePresetSelect(pendingPreset), 50);
                   setPendingPreset(null);
                 }
