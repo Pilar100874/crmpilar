@@ -129,7 +129,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-hero', name: 'Epic Hero Shot', mediaType: 'video', category: 'produto',
     tags: ['hero', 'dramatic', 'premium'], image: imgHero,
-    referenceBlocks: ['productImageSelect'],
+    referenceBlocks: ['productImageSelect'], isCustom: true,
     prompt: `Epic hero shot product commercial. The product placed on a reflective black surface with dramatic lighting from behind. Particles floating in the air. Camera slowly pushing in. Ultra high contrast cinematic lighting. Premium brand reveal aesthetic.${NEGATIVE_BLOCK}`,
   },
   {
