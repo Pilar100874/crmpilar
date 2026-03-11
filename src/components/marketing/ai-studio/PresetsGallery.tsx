@@ -4,6 +4,7 @@ import { X, Sparkles, ChevronRight, RotateCcw, Video, Image, Check, Wand2, Film,
 import type { LucideIcon } from 'lucide-react';
 import PromptPresets, { type PromptPreset } from './PromptPresets';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
