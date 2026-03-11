@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { 
   Images, Upload, Trash2, Search, X, Plus, Copy,
   User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen,
-  ZoomIn, Download, Play, Pause
+  ZoomIn, Download, Play, Pause, Scissors
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
@@ -66,6 +66,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<GalleryImage | null>(null);
   const [previewItem, setPreviewItem] = useState<GalleryImage | null>(null);
+  const [editItem, setEditItem] = useState<GalleryImage | null>(null);
   const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -407,6 +408,15 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                             >
                               <ZoomIn className="h-3 w-3" />
                             </button>
+                            {isVideo && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditItem(img); }}
+                                className="p-1.5 rounded-lg bg-primary/40 hover:bg-primary/60 text-white transition-colors"
+                                title="Editar / Cortar"
+                              >
+                                <Scissors className="h-3 w-3" />
+                              </button>
+                            )}
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDuplicate(img); }}
                               className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
@@ -446,21 +456,20 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
       </motion.div>
 
-      {/* Video Editor Dialog - same as StudioNodeComponent */}
-      {previewItem && isVideoUrl(previewItem.image_url, previewItem.tipo) && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setPreviewItem(null); }}>
+      {/* Video Editor Dialog - opens via edit button */}
+      {editItem && isVideoUrl(editItem.image_url, editItem.tipo) && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditItem(null); }}>
           <DialogContent className="max-w-[900px] max-h-[90vh] p-0 border-none bg-card overflow-visible [&>button]:hidden z-[200]">
             <div className="relative overflow-y-auto max-h-[90vh] rounded-lg">
-              {/* Close button */}
               <button
-                onClick={() => setPreviewItem(null)}
+                onClick={() => setEditItem(null)}
                 className="absolute top-3 right-3 z-[200] rounded-full p-2 bg-background/80 backdrop-blur text-foreground shadow-lg hover:bg-background transition-colors"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
               </button>
               <VideoTrimmer
-                videoUrl={previewItem.image_url}
+                videoUrl={editItem.image_url}
                 isSaving={isSavingTrimmed}
                 onSaveTrimmed={async (blob, startTime, endTime) => {
                   setIsSavingTrimmed(true);
@@ -480,7 +489,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                       tipo: 'video',
                       public_url: publicUrl,
                       storage_path: path,
-                      nome: `${previewItem.nome || 'Vídeo'} (cortado)`,
+                      nome: `${editItem.nome || 'Vídeo'} (cortado)`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
                       tamanho_bytes: blob.size,
                       mime_type: blob.type || 'video/mp4',
@@ -496,7 +505,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 }}
                 onSaveOriginal={() => {
                   toast.success('Vídeo original mantido');
-                  setPreviewItem(null);
+                  setEditItem(null);
                 }}
               />
             </div>
@@ -504,9 +513,9 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </Dialog>
       )}
 
-      {/* Image Preview Modal */}
+      {/* Fullscreen Preview Modal (zoom) - images and videos */}
       <AnimatePresence>
-        {previewItem && !isVideoUrl(previewItem.image_url, previewItem.tipo) && (
+        {previewItem && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -524,6 +533,16 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
             >
               {/* Preview actions bar */}
               <div className="absolute -top-12 right-0 flex items-center gap-2 z-10">
+                {isVideoUrl(previewItem.image_url, previewItem.tipo) && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="gap-1.5 text-xs h-8 rounded-lg bg-primary/30 hover:bg-primary/50 text-white border-0"
+                    onClick={() => { setEditItem(previewItem); setPreviewItem(null); }}
+                  >
+                    <Scissors className="h-3.5 w-3.5" /> Editar
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="secondary"
@@ -558,11 +577,21 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 </Button>
               </div>
 
-              <img
-                src={previewItem.image_url}
-                alt={previewItem.nome || ''}
-                className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
-              />
+              {isVideoUrl(previewItem.image_url, previewItem.tipo) ? (
+                <video
+                  src={previewItem.image_url}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl"
+                  controlsList="nofullscreen"
+                />
+              ) : (
+                <img
+                  src={previewItem.image_url}
+                  alt={previewItem.nome || ''}
+                  className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
+                />
+              )}
 
               {previewItem.nome && (
                 <p className="mt-3 text-sm text-white/80 font-medium">{previewItem.nome}</p>
