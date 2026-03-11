@@ -1088,7 +1088,7 @@ const AICreativeStudioInner: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Saved Workflows */}
+          {/* Saved Workflows with Folders */}
           {savedWorkflows.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1097,9 +1097,56 @@ const AICreativeStudioInner: React.FC = () => {
               className="relative z-10 w-full max-w-5xl mb-10"
             >
               <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Meus Workflows</p>
+              
+              {/* Folder navigation */}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <Button
+                  variant={activeFolder === null ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full gap-1.5 text-xs"
+                  onClick={() => setActiveFolder(null)}
+                >
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  Todos
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                    {savedWorkflows.filter(w => !w.pasta).length}
+                  </Badge>
+                </Button>
+                {folders.map((folder) => (
+                  <Button
+                    key={folder}
+                    variant={activeFolder === folder ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full gap-1.5 text-xs"
+                    onClick={() => setActiveFolder(folder)}
+                  >
+                    <Folder className="h-3.5 w-3.5" />
+                    {folder}
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                      {savedWorkflows.filter(w => w.pasta === folder).length}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+
+              {/* Active folder breadcrumb */}
+              {activeFolder && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" onClick={() => setActiveFolder(null)}>
+                    <ChevronLeft className="h-3 w-3" />
+                    Voltar
+                  </Button>
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <Folder className="h-4 w-4 text-primary" />
+                    {activeFolder}
+                  </span>
+                </div>
+              )}
+
               <WorkflowCardGrid>
-                {savedWorkflows.map((w) => {
+                {filteredWorkflows.map((w) => {
                   const nodesCount = Array.isArray(w.nodes_data) ? w.nodes_data.length : 0;
+                  const mediaTypes = getWorkflowMediaTypes(w.nodes_data);
                   return (
                     <WorkflowCard
                       key={w.id}
@@ -1109,14 +1156,22 @@ const AICreativeStudioInner: React.FC = () => {
                       isActive={true}
                       blocksCount={nodesCount}
                       createdAt={w.created_at}
+                      mediaTypes={mediaTypes}
                       onOpenEditor={() => handleOpenWorkflow(w)}
                       onRename={() => { setRenameDialog({ id: w.id, nome: w.nome }); setRenameValue(w.nome); }}
                       onDuplicate={() => handleDuplicateWorkflow(w)}
                       onDelete={() => setDeleteConfirm({ id: w.id, nome: w.nome })}
+                      onMoveToFolder={() => { setMoveToFolderWorkflow(w); setShowMoveDialog(true); }}
                     />
                   );
                 })}
               </WorkflowCardGrid>
+
+              {filteredWorkflows.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  {activeFolder ? `Nenhum workflow na pasta "${activeFolder}"` : 'Nenhum workflow sem pasta'}
+                </p>
+              )}
             </motion.div>
           )}
 
