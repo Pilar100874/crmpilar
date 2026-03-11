@@ -1254,9 +1254,11 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       {mode === 'prompts' ? (
         <PromptPresets onSelect={handlePromptPresetSelect} estabelecimentoId={estabelecimentoId} />
       ) : (
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left — Layers Panel */}
-        <div className="flex-1 lg:max-w-[45%] flex flex-col bg-gradient-to-b from-background to-muted/10">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Step 1 — Layers Panel */}
+        <AnimatePresence mode="wait">
+        {wizardStep === 1 ? (
+        <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-background to-muted/10">
           {/* Friendly header with progress */}
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-center justify-between mb-3">
