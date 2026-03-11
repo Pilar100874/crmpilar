@@ -99,7 +99,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'vp-influencer-vlog', name: 'Influencer Vlog Style', mediaType: 'video', category: 'produto',
     tags: ['ugc', 'vlog', 'lifestyle'], image: imgInfluencerVlog,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Realistic influencer-style commercial video. A charismatic young influencer speaking to the camera while demonstrating a product. Modern aesthetic apartment with natural lighting from large windows. Camera handheld vlog style but cinematic stabilization. Authentic social media advertising tone. Camera: Sony FX6, 35mm lens. Warm natural light, realistic skin tones, lifestyle advertising.${NEGATIVE_BLOCK}`,
   },
   {
