@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Film, Music, Type, Image, Upload, FolderOpen, Play, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface MediaItem {
+  type: 'video' | 'audio' | 'image';
+  name: string;
+  src: string;
+  duration?: number;
+}
+
 interface Props {
-  onAddClip: (type: 'video' | 'audio' | 'image' | 'text') => void;
+  onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem) => void;
 }
 
 interface GalleryVideo {
@@ -18,6 +25,7 @@ interface GalleryVideo {
 const MediaBin: React.FC<Props> = ({ onAddClip }) => {
   const [savedVideos, setSavedVideos] = useState<GalleryVideo[]>([]);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSavedVideos = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -43,11 +51,36 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     for (const file of Array.from(files)) {
-      if (file.type.startsWith('video/')) onAddClip('video');
-      else if (file.type.startsWith('audio/')) onAddClip('audio');
-      else if (file.type.startsWith('image/')) onAddClip('image');
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith('video/')) {
+        // Get video duration
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.onloadedmetadata = () => {
+          onAddClip('video', { type: 'video', name: file.name, src: url, duration: vid.duration });
+          URL.revokeObjectURL(vid.src);
+        };
+        vid.src = url;
+      } else if (file.type.startsWith('audio/')) {
+        const aud = document.createElement('audio');
+        aud.preload = 'metadata';
+        aud.onloadedmetadata = () => {
+          onAddClip('audio', { type: 'audio', name: file.name, src: url, duration: aud.duration });
+        };
+        aud.src = url;
+      } else if (file.type.startsWith('image/')) {
+        onAddClip('image', { type: 'image', name: file.name, src: url });
+      }
     }
     e.target.value = '';
+  }, [onAddClip]);
+
+  const handleGalleryVideoClick = useCallback((video: GalleryVideo) => {
+    onAddClip('video', {
+      type: 'video',
+      name: video.nome,
+      src: video.public_url,
+    });
   }, [onAddClip]);
 
   return (
@@ -62,15 +95,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
       <div className="p-3 space-y-2">
         <Button onClick={() => onAddClip('video')} variant="outline" className="w-full justify-start gap-2 text-xs">
           <Film className="h-4 w-4 text-primary" />
-          Adicionar Cena de Vídeo
-        </Button>
-        <Button onClick={() => onAddClip('image')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Image className="h-4 w-4 text-primary" />
-          Adicionar Imagem / Frame
-        </Button>
-        <Button onClick={() => onAddClip('audio')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Music className="h-4 w-4 text-primary" />
-          Adicionar Áudio / SFX
+          Adicionar Cena Vazia
         </Button>
         <Button onClick={() => onAddClip('text')} variant="outline" className="w-full justify-start gap-2 text-xs">
           <Type className="h-4 w-4 text-primary" />
@@ -103,7 +128,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
               {savedVideos.map((video) => (
                 <button
                   key={video.id}
-                  onClick={() => onAddClip('video')}
+                  onClick={() => handleGalleryVideoClick(video)}
                   className="w-full flex items-center gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors text-left group"
                 >
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 relative overflow-hidden">
@@ -131,7 +156,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
           <Upload className="h-8 w-8 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">Arraste ou clique para importar</span>
           <span className="text-[10px] text-muted-foreground">MP4, MOV, MP3, WAV, PNG, JPG</span>
-          <input type="file" className="hidden" accept="video/*,audio/*,image/*" multiple onChange={handleFileUpload} />
+          <input ref={fileInputRef} type="file" className="hidden" accept="video/*,audio/*,image/*" multiple onChange={handleFileUpload} />
         </label>
       </div>
     </div>
