@@ -1979,18 +1979,18 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     <>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold flex items-center gap-1.5">
-                          <Clapperboard className="h-3.5 w-3.5 text-primary" /> Storyboard — {generatedScenes.length} Cenas
+                          <Clapperboard className="h-3.5 w-3.5 text-primary" /> Storyboard — {currentScenes.length} Cenas
                         </p>
                         <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => {
-                          const text = generatedScenes.map(s => `${s.title}\nDescrição: ${s.description}\nCâmera: ${s.camera}\nIluminação: ${s.lighting}\nAção: ${s.action}`).join('\n\n---\n\n');
+                          const text = currentScenes.map(s => `${s.title}\nDescrição: ${s.description}\nCâmera: ${s.camera}\nIluminação: ${s.lighting}\nAção: ${s.action}`).join('\n\n---\n\n');
                           handleCopyText(text);
                         }}>
                           <Copy className="h-3 w-3" /> Copiar Tudo
                         </Button>
                       </div>
-                      {generatedScenes.map((scene, i) => (
+                      {currentScenes.map((scene, i) => (
                         <motion.div
-                          key={i}
+                          key={`${scenesVersion}-${i}`}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
@@ -2000,25 +2000,66 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                             <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-bold">
                               {i + 1}
                             </div>
-                            <h4 className="text-xs font-semibold">{scene.title}</h4>
+                            <input
+                              className="text-xs font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none flex-1 py-0.5 transition-colors"
+                              value={scene.title}
+                              onChange={(e) => handleUpdateScene(i, 'title', e.target.value)}
+                            />
                           </div>
-                          <p className="text-[11px] text-muted-foreground">{scene.description}</p>
+                          <Textarea
+                            value={scene.description}
+                            onChange={(e) => handleUpdateScene(i, 'description', e.target.value)}
+                            rows={2}
+                            className="text-[11px] text-muted-foreground bg-muted/30 border-border/50 min-h-[50px] resize-y"
+                          />
                           <div className="grid grid-cols-1 gap-1.5 text-[10px]">
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">📹 Câmera:</span>
-                              <span>{scene.camera}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">📹 Câmera:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.camera}
+                                onChange={(e) => handleUpdateScene(i, 'camera', e.target.value)}
+                              />
                             </div>
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">💡 Iluminação:</span>
-                              <span>{scene.lighting}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">💡 Iluminação:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.lighting}
+                                onChange={(e) => handleUpdateScene(i, 'lighting', e.target.value)}
+                              />
                             </div>
                             <div className="flex items-start gap-1.5 p-1.5 rounded bg-muted/50">
-                              <span className="text-muted-foreground font-medium min-w-[70px]">🎬 Ação:</span>
-                              <span>{scene.action}</span>
+                              <span className="text-muted-foreground font-medium min-w-[70px] shrink-0 pt-0.5">🎬 Ação:</span>
+                              <input
+                                className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none text-[10px] py-0 transition-colors"
+                                value={scene.action}
+                                onChange={(e) => handleUpdateScene(i, 'action', e.target.value)}
+                              />
                             </div>
                           </div>
                         </motion.div>
                       ))}
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] gap-1.5 h-7"
+                          onClick={handleSuggestNewScenes}
+                        >
+                          <Sparkles className="h-3 w-3" /> Gerar nova sequência
+                        </Button>
+                        {editedScenes && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[10px] gap-1 h-7 text-muted-foreground"
+                            onClick={handleResetScenes}
+                          >
+                            Restaurar original
+                          </Button>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
