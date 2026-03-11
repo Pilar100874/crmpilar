@@ -1819,36 +1819,15 @@ const AICreativeStudioInner: React.FC = () => {
             value={createFolderName}
             onChange={(e) => setCreateFolderName(e.target.value)}
             placeholder="Nome da pasta..."
+            autoFocus
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && createFolderName.trim()) {
-                // Create folder by moving nothing — folder becomes visible when a workflow is moved to it
-                // For now just show it as a tab
-                if (folders.includes(createFolderName.trim())) {
-                  toast.error('Pasta já existe');
-                } else {
-                  // Create a dummy entry — we need at least one workflow. Let's use the move dialog approach instead.
-                  toast.success(`Pasta "${createFolderName.trim()}" pronta! Arraste workflows para organizá-los.`);
-                  // We need to persist the folder even without workflows. Let's create via a placeholder approach.
-                  // Actually, we just add it to a local state list for display purposes.
-                }
-                setShowCreateFolderDialog(false);
-                setCreateFolderName('');
-              }
+              if (e.key === 'Enter') handleCreateStandaloneFolder();
             }}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateFolderDialog(false)}>Cancelar</Button>
             <Button
-              onClick={() => {
-                if (!createFolderName.trim()) return;
-                if (folders.includes(createFolderName.trim())) {
-                  toast.error('Pasta já existe');
-                  return;
-                }
-                toast.success(`Pasta "${createFolderName.trim()}" criada!`);
-                setShowCreateFolderDialog(false);
-                setCreateFolderName('');
-              }}
+              onClick={handleCreateStandaloneFolder}
               disabled={!createFolderName.trim()}
               className="gap-1"
             >
