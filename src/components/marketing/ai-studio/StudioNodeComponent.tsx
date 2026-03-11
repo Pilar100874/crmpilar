@@ -566,8 +566,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
-  // Save video to media_gallery
-  const handleSaveVideoToGallery = useCallback(async (videoUrl: string) => {
+  const handleSaveVideoToGallery = useCallback(async (videoUrl: string, withAudio: boolean = true) => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId || !videoUrl) {
       toast.error('Erro: estabelecimento ou vídeo não encontrados');
@@ -577,14 +576,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     setIsSavingToGallery(true);
     try {
       const blob = await downloadAsBlob(videoUrl);
-      const convertedBlob = await convertVideoToWhatsappMp4(blob);
+      const mp4Blob = await convertVideoToWhatsappMp4(blob);
+      const finalBlob = withAudio ? mp4Blob : await removeAudioFromVideo(mp4Blob);
 
-      const fileName = `studio-video-${nodeData.type}-${id}-${Date.now()}.mp4`;
+      const fileName = `studio-video-${nodeData.type}-${id}-${withAudio ? 'audio' : 'sem-audio'}-${Date.now()}.mp4`;
       const storagePath = `${estabId}/${fileName}`;
 
       const { error: uploadErr } = await supabase.storage
         .from('marketing-videos')
-        .upload(storagePath, convertedBlob, { contentType: 'video/mp4' });
+        .upload(storagePath, finalBlob, { contentType: 'video/mp4' });
       if (uploadErr) throw new Error(`Upload falhou: ${uploadErr.message}`);
 
       const { data: { publicUrl } } = supabase.storage
@@ -598,16 +598,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           tipo: 'video',
           storage_path: storagePath,
           public_url: publicUrl,
-          nome: `AI Studio Vídeo - ${nodeData.label}`,
-          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type})`,
-          tamanho_bytes: convertedBlob.size,
+          nome: `AI Studio Vídeo ${withAudio ? '' : '(Sem Áudio) '} - ${nodeData.label}`,
+          descricao: `Vídeo gerado pelo AI Creative Studio (${nodeData.type}) ${withAudio ? 'com áudio' : 'sem áudio'}`,
+          tamanho_bytes: finalBlob.size,
           mime_type: 'video/mp4',
           origem: 'ai_studio',
         });
       if (dbErr) throw new Error(`DB insert falhou: ${dbErr.message}`);
 
       console.log('[Studio] Vídeo salvo com sucesso na galeria!');
-      toast.success('✅ Vídeo salvo na galeria!');
+      toast.success(`✅ Vídeo salvo na galeria ${withAudio ? 'com áudio' : 'sem áudio'}!`);
     } catch (err: any) {
       console.error('[Studio] Erro ao salvar vídeo na galeria:', err);
       toast.error('Erro ao salvar: ' + (err.message || String(err)));
