@@ -695,8 +695,8 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
   const isEditing = !!editingPreset;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-[10000] [&~[data-radix-dialog-overlay]]:bg-black/30" style={{ position: 'fixed' }}>
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()} modal={false}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-[10000] fixed shadow-2xl border bg-background">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5 text-primary" /> {isEditing ? 'Editar Prompt' : 'Criar Prompt Personalizado'}
