@@ -582,7 +582,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   src={previewItem.image_url}
                   controls
                   autoPlay
-                  className="max-w-full max-h-[70vh] rounded-xl shadow-2xl mt-14"
+                  className="max-w-full max-h-[70vh] rounded-xl shadow-2xl mt-14 studio-video-no-fullscreen"
                   controlsList="nofullscreen nodownload"
                   disablePictureInPicture
                   onDoubleClick={(e) => e.preventDefault()}
