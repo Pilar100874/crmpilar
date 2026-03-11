@@ -1484,7 +1484,6 @@ const AICreativeStudioInner: React.FC = () => {
             </AlertDialogAction>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              className="bg-destructive hover:bg-destructive/90"
               onClick={() => {
                 if (pendingPreset) {
                   // Clear canvas then apply
