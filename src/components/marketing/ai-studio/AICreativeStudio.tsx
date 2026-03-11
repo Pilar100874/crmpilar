@@ -525,6 +525,53 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [fetchWorkflows, estabelecimentoId]);
 
+  // Helper: detect media types from workflow nodes
+  const getWorkflowMediaTypes = useCallback((nodesData: any): ('image' | 'video')[] => {
+    if (!Array.isArray(nodesData)) return [];
+    const types = new Set<'image' | 'video'>();
+    for (const node of nodesData) {
+      const nodeType = node?.data?.type || node?.type || '';
+      if (['imageGen', 'imageEdit', 'productComposite'].includes(nodeType)) types.add('image');
+      if (nodeType === 'videoGen') types.add('video');
+    }
+    return Array.from(types);
+  }, []);
+
+  // Get unique folders from workflows
+  const folders = Array.from(new Set(savedWorkflows.map(w => w.pasta).filter(Boolean))) as string[];
+
+  // Filtered workflows based on active folder
+  const filteredWorkflows = activeFolder
+    ? savedWorkflows.filter(w => w.pasta === activeFolder)
+    : savedWorkflows.filter(w => !w.pasta);
+
+  const handleMoveToFolder = useCallback(async (workflowId: string, folder: string | null) => {
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .update({ pasta: folder } as any)
+      .eq('id', workflowId);
+    if (error) {
+      toast.error('Erro ao mover workflow');
+    } else {
+      toast.success(folder ? `Movido para "${folder}"` : 'Removido da pasta');
+      fetchWorkflows();
+    }
+    setShowMoveDialog(false);
+    setMoveToFolderWorkflow(null);
+  }, [fetchWorkflows]);
+
+  const handleCreateFolder = useCallback(() => {
+    if (!newFolderName.trim()) return;
+    // Folder is created implicitly by assigning a workflow to it
+    // But we can pre-create by moving current moveToFolderWorkflow
+    if (moveToFolderWorkflow) {
+      handleMoveToFolder(moveToFolderWorkflow.id, newFolderName.trim());
+    }
+    setShowFolderDialog(false);
+    setNewFolderName('');
+  }, [newFolderName, moveToFolderWorkflow, handleMoveToFolder]);
+
+
   const handleCloseCanvas = useCallback(() => {
     if (hasUnsavedChanges) {
       setShowCloseConfirm(true);
