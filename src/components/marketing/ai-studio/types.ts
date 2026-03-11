@@ -305,7 +305,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere efeitos sonoros e narração',
         icon: '🔊',
         color: '#22c55e',
-        defaultConfig: { duration: 5, type: 'sfx' },
+        defaultConfig: { duration: 5, type: 'narration', model: 'openai_tts', language: 'pt-BR' },
       },
       {
         type: 'musicGen',
