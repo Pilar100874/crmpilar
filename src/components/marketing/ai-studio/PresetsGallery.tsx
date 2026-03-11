@@ -991,6 +991,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
   const [selections, setSelections] = useState<Record<string, string[]>>(initialSelections || {});
   const [expandedLayer, setExpandedLayer] = useState<string>('contentType');
   const [activeTab, setActiveTab] = useState<string>('prompt');
+  const [wizardStep, setWizardStep] = useState<1 | 2>(1);
   const [selectedHookText, setSelectedHookText] = useState<string>('');
   const [variations, setVariations] = useState<string[]>([]);
   const [viralHooks, setViralHooks] = useState<ViralHook[]>(DEFAULT_VIRAL_HOOKS);
