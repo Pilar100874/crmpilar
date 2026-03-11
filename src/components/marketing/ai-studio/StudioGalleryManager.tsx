@@ -749,13 +749,13 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                       tipo: 'video',
                       public_url: publicUrl,
                       storage_path: path,
-                      nome: `${editItem.nome || 'Vídeo'} (cortado)`,
+                      nome: `${editItem.nome || 'Vídeo'} (${withAudio ? 'cortado' : 'cortado sem áudio'})`,
                       descricao: `Cortado de ${formatTimestamp(startTime)} a ${formatTimestamp(endTime)}`,
-                      tamanho_bytes: convertedBlob.size,
+                      tamanho_bytes: finalBlob.size,
                       mime_type: 'video/mp4',
                       origem: 'studio-trimmed',
                     });
-                    toast.success('✅ Vídeo cortado salvo na galeria!');
+                    toast.success(`✅ Vídeo cortado salvo ${withAudio ? 'com áudio' : 'sem áudio'}!`);
                     fetchImages();
                   } catch (err: any) {
                     toast.error('Erro ao salvar vídeo cortado: ' + (err.message || String(err)));
