@@ -267,7 +267,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
   {
     id: 'ii-fitness', name: 'Fitness Action', mediaType: 'image', category: 'influencer',
     tags: ['fitness', 'gym', 'action'], image: imgInfFitness,
-    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'], isCustom: true,
     prompt: `Dynamic fitness photography of an athletic person with the product in a gym environment. Dramatic backlight creating rim light effect on the body. Action pose frozen in mid-movement. Visible energy and determination. High contrast lighting emphasizing muscle definition and product visibility. Camera: Nikon Z9, 70-200mm f/2.8, 1/2000s shutter speed.${NEGATIVE_BLOCK}`,
   },
   {
