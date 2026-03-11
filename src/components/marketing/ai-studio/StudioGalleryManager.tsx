@@ -12,7 +12,9 @@ import {
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VideoTrimmer from './VideoTrimmer';
-import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
 export interface GalleryImage {
   id: string;
