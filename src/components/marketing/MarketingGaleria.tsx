@@ -43,7 +43,9 @@ import { ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG, PublishChannel } from '
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 import VideoTrimmer from './ai-studio/VideoTrimmer';
-import { convertVideoToWhatsappMp4 } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
 interface MarketingContentItem {
   id: string;
