@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Image, 
   Video, 
@@ -13,7 +13,11 @@ import {
   Play,
   Download,
   Pencil,
-  X
+  X,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +56,7 @@ interface MarketingContentItem {
   status: string | null;
   created_at: string;
   _source?: 'marketing_content' | 'media_gallery';
+  _folder?: string | null;
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
@@ -84,6 +89,39 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<MarketingContentItem | null>(null);
   const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+
+  // Folder system
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<string | null>(null);
+  const [manualFolders, setManualFolders] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(`galeria_content_folders_${localStorage.getItem('estabelecimentoId') || ''}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  // Folder assignment stored in localStorage (since content comes from two tables)
+  const [folderAssignments, setFolderAssignments] = useState<Record<string, string | null>>(() => {
+    try {
+      const stored = localStorage.getItem(`galeria_content_assignments_${localStorage.getItem('estabelecimentoId') || ''}`);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+
+  const saveManualFolders = useCallback((newFolders: string[]) => {
+    setManualFolders(newFolders);
+    localStorage.setItem(`galeria_content_folders_${estabelecimentoId}`, JSON.stringify(newFolders));
+  }, [estabelecimentoId]);
+
+  const saveFolderAssignments = useCallback((assignments: Record<string, string | null>) => {
+    setFolderAssignments(assignments);
+    localStorage.setItem(`galeria_content_assignments_${estabelecimentoId}`, JSON.stringify(assignments));
+  }, [estabelecimentoId]);
 
   useEffect(() => {
     loadContent();
@@ -94,7 +132,6 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     try {
       const estabId = localStorage.getItem('estabelecimentoId');
 
-      // Fetch from marketing_content
       const { data: mcData, error: mcError } = await supabase
         .from('marketing_content')
         .select('*')
@@ -107,7 +144,6 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         _source: 'marketing_content' as const,
       }));
 
-      // Fetch from media_gallery
       let mgItems: MarketingContentItem[] = [];
       if (estabId) {
         const { data: mgData, error: mgError } = await supabase
@@ -133,7 +169,6 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         }
       }
 
-      // Merge and sort by date descending
       const merged = [...mcItems, ...mgItems].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -162,6 +197,10 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       if (error) throw error;
 
       setContent(prev => prev.filter(c => c.id !== deleteId));
+      // Remove folder assignment
+      const newAssignments = { ...folderAssignments };
+      delete newAssignments[deleteId];
+      saveFolderAssignments(newAssignments);
       toast.success('Conteúdo removido');
     } catch (error) {
       console.error('Error deleting content:', error);
@@ -187,10 +226,96 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     window.open(item.content_url, '_blank');
   };
 
+  const handleDownload = useCallback(async (item: MarketingContentItem) => {
+    if (!item.content_url) return;
+    try {
+      const response = await fetch(item.content_url);
+      const blob = await response.blob();
+      const isVideo = item.content_type === 'video';
+      const ext = isVideo ? 'mp4' : (item.content_type === 'audio' ? 'mp3' : 'png');
+      const fileName = `${item.resource_name || 'download'}.${ext}`;
+      
+      const url = URL.createObjectURL(isVideo ? new Blob([blob], { type: 'video/mp4' }) : blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      // Fallback
+      const a = document.createElement('a');
+      a.href = item.content_url;
+      a.download = item.resource_name || 'download';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }, []);
+
+  // Folder logic
+  const folders = Array.from(new Set([
+    ...Object.values(folderAssignments).filter(Boolean) as string[],
+    ...manualFolders,
+  ]));
+
+  const getItemFolder = (itemId: string) => folderAssignments[itemId] || null;
+
+  const handleMoveToFolder = useCallback((itemId: string, folder: string | null) => {
+    const newAssignments = { ...folderAssignments };
+    if (folder) {
+      newAssignments[itemId] = folder;
+    } else {
+      delete newAssignments[itemId];
+    }
+    saveFolderAssignments(newAssignments);
+    toast.success(folder ? `Movido para "${folder}"` : 'Movido para raiz');
+  }, [folderAssignments, saveFolderAssignments]);
+
+  const handleFolderDrop = useCallback((folder: string | null) => {
+    if (!draggingItemId) return;
+    setDragOverFolder(null);
+    handleMoveToFolder(draggingItemId, folder);
+    setDraggingItemId(null);
+  }, [draggingItemId, handleMoveToFolder]);
+
+  const handleCreateFolder = useCallback(() => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    if (folders.includes(name)) {
+      toast.info('Pasta já existe');
+    } else {
+      saveManualFolders([...manualFolders, name]);
+      setActiveFolder(name);
+      toast.success(`Pasta "${name}" criada!`);
+    }
+    setIsCreatingFolder(false);
+    setNewFolderName('');
+  }, [newFolderName, folders, manualFolders, saveManualFolders]);
+
+  const handleDeleteFolder = useCallback((folder: string) => {
+    // Move all items to root
+    const newAssignments = { ...folderAssignments };
+    Object.keys(newAssignments).forEach(k => {
+      if (newAssignments[k] === folder) delete newAssignments[k];
+    });
+    saveFolderAssignments(newAssignments);
+    saveManualFolders(manualFolders.filter(f => f !== folder));
+    toast.success(`Pasta "${folder}" excluída. Itens movidos para raiz.`);
+    setDeleteFolderConfirm(null);
+    if (activeFolder === folder) setActiveFolder(null);
+  }, [folderAssignments, saveFolderAssignments, manualFolders, saveManualFolders, activeFolder]);
+
+  // Filter content
   const filteredContent = content.filter(item => {
     const matchesSearch = item.resource_name.toLowerCase().includes(search.toLowerCase());
     const matchesType = filterType === 'all' || item.content_type === filterType;
-    return matchesSearch && matchesType;
+    const itemFolder = getItemFolder(item.id);
+    const matchesFolder = activeFolder === null ? !itemFolder : itemFolder === activeFolder;
+    return matchesSearch && matchesType && matchesFolder;
   });
 
   const groupedByDate = filteredContent.reduce((acc, item) => {
@@ -222,8 +347,10 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
             <video 
               src={item.content_url} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover studio-video-no-fullscreen"
               controls
+              controlsList="nofullscreen nodownload"
+              disablePictureInPicture
             />
           </div>
         ) : (
@@ -303,6 +430,87 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         </div>
       </div>
 
+      {/* Folder bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          onClick={() => setActiveFolder(null)}
+          onDragOver={(e) => { e.preventDefault(); setDragOverFolder('__root__'); }}
+          onDragLeave={() => setDragOverFolder(null)}
+          onDrop={(e) => { e.preventDefault(); handleFolderDrop(null); }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+            activeFolder === null
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+          } ${dragOverFolder === '__root__' ? 'ring-2 ring-primary/50' : ''}`}
+        >
+          <FolderOpen className="h-3.5 w-3.5" />
+          Raiz
+          <span className="text-[10px] opacity-70">
+            {content.filter(i => !getItemFolder(i.id)).length}
+          </span>
+        </button>
+
+        {folders.map((folder) => (
+          <div key={folder} className="group relative">
+            <button
+              onClick={() => setActiveFolder(folder)}
+              onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
+              onDragLeave={() => setDragOverFolder(null)}
+              onDrop={(e) => { e.preventDefault(); handleFolderDrop(folder); }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                activeFolder === folder
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+              } ${dragOverFolder === folder ? 'ring-2 ring-primary/50' : ''}`}
+            >
+              <Folder className="h-3.5 w-3.5" />
+              {folder}
+              <span className="text-[10px] opacity-70">
+                {content.filter(i => getItemFolder(i.id) === folder).length}
+              </span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setDeleteFolderConfirm(folder); }}
+              className="absolute -top-1 -right-1 p-0.5 rounded-full bg-background border border-border opacity-0 group-hover:opacity-100 hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-all shadow-sm"
+              title="Excluir pasta"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+
+        {isCreatingFolder ? (
+          <div className="inline-flex items-center gap-1.5">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Nome da pasta..."
+              className="h-7 w-36 text-xs"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateFolder();
+                if (e.key === 'Escape') { setIsCreatingFolder(false); setNewFolderName(''); }
+              }}
+            />
+            <Button size="sm" className="h-7 text-xs gap-1 px-2" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+              <FolderPlus className="h-3 w-3" />
+              Criar
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => { setIsCreatingFolder(false); setNewFolderName(''); }}>
+              Cancelar
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => { setIsCreatingFolder(true); setNewFolderName(''); }}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-muted-foreground border border-dashed border-border hover:bg-muted/50 hover:text-foreground transition-all"
+          >
+            <FolderPlus className="h-3.5 w-3.5" />
+            Nova Pasta
+          </button>
+        )}
+      </div>
+
       {/* Content List */}
       {filteredContent.length === 0 ? (
         <Card className="border-dashed">
@@ -310,16 +518,20 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
             <div className="rounded-full bg-muted p-4 mb-4">
               <Image className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold mb-1">Nenhum conteúdo encontrado</h3>
+            <h3 className="font-semibold mb-1">
+              {activeFolder ? `Nenhum conteúdo na pasta "${activeFolder}"` : 'Nenhum conteúdo encontrado'}
+            </h3>
             <p className="text-sm text-muted-foreground text-center">
               {search || filterType !== 'all'
                 ? 'Tente ajustar os filtros de busca'
-                : 'Use um recurso para criar seu primeiro conteúdo'}
+                : activeFolder
+                  ? 'Arraste itens para esta pasta'
+                  : 'Use um recurso para criar seu primeiro conteúdo'}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-20rem)]">
+        <ScrollArea className="h-[calc(100vh-24rem)]">
           <div className="space-y-6">
             {Object.entries(groupedByDate).map(([date, items]) => (
               <div key={date}>
@@ -335,7 +547,17 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.map((item) => (
-                    <Card key={item.id} className="overflow-hidden group">
+                    <Card
+                      key={item.id}
+                      className={`overflow-hidden group ${draggingItemId === item.id ? 'opacity-50 ring-2 ring-primary' : ''}`}
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggingItemId(item.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', item.id);
+                      }}
+                      onDragEnd={() => setDraggingItemId(null)}
+                    >
                       {renderContentPreview(item)}
                       
                       <CardContent className="p-4">
@@ -391,11 +613,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                               <Button
                                 size="sm"
                                 variant="outline"
-                                asChild
+                                onClick={() => handleDownload(item)}
                               >
-                                <a href={item.content_url} download>
-                                  <Download className="h-3.5 w-3.5" />
-                                </a>
+                                <Download className="h-3.5 w-3.5" />
                               </Button>
                             </>
                           )}
@@ -439,12 +659,11 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                   const estabId = localStorage.getItem('estabelecimentoId');
                   if (!estabId) { toast.error('Estabelecimento não encontrado'); setIsSavingTrimmed(false); return; }
                   try {
-                    const ext = blob.type?.includes('webm') ? 'webm' : 'mp4';
-                    const fileName = `trimmed_${Date.now()}.${ext}`;
+                    const fileName = `trimmed_${Date.now()}.mp4`;
                     const path = `${estabId}/${fileName}`;
                     const { error: upErr } = await supabase.storage
                       .from('marketing-videos')
-                      .upload(path, blob, { contentType: blob.type || 'video/mp4' });
+                      .upload(path, blob, { contentType: 'video/mp4' });
                     if (upErr) throw upErr;
                     const { data: { publicUrl } } = supabase.storage
                       .from('marketing-videos')
@@ -456,7 +675,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                       storage_path: path,
                       nome: `${editingVideo.resource_name || 'Vídeo'} (cortado)`,
                       tamanho_bytes: blob.size,
-                      mime_type: blob.type || 'video/mp4',
+                      mime_type: 'video/mp4',
                       origem: 'galeria-trimmed',
                     });
                     toast.success('✅ Vídeo cortado salvo na galeria!');
@@ -477,7 +696,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Content Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -494,6 +713,29 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Folder Confirmation */}
+      {deleteFolderConfirm && (
+        <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteFolderConfirm(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir pasta "{deleteFolderConfirm}"?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Os itens dentro desta pasta serão movidos para a raiz. Nenhum arquivo será excluído.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteFolderConfirm(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={(e) => { e.preventDefault(); handleDeleteFolder(deleteFolderConfirm); }}
+              >
+                Excluir Pasta
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };
