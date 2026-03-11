@@ -755,10 +755,61 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             <ConfigField label="Modelo de Vídeo">
               <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => {
                 update('videoModel', v);
+                // Auto-fill minimum required params per model
                 if (v === 'free/gif-animated') {
                   update('frameCount', 4);
                   update('fps', 3);
                   update('resolution', '480p');
+                  update('duration', 4);
+                } else if (v.startsWith('google/')) {
+                  // Google Veo: duration 4-8s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('openai/')) {
+                  // Sora: duration 4, 8, 12
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('runway/')) {
+                  // Runway: duration 5 or 10
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('kling/')) {
+                  // Kling: duration 5 or 10
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('luma/')) {
+                  // Luma: automatic duration ~4s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
+                } else if (v.startsWith('stability/')) {
+                  // Stability: fixed ~4s
+                  update('duration', 4);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 2.5);
+                } else {
+                  // Default
+                  update('duration', 5);
+                  update('resolution', '1080p');
+                  update('aspectRatio', '16:9');
+                  update('fps', '24');
+                  update('cfgScale', 7);
                 }
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
