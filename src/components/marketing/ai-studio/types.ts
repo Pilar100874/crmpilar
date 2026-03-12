@@ -292,7 +292,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Gere vídeos a partir de prompts ou imagens',
         icon: '🎬',
         color: '#f59e0b',
-        defaultConfig: { duration: 5, resolution: '1080p', aspectRatio: '16:9', withAudio: true, withMusic: true },
+        defaultConfig: { duration: 4, resolution: '1080p', aspectRatio: '16:9', withAudio: true, withMusic: true, videoModel: 'openai/sora-2' },
       },
       {
         type: 'videoMerge',
