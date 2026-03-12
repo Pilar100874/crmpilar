@@ -96,7 +96,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
     if (!estabId) return;
     setLoading(true);
     try {
-      const tipoFilter = type === 'video' ? 'video' : 'imagem';
+      const tipoFilter = type === 'video' ? 'video' : 'image';
       const { data, error } = await supabase
         .from('media_gallery')
         .select('id, nome, public_url, tipo, thumbnail_url, created_at, duracao_segundos')
