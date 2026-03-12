@@ -871,6 +871,7 @@ export function useStudioExecution() {
               frames.push(result.imageUrl);
             }
           } catch (frameErr: any) {
+            if (abortRef.current?.signal.aborted) throw frameErr;
             console.warn(`[Studio] Frame ${i + 1} failed, skipping:`, frameErr.message);
             toast.error(`Frame ${i + 1} falhou: ${frameErr.message?.substring(0, 80)}`, { duration: 4000 });
           }
@@ -1426,6 +1427,7 @@ export function useStudioExecution() {
                   nodeResultStore.setResult(intId, intResult);
                   lastResult = intResult;
                 } catch (intErr: any) {
+                  if (abortRef.current?.signal.aborted) throw intErr;
                   console.error(`[Studio Loop] Node ${intId} failed for product ${pi}:`, intErr.message);
                   toast.error(`Loop ${pi + 1}: ${intErr.message?.substring(0, 80)}`, { duration: 4000 });
                 }
@@ -1463,6 +1465,7 @@ export function useStudioExecution() {
             toast.success(`🎉 Lote finalizado! ${loopResults.length} imagens geradas. Revise e salve.`, { duration: 6000 });
 
           } catch (err: any) {
+            if (abortRef.current?.signal.aborted) break;
             const elapsed = Date.now() - startTime;
             const errMsg = err.message || 'Erro desconhecido';
             updateNode(nodeId, { isProcessing: false, error: errMsg });
@@ -1498,6 +1501,7 @@ export function useStudioExecution() {
             toast.success('🎨 Imagem gerada com sucesso!', { duration: 4000 });
           }
         } catch (err: any) {
+          if (abortRef.current?.signal.aborted) break;
           const elapsed = Date.now() - startTime;
           const errMsg = err.message || 'Erro desconhecido';
           console.error(`[Studio] Node ${nodeId} (${nd.type}) failed:`, errMsg);
