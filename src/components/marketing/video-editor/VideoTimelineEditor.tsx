@@ -27,7 +27,7 @@ interface MediaItem {
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
   const { state } = timeline;
-  const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media'>('media');
+  const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media' | 'config'>('media');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
