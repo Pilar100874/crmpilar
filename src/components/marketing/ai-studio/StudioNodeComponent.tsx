@@ -752,56 +752,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             )}
           </div>
         )}
-        {/* Image input with inline upload */}
-        {nodeData.type === 'imageInput' && (
-          <div className="px-3 pb-3 pt-1">
-            {(nodeData.config.images?.length > 0) ? (
-              <div className="grid grid-cols-2 gap-1.5">
-                {nodeData.config.images.slice(0, 4).map((img: string, idx: number) => (
-                  <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square relative group/img">
-                    <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleInlineUpdate('images', nodeData.config.images.filter((_: any, i: number) => i !== idx));
-                      }}
-                      className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover/img:opacity-100 transition-opacity text-[8px]"
-                    >✕</button>
-                  </div>
-                ))}
-                {nodeData.config.images.length > 4 && (
-                  <div className="rounded-lg border border-border/50 aspect-square flex items-center justify-center bg-muted/50">
-                    <span className="text-xs text-muted-foreground font-medium">+{nodeData.config.images.length - 4}</span>
-                  </div>
-                )}
-              </div>
-            ) : null}
-            <label className="flex flex-col items-center gap-1.5 py-3 border border-dashed border-border/50 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors mt-1.5">
-              <Upload className="h-5 w-5 text-muted-foreground/40" />
-              <p className="text-[10px] text-muted-foreground">Clique ou arraste imagens</p>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  files.forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const base64 = reader.result as string;
-                      handleInlineUpdate('images', [...(nodeData.config.images || []), base64]);
-                    };
-                    reader.readAsDataURL(file);
-                  });
-                  e.target.value = '';
-                }}
-              />
-            </label>
-            {nodeData.config.images?.length > 0 && (
-              <p className="text-[10px] text-muted-foreground mt-1.5">{nodeData.config.images.length} imagem(ns) de referência</p>
-            )}
-          </div>
+        {/* Image input with inline upload + gallery */}
+        {(nodeData.type === 'imageInput' || nodeData.type === 'multiImageRef') && (
+          <ImageInputWithGallery
+            images={nodeData.config.images || []}
+            onUpdateImages={(imgs) => handleInlineUpdate('images', imgs)}
+            nodeType={nodeData.type}
+          />
         )}
 
         {/* Product image select inline display */}
