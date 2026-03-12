@@ -223,6 +223,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     e.preventDefault();
     setDropTargetTrackId(null);
     setDragMediaType(null);
+    if (track.locked) return; // Block drops on locked tracks
     const raw = e.dataTransfer.getData('application/timeline-media');
     if (!raw || !onAddClip) return;
     try {
