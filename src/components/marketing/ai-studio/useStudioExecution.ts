@@ -580,8 +580,13 @@ export function useStudioExecution() {
       }
 
       case 'imageEdit': {
+        const editEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const editDefaults = getStudioDefaults(editEstabId);
+        const editLangSuffix = getLanguagePromptSuffix(editDefaults.defaultLanguage || 'pt-BR');
+        const editPromptText = config.editPrompt || combinedInput || 'Melhore esta imagem';
+        const editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
         const result = await callStudio('edit_image', {
-          prompt: config.editPrompt || combinedInput || 'Enhance this image',
+          prompt: editPromptWithLang,
           imageUrls: imageInputs,
           model: config.model,
         });
