@@ -12,7 +12,7 @@ import TimelineTracks from './TimelineTracks';
 import TimelineRuler from './TimelineRuler';
 import TrackHeaders from './TrackHeaders';
 import ClipPropertiesPanel from './ClipPropertiesPanel';
-import ResourcePanel from './ResourcePanel';
+import ResourcePanel, { ResourcePanelHandle } from './ResourcePanel';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
