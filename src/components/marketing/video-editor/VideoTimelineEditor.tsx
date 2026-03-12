@@ -290,7 +290,7 @@ const VideoTimelineEditor: React.FC = () => {
 
         {/* Right panel */}
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
-          {rightPanel === 'media' && <MediaBin onAddClip={handleAddClip} />}
+          {rightPanel === 'media' && <MediaBin onAddClip={handleAddClip} tracks={state.tracks} />}
           {rightPanel === 'effects' && (
             <EffectsPanel
               selectedClip={selectedClip || undefined}
