@@ -19,6 +19,10 @@ interface MediaItem {
   canvasJson?: string;
 }
 
+export interface ResourcePanelHandle {
+  addCanvasItem: (name: string, src: string, canvasJson?: string) => void;
+}
+
 interface Props {
   onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   tracks: TimelineTrack[];
