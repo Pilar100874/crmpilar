@@ -74,7 +74,9 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   }, []);
 
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: TimelineClip, type: 'move' | 'resize-start' | 'resize-end') => {
-    if (clip.locked) return;
+    // Block interaction if clip or its track is locked
+    const track = state.tracks.find(t => t.id === clip.trackId);
+    if (clip.locked || track?.locked) return;
     e.stopPropagation();
     e.preventDefault();
     onSelectClip(clip.id, e.ctrlKey || e.metaKey);
