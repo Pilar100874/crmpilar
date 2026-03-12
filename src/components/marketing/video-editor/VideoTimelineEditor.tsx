@@ -110,12 +110,31 @@ const VideoTimelineEditor: React.FC = () => {
       opacity: 1,
       filters: [],
       src: media?.src,
+      canvasJson: (media as any)?.canvasJson,
       x: 0,
       y: 0,
       w: 100,
       h: 100,
     });
   }, [timeline]);
+
+  // Double-click on a canvas clip opens the composer for editing
+  const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
+    if (clip.canvasJson) {
+      setCanvasEditClipId(clip.id);
+      setCanvasEditJson(clip.canvasJson);
+      setCanvasDialogOpen(true);
+    }
+  }, []);
+
+  const handleCanvasEditConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
+    setCanvasDialogOpen(false);
+    if (canvasEditClipId) {
+      timeline.updateClip(canvasEditClipId, { src: imageDataUrl, canvasJson });
+    }
+    setCanvasEditClipId(null);
+    setCanvasEditJson(undefined);
+  }, [canvasEditClipId, timeline]);
 
   return (
     <div ref={containerRef} className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] border rounded-xl overflow-hidden bg-background" tabIndex={0}>
