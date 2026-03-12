@@ -69,7 +69,7 @@ export type TransitionType =
 export interface TimelineTrack {
   id: string;
   name: string;
-  type: 'video' | 'audio' | 'text' | 'effect';
+  type: 'video' | 'audio' | 'text' | 'effect' | 'canvas';
   height: number;
   muted: boolean;
   locked: boolean;
