@@ -793,25 +793,22 @@ export function useStudioExecution() {
         const langSuffix = getLanguagePromptSuffix(defaultLang);
         const langCode = (config.lang || defaultLang).split('-')[0]; // e.g. "pt"
 
-        // Auto-translate text to target language if it appears to be in a different language
-        // Use a simple heuristic: if configured lang is pt-BR but text has many English-only patterns
+        // ALWAYS translate/rewrite text to the configured language before TTS
+        // This ensures audio is NEVER in the wrong language regardless of prompt language
         const targetLangPrefix = (config.lang || defaultLang).split('-')[0];
-        const textLooksEnglish = /\b(the|is|are|this|that|with|for|and|you|your|our|can|will|have|has|from|been|were|was|not|but|all|would|their|said|each|which|how|about)\b/gi;
-        const englishWordCount = (textToSpeak.match(textLooksEnglish) || []).length;
         const wordCount = textToSpeak.split(/\s+/).length;
-        const isLikelyEnglish = englishWordCount > 3 && (englishWordCount / wordCount) > 0.15;
         
-        if (targetLangPrefix !== 'en' && isLikelyEnglish && wordCount > 5) {
-          // Translate via LLM before TTS
+        if (targetLangPrefix !== 'en' && wordCount > 3) {
+          // Always rewrite to target language via LLM (handles English, mixed, or any other language)
           try {
             const translated = await callStudio('generate_text', {
-              prompt: `Translate the following text to ${langSuffix}. Return ONLY the translation, nothing else:\n\n${textToSpeak}`,
-              systemPrompt: `You are a professional translator. Translate accurately and naturally ${langSuffix}. Do not add explanations, quotes, or any extra text. Return only the translated text.`,
+              prompt: `Rewrite/translate the following text to ${langSuffix}. If it's already in the target language, just clean it up and return it. Return ONLY the final text, nothing else:\n\n${textToSpeak}`,
+              systemPrompt: `You are a professional translator and copywriter. Your ONLY job is to output text ${langSuffix}. Never output in English. Do not add explanations, quotes, labels, or any extra text. Return only the final text in the target language.`,
               model: 'google/gemini-2.5-flash-lite',
             });
-            if (translated && typeof translated === 'string' && translated.trim().length > 0) {
+            if (translated && typeof translated === 'string' && translated.trim().length > 5) {
               textToSpeak = translated.trim();
-              console.log('[Studio] Auto-translated text to', defaultLang);
+              console.log('[Studio] Text rewritten/translated to', defaultLang);
             }
           } catch (err) {
             console.warn('[Studio] Auto-translation failed, using original text:', err);
