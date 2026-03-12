@@ -1114,8 +1114,8 @@ const AICreativeStudioInner: React.FC = () => {
   // Landing page — only show when user has NOT entered the canvas editor
   if (!showCanvas) {
     return (
-      <div className="h-[calc(100vh-200px)] min-h-[400px] md:min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative overflow-y-auto pt-6 sm:pt-12 pb-20 lg:pb-16">
+      <div className="h-[calc(100vh-180px)] min-h-[350px] md:min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative overflow-y-auto pt-4 sm:pt-8 md:pt-12 pb-20 lg:pb-16">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
 
@@ -1125,33 +1125,34 @@ const AICreativeStudioInner: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="relative z-10 text-center max-w-3xl w-full"
           >
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6 text-[10px] sm:text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-3 sm:mb-5 text-[9px] sm:text-xs text-muted-foreground">
               <Sparkles className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary" />
               Powered by Veo 3.1, Sora 3, Gemini & mais
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4">
+            <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-2 sm:mb-4">
               <span className="text-foreground">AI Creative</span>
-              <br />
+              <br className="sm:hidden" />
+              <span className="hidden sm:inline"> </span>
               <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">Studio</span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-10 max-w-xl mx-auto leading-relaxed px-2">
-              Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo.
+            <p className="text-xs sm:text-sm md:text-lg text-muted-foreground mb-4 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2">
+              Crie vídeos, imagens, músicas e áudio com IA.
             </p>
 
-            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 sm:flex-wrap px-1">
-              <Button onClick={() => { setCurrentWorkflowId(null); setCurrentWorkflowName(''); setShowCanvas(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm col-span-2 sm:col-span-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-8 px-1">
+              <Button onClick={() => { setCurrentWorkflowId(null); setCurrentWorkflowName(''); setShowCanvas(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Workflow
               </Button>
-              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Settings2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                <span className="truncate">Config</span>
+                Config
               </Button>
-              <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm col-span-2 sm:col-span-1">
+              <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                <span className="truncate">Galeria</span>
+                Galeria
               </Button>
             </div>
           </motion.div>
@@ -1376,7 +1377,7 @@ const AICreativeStudioInner: React.FC = () => {
       className={`flex flex-col border border-border rounded-xl overflow-hidden bg-background transition-all duration-300 ${
         isFullscreen
           ? 'fixed inset-0 z-50 rounded-none border-0'
-          : 'h-[calc(100vh-200px)] min-h-[350px] md:min-h-[600px]'
+          : 'h-[calc(100vh-180px)] min-h-[300px] md:min-h-[600px]'
       }`}
     >
       {/* Header Toolbar */}
@@ -1458,12 +1459,18 @@ const AICreativeStudioInner: React.FC = () => {
               {currentWorkflowName}
             </span>
           )}
-          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
-            <Clapperboard className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+          <Button size="icon" variant="ghost" onClick={() => setShowPresets(true)} className="h-7 w-7 sm:hidden shrink-0" title="Presets">
+            <Clapperboard className="h-3 w-3" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setShowSettings(true)} className="h-7 w-7 sm:hidden shrink-0" title="Config">
+            <Settings2 className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Clapperboard className="h-3.5 w-3.5" />
             Presets
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
-            <Settings2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Settings2 className="h-3.5 w-3.5" />
             Config
           </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />

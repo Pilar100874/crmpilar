@@ -1368,54 +1368,54 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       className="absolute inset-0 z-50 bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
-        <div className="relative flex items-center justify-between px-6 py-3 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-                <Wand2 className="h-4.5 w-4.5 text-primary-foreground" />
+        <div className="relative flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-border/50 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <Wand2 className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-primary-foreground" />
               </div>
-              <div>
-                <h2 className="text-base font-bold tracking-tight">AI Creative Studio</h2>
-                <p className="text-[10px] text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+              <div className="hidden sm:block">
+                <h2 className="text-sm sm:text-base font-bold tracking-tight">AI Creative Studio</h2>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground">Motor avançado de criação de criativos</p>
               </div>
             </div>
             {/* Mode Toggle — only when not on choose screen */}
             {mode !== 'choose' && (
-              <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-xl p-0.5 border border-border/40">
+              <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-lg sm:rounded-xl p-0.5 border border-border/40">
                 <button
                   onClick={() => setMode('wizard')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  className={`px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-md sm:rounded-[10px] transition-all flex items-center gap-1 sm:gap-1.5 ${
                     mode === 'wizard' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Wand2 className="h-3.5 w-3.5" /> Assistente
+                  <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> <span className="hidden xs:inline">Assistente</span><span className="xs:hidden">Assist.</span>
                 </button>
                 <button
                   onClick={() => setMode('prompts')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  className={`px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-md sm:rounded-[10px] transition-all flex items-center gap-1 sm:gap-1.5 ${
                     mode === 'prompts' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
+                  <BookOpen className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> Prompts
                 </button>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {mode === 'wizard' && selectionCount > 0 && (
-              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold">
-                {selectionCount} camadas selecionadas
+              <Badge className="text-[9px] sm:text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold hidden sm:inline-flex">
+                {selectionCount} camadas
               </Badge>
             )}
             {mode === 'wizard' && selectionCount > 0 && (
-              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5 text-xs h-8 rounded-lg border-border/50">
-                <RotateCcw className="h-3 w-3" /> Limpar
+              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 rounded-lg border-border/50">
+                <RotateCcw className="h-3 w-3" /> <span className="hidden sm:inline">Limpar</span>
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl hover:bg-destructive/10 hover:text-destructive">
-              <X className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-lg sm:rounded-xl hover:bg-destructive/10 hover:text-destructive h-7 w-7 sm:h-9 sm:w-9">
+              <X className="h-4 sm:h-5 w-4 sm:w-5" />
             </Button>
           </div>
         </div>
@@ -1423,8 +1423,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
       {/* Choose Mode Screen */}
       {mode === 'choose' ? (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-xl w-full space-y-8">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+          <div className="max-w-xl w-full space-y-5 sm:space-y-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1497,8 +1497,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         <AnimatePresence mode="wait">
         {wizardStep === 1 ? (
         <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-background to-muted/10">
-          {/* Friendly header with progress */}
-          <div className="px-5 pt-5 pb-3">
+           {/* Friendly header with progress */}
+           <div className="px-3 sm:px-5 pt-3 sm:pt-5 pb-2 sm:pb-3">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/10">
@@ -1534,7 +1534,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="px-4 pb-5 space-y-2">
+            <div className="px-2.5 sm:px-4 pb-5 space-y-2">
               {visibleLayers.map((layer, idx) => {
                 const isExpanded = expandedLayer === layer.id;
                 const selected = selections[layer.id] || [];
@@ -1640,10 +1640,10 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="px-4 pb-4 pt-0">
-                              <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent mb-3" />
-                              <p className="text-[11px] text-muted-foreground mb-3 pl-1">{layer.description}</p>
-                              <div className="flex flex-wrap gap-2">
+                            <div className="px-2.5 sm:px-4 pb-3 sm:pb-4 pt-0">
+                              <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent mb-2 sm:mb-3" />
+                              <p className="text-[10px] sm:text-[11px] text-muted-foreground mb-2 sm:mb-3 pl-1">{layer.description}</p>
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                 {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
                                   const isSelected = selected.includes(option.id);
                                   return (
@@ -1652,7 +1652,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                                       whileHover={{ scale: 1.03, y: -1 }}
                                       whileTap={{ scale: 0.97 }}
                                       onClick={() => toggleOption(layer.id, option.id)}
-                                      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 border-2 ${
+                                      className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all duration-200 border-2 ${
                                         isSelected
                                           ? `bg-gradient-to-br ${layer.iconColor} text-white border-transparent shadow-lg shadow-primary/15`
                                           : 'bg-background text-foreground border-border/20 hover:border-primary/20 hover:bg-primary/[0.03] hover:shadow-sm'
@@ -1676,7 +1676,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </div>
           </ScrollArea>
           {/* Step 1 Footer — Avançar button */}
-          <div className="p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
+          <div className="p-3 sm:p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
             <Button
               className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
               size="lg"
@@ -1703,8 +1703,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
               }
             }} className="flex flex-col flex-1 overflow-hidden">
-            <div className="border-b border-border/30 px-4 pt-3 pb-1">
-              <TabsList className={`h-10 w-full grid bg-muted/30 rounded-xl p-1 border border-border/20 ${
+             <div className="border-b border-border/30 px-2 sm:px-4 pt-2 sm:pt-3 pb-1">
+               <TabsList className={`h-8 sm:h-10 w-full grid bg-muted/30 rounded-lg sm:rounded-xl p-0.5 sm:p-1 border border-border/20 ${
                 (() => {
                   const isVideo = selections.contentType?.includes('video');
                   const hasHook = hasHookStyleSelected;
@@ -1713,27 +1713,27 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   return 'grid-cols-2';
                 })()
               }`}>
-                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                  <Sparkles className="h-3 w-3" /> Prompt
-                </TabsTrigger>
-                {hasHookStyleSelected && (
-                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <Library className="h-3 w-3" /> Ganchos
-                  </TabsTrigger>
-                )}
-                {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <FileText className="h-3 w-3" /> Roteiro
-                  </TabsTrigger>
-                )}
-                {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <Clapperboard className="h-3 w-3" /> Cenas
-                  </TabsTrigger>
-                )}
-                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                  <Layers className="h-3 w-3" /> Variações
-                </TabsTrigger>
+                 <TabsTrigger value="prompt" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                   <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Prompt
+                 </TabsTrigger>
+                 {hasHookStyleSelected && (
+                   <TabsTrigger value="hooks" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <Library className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Ganchos</span><span className="sm:hidden">Hook</span>
+                   </TabsTrigger>
+                 )}
+                 {selections.contentType?.includes('video') && (
+                   <TabsTrigger value="script" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <FileText className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Roteiro</span><span className="sm:hidden">Script</span>
+                   </TabsTrigger>
+                 )}
+                 {selections.contentType?.includes('video') && (
+                   <TabsTrigger value="scenes" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <Clapperboard className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Cenas
+                   </TabsTrigger>
+                 )}
+                 <TabsTrigger value="variations" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                   <Layers className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Variações</span><span className="sm:hidden">Vars</span>
+                 </TabsTrigger>
               </TabsList>
             </div>
 

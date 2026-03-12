@@ -61,7 +61,7 @@ const ExecutionLogPanel: React.FC<ExecutionLogPanelProps> = ({ log, isExecuting,
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      className="absolute bottom-4 right-4 z-50 w-80 rounded-xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+      className="absolute bottom-3 right-3 left-3 sm:left-auto z-50 sm:w-80 rounded-xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border/50 bg-muted/30">
