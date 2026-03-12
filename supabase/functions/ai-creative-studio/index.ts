@@ -71,9 +71,12 @@ async function pollUntilDone<T>(
     const { done, result, error } = await pollFn();
     if (error) throw new Error(error);
     if (done && result !== undefined) return result;
+    if (done && result === undefined) {
+      throw new Error("timeout:A geração de vídeo foi concluída mas não retornou resultado. Tente novamente.");
+    }
     await new Promise(r => setTimeout(r, intervalMs));
   }
-  throw new Error("Video generation timed out after polling");
+  throw new Error("timeout:A geração de vídeo excedeu o tempo limite. O servidor do modelo está sobrecarregado. Tente novamente mais tarde.");
 }
 
 // --- Google Veo (Vertex AI / AI Studio) ---
