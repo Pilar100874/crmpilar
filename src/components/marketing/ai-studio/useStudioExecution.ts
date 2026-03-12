@@ -784,13 +784,39 @@ export function useStudioExecution() {
 
       case 'audioGen': {
         // Always use config.text or a default — ignore audio from connected prompt blocks
-        const textToSpeak = config.text || combinedInput || 'Olá! Este é um exemplo de áudio gerado pelo AI Creative Studio.';
+        let textToSpeak = config.text || combinedInput || 'Olá! Este é um exemplo de áudio gerado pelo AI Creative Studio.';
 
         // Get default language from studio config
         const estabId = localStorage.getItem('estabelecimentoId') || '';
         const studioDefaults = getStudioDefaults(estabId);
         const defaultLang = studioDefaults.defaultLanguage || 'pt-BR';
         const langSuffix = getLanguagePromptSuffix(defaultLang);
+        const langCode = (config.lang || defaultLang).split('-')[0]; // e.g. "pt"
+
+        // Auto-translate text to target language if it appears to be in a different language
+        // Use a simple heuristic: if configured lang is pt-BR but text has many English-only patterns
+        const targetLangPrefix = (config.lang || defaultLang).split('-')[0];
+        const textLooksEnglish = /\b(the|is|are|this|that|with|for|and|you|your|our|can|will|have|has|from|been|were|was|not|but|all|would|their|said|each|which|how|about)\b/gi;
+        const englishWordCount = (textToSpeak.match(textLooksEnglish) || []).length;
+        const wordCount = textToSpeak.split(/\s+/).length;
+        const isLikelyEnglish = englishWordCount > 3 && (englishWordCount / wordCount) > 0.15;
+        
+        if (targetLangPrefix !== 'en' && isLikelyEnglish && wordCount > 5) {
+          // Translate via LLM before TTS
+          try {
+            const translated = await callStudio('generate_text', {
+              prompt: `Translate the following text to ${langSuffix}. Return ONLY the translation, nothing else:\n\n${textToSpeak}`,
+              systemPrompt: `You are a professional translator. Translate accurately and naturally ${langSuffix}. Do not add explanations, quotes, or any extra text. Return only the translated text.`,
+              model: 'google/gemini-2.5-flash-lite',
+            });
+            if (translated && typeof translated === 'string' && translated.trim().length > 0) {
+              textToSpeak = translated.trim();
+              console.log('[Studio] Auto-translated text to', defaultLang);
+            }
+          } catch (err) {
+            console.warn('[Studio] Auto-translation failed, using original text:', err);
+          }
+        }
         
         // Check if user has a paid TTS provider configured
         let paidProvider: string | null = null;
@@ -820,7 +846,7 @@ export function useStudioExecution() {
               provider: paidProvider,
               voiceId: config.voiceId,
               audioModel: config.audioModel,
-              lang: config.lang || defaultLang,
+              lang: langCode,
               voice: config.voice,
               estabelecimentoId: estabId,
               languageSuffix: langSuffix,
