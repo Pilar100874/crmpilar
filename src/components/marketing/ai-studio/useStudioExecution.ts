@@ -1427,6 +1427,7 @@ export function useStudioExecution() {
                   nodeResultStore.setResult(intId, intResult);
                   lastResult = intResult;
                 } catch (intErr: any) {
+                  if (abortRef.current?.signal.aborted) throw intErr;
                   console.error(`[Studio Loop] Node ${intId} failed for product ${pi}:`, intErr.message);
                   toast.error(`Loop ${pi + 1}: ${intErr.message?.substring(0, 80)}`, { duration: 4000 });
                 }
