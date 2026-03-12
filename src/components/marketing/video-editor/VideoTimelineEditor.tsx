@@ -531,7 +531,7 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'resources' && (
-              <ResourcePanel onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} />
+              <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} />
             )}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
             {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
