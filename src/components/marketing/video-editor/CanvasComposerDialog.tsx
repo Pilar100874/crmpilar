@@ -141,12 +141,20 @@ const CanvasComposerInner: React.FC<{
     try {
       // Deselect all to avoid selection handles in export
       canvas.discardActiveObject();
+      
+      // Temporarily set transparent background for video compositing
+      const originalBg = canvas.backgroundColor;
+      canvas.backgroundColor = 'transparent';
       canvas.renderAll();
 
       // Small delay to ensure render is complete
       await new Promise(r => setTimeout(r, 200));
 
       const dataUrl = canvas.toDataURL({ format: 'png', multiplier: 2 });
+      
+      // Restore original background
+      canvas.backgroundColor = originalBg;
+      canvas.renderAll();
       const json = JSON.stringify(canvas.toJSON());
       
       if (!dataUrl || dataUrl.length < 200) {
