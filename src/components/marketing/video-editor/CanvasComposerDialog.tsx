@@ -87,7 +87,7 @@ const CanvasComposerInner: React.FC<{
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [userSelectedPanel, setUserSelectedPanel] = useState(true);
   const [selectedObjectType, setSelectedObjectType] = useState<string | null>(null);
-  const loadedRef = useRef(false);
+  
 
   // Listen to canvas selection
   useEffect(() => {
@@ -112,17 +112,23 @@ const CanvasComposerInner: React.FC<{
 
   // Load initial canvas JSON if re-editing
   useEffect(() => {
-    if (!fabricCanvas || !initialCanvasJson || loadedRef.current) return;
-    loadedRef.current = true;
-    try {
-      const json = JSON.parse(initialCanvasJson);
-      fabricCanvas.loadFromJSON(json).then(() => {
-        fabricCanvas.renderAll();
-      });
-    } catch (e) {
-      console.error('Erro ao carregar canvas:', e);
-    }
-  }, [fabricCanvas, initialCanvasJson]);
+    if (!fabricCanvas || !initialCanvasJson) return;
+    // Use a small delay to ensure canvas is fully initialized
+    const timer = setTimeout(() => {
+      try {
+        const json = JSON.parse(initialCanvasJson);
+        fabricCanvas.loadFromJSON(json).then(() => {
+          fabricCanvas.renderAll();
+          console.log('Canvas loaded from JSON:', fabricCanvas.getObjects().length, 'objects');
+        });
+      } catch (e) {
+        console.error('Erro ao carregar canvas:', e);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+    // Only run once when fabricCanvas becomes available
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fabricCanvas]);
 
   const handleConfirm = useCallback(async () => {
     // Try context canvas first, then window fallback
