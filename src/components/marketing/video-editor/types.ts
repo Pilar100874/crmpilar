@@ -204,11 +204,12 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   },
 ];
 
-export const TRACK_COLORS = {
+export const TRACK_COLORS: Record<string, string> = {
   video: '#3b82f6',
   audio: '#22c55e',
   text: '#f59e0b',
   effect: '#a855f7',
+  canvas: '#ec4899',
 };
 
 export const DEFAULT_TRACKS: TimelineTrack[] = [
