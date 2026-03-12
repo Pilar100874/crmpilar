@@ -207,21 +207,13 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
 
         {/* Lock */}
         <div className="flex items-center justify-between">
-          <Label className="text-xs">Bloquear clipe</Label>
+          <div>
+            <Label className="text-xs">Bloquear clipe</Label>
+            <p className="text-[9px] text-muted-foreground">Impede mover, redimensionar ou editar este clipe na timeline</p>
+          </div>
           <Switch
             checked={clip.locked || false}
             onCheckedChange={(v) => onUpdateClip(clip.id, { locked: v })}
-          />
-        </div>
-
-        {/* Source */}
-        <div>
-          <Label className="text-xs">URL da mídia (opcional)</Label>
-          <Input
-            value={clip.src || ''}
-            onChange={(e) => onUpdateClip(clip.id, { src: e.target.value })}
-            className="mt-1 text-xs h-8"
-            placeholder="https://..."
           />
         </div>
       </div>
