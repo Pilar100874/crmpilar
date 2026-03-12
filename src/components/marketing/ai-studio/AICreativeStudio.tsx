@@ -1141,18 +1141,18 @@ const AICreativeStudioInner: React.FC = () => {
               Crie vídeos, imagens, músicas e áudio com IA.
             </p>
 
-            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 sm:flex-wrap px-1">
-              <Button onClick={() => { setCurrentWorkflowId(null); setCurrentWorkflowName(''); setShowCanvas(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm col-span-2 sm:col-span-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-8 px-1">
+              <Button onClick={() => { setCurrentWorkflowId(null); setCurrentWorkflowName(''); setShowCanvas(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Workflow
               </Button>
-              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Settings2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                <span className="truncate">Config</span>
+                Config
               </Button>
-              <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-xs sm:text-sm col-span-2 sm:col-span-1">
+              <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                <span className="truncate">Galeria</span>
+                Galeria
               </Button>
             </div>
           </motion.div>
