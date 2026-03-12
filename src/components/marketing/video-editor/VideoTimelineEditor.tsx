@@ -902,6 +902,71 @@ const VideoTimelineEditor: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Export preview dialog */}
+      <Dialog open={!!exportedVideoUrl} onOpenChange={(open) => { if (!open) handleCloseExportPreview(); }}>
+        <DialogContent className="max-w-3xl p-0 overflow-visible [&>button]:hidden">
+          <div className="relative">
+            {/* Close & Save buttons overlay */}
+            <div className="absolute top-3 right-3 z-[200] flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5 text-xs h-8 shadow-lg"
+                onClick={handleDownloadExported}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Baixar
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                className="gap-1.5 text-xs h-8 shadow-lg"
+                onClick={handleSaveExportedToGallery}
+                disabled={isSavingToGallery}
+              >
+                {isSavingToGallery ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                Salvar na Galeria
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-foreground/70 hover:text-foreground bg-background/60 backdrop-blur-sm rounded-full shadow-lg"
+                onClick={handleCloseExportPreview}
+              >
+                ✕
+              </Button>
+            </div>
+
+            {/* Video player */}
+            <div className="bg-black rounded-t-lg overflow-hidden">
+              {exportedVideoUrl && (
+                <video
+                  src={exportedVideoUrl}
+                  controls
+                  autoPlay
+                  className="w-full max-h-[70vh] object-contain"
+                  controlsList="nofullscreen nodownload"
+                />
+              )}
+            </div>
+
+            {/* Info bar */}
+            <div className="px-4 py-3 bg-card rounded-b-lg border-t flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Vídeo Gerado</p>
+                <p className="text-xs text-muted-foreground">
+                  Duração: {exportedVideoDuration}s • {videoConfig.resolution} • {videoConfig.fps}fps
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
