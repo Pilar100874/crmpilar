@@ -232,13 +232,18 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
             <div
               key={track.id}
               data-track-id={track.id}
-              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60 bg-primary/10' : ''}`}
-              style={{ height: track.height, opacity: track.visible ? 1 : 0.3 }}
+              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60' : ''}`}
+              style={{
+                height: track.height,
+                opacity: track.visible ? 1 : 0.3,
+                backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
+              }}
               onDragOver={(e) => handleExternalDragOver(e, track)}
               onDragLeave={() => setDropTargetTrackId(null)}
               onDrop={(e) => handleExternalDrop(e, track)}
             >
-              <div className="absolute inset-0 bg-muted/10" />
+              {/* Left color indicator */}
+              <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}60` }} />
 
               {trackClips.map((clip) => {
                 const left = clip.startTime * state.zoom;
