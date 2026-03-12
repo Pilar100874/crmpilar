@@ -107,7 +107,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''} ${
             track.locked ? 'bg-muted/30' : ''
           }`}
-          style={{ height: track.height, backgroundColor: track.locked ? undefined : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
+          style={{ minHeight: track.height, height: track.height, backgroundColor: track.locked ? undefined : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
         >
           {/* Drag handle */}
           <div className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity">
