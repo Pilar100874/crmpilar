@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
+import StudioCustomEdge from './StudioCustomEdge';
 import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
