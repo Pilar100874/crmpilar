@@ -81,6 +81,17 @@ const VideoTimelineEditor: React.FC = () => {
   const [renameName, setRenameName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
+  const [lastSavedState, setLastSavedState] = useState<string>('');
+
+  const getCurrentStateHash = useCallback(() => {
+    return JSON.stringify({ tracks: state.tracks, clips: state.clips, videoConfig });
+  }, [state.tracks, state.clips, videoConfig]);
+
+  const hasUnsavedChanges = useCallback(() => {
+    if (state.clips.length === 0 && state.tracks.length === DEFAULT_TRACKS.length) return false;
+    return getCurrentStateHash() !== lastSavedState;
+  }, [getCurrentStateHash, lastSavedState, state.clips.length, state.tracks.length]);
 
   const loadProjects = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
