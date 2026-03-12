@@ -186,10 +186,6 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
           <Film className="h-4 w-4 text-primary" />
           Adicionar Cena Vazia
         </Button>
-        <Button onClick={() => onAddClip('text')} variant="outline" className="w-full justify-start gap-2 text-xs">
-          <Type className="h-4 w-4 text-primary" />
-          Adicionar Texto / Legenda
-        </Button>
       </div>
 
       {/* Canvas Composer */}
