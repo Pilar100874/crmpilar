@@ -850,7 +850,7 @@ const AICreativeStudioInner: React.FC = () => {
             target: processNodeId,
             animated: true,
             style: EDGE_STYLE,
-            type: 'smoothstep',
+            type: 'studioEdge',
           } as any);
         });
 
