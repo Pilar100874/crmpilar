@@ -591,69 +591,6 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
           </div>
         </ScrollArea>
 
-        {/* Right — Preview */}
-        {selectedPreset && (
-          <div className="w-[350px] border-l flex flex-col bg-muted/30">
-            <div className="p-4 border-b">
-              {selectedPreset.image ? (
-                <img src={selectedPreset.image} alt={selectedPreset.name} className="w-full aspect-video object-cover rounded-lg mb-3" />
-              ) : (
-                <div className="w-full aspect-video bg-muted rounded-lg mb-3 flex items-center justify-center">
-                  <Sparkles className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-              )}
-              <h3 className="font-bold text-sm">{selectedPreset.name}</h3>
-              <div className="flex gap-1 mt-1.5 flex-wrap">
-                <Badge variant="outline" className="text-[9px]">
-                  {selectedPreset.mediaType === 'video' ? '🎥 Vídeo' : '📷 Imagem'}
-                </Badge>
-                {selectedPreset.tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-[9px]">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Reference Blocks */}
-            <div className="px-4 py-2 border-b">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">🧩 Blocos de Referência</p>
-              <div className="flex flex-wrap gap-1">
-                {selectedPreset.referenceBlocks.length > 0 ? selectedPreset.referenceBlocks.map(blockId => {
-                  const block = ALL_REF_BLOCKS.find(b => b.id === blockId);
-                  return block ? (
-                    <Badge key={blockId} variant="secondary" className="text-[9px] gap-1">
-                      {block.emoji} {block.label}
-                    </Badge>
-                  ) : null;
-                }) : (
-                  <span className="text-[10px] text-muted-foreground">Nenhum bloco configurado</span>
-                )}
-              </div>
-            </div>
-
-            <ScrollArea className="flex-1 p-4">
-              <pre className="text-[10px] leading-relaxed font-mono whitespace-pre-wrap text-foreground/80">
-                {selectedPreset.prompt}
-              </pre>
-            </ScrollArea>
-            <div className="p-3 border-t flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleCopy(selectedPreset.prompt)}>
-                <Copy className="h-3.5 w-3.5" /> Copiar
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPreset(selectedPreset)}>
-                <Sparkles className="h-3.5 w-3.5" /> Editar
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleDuplicatePreset(selectedPreset)}>
-                <CopyPlus className="h-3.5 w-3.5" /> Duplicar
-              </Button>
-              <Button variant="destructive" size="sm" className="gap-1.5 text-xs" onClick={() => setDeleteConfirmId(selectedPreset.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-              <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelect(selectedPreset)}>
-                <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Create/Edit Dialog */}
