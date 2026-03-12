@@ -844,6 +844,9 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     if (heroFrameUrl) {
       console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
       params.imageUrls = [heroFrameUrl];
+      params._heroFrameUsed = true;
+    } else {
+      console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images for ${provider}`);
     }
   }
 
