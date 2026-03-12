@@ -87,7 +87,7 @@ const CanvasComposerInner: React.FC<{
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [userSelectedPanel, setUserSelectedPanel] = useState(true);
   const [selectedObjectType, setSelectedObjectType] = useState<string | null>(null);
-  const loadedRef = useRef(false);
+  
 
   // Listen to canvas selection
   useEffect(() => {
