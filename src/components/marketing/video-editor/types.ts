@@ -215,10 +215,10 @@ export const TRACK_COLORS: Record<string, string> = {
 };
 
 export const DEFAULT_TRACKS: TimelineTrack[] = [
+  { id: 'cv1', name: 'Canvas', type: 'canvas', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
+  { id: 'img1', name: 'Imagem', type: 'image', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'v1', name: 'Vídeo 1', type: 'video', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'v2', name: 'Vídeo 2', type: 'video', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
-  { id: 'img1', name: 'Imagem', type: 'image', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
-  { id: 'cv1', name: 'Canvas', type: 'canvas', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'a1', name: 'Áudio 1', type: 'audio', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'a2', name: 'Música', type: 'audio', height: 50, muted: false, locked: false, visible: true, volume: 0.7, solo: false },
   { id: 'e1', name: 'Efeitos', type: 'effect', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
