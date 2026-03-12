@@ -744,6 +744,8 @@ export function useStudioExecution() {
               return {
                 videoUrl: result.videoUrl,
                 ...(result.thumbnailUrl ? { imageUrl: result.thumbnailUrl } : {}),
+                ...(result.provider ? { _provider: result.provider } : { _provider: (videoModel || '').split('/')[0] }),
+                ...(result.providerVideoId ? { _providerVideoId: result.providerVideoId } : {}),
                 text: `🎬 Vídeo gerado com ${videoModel.split('/').pop()} para: "${videoPrompt.substring(0, 60)}"`,
                 _isVideo: true,
               };
