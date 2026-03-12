@@ -810,23 +810,25 @@ const VideoTimelineEditor: React.FC = () => {
             )}
           </div>
 
-          {/* Timeline - isolated scrollable area */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-            {/* Ruler row - sticky top */}
-            <div className="flex shrink-0">
-              <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center">
-                <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
+          {/* Timeline - single scrollable area */}
+          <div className="flex-1 overflow-auto min-h-0">
+            <div className="inline-flex flex-col" style={{ minWidth: '100%' }}>
+              {/* Ruler row */}
+              <div className="flex sticky top-0 z-20">
+                <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center sticky left-0 z-30">
+                  <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
+                </div>
+                <div className="flex-1">
+                  <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+                </div>
               </div>
-              <div className="flex-1 overflow-hidden">
-                <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+              {/* Tracks - headers stick left, content scrolls */}
+              <div className="flex">
+                <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
+                  <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
+                </div>
+                <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
               </div>
-            </div>
-            {/* Tracks row - synced vertical scroll */}
-            <div className="flex-1 flex overflow-auto min-h-0">
-              <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
-                <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
-              </div>
-              <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
             </div>
           </div>
         </div>
