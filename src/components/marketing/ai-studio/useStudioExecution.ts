@@ -604,6 +604,9 @@ export function useStudioExecution() {
           
           try {
             const estabId = localStorage.getItem('estabelecimentoId');
+            const effectiveWithAudio = config.withAudio ?? true;
+            const effectiveWithMusic = effectiveWithAudio ? (config.withMusic ?? true) : false;
+
             const result = await callStudio('generate_video', {
               prompt: videoPrompt,
               model: videoModel,
@@ -615,7 +618,8 @@ export function useStudioExecution() {
               cameraSpeed: config.cameraSpeed ?? 1,
               fps: config.fps || '24',
               loop: config.loop ?? false,
-              withAudio: config.withAudio ?? false,
+              withAudio: effectiveWithAudio,
+              withMusic: effectiveWithMusic,
               negativePrompt: config.videoNegativePrompt || '',
               seed: config.videoSeed,
               cfgScale: config.cfgScale ?? 7,
