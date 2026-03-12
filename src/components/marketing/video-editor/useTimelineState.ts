@@ -37,18 +37,29 @@ export function useTimelineState() {
   // Playback
   const play = useCallback(() => {
     if (playIntervalRef.current) return;
+    
+    // Check if there are clips before starting
+    let hasClips = false;
     setState((prev) => {
-      if (prev.clips.length === 0) return prev; // No content, don't play
+      if (prev.clips.length === 0) return prev;
+      hasClips = true;
       return { ...prev, isPlaying: true };
     });
+    
+    if (!hasClips) return;
+    
     const interval = 1000 / 30;
     playIntervalRef.current = window.setInterval(() => {
       setState((prev) => {
+        if (prev.clips.length === 0) {
+          if (playIntervalRef.current) {
+            window.clearInterval(playIntervalRef.current);
+            playIntervalRef.current = null;
+          }
+          return { ...prev, currentTime: 0, isPlaying: false };
+        }
         const next = prev.currentTime + 1 / 30;
-        // Find the end of last content across all clips
-        const lastContentEnd = prev.clips.length > 0
-          ? Math.max(...prev.clips.map(c => c.startTime + c.duration))
-          : prev.duration;
+        const lastContentEnd = Math.max(...prev.clips.map(c => c.startTime + c.duration));
         const endTime = Math.min(prev.duration, lastContentEnd);
         
         if (next >= endTime) {
