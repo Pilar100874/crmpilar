@@ -30,6 +30,7 @@ export type StudioNodeType =
   | 'lipSync'
   | 'videoMerge'
   | 'imageAnalyze'
+  | 'mediaCorrection'
   | 'loopOutput'
   | 'randomPick'
   | 'output';
@@ -331,6 +332,21 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '👄',
         color: '#06b6d4',
         defaultConfig: {},
+      },
+    ],
+  },
+  {
+    id: 'refinement',
+    label: 'Refinamento',
+    icon: '🔧',
+    nodes: [
+      {
+        type: 'mediaCorrection',
+        label: 'Correção / Refinamento',
+        description: 'Recebe imagem ou vídeo e passa instrução de correção para o próximo bloco de geração',
+        icon: '🔧',
+        color: '#f97316',
+        defaultConfig: { correctionPrompt: '' },
       },
     ],
   },

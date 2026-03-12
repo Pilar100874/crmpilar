@@ -1786,6 +1786,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     productComposite: '#8b5cf6', videoGen: '#f59e0b', audioGen: '#22c55e',
     musicGen: '#14b8a6', lipSync: '#06b6d4', videoMerge: '#eab308',
     imageAnalyze: '#14b8a6', loopOutput: '#7c3aed', randomPick: '#e11d48',
+    mediaCorrection: '#f97316',
     output: '#64748b', textContent: '#7c3aed',
   };
   const accent = nodeAccentMap[node.data.type] || '#64748b';
