@@ -751,7 +751,13 @@ export function useStudioExecution() {
       }
 
       case 'audioGen': {
-        const textToSpeak = combinedInput || config.text || 'Olá, este é um teste.';
+        const textToSpeak = combinedInput || config.text || '';
+        
+        if (!textToSpeak.trim()) {
+          return {
+            text: '⚠️ Nenhum texto fornecido. Conecte um bloco de Texto/Prompt ao bloco de Áudio ou preencha o campo de texto no bloco.',
+          };
+        }
         
         // Check if user has a paid TTS provider configured
         const estabId = localStorage.getItem('estabelecimentoId');
