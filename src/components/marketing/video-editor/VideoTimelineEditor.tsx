@@ -154,7 +154,7 @@ const VideoTimelineEditor: React.FC = () => {
     if (vc) setVideoConfig(vc);
     setCurrentProjectId(project.id);
     setProjectName(project.nome);
-    setProjectsOpen(false);
+    setShowEditor(true);
     toast.success(`Projeto "${project.nome}" carregado`);
   }, [timeline]);
 
