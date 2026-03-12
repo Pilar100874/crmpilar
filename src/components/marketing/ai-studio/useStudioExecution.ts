@@ -604,8 +604,42 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
+        // Check if this is a correction/refinement pass
+        const isCorrectionVideo = inputs.some(i => i?._isCorrection);
+        const correctionInputVideo = inputs.find(i => i?._isCorrection);
+        const correctionOnlyPromptVideo = correctionInputVideo?._correctionPrompt || '';
+        const correctionSourceVideo = correctionInputVideo?.videoUrl || correctionInputVideo?.imageUrl;
+
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
+
+        // If correction mode, override prompt to preserve original and only apply the fix
+        if (isCorrectionVideo && correctionSourceVideo) {
+          const isVideoSource = !!correctionInputVideo?.videoUrl;
+          videoPrompt = [
+            `🔒 MODO CORREÇÃO — EDIÇÃO MÍNIMA OBRIGATÓRIA`,
+            ``,
+            `O ${isVideoSource ? 'vídeo' : 'conteúdo visual'} fornecido é a BASE ORIGINAL. Você DEVE manter ${isVideoSource ? 'o vídeo' : 'a cena'} EXATAMENTE como está, alterando SOMENTE o que foi solicitado abaixo.`,
+            ``,
+            `✏️ CORREÇÃO SOLICITADA:`,
+            correctionOnlyPromptVideo,
+            ``,
+            `⚠️ REGRAS ABSOLUTAS:`,
+            `- NÃO regenere ${isVideoSource ? 'o vídeo' : 'a cena'} do zero. EDITE ${isVideoSource ? 'o vídeo' : 'a cena'} existente.`,
+            `- NÃO mude composição, enquadramento, iluminação, cores, movimentos de câmera ou elementos que NÃO foram mencionados na correção.`,
+            `- NÃO mude rostos, produtos, logos, cenário ou qualquer elemento que NÃO foi explicitamente solicitado para correção.`,
+            `- O resultado deve ser IDÊNTICO ao original, exceto pela correção aplicada.`,
+            `- Mantenha a mesma duração, ritmo e estilo do original.`,
+          ].join('\n');
+          // Ensure source media is passed as reference
+          if (correctionInputVideo?.videoUrl && !inputs.some(i => i?.videoUrl === correctionInputVideo.videoUrl)) {
+            // videoUrl is already in the input
+          }
+          if (correctionInputVideo?.imageUrl && !imageInputs.includes(correctionInputVideo.imageUrl)) {
+            imageInputs.unshift(correctionInputVideo.imageUrl);
+            orderedImageInputs.unshift(correctionInputVideo.imageUrl);
+          }
+        }
         const videoModel = config.videoModel || 'free/gif-animated';
 
         // Auto-detect product + influencer without explicit placement prompt → default to holding (same as imageGen)
