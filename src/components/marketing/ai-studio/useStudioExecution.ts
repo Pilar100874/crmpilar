@@ -633,8 +633,12 @@ export function useStudioExecution() {
 
       case 'imageAnalyze': {
         const imageUrl = imageInputs[0];
+        const analyzeEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const analyzeDefaults = getStudioDefaults(analyzeEstabId);
+        const analyzeLangSuffix = getLanguagePromptSuffix(analyzeDefaults.defaultLanguage || 'pt-BR');
+        const analyzePrompt = `${config.prompt || combinedInput || 'Descreva esta imagem'}\n\n[IDIOMA] Responda ${analyzeLangSuffix}.`;
         const result = await callStudio('analyze_image', {
-          prompt: config.prompt || combinedInput || 'Describe this image',
+          prompt: analyzePrompt,
           imageUrl,
           model: config.model,
         });
