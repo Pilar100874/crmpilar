@@ -1102,8 +1102,8 @@ const AICreativeStudioInner: React.FC = () => {
 
     setNodes([inputNode, processNode, outputNode]);
     setEdges([
-      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
     ]);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
