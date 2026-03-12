@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Film, Music, Type, Image, Upload, FolderOpen, Play, Loader2, RefreshCw } from 'lucide-react';
+import { Film, Music, Type, Image, Upload, FolderOpen, Play, Loader2, RefreshCw, Palette, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import CanvasComposerDialog from './CanvasComposerDialog';
+import { TimelineTrack } from './types';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
   name: string;
   src: string;
   duration?: number;
+  canvasJson?: string;
 }
 
 interface Props {
-  onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem) => void;
+  onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
+  tracks: TimelineTrack[];
 }
 
 interface GalleryVideo {
@@ -22,10 +26,24 @@ interface GalleryVideo {
   created_at: string;
 }
 
-const MediaBin: React.FC<Props> = ({ onAddClip }) => {
+interface CanvasClipRef {
+  clipName: string;
+  canvasJson: string;
+}
+
+const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const [savedVideos, setSavedVideos] = useState<GalleryVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCanvasDialog, setShowCanvasDialog] = useState(false);
+  const [editingCanvasJson, setEditingCanvasJson] = useState<string | undefined>(undefined);
+  const [editingCanvasClipCallback, setEditingCanvasClipCallback] = useState<((dataUrl: string, json: string) => void) | null>(null);
+  const [canvasClips, setCanvasClips] = useState<CanvasClipRef[]>([]);
+
+  // Track selection for video/image
+  const [addToTrackId, setAddToTrackId] = useState<string | null>(null);
+
+  const videoTracks = tracks.filter(t => t.type === 'video');
 
   const fetchSavedVideos = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -53,11 +71,10 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
     for (const file of Array.from(files)) {
       const url = URL.createObjectURL(file);
       if (file.type.startsWith('video/')) {
-        // Get video duration
         const vid = document.createElement('video');
         vid.preload = 'metadata';
         vid.onloadedmetadata = () => {
-          onAddClip('video', { type: 'video', name: file.name, src: url, duration: vid.duration });
+          onAddClip('video', { type: 'video', name: file.name, src: url, duration: vid.duration }, addToTrackId || undefined);
           URL.revokeObjectURL(vid.src);
         };
         vid.src = url;
@@ -69,19 +86,61 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
         };
         aud.src = url;
       } else if (file.type.startsWith('image/')) {
-        onAddClip('image', { type: 'image', name: file.name, src: url });
+        onAddClip('image', { type: 'image', name: file.name, src: url }, addToTrackId || undefined);
       }
     }
     e.target.value = '';
-  }, [onAddClip]);
+  }, [onAddClip, addToTrackId]);
 
   const handleGalleryVideoClick = useCallback((video: GalleryVideo) => {
     onAddClip('video', {
       type: 'video',
       name: video.nome,
       src: video.public_url,
+    }, addToTrackId || undefined);
+  }, [onAddClip, addToTrackId]);
+
+  // Canvas composer
+  const handleOpenCanvas = useCallback(() => {
+    setEditingCanvasJson(undefined);
+    setEditingCanvasClipCallback(null);
+    setShowCanvasDialog(true);
+  }, []);
+
+  const handleCanvasConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
+    setShowCanvasDialog(false);
+
+    if (editingCanvasClipCallback) {
+      editingCanvasClipCallback(imageDataUrl, canvasJson);
+      setEditingCanvasClipCallback(null);
+      return;
+    }
+
+    const clipName = `Canvas ${canvasClips.length + 1}`;
+    setCanvasClips(prev => [...prev, { clipName, canvasJson }]);
+    onAddClip('image', {
+      type: 'image',
+      name: clipName,
+      src: imageDataUrl,
+      canvasJson,
+    }, addToTrackId || undefined);
+  }, [onAddClip, addToTrackId, canvasClips.length, editingCanvasClipCallback]);
+
+  const handleEditCanvasClip = useCallback((clip: CanvasClipRef, index: number) => {
+    setEditingCanvasJson(clip.canvasJson);
+    setEditingCanvasClipCallback(() => (dataUrl: string, json: string) => {
+      setCanvasClips(prev => prev.map((c, i) => i === index ? { ...c, canvasJson: json } : c));
+      // Note: the clip in timeline uses src which would need manual update
+      // For simplicity we add as new clip - user can delete old one
+      onAddClip('image', {
+        type: 'image',
+        name: clip.clipName + ' (editado)',
+        src: dataUrl,
+        canvasJson: json,
+      }, addToTrackId || undefined);
     });
-  }, [onAddClip]);
+    setShowCanvasDialog(true);
+  }, [onAddClip, addToTrackId]);
 
   return (
     <div className="flex flex-col h-full">
@@ -92,8 +151,35 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
         </h3>
       </div>
 
+      {/* Track selector for video */}
+      {videoTracks.length > 1 && (
+        <div className="px-3 pt-3 pb-1">
+          <p className="text-[10px] font-medium text-muted-foreground mb-1.5">Destino da trilha</p>
+          <div className="flex gap-1">
+            {videoTracks.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setAddToTrackId(prev => prev === t.id ? null : t.id)}
+                className={`flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-colors ${
+                  addToTrackId === t.id
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted/40 border-border hover:bg-muted'
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          {addToTrackId && (
+            <p className="text-[9px] text-primary mt-1">
+              Mídias serão adicionadas em: {videoTracks.find(t => t.id === addToTrackId)?.name}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="p-3 space-y-2">
-        <Button onClick={() => onAddClip('video')} variant="outline" className="w-full justify-start gap-2 text-xs">
+        <Button onClick={() => onAddClip('video', undefined, addToTrackId || undefined)} variant="outline" className="w-full justify-start gap-2 text-xs">
           <Film className="h-4 w-4 text-primary" />
           Adicionar Cena Vazia
         </Button>
@@ -101,6 +187,35 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
           <Type className="h-4 w-4 text-primary" />
           Adicionar Texto / Legenda
         </Button>
+      </div>
+
+      {/* Canvas Composer */}
+      <div className="px-3 pb-2">
+        <Button onClick={handleOpenCanvas} variant="outline" className="w-full justify-start gap-2 text-xs border-dashed border-primary/40 hover:border-primary hover:bg-primary/5">
+          <Palette className="h-4 w-4 text-primary" />
+          Criar no Canvas (Imagem/Texto)
+        </Button>
+        {canvasClips.length > 0 && (
+          <div className="mt-2 space-y-1">
+            <p className="text-[10px] font-medium text-muted-foreground">Composições Canvas</p>
+            {canvasClips.map((clip, i) => (
+              <button
+                key={i}
+                onClick={() => handleEditCanvasClip(clip, i)}
+                className="w-full flex items-center gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors text-left group"
+              >
+                <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                  <Palette className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium truncate">{clip.clipName}</p>
+                  <p className="text-[10px] text-muted-foreground">Clique para reabrir e editar</p>
+                </div>
+                <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Saved Videos from Gallery */}
@@ -159,6 +274,13 @@ const MediaBin: React.FC<Props> = ({ onAddClip }) => {
           <input ref={fileInputRef} type="file" className="hidden" accept="video/*,audio/*,image/*" multiple onChange={handleFileUpload} />
         </label>
       </div>
+
+      <CanvasComposerDialog
+        open={showCanvasDialog}
+        onClose={() => { setShowCanvasDialog(false); setEditingCanvasClipCallback(null); }}
+        onConfirm={handleCanvasConfirm}
+        initialCanvasJson={editingCanvasJson}
+      />
     </div>
   );
 };
