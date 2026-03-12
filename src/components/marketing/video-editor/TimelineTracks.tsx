@@ -7,6 +7,7 @@ interface Props {
   onUpdateClip: (id: string, updates: Partial<TimelineClip>) => void;
   onDeselectAll: () => void;
   onSeek: (time: number) => void;
+  onDoubleClickClip?: (clip: TimelineClip) => void;
 }
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek }) => {
