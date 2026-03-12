@@ -794,7 +794,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
           params.imageUrls = [heroFrameUrl];
           params._heroFrameUsed = true;
         } else {
-          console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images`);
+          // Hero frame failed — do NOT proceed with partial references (would generate low quality)
+          throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
         }
         console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
         return await generateVideoGoogle(googleKey, params);
