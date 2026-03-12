@@ -1125,19 +1125,20 @@ const AICreativeStudioInner: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="relative z-10 text-center max-w-3xl w-full"
           >
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6 text-[10px] sm:text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-3 sm:mb-5 text-[9px] sm:text-xs text-muted-foreground">
               <Sparkles className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary" />
               Powered by Veo 3.1, Sora 3, Gemini & mais
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4">
+            <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-2 sm:mb-4">
               <span className="text-foreground">AI Creative</span>
-              <br />
+              <br className="sm:hidden" />
+              <span className="hidden sm:inline"> </span>
               <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">Studio</span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-10 max-w-xl mx-auto leading-relaxed px-2">
-              Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo.
+            <p className="text-xs sm:text-sm md:text-lg text-muted-foreground mb-4 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2">
+              Crie vídeos, imagens, músicas e áudio com IA.
             </p>
 
             <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 sm:flex-wrap px-1">
