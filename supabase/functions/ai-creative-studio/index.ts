@@ -24,6 +24,8 @@ function base64Decode(str: string): Uint8Array {
 interface VideoGenerationResult {
   videoUrl?: string;
   thumbnailUrl?: string;
+  provider?: string;
+  providerVideoId?: string;
   error?: string;
 }
 
