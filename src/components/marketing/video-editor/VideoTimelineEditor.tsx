@@ -345,41 +345,13 @@ const VideoTimelineEditor: React.FC = () => {
       recorder.stop();
       const blob = await recordingDone;
 
-      const estabId = localStorage.getItem('estabelecimentoId');
-      if (estabId) {
-        const fileName = `video_${Date.now()}.webm`;
-        const path = `${estabId}/${fileName}`;
-        const { error: uploadError } = await supabase.storage
-          .from('marketing-videos')
-          .upload(path, blob, { contentType: mimeType });
-
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
-          await supabase.from('media_gallery').insert({
-            estabelecimento_id: estabId,
-            tipo: 'video',
-            nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
-            public_url: urlData.publicUrl,
-            storage_path: path,
-            duracao_segundos: Math.round(duration),
-          });
-          toast.success('Vídeo gerado e salvo na galeria!');
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = fileName; a.click();
-          URL.revokeObjectURL(url);
-          toast.info('Upload falhou. Vídeo baixado localmente.');
-        }
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `video_editor_${Date.now()}.webm`; a.click();
-        URL.revokeObjectURL(url);
-        toast.success('Vídeo gerado e baixado!');
-      }
-
+      // Show preview dialog instead of auto-saving
+      const url = URL.createObjectURL(blob);
+      setExportedVideoBlob(blob);
+      setExportedVideoUrl(url);
+      setExportedVideoDuration(Math.round(duration));
       setExportProgress(100);
+      toast.success('Vídeo gerado com sucesso!');
     } catch (err: any) {
       console.error('Export error:', err);
       toast.error('Erro ao gerar vídeo: ' + (err.message || 'Tente novamente'));
