@@ -825,11 +825,12 @@ export function useStudioExecution() {
             if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
               throw new Error('💳 Limite de uso atingido no provedor de IA. Verifique seu plano ou créditos disponíveis.');
             }
-            if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão')) {
+            if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão') || msg.includes('excedeu o tempo limite')) {
               const modelLabel = (videoModel || 'desconhecido').split('/').pop();
               throw new Error(`A API do modelo ${modelLabel} não está respondendo. Tente novamente mais tarde.`);
             }
-            throw new Error(`Não foi possível gerar o vídeo. Tente novamente com uma descrição diferente. (${msg.substring(0, 100)})`);
+            const modelLabel2 = (videoModel || 'desconhecido').split('/').pop();
+            throw new Error(`Erro na API do modelo ${modelLabel2}: ${msg.substring(0, 120)}`);
           }
         }
         

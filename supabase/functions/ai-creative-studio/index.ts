@@ -71,9 +71,12 @@ async function pollUntilDone<T>(
     const { done, result, error } = await pollFn();
     if (error) throw new Error(error);
     if (done && result !== undefined) return result;
+    if (done && result === undefined) {
+      throw new Error("timeout:A geração de vídeo foi concluída mas não retornou resultado. Tente novamente.");
+    }
     await new Promise(r => setTimeout(r, intervalMs));
   }
-  throw new Error("Video generation timed out after polling");
+  throw new Error("timeout:A geração de vídeo excedeu o tempo limite. O servidor do modelo está sobrecarregado. Tente novamente mais tarde.");
 }
 
 // --- Google Veo (Vertex AI / AI Studio) ---
@@ -184,8 +187,18 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
     );
     const pollData = await pollResp.json();
-    console.log(`[generate_video] Poll response done=${pollData.done}, keys=${JSON.stringify(Object.keys(pollData.response || {}))}`);
-    if (pollData.done) {
+    const isDone = pollData.done === true;
+    const hasError = pollData.error != null;
+    console.log(`[generate_video] Poll response done=${isDone}, hasError=${hasError}, keys=${JSON.stringify(Object.keys(pollData.response || {}))}`);
+    
+    // If the operation errored out
+    if (hasError) {
+      const errMsg = typeof pollData.error === 'object' ? (pollData.error.message || JSON.stringify(pollData.error)) : String(pollData.error);
+      console.log(`[generate_video] Operation error: ${errMsg}`);
+      return { done: true, error: `Google Veo error: ${errMsg.substring(0, 200)}` };
+    }
+    
+    if (isDone) {
       const resp = pollData.response || pollData.result || pollData;
       console.log(`[generate_video] Response structure: ${JSON.stringify(resp).substring(0, 500)}`);
       
