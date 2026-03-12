@@ -270,12 +270,10 @@ const AICreativeStudioInner: React.FC = () => {
       const targetData = targetNode.data as StudioNodeData;
       const newPaused = !targetData.config?._paused;
 
-      // If pausing, also pause all descendants
+      // Also affect all descendants (pause or unpause together)
       const affectedIds = new Set<string>([nodeId]);
-      if (newPaused) {
-        const descendants = getDescendants(nodeId, edges);
-        descendants.forEach(id => affectedIds.add(id));
-      }
+      const descendants = getDescendants(nodeId, edges);
+      descendants.forEach(id => affectedIds.add(id));
 
       return nds.map((n) => {
         if (affectedIds.has(n.id)) {
