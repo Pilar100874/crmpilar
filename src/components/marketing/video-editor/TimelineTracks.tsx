@@ -150,8 +150,26 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           return (
             <div
               key={track.id}
-              className="relative border-b"
+              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60 bg-primary/10' : ''}`}
               style={{ height: track.height, opacity: track.visible ? 1 : 0.3 }}
+              onDragOver={(e) => {
+                const data = e.dataTransfer.types.includes('application/timeline-media');
+                if (!data) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                setDropTargetTrackId(track.id);
+              }}
+              onDragLeave={() => setDropTargetTrackId(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDropTargetTrackId(null);
+                const raw = e.dataTransfer.getData('application/timeline-media');
+                if (!raw || !onAddClip) return;
+                try {
+                  const media = JSON.parse(raw) as MediaItem;
+                  onAddClip(media.type, media, track.id);
+                } catch {}
+              }}
             >
               <div className="absolute inset-0 bg-muted/10" />
 
