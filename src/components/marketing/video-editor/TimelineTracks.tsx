@@ -197,7 +197,12 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     if (!e.dataTransfer.types.includes('application/timeline-media')) return;
     e.preventDefault();
 
-    // Try to detect media type from custom type hint
+    // Block drops on locked tracks
+    if (track.locked) {
+      e.dataTransfer.dropEffect = 'none';
+      return;
+    }
+
     const typeHint = e.dataTransfer.types.find(t => t.startsWith('mediatype/'));
     const mediaType = typeHint ? typeHint.replace('mediatype/', '') : null;
     
