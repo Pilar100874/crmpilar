@@ -566,7 +566,7 @@ const VideoTimelineEditor: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-10">
               <Button
-                onClick={() => { setCurrentProjectId(null); setProjectName(''); setShowEditor(true); }}
+                onClick={() => { setCurrentProjectId(null); setProjectName(''); setLastSavedState(getCurrentStateHash()); setShowEditor(true); }}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm"
               >
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
