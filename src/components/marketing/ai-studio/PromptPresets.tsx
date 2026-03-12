@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Play, Check, Package, Users, Search, Video, Image, Plus, Loader2, Sparkles, X, Save, Trash2, CopyPlus } from 'lucide-react';
+import { Copy, Play, Check, Package, Users, Search, Video, Image, Plus, Loader2, Sparkles, X, Save, Trash2, CopyPlus, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -343,6 +343,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
+  const [detailPreset, setDetailPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
 
   // Load which presets are in use by saved workflows
@@ -514,7 +515,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                 }`}
               >
                 <button
-                  onClick={() => setSelectedId(preset.id)}
+                  onClick={() => { setSelectedId(preset.id); setDetailPreset(preset); }}
                   className="w-full text-left"
                 >
                   <div className="aspect-square relative overflow-hidden">
@@ -666,6 +667,83 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
         editingPreset={editingPreset}
       />
 
+      {/* Prompt Detail Popup */}
+      <Dialog open={!!detailPreset} onOpenChange={(v) => { if (!v) setDetailPreset(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          {detailPreset && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <Eye className="h-4 w-4 text-primary" />
+                  {detailPreset.name}
+                </DialogTitle>
+                <DialogDescription className="flex gap-1.5 flex-wrap mt-1">
+                  <Badge variant="outline" className="text-[10px]">
+                    {detailPreset.mediaType === 'video' ? '🎥 Vídeo' : '📷 Imagem'}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    {detailPreset.category === 'produto' ? '📦 Produto' : '👤 Influencer'}
+                  </Badge>
+                  {detailPreset.isCustom && (
+                    <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
+                  )}
+                  {detailPreset.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                  ))}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Image */}
+              {detailPreset.image && (
+                <div className="rounded-lg overflow-hidden border">
+                  <img src={detailPreset.image} alt={detailPreset.name} className="w-full aspect-video object-cover" />
+                </div>
+              )}
+
+              {/* Reference Blocks */}
+              {detailPreset.referenceBlocks.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">🧩 Blocos de Referência</p>
+                  <div className="flex flex-wrap gap-1">
+                    {detailPreset.referenceBlocks.map(blockId => {
+                      const block = ALL_REF_BLOCKS.find(b => b.id === blockId);
+                      return block ? (
+                        <Badge key={blockId} variant="secondary" className="text-[10px] gap-1">
+                          {block.emoji} {block.label}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
+                <div className="bg-muted/50 rounded-lg p-3 border">
+                  <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap text-foreground/80">
+                    {detailPreset.prompt}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { navigator.clipboard.writeText(detailPreset.prompt); toast({ title: 'Copiado!' }); }}>
+                  <Copy className="h-3.5 w-3.5" /> Copiar
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { setDetailPreset(null); handleEditPreset(detailPreset); }}>
+                  <Sparkles className="h-3.5 w-3.5" /> Editar
+                </Button>
+                <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => { setDetailPreset(null); onSelect(detailPreset); }}>
+                  <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
         <AlertDialogContent>
@@ -745,28 +823,20 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
     }
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
+      const { data, error } = await supabase.functions.invoke('generate-ad-image', {
         body: {
-          action: 'generate_image',
-          params: {
-            model: 'google/gemini-2.5-flash-image',
-            prompt: `Create a cinematic reference thumbnail image that visually represents the following advertising concept. Do NOT include any text, logos, or watermarks. Pure visual representation:\n\n${prompt.slice(0, 500)}`,
-            imageUrls: [],
-            imageRoles: [],
-          },
+          prompt: `Create a cinematic reference thumbnail image that visually represents the following advertising concept. Do NOT include any text, logos, or watermarks. Pure visual representation:\n\n${prompt.slice(0, 500)}`,
+          style: 'cinematic, professional, advertising reference',
         },
       });
       if (error) throw error;
-      const rawUrl = data?.imageUrl || data?.result?.imageUrl || (typeof data?.result === 'string' ? data.result : null);
-      const imageUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.url || rawUrl?.image_url?.url || '');
+      const imageUrl = data?.image || data?.imageUrl || '';
       if (imageUrl) {
-        // Add cache-buster for storage URLs to force refresh
-        const bustUrl = imageUrl.includes('?') ? `${imageUrl}&_t=${Date.now()}` : `${imageUrl}?_t=${Date.now()}`;
-        setGeneratedImage(bustUrl);
+        setGeneratedImage(imageUrl);
         toast({ title: 'Imagem gerada!', description: 'Imagem de referência atualizada.' });
       } else {
         console.warn('No image in response:', JSON.stringify(data).slice(0, 300));
-        toast({ title: 'Imagem não retornada', description: 'O modelo não gerou uma imagem. Tente reformular o prompt.', variant: 'destructive' });
+        toast({ title: 'Imagem não retornada', description: data?.error || 'O modelo não gerou uma imagem. Tente reformular o prompt.', variant: 'destructive' });
       }
     } catch (err: any) {
       console.error('Failed to generate reference image:', err);
