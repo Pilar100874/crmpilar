@@ -612,15 +612,16 @@ export function useStudioExecution() {
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
-              influencer: 'PERSON (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
-              pose: 'POSE REFERENCE', ambiente: 'ENVIRONMENT (flexible)',
+              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
+              influencer: 'PESSOA (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
+              pose: 'REFERÊNCIA DE POSE', ambiente: 'AMBIENTE (flexível)',
             };
-            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+            return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
-          const imagePositionHint = positionLabels.length > 0 ? `\n\n🔒 IMAGE ORDER:\n${positionLabels.join('\n')}` : '';
-          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nEnvironment references affect ONLY the background, NEVER the product, person or clothing.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          const imagePositionHint = positionLabels.length > 0 ? `\n\n🔒 ORDEM DAS IMAGENS:\n${positionLabels.join('\n')}` : '';
+          fullPrompt = `${fullPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA:\nReferências de ambiente afetam APENAS o fundo, NUNCA o produto, pessoa ou roupa.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
+        fullPrompt = `${fullPrompt}\n\n[IDIOMA] Todos os textos na imagem devem estar ${compLangSuffix}.`;
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
