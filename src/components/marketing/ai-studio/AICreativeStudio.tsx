@@ -62,6 +62,10 @@ const nodeTypes = {
   studioNode: StudioNodeComponent,
 };
 
+const edgeTypes = {
+  studioEdge: StudioCustomEdge,
+};
+
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
 
