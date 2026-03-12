@@ -929,23 +929,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               value={nodeData.config.title || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('title', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Título..."
-              className="w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
             />
             <input
               value={nodeData.config.subtitle || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('subtitle', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Subtítulo..."
-              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
             />
             <textarea
               value={nodeData.config.body || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('body', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Corpo do texto..."
               rows={2}
-              className="w-full px-2 py-1 text-[10px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-none"
+              className="nodrag nowheel w-full px-2 py-1 text-[10px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-none"
             />
             {nodeData.config.title && (
               <div className="rounded-lg p-2.5 bg-muted/30 border border-border/30 overflow-hidden" style={{ textAlign: (nodeData.config.textAlign || 'center') as any }}>
