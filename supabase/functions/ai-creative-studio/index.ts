@@ -320,17 +320,11 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
       body: buildCreateFormData(includeReference),
     });
 
-    // Some accounts/models may reject reference fields. Retry without references.
+    // In correction mode we must NOT silently drop references,
+    // otherwise the model can regenerate a radically different video.
     if (!response.ok && includeReference) {
       const firstErr = await response.text();
-      console.warn(`[generate_video] Sora input_reference rejected, retrying without references: ${firstErr.substring(0, 200)}`);
-      response = await fetch("https://api.openai.com/v1/videos", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: buildCreateFormData(false),
-      });
+      throw new Error(`Sora não aceitou referência para correção (${response.status}). Para preservar fidelidade, use OpenAI Remix ou Runway video-to-video. Detalhe: ${firstErr.substring(0, 180)}`);
     }
   }
 
