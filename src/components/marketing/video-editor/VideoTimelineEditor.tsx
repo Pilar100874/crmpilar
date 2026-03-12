@@ -70,14 +70,17 @@ const VideoTimelineEditor: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Project management
+  const [showEditor, setShowEditor] = useState(false);
   const [projects, setProjects] = useState<VideoProject[]>([]);
-  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameProjectId, setRenameProjectId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const loadProjects = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
