@@ -147,11 +147,59 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
     }
   }, []);
 
+  const handleFileUpload = useCallback((files: FileList | null, type: 'video' | 'image') => {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      const url = URL.createObjectURL(file);
+      const imported: ImportedMedia = {
+        id: `upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: file.name,
+        src: url,
+        type,
+        duration: null,
+        thumbnail: null,
+      };
+
+      if (type === 'video') {
+        // Get video duration
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.onloadedmetadata = () => {
+          imported.duration = vid.duration;
+          setImportedVideos(prev => [...prev, imported]);
+        };
+        vid.onerror = () => setImportedVideos(prev => [...prev, imported]);
+        vid.src = url;
+      } else {
+        setImportedImages(prev => [...prev, imported]);
+      }
+    });
+    setActiveTab(type);
+  }, []);
+
   const currentList = activeTab === 'video' ? importedVideos : importedImages;
   const totalImported = importedVideos.length + importedImages.length;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
+      {/* Hidden file inputs */}
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileUpload(e.target.files, 'video')}
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileUpload(e.target.files, 'image')}
+      />
+
       <div className="p-3 border-b">
         <h3 className="font-semibold text-sm flex items-center gap-2">
           <FolderOpen className="h-4 w-4" />
@@ -161,28 +209,52 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
 
       {/* Insert buttons */}
       <div className="p-3 space-y-2 shrink-0">
-        <Button
-          onClick={() => handleOpenGallery('video')}
-          variant="outline"
-          className="w-full justify-start gap-2 text-xs h-10"
-        >
-          <Film className="h-4 w-4 text-primary" />
-          <span className="font-medium">Inserir Vídeo</span>
-          {importedVideos.length > 0 && (
-            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedVideos.length}</span>
-          )}
-        </Button>
-        <Button
-          onClick={() => handleOpenGallery('image')}
-          variant="outline"
-          className="w-full justify-start gap-2 text-xs h-10"
-        >
-          <ImageIcon className="h-4 w-4 text-primary" />
-          <span className="font-medium">Inserir Imagem</span>
-          {importedImages.length > 0 && (
-            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedImages.length}</span>
-          )}
-        </Button>
+        {/* Video */}
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => handleOpenGallery('video')}
+            variant="outline"
+            className="flex-1 justify-start gap-2 text-xs h-9"
+          >
+            <Film className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium">Vídeo</span>
+            {importedVideos.length > 0 && (
+              <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedVideos.length}</span>
+            )}
+          </Button>
+          <Button
+            onClick={() => videoInputRef.current?.click()}
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            title="Upload vídeo do computador"
+          >
+            <Upload className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+        {/* Image */}
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => handleOpenGallery('image')}
+            variant="outline"
+            className="flex-1 justify-start gap-2 text-xs h-9"
+          >
+            <ImageIcon className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium">Imagem</span>
+            {importedImages.length > 0 && (
+              <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedImages.length}</span>
+            )}
+          </Button>
+          <Button
+            onClick={() => imageInputRef.current?.click()}
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            title="Upload imagem do computador"
+          >
+            <Upload className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Tabs + imported list */}
