@@ -42,7 +42,13 @@ export function useTimelineState() {
     playIntervalRef.current = window.setInterval(() => {
       setState((prev) => {
         const next = prev.currentTime + 1 / 30;
-        if (next >= prev.duration) {
+        // Find the end of last content across all clips
+        const lastContentEnd = prev.clips.length > 0
+          ? Math.max(...prev.clips.map(c => c.startTime + c.duration))
+          : prev.duration;
+        const endTime = Math.min(prev.duration, lastContentEnd);
+        
+        if (next >= endTime) {
           if (playIntervalRef.current) {
             window.clearInterval(playIntervalRef.current);
             playIntervalRef.current = null;
