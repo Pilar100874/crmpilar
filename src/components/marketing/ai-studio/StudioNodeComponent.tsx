@@ -17,7 +17,7 @@ import {
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
   Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
-import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo, triggerDownload } from '@/lib/video/whatsappMp4';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { VolumeX } from 'lucide-react';
 
