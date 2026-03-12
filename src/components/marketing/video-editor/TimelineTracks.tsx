@@ -325,7 +325,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       {clip.type === 'effect' && '✨'}
                       {clip.type === 'canvas' && '🎨'}
                       <span className="truncate">{clip.name}</span>
-                      {clip.muted && <span className="text-destructive">🔇</span>}
+                      {(clip.muted || track.muted) && <span className="text-destructive">🔇</span>}
                     </div>
 
                     <div className="flex-1 px-1 flex items-center">
