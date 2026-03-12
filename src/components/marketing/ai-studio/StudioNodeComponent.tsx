@@ -890,7 +890,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 value={nodeData.config.fontSize || 48}
                 onChange={(e) => handleInlineUpdate('fontSize', parseInt(e.target.value) || 48)}
                 onClick={(e) => e.stopPropagation()}
-                className="h-6 w-12 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="nodrag nowheel h-6 w-12 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
                 title="Tamanho"
               />
               <input
