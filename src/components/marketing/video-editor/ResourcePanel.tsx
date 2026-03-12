@@ -208,7 +208,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
       onAddClip('image', { type: 'image', name: media.name, src: media.src }, trackId);
     } else if (resType === 'canvas') {
       const trackId = tracks.find(t => t.type === 'canvas')?.id || tracks.find(t => t.type === 'video')?.id;
-      onAddClip('image', { type: 'image', name: media.name, src: media.src, canvasJson: media.canvasJson }, trackId);
+      onAddClip('image', { type: 'canvas' as any, name: media.name, src: media.src, canvasJson: media.canvasJson }, trackId);
     } else if (resType === 'music' || resType === 'audio') {
       const trackId = tracks.find(t => t.type === 'audio')?.id;
       onAddClip('audio', { type: 'audio', name: media.name, src: media.src, duration: media.duration || undefined }, trackId);
