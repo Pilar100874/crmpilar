@@ -621,61 +621,69 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     <>
     <div
       className={`
-        relative rounded-2xl transition-all duration-300 overflow-visible
+        relative rounded-2xl transition-all duration-300 overflow-visible group/node
         ${selected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
         ${nodeData.error ? 'ring-2 ring-destructive/40' : ''}
         ${isPaused ? 'opacity-50 grayscale' : ''}
       `}
       style={{
         width: nodeWidth,
-        background: 'hsl(var(--card))',
-        border: selected ? `2px solid ${accent}` : '1px solid hsl(var(--border))',
-        borderRadius: 16,
+        background: 'hsl(var(--card) / 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: selected ? `1.5px solid ${accent}` : '1px solid hsl(var(--border) / 0.5)',
+        borderRadius: 14,
         boxShadow: selected
-          ? `0 0 0 1px ${accent}20, 0 8px 32px -8px ${accent}30, 0 4px 16px -4px rgba(0,0,0,0.1)`
-          : '0 2px 12px -4px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+          ? `0 0 0 1px ${accent}15, 0 20px 40px -12px ${accent}20, 0 8px 20px -8px rgba(0,0,0,0.12)`
+          : '0 1px 3px rgba(0,0,0,0.04), 0 4px 14px -6px rgba(0,0,0,0.06)',
+        transition: 'border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease',
       }}
     >
+      {/* Subtle top accent line */}
+      <div
+        className="absolute top-0 left-4 right-4 h-[1.5px] rounded-full opacity-60"
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
+      />
       {/* Paused badge */}
       {isPaused && (
-        <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold shadow-md">
+        <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/90 text-white text-[9px] font-semibold shadow-sm backdrop-blur-sm">
           <PauseCircle className="h-3 w-3" />
           PAUSADO
         </div>
       )}
       {isPaidBlock && (
-        <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold shadow-md" title="Este bloco requer API paga externa">
+        <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-500/90 text-white text-[9px] font-semibold shadow-sm backdrop-blur-sm" title="Este bloco requer API paga externa">
           <DollarSign className="h-3 w-3" />
           API PAGA
         </div>
       )}
-      {/* Cinematic Header with gradient */}
-      <div className={`px-3.5 py-2.5 flex items-center gap-2.5 bg-gradient-to-r ${gradient} rounded-t-2xl border-b border-border/50`}>
+      {/* Refined Header */}
+      <div className={`px-3.5 py-2.5 flex items-center gap-2.5 rounded-t-[13px] border-b border-border/30`}
+        style={{ background: `linear-gradient(135deg, ${accent}08, ${accent}04)` }}
+      >
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover/node:scale-110"
           style={{
-            background: `linear-gradient(135deg, ${accent}30, ${accent}15)`,
-            border: `1px solid ${accent}30`,
-            boxShadow: `0 0 12px ${accent}15`,
+            background: `linear-gradient(135deg, ${accent}20, ${accent}10)`,
+            border: `1px solid ${accent}20`,
           }}
         >
-          <IconComponent className={`h-4 w-4 ${iconColor}`} />
+          <IconComponent className={`h-3.5 w-3.5 ${iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate text-foreground">{nodeData.label}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{meta?.description || ''}</p>
+          <p className="text-[13px] font-semibold truncate text-foreground/90 tracking-tight">{nodeData.label}</p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {activeProcessing && (
             <div className="relative">
-              <div className="absolute inset-0 rounded-full animate-ping" style={{ background: `${accent}30` }} />
-              <Loader2 className="h-4 w-4 animate-spin" style={{ color: accent }} />
+              <div className="absolute inset-0 rounded-full animate-ping opacity-40" style={{ background: `${accent}` }} />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: accent }} />
             </div>
           )}
           {hasResult && !activeProcessing && (
-            <div className="relative">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
+            <div className="relative flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-40" />
             </div>
           )}
         </div>
@@ -1513,16 +1521,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         )}
       </div>
 
-      {/* Handles - cinematic glow style */}
+      {/* Handles - refined minimal style */}
       {hasInput && (
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3.5 !h-3.5 !rounded-full !border-[2px] !-left-[7px]"
+          className="!w-3 !h-3 !rounded-full !border-[2px] !-left-[6px] !transition-all !duration-200 hover:!scale-125"
           style={{
-            backgroundColor: accent,
-            borderColor: 'hsl(var(--card))',
-            boxShadow: `0 0 8px ${accent}50`,
+            backgroundColor: 'hsl(var(--card))',
+            borderColor: `${accent}80`,
+            boxShadow: `0 0 0 2px ${accent}15`,
           }}
         />
       )}
@@ -1530,11 +1538,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3.5 !h-3.5 !rounded-full !border-[2px] !-right-[7px]"
+          className="!w-3 !h-3 !rounded-full !border-[2px] !-right-[6px] !transition-all !duration-200 hover:!scale-125"
           style={{
             backgroundColor: accent,
             borderColor: 'hsl(var(--card))',
-            boxShadow: `0 0 8px ${accent}50`,
+            boxShadow: `0 0 0 2px ${accent}15`,
           }}
         />
       )}

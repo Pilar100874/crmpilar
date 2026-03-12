@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
+import StudioCustomEdge from './StudioCustomEdge';
 import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
@@ -61,10 +62,14 @@ const nodeTypes = {
   studioNode: StudioNodeComponent,
 };
 
+const edgeTypes = {
+  studioEdge: StudioCustomEdge,
+};
+
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
 
-const EDGE_STYLE = { stroke: '#22c55e', strokeWidth: 2, cursor: 'pointer' };
+const EDGE_STYLE = { stroke: 'hsl(var(--primary) / 0.5)', strokeWidth: 1.5, cursor: 'pointer' };
 
 const QUICK_TOOLS = [
   { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
@@ -188,7 +193,7 @@ const AICreativeStudioInner: React.FC = () => {
   }, [fetchWorkflows]);
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'smoothstep' }, eds));
+    setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'studioEdge' }, eds));
   }, [setEdges]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -363,7 +368,7 @@ const AICreativeStudioInner: React.FC = () => {
             config: applyNegativeDefaults(mediaType, { ...meta?.defaultConfig, ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}) }),
           },
         });
-        newEdges.push({ id: `e_${promptId}_${mediaId}`, source: promptId, target: mediaId, animated: true, style: EDGE_STYLE, type: 'smoothstep' });
+        newEdges.push({ id: `e_${promptId}_${mediaId}`, source: promptId, target: mediaId, animated: true, style: EDGE_STYLE, type: 'studioEdge' });
       }
 
       if (scene.audioType !== 'none') {
@@ -382,7 +387,7 @@ const AICreativeStudioInner: React.FC = () => {
             config: { ...meta?.defaultConfig, duration: scene.duration, ...(scene.audioType === 'narration' ? { type: 'narration' } : {}), ...(scene.audioType === 'sfx' ? { type: 'sfx' } : {}) },
           },
         });
-        newEdges.push({ id: `e_${promptId}_${audioId}`, source: promptId, target: audioId, animated: true, style: EDGE_STYLE, type: 'smoothstep' });
+        newEdges.push({ id: `e_${promptId}_${audioId}`, source: promptId, target: audioId, animated: true, style: EDGE_STYLE, type: 'studioEdge' });
       }
 
       x += 750;
@@ -845,7 +850,7 @@ const AICreativeStudioInner: React.FC = () => {
             target: processNodeId,
             animated: true,
             style: EDGE_STYLE,
-            type: 'smoothstep',
+            type: 'studioEdge',
           } as any);
         });
 
@@ -919,9 +924,9 @@ const AICreativeStudioInner: React.FC = () => {
       };
       newNodes.push(personNode, productNode, promptNode, compositeNode);
       newEdges.push(
-        { id: `e_${personNode.id}_${compositeNode.id}`, source: personNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-        { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-        { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${personNode.id}_${compositeNode.id}`, source: personNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+        { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+        { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
       );
     } else if (preset.variationPrompts && preset.variationPrompts.length > 0) {
       // Create 5 parallel chains — one for each variation
@@ -945,7 +950,7 @@ const AICreativeStudioInner: React.FC = () => {
         };
         newNodes.push(inputNode, processNode);
         newEdges.push(
-          { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+          { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
         );
 
         // Add reference blocks for each variation
@@ -975,7 +980,7 @@ const AICreativeStudioInner: React.FC = () => {
             };
             newNodes.push(refNode);
             newEdges.push(
-              { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+              { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
             );
           });
         }
@@ -995,7 +1000,7 @@ const AICreativeStudioInner: React.FC = () => {
       };
       newNodes.push(inputNode, processNode);
       newEdges.push(
-        { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
       );
 
       if (targetType === 'imageGen' || targetType === 'videoGen') {
@@ -1026,7 +1031,7 @@ const AICreativeStudioInner: React.FC = () => {
           };
           newNodes.push(refNode);
           newEdges.push(
-            { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+            { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
           );
         });
       }
@@ -1097,8 +1102,8 @@ const AICreativeStudioInner: React.FC = () => {
 
     setNodes([inputNode, processNode, outputNode]);
     setEdges([
-      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
     ]);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
@@ -1498,22 +1503,23 @@ const AICreativeStudioInner: React.FC = () => {
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             fitView
             snapToGrid
             snapGrid={[16, 16]}
             className="bg-background"
             deleteKeyCode={["Delete", "Backspace"]}
-            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep', interactionWidth: 20, focusable: true, selectable: true }}
+            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'studioEdge', interactionWidth: 20, focusable: true, selectable: true }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={0.8} color="hsl(var(--muted-foreground) / 0.1)" />
             <Controls
               showInteractive={false}
-              className="!bg-card !border-border !shadow-md !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
+              className="!bg-card/80 !backdrop-blur-md !border-border/50 !shadow-lg !rounded-xl [&>button]:!bg-transparent [&>button]:!border-border/30 [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent/50 [&>button]:!rounded-lg [&>button]:!transition-colors"
             />
             <MiniMap
-              className="!bg-card !border-border !rounded-lg"
-              nodeColor={() => 'hsl(25 95% 53%)'}
-              maskColor="hsl(var(--background) / 0.7)"
+              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg"
+              nodeColor={() => 'hsl(var(--primary))'}
+              maskColor="hsl(var(--background) / 0.75)"
             />
 
             {/* Empty state */}
