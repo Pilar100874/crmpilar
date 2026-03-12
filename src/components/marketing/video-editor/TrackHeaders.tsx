@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelineTrack, TRACK_COLORS } from './types';
 import {
   Eye, EyeOff, Volume2, VolumeX, Lock, Unlock, Plus, Trash2,
-  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette
+  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
 } from 'lucide-react';
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
 
 const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: React.ReactNode; defaultHeight: number }[] = [
   { type: 'video', label: 'Vídeo', icon: <Film className="h-3.5 w-3.5" />, defaultHeight: 50 },
+  { type: 'image', label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'canvas', label: 'Canvas', icon: <Palette className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'audio', label: 'Áudio', icon: <Music className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'effect', label: 'Efeitos', icon: <Sparkles className="h-3.5 w-3.5" />, defaultHeight: 50 },
