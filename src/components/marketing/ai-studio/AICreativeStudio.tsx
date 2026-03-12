@@ -1114,7 +1114,7 @@ const AICreativeStudioInner: React.FC = () => {
   // Landing page — only show when user has NOT entered the canvas editor
   if (!showCanvas) {
     return (
-      <div className="h-[calc(100vh-200px)] min-h-[400px] md:min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
+      <div className="h-[calc(100vh-180px)] min-h-[350px] md:min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative overflow-y-auto pt-6 sm:pt-12 pb-20 lg:pb-16">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
