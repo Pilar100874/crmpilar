@@ -149,6 +149,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         parameters: {
           aspectRatio: params.aspectRatio || "16:9",
           durationSeconds: Math.min(8, Math.max(4, Math.round(Number(params.duration) || 6))),
+          ...(!modelId.startsWith("veo-2.0-generate") ? { generateAudio: params.withAudio !== false } : {}),
           ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
         },
       }),
@@ -625,6 +626,21 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   const estabelecimentoId = params.estabelecimentoId;
   
   if (!estabelecimentoId) throw new Error("estabelecimentoId é obrigatório para geração de vídeo");
+
+  // Audio controls (default both ON for new behavior)
+  const withAudio = params.withAudio !== false;
+  const withMusic = withAudio ? params.withMusic !== false : false;
+  params.withAudio = withAudio;
+  params.withMusic = withMusic;
+
+  const audioDirective = !withAudio
+    ? "Generate a completely SILENT video. No speech, no music, no soundtrack, no ambient audio, no sound effects."
+    : !withMusic
+      ? "Audio is allowed, but DO NOT add any background music or soundtrack. Keep only natural non-musical audio."
+      : "Include a subtle background music track that matches the scene naturally.";
+
+  params.prompt = `${params.prompt || ""}\n\n[AUDIO DIRECTIVE]\n${audioDirective}`.trim();
+  console.log(`[generate_video] Audio config: withAudio=${withAudio}, withMusic=${withMusic}`);
 
   // Check if there are strict references (product/influencer) that need preservation
   const imageRoles = (params.imageRoles || []) as string[];

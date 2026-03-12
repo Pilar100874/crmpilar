@@ -1061,7 +1061,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             </ConfigField>
             <SectionTitle>Opções</SectionTitle>
             <ToggleField label="Loop Infinito" checked={config.loop ?? false} onChange={(v) => update('loop', v)} />
-            <ToggleField label="Gerar com Áudio" checked={config.withAudio ?? false} onChange={(v) => update('withAudio', v)} />
+            <ToggleField label="Gerar com Áudio" checked={config.withAudio ?? true} onChange={(v) => update('withAudio', v)} />
+            <ToggleField label="Gerar com Música" checked={config.withMusic ?? true} onChange={(v) => update('withMusic', v)} />
             <ConfigField label="Prompt Negativo">
               <Textarea
                 value={config.videoNegativePrompt || ''}
