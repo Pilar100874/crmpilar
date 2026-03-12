@@ -363,93 +363,121 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
       )}
 
       {/* Gallery Popup */}
-      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-between px-4 pt-10 pb-2 pr-12">
-            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
-              {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
-              Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
-            </DialogTitle>
-          </div>
-          <div className="flex items-center justify-between px-4 pb-3 border-b">
-            {selectedIds.size > 0 ? (
-              <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Selecione os itens desejados</span>
-            )}
-            <Button
-              size="sm"
-              disabled={selectedIds.size === 0}
-              onClick={handleConfirmSelection}
-              className="gap-1.5 text-xs"
-            >
-              <Check className="h-3.5 w-3.5" />
-              Adicionar ({selectedIds.size})
-            </Button>
-          </div>
+      {galleryOpen && (
+        <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+          <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
+            <div className="flex items-center justify-between px-4 pt-10 pb-2 pr-12">
+              <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+                {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
+                Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
+              </DialogTitle>
+            </div>
+            <div className="flex items-center justify-between px-4 pb-3 border-b gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={() => {
+                  if (galleryType === 'video') videoInputRef.current?.click();
+                  else imageInputRef.current?.click();
+                  setGalleryOpen(false);
+                }}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload do PC
+              </Button>
+              <div className="flex items-center gap-2">
+                {selectedIds.size > 0 && (
+                  <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
+                )}
+                <Button
+                  size="sm"
+                  disabled={selectedIds.size === 0}
+                  onClick={handleConfirmSelection}
+                  className="gap-1.5 text-xs"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Adicionar ({selectedIds.size})
+                </Button>
+              </div>
+            </div>
 
-          <ScrollArea className="flex-1">
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : galleryItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                {galleryType === 'video' ? <Film className="h-10 w-10 mb-2" /> : <ImageIcon className="h-10 w-10 mb-2" />}
-                <p className="text-sm">Nenhum {galleryType === 'video' ? 'vídeo' : 'imagem'} na galeria</p>
-                <p className="text-xs mt-1">Salve mídias pelo AI Studio para usar aqui</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 p-4">
-                {galleryItems.map((item) => {
-                  const isSelected = selectedIds.has(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggleSelect(item.id)}
-                      className={`
-                        relative rounded-lg border-2 overflow-hidden transition-all group
-                        aspect-video bg-muted
-                        ${isSelected
-                          ? 'border-primary ring-2 ring-primary/30 scale-[0.97]'
-                          : 'border-border hover:border-primary/50'
-                        }
-                      `}
-                    >
-                      {galleryType === 'video' ? (
-                        <video
-                          src={item.public_url}
-                          className="w-full h-full object-cover"
-                          muted
-                          preload="metadata"
-                        />
-                      ) : (
-                        <img
-                          src={item.thumbnail_url || item.public_url}
-                          className="w-full h-full object-cover"
-                          alt={item.nome}
-                        />
-                      )}
-                      
-                      <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? 'bg-primary border-primary'
-                          : 'bg-background/80 border-border group-hover:border-primary/50'
-                      }`}>
-                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </div>
+            <ScrollArea className="flex-1">
+              {loading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : galleryItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  {galleryType === 'video' ? <Film className="h-10 w-10 mb-2" /> : <ImageIcon className="h-10 w-10 mb-2" />}
+                  <p className="text-sm">Nenhum {galleryType === 'video' ? 'vídeo' : 'imagem'} na galeria</p>
+                  <p className="text-xs mt-1 mb-4">Salve mídias pelo AI Studio ou faça upload</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      if (galleryType === 'video') videoInputRef.current?.click();
+                      else imageInputRef.current?.click();
+                      setGalleryOpen(false);
+                    }}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload do computador
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 p-4">
+                  {galleryItems.map((item) => {
+                    const isSelected = selectedIds.has(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => toggleSelect(item.id)}
+                        className={`
+                          relative rounded-lg border-2 overflow-hidden transition-all group
+                          aspect-video bg-muted
+                          ${isSelected
+                            ? 'border-primary ring-2 ring-primary/30 scale-[0.97]'
+                            : 'border-border hover:border-primary/50'
+                          }
+                        `}
+                      >
+                        {galleryType === 'video' ? (
+                          <video
+                            src={item.public_url}
+                            className="w-full h-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                        ) : (
+                          <img
+                            src={item.thumbnail_url || item.public_url}
+                            className="w-full h-full object-cover"
+                            alt={item.nome}
+                          />
+                        )}
+                        
+                        <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-primary border-primary'
+                            : 'bg-background/80 border-border group-hover:border-primary/50'
+                        }`}>
+                          {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
-                        <p className="text-[10px] text-white truncate">{item.nome}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                          <p className="text-[10px] text-white truncate">{item.nome}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
