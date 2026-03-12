@@ -18,14 +18,16 @@ export function useTimelineState() {
     fps: 30,
   });
 
-  const playIntervalRef = useRef<number | null>(null);
+  const playRafRef = useRef<number | null>(null);
+  const playStartTsRef = useRef(0);
+  const playStartTimeRef = useRef(0);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (playIntervalRef.current) {
-        window.clearInterval(playIntervalRef.current);
-        playIntervalRef.current = null;
+      if (playRafRef.current) {
+        window.cancelAnimationFrame(playRafRef.current);
+        playRafRef.current = null;
       }
     };
   }, []);
@@ -36,48 +38,62 @@ export function useTimelineState() {
 
   // Playback
   const play = useCallback(() => {
-    if (playIntervalRef.current) return;
-    
-    // Check if there are clips before starting
+    if (playRafRef.current) return;
+
     let hasClips = false;
+    let startTime = 0;
+
     setState((prev) => {
       if (prev.clips.length === 0) return prev;
       hasClips = true;
-      return { ...prev, isPlaying: true };
+      const lastContentEnd = Math.max(...prev.clips.map(c => c.startTime + c.duration));
+      const endTime = Math.min(prev.duration, lastContentEnd);
+      startTime = prev.currentTime >= endTime ? 0 : prev.currentTime;
+      return { ...prev, isPlaying: true, currentTime: startTime };
     });
-    
+
     if (!hasClips) return;
-    
-    const interval = 1000 / 30;
-    playIntervalRef.current = window.setInterval(() => {
+
+    playStartTsRef.current = performance.now();
+    playStartTimeRef.current = startTime;
+
+    const tick = (now: number) => {
+      let shouldStop = false;
+      const elapsedSec = (now - playStartTsRef.current) / 1000;
+      const nextByClock = playStartTimeRef.current + elapsedSec;
+
       setState((prev) => {
         if (prev.clips.length === 0) {
-          if (playIntervalRef.current) {
-            window.clearInterval(playIntervalRef.current);
-            playIntervalRef.current = null;
-          }
+          shouldStop = true;
           return { ...prev, currentTime: 0, isPlaying: false };
         }
-        const next = prev.currentTime + 1 / 30;
+
         const lastContentEnd = Math.max(...prev.clips.map(c => c.startTime + c.duration));
         const endTime = Math.min(prev.duration, lastContentEnd);
-        
-        if (next >= endTime) {
-          if (playIntervalRef.current) {
-            window.clearInterval(playIntervalRef.current);
-            playIntervalRef.current = null;
-          }
+
+        if (nextByClock >= endTime) {
+          shouldStop = true;
           return { ...prev, currentTime: 0, isPlaying: false };
         }
-        return { ...prev, currentTime: next };
+
+        return { ...prev, currentTime: nextByClock };
       });
-    }, interval);
+
+      if (shouldStop) {
+        playRafRef.current = null;
+        return;
+      }
+
+      playRafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    playRafRef.current = window.requestAnimationFrame(tick);
   }, []);
 
   const pause = useCallback(() => {
-    if (playIntervalRef.current) {
-      window.clearInterval(playIntervalRef.current);
-      playIntervalRef.current = null;
+    if (playRafRef.current) {
+      window.cancelAnimationFrame(playRafRef.current);
+      playRafRef.current = null;
     }
     setState((prev) => ({ ...prev, isPlaying: false }));
   }, []);
