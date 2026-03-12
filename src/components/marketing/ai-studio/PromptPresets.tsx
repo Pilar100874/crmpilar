@@ -501,7 +501,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
       <div className="flex-1 flex overflow-hidden">
         {/* Left — Grid */}
         <ScrollArea className="flex-1">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 p-2.5 sm:p-4">
             {filtered.map((preset, i) => (
               <motion.div
                 key={preset.id}
