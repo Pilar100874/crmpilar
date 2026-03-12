@@ -103,7 +103,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           className={`border-b flex items-center gap-1 px-1.5 group transition-all ${
             draggingId === track.id ? 'opacity-40' : ''
           } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''}`}
-          style={{ height: track.height }}
+          style={{ height: track.height, backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
         >
           {/* Drag handle */}
           <div className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity">
