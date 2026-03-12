@@ -94,12 +94,12 @@ async function getFFmpeg(): Promise<FFmpeg> {
     });
 
     try {
-      const [coreURL, wasmURL, workerURL] = await Promise.all([
+      // Load single-threaded (no worker) for maximum browser compatibility
+      const [coreURL, wasmURL] = await Promise.all([
         toBlobURL(`${CORE_URL}/ffmpeg-core.js`, 'text/javascript'),
         toBlobURL(`${CORE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-        toBlobURL(`${CORE_URL}/ffmpeg-core.worker.js`, 'text/javascript'),
       ]);
-      await withTimeout(ff.load({ coreURL, wasmURL, workerURL }), LOAD_TIMEOUT, 'Timeout carregando FFmpeg');
+      await withTimeout(ff.load({ coreURL, wasmURL }), LOAD_TIMEOUT, 'Timeout carregando FFmpeg');
       instance = ff;
       return ff;
     } catch (e) {
