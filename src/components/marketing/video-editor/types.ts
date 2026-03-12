@@ -15,7 +15,8 @@ export interface TimelineClip {
   volume?: number; // 0-1 for audio/video
   opacity?: number; // 0-1
   filters?: VideoFilter[];
-  transition?: ClipTransition;
+  transition?: ClipTransition; // legacy - kept for backward compat
+  transitions?: ClipTransitions;
   locked?: boolean;
   muted?: boolean;
   canvasJson?: string; // JSON state for canvas compositions
