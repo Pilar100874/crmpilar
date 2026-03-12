@@ -66,6 +66,10 @@ const VideoTimelineEditor: React.FC = () => {
   });
   const resourcePanelRef = useRef<ResourcePanelHandle>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null);
+  const [exportedVideoBlob, setExportedVideoBlob] = useState<Blob | null>(null);
+  const [exportedVideoDuration, setExportedVideoDuration] = useState(0);
+  const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -341,41 +345,13 @@ const VideoTimelineEditor: React.FC = () => {
       recorder.stop();
       const blob = await recordingDone;
 
-      const estabId = localStorage.getItem('estabelecimentoId');
-      if (estabId) {
-        const fileName = `video_${Date.now()}.webm`;
-        const path = `${estabId}/${fileName}`;
-        const { error: uploadError } = await supabase.storage
-          .from('marketing-videos')
-          .upload(path, blob, { contentType: mimeType });
-
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
-          await supabase.from('media_gallery').insert({
-            estabelecimento_id: estabId,
-            tipo: 'video',
-            nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
-            public_url: urlData.publicUrl,
-            storage_path: path,
-            duracao_segundos: Math.round(duration),
-          });
-          toast.success('Vídeo gerado e salvo na galeria!');
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = fileName; a.click();
-          URL.revokeObjectURL(url);
-          toast.info('Upload falhou. Vídeo baixado localmente.');
-        }
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `video_editor_${Date.now()}.webm`; a.click();
-        URL.revokeObjectURL(url);
-        toast.success('Vídeo gerado e baixado!');
-      }
-
+      // Show preview dialog instead of auto-saving
+      const url = URL.createObjectURL(blob);
+      setExportedVideoBlob(blob);
+      setExportedVideoUrl(url);
+      setExportedVideoDuration(Math.round(duration));
       setExportProgress(100);
+      toast.success('Vídeo gerado com sucesso!');
     } catch (err: any) {
       console.error('Export error:', err);
       toast.error('Erro ao gerar vídeo: ' + (err.message || 'Tente novamente'));
@@ -384,6 +360,50 @@ const VideoTimelineEditor: React.FC = () => {
       setExportProgress(0);
     }
   }, [state, videoConfig]);
+
+  const handleSaveExportedToGallery = useCallback(async () => {
+    if (!exportedVideoBlob) return;
+    setIsSavingToGallery(true);
+    try {
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+      const fileName = `video_${Date.now()}.webm`;
+      const path = `${estabId}/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('marketing-videos')
+        .upload(path, exportedVideoBlob, { contentType: 'video/webm' });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
+      await supabase.from('media_gallery').insert({
+        estabelecimento_id: estabId,
+        tipo: 'video',
+        nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
+        public_url: urlData.publicUrl,
+        storage_path: path,
+        duracao_segundos: exportedVideoDuration,
+      });
+      toast.success('Vídeo salvo na galeria!');
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+  }, [exportedVideoBlob, exportedVideoDuration]);
+
+  const handleDownloadExported = useCallback(() => {
+    if (!exportedVideoUrl) return;
+    const a = document.createElement('a');
+    a.href = exportedVideoUrl;
+    a.download = `video_editor_${Date.now()}.webm`;
+    a.click();
+    toast.success('Download iniciado!');
+  }, [exportedVideoUrl]);
+
+  const handleCloseExportPreview = useCallback(() => {
+    if (exportedVideoUrl) URL.revokeObjectURL(exportedVideoUrl);
+    setExportedVideoUrl(null);
+    setExportedVideoBlob(null);
+  }, [exportedVideoUrl]);
 
   const selectedClip = state.selectedClipIds.length === 1
     ? state.clips.find((c) => c.id === state.selectedClipIds[0])
@@ -882,6 +902,71 @@ const VideoTimelineEditor: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Export preview dialog */}
+      <Dialog open={!!exportedVideoUrl} onOpenChange={(open) => { if (!open) handleCloseExportPreview(); }}>
+        <DialogContent className="max-w-3xl p-0 overflow-visible [&>button]:hidden">
+          <div className="relative">
+            {/* Close & Save buttons overlay */}
+            <div className="absolute top-3 right-3 z-[200] flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5 text-xs h-8 shadow-lg"
+                onClick={handleDownloadExported}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Baixar
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                className="gap-1.5 text-xs h-8 shadow-lg"
+                onClick={handleSaveExportedToGallery}
+                disabled={isSavingToGallery}
+              >
+                {isSavingToGallery ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                Salvar na Galeria
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-foreground/70 hover:text-foreground bg-background/60 backdrop-blur-sm rounded-full shadow-lg"
+                onClick={handleCloseExportPreview}
+              >
+                ✕
+              </Button>
+            </div>
+
+            {/* Video player */}
+            <div className="bg-black rounded-t-lg overflow-hidden">
+              {exportedVideoUrl && (
+                <video
+                  src={exportedVideoUrl}
+                  controls
+                  autoPlay
+                  className="w-full max-h-[70vh] object-contain"
+                  controlsList="nofullscreen nodownload"
+                />
+              )}
+            </div>
+
+            {/* Info bar */}
+            <div className="px-4 py-3 bg-card rounded-b-lg border-t flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Vídeo Gerado</p>
+                <p className="text-xs text-muted-foreground">
+                  Duração: {exportedVideoDuration}s • {videoConfig.resolution} • {videoConfig.fps}fps
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
