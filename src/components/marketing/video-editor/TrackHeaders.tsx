@@ -76,7 +76,8 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
         </Popover>
       </div>
 
-      {/* Track headers */}
+      {/* Track headers - scrollable area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
       {tracks.map((track, index) => (
         <div
           key={track.id}
