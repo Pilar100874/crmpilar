@@ -1368,54 +1368,54 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       className="absolute inset-0 z-50 bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
-        <div className="relative flex items-center justify-between px-6 py-3 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-                <Wand2 className="h-4.5 w-4.5 text-primary-foreground" />
+        <div className="relative flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-border/50 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <Wand2 className="h-3.5 sm:h-4.5 w-3.5 sm:w-4.5 text-primary-foreground" />
               </div>
-              <div>
-                <h2 className="text-base font-bold tracking-tight">AI Creative Studio</h2>
-                <p className="text-[10px] text-muted-foreground">Motor avançado de criação de criativos publicitários</p>
+              <div className="hidden sm:block">
+                <h2 className="text-sm sm:text-base font-bold tracking-tight">AI Creative Studio</h2>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground">Motor avançado de criação de criativos</p>
               </div>
             </div>
             {/* Mode Toggle — only when not on choose screen */}
             {mode !== 'choose' && (
-              <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-xl p-0.5 border border-border/40">
+              <div className="flex items-center bg-muted/60 backdrop-blur-sm rounded-lg sm:rounded-xl p-0.5 border border-border/40">
                 <button
                   onClick={() => setMode('wizard')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  className={`px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-md sm:rounded-[10px] transition-all flex items-center gap-1 sm:gap-1.5 ${
                     mode === 'wizard' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Wand2 className="h-3.5 w-3.5" /> Assistente
+                  <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> <span className="hidden xs:inline">Assistente</span><span className="xs:hidden">Assist.</span>
                 </button>
                 <button
                   onClick={() => setMode('prompts')}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-[10px] transition-all flex items-center gap-1.5 ${
+                  className={`px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-md sm:rounded-[10px] transition-all flex items-center gap-1 sm:gap-1.5 ${
                     mode === 'prompts' ? 'bg-background shadow-md text-foreground border border-border/50' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <BookOpen className="h-3.5 w-3.5" /> Prompts Prontos
+                  <BookOpen className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> Prompts
                 </button>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {mode === 'wizard' && selectionCount > 0 && (
-              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold">
-                {selectionCount} camadas selecionadas
+              <Badge className="text-[9px] sm:text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold hidden sm:inline-flex">
+                {selectionCount} camadas
               </Badge>
             )}
             {mode === 'wizard' && selectionCount > 0 && (
-              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5 text-xs h-8 rounded-lg border-border/50">
-                <RotateCcw className="h-3 w-3" /> Limpar
+              <Button variant="outline" size="sm" onClick={handleReset} className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 rounded-lg border-border/50">
+                <RotateCcw className="h-3 w-3" /> <span className="hidden sm:inline">Limpar</span>
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl hover:bg-destructive/10 hover:text-destructive">
-              <X className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-lg sm:rounded-xl hover:bg-destructive/10 hover:text-destructive h-7 w-7 sm:h-9 sm:w-9">
+              <X className="h-4 sm:h-5 w-4 sm:w-5" />
             </Button>
           </div>
         </div>
