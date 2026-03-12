@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Settings2, Square, RectangleHorizontal, RectangleVertical, Check } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Settings2, Square, RectangleHorizontal, RectangleVertical, Check, AlertTriangle } from 'lucide-react';
 
 export interface VideoConfig {
   backgroundColor: string;
@@ -76,8 +76,57 @@ const VideoConfigPanel: React.FC<Props> = ({ config, onChange }) => {
   const currentDest = DESTINATIONS.find(d => d.id === config.destination) || DESTINATIONS[0];
   const currentFormat = currentDest.formats.find(f => f.id === config.resolution);
 
+  // Pending change confirmation state
+  const [pendingChange, setPendingChange] = useState<{
+    destination: string;
+    resolution: string;
+    destLabel: string;
+    destIcon: string;
+    formatLabel: string;
+  } | null>(null);
+
   const updateConfig = (partial: Partial<VideoConfig>) => {
     onChange({ ...config, ...partial });
+  };
+
+  const handleDestinationChange = (destId: string) => {
+    if (destId === config.destination) return;
+    const dest = DESTINATIONS.find(d => d.id === destId)!;
+    const firstFormat = dest.formats[0];
+
+    // Check if resolution/aspect ratio is actually changing
+    const currentRes = config.resolution;
+    const newRes = firstFormat.id;
+    if (currentRes === newRes) {
+      // Same resolution, just switch destination label
+      updateConfig({ destination: destId });
+      return;
+    }
+
+    setPendingChange({
+      destination: destId,
+      resolution: newRes,
+      destLabel: dest.label,
+      destIcon: dest.icon,
+      formatLabel: firstFormat.label,
+    });
+  };
+
+  const confirmChange = () => {
+    if (!pendingChange) return;
+    updateConfig({
+      destination: pendingChange.destination,
+      resolution: pendingChange.resolution,
+    });
+    setPendingChange(null);
+  };
+
+  const getAspectLabel = (res: string) => {
+    const [w, h] = res.split('x').map(Number);
+    if (w === h) return '1:1';
+    const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+    const d = gcd(w, h);
+    return `${w / d}:${h / d}`;
   };
 
   return (
@@ -98,13 +147,7 @@ const VideoConfigPanel: React.FC<Props> = ({ config, onChange }) => {
               {DESTINATIONS.map(dest => (
                 <button
                   key={dest.id}
-                  onClick={() => {
-                    const firstFormat = dest.formats[0];
-                    updateConfig({
-                      destination: dest.id,
-                      resolution: firstFormat.id,
-                    });
-                  }}
+                  onClick={() => handleDestinationChange(dest.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg border text-xs transition-all ${
                     config.destination === dest.id
                       ? 'border-primary bg-primary/10 text-primary font-medium'
@@ -130,7 +173,17 @@ const VideoConfigPanel: React.FC<Props> = ({ config, onChange }) => {
                 return (
                   <button
                     key={fmt.id}
-                    onClick={() => updateConfig({ resolution: fmt.id })}
+                    onClick={() => {
+                      if (fmt.id !== config.resolution) {
+                        setPendingChange({
+                          destination: config.destination,
+                          resolution: fmt.id,
+                          destLabel: currentDest.label,
+                          destIcon: currentDest.icon,
+                          formatLabel: fmt.label,
+                        });
+                      }
+                    }}
                     className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all ${
                       isActive
                         ? 'border-primary bg-primary/10'
@@ -251,6 +304,67 @@ const VideoConfigPanel: React.FC<Props> = ({ config, onChange }) => {
           )}
         </div>
       </ScrollArea>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!pendingChange} onOpenChange={(open) => { if (!open) setPendingChange(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Alterar formato do vídeo?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Você está mudando para <strong>{pendingChange?.destIcon} {pendingChange?.destLabel}</strong> com formato <strong>{pendingChange?.formatLabel}</strong>.
+                </p>
+
+                {pendingChange && (
+                  <div className="flex items-center gap-4 justify-center py-2">
+                    {/* Current */}
+                    <div className="text-center">
+                      <div
+                        className="mx-auto rounded border border-border bg-muted/60 flex items-center justify-center"
+                        style={{
+                          width: (() => { const [w, h] = config.resolution.split('x').map(Number); const ratio = w / h; return ratio >= 1 ? 56 : Math.round(56 * ratio); })(),
+                          height: (() => { const [w, h] = config.resolution.split('x').map(Number); const ratio = w / h; return ratio <= 1 ? 56 : Math.round(56 / ratio); })(),
+                        }}
+                      >
+                        <span className="text-[8px] text-muted-foreground">{getAspectLabel(config.resolution)}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">Atual</p>
+                    </div>
+
+                    <span className="text-lg text-muted-foreground">→</span>
+
+                    {/* New */}
+                    <div className="text-center">
+                      <div
+                        className="mx-auto rounded border-2 border-primary bg-primary/10 flex items-center justify-center"
+                        style={{
+                          width: (() => { const [w, h] = (pendingChange?.resolution || '1920x1080').split('x').map(Number); const ratio = w / h; return ratio >= 1 ? 56 : Math.round(56 * ratio); })(),
+                          height: (() => { const [w, h] = (pendingChange?.resolution || '1920x1080').split('x').map(Number); const ratio = w / h; return ratio <= 1 ? 56 : Math.round(56 / ratio); })(),
+                        }}
+                      >
+                        <span className="text-[8px] text-primary font-medium">{getAspectLabel(pendingChange?.resolution || '1920x1080')}</span>
+                      </div>
+                      <p className="text-[10px] text-primary font-medium mt-1">Novo</p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground">
+                  A tela de preview e a exportação serão ajustadas para o novo formato. Clipes existentes podem ficar desproporcionais.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmChange}>Confirmar Alteração</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
