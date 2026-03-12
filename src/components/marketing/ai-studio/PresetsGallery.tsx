@@ -1640,10 +1640,10 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="px-4 pb-4 pt-0">
-                              <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent mb-3" />
-                              <p className="text-[11px] text-muted-foreground mb-3 pl-1">{layer.description}</p>
-                              <div className="flex flex-wrap gap-2">
+                            <div className="px-2.5 sm:px-4 pb-3 sm:pb-4 pt-0">
+                              <div className="h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent mb-2 sm:mb-3" />
+                              <p className="text-[10px] sm:text-[11px] text-muted-foreground mb-2 sm:mb-3 pl-1">{layer.description}</p>
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                 {(layer.filterOptions ? layer.filterOptions(layer.options, selections) : layer.options).map((option) => {
                                   const isSelected = selected.includes(option.id);
                                   return (
