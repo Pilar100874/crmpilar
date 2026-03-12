@@ -5,6 +5,7 @@ export type StudioNodeType =
   | 'textInput'
   | 'systemPrompt'
   | 'imageInput'
+  | 'multiImageRef'
   | 'productImageSelect'
   | 'multiProductSelect'
   | 'galleryInfluencer'
@@ -89,6 +90,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🖼️',
         color: '#f97316',
         defaultConfig: { images: [] },
+      },
+      {
+        type: 'multiImageRef',
+        label: 'Referências Múltiplas',
+        description: 'Selecione várias imagens de referência (upload ou galeria)',
+        icon: '🖼️🖼️',
+        color: '#e67e22',
+        defaultConfig: { images: [], referenceRole: '' },
       },
       {
         type: 'productImageSelect',

@@ -259,6 +259,31 @@ export function useStudioExecution() {
         };
       }
 
+      case 'multiImageRef': {
+        // Same logic as imageInput — return all images with optional reference role
+        const role = config.referenceRole;
+        const roleDescMap: Record<string, string> = {
+          influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece.',
+          logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece.',
+          produto: '[PRODUTO - PROIBIDO MODIFICAR] Mantenha este produto EXATAMENTE como aparece na referência.',
+          ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário/fundo.',
+          estilo: 'Use como referência de estilo visual.',
+          paleta: 'Use como referência de paleta de cores.',
+          textura: 'Use como referência de textura/material.',
+          pose: 'Use como referência de pose corporal.',
+          roupa: '[ROUPA - NÃO ALTERAR] Mantenha a roupa EXATAMENTE como aparece na referência.',
+        };
+        const mImages = config.images || [];
+        if (mImages.length === 0) {
+          return role ? null : { imageUrls: [], imageUrl: undefined };
+        }
+        return {
+          imageUrls: mImages,
+          imageUrl: mImages[0],
+          ...(role ? { _referenceRole: role, _referenceDesc: roleDescMap[role] || 'Use estas imagens como referência visual.' } : {}),
+        };
+      }
+
       case 'productImageSelect':
         // Return the selected product image as reference with role context
         if (config.selectedImageUrl) {
@@ -1142,7 +1167,7 @@ export function useStudioExecution() {
               if (!n) return false;
               const nType = (n.data as StudioNodeData).type;
               // Only re-execute processing nodes in the path, not pure inputs or galleries
-              const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect',
+              const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'productImageSelect', 'multiProductSelect',
                 'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura',
                 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
               return ancestors.has(id) && !inputTypes.includes(nType);
