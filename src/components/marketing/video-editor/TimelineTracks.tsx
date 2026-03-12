@@ -35,6 +35,7 @@ interface Props {
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
+  const [dragMediaType, setDragMediaType] = useState<string | null>(null);
   const draggingRef = useRef<{
     clipId: string;
     type: 'move' | 'resize-start' | 'resize-end';
