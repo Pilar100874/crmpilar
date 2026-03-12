@@ -1703,8 +1703,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 toast({ title: 'Variações Geradas', description: `${v.length} variações de prompt criadas com sucesso.` });
               }
             }} className="flex flex-col flex-1 overflow-hidden">
-            <div className="border-b border-border/30 px-4 pt-3 pb-1">
-              <TabsList className={`h-10 w-full grid bg-muted/30 rounded-xl p-1 border border-border/20 ${
+             <div className="border-b border-border/30 px-2 sm:px-4 pt-2 sm:pt-3 pb-1">
+               <TabsList className={`h-8 sm:h-10 w-full grid bg-muted/30 rounded-lg sm:rounded-xl p-0.5 sm:p-1 border border-border/20 ${
                 (() => {
                   const isVideo = selections.contentType?.includes('video');
                   const hasHook = hasHookStyleSelected;
