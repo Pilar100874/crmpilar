@@ -242,19 +242,24 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
       <div style={{ minWidth: totalWidth, position: 'relative' }}>
         {state.tracks.map((track) => {
           const trackClips = state.clips.filter((c) => c.trackId === track.id);
+          const canAccept = dragMediaType ? (isCompatible(track.type, dragMediaType) || (dragMediaType === 'video' && track.type === 'audio')) : true;
+          const isDropTarget = dropTargetTrackId === track.id;
+          const isDimmed = dragMediaType && !canAccept;
           
           return (
             <div
               key={track.id}
               data-track-id={track.id}
-              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60' : ''}`}
+              className={`relative border-b transition-all ${isDropTarget ? 'ring-2 ring-inset ring-primary/60' : ''}`}
               style={{
                 height: track.height,
-                opacity: track.visible ? 1 : 0.3,
-                backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
+                opacity: isDimmed ? 0.15 : (track.visible ? 1 : 0.3),
+                backgroundColor: isDropTarget && canAccept
+                  ? `${TRACK_COLORS[track.type] || TRACK_COLORS.video}30`
+                  : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
               }}
               onDragOver={(e) => handleExternalDragOver(e, track)}
-              onDragLeave={() => setDropTargetTrackId(null)}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleExternalDrop(e, track)}
             >
               {/* Left color indicator */}
