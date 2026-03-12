@@ -825,8 +825,9 @@ export function useStudioExecution() {
             if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
               throw new Error('💳 Limite de uso atingido no provedor de IA. Verifique seu plano ou créditos disponíveis.');
             }
-            if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED')) {
-              throw new Error('🌐 Erro de conexão com o servidor de geração de vídeo. Isso pode ocorrer por instabilidade na rede ou timeout. Aguarde alguns segundos e tente novamente.');
+            if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão')) {
+              const modelLabel = (videoModel || 'desconhecido').split('/').pop();
+              throw new Error(`A API do modelo ${modelLabel} não está respondendo. Tente novamente mais tarde.`);
             }
             throw new Error(`Não foi possível gerar o vídeo. Tente novamente com uma descrição diferente. (${msg.substring(0, 100)})`);
           }
