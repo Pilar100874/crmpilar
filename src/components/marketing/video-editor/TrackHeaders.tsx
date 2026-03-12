@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelineTrack, TRACK_COLORS } from './types';
 import {
   Eye, EyeOff, Volume2, VolumeX, Lock, Unlock, Plus, Trash2,
-  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
+  GripVertical, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
 } from 'lucide-react';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   onDeleteTrack: (id: string) => void;
   onAddTrack: (track: Omit<TimelineTrack, 'id'>) => void;
   onMoveTrack: (id: string, direction: 'up' | 'down') => void;
+  onReorderTrack?: (id: string, toIndex: number) => void;
 }
 
 const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: React.ReactNode; defaultHeight: number }[] = [
@@ -23,8 +24,10 @@ const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: Re
   { type: 'effect', label: 'Efeitos', icon: <Sparkles className="h-3.5 w-3.5" />, defaultHeight: 50 },
 ];
 
-const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack }) => {
+const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack, onReorderTrack }) => {
   const [addPopoverOpen, setAddPopoverOpen] = useState(false);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const handleAddTrack = (opt: typeof TRACK_TYPE_OPTIONS[0]) => {
     const count = tracks.filter(t => t.type === opt.type).length + 1;
@@ -76,27 +79,35 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
       {tracks.map((track, index) => (
         <div
           key={track.id}
-          className="border-b flex items-center gap-1 px-1.5 group"
+          draggable
+          onDragStart={(e) => {
+            setDraggingId(track.id);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', track.id);
+          }}
+          onDragEnd={() => { setDraggingId(null); setDragOverIndex(null); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            setDragOverIndex(index);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOverIndex(null);
+            const srcId = e.dataTransfer.getData('text/plain');
+            if (srcId && onReorderTrack) {
+              onReorderTrack(srcId, index);
+            }
+            setDraggingId(null);
+          }}
+          className={`border-b flex items-center gap-1 px-1.5 group transition-all ${
+            draggingId === track.id ? 'opacity-40' : ''
+          } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''}`}
           style={{ height: track.height }}
         >
-          {/* Move buttons */}
-          <div className="flex flex-col gap-0 shrink-0 opacity-0 group-hover:opacity-70 transition-opacity">
-            <button
-              onClick={() => onMoveTrack(track.id, 'up')}
-              disabled={index === 0}
-              className="p-0 rounded hover:bg-muted disabled:opacity-20"
-              title="Mover para cima (camada superior)"
-            >
-              <ChevronUp className="h-3 w-3" />
-            </button>
-            <button
-              onClick={() => onMoveTrack(track.id, 'down')}
-              disabled={index === tracks.length - 1}
-              className="p-0 rounded hover:bg-muted disabled:opacity-20"
-              title="Mover para baixo (camada inferior)"
-            >
-              <ChevronDown className="h-3 w-3" />
-            </button>
+          {/* Drag handle */}
+          <div className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
 
           <div
