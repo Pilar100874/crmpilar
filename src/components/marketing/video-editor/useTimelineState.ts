@@ -179,6 +179,18 @@ export function useTimelineState() {
     }));
   }, []);
 
+  const moveTrack = useCallback((id: string, direction: 'up' | 'down') => {
+    setState((prev) => {
+      const idx = prev.tracks.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= prev.tracks.length) return prev;
+      const newTracks = [...prev.tracks];
+      [newTracks[idx], newTracks[newIdx]] = [newTracks[newIdx], newTracks[idx]];
+      return { ...prev, tracks: newTracks };
+    });
+  }, []);
+
   // Zoom
   const zoomIn = useCallback(() => {
     setState((prev) => ({ ...prev, zoom: Math.min(200, prev.zoom * 1.3) }));
