@@ -71,6 +71,7 @@ const VideoTimelineEditor: React.FC = () => {
   const [exportedVideoDuration, setExportedVideoDuration] = useState(0);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Project management
