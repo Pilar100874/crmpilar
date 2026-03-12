@@ -133,7 +133,16 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     cleanPrompt = "A cinematic product showcase video with smooth camera movement, professional lighting, and elegant composition.";
   }
 
-  console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars): ${cleanPrompt.substring(0, 200)}`);
+  // Re-append audio directive after cleaning (it gets stripped by fidelity markers)
+  const withAudio = params.withAudio !== false;
+  const withMusic = withAudio ? (params.withMusic !== false) : false;
+  if (!withAudio) {
+    cleanPrompt += "\n\nGenerate a completely SILENT video. No speech, no music, no soundtrack, no ambient audio.";
+  } else if (!withMusic) {
+    cleanPrompt += "\n\nDo NOT add any background music or soundtrack. Keep only natural non-musical audio.";
+  }
+
+  console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars), audio=${withAudio}, music=${withMusic}: ${cleanPrompt.substring(0, 200)}`);
 
   // Submit generation request
   const response = await fetch(
