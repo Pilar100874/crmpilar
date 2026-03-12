@@ -1676,7 +1676,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </div>
           </ScrollArea>
           {/* Step 1 Footer — Avançar button */}
-          <div className="p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
+          <div className="p-3 sm:p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
             <Button
               className="w-full gap-2.5 h-12 rounded-xl font-bold text-sm shadow-xl shadow-primary/25 bg-gradient-to-r from-primary via-primary/95 to-primary/85 hover:from-primary/90 hover:via-primary/85 hover:to-primary/75 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99]"
               size="lg"
