@@ -14,8 +14,8 @@ interface Props {
   resolution?: string;
 }
 
-const CANVAS_W = 480;
-const CANVAS_H = 270;
+const MAX_PREVIEW_W = 640;
+const MAX_PREVIEW_H = 400;
 
 function getTransitionStyle(
   type: TransitionType,
