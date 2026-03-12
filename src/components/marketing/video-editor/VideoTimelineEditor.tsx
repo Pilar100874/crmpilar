@@ -32,6 +32,7 @@ const VideoTimelineEditor: React.FC = () => {
   const [rightPanel, setRightPanel] = useState<'resources' | 'effects' | 'config' | 'properties'>('resources');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [previewZoom, setPreviewZoom] = useState(1);
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
   const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
   const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
@@ -464,13 +465,34 @@ const VideoTimelineEditor: React.FC = () => {
         {/* Preview + Timeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!previewCollapsed && (
-            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0"
-              style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}>
-              <VideoPreview
-                clips={state.clips} currentTime={state.currentTime} tracks={state.tracks}
-                isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds}
-                onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)}
-              />
+            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0 overflow-hidden"
+              style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}
+              onWheel={(e) => {
+                if (e.ctrlKey || e.metaKey) {
+                  e.preventDefault();
+                  setPreviewZoom(prev => Math.min(5, Math.max(0.25, prev + (e.deltaY < 0 ? 0.1 : -0.1))));
+                }
+              }}
+            >
+              <div style={{ transform: `scale(${previewZoom})`, transformOrigin: 'center center', transition: 'transform 0.1s ease-out' }}>
+                <VideoPreview
+                  clips={state.clips} currentTime={state.currentTime} tracks={state.tracks}
+                  isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds}
+                  onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)}
+                />
+              </div>
+              {/* Zoom controls overlay */}
+              <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur rounded-lg px-1.5 py-0.5 border">
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.max(0.25, prev - 0.25))}>
+                  <ZoomOut className="h-3 w-3" />
+                </Button>
+                <button className="text-[10px] text-muted-foreground w-10 text-center hover:text-foreground" onClick={() => setPreviewZoom(1)}>
+                  {Math.round(previewZoom * 100)}%
+                </button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.min(5, prev + 0.25))}>
+                  <ZoomIn className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           )}
           {previewCollapsed && (
