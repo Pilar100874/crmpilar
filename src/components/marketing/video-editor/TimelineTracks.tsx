@@ -18,7 +18,7 @@ interface Props {
   onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{
     clipId: string;
