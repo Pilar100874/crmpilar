@@ -11,10 +11,11 @@ interface Props {
   onSelectClip?: (id: string) => void;
   previewingTransition?: { clipId: string; phase: 'entrance' | 'exit' } | null;
   previewingFilter?: boolean;
+  resolution?: string;
 }
 
-const CANVAS_W = 480;
-const CANVAS_H = 270;
+const MAX_PREVIEW_W = 640;
+const MAX_PREVIEW_H = 400;
 
 function getTransitionStyle(
   type: TransitionType,
@@ -80,8 +81,13 @@ function getTransitionStyle(
 const VideoPreview: React.FC<Props> = ({
   clips, currentTime, tracks, isPlaying,
   selectedClipIds = [], onUpdateClip, onSelectClip,
-  previewingTransition, previewingFilter,
+  previewingTransition, previewingFilter, resolution = '1920x1080',
 }) => {
+  const [resW, resH] = resolution.split('x').map(Number);
+  const aspectRatio = resW / resH;
+  const CANVAS_W = aspectRatio >= 1 ? Math.min(MAX_PREVIEW_W, MAX_PREVIEW_H * aspectRatio) : Math.min(MAX_PREVIEW_W, MAX_PREVIEW_H * aspectRatio);
+  const CANVAS_H = CANVAS_W / aspectRatio;
+
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
   const [previewAnim, setPreviewAnim] = useState<{ clipId: string; phase: 'entrance' | 'exit'; startTime: number } | null>(null);
@@ -319,7 +325,7 @@ const VideoPreview: React.FC<Props> = ({
         </div>
 
         <div className="absolute top-2 left-2 bg-black/50 px-1.5 py-0.5 rounded text-white/50 text-[8px] font-mono z-40">
-          1920×1080
+          {resW}×{resH}
         </div>
       </div>
     </div>
