@@ -434,7 +434,10 @@ export function useStudioExecution() {
 
         // Find the source media from inputs
         const sourceImageUrl = orderedImageInputs[0] || imageInputs[0];
-        const sourceVideoUrl = inputs.find(i => i?.videoUrl)?.videoUrl || inputs.find(i => i?._isVideo)?.videoUrl;
+        const sourceVideoInput = inputs.find(i => i?.videoUrl || i?._isVideo);
+        const sourceVideoUrl = sourceVideoInput?.videoUrl;
+        const sourceProvider = sourceVideoInput?._provider;
+        const sourceProviderVideoId = sourceVideoInput?._providerVideoId;
         const sourceMedia = sourceVideoUrl || sourceImageUrl;
 
         if (!sourceMedia) {
@@ -456,6 +459,8 @@ export function useStudioExecution() {
           text: correctionText,
           ...(sourceImageUrl ? { imageUrl: sourceImageUrl, imageUrls: [sourceImageUrl] } : {}),
           ...(sourceVideoUrl ? { videoUrl: sourceVideoUrl, _isVideo: true } : {}),
+          ...(sourceProvider ? { _provider: sourceProvider } : {}),
+          ...(sourceProviderVideoId ? { _providerVideoId: sourceProviderVideoId } : {}),
           _isCorrection: true,
           _correctionPrompt: correctionPrompt,
         };
