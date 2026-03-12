@@ -553,37 +553,37 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   </div>
                 </button>
                 {/* Overlay buttons on hover */}
-                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-1 sm:gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex-wrap px-1">
                   <Button
                     size="sm"
-                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
+                    className="gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] pointer-events-auto shadow-lg h-6 sm:h-7 px-1.5 sm:px-2"
                     onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
                   >
-                    <Play className="h-3 w-3" /> Usar
+                    <Play className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Usar
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
+                    className="gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] pointer-events-auto shadow-lg bg-background/90 h-6 sm:h-7 px-1.5 sm:px-2"
                     onClick={(e) => { e.stopPropagation(); handleEditPreset(preset); }}
                   >
-                    <Sparkles className="h-3 w-3" /> Editar
+                    <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Editar</span><span className="sm:hidden">✏</span>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1 text-[10px] pointer-events-auto shadow-lg bg-background/90 h-7 px-2"
+                    className="gap-0.5 text-[9px] sm:text-[10px] pointer-events-auto shadow-lg bg-background/90 h-6 sm:h-7 px-1.5 sm:px-2"
                     onClick={(e) => { e.stopPropagation(); handleDuplicatePreset(preset); }}
                   >
-                    <CopyPlus className="h-3 w-3" />
+                    <CopyPlus className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="gap-1 text-[10px] pointer-events-auto shadow-lg h-7 px-2"
+                    className="gap-0.5 text-[9px] sm:text-[10px] pointer-events-auto shadow-lg h-6 sm:h-7 px-1.5 sm:px-2"
                     onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(preset.id); }}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                   </Button>
                 </div>
               </motion.div>

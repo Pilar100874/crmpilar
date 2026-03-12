@@ -1377,7 +1377,7 @@ const AICreativeStudioInner: React.FC = () => {
       className={`flex flex-col border border-border rounded-xl overflow-hidden bg-background transition-all duration-300 ${
         isFullscreen
           ? 'fixed inset-0 z-50 rounded-none border-0'
-          : 'h-[calc(100vh-200px)] min-h-[350px] md:min-h-[600px]'
+          : 'h-[calc(100vh-180px)] min-h-[300px] md:min-h-[600px]'
       }`}
     >
       {/* Header Toolbar */}

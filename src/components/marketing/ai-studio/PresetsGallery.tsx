@@ -1713,27 +1713,27 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   return 'grid-cols-2';
                 })()
               }`}>
-                <TabsTrigger value="prompt" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                  <Sparkles className="h-3 w-3" /> Prompt
-                </TabsTrigger>
-                {hasHookStyleSelected && (
-                  <TabsTrigger value="hooks" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <Library className="h-3 w-3" /> Ganchos
-                  </TabsTrigger>
-                )}
-                {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="script" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <FileText className="h-3 w-3" /> Roteiro
-                  </TabsTrigger>
-                )}
-                {selections.contentType?.includes('video') && (
-                  <TabsTrigger value="scenes" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                    <Clapperboard className="h-3 w-3" /> Cenas
-                  </TabsTrigger>
-                )}
-                <TabsTrigger value="variations" className="text-[10px] gap-1.5 px-2 rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
-                  <Layers className="h-3 w-3" /> Variações
-                </TabsTrigger>
+                 <TabsTrigger value="prompt" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                   <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Prompt
+                 </TabsTrigger>
+                 {hasHookStyleSelected && (
+                   <TabsTrigger value="hooks" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <Library className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Ganchos</span><span className="sm:hidden">Hook</span>
+                   </TabsTrigger>
+                 )}
+                 {selections.contentType?.includes('video') && (
+                   <TabsTrigger value="script" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <FileText className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Roteiro</span><span className="sm:hidden">Script</span>
+                   </TabsTrigger>
+                 )}
+                 {selections.contentType?.includes('video') && (
+                   <TabsTrigger value="scenes" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                     <Clapperboard className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Cenas
+                   </TabsTrigger>
+                 )}
+                 <TabsTrigger value="variations" className="text-[9px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 sm:px-2 rounded-md sm:rounded-lg font-bold data-[state=active]:bg-gradient-to-b data-[state=active]:from-background data-[state=active]:to-background/90 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40">
+                   <Layers className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> <span className="hidden sm:inline">Variações</span><span className="sm:hidden">Vars</span>
+                 </TabsTrigger>
               </TabsList>
             </div>
 
