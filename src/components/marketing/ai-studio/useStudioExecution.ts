@@ -434,7 +434,10 @@ export function useStudioExecution() {
 
         // Find the source media from inputs
         const sourceImageUrl = orderedImageInputs[0] || imageInputs[0];
-        const sourceVideoUrl = inputs.find(i => i?.videoUrl)?.videoUrl || inputs.find(i => i?._isVideo)?.videoUrl;
+        const sourceVideoInput = inputs.find(i => i?.videoUrl || i?._isVideo);
+        const sourceVideoUrl = sourceVideoInput?.videoUrl;
+        const sourceProvider = sourceVideoInput?._provider;
+        const sourceProviderVideoId = sourceVideoInput?._providerVideoId;
         const sourceMedia = sourceVideoUrl || sourceImageUrl;
 
         if (!sourceMedia) {
@@ -456,6 +459,8 @@ export function useStudioExecution() {
           text: correctionText,
           ...(sourceImageUrl ? { imageUrl: sourceImageUrl, imageUrls: [sourceImageUrl] } : {}),
           ...(sourceVideoUrl ? { videoUrl: sourceVideoUrl, _isVideo: true } : {}),
+          ...(sourceProvider ? { _provider: sourceProvider } : {}),
+          ...(sourceProviderVideoId ? { _providerVideoId: sourceProviderVideoId } : {}),
           _isCorrection: true,
           _correctionPrompt: correctionPrompt,
         };
@@ -609,6 +614,9 @@ export function useStudioExecution() {
         const correctionInputVideo = inputs.find(i => i?._isCorrection);
         const correctionOnlyPromptVideo = correctionInputVideo?._correctionPrompt || '';
         const correctionSourceVideo = correctionInputVideo?.videoUrl || correctionInputVideo?.imageUrl;
+        const correctionSourceVideoUrl = correctionInputVideo?.videoUrl;
+        const correctionSourceProvider = correctionInputVideo?._provider;
+        const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
@@ -725,6 +733,10 @@ export function useStudioExecution() {
               cfgScale: config.cfgScale ?? 7,
               imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : (imageInputs.length > 0 ? imageInputs : undefined),
               imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+              correctionMode: isCorrectionVideo,
+              sourceVideoUrl: correctionSourceVideoUrl,
+              sourceVideoId: correctionSourceProviderVideoId,
+              sourceProvider: correctionSourceProvider,
               estabelecimentoId: estabId,
             }, 300000); // 5 min timeout for video generation
             
@@ -732,6 +744,8 @@ export function useStudioExecution() {
               return {
                 videoUrl: result.videoUrl,
                 ...(result.thumbnailUrl ? { imageUrl: result.thumbnailUrl } : {}),
+                ...(result.provider ? { _provider: result.provider } : { _provider: (videoModel || '').split('/')[0] }),
+                ...(result.providerVideoId ? { _providerVideoId: result.providerVideoId } : {}),
                 text: `🎬 Vídeo gerado com ${videoModel.split('/').pop()} para: "${videoPrompt.substring(0, 60)}"`,
                 _isVideo: true,
               };

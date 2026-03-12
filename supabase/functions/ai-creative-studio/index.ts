@@ -24,6 +24,8 @@ function base64Decode(str: string): Uint8Array {
 interface VideoGenerationResult {
   videoUrl?: string;
   thumbnailUrl?: string;
+  provider?: string;
+  providerVideoId?: string;
   error?: string;
 }
 
@@ -249,27 +251,82 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const model = params.model?.includes("sora-2-pro") ? "sora-2-pro" : "sora-2";
   const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
-  // Step 1: Create video job via POST /v1/videos (multipart/form-data)
-  const formData = new FormData();
-  formData.append("model", model);
-  formData.append("prompt", params.prompt);
-  formData.append("size", size);
   // Sora only accepts seconds: 4, 8, or 12
   const validSeconds = [4, 8, 12];
   const dur = params.duration || 4;
   const soraSeconds = validSeconds.reduce((prev, curr) => Math.abs(curr - dur) < Math.abs(prev - dur) ? curr : prev);
-  formData.append("seconds", String(soraSeconds));
 
-  // Note: Sora API does not support image-to-video via 'image' param.
-  // Reference images are baked into the prompt by the hero-frame step instead.
+  const isCorrection = params.correctionMode === true;
+  const sourceVideoId = typeof params.sourceVideoId === "string" && params.sourceVideoId.trim()
+    ? params.sourceVideoId.trim()
+    : null;
+  const sourceVideoUrl = typeof params.sourceVideoUrl === "string" && params.sourceVideoUrl.startsWith("http")
+    ? params.sourceVideoUrl
+    : null;
+  const firstImageRef = Array.isArray(params.imageUrls) ? params.imageUrls[0] : null;
 
-  const response = await fetch("https://api.openai.com/v1/videos", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
+  const buildCreateFormData = (includeReference: boolean) => {
+    const formData = new FormData();
+    formData.append("model", model);
+    formData.append("prompt", params.prompt);
+    formData.append("size", size);
+    formData.append("seconds", String(soraSeconds));
+
+    if (includeReference && isCorrection) {
+      if (sourceVideoUrl) {
+        formData.append("input_reference", sourceVideoUrl);
+      }
+      if (typeof firstImageRef === "string" && firstImageRef) {
+        // JSON-safe reference shape documented by OpenAI videos API
+        formData.append("image_reference", JSON.stringify({ image_url: firstImageRef }));
+      }
+    }
+
+    return formData;
+  };
+
+  let response: Response;
+
+  // Prefer remix when we have a previous OpenAI video id (best fidelity for corrections)
+  if (isCorrection && sourceVideoId) {
+    const remixForm = buildCreateFormData(false);
+    response = await fetch(`https://api.openai.com/v1/videos/${sourceVideoId}/remix`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: remixForm,
+    });
+
+    if (!response.ok) {
+      const remixErr = await response.text();
+      console.warn(`[generate_video] Sora remix failed (${response.status}), fallback to create: ${remixErr.substring(0, 200)}`);
+      const includeReference = !!(sourceVideoUrl || firstImageRef);
+      response = await fetch("https://api.openai.com/v1/videos", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: buildCreateFormData(includeReference),
+      });
+    }
+  } else {
+    const includeReference = isCorrection && !!(sourceVideoUrl || firstImageRef);
+    response = await fetch("https://api.openai.com/v1/videos", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: buildCreateFormData(includeReference),
+    });
+
+    // In correction mode we must NOT silently drop references,
+    // otherwise the model can regenerate a radically different video.
+    if (!response.ok && includeReference) {
+      const firstErr = await response.text();
+      throw new Error(`Sora não aceitou referência para correção (${response.status}). Para preservar fidelidade, use OpenAI Remix ou Runway video-to-video. Detalhe: ${firstErr.substring(0, 180)}`);
+    }
+  }
 
   if (!response.ok) {
     const err = await response.text();
@@ -293,7 +350,7 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
     }
     const pollData = await pollResp.json();
     console.log(`[generate_video] Sora poll status: ${pollData.status}`);
-    
+
     if (pollData.status === "failed") {
       return { done: true, error: pollData.error?.message || "Video generation failed" } as any;
     }
@@ -314,7 +371,11 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
 
   const videoBytes = new Uint8Array(await contentResp.arrayBuffer());
   const storedUrl = await uploadVideoToStorage(videoBytes);
-  return { videoUrl: storedUrl || undefined };
+  return {
+    videoUrl: storedUrl || undefined,
+    provider: "openai",
+    providerVideoId: videoId,
+  };
 }
 
 // --- Runway ---
@@ -323,20 +384,40 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     "runway/gen4": "gen4_turbo",
     "runway/gen3-alpha-turbo": "gen3a_turbo",
   };
-  const model = modelMap[params.model] || "gen3a_turbo";
 
-  const body: any = {
-    model,
-    promptText: params.prompt,
-    ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
-    duration: params.duration || 10,
-  };
+  const hasSourceVideo = typeof params.sourceVideoUrl === "string" && params.sourceVideoUrl.startsWith("http");
+  const useVideoToVideo = params.correctionMode === true && hasSourceVideo;
 
-  if (params.imageUrls?.[0]?.startsWith("http")) {
-    body.promptImage = params.imageUrls[0];
+  let endpoint = "https://api.dev.runwayml.com/v1/image_to_video";
+  let body: any;
+
+  if (useVideoToVideo) {
+    // Runway video-to-video gives much better fidelity for correction flows.
+    endpoint = "https://api.dev.runwayml.com/v1/video_to_video";
+    body = {
+      model: "gen4_aleph",
+      promptText: params.prompt,
+      videoUri: params.sourceVideoUrl,
+    };
+
+    if (params.seed !== undefined && params.seed !== null && `${params.seed}` !== "undefined" && !Number.isNaN(Number(params.seed))) {
+      body.seed = Number(params.seed);
+    }
+  } else {
+    const model = modelMap[params.model] || "gen3a_turbo";
+    body = {
+      model,
+      promptText: params.prompt,
+      ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
+      duration: params.duration || 10,
+    };
+
+    if (params.imageUrls?.[0]?.startsWith("http")) {
+      body.promptImage = params.imageUrls[0];
+    }
   }
 
-  const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -348,14 +429,15 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Runway API error ${response.status}: ${err.substring(0, 200)}`);
+    const mode = useVideoToVideo ? "video_to_video" : "image_to_video";
+    throw new Error(`Runway API (${mode}) error ${response.status}: ${err.substring(0, 200)}`);
   }
 
   const taskData = await response.json();
   const taskId = taskData.id;
   if (!taskId) throw new Error("No task ID from Runway");
 
-  console.log(`[generate_video] Runway task: ${taskId}`);
+  console.log(`[generate_video] Runway task (${useVideoToVideo ? "v2v" : "i2v"}): ${taskId}`);
 
   const result = await pollUntilDone<string>(async () => {
     const pollResp = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
@@ -376,7 +458,11 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
   const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
   const storedUrl = await uploadVideoToStorage(videoBytes);
 
-  return { videoUrl: storedUrl || result };
+  return {
+    videoUrl: storedUrl || result,
+    provider: "runway",
+    providerVideoId: taskId,
+  };
 }
 
 // --- Kling (Kuaishou) ---
@@ -650,6 +736,25 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
 
   params.prompt = `${params.prompt || ""}\n\n[AUDIO DIRECTIVE]\n${audioDirective}`.trim();
   console.log(`[generate_video] Audio config: withAudio=${withAudio}, withMusic=${withMusic}`);
+
+  const hasCorrectionVideoSource =
+    params.correctionMode === true &&
+    typeof params.sourceVideoUrl === "string" &&
+    params.sourceVideoUrl.startsWith("http");
+
+  // Prefer true video-to-video for correction when source video exists.
+  if (hasCorrectionVideoSource && provider === "openai" && !params.sourceVideoId) {
+    const runwayKey = await fetchApiKey(estabelecimentoId, "runway");
+    if (runwayKey) {
+      console.log(`[generate_video] AUTO-ROUTING correction: OpenAI -> Runway video_to_video for higher fidelity`);
+      return await generateVideoRunway(runwayKey, {
+        ...params,
+        model: "runway/gen4",
+        correctionMode: true,
+      });
+    }
+    console.warn(`[generate_video] Correction source video provided, but Runway key not found. Proceeding with OpenAI fallback.`);
+  }
 
   // Check if there are strict references (product/influencer) that need preservation
   const imageRoles = (params.imageRoles || []) as string[];
