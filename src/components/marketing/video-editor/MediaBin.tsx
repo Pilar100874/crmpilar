@@ -140,7 +140,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
         name: clip.clipName + ' (editado)',
         src: dataUrl,
         canvasJson: json,
-      }, addToTrackId || undefined);
+      }, canvasTrackId);
     });
     setShowCanvasDialog(true);
   }, [onAddClip, addToTrackId]);
