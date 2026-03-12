@@ -251,27 +251,88 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const model = params.model?.includes("sora-2-pro") ? "sora-2-pro" : "sora-2";
   const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
-  // Step 1: Create video job via POST /v1/videos (multipart/form-data)
-  const formData = new FormData();
-  formData.append("model", model);
-  formData.append("prompt", params.prompt);
-  formData.append("size", size);
   // Sora only accepts seconds: 4, 8, or 12
   const validSeconds = [4, 8, 12];
   const dur = params.duration || 4;
   const soraSeconds = validSeconds.reduce((prev, curr) => Math.abs(curr - dur) < Math.abs(prev - dur) ? curr : prev);
-  formData.append("seconds", String(soraSeconds));
 
-  // Note: Sora API does not support image-to-video via 'image' param.
-  // Reference images are baked into the prompt by the hero-frame step instead.
+  const isCorrection = params.correctionMode === true;
+  const sourceVideoId = typeof params.sourceVideoId === "string" && params.sourceVideoId.trim()
+    ? params.sourceVideoId.trim()
+    : null;
+  const sourceVideoUrl = typeof params.sourceVideoUrl === "string" && params.sourceVideoUrl.startsWith("http")
+    ? params.sourceVideoUrl
+    : null;
+  const firstImageRef = Array.isArray(params.imageUrls) ? params.imageUrls[0] : null;
 
-  const response = await fetch("https://api.openai.com/v1/videos", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
+  const buildCreateFormData = (includeReference: boolean) => {
+    const formData = new FormData();
+    formData.append("model", model);
+    formData.append("prompt", params.prompt);
+    formData.append("size", size);
+    formData.append("seconds", String(soraSeconds));
+
+    if (includeReference && isCorrection) {
+      if (sourceVideoUrl) {
+        formData.append("input_reference", sourceVideoUrl);
+      }
+      if (typeof firstImageRef === "string" && firstImageRef) {
+        // JSON-safe reference shape documented by OpenAI videos API
+        formData.append("image_reference", JSON.stringify({ image_url: firstImageRef }));
+      }
+    }
+
+    return formData;
+  };
+
+  let response: Response;
+
+  // Prefer remix when we have a previous OpenAI video id (best fidelity for corrections)
+  if (isCorrection && sourceVideoId) {
+    const remixForm = buildCreateFormData(false);
+    response = await fetch(`https://api.openai.com/v1/videos/${sourceVideoId}/remix`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: remixForm,
+    });
+
+    if (!response.ok) {
+      const remixErr = await response.text();
+      console.warn(`[generate_video] Sora remix failed (${response.status}), fallback to create: ${remixErr.substring(0, 200)}`);
+      const includeReference = !!(sourceVideoUrl || firstImageRef);
+      response = await fetch("https://api.openai.com/v1/videos", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: buildCreateFormData(includeReference),
+      });
+    }
+  } else {
+    const includeReference = isCorrection && !!(sourceVideoUrl || firstImageRef);
+    response = await fetch("https://api.openai.com/v1/videos", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: buildCreateFormData(includeReference),
+    });
+
+    // Some accounts/models may reject reference fields. Retry without references.
+    if (!response.ok && includeReference) {
+      const firstErr = await response.text();
+      console.warn(`[generate_video] Sora input_reference rejected, retrying without references: ${firstErr.substring(0, 200)}`);
+      response = await fetch("https://api.openai.com/v1/videos", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: buildCreateFormData(false),
+      });
+    }
+  }
 
   if (!response.ok) {
     const err = await response.text();
@@ -295,7 +356,7 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
     }
     const pollData = await pollResp.json();
     console.log(`[generate_video] Sora poll status: ${pollData.status}`);
-    
+
     if (pollData.status === "failed") {
       return { done: true, error: pollData.error?.message || "Video generation failed" } as any;
     }
@@ -316,7 +377,11 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
 
   const videoBytes = new Uint8Array(await contentResp.arrayBuffer());
   const storedUrl = await uploadVideoToStorage(videoBytes);
-  return { videoUrl: storedUrl || undefined };
+  return {
+    videoUrl: storedUrl || undefined,
+    provider: "openai",
+    providerVideoId: videoId,
+  };
 }
 
 // --- Runway ---
