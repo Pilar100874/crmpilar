@@ -228,6 +228,7 @@ export function useTimelineState() {
     updateTrack,
     deleteTrack,
     moveTrack,
+    reorderTrack,
     zoomIn,
     zoomOut,
   };
