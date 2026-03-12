@@ -101,12 +101,11 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
         const hoverTrackId = getTrackAtY(me.clientY);
         if (hoverTrackId && hoverTrackId !== clip.trackId) {
           const hoverTrack = state.tracks.find(t => t.id === hoverTrackId);
-          if (hoverTrack) {
+          if (hoverTrack && !hoverTrack.locked) {
             // Check compatibility
             if (isCompatible(hoverTrack.type, clip.type)) {
               onUpdateClip(clip.id, { trackId: hoverTrackId, startTime: Math.max(0, originalStart + dt) });
             } else if (clip.type === 'video' && hoverTrack.type === 'audio') {
-              // Video → audio track: convert to audio-only
               onUpdateClip(clip.id, {
                 trackId: hoverTrackId,
                 type: 'audio',
