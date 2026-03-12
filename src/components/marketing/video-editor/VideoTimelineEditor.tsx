@@ -247,7 +247,7 @@ const VideoTimelineEditor: React.FC = () => {
           vid.preload = 'auto';
           await new Promise<void>((res, rej) => { vid.onloadeddata = () => res(); vid.onerror = () => rej(); vid.load(); });
           mediaElements[clip.id] = vid;
-        } else if (clip.type === 'image') {
+        } else if (clip.type === 'image' || clip.type === 'canvas') {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = clip.src;
@@ -322,19 +322,58 @@ const VideoTimelineEditor: React.FC = () => {
           for (const clip of trackClips) {
             const el = mediaElements[clip.id];
             if (!el) continue;
-            const x = ((clip.x ?? 0) / 100) * resW;
-            const y = ((clip.y ?? 0) / 100) * resH;
-            const w = ((clip.w ?? 100) / 100) * resW;
-            const h = ((clip.h ?? 100) / 100) * resH;
+            const destX = ((clip.x ?? 0) / 100) * resW;
+            const destY = ((clip.y ?? 0) / 100) * resH;
+            const destW = ((clip.w ?? 100) / 100) * resW;
+            const destH = ((clip.h ?? 100) / 100) * resH;
 
+            ctx.save();
             ctx.globalAlpha = clip.opacity ?? 1;
-            if (el instanceof HTMLVideoElement) {
-              el.currentTime = t - clip.startTime + (clip.trimStart || 0);
-              ctx.drawImage(el, x, y, w, h);
-            } else {
-              ctx.drawImage(el, x, y, w, h);
+
+            // Apply filters
+            if (clip.filters?.length) {
+              const filterStr = clip.filters
+                .filter(f => f.enabled)
+                .map(f => {
+                  switch (f.type) {
+                    case 'brightness': return `brightness(${f.value / 50})`;
+                    case 'contrast': return `contrast(${f.value / 50})`;
+                    case 'saturation': return `saturate(${f.value / 50})`;
+                    case 'hue-rotate': return `hue-rotate(${(f.value / 100) * 360}deg)`;
+                    case 'blur': return `blur(${(f.value / 100) * 10}px)`;
+                    case 'grayscale': return `grayscale(${f.value}%)`;
+                    case 'sepia': return `sepia(${f.value}%)`;
+                    case 'invert': return `invert(${f.value}%)`;
+                    default: return '';
+                  }
+                })
+                .filter(Boolean)
+                .join(' ');
+              if (filterStr) ctx.filter = filterStr;
             }
-            ctx.globalAlpha = 1;
+
+            // Draw with aspect ratio preserved (object-contain)
+            const elW = el instanceof HTMLVideoElement ? el.videoWidth : el.naturalWidth;
+            const elH = el instanceof HTMLVideoElement ? el.videoHeight : el.naturalHeight;
+            if (elW && elH) {
+              const scale = Math.min(destW / elW, destH / elH);
+              const drawW = elW * scale;
+              const drawH = elH * scale;
+              const drawX = destX + (destW - drawW) / 2;
+              const drawY = destY + (destH - drawH) / 2;
+
+              if (el instanceof HTMLVideoElement) {
+                el.currentTime = t - clip.startTime + (clip.trimStart || 0);
+              }
+              ctx.drawImage(el, drawX, drawY, drawW, drawH);
+            } else {
+              if (el instanceof HTMLVideoElement) {
+                el.currentTime = t - clip.startTime + (clip.trimStart || 0);
+              }
+              ctx.drawImage(el, destX, destY, destW, destH);
+            }
+
+            ctx.restore();
           }
         }
 
