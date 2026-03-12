@@ -1465,6 +1465,7 @@ export function useStudioExecution() {
             toast.success(`🎉 Lote finalizado! ${loopResults.length} imagens geradas. Revise e salve.`, { duration: 6000 });
 
           } catch (err: any) {
+            if (abortRef.current?.signal.aborted) break;
             const elapsed = Date.now() - startTime;
             const errMsg = err.message || 'Erro desconhecido';
             updateNode(nodeId, { isProcessing: false, error: errMsg });
