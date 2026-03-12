@@ -161,6 +161,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };
