@@ -1503,22 +1503,23 @@ const AICreativeStudioInner: React.FC = () => {
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             fitView
             snapToGrid
             snapGrid={[16, 16]}
             className="bg-background"
             deleteKeyCode={["Delete", "Backspace"]}
-            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep', interactionWidth: 20, focusable: true, selectable: true }}
+            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'studioEdge', interactionWidth: 20, focusable: true, selectable: true }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={0.8} color="hsl(var(--muted-foreground) / 0.1)" />
             <Controls
               showInteractive={false}
-              className="!bg-card !border-border !shadow-md !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
+              className="!bg-card/80 !backdrop-blur-md !border-border/50 !shadow-lg !rounded-xl [&>button]:!bg-transparent [&>button]:!border-border/30 [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent/50 [&>button]:!rounded-lg [&>button]:!transition-colors"
             />
             <MiniMap
-              className="!bg-card !border-border !rounded-lg"
-              nodeColor={() => 'hsl(25 95% 53%)'}
-              maskColor="hsl(var(--background) / 0.7)"
+              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg"
+              nodeColor={() => 'hsl(var(--primary))'}
+              maskColor="hsl(var(--background) / 0.75)"
             />
 
             {/* Empty state */}
