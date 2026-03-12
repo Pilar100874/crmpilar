@@ -323,13 +323,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível baixar o arquivo.');
-      const a = document.createElement('a');
-      a.href = img.image_url;
-      a.download = img.nome || 'download';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      toast.error('Não foi possível converter para MP4 compatível.');
     }
   }, []);
 

@@ -260,13 +260,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível baixar o arquivo.');
-      const a = document.createElement('a');
-      a.href = item.content_url;
-      a.download = item.resource_name || 'download';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      toast.error('Não foi possível converter para MP4 compatível.');
     }
   }, []);
 
