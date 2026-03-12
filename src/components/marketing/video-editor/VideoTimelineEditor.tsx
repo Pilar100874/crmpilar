@@ -453,8 +453,12 @@ const VideoTimelineEditor: React.FC = () => {
         {/* Preview + Timeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!previewCollapsed && (
-            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0 overflow-hidden"
-              style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}
+            <div
+              className="border-b flex items-center justify-center relative shrink-0 overflow-hidden"
+              style={{
+                height: previewHeight,
+                backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor,
+              }}
               onWheel={(e) => {
                 if (e.ctrlKey || e.metaKey) {
                   e.preventDefault();
@@ -481,6 +485,37 @@ const VideoTimelineEditor: React.FC = () => {
                   <ZoomIn className="h-3 w-3" />
                 </Button>
               </div>
+            </div>
+          )}
+          {/* Resize handle */}
+          {!previewCollapsed && (
+            <div
+              className="h-1.5 bg-border/50 hover:bg-primary/40 cursor-row-resize transition-colors flex items-center justify-center shrink-0 group"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                resizingRef.current = true;
+                resizeStartRef.current = { y: e.clientY, height: previewHeight };
+
+                const onMouseMove = (ev: MouseEvent) => {
+                  if (!resizingRef.current) return;
+                  const delta = ev.clientY - resizeStartRef.current.y;
+                  const newHeight = Math.min(800, Math.max(120, resizeStartRef.current.height + delta));
+                  setPreviewHeight(newHeight);
+                };
+                const onMouseUp = () => {
+                  resizingRef.current = false;
+                  document.removeEventListener('mousemove', onMouseMove);
+                  document.removeEventListener('mouseup', onMouseUp);
+                  document.body.style.cursor = '';
+                  document.body.style.userSelect = '';
+                };
+                document.body.style.cursor = 'row-resize';
+                document.body.style.userSelect = 'none';
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+              }}
+            >
+              <div className="w-8 h-0.5 rounded-full bg-muted-foreground/30 group-hover:bg-primary/60 transition-colors" />
             </div>
           )}
           {previewCollapsed && (
