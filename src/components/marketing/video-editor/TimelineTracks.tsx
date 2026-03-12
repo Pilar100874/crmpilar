@@ -29,6 +29,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     originalTrimStart: number;
   } | null>(null);
 
+  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const totalWidth = state.duration * state.zoom;
 
   const handleTrackClick = useCallback((e: React.MouseEvent) => {
