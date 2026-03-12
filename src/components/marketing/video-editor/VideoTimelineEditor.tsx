@@ -241,12 +241,18 @@ const VideoTimelineEditor: React.FC = () => {
       const audioCtx = new AudioContext();
       const dest = audioCtx.createMediaStreamDestination();
       let hasAudio = false;
+      const hasSoloTrack = state.tracks.some(t => t.solo);
       for (const clip of state.clips) {
+        const clipTrack = state.tracks.find(t => t.id === clip.trackId);
+        // Skip audio for muted tracks or non-solo tracks when solo exists
+        const isTrackMuted = clipTrack?.muted || (hasSoloTrack && !clipTrack?.solo);
+        if (isTrackMuted) continue;
+
         if (clip.type === 'video' && mediaElements[clip.id] instanceof HTMLVideoElement) {
           try {
             const vid = mediaElements[clip.id] as HTMLVideoElement;
             vid.muted = false;
-            vid.volume = clip.volume ?? 1;
+            vid.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
             const source = audioCtx.createMediaElementSource(vid);
             source.connect(dest);
             hasAudio = true;
@@ -256,7 +262,7 @@ const VideoTimelineEditor: React.FC = () => {
           try {
             const audio = new Audio(clip.src);
             audio.crossOrigin = 'anonymous';
-            audio.volume = clip.volume ?? 1;
+            audio.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
             const source = audioCtx.createMediaElementSource(audio);
             source.connect(dest);
             hasAudio = true;
@@ -289,6 +295,7 @@ const VideoTimelineEditor: React.FC = () => {
         for (let ti = sortedTracks.length - 1; ti >= 0; ti--) {
           const track = sortedTracks[ti];
           if (!track.visible) continue;
+          if (hasSoloTrack && !track.solo) continue;
           const trackClips = state.clips
             .filter(c => c.trackId === track.id && t >= c.startTime && t < c.startTime + c.duration)
             .sort((a, b) => a.startTime - b.startTime);

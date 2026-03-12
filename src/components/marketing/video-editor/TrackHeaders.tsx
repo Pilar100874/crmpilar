@@ -4,7 +4,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelineTrack, TRACK_COLORS } from './types';
 import {
   Eye, EyeOff, Volume2, VolumeX, Lock, Unlock, Plus, Trash2,
-  GripVertical, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
+  GripVertical, Film, Music, Type, Sparkles, Palette, Image as ImageIcon,
+  Headphones
 } from 'lucide-react';
 
 interface Props {
@@ -102,8 +103,10 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           }}
           className={`border-b flex items-center gap-1 px-1.5 group transition-all ${
             draggingId === track.id ? 'opacity-40' : ''
-          } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''}`}
-          style={{ height: track.height, backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
+          } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''} ${
+            track.locked ? 'bg-muted/30' : ''
+          }`}
+          style={{ height: track.height, backgroundColor: track.locked ? undefined : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
         >
           {/* Drag handle */}
           <div className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity">
@@ -114,25 +117,35 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
             className="w-1.5 h-4 rounded-full shrink-0"
             style={{ backgroundColor: TRACK_COLORS[track.type] }}
           />
-          <span className="text-xs font-medium flex-1 truncate">{track.name}</span>
+          <span className={`text-xs font-medium flex-1 truncate ${track.locked ? 'text-muted-foreground' : ''}`}>{track.name}</span>
           <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100">
+            {/* Solo button - only for audio/video */}
+            {(track.type === 'audio' || track.type === 'video') && (
+              <button
+                onClick={() => onUpdateTrack(track.id, { solo: !track.solo })}
+                className={`p-0.5 rounded hover:bg-muted ${track.solo ? 'text-yellow-500' : ''}`}
+                title={track.solo ? 'Desativar solo' : 'Solo'}
+              >
+                <Headphones className="h-3 w-3" />
+              </button>
+            )}
             <button
               onClick={() => onUpdateTrack(track.id, { muted: !track.muted })}
-              className="p-0.5 rounded hover:bg-muted"
+              className={`p-0.5 rounded hover:bg-muted ${track.muted ? 'text-destructive' : ''}`}
               title={track.muted ? 'Ativar som' : 'Silenciar'}
             >
               {track.muted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
             </button>
             <button
               onClick={() => onUpdateTrack(track.id, { visible: !track.visible })}
-              className="p-0.5 rounded hover:bg-muted"
+              className={`p-0.5 rounded hover:bg-muted ${!track.visible ? 'text-muted-foreground/40' : ''}`}
               title={track.visible ? 'Ocultar' : 'Mostrar'}
             >
               {track.visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
             </button>
             <button
               onClick={() => onUpdateTrack(track.id, { locked: !track.locked })}
-              className="p-0.5 rounded hover:bg-muted"
+              className={`p-0.5 rounded hover:bg-muted ${track.locked ? 'text-orange-500' : ''}`}
               title={track.locked ? 'Desbloquear' : 'Bloquear'}
             >
               {track.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
