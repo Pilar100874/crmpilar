@@ -11,6 +11,7 @@ interface Props {
   onSelectClip?: (id: string) => void;
   previewingTransition?: { clipId: string; phase: 'entrance' | 'exit' } | null;
   previewingFilter?: boolean;
+  resolution?: string;
 }
 
 const CANVAS_W = 480;
