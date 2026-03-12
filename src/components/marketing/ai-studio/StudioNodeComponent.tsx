@@ -1049,7 +1049,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     value={nodeData.config.width || 1080}
                     onChange={(e) => { e.stopPropagation(); handleInlineUpdate('width', parseInt(e.target.value) || 1080); }}
                     onClick={e => e.stopPropagation()}
-                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    onMouseDown={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                    className="nodrag nowheel w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
                     placeholder="Largura"
                   />
                   <span className="text-muted-foreground text-[10px] self-center">×</span>
@@ -1058,7 +1060,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     value={nodeData.config.height || 1080}
                     onChange={(e) => { e.stopPropagation(); handleInlineUpdate('height', parseInt(e.target.value) || 1080); }}
                     onClick={e => e.stopPropagation()}
-                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    onMouseDown={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                    className="nodrag nowheel w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
                     placeholder="Altura"
                   />
                 </div>
