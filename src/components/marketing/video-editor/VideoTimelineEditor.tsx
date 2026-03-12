@@ -811,15 +811,11 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
 
           {/* Timeline - isolated scrollable area */}
-          <div className="flex-1 flex min-h-0 overflow-hidden">
+          <div className="flex-1 flex overflow-hidden min-h-0">
             <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} />
-            <div className="flex-1 flex flex-col min-h-0 min-w-0">
-              <div className="shrink-0">
-                <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
-              </div>
-              <div className="flex-1 min-h-0 overflow-auto">
-                <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
-              </div>
+            <div className="flex-1 overflow-auto relative flex flex-col min-h-0">
+              <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+              <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
             </div>
           </div>
         </div>

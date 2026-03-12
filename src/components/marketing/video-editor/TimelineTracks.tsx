@@ -263,7 +263,6 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               data-track-id={track.id}
               className={`relative border-b transition-all ${isDropTarget ? 'ring-2 ring-inset ring-primary/60' : ''} ${track.locked ? 'cursor-not-allowed' : ''}`}
               style={{
-                minHeight: track.height,
                 height: track.height,
                 opacity: isDimmed ? 0.15 : (!track.visible || !isTrackActive) ? 0.25 : 1,
                 backgroundColor: isDropTarget && canAccept
