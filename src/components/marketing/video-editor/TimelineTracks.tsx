@@ -196,7 +196,19 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     if (!e.dataTransfer.types.includes('application/timeline-media')) return;
     e.preventDefault();
 
-    // Try to peek at the data type from the drag
+    // Try to detect media type from custom type hint
+    const typeHint = e.dataTransfer.types.find(t => t.startsWith('mediatype/'));
+    const mediaType = typeHint ? typeHint.replace('mediatype/', '') : null;
+    
+    if (mediaType) {
+      setDragMediaType(mediaType);
+      const canAccept = isCompatible(track.type, mediaType) || (mediaType === 'video' && track.type === 'audio');
+      if (!canAccept) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+    }
+    
     e.dataTransfer.dropEffect = 'copy';
     setDropTargetTrackId(track.id);
   }, []);
@@ -204,20 +216,22 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const handleExternalDrop = useCallback((e: React.DragEvent, track: typeof state.tracks[0]) => {
     e.preventDefault();
     setDropTargetTrackId(null);
+    setDragMediaType(null);
     const raw = e.dataTransfer.getData('application/timeline-media');
     if (!raw || !onAddClip) return;
     try {
       const media = JSON.parse(raw) as MediaItem;
-      // Type enforcement
       if (isCompatible(track.type, media.type)) {
         onAddClip(media.type, media, track.id);
       } else if (media.type === 'video' && track.type === 'audio') {
-        // Video dropped on audio track → extract audio
         onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id);
       }
-      // Otherwise: incompatible, silently ignore
     } catch {}
   }, [onAddClip]);
+
+  const handleDragLeave = useCallback(() => {
+    setDropTargetTrackId(null);
+  }, []);
 
   return (
     <div
