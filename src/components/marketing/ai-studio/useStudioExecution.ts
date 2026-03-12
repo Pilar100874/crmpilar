@@ -751,13 +751,9 @@ export function useStudioExecution() {
       }
 
       case 'audioGen': {
-        const textToSpeak = combinedInput || config.text || '';
-        
-        if (!textToSpeak.trim()) {
-          return {
-            text: '⚠️ Nenhum texto fornecido. Conecte um bloco de Texto/Prompt ao bloco de Áudio ou preencha o campo de texto no bloco.',
-          };
-        }
+        // Always use config.text or a default — ignore audio from connected prompt blocks
+        const textToSpeak = config.text || combinedInput || 'Olá! Este é um exemplo de áudio gerado pelo AI Creative Studio.';
+
         
         // Check if user has a paid TTS provider configured
         const estabId = localStorage.getItem('estabelecimentoId');
