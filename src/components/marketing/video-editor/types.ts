@@ -50,6 +50,7 @@ export type FilterType =
 export interface ClipTransition {
   type: TransitionType;
   duration: number; // seconds
+  easing?: string; // ease-out, ease-in, ease-in-out, linear, elastic
 }
 
 export interface ClipTransitions {
