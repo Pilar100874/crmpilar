@@ -594,6 +594,9 @@ export function useStudioExecution() {
       }
 
       case 'productComposite': {
+        const compEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const compDefaults = getStudioDefaults(compEstabId);
+        const compLangSuffix = getLanguagePromptSuffix(compDefaults.defaultLanguage || 'pt-BR');
         const modeDescriptions: Record<string, string> = {
           clothing: 'Vista esta roupa na pessoa da foto.',
           holding: 'Coloque este produto na mão da pessoa da foto.',
@@ -604,7 +607,7 @@ export function useStudioExecution() {
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         if (formatWidth && formatHeight) {
-          fullPrompt = `${fullPrompt}\n\n[FORMAT] Optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+          fullPrompt = `${fullPrompt}\n\n[FORMAT] Otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
         }
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
