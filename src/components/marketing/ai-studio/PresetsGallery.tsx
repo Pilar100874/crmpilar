@@ -1497,8 +1497,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
         <AnimatePresence mode="wait">
         {wizardStep === 1 ? (
         <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-background to-muted/10">
-          {/* Friendly header with progress */}
-          <div className="px-5 pt-5 pb-3">
+           {/* Friendly header with progress */}
+           <div className="px-3 sm:px-5 pt-3 sm:pt-5 pb-2 sm:pb-3">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/10">
