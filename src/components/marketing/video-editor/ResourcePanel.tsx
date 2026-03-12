@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
-  Play, Check, Trash2, Loader2, Plus, Mic
+  Play, Check, Trash2, Loader2, Plus, Mic, Pencil
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack } from './types';
@@ -27,6 +27,7 @@ interface Props {
   onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   tracks: TimelineTrack[];
   onOpenCanvas: () => void;
+  onEditCanvas?: (canvasJson: string, itemId: string) => void;
 }
 
 interface ImportedMedia {
@@ -37,6 +38,7 @@ interface ImportedMedia {
   duration?: number | null;
   thumbnail?: string | null;
   resourceType: ResourceType;
+  canvasJson?: string;
 }
 
 interface GalleryItem {
@@ -57,7 +59,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
 ];
 
-const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, onOpenCanvas }, ref) => {
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, onOpenCanvas, onEditCanvas }, ref) => {
   const [activeTab, setActiveTab] = useState<ResourceType>('video');
   const [items, setItems] = useState<Record<ResourceType, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [],
@@ -73,9 +75,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         duration: null,
         thumbnail: null,
         resourceType: 'canvas',
+        canvasJson,
       };
       setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
       setActiveTab('canvas');
+    },
+    updateCanvasItem: (itemId: string, src: string, canvasJson: string) => {
+      setItems(prev => ({
+        ...prev,
+        canvas: prev.canvas.map(item =>
+          item.id === itemId ? { ...item, src, canvasJson } : item
+        ),
+      }));
     },
   }));
 
@@ -196,7 +207,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
       onAddClip('image', { type: 'image', name: media.name, src: media.src }, trackId);
     } else if (resType === 'canvas') {
       const trackId = tracks.find(t => t.type === 'canvas')?.id || tracks.find(t => t.type === 'video')?.id;
-      onAddClip('image', { type: 'image', name: media.name, src: media.src }, trackId);
+      onAddClip('image', { type: 'image', name: media.name, src: media.src, canvasJson: media.canvasJson }, trackId);
     } else if (resType === 'music' || resType === 'audio') {
       const trackId = tracks.find(t => t.type === 'audio')?.id;
       onAddClip('audio', { type: 'audio', name: media.name, src: media.src, duration: media.duration || undefined }, trackId);
@@ -206,6 +217,12 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
   const handleRemove = useCallback((id: string, resType: ResourceType) => {
     setItems(prev => ({ ...prev, [resType]: prev[resType].filter(v => v.id !== id) }));
   }, []);
+
+  const handleDoubleClickCanvas = useCallback((media: ImportedMedia) => {
+    if (media.canvasJson && onEditCanvas) {
+      onEditCanvas(media.canvasJson, media.id);
+    }
+  }, [onEditCanvas]);
 
   const getInputRef = (tab: ResourceType) => {
     if (tab === 'video') return videoInputRef;
@@ -316,12 +333,19 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
                     name: media.name,
                     src: media.src,
                     duration: media.duration,
-                    canvasJson: undefined,
+                    canvasJson: media.canvasJson,
                   }));
                   e.dataTransfer.setData(`mediatype/${dragType}`, '');
                   e.dataTransfer.effectAllowed = 'copy';
                 }}
-                className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing"
+                onDoubleClick={() => {
+                  if (media.resourceType === 'canvas' && media.canvasJson) {
+                    handleDoubleClickCanvas(media);
+                  }
+                }}
+                className={`flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing ${
+                  media.resourceType === 'canvas' && media.canvasJson ? 'cursor-pointer' : ''
+                }`}
               >
                 {/* Thumbnail */}
                 <div className="w-11 h-8 rounded bg-muted shrink-0 overflow-hidden relative">
@@ -347,10 +371,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
                   {media.duration && (
                     <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
                   )}
+                  {media.resourceType === 'canvas' && media.canvasJson && (
+                    <p className="text-[9px] text-purple-400">Duplo clique para editar</p>
+                  )}
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {media.resourceType === 'canvas' && media.canvasJson && (
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
+                      <Pencil className="h-3 w-3 text-purple-400" />
+                    </Button>
+                  )}
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
                     <Plus className="h-3 w-3 text-primary" />
                   </Button>
