@@ -859,7 +859,7 @@ export function useStudioExecution() {
 
             return {
               audioUrl: result.audioUrl,
-              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nIdioma: ${defaultLang}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nIdioma: ${effectiveLanguage}\nTexto: "${textToSpeak.substring(0, 80)}"`,
             };
           } catch (err: any) {
             console.error('[Studio] Paid TTS error:', err);
@@ -876,12 +876,12 @@ export function useStudioExecution() {
             }
 
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = config.lang || defaultLang;
+            utterance.lang = effectiveLanguage;
             utterance.rate = config.speed || 1.0;
             utterance.pitch = config.pitch || 1.0;
 
             const voices = speechSynthesis.getVoices();
-            const langPrefix = (config.lang || defaultLang).split('-')[0];
+            const langPrefix = effectiveLanguage.split('-')[0];
             const matchedVoice = voices.find(v => v.lang.startsWith(langPrefix)) || voices[0];
             if (matchedVoice) utterance.voice = matchedVoice;
 
@@ -893,9 +893,9 @@ export function useStudioExecution() {
           });
 
           return {
-            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${config.lang || defaultLang} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${effectiveLanguage} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
             _webSpeechText: textToSpeak,
-            _webSpeechLang: config.lang || defaultLang,
+            _webSpeechLang: effectiveLanguage,
             _webSpeechRate: config.speed || 1.0,
             _webSpeechPitch: config.pitch || 1.0,
           };
