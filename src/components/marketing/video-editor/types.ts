@@ -51,6 +51,11 @@ export interface ClipTransition {
   duration: number; // seconds
 }
 
+export interface ClipTransitions {
+  entrance?: ClipTransition;
+  exit?: ClipTransition;
+}
+
 export type TransitionType =
   | 'none'
   | 'fade'
@@ -65,7 +70,11 @@ export type TransitionType =
   | 'zoom-in'
   | 'zoom-out'
   | 'blur-transition'
-  | 'flash';
+  | 'flash'
+  | 'scale-up'
+  | 'scale-down'
+  | 'rotate-in'
+  | 'bounce';
 
 export interface TimelineTrack {
   id: string;
