@@ -383,6 +383,164 @@ const MultiProductSelectInline: React.FC<{ config: Record<string, any>; onUpdate
   );
 };
 
+// Inline image input with gallery picker (used by imageInput and multiImageRef)
+const ImageInputWithGallery: React.FC<{
+  images: string[];
+  onUpdateImages: (imgs: string[]) => void;
+  nodeType: string;
+}> = ({ images, onUpdateImages, nodeType }) => {
+  const [showGalleryPicker, setShowGalleryPicker] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [gallerySearch, setGallerySearch] = useState('');
+  const [loadingGallery, setLoadingGallery] = useState(false);
+
+  const fetchGalleryImages = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    setLoadingGallery(true);
+    const { data } = await supabase
+      .from('media_gallery')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .in('tipo', ['imagem', 'image', 'gif'])
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setGalleryImages(data || []);
+    setLoadingGallery(false);
+  }, []);
+
+  useEffect(() => {
+    if (showGalleryPicker && galleryImages.length === 0) fetchGalleryImages();
+  }, [showGalleryPicker, fetchGalleryImages, galleryImages.length]);
+
+  const filteredGallery = galleryImages.filter(img =>
+    !gallerySearch || img.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
+  );
+
+  return (
+    <div className="px-3 pb-3 pt-1">
+      {images.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5 mb-2">
+          {images.slice(0, 6).map((img: string, idx: number) => (
+            <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square relative group/img">
+              <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateImages(images.filter((_: any, i: number) => i !== idx));
+                }}
+                className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover/img:opacity-100 transition-opacity text-[8px]"
+              >✕</button>
+            </div>
+          ))}
+          {images.length > 6 && (
+            <div className="rounded-lg border border-border/50 aspect-square flex items-center justify-center bg-muted/50">
+              <span className="text-xs text-muted-foreground font-medium">+{images.length - 6}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Gallery Picker */}
+      {showGalleryPicker && (
+        <div className="space-y-2 mb-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-medium text-muted-foreground">📁 Galeria de Mídia</p>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowGalleryPicker(false); }}
+              className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
+            >✕ Fechar</button>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <input
+              autoFocus
+              value={gallerySearch}
+              onChange={(e) => setGallerySearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              placeholder="Buscar na galeria..."
+              className="nodrag nowheel w-full h-7 pl-7 pr-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+          <div className="max-h-[180px] overflow-y-auto rounded-lg">
+            {loadingGallery && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+            {!loadingGallery && filteredGallery.length === 0 && (
+              <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma imagem na galeria</p>
+            )}
+            <div className="grid grid-cols-3 gap-1">
+              {filteredGallery.map((img) => {
+                const isSelected = images.includes(img.public_url);
+                return (
+                  <button
+                    key={img.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isSelected) {
+                        onUpdateImages(images.filter((u: string) => u !== img.public_url));
+                      } else {
+                        onUpdateImages([...images, img.public_url]);
+                      }
+                    }}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors relative ${
+                      isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-border/30 hover:border-primary/50'
+                    }`}
+                  >
+                    <img src={img.public_url} alt={img.nome || ''} className="w-full h-full object-cover" />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">✓</div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex gap-1.5">
+        <label className="flex-1 flex flex-col items-center gap-1 py-2.5 border border-dashed border-border/50 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors">
+          <Upload className="h-4 w-4 text-muted-foreground/40" />
+          <p className="text-[9px] text-muted-foreground">Upload</p>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const base64 = reader.result as string;
+                  onUpdateImages([...images, base64]);
+                };
+                reader.readAsDataURL(file);
+              });
+              e.target.value = '';
+            }}
+          />
+        </label>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowGalleryPicker(!showGalleryPicker); }}
+          className="flex-1 flex flex-col items-center gap-1 py-2.5 border border-dashed border-orange-500/30 rounded-xl cursor-pointer hover:bg-orange-500/5 transition-colors"
+        >
+          <FolderOpen className="h-4 w-4 text-orange-500/40" />
+          <p className="text-[9px] text-muted-foreground">Galeria</p>
+        </button>
+      </div>
+
+      {images.length > 0 && (
+        <p className="text-[10px] text-muted-foreground mt-1.5">{images.length} imagem(ns) de referência</p>
+      )}
+    </div>
+  );
+};
+
 const formatTimestamp = (s: number) => {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
