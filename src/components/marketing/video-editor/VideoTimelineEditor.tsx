@@ -33,6 +33,13 @@ const VideoTimelineEditor: React.FC = () => {
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
   const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
   const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
+  const [videoConfig, setVideoConfig] = useState<VideoConfig>({
+    backgroundColor: '#000000',
+    resolution: '1920x1080',
+    fps: 30,
+    destination: 'youtube',
+    format: 'mp4',
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = state.selectedClipIds.length === 1
