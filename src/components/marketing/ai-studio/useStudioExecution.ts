@@ -780,9 +780,13 @@ export function useStudioExecution() {
         // Always use config.text or a default — ignore audio from connected prompt blocks
         const textToSpeak = config.text || combinedInput || 'Olá! Este é um exemplo de áudio gerado pelo AI Creative Studio.';
 
+        // Get default language from studio config
+        const estabId = localStorage.getItem('estabelecimentoId') || '';
+        const studioDefaults = getStudioDefaults(estabId);
+        const defaultLang = studioDefaults.defaultLanguage || 'pt-BR';
+        const langSuffix = getLanguagePromptSuffix(defaultLang);
         
         // Check if user has a paid TTS provider configured
-        const estabId = localStorage.getItem('estabelecimentoId');
         let paidProvider: string | null = null;
 
         if (estabId) {
@@ -810,14 +814,15 @@ export function useStudioExecution() {
               provider: paidProvider,
               voiceId: config.voiceId,
               audioModel: config.audioModel,
-              lang: config.lang || 'pt-BR',
+              lang: config.lang || defaultLang,
               voice: config.voice,
               estabelecimentoId: estabId,
+              languageSuffix: langSuffix,
             }, 120000);
 
             return {
               audioUrl: result.audioUrl,
-              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nTexto: "${textToSpeak.substring(0, 80)}"`,
+              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nIdioma: ${defaultLang}\nTexto: "${textToSpeak.substring(0, 80)}"`,
             };
           } catch (err: any) {
             console.error('[Studio] Paid TTS error:', err);
@@ -834,13 +839,14 @@ export function useStudioExecution() {
             }
 
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = config.lang || 'pt-BR';
+            utterance.lang = config.lang || defaultLang;
             utterance.rate = config.speed || 1.0;
             utterance.pitch = config.pitch || 1.0;
 
             const voices = speechSynthesis.getVoices();
-            const ptVoice = voices.find(v => v.lang.startsWith('pt')) || voices[0];
-            if (ptVoice) utterance.voice = ptVoice;
+            const langPrefix = (config.lang || defaultLang).split('-')[0];
+            const matchedVoice = voices.find(v => v.lang.startsWith(langPrefix)) || voices[0];
+            if (matchedVoice) utterance.voice = matchedVoice;
 
             utterance.onend = () => resolve('__webspeech__');
             utterance.onerror = (e) => reject(new Error(`Speech error: ${e.error}`));
@@ -850,9 +856,9 @@ export function useStudioExecution() {
           });
 
           return {
-            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${config.lang || 'pt-BR'} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${config.lang || defaultLang} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
             _webSpeechText: textToSpeak,
-            _webSpeechLang: config.lang || 'pt-BR',
+            _webSpeechLang: config.lang || defaultLang,
             _webSpeechRate: config.speed || 1.0,
             _webSpeechPitch: config.pitch || 1.0,
           };
