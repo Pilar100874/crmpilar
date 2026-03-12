@@ -325,7 +325,7 @@ const VideoPreview: React.FC<Props> = ({
         </div>
 
         <div className="absolute top-2 left-2 bg-black/50 px-1.5 py-0.5 rounded text-white/50 text-[8px] font-mono z-40">
-          1920×1080
+          {resW}×{resH}
         </div>
       </div>
     </div>
