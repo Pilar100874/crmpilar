@@ -871,6 +871,7 @@ export function useStudioExecution() {
               frames.push(result.imageUrl);
             }
           } catch (frameErr: any) {
+            if (abortRef.current?.signal.aborted) throw frameErr;
             console.warn(`[Studio] Frame ${i + 1} failed, skipping:`, frameErr.message);
             toast.error(`Frame ${i + 1} falhou: ${frameErr.message?.substring(0, 80)}`, { duration: 4000 });
           }
