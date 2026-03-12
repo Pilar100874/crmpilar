@@ -14,6 +14,7 @@ import MediaBin from './MediaBin';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
+import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
 import { TRACK_COLORS, TimelineClip } from './types';
 
 interface MediaItem {
