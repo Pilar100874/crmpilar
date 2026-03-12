@@ -980,7 +980,7 @@ const AICreativeStudioInner: React.FC = () => {
             };
             newNodes.push(refNode);
             newEdges.push(
-              { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+              { id: `e_${refNode.id}_${processNode.id}`, source: refNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
             );
           });
         }
