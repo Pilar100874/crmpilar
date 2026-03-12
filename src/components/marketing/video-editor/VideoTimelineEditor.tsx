@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen,
-  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronUp, ChevronDown,
-  FolderKanban, MoreVertical, Pencil, Copy as CopyIcon
+  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown,
+  Plus, ArrowLeft, Clapperboard
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useTimelineState } from './useTimelineState';
@@ -19,11 +20,10 @@ import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
 import { TRACK_COLORS, TimelineClip } from './types';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -70,24 +70,29 @@ const VideoTimelineEditor: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Project management
+  const [showEditor, setShowEditor] = useState(false);
   const [projects, setProjects] = useState<VideoProject[]>([]);
-  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameProjectId, setRenameProjectId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const loadProjects = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId) return;
+    if (!estabId) { setLoadingProjects(false); return; }
+    setLoadingProjects(true);
     const { data } = await supabase
       .from('video_projects')
       .select('id, nome, thumbnail, created_at, updated_at')
       .eq('estabelecimento_id', estabId)
       .order('updated_at', { ascending: false });
     if (data) setProjects(data as VideoProject[]);
+    setLoadingProjects(false);
   }, []);
 
   const saveProject = useCallback(async (name?: string) => {
@@ -149,7 +154,7 @@ const VideoTimelineEditor: React.FC = () => {
     if (vc) setVideoConfig(vc);
     setCurrentProjectId(project.id);
     setProjectName(project.nome);
-    setProjectsOpen(false);
+    setShowEditor(true);
     toast.success(`Projeto "${project.nome}" carregado`);
   }, [timeline]);
 
@@ -475,6 +480,145 @@ const VideoTimelineEditor: React.FC = () => {
     setCanvasEditJson(undefined);
   }, [canvasEditClipId, canvasEditResourceId, timeline]);
 
+  const handleCloseEditor = useCallback(() => {
+    setShowEditor(false);
+    setCurrentProjectId(null);
+    setProjectName('');
+    loadProjects();
+  }, [loadProjects]);
+
+  // Landing page
+  if (!showEditor) {
+    return (
+      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative overflow-y-auto pt-6 sm:pt-10 pb-16">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-10 text-center max-w-3xl w-full"
+          >
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-3 sm:mb-5 text-[9px] sm:text-xs text-muted-foreground">
+              <Clapperboard className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary" />
+              Timeline completa com efeitos, cortes e transições
+            </div>
+
+            <h1 className="text-xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-4">
+              <span className="text-foreground">Editor de</span>{' '}
+              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Vídeo</span>
+            </h1>
+
+            <p className="text-xs sm:text-sm md:text-lg text-muted-foreground mb-4 sm:mb-8 max-w-xl mx-auto leading-relaxed px-2">
+              Crie e edite vídeos com múltiplas trilhas, efeitos e transições profissionais.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-10">
+              <Button
+                onClick={() => { setCurrentProjectId(null); setProjectName(''); setShowEditor(true); }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm"
+              >
+                <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                Novo Projeto
+              </Button>
+            </div>
+          </motion.div>
+
+          {/* Saved Projects */}
+          {projects.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative z-10 w-full max-w-5xl mb-10"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">Meus Projetos</p>
+              </div>
+
+              <WorkflowCardGrid>
+                {projects.map((p) => (
+                  <WorkflowCard
+                    key={p.id}
+                    id={p.id}
+                    title={p.nome}
+                    isActive={true}
+                    createdAt={p.created_at}
+                    mediaTypes={['video']}
+                    onOpenEditor={() => loadProject(p)}
+                    onRename={() => { setRenameProjectId(p.id); setRenameValue(p.nome); setRenameDialogOpen(true); }}
+                    onDuplicate={() => duplicateProject(p)}
+                    onDelete={() => setDeleteConfirm({ id: p.id, nome: p.nome })}
+                  />
+                ))}
+              </WorkflowCardGrid>
+            </motion.div>
+          )}
+
+          {loadingProjects && projects.length === 0 && (
+            <p className="text-sm text-muted-foreground">Carregando projetos...</p>
+          )}
+        </div>
+
+        {/* Delete confirm */}
+        <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir projeto</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir "{deleteConfirm?.nome}"? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { if (deleteConfirm) deleteProject(deleteConfirm.id); setDeleteConfirm(null); }}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Rename dialog */}
+        {renameDialogOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60" onClick={() => setRenameDialogOpen(false)}>
+            <div className="bg-card rounded-xl p-6 w-[400px] shadow-2xl border" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold mb-4">Renomear Projeto</h3>
+              <Input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && renameProjectId) {
+                    supabase.from('video_projects').update({ nome: renameValue.trim() }).eq('id', renameProjectId).then(() => {
+                      loadProjects();
+                      setRenameDialogOpen(false);
+                      toast.success('Projeto renomeado');
+                    });
+                  }
+                }}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={() => {
+                  if (renameProjectId) {
+                    supabase.from('video_projects').update({ nome: renameValue.trim() }).eq('id', renameProjectId).then(() => {
+                      loadProjects();
+                      setRenameDialogOpen(false);
+                      toast.success('Projeto renomeado');
+                    });
+                  }
+                }}>Renomear</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Editor view
   return (
     <div
       ref={containerRef}
@@ -483,19 +627,21 @@ const VideoTimelineEditor: React.FC = () => {
       }`}
       tabIndex={0}
     >
-      {/* Top toolbar — only controls */}
+      {/* Top toolbar */}
       <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card/80 backdrop-blur shrink-0">
+        {/* Back button */}
+        <Button size="icon" variant="ghost" onClick={handleCloseEditor} title="Voltar aos projetos" className="h-8 w-8 mr-1">
+          <ArrowLeft className="h-3.5 w-3.5" />
+        </Button>
+
+        <div className="w-px h-5 bg-border mx-0.5" />
+
         {/* Playback */}
         <div className="flex items-center gap-0.5">
           <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(0)} title="Início" className="h-8 w-8">
             <SkipBack className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            size="icon"
-            variant={state.isPlaying ? 'default' : 'ghost'}
-            onClick={() => state.isPlaying ? timeline.pause() : timeline.play()}
-            className="h-9 w-9"
-          >
+          <Button size="icon" variant={state.isPlaying ? 'default' : 'ghost'} onClick={() => state.isPlaying ? timeline.pause() : timeline.play()} className="h-9 w-9">
             {state.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
           <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(state.duration)} title="Fim" className="h-8 w-8">
@@ -503,7 +649,6 @@ const VideoTimelineEditor: React.FC = () => {
           </Button>
         </div>
 
-        {/* Time */}
         <div className="font-mono text-xs bg-muted px-2.5 py-1 rounded-md min-w-[100px] text-center">
           {formatTime(state.currentTime)}
         </div>
@@ -512,34 +657,21 @@ const VideoTimelineEditor: React.FC = () => {
 
         {/* Edit tools */}
         <div className="flex items-center gap-0.5">
-          <Button size="icon" variant="ghost" className="h-8 w-8"
-            onClick={() => selectedClip && timeline.splitClip(selectedClip.id, state.currentTime)}
-            disabled={!selectedClip} title="Cortar (C)">
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => selectedClip && timeline.splitClip(selectedClip.id, state.currentTime)} disabled={!selectedClip} title="Cortar">
             <Scissors className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-8 w-8"
-            onClick={() => selectedClip && timeline.duplicateClip(selectedClip.id)}
-            disabled={!selectedClip} title="Duplicar">
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => selectedClip && timeline.duplicateClip(selectedClip.id)} disabled={!selectedClip} title="Duplicar">
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" className="h-8 w-8"
-            onClick={() => timeline.deleteClips(state.selectedClipIds)}
-            disabled={state.selectedClipIds.length === 0} title="Excluir (Del)">
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => timeline.deleteClips(state.selectedClipIds)} disabled={state.selectedClipIds.length === 0} title="Excluir">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8"
-            onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
+          <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8" onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
             <Magnet className="h-3.5 w-3.5" />
           </Button>
         </div>
 
         <div className="flex-1" />
-
-        {/* Projects */}
-        <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setProjectsOpen(true); loadProjects(); }}>
-          <FolderKanban className="h-3.5 w-3.5" />
-          Projetos
-        </Button>
 
         {/* Save */}
         <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => {
@@ -553,241 +685,102 @@ const VideoTimelineEditor: React.FC = () => {
 
         {/* Zoom */}
         <div className="flex items-center gap-0.5">
-          <Button size="icon" variant="ghost" onClick={timeline.zoomOut} className="h-8 w-8">
-            <ZoomOut className="h-3.5 w-3.5" />
-          </Button>
+          <Button size="icon" variant="ghost" onClick={timeline.zoomOut} className="h-8 w-8"><ZoomOut className="h-3.5 w-3.5" /></Button>
           <span className="text-[10px] text-muted-foreground w-8 text-center">{Math.round(state.zoom)}x</span>
-          <Button size="icon" variant="ghost" onClick={timeline.zoomIn} className="h-8 w-8">
-            <ZoomIn className="h-3.5 w-3.5" />
-          </Button>
+          <Button size="icon" variant="ghost" onClick={timeline.zoomIn} className="h-8 w-8"><ZoomIn className="h-3.5 w-3.5" /></Button>
         </div>
 
         <div className="w-px h-5 bg-border mx-1" />
 
-        <Button size="icon" variant="ghost" className="h-8 w-8"
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          title={isFullscreen ? 'Sair (Esc)' : 'Tela cheia'}>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)} title={isFullscreen ? 'Sair' : 'Tela cheia'}>
           {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
         </Button>
 
         <div className="w-px h-5 bg-border mx-1" />
 
-        {/* Export / Generate */}
-        <Button
-          onClick={handleExportVideo}
-          disabled={isExporting || state.clips.length === 0}
-          variant="default"
-          size="sm"
-          className="gap-1.5 text-xs h-8 px-3"
-          title="Gerar vídeo e salvar na galeria"
-        >
-          {isExporting ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {exportProgress}%
-            </>
-          ) : (
-            <>
-              <Download className="h-3.5 w-3.5" />
-              Gerar Vídeo
-            </>
-          )}
+        <Button onClick={handleExportVideo} disabled={isExporting || state.clips.length === 0} variant="default" size="sm" className="gap-1.5 text-xs h-8 px-3">
+          {isExporting ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" />{exportProgress}%</>) : (<><Download className="h-3.5 w-3.5" />Gerar Vídeo</>)}
         </Button>
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Preview + Timeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Preview area */}
           {!previewCollapsed && (
-            <div
-              className="flex items-center justify-center relative shrink-0 overflow-hidden"
-              style={{
-                height: previewHeight,
-                backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor,
-              }}
-              onWheel={(e) => {
-                if (e.ctrlKey || e.metaKey) {
-                  e.preventDefault();
-                  setPreviewZoom(prev => Math.min(5, Math.max(0.25, prev + (e.deltaY < 0 ? 0.1 : -0.1))));
-                }
-              }}
-            >
+            <div className="flex items-center justify-center relative shrink-0 overflow-hidden" style={{ height: previewHeight, backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}
+              onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setPreviewZoom(prev => Math.min(5, Math.max(0.25, prev + (e.deltaY < 0 ? 0.1 : -0.1)))); } }}>
               <div style={{ transform: `scale(${previewZoom})`, transformOrigin: 'center center', transition: 'transform 0.1s ease-out' }}>
-                <VideoPreview
-                  clips={state.clips} currentTime={state.currentTime} tracks={state.tracks}
-                  isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds}
-                  onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)}
-                />
+                <VideoPreview clips={state.clips} currentTime={state.currentTime} tracks={state.tracks} isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds} onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)} />
               </div>
-              {/* Zoom controls overlay */}
               <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur rounded-lg px-1.5 py-0.5 border">
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.max(0.25, prev - 0.25))}>
-                  <ZoomOut className="h-3 w-3" />
-                </Button>
-                <button className="text-[10px] text-muted-foreground w-10 text-center hover:text-foreground" onClick={() => setPreviewZoom(1)}>
-                  {Math.round(previewZoom * 100)}%
-                </button>
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.min(5, prev + 0.25))}>
-                  <ZoomIn className="h-3 w-3" />
-                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.max(0.25, prev - 0.25))}><ZoomOut className="h-3 w-3" /></Button>
+                <button className="text-[10px] text-muted-foreground w-10 text-center hover:text-foreground" onClick={() => setPreviewZoom(1)}>{Math.round(previewZoom * 100)}%</button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.min(5, prev + 0.25))}><ZoomIn className="h-3 w-3" /></Button>
               </div>
             </div>
           )}
 
-          {/* Fixed bars — always between preview and timeline */}
+          {/* Fixed bars */}
           <div className="shrink-0">
-            {/* Resize bar */}
             {showResizeBar && !previewCollapsed && (
-              <div
-                className="h-5 bg-muted/40 border-y border-border/40 cursor-row-resize flex items-center justify-center group relative"
+              <div className="h-5 bg-muted/40 border-y border-border/40 cursor-row-resize flex items-center justify-center group relative"
                 onMouseDown={(e) => {
-                  e.preventDefault();
-                  resizingRef.current = true;
-                  resizeStartRef.current = { y: e.clientY, height: previewHeight };
-                  const onMouseMove = (ev: MouseEvent) => {
-                    if (!resizingRef.current) return;
-                    const delta = ev.clientY - resizeStartRef.current.y;
-                    const newHeight = Math.min(800, Math.max(120, resizeStartRef.current.height + delta));
-                    setPreviewHeight(newHeight);
-                  };
-                  const onMouseUp = () => {
-                    resizingRef.current = false;
-                    document.removeEventListener('mousemove', onMouseMove);
-                    document.removeEventListener('mouseup', onMouseUp);
-                    document.body.style.cursor = '';
-                    document.body.style.userSelect = '';
-                  };
-                  document.body.style.cursor = 'row-resize';
-                  document.body.style.userSelect = 'none';
-                  document.addEventListener('mousemove', onMouseMove);
-                  document.addEventListener('mouseup', onMouseUp);
-                }}
-              >
+                  e.preventDefault(); resizingRef.current = true; resizeStartRef.current = { y: e.clientY, height: previewHeight };
+                  const onMouseMove = (ev: MouseEvent) => { if (!resizingRef.current) return; setPreviewHeight(Math.min(800, Math.max(120, resizeStartRef.current.height + ev.clientY - resizeStartRef.current.y))); };
+                  const onMouseUp = () => { resizingRef.current = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); document.body.style.cursor = ''; document.body.style.userSelect = ''; };
+                  document.body.style.cursor = 'row-resize'; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+                }}>
                 <GripHorizontal className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
-                <button
-                  className="absolute right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-all"
-                  onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}
-                  title="Ocultar barra"
-                >
-                  <Minimize2 className="h-2.5 w-2.5" />
-                </button>
+                <button className="absolute right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-all" onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}><Minimize2 className="h-2.5 w-2.5" /></button>
               </div>
             )}
-
-            {/* Status bar */}
             {showStatusBar && (
               <div className="h-6 bg-muted/30 border-b border-border/40 px-3 flex items-center justify-between select-none">
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-2.5 w-2.5" />
-                    {formatTime(state.currentTime)} / {formatTime(state.duration)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Layers className="h-2.5 w-2.5" />
-                    {state.tracks.length} trilhas · {state.clips.length} clipes
-                  </span>
-                  {currentProjectId && (
-                    <span className="text-primary/70 font-medium">{projectName}</span>
-                  )}
+                  <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" />{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
+                  <span className="flex items-center gap-1"><Layers className="h-2.5 w-2.5" />{state.tracks.length} trilhas · {state.clips.length} clipes</span>
+                  {currentProjectId && <span className="text-primary/70 font-medium">{projectName}</span>}
                 </div>
                 <div className="flex items-center gap-1">
-                  {!showResizeBar && !previewCollapsed && (
-                    <button
-                      className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80 transition-colors"
-                      onClick={() => setShowResizeBar(true)}
-                    >
-                      <GripHorizontal className="h-2.5 w-2.5 inline" />
-                    </button>
-                  )}
-                  <button
-                    className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80 transition-colors"
-                    onClick={() => setShowStatusBar(false)}
-                  >
-                    <Minimize2 className="h-2.5 w-2.5" />
-                  </button>
+                  {!showResizeBar && !previewCollapsed && <button className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80" onClick={() => setShowResizeBar(true)}><GripHorizontal className="h-2.5 w-2.5 inline" /></button>}
+                  <button className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80" onClick={() => setShowStatusBar(false)}><Minimize2 className="h-2.5 w-2.5" /></button>
                 </div>
               </div>
             )}
-
-            {/* Collapsed preview bar */}
             {previewCollapsed && (
               <div className="bg-muted/30 px-3 py-1 flex items-center gap-2 border-b border-border/40">
-                <Button size="sm" variant="ghost" onClick={() => setPreviewCollapsed(false)} className="text-xs gap-1 h-6">
-                  <ChevronDown className="h-3 w-3" />Mostrar Preview
-                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setPreviewCollapsed(false)} className="text-xs gap-1 h-6"><ChevronDown className="h-3 w-3" />Mostrar Preview</Button>
                 <span className="text-[10px] text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
               </div>
             )}
-
-            {/* Hidden bars restore */}
             {(!showResizeBar || !showStatusBar) && (
               <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20">
-                {!showResizeBar && !previewCollapsed && (
-                  <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>
-                    ↕ Resize
-                  </button>
-                )}
-                {!showStatusBar && (
-                  <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>
-                    ▤ Status
-                  </button>
-                )}
+                {!showResizeBar && !previewCollapsed && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>↕ Resize</button>}
+                {!showStatusBar && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>}
               </div>
             )}
           </div>
 
           {/* Timeline */}
           <div className="flex-1 flex overflow-hidden min-h-0">
-            <TrackHeaders
-              tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
-              onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
-              onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
-            />
+            <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} />
             <div className="flex-1 overflow-auto relative flex flex-col">
-              <TimelineRuler
-                duration={state.duration} zoom={state.zoom}
-                currentTime={state.currentTime} onSeek={timeline.seekTo}
-                onDurationChange={(d) => timeline.updateState({ duration: d })}
-              />
-              <TimelineTracks
-                state={state} onSelectClip={timeline.selectClip}
-                onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
-                onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
-                onAddClip={handleAddClip}
-              />
+              <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+              <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
             </div>
           </div>
         </div>
 
         {/* Right panel */}
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
-          {/* Panel selector */}
           <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
-            <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1">
-              <FolderOpen className="h-3 w-3" />Recursos
-            </Button>
-            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1">
-              <Sparkles className="h-3 w-3" />Efeitos
-            </Button>
-            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1">
-              <Settings2 className="h-3 w-3" />Config
-            </Button>
-            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1">
-              <Settings2 className="h-3 w-3" />Props
-            </Button>
+            <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
+            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Sparkles className="h-3 w-3" />Efeitos</Button>
+            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
+            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Props</Button>
           </div>
           <div className="flex-1 overflow-hidden">
-            {rightPanel === 'resources' && (
-              <ResourcePanel
-                ref={resourcePanelRef}
-                onAddClip={handleAddClip}
-                tracks={state.tracks}
-                onOpenCanvas={handleOpenCanvasFromToolbar}
-                onEditCanvas={handleEditCanvasFromResource}
-              />
-            )}
+            {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
             {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
             {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
@@ -795,126 +788,16 @@ const VideoTimelineEditor: React.FC = () => {
         </div>
       </div>
 
-      {/* Canvas Dialog */}
-      <CanvasComposerDialog
-        open={canvasDialogOpen}
-        onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditResourceId(null); setCanvasEditJson(undefined); }}
-        onConfirm={handleCanvasEditConfirm}
-        initialCanvasJson={canvasEditJson}
-      />
+      <CanvasComposerDialog open={canvasDialogOpen} onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditResourceId(null); setCanvasEditJson(undefined); }} onConfirm={handleCanvasEditConfirm} initialCanvasJson={canvasEditJson} />
 
-      {/* Save Project Dialog */}
+      {/* Save Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogTitle>Salvar Projeto</DialogTitle>
-          <Input
-            placeholder="Nome do projeto"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { saveProject(projectName); setSaveDialogOpen(false); } }}
-            autoFocus
-          />
+          <Input placeholder="Nome do projeto" value={projectName} onChange={(e) => setProjectName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { saveProject(projectName); setSaveDialogOpen(false); } }} autoFocus />
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" size="sm" onClick={() => setSaveDialogOpen(false)}>Cancelar</Button>
-            <Button size="sm" onClick={() => { saveProject(projectName); setSaveDialogOpen(false); }}>
-              <Save className="h-3.5 w-3.5 mr-1" />Salvar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Rename Dialog */}
-      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogTitle>Renomear Projeto</DialogTitle>
-          <Input
-            value={renameName}
-            onChange={(e) => setRenameName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') renameProject(); }}
-            autoFocus
-          />
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" size="sm" onClick={() => setRenameDialogOpen(false)}>Cancelar</Button>
-            <Button size="sm" onClick={renameProject}>Renomear</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Projects Dialog */}
-      <Dialog open={projectsOpen} onOpenChange={setProjectsOpen}>
-        <DialogContent className="max-w-lg max-h-[70vh] flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-between px-4 pt-6 pb-3 border-b">
-            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
-              <FolderKanban className="h-4 w-4 text-primary" />
-              Meus Projetos de Vídeo
-            </DialogTitle>
-            <Button size="sm" variant="default" className="gap-1.5 text-xs" onClick={() => { setProjectsOpen(false); setSaveDialogOpen(true); }}>
-              <Save className="h-3.5 w-3.5" />Novo Projeto
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto p-4">
-            {projects.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <FolderKanban className="h-10 w-10 mb-3 opacity-40" />
-                <p className="text-sm">Nenhum projeto salvo</p>
-                <p className="text-xs mt-1 opacity-60">Salve seu trabalho para continuar depois</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className={`relative rounded-lg border-2 overflow-hidden transition-all group cursor-pointer hover:border-primary/50 ${
-                      currentProjectId === project.id ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-                    }`}
-                    onClick={() => loadProject(project)}
-                  >
-                    <div className="aspect-video bg-muted flex items-center justify-center">
-                      {project.thumbnail ? (
-                        <img src={project.thumbnail} className="w-full h-full object-cover" alt="" />
-                      ) : (
-                        <Film className="h-8 w-8 text-muted-foreground/30" />
-                      )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-xs font-medium truncate">{project.nome}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(project.updated_at).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                    {/* Actions menu */}
-                    <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-6 w-6 bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreVertical className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-36">
-                          <DropdownMenuItem onClick={() => loadProject(project)} className="text-xs gap-2">
-                            <FolderOpen className="h-3 w-3" />Abrir
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setRenameProjectId(project.id); setRenameName(project.nome); setRenameDialogOpen(true); }} className="text-xs gap-2">
-                            <Pencil className="h-3 w-3" />Renomear
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => duplicateProject(project)} className="text-xs gap-2">
-                            <CopyIcon className="h-3 w-3" />Duplicar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => deleteProject(project.id)} className="text-xs gap-2 text-destructive">
-                            <Trash2 className="h-3 w-3" />Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    {currentProjectId === project.id && (
-                      <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 rounded font-bold">
-                        ATUAL
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <Button size="sm" onClick={() => { saveProject(projectName); setSaveDialogOpen(false); }}><Save className="h-3.5 w-3.5 mr-1" />Salvar</Button>
           </div>
         </DialogContent>
       </Dialog>
