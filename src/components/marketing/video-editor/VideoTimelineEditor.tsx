@@ -489,10 +489,10 @@ const VideoTimelineEditor: React.FC = () => {
               </div>
             </div>
           )}
-          {/* Resize handle */}
-          {!previewCollapsed && (
+          {/* Resize handle - fixed bar */}
+          {!previewCollapsed && showResizeBar && (
             <div
-              className="h-1.5 bg-border/50 hover:bg-primary/40 cursor-row-resize transition-colors flex items-center justify-center shrink-0 group"
+              className="h-6 bg-muted/60 border-y border-border/60 cursor-row-resize flex items-center justify-center shrink-0 group relative"
               onMouseDown={(e) => {
                 e.preventDefault();
                 resizingRef.current = true;
@@ -517,38 +517,101 @@ const VideoTimelineEditor: React.FC = () => {
                 document.addEventListener('mouseup', onMouseUp);
               }}
             >
-              <div className="w-8 h-0.5 rounded-full bg-muted-foreground/30 group-hover:bg-primary/60 transition-colors" />
+              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-primary/70 transition-colors" />
+              {/* Toggle buttons */}
+              <div className="absolute right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  className="p-0.5 rounded hover:bg-background/80 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => { e.stopPropagation(); setPreviewCollapsed(true); }}
+                  title="Ocultar preview"
+                >
+                  <ChevronUp className="h-3 w-3" />
+                </button>
+                <button
+                  className="p-0.5 rounded hover:bg-background/80 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}
+                  title="Ocultar barra de redimensionamento"
+                >
+                  <Minimize2 className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           )}
+          {!previewCollapsed && !showResizeBar && (
+            <div className="h-px bg-border shrink-0" />
+          )}
           {previewCollapsed && (
-            <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2">
+            <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2 shrink-0">
               <Button size="sm" variant="ghost" onClick={() => setPreviewCollapsed(false)} className="text-xs gap-1">
                 <Film className="h-3 w-3" />Mostrar Preview
               </Button>
               <span className="text-xs text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
+              {!showResizeBar && (
+                <Button size="sm" variant="ghost" onClick={() => setShowResizeBar(true)} className="text-xs gap-1 ml-auto">
+                  <GripHorizontal className="h-3 w-3" />Barra Resize
+                </Button>
+              )}
             </div>
           )}
 
           {/* Timeline */}
-          <div className="flex-1 flex overflow-hidden">
-            <TrackHeaders
-              tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
-              onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
-              onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
-            />
-            <div className="flex-1 overflow-auto relative flex flex-col">
-              <TimelineRuler
-                duration={state.duration} zoom={state.zoom}
-                currentTime={state.currentTime} onSeek={timeline.seekTo}
-                onDurationChange={(d) => timeline.updateState({ duration: d })}
+          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+            <div className="flex-1 flex overflow-hidden">
+              <TrackHeaders
+                tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
+                onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
+                onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
               />
-              <TimelineTracks
-                state={state} onSelectClip={timeline.selectClip}
-                onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
-                onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
-                onAddClip={handleAddClip}
-              />
+              <div className="flex-1 overflow-auto relative flex flex-col">
+                <TimelineRuler
+                  duration={state.duration} zoom={state.zoom}
+                  currentTime={state.currentTime} onSeek={timeline.seekTo}
+                  onDurationChange={(d) => timeline.updateState({ duration: d })}
+                />
+                <TimelineTracks
+                  state={state} onSelectClip={timeline.selectClip}
+                  onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
+                  onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
+                  onAddClip={handleAddClip}
+                />
+              </div>
             </div>
+
+            {/* Status bar - fixed at bottom */}
+            {showStatusBar && (
+              <div className="h-7 bg-muted/50 border-t border-border/60 px-3 flex items-center justify-between shrink-0 select-none">
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatTime(state.currentTime)} / {formatTime(state.duration)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Layers className="h-3 w-3" />
+                    {state.tracks.length} trilhas · {state.clips.length} clipes
+                  </span>
+                  <span>Zoom: {Math.round(state.zoom)}x</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {!showResizeBar && (
+                    <button
+                      className="text-[10px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/80 transition-colors"
+                      onClick={() => setShowResizeBar(true)}
+                      title="Mostrar barra de redimensionamento"
+                    >
+                      <GripHorizontal className="h-3 w-3 inline mr-0.5" />
+                      Resize
+                    </button>
+                  )}
+                  <button
+                    className="text-[10px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/80 transition-colors"
+                    onClick={() => setShowStatusBar(false)}
+                    title="Ocultar barra de status"
+                  >
+                    <Minimize2 className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
