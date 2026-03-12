@@ -1,6 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { TimelineState, TimelineClip, TRACK_COLORS } from './types';
 
+interface MediaItem {
+  type: 'video' | 'audio' | 'image';
+  name: string;
+  src: string;
+  duration?: number;
+}
+
 interface Props {
   state: TimelineState;
   onSelectClip: (id: string, multi?: boolean) => void;
@@ -8,9 +15,10 @@ interface Props {
   onDeselectAll: () => void;
   onSeek: (time: number) => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
+  onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{
     clipId: string;
@@ -21,6 +29,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     originalTrimStart: number;
   } | null>(null);
 
+  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const totalWidth = state.duration * state.zoom;
 
   const handleTrackClick = useCallback((e: React.MouseEvent) => {
@@ -141,8 +150,26 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           return (
             <div
               key={track.id}
-              className="relative border-b"
+              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60 bg-primary/10' : ''}`}
               style={{ height: track.height, opacity: track.visible ? 1 : 0.3 }}
+              onDragOver={(e) => {
+                const data = e.dataTransfer.types.includes('application/timeline-media');
+                if (!data) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                setDropTargetTrackId(track.id);
+              }}
+              onDragLeave={() => setDropTargetTrackId(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDropTargetTrackId(null);
+                const raw = e.dataTransfer.getData('application/timeline-media');
+                if (!raw || !onAddClip) return;
+                try {
+                  const media = JSON.parse(raw) as MediaItem;
+                  onAddClip(media.type, media, track.id);
+                } catch {}
+              }}
             >
               <div className="absolute inset-0 bg-muted/10" />
 

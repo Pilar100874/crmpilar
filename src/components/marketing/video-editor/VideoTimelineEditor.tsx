@@ -360,6 +360,7 @@ const VideoTimelineEditor: React.FC = () => {
                 onDeselectAll={timeline.deselectAll}
                 onSeek={timeline.seekTo}
                 onDoubleClickClip={handleDoubleClickClip}
+                onAddClip={handleAddClip}
               />
             </div>
           </div>

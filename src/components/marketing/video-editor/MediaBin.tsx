@@ -222,7 +222,17 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                 currentList.map((media) => (
                   <div
                     key={media.id}
-                    className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/timeline-media', JSON.stringify({
+                        type: media.type,
+                        name: media.name,
+                        src: media.src,
+                        duration: media.duration,
+                      }));
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing"
                   >
                     {/* Thumbnail */}
                     <div className="w-12 h-9 rounded bg-muted shrink-0 overflow-hidden relative">
