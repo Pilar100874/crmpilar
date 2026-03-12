@@ -1773,6 +1773,48 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'mediaCorrection':
+        return (
+          <div className="space-y-4">
+            <ConfigField label="Tipo de Mídia">
+              <Select value={config.mediaType || 'image'} onValueChange={v => update('mediaType', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image">🖼️ Imagem</SelectItem>
+                  <SelectItem value="video">🎬 Vídeo</SelectItem>
+                  <SelectItem value="auto">🔄 Auto-detectar</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+            <ConfigField label="Instrução de Correção / Refinamento">
+              <Textarea
+                value={config.correctionPrompt || ''}
+                onChange={e => update('correctionPrompt', e.target.value)}
+                placeholder="Descreva o que deve ser corrigido ou refinado na mídia gerada. Ex: 'Mude a cor do fundo para azul', 'Remova o texto sobreposto', 'Aumente o brilho da cena'..."
+                rows={5}
+                className="nodrag nowheel text-sm"
+                onClick={e => e.stopPropagation()}
+              />
+            </ConfigField>
+            <ConfigField label="Manter Estilo Original">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={config.keepOriginalStyle !== false}
+                  onCheckedChange={v => update('keepOriginalStyle', v)}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {config.keepOriginalStyle !== false ? 'Sim, manter base original' : 'Não, pode alterar livremente'}
+                </span>
+              </div>
+            </ConfigField>
+            <div className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3">
+              <p className="text-xs text-muted-foreground">
+                <strong>💡 Como usar:</strong> Conecte a saída de um bloco de Gerar Imagem/Vídeo a este bloco, escreva a correção desejada, e conecte a saída deste bloco a um novo bloco de geração.
+              </p>
+            </div>
+          </div>
+        );
+
       default:
         return <p className="text-xs text-muted-foreground">Sem configurações adicionais</p>;
     }
