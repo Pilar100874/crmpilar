@@ -1167,7 +1167,7 @@ export function useStudioExecution() {
               if (!n) return false;
               const nType = (n.data as StudioNodeData).type;
               // Only re-execute processing nodes in the path, not pure inputs or galleries
-              const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect',
+              const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'productImageSelect', 'multiProductSelect',
                 'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura',
                 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
               return ancestors.has(id) && !inputTypes.includes(nType);
