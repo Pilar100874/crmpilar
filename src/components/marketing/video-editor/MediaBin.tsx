@@ -278,25 +278,27 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
       {/* Gallery Popup */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
         <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 pr-12">
             <DialogTitle className="text-sm font-semibold flex items-center gap-2">
               {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
               Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              {selectedIds.size > 0 && (
-                <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
-              )}
-              <Button
-                size="sm"
-                disabled={selectedIds.size === 0}
-                onClick={handleConfirmSelection}
-                className="gap-1.5 text-xs"
-              >
-                <Check className="h-3.5 w-3.5" />
-                Adicionar ({selectedIds.size})
-              </Button>
-            </div>
+          </div>
+          <div className="flex items-center justify-between px-4 pb-3 border-b">
+            {selectedIds.size > 0 ? (
+              <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
+            ) : (
+              <span className="text-xs text-muted-foreground">Selecione os itens desejados</span>
+            )}
+            <Button
+              size="sm"
+              disabled={selectedIds.size === 0}
+              onClick={handleConfirmSelection}
+              className="gap-1.5 text-xs"
+            >
+              <Check className="h-3.5 w-3.5" />
+              Adicionar ({selectedIds.size})
+            </Button>
           </div>
 
           <ScrollArea className="flex-1">
