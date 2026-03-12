@@ -146,6 +146,7 @@ const VideoTimelineEditor: React.FC = () => {
         setCurrentProjectId(data.id);
         setProjectName(finalName);
         toast.success('Projeto criado!');
+        setLastSavedState(getCurrentStateHash());
       }
     }
     loadProjects();
