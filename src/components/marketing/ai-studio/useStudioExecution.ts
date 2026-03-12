@@ -34,6 +34,17 @@ export function useStudioExecution() {
     console.log(`[Studio] Calling edge function: action=${action}`, params);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    // Link global cancel to this fetch
+    const onGlobalAbort = () => controller.abort();
+    if (abortRef.current) {
+      if (abortRef.current.signal.aborted) {
+        clearTimeout(timer);
+        throw new Error('Execução cancelada pelo usuário.');
+      }
+      abortRef.current.signal.addEventListener('abort', onGlobalAbort);
+    }
+
     let response: Response;
     try {
       response = await fetch(
@@ -50,11 +61,16 @@ export function useStudioExecution() {
       );
     } catch (fetchErr: any) {
       clearTimeout(timer);
+      abortRef.current?.signal.removeEventListener('abort', onGlobalAbort);
       if (fetchErr.name === 'AbortError') {
+        if (abortRef.current?.signal.aborted) {
+          throw new Error('Execução cancelada pelo usuário.');
+        }
         throw new Error(`Timeout: a geração demorou mais de ${Math.round(timeoutMs / 1000)}s`);
       }
       throw fetchErr;
     }
+    abortRef.current?.signal.removeEventListener('abort', onGlobalAbort);
     clearTimeout(timer);
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
