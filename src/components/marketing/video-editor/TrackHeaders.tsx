@@ -24,8 +24,10 @@ const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: Re
   { type: 'effect', label: 'Efeitos', icon: <Sparkles className="h-3.5 w-3.5" />, defaultHeight: 50 },
 ];
 
-const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack }) => {
+const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack, onReorderTrack }) => {
   const [addPopoverOpen, setAddPopoverOpen] = useState(false);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const handleAddTrack = (opt: typeof TRACK_TYPE_OPTIONS[0]) => {
     const count = tracks.filter(t => t.type === opt.type).length + 1;
