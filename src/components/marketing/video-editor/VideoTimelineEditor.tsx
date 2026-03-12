@@ -43,6 +43,7 @@ const VideoTimelineEditor: React.FC = () => {
     destination: 'youtube',
     format: 'mp4',
   });
+  const resourcePanelRef = useRef<ResourcePanelHandle>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
