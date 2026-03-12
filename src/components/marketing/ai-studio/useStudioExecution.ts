@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, StudioNodeType } from './types';
 import { nodeResultStore } from './useNodeResults';
 import { toast } from 'sonner';
+import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
 
 export interface ExecutionLogEntry {
   nodeId: string;
