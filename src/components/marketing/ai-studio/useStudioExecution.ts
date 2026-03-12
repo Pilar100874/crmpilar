@@ -817,6 +817,9 @@ export function useStudioExecution() {
             console.error('[Studio] Video generation failed:', videoErr);
             const msg = videoErr.message || '';
             const modelLabel = (videoModel || 'desconhecido').split('/').pop();
+            if (msg.includes('hero_frame_failed') || msg.includes('compor a imagem de referência')) {
+              throw new Error(`🖼️ Não foi possível compor a cena com todos os elementos de referência (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.`);
+            }
             if (msg.includes('moderation') || msg.includes('blocked') || msg.includes('content policy') || msg.includes('safety')) {
               throw new Error(`⚠️ O modelo ${modelLabel} bloqueou o conteúdo por política de segurança. Reformule a descrição com termos mais neutros.`);
             }

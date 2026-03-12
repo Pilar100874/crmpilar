@@ -90,29 +90,11 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
-  // Veo only accepts ONE image — pick the best one:
-  // 1) Hero frame (composite of all refs) if available
-  // 2) Influencer image (face is hardest to reproduce from text)
-  // 3) Product image
-  // 4) First available image
+  // Veo only accepts ONE image — use the hero frame (composite of all refs)
+  // If no hero frame, use the first available image (product has priority)
   let imagePayload: any = {};
   const allImageUrls = (params.imageUrls || []) as string[];
-  const allImageRoles = (params.imageRoles || []) as string[];
-  
-  // Find the best single image to use
-  let bestImageUrl = allImageUrls[0]; // default: first (could be hero frame)
-  if (allImageUrls.length > 1 && !params._heroFrameUsed) {
-    // No hero frame — pick influencer first (face fidelity matters most for video)
-    const influencerIdx = allImageRoles.findIndex(r => r?.includes('PERSON') || r?.includes('INFLUENCER'));
-    const productIdx = allImageRoles.findIndex(r => r?.includes('PRODUCT'));
-    if (influencerIdx >= 0 && allImageUrls[influencerIdx]) {
-      bestImageUrl = allImageUrls[influencerIdx];
-      console.log(`[generate_video] Google Veo: using INFLUENCER image (idx ${influencerIdx}) as primary reference`);
-    } else if (productIdx >= 0 && allImageUrls[productIdx]) {
-      bestImageUrl = allImageUrls[productIdx];
-      console.log(`[generate_video] Google Veo: using PRODUCT image (idx ${productIdx}) as primary reference`);
-    }
-  }
+  const bestImageUrl = allImageUrls[0]; // hero frame or product (by priority)
   
   if (bestImageUrl?.startsWith("http")) {
     try {
@@ -812,7 +794,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
           params.imageUrls = [heroFrameUrl];
           params._heroFrameUsed = true;
         } else {
-          console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images`);
+          // Hero frame failed — do NOT proceed with partial references (would generate low quality)
+          throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
         }
         console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
         return await generateVideoGoogle(googleKey, params);
@@ -846,7 +829,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
-      console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images for ${provider}`);
+      // Hero frame failed — do NOT proceed with partial references
+      throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
     }
   }
 
