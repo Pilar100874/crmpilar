@@ -288,7 +288,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
       {/* Gallery Popup */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
         <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 pr-12">
+          <div className="flex items-center justify-between px-4 pt-10 pb-2 pr-12">
             <DialogTitle className="text-sm font-semibold flex items-center gap-2">
               {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
               Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
