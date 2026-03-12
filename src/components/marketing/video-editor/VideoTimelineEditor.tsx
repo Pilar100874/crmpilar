@@ -42,7 +42,197 @@ const VideoTimelineEditor: React.FC = () => {
     destination: 'youtube',
     format: 'mp4',
   });
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleExportVideo = useCallback(async () => {
+    if (state.clips.length === 0) {
+      toast.error('Adicione conteúdo à timeline antes de gerar o vídeo');
+      return;
+    }
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      const [resW, resH] = videoConfig.resolution.split('x').map(Number);
+      const fps = videoConfig.fps;
+      const duration = state.duration;
+      const totalFrames = Math.ceil(duration * fps);
+
+      // Create offscreen canvas for rendering
+      const canvas = document.createElement('canvas');
+      canvas.width = resW;
+      canvas.height = resH;
+      const ctx = canvas.getContext('2d')!;
+
+      // Preload all media
+      const mediaElements: Record<string, HTMLVideoElement | HTMLImageElement> = {};
+      for (const clip of state.clips) {
+        if (!clip.src) continue;
+        if (clip.type === 'video') {
+          const vid = document.createElement('video');
+          vid.src = clip.src;
+          vid.crossOrigin = 'anonymous';
+          vid.muted = true;
+          vid.preload = 'auto';
+          await new Promise<void>((res, rej) => { vid.onloadeddata = () => res(); vid.onerror = () => rej(); vid.load(); });
+          mediaElements[clip.id] = vid;
+        } else if (clip.type === 'image') {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = clip.src;
+          await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); });
+          mediaElements[clip.id] = img;
+        }
+      }
+
+      // Use MediaRecorder on the canvas stream
+      const stream = canvas.captureStream(fps);
+
+      // Add audio tracks from video elements if any
+      const audioCtx = new AudioContext();
+      const dest = audioCtx.createMediaStreamDestination();
+      let hasAudio = false;
+      for (const clip of state.clips) {
+        if (clip.type === 'video' && mediaElements[clip.id] instanceof HTMLVideoElement) {
+          try {
+            const vid = mediaElements[clip.id] as HTMLVideoElement;
+            vid.muted = false;
+            vid.volume = clip.volume ?? 1;
+            const source = audioCtx.createMediaElementSource(vid);
+            source.connect(dest);
+            hasAudio = true;
+          } catch { /* some videos may not have audio */ }
+        }
+        if (clip.type === 'audio' && clip.src) {
+          try {
+            const audio = new Audio(clip.src);
+            audio.crossOrigin = 'anonymous';
+            audio.volume = clip.volume ?? 1;
+            const source = audioCtx.createMediaElementSource(audio);
+            source.connect(dest);
+            hasAudio = true;
+          } catch { /* skip */ }
+        }
+      }
+
+      if (hasAudio) {
+        for (const track of dest.stream.getAudioTracks()) {
+          stream.addTrack(track);
+        }
+      }
+
+      const chunks: Blob[] = [];
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+      const recordingDone = new Promise<Blob>((resolve) => {
+        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+      });
+
+      recorder.start(100);
+
+      // Render frame by frame
+      for (let frame = 0; frame < totalFrames; frame++) {
+        const time = frame / fps;
+        setExportProgress(Math.round((frame / totalFrames) * 100));
+
+        ctx.fillStyle = videoConfig.backgroundColor || '#000000';
+        ctx.fillRect(0, 0, resW, resH);
+
+        // Get active clips at this time
+        const activeClips = state.clips.filter(c => {
+          const track = state.tracks.find(t => t.id === c.trackId);
+          if (!track?.visible) return false;
+          return time >= c.startTime && time < c.startTime + c.duration;
+        });
+
+        // Sort by track order (lower tracks behind)
+        const trackIndexMap = new Map(state.tracks.map((t, i) => [t.id, i]));
+        activeClips.sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
+
+        for (const clip of activeClips) {
+          const el = mediaElements[clip.id];
+          if (!el) continue;
+
+          if (el instanceof HTMLVideoElement) {
+            const clipTime = time - clip.startTime + (clip.trimStart || 0);
+            el.currentTime = clipTime;
+            await new Promise(r => setTimeout(r, 10)); // allow seek
+          }
+
+          const dx = (clip.x ?? 0) / 100 * resW;
+          const dy = (clip.y ?? 0) / 100 * resH;
+          const dw = (clip.w ?? 100) / 100 * resW;
+          const dh = (clip.h ?? 100) / 100 * resH;
+
+          ctx.globalAlpha = clip.opacity ?? 1;
+          ctx.drawImage(el, dx, dy, dw, dh);
+          ctx.globalAlpha = 1;
+        }
+
+        // Wait for next frame timing
+        await new Promise(r => setTimeout(r, 1000 / fps / 2));
+      }
+
+      recorder.stop();
+      const blob = await recordingDone;
+      await audioCtx.close();
+
+      setExportProgress(95);
+
+      // Save to gallery
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (estabId) {
+        const fileName = `video_editor_${Date.now()}.webm`;
+        const path = `${estabId}/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('marketing-videos')
+          .upload(path, blob, { contentType: mimeType });
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
+          await supabase.from('media_gallery').insert({
+            estabelecimento_id: estabId,
+            tipo: 'video',
+            nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
+            public_url: urlData.publicUrl,
+            duracao_segundos: Math.round(duration),
+          });
+          toast.success('Vídeo gerado e salvo na galeria!');
+        } else {
+          // Download locally if upload fails
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast.info('Upload falhou. Vídeo baixado localmente.');
+        }
+      } else {
+        // No estab, download locally
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video_editor_${Date.now()}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Vídeo gerado e baixado!');
+      }
+
+      setExportProgress(100);
+    } catch (err: any) {
+      console.error('Export error:', err);
+      toast.error('Erro ao gerar vídeo: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+    }
+  }, [state, videoConfig]);
 
   const selectedClip = state.selectedClipIds.length === 1
     ? state.clips.find((c) => c.id === state.selectedClipIds[0])
