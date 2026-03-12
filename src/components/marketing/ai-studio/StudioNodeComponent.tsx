@@ -57,6 +57,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
 
 const nodeGradientMap: Record<string, string> = {
   textInput: 'from-indigo-500/20 to-violet-500/20',
+  multiImageRef: 'from-orange-400/20 to-amber-500/20',
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
   imageInput: 'from-orange-500/20 to-amber-500/20',
   productImageSelect: 'from-emerald-500/20 to-teal-500/20',
