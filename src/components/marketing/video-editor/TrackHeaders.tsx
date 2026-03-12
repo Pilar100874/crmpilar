@@ -46,7 +46,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
   };
 
   return (
-    <div className="w-44 border-r bg-card/80 shrink-0 flex flex-col">
+    <div className="w-44 border-r bg-card/80 shrink-0 flex flex-col overflow-hidden">
       {/* Ruler spacer */}
       <div className="h-7 border-b bg-muted/40 flex items-center justify-center">
         <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
@@ -76,7 +76,8 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
         </Popover>
       </div>
 
-      {/* Track headers */}
+      {/* Track headers - scrollable area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
       {tracks.map((track, index) => (
         <div
           key={track.id}
@@ -106,7 +107,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''} ${
             track.locked ? 'bg-muted/30' : ''
           }`}
-          style={{ height: track.height, backgroundColor: track.locked ? undefined : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
+          style={{ minHeight: track.height, height: track.height, backgroundColor: track.locked ? undefined : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12` }}
         >
           {/* Drag handle */}
           <div className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity">
@@ -160,6 +161,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };
