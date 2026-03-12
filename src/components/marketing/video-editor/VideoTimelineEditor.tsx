@@ -241,12 +241,18 @@ const VideoTimelineEditor: React.FC = () => {
       const audioCtx = new AudioContext();
       const dest = audioCtx.createMediaStreamDestination();
       let hasAudio = false;
+      const hasSoloTrack = state.tracks.some(t => t.solo);
       for (const clip of state.clips) {
+        const clipTrack = state.tracks.find(t => t.id === clip.trackId);
+        // Skip audio for muted tracks or non-solo tracks when solo exists
+        const isTrackMuted = clipTrack?.muted || (hasSoloTrack && !clipTrack?.solo);
+        if (isTrackMuted) continue;
+
         if (clip.type === 'video' && mediaElements[clip.id] instanceof HTMLVideoElement) {
           try {
             const vid = mediaElements[clip.id] as HTMLVideoElement;
             vid.muted = false;
-            vid.volume = clip.volume ?? 1;
+            vid.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
             const source = audioCtx.createMediaElementSource(vid);
             source.connect(dest);
             hasAudio = true;
@@ -256,7 +262,7 @@ const VideoTimelineEditor: React.FC = () => {
           try {
             const audio = new Audio(clip.src);
             audio.crossOrigin = 'anonymous';
-            audio.volume = clip.volume ?? 1;
+            audio.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
             const source = audioCtx.createMediaElementSource(audio);
             source.connect(dest);
             hasAudio = true;
