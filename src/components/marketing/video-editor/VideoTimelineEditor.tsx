@@ -2,15 +2,14 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
-  ZoomIn, ZoomOut, Film,
-  Music, Type, Sparkles, Layers, Maximize2, Minimize2, Settings2, Magnet, Upload, Palette
+  ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen
 } from 'lucide-react';
 import { useTimelineState } from './useTimelineState';
 import TimelineTracks from './TimelineTracks';
 import TimelineRuler from './TimelineRuler';
 import TrackHeaders from './TrackHeaders';
 import ClipPropertiesPanel from './ClipPropertiesPanel';
-import MediaBin from './MediaBin';
+import ResourcePanel from './ResourcePanel';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
@@ -27,7 +26,7 @@ interface MediaItem {
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
   const { state } = timeline;
-  const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media' | 'config'>('media');
+  const [rightPanel, setRightPanel] = useState<'resources' | 'effects' | 'config' | 'properties'>('resources');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
@@ -46,7 +45,6 @@ const VideoTimelineEditor: React.FC = () => {
     ? state.clips.find((c) => c.id === state.selectedClipIds[0])
     : null;
 
-  // Keyboard shortcuts (Delete/Backspace to remove clips)
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -54,17 +52,12 @@ const VideoTimelineEditor: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const ids = stateRef.current.selectedClipIds;
-        if (ids.length > 0) {
-          timeline.deleteClips(ids);
-        }
+        if (ids.length > 0) timeline.deleteClips(ids);
       }
-      if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
-      }
+      if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -85,7 +78,6 @@ const VideoTimelineEditor: React.FC = () => {
   const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, targetTrackId?: string) => {
     const tracks = tracksRef.current;
     const clips = clipsRef.current;
-
     let trackId = targetTrackId;
     if (!trackId || !tracks.find(t => t.id === trackId)) {
       trackId = tracks.find((t) => {
@@ -100,7 +92,6 @@ const VideoTimelineEditor: React.FC = () => {
     const lastClip = clips
       .filter((c) => c.trackId === trackId)
       .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
-
     const startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
     const targetTrack = tracks.find(t => t.id === trackId);
     const trackType = targetTrack?.type || (type === 'image' ? 'video' : type);
@@ -121,21 +112,16 @@ const VideoTimelineEditor: React.FC = () => {
       filters: [],
       src: media?.src,
       canvasJson: (media as any)?.canvasJson,
-      x: 0,
-      y: 0,
-      w: 100,
-      h: 100,
+      x: 0, y: 0, w: 100, h: 100,
     });
   }, [timeline]);
 
-  // Open canvas composer for new composition from toolbar
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditJson(undefined);
     setCanvasDialogOpen(true);
   }, []);
 
-  // Double-click on a canvas clip opens the composer for editing
   const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
     if (clip.canvasJson) {
       setCanvasEditClipId(clip.id);
@@ -147,10 +133,8 @@ const VideoTimelineEditor: React.FC = () => {
   const handleCanvasEditConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
     setCanvasDialogOpen(false);
     if (canvasEditClipId) {
-      // Editing existing clip
       timeline.updateClip(canvasEditClipId, { src: imageDataUrl, canvasJson });
     } else {
-      // New canvas composition from toolbar
       const tracks = tracksRef.current;
       const clips = clipsRef.current;
       const canvasTrackId = tracks.find(t => t.type === 'canvas')?.id;
@@ -164,23 +148,12 @@ const VideoTimelineEditor: React.FC = () => {
         const color = TRACK_COLORS[targetTrack?.type || 'canvas'] || TRACK_COLORS.video;
 
         timeline.addClip({
-          trackId,
-          type: 'image',
+          trackId, type: 'image',
           name: `Canvas ${clips.filter(c => c.canvasJson).length + 1}`,
-          startTime,
-          duration: 5,
-          trimStart: 0,
-          trimEnd: 0,
-          color,
-          volume: 1,
-          opacity: 1,
-          filters: [],
-          src: imageDataUrl,
-          canvasJson,
-          x: 0,
-          y: 0,
-          w: 100,
-          h: 100,
+          startTime, duration: 5, trimStart: 0, trimEnd: 0,
+          color, volume: 1, opacity: 1, filters: [],
+          src: imageDataUrl, canvasJson,
+          x: 0, y: 0, w: 100, h: 100,
         });
       }
     }
@@ -192,35 +165,16 @@ const VideoTimelineEditor: React.FC = () => {
     <div
       ref={containerRef}
       className={`flex flex-col border rounded-xl overflow-hidden bg-background ${
-        isFullscreen
-          ? 'fixed inset-0 z-50 rounded-none'
-          : 'h-[calc(100vh-200px)] min-h-[700px]'
+        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'h-[calc(100vh-200px)] min-h-[700px]'
       }`}
       tabIndex={0}
     >
-      {/* Top toolbar */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b bg-card/80 backdrop-blur">
-        <div className="flex items-center gap-1 mr-4">
-          <Button size="icon" variant="ghost" onClick={() => handleAddClip('video')} title="Adicionar vídeo vazio">
-            <Film className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="ghost" onClick={() => handleAddClip('audio')} title="Adicionar áudio">
-            <Music className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="ghost" onClick={handleOpenCanvasFromToolbar} title="Criar no Canvas">
-            <Palette className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="ghost" onClick={() => handleAddClip('image')} title="Adicionar imagem">
-            <Upload className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="w-px h-6 bg-border" />
-
-        {/* Playback controls */}
-        <div className="flex items-center gap-1 mx-4">
-          <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(0)} title="Início">
-            <SkipBack className="h-4 w-4" />
+      {/* Top toolbar — only controls */}
+      <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card/80 backdrop-blur">
+        {/* Playback */}
+        <div className="flex items-center gap-0.5">
+          <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(0)} title="Início" className="h-8 w-8">
+            <SkipBack className="h-3.5 w-3.5" />
           </Button>
           <Button
             size="icon"
@@ -230,98 +184,74 @@ const VideoTimelineEditor: React.FC = () => {
           >
             {state.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(state.duration)} title="Fim">
-            <SkipForward className="h-4 w-4" />
+          <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(state.duration)} title="Fim" className="h-8 w-8">
+            <SkipForward className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        {/* Time display */}
-        <div className="font-mono text-sm bg-muted px-3 py-1.5 rounded-md min-w-[120px] text-center">
+        {/* Time */}
+        <div className="font-mono text-xs bg-muted px-2.5 py-1 rounded-md min-w-[100px] text-center">
           {formatTime(state.currentTime)}
         </div>
 
-        <div className="w-px h-6 bg-border mx-2" />
+        <div className="w-px h-5 bg-border mx-1" />
 
         {/* Edit tools */}
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
+        <div className="flex items-center gap-0.5">
+          <Button size="icon" variant="ghost" className="h-8 w-8"
             onClick={() => selectedClip && timeline.splitClip(selectedClip.id, state.currentTime)}
-            disabled={!selectedClip}
-            title="Cortar no cursor (C)"
-          >
-            <Scissors className="h-4 w-4" />
+            disabled={!selectedClip} title="Cortar (C)">
+            <Scissors className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            size="icon"
-            variant="ghost"
+          <Button size="icon" variant="ghost" className="h-8 w-8"
             onClick={() => selectedClip && timeline.duplicateClip(selectedClip.id)}
-            disabled={!selectedClip}
-            title="Duplicar (Ctrl+D)"
-          >
-            <Copy className="h-4 w-4" />
+            disabled={!selectedClip} title="Duplicar">
+            <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            size="icon"
-            variant="ghost"
+          <Button size="icon" variant="ghost" className="h-8 w-8"
             onClick={() => timeline.deleteClips(state.selectedClipIds)}
-            disabled={state.selectedClipIds.length === 0}
-            title="Excluir (Del)"
-          >
-            <Trash2 className="h-4 w-4" />
+            disabled={state.selectedClipIds.length === 0} title="Excluir (Del)">
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            size="icon"
-            variant={state.snapEnabled ? 'default' : 'ghost'}
-            onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })}
-            title="Snap"
-          >
-            <Magnet className="h-4 w-4" />
+          <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8"
+            onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
+            <Magnet className="h-3.5 w-3.5" />
           </Button>
         </div>
 
         <div className="flex-1" />
 
         {/* Zoom */}
-        <div className="flex items-center gap-1">
-          <Button size="icon" variant="ghost" onClick={timeline.zoomOut}>
-            <ZoomOut className="h-4 w-4" />
+        <div className="flex items-center gap-0.5">
+          <Button size="icon" variant="ghost" onClick={timeline.zoomOut} className="h-8 w-8">
+            <ZoomOut className="h-3.5 w-3.5" />
           </Button>
-          <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(state.zoom)}x</span>
-          <Button size="icon" variant="ghost" onClick={timeline.zoomIn}>
-            <ZoomIn className="h-4 w-4" />
+          <span className="text-[10px] text-muted-foreground w-8 text-center">{Math.round(state.zoom)}x</span>
+          <Button size="icon" variant="ghost" onClick={timeline.zoomIn} className="h-8 w-8">
+            <ZoomIn className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        <div className="w-px h-6 bg-border mx-2" />
+        <div className="w-px h-5 bg-border mx-1" />
 
-        {/* Fullscreen toggle */}
-        <Button
-          size="icon"
-          variant="ghost"
+        <Button size="icon" variant="ghost" className="h-8 w-8"
           onClick={() => setIsFullscreen(!isFullscreen)}
-          title={isFullscreen ? 'Sair da tela cheia (Esc)' : 'Tela cheia'}
-        >
-          {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          title={isFullscreen ? 'Sair (Esc)' : 'Tela cheia'}>
+          {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
         </Button>
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Preview + Timeline (left) */}
+        {/* Preview + Timeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Preview */}
           {!previewCollapsed && (
-            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0" style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}>
+            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0"
+              style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}>
               <VideoPreview
-                clips={state.clips}
-                currentTime={state.currentTime}
-                tracks={state.tracks}
-                isPlaying={state.isPlaying}
-                selectedClipIds={state.selectedClipIds}
-                onUpdateClip={timeline.updateClip}
-                onSelectClip={(id) => timeline.selectClip(id)}
+                clips={state.clips} currentTime={state.currentTime} tracks={state.tracks}
+                isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds}
+                onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)}
               />
             </div>
           )}
@@ -334,34 +264,23 @@ const VideoTimelineEditor: React.FC = () => {
             </div>
           )}
 
-          {/* Timeline area */}
+          {/* Timeline */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Track headers */}
             <TrackHeaders
-              tracks={state.tracks}
-              onUpdateTrack={timeline.updateTrack}
-              onDeleteTrack={timeline.deleteTrack}
-              onAddTrack={timeline.addTrack}
-              onMoveTrack={timeline.moveTrack}
-              onReorderTrack={timeline.reorderTrack}
+              tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
+              onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
+              onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
             />
-
-            {/* Timeline canvas */}
             <div className="flex-1 overflow-auto relative flex flex-col">
               <TimelineRuler
-                duration={state.duration}
-                zoom={state.zoom}
-                currentTime={state.currentTime}
-                onSeek={timeline.seekTo}
+                duration={state.duration} zoom={state.zoom}
+                currentTime={state.currentTime} onSeek={timeline.seekTo}
                 onDurationChange={(d) => timeline.updateState({ duration: d })}
               />
               <TimelineTracks
-                state={state}
-                onSelectClip={timeline.selectClip}
-                onUpdateClip={timeline.updateClip}
-                onDeselectAll={timeline.deselectAll}
-                onSeek={timeline.seekTo}
-                onDoubleClickClip={handleDoubleClickClip}
+                state={state} onSelectClip={timeline.selectClip}
+                onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
+                onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
                 onAddClip={handleAddClip}
               />
             </div>
@@ -370,36 +289,28 @@ const VideoTimelineEditor: React.FC = () => {
 
         {/* Right panel */}
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
-          {/* Panel tabs inside the panel itself */}
-          <div className="flex items-center border-b px-1 py-1 gap-0.5">
-            <Button size="sm" variant={rightPanel === 'media' ? 'default' : 'ghost'} onClick={() => setRightPanel('media')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
-              <Layers className="h-3 w-3" />Mídia
+          {/* Panel selector */}
+          <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
+            <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1">
+              <FolderOpen className="h-3 w-3" />Recursos
             </Button>
-            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
-              <Settings2 className="h-3 w-3" />Config
-            </Button>
-            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
+            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1">
               <Sparkles className="h-3 w-3" />Efeitos
             </Button>
-            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
+            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1">
+              <Settings2 className="h-3 w-3" />Config
+            </Button>
+            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1">
               <Settings2 className="h-3 w-3" />Props
             </Button>
           </div>
           <div className="flex-1 overflow-hidden">
-            {rightPanel === 'media' && <MediaBin onAddClip={handleAddClip} tracks={state.tracks} />}
+            {rightPanel === 'resources' && (
+              <ResourcePanel onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} />
+            )}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
-            {rightPanel === 'effects' && (
-              <EffectsPanel
-                selectedClip={selectedClip || undefined}
-                onUpdateClip={timeline.updateClip}
-              />
-            )}
-            {rightPanel === 'properties' && (
-              <ClipPropertiesPanel
-                clip={selectedClip || undefined}
-                onUpdateClip={timeline.updateClip}
-              />
-            )}
+            {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
+            {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
           </div>
         </div>
       </div>
