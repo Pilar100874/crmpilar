@@ -341,7 +341,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       </div>
                     )}
 
-                    {!clip.locked && (
+                    {!clip.locked && !track.locked && (
                       <>
                         <div
                           className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-l"
