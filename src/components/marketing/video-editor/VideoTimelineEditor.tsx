@@ -329,29 +329,13 @@ const VideoTimelineEditor: React.FC = () => {
   const handleCanvasEditConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
     setCanvasDialogOpen(false);
     if (canvasEditClipId) {
+      // Editing existing clip — update in place
       timeline.updateClip(canvasEditClipId, { src: imageDataUrl, canvasJson });
     } else {
-      const tracks = tracksRef.current;
+      // New canvas — add to resource panel (not timeline)
       const clips = clipsRef.current;
-      const canvasTrackId = tracks.find(t => t.type === 'canvas')?.id;
-      const trackId = canvasTrackId || tracks.find(t => t.type === 'video')?.id;
-      if (trackId) {
-        const lastClip = clips
-          .filter((c) => c.trackId === trackId)
-          .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
-        const startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
-        const targetTrack = tracks.find(t => t.id === trackId);
-        const color = TRACK_COLORS[targetTrack?.type || 'canvas'] || TRACK_COLORS.video;
-
-        timeline.addClip({
-          trackId, type: 'image',
-          name: `Canvas ${clips.filter(c => c.canvasJson).length + 1}`,
-          startTime, duration: 5, trimStart: 0, trimEnd: 0,
-          color, volume: 1, opacity: 1, filters: [],
-          src: imageDataUrl, canvasJson,
-          x: 0, y: 0, w: 100, h: 100,
-        });
-      }
+      const name = `Canvas ${clips.filter(c => c.canvasJson).length + 1}`;
+      resourcePanelRef.current?.addCanvasItem(name, imageDataUrl, canvasJson);
     }
     setCanvasEditClipId(null);
     setCanvasEditJson(undefined);
