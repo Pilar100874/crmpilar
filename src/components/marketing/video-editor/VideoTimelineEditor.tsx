@@ -247,7 +247,7 @@ const VideoTimelineEditor: React.FC = () => {
           vid.preload = 'auto';
           await new Promise<void>((res, rej) => { vid.onloadeddata = () => res(); vid.onerror = () => rej(); vid.load(); });
           mediaElements[clip.id] = vid;
-        } else if (clip.type === 'image') {
+        } else if (clip.type === 'image' || clip.type === 'canvas') {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = clip.src;
