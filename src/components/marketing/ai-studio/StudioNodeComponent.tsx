@@ -869,8 +869,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               value={nodeData.config.text || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('text', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Texto para aplicar..."
-              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
             />
             <div className="flex items-center gap-1.5 flex-wrap">
               <select
