@@ -667,6 +667,83 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
         editingPreset={editingPreset}
       />
 
+      {/* Prompt Detail Popup */}
+      <Dialog open={!!detailPreset} onOpenChange={(v) => { if (!v) setDetailPreset(null); }}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          {detailPreset && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <Eye className="h-4 w-4 text-primary" />
+                  {detailPreset.name}
+                </DialogTitle>
+                <DialogDescription className="flex gap-1.5 flex-wrap mt-1">
+                  <Badge variant="outline" className="text-[10px]">
+                    {detailPreset.mediaType === 'video' ? '🎥 Vídeo' : '📷 Imagem'}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    {detailPreset.category === 'produto' ? '📦 Produto' : '👤 Influencer'}
+                  </Badge>
+                  {detailPreset.isCustom && (
+                    <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
+                  )}
+                  {detailPreset.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                  ))}
+                </DialogDescription>
+              </DialogHeader>
+
+              {/* Image */}
+              {detailPreset.image && (
+                <div className="rounded-lg overflow-hidden border">
+                  <img src={detailPreset.image} alt={detailPreset.name} className="w-full aspect-video object-cover" />
+                </div>
+              )}
+
+              {/* Reference Blocks */}
+              {detailPreset.referenceBlocks.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">🧩 Blocos de Referência</p>
+                  <div className="flex flex-wrap gap-1">
+                    {detailPreset.referenceBlocks.map(blockId => {
+                      const block = ALL_REF_BLOCKS.find(b => b.id === blockId);
+                      return block ? (
+                        <Badge key={blockId} variant="secondary" className="text-[10px] gap-1">
+                          {block.emoji} {block.label}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
+                <div className="bg-muted/50 rounded-lg p-3 border">
+                  <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap text-foreground/80">
+                    {detailPreset.prompt}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { navigator.clipboard.writeText(detailPreset.prompt); toast({ title: 'Copiado!' }); }}>
+                  <Copy className="h-3.5 w-3.5" /> Copiar
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { setDetailPreset(null); handleEditPreset(detailPreset); }}>
+                  <Sparkles className="h-3.5 w-3.5" /> Editar
+                </Button>
+                <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => { setDetailPreset(null); onSelect(detailPreset); }}>
+                  <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
         <AlertDialogContent>
