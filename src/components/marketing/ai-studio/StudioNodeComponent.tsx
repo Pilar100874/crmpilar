@@ -25,6 +25,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,
   systemPrompt: Clapperboard,
   imageInput: Upload,
+  multiImageRef: Layers,
   productImageSelect: Package,
   multiProductSelect: Layers,
   galleryInfluencer: User,
