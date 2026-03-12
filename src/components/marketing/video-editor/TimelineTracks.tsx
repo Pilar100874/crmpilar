@@ -332,9 +332,30 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       {renderWaveform(clip, width, trackColor)}
                     </div>
 
-                    {clip.transition && clip.transition.type !== 'none' && (
+                    {/* Entrance transition indicator */}
+                    {clip.transitions?.entrance && clip.transitions.entrance.type !== 'none' && (
                       <div
-                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-yellow-500/30 to-transparent flex items-center pl-1"
+                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-emerald-500/40 to-transparent flex items-end pb-0.5 pl-1 pointer-events-none"
+                        style={{ width: Math.max(clip.transitions.entrance.duration * state.zoom, 16) }}
+                      >
+                        <span className="text-[7px] text-emerald-300 font-medium">▶ IN</span>
+                      </div>
+                    )}
+
+                    {/* Exit transition indicator */}
+                    {clip.transitions?.exit && clip.transitions.exit.type !== 'none' && (
+                      <div
+                        className="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-amber-500/40 to-transparent flex items-end pb-0.5 pr-1 justify-end pointer-events-none"
+                        style={{ width: Math.max(clip.transitions.exit.duration * state.zoom, 16) }}
+                      >
+                        <span className="text-[7px] text-amber-300 font-medium">OUT ◀</span>
+                      </div>
+                    )}
+
+                    {/* Legacy transition support */}
+                    {clip.transition && clip.transition.type !== 'none' && !clip.transitions?.entrance && (
+                      <div
+                        className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-yellow-500/30 to-transparent flex items-center pl-1 pointer-events-none"
                         style={{ width: clip.transition.duration * state.zoom }}
                       >
                         <span className="text-[8px]">⚡</span>

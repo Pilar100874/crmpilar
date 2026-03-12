@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { TimelineClip, TimelineTrack } from './types';
+import { TimelineClip, TimelineTrack, TransitionType } from './types';
 
 interface Props {
   clips: TimelineClip[];
@@ -9,25 +9,125 @@ interface Props {
   selectedClipIds?: string[];
   onUpdateClip?: (id: string, updates: Partial<TimelineClip>) => void;
   onSelectClip?: (id: string) => void;
+  previewingTransition?: { clipId: string; phase: 'entrance' | 'exit' } | null;
 }
 
 const CANVAS_W = 480;
 const CANVAS_H = 270;
 
+// Compute CSS transform/opacity/filter for a transition at a given progress (0→1)
+function getTransitionStyle(
+  type: TransitionType,
+  progress: number, // 0 = fully hidden, 1 = fully visible
+  isExit: boolean
+): React.CSSProperties {
+  // For exit, we invert the progress so 0=visible, 1=hidden
+  const p = isExit ? 1 - progress : progress;
+
+  switch (type) {
+    case 'fade':
+      return { opacity: p };
+    case 'slide-left':
+      return { transform: `translateX(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-right':
+      return { transform: `translateX(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-up':
+      return { transform: `translateY(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-down':
+      return { transform: `translateY(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
+    case 'zoom-in':
+      return { transform: `scale(${0.3 + p * 0.7})`, opacity: p };
+    case 'zoom-out':
+      return { transform: `scale(${1 + (1 - p) * 0.5})`, opacity: p };
+    case 'scale-up':
+      // Bounce-like pop
+      const bounce = p < 0.7 ? p / 0.7 : 1 + Math.sin((p - 0.7) / 0.3 * Math.PI) * 0.1;
+      return { transform: `scale(${bounce * 0.5 + 0.5})`, opacity: Math.min(1, p * 1.5) };
+    case 'scale-down':
+      return { transform: `scale(${1 + (1 - p) * 0.3})`, opacity: p };
+    case 'blur-transition':
+      return { filter: `blur(${(1 - p) * 15}px)`, opacity: p };
+    case 'flash':
+      return { opacity: p, filter: `brightness(${1 + (1 - p) * 3})` };
+    case 'bounce': {
+      const elasticP = p < 1
+        ? 1 - Math.pow(2, -10 * p) * Math.cos((p * 10 - 0.75) * (2 * Math.PI) / 3)
+        : 1;
+      return { transform: `scale(${elasticP})`, opacity: Math.min(1, p * 2) };
+    }
+    case 'rotate-in':
+      return { transform: `rotate(${(1 - p) * 90}deg) scale(${0.5 + p * 0.5})`, opacity: p };
+    case 'dissolve':
+      return { opacity: p };
+    case 'wipe-left':
+      return { clipPath: `inset(0 ${(1 - p) * 100}% 0 0)` };
+    case 'wipe-right':
+      return { clipPath: `inset(0 0 0 ${(1 - p) * 100}%)` };
+    default:
+      return {};
+  }
+}
+
 const VideoPreview: React.FC<Props> = ({
   clips, currentTime, tracks, isPlaying,
   selectedClipIds = [], onUpdateClip, onSelectClip,
+  previewingTransition,
 }) => {
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
+  const [previewAnim, setPreviewAnim] = useState<{ clipId: string; phase: 'entrance' | 'exit'; startTime: number } | null>(null);
 
-  // Memoize active clips to avoid infinite re-render loops
+  // Handle preview trigger from EffectsPanel
+  useEffect(() => {
+    if (previewingTransition) {
+      setPreviewAnim({
+        clipId: previewingTransition.clipId,
+        phase: previewingTransition.phase,
+        startTime: performance.now(),
+      });
+    }
+  }, [previewingTransition]);
+
+  // Animate the preview
+  const [previewProgress, setPreviewProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!previewAnim) {
+      setPreviewProgress(null);
+      return;
+    }
+    const clip = clips.find(c => c.id === previewAnim.clipId);
+    const trans = previewAnim.phase === 'entrance'
+      ? clip?.transitions?.entrance
+      : clip?.transitions?.exit;
+    if (!trans) {
+      setPreviewAnim(null);
+      return;
+    }
+    const durationMs = trans.duration * 1000;
+    let raf: number;
+    const animate = () => {
+      const elapsed = performance.now() - previewAnim.startTime;
+      const p = Math.min(elapsed / durationMs, 1);
+      setPreviewProgress(p);
+      if (p < 1) {
+        raf = requestAnimationFrame(animate);
+      } else {
+        setTimeout(() => {
+          setPreviewAnim(null);
+          setPreviewProgress(null);
+        }, 300);
+      }
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [previewAnim, clips]);
+
   const activeClipIds = useMemo(() => {
     return clips
       .filter((c) => {
         const track = tracks.find((t) => t.id === c.trackId);
         if (!track || !track.visible) return false;
-        // muted only hides audio, not visuals
         if (track.muted && (c.type === 'audio')) return false;
         return currentTime >= c.startTime && currentTime < c.startTime + c.duration;
       })
@@ -36,13 +136,11 @@ const VideoPreview: React.FC<Props> = ({
 
   const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
 
-  // Sort clips by track order: lower tracks (higher index) render first, upper tracks render on top
   const sortedActiveClips = useMemo(() => {
     const trackIndexMap = new Map(tracks.map((t, i) => [t.id, i]));
     return [...activeClips].sort((a, b) => {
       const idxA = trackIndexMap.get(a.trackId) ?? 0;
       const idxB = trackIndexMap.get(b.trackId) ?? 0;
-      // Higher index = lower in timeline = rendered first (behind)
       return idxB - idxA;
     });
   }, [activeClips, tracks]);
@@ -50,10 +148,8 @@ const VideoPreview: React.FC<Props> = ({
   const activeVisuals = useMemo(() => sortedActiveClips.filter((c) => c.type === 'video' || c.type === 'image' || c.type === 'canvas'), [sortedActiveClips]);
   const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
 
-  // Stable key for video sync effect - only re-run when clip IDs or play state change
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
 
-  // Sync video currentTime - use refs to avoid dependency on clips array
   const clipsRef = useRef(clips);
   clipsRef.current = clips;
 
@@ -71,7 +167,6 @@ const VideoPreview: React.FC<Props> = ({
     });
   }, [currentTime, activeVideoIds]);
 
-  // Separate effect for play/pause to avoid constant toggling
   useEffect(() => {
     const ids = activeVideoIds.split(',').filter(Boolean);
     ids.forEach((clipId) => {
@@ -104,6 +199,45 @@ const VideoPreview: React.FC<Props> = ({
       })
       .join(' ');
   }, []);
+
+  // Compute transition style for a clip at the current time
+  const getClipTransitionStyle = useCallback((clip: TimelineClip): React.CSSProperties => {
+    // Preview animation override
+    if (previewAnim && previewAnim.clipId === clip.id && previewProgress !== null) {
+      const trans = previewAnim.phase === 'entrance'
+        ? clip.transitions?.entrance
+        : clip.transitions?.exit;
+      if (trans) {
+        return getTransitionStyle(trans.type, previewProgress, previewAnim.phase === 'exit');
+      }
+    }
+
+    const transitions = clip.transitions;
+    if (!transitions) return {};
+
+    const clipElapsed = currentTime - clip.startTime;
+    const clipRemaining = (clip.startTime + clip.duration) - currentTime;
+
+    // Entrance
+    if (transitions.entrance && transitions.entrance.type !== 'none') {
+      const dur = transitions.entrance.duration;
+      if (clipElapsed < dur) {
+        const progress = clipElapsed / dur;
+        return getTransitionStyle(transitions.entrance.type, progress, false);
+      }
+    }
+
+    // Exit
+    if (transitions.exit && transitions.exit.type !== 'none') {
+      const dur = transitions.exit.duration;
+      if (clipRemaining < dur) {
+        const progress = clipRemaining / dur;
+        return getTransitionStyle(transitions.exit.type, progress, true);
+      }
+    }
+
+    return {};
+  }, [currentTime, previewAnim, previewProgress]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize') => {
     e.stopPropagation();
@@ -172,7 +306,8 @@ const VideoPreview: React.FC<Props> = ({
             const cw = clip.w ?? 100;
             const ch = clip.h ?? 100;
             const isSelected = selectedClipIds.includes(clip.id);
-            const zIndex = 10 + layerIdx; // Already sorted: first = bottom, last = top
+            const zIndex = 10 + layerIdx;
+            const transitionStyle = getClipTransitionStyle(clip);
 
             return (
               <div
@@ -188,6 +323,16 @@ const VideoPreview: React.FC<Props> = ({
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px',
                   zIndex,
+                  transition: 'none',
+                  ...transitionStyle,
+                  // Merge opacity
+                  ...(transitionStyle.opacity !== undefined
+                    ? { opacity: (clip.opacity ?? 1) * (transitionStyle.opacity as number) }
+                    : {}),
+                  // Merge filter
+                  ...(transitionStyle.filter
+                    ? { filter: [buildFilter(clip), transitionStyle.filter].filter(f => f && f !== 'none').join(' ') || 'none' }
+                    : {}),
                 }}
                 onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
               >

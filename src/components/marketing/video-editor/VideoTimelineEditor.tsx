@@ -71,6 +71,7 @@ const VideoTimelineEditor: React.FC = () => {
   const [exportedVideoDuration, setExportedVideoDuration] = useState(0);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Project management
@@ -819,7 +820,7 @@ const VideoTimelineEditor: React.FC = () => {
             <div className="flex items-center justify-center relative shrink-0 overflow-hidden" style={{ height: previewHeight, backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}
               onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); setPreviewZoom(prev => Math.min(5, Math.max(0.25, prev + (e.deltaY < 0 ? 0.1 : -0.1)))); } }}>
               <div style={{ transform: `scale(${previewZoom})`, transformOrigin: 'center center', transition: 'transform 0.1s ease-out' }}>
-                <VideoPreview clips={state.clips} currentTime={state.currentTime} tracks={state.tracks} isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds} onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)} />
+                <VideoPreview clips={state.clips} currentTime={state.currentTime} tracks={state.tracks} isPlaying={state.isPlaying} selectedClipIds={state.selectedClipIds} onUpdateClip={timeline.updateClip} onSelectClip={(id) => timeline.selectClip(id)} previewingTransition={previewingTransition} />
               </div>
               <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur rounded-lg px-1.5 py-0.5 border">
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewZoom(prev => Math.max(0.25, prev - 0.25))}><ZoomOut className="h-3 w-3" /></Button>
@@ -904,7 +905,7 @@ const VideoTimelineEditor: React.FC = () => {
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
-            {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
+            {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} onPreviewTransition={(clipId, phase) => setPreviewingTransition({ clipId, phase })} />}
             {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
           </div>
         </div>

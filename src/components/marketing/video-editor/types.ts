@@ -15,7 +15,8 @@ export interface TimelineClip {
   volume?: number; // 0-1 for audio/video
   opacity?: number; // 0-1
   filters?: VideoFilter[];
-  transition?: ClipTransition;
+  transition?: ClipTransition; // legacy - kept for backward compat
+  transitions?: ClipTransitions;
   locked?: boolean;
   muted?: boolean;
   canvasJson?: string; // JSON state for canvas compositions
@@ -51,6 +52,11 @@ export interface ClipTransition {
   duration: number; // seconds
 }
 
+export interface ClipTransitions {
+  entrance?: ClipTransition;
+  exit?: ClipTransition;
+}
+
 export type TransitionType =
   | 'none'
   | 'fade'
@@ -65,7 +71,11 @@ export type TransitionType =
   | 'zoom-in'
   | 'zoom-out'
   | 'blur-transition'
-  | 'flash';
+  | 'flash'
+  | 'scale-up'
+  | 'scale-down'
+  | 'rotate-in'
+  | 'bounce';
 
 export interface TimelineTrack {
   id: string;
@@ -101,21 +111,24 @@ export interface EffectPreset {
   filters: Omit<VideoFilter, 'id'>[];
 }
 
-export const TRANSITION_PRESETS: { type: TransitionType; label: string; icon: string }[] = [
-  { type: 'none', label: 'Sem transição', icon: '⬜' },
-  { type: 'fade', label: 'Fade', icon: '🌫️' },
-  { type: 'crossfade', label: 'Crossfade', icon: '🔀' },
-  { type: 'dissolve', label: 'Dissolve', icon: '✨' },
-  { type: 'slide-left', label: 'Slide Esquerda', icon: '⬅️' },
-  { type: 'slide-right', label: 'Slide Direita', icon: '➡️' },
-  { type: 'slide-up', label: 'Slide Cima', icon: '⬆️' },
-  { type: 'slide-down', label: 'Slide Baixo', icon: '⬇️' },
-  { type: 'wipe-left', label: 'Wipe Esquerda', icon: '🔲' },
-  { type: 'wipe-right', label: 'Wipe Direita', icon: '🔳' },
-  { type: 'zoom-in', label: 'Zoom In', icon: '🔍' },
-  { type: 'zoom-out', label: 'Zoom Out', icon: '🔎' },
-  { type: 'blur-transition', label: 'Blur', icon: '💫' },
-  { type: 'flash', label: 'Flash', icon: '⚡' },
+export const TRANSITION_PRESETS: { type: TransitionType; label: string; icon: string; description: string }[] = [
+  { type: 'none', label: 'Nenhum', icon: '⬜', description: 'Sem efeito' },
+  { type: 'fade', label: 'Fade', icon: '🌫️', description: 'Aparece/desaparece suavemente' },
+  { type: 'slide-left', label: 'Slide ←', icon: '⬅️', description: 'Desliza da direita' },
+  { type: 'slide-right', label: 'Slide →', icon: '➡️', description: 'Desliza da esquerda' },
+  { type: 'slide-up', label: 'Slide ↑', icon: '⬆️', description: 'Desliza de baixo' },
+  { type: 'slide-down', label: 'Slide ↓', icon: '⬇️', description: 'Desliza de cima' },
+  { type: 'zoom-in', label: 'Zoom In', icon: '🔍', description: 'Cresce do centro' },
+  { type: 'zoom-out', label: 'Zoom Out', icon: '🔎', description: 'Diminui ao centro' },
+  { type: 'scale-up', label: 'Pop', icon: '💥', description: 'Aparece com impacto' },
+  { type: 'scale-down', label: 'Encolher', icon: '🫧', description: 'Encolhe suavemente' },
+  { type: 'blur-transition', label: 'Blur', icon: '💫', description: 'Desfoca/foca' },
+  { type: 'flash', label: 'Flash', icon: '⚡', description: 'Lampejo branco' },
+  { type: 'bounce', label: 'Bounce', icon: '🏀', description: 'Efeito elástico' },
+  { type: 'rotate-in', label: 'Rotação', icon: '🔄', description: 'Gira ao aparecer' },
+  { type: 'dissolve', label: 'Dissolve', icon: '✨', description: 'Dissolução gradual' },
+  { type: 'wipe-left', label: 'Wipe ←', icon: '🔲', description: 'Cortina lateral' },
+  { type: 'wipe-right', label: 'Wipe →', icon: '🔳', description: 'Cortina lateral' },
 ];
 
 export const EFFECT_PRESETS: EffectPreset[] = [
