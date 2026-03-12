@@ -411,9 +411,15 @@ export function useStudioExecution() {
       }
 
       case 'llmProcess': {
+        const llmEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const llmDefaults = getStudioDefaults(llmEstabId);
+        const llmLangSuffix = getLanguagePromptSuffix(llmDefaults.defaultLanguage || 'pt-BR');
+        const langSystemPrompt = systemPrompt 
+          ? `${systemPrompt}\n\nIMPORTANT: Always respond ${llmLangSuffix}.`
+          : `Always respond ${llmLangSuffix}.`;
         const result = await callStudio('generate_text', {
           prompt: combinedInput,
-          systemPrompt,
+          systemPrompt: langSystemPrompt,
           model: config.model,
         });
         return { text: result };
