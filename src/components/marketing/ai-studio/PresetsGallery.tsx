@@ -1423,8 +1423,8 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
       {/* Choose Mode Screen */}
       {mode === 'choose' ? (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-xl w-full space-y-8">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+          <div className="max-w-xl w-full space-y-5 sm:space-y-8">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
