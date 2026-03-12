@@ -1445,7 +1445,7 @@ const AICreativeStudioInner: React.FC = () => {
               size="sm"
               onClick={cancelExecution}
               variant="destructive"
-              className="gap-1.5 sm:gap-2 rounded-lg text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 animate-pulse"
+              className="gap-1.5 sm:gap-2 rounded-lg text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 animate-pulse cursor-pointer"
             >
               <Square className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
               <span className="hidden xs:inline">Cancelar</span>
