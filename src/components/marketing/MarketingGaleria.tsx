@@ -241,9 +241,11 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
 
       let downloadBlob: Blob;
       if (isVideo) {
-        downloadBlob = withAudio
-          ? await convertVideoToWhatsappMp4(blob)
-          : await removeAudioFromVideo(blob);
+        if (withAudio) {
+          downloadBlob = new Blob([blob], { type: 'video/mp4' });
+        } else {
+          downloadBlob = await removeAudioFromVideo(blob);
+        }
       } else if (item.content_type === 'audio') {
         downloadBlob = new Blob([blob], { type: 'audio/mpeg' });
       } else {
@@ -264,7 +266,6 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       const a = document.createElement('a');
       a.href = item.content_url;
       a.download = item.resource_name || 'download';
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
