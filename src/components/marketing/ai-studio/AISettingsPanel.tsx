@@ -434,14 +434,42 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                     <div className="p-6 space-y-6">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
-                          🚫
+                          ⚙️
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-foreground">Prompts Negativos Padrão</h3>
-                          <p className="text-sm text-muted-foreground">Defina os textos negativos que serão preenchidos automaticamente em novos blocos de imagem e vídeo.</p>
+                          <h3 className="text-xl font-bold text-foreground">Configurações Padrão</h3>
+                          <p className="text-sm text-muted-foreground">Defina idioma e prompts negativos padrão para todo o Studio.</p>
                         </div>
                       </div>
 
+                      {/* Language Config */}
+                      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🌐 Idioma Padrão
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">
+                            Todo conteúdo gerado (textos, áudios, músicas, scripts) será criado neste idioma.
+                          </p>
+                          <Select
+                            value={studioDefaults.defaultLanguage}
+                            onValueChange={(v) => setStudioDefaults(prev => ({ ...prev, defaultLanguage: v }))}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SUPPORTED_LANGUAGES.map(lang => (
+                                <SelectItem key={lang.value} value={lang.value}>
+                                  {lang.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Negative Prompts */}
                       <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
                         <div className="space-y-2">
                           <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
@@ -478,7 +506,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                         <Button
                           onClick={() => {
                             saveStudioDefaults(estabelecimentoId, studioDefaults);
-                            toast.success('Prompts negativos padrão salvos!');
+                            toast.success('Configurações padrão salvas!');
                           }}
                           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
                         >
