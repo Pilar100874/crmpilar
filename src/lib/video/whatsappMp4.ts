@@ -1,218 +1,186 @@
 import { toast } from 'sonner';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
 
-/* ── helpers (inline, sem @ffmpeg/util) ── */
+/**
+ * Re-encodes a video blob using Canvas + MediaRecorder.
+ * This avoids FFmpeg WASM which is too heavy/unreliable in browser.
+ * Output is WebM (VP8/VP9) which is widely supported, or MP4 if browser supports it.
+ */
 
-async function toBlobURL(url: string, mimeType: string): Promise<string> {
-  const resp = await fetch(url);
-  const buf = await resp.arrayBuffer();
-  return URL.createObjectURL(new Blob([buf], { type: mimeType }));
-}
-
-async function fetchFile(input: Blob | string): Promise<Uint8Array> {
-  if (input instanceof Blob) return new Uint8Array(await input.arrayBuffer());
-  const resp = await fetch(input);
-  return new Uint8Array(await resp.arrayBuffer());
-}
-
-type InputProbe = {
-  ext: 'mp4' | 'webm' | 'mov' | 'ogg';
-  formatArg?: 'webm' | 'mov' | 'ogg';
-};
-
-async function probeInput(blob: Blob): Promise<InputProbe> {
-  try {
-    const header = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
-
-    // WebM / Matroska (EBML)
-    if (header[0] === 0x1a && header[1] === 0x45 && header[2] === 0xdf && header[3] === 0xa3) {
-      return { ext: 'webm', formatArg: 'webm' };
-    }
-
-    // ISO BMFF (MP4/MOV): "ftyp" em bytes 4..7
-    if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
-      const majorBrand = String.fromCharCode(header[8], header[9], header[10], header[11]);
-      if (majorBrand === 'qt  ') return { ext: 'mov', formatArg: 'mov' };
-      return { ext: 'mp4' };
-    }
-
-    // OGG
-    if (header[0] === 0x4f && header[1] === 0x67 && header[2] === 0x67 && header[3] === 0x53) {
-      return { ext: 'ogg', formatArg: 'ogg' };
-    }
-  } catch {
-    // fallback abaixo
+function getSupportedMimeType(): string {
+  const types = [
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=h264',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ];
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
   }
-
-  const mime = blob.type.toLowerCase();
-  if (mime.includes('webm')) return { ext: 'webm', formatArg: 'webm' };
-  if (mime.includes('quicktime') || mime.includes('mov')) return { ext: 'mov', formatArg: 'mov' };
-  if (mime.includes('ogg')) return { ext: 'ogg', formatArg: 'ogg' };
-  return { ext: 'mp4' };
+  return 'video/webm';
 }
 
-/* ── FFmpeg singleton ── */
+async function reEncodeVideo(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
 
-const CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-const LOAD_TIMEOUT = 60_000;
-const EXEC_TIMEOUT = 240_000;
+    const blobUrl = URL.createObjectURL(inputBlob);
+    video.src = blobUrl;
 
-let instance: FFmpeg | null = null;
-let loadPromise: Promise<FFmpeg> | null = null;
-let queue: Promise<void> = Promise.resolve();
+    const cleanup = () => {
+      URL.revokeObjectURL(blobUrl);
+      video.remove();
+      canvas.remove();
+    };
 
-function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
-  let tid: ReturnType<typeof setTimeout>;
-  const tp = new Promise<T>((_, rej) => {
-    tid = setTimeout(() => rej(new Error(msg)), ms);
-  });
-  return Promise.race([p, tp]).finally(() => clearTimeout(tid!)) as Promise<T>;
-}
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
 
-function enqueue<T>(job: () => Promise<T>): Promise<T> {
-  const run = queue.then(job, job);
-  queue = run.then(() => {}, () => {});
-  return run;
-}
-
-function reset() {
-  try {
-    instance?.terminate();
-  } catch {}
-  instance = null;
-  loadPromise = null;
-}
-
-async function getFFmpeg(): Promise<FFmpeg> {
-  if (instance) return instance;
-  if (loadPromise) return loadPromise;
-
-  loadPromise = (async () => {
-    const ff = new FFmpeg();
-    ff.on('log', ({ message }) => {
-      console.log('[ffmpeg]', message);
-    });
-
-    try {
-      // Load single-threaded (no worker) for maximum browser compatibility
-      const [coreURL, wasmURL] = await Promise.all([
-        toBlobURL(`${CORE_URL}/ffmpeg-core.js`, 'text/javascript'),
-        toBlobURL(`${CORE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-      ]);
-      await withTimeout(ff.load({ coreURL, wasmURL }), LOAD_TIMEOUT, 'Timeout carregando FFmpeg');
-      instance = ff;
-      return ff;
-    } catch (e) {
-      try {
-        ff.terminate();
-      } catch {}
-      loadPromise = null;
-      throw e;
-    }
-  })();
-
-  return loadPromise;
-}
-
-/* ── transcode core ── */
-
-async function transcode(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
-  return enqueue(async () => {
-    const ff = await getFFmpeg();
-    const probe = await probeInput(inputBlob);
-    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const inFile = `in_${uid}.${probe.ext}`;
-    const outFile = `out_${uid}.mp4`;
-
-    try {
-      const data = await fetchFile(inputBlob);
-      await ff.writeFile(inFile, data);
-
-      const args: string[] = ['-hide_banner', '-loglevel', 'error'];
-
-      if (probe.formatArg) {
-        args.push('-f', probe.formatArg);
-      }
-
-      args.push(
-        '-i',
-        inFile,
-        '-map',
-        '0:v:0',
-        '-vf',
-        'scale=trunc(iw/2)*2:trunc(ih/2)*2',
-        '-c:v',
-        'libx264',
-        '-preset',
-        'veryfast',
-        '-profile:v',
-        'baseline',
-        '-level',
-        '3.1',
-        '-pix_fmt',
-        'yuv420p',
-        '-movflags',
-        '+faststart',
-        '-r',
-        '30',
-        '-crf',
-        '23',
-      );
-
-      if (keepAudio) {
-        args.push('-map', '0:a:0?', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2');
+    video.onloadedmetadata = () => {
+      // Handle WebM duration bug
+      if (!video.duration || !isFinite(video.duration)) {
+        video.currentTime = 1e10;
+        video.ontimeupdate = () => {
+          video.ontimeupdate = null;
+          video.currentTime = 0;
+          startRecording();
+        };
       } else {
-        args.push('-an');
+        startRecording();
+      }
+    };
+
+    video.onerror = () => {
+      cleanup();
+      reject(new Error('Erro ao carregar vídeo'));
+    };
+
+    function startRecording() {
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      // Ensure even dimensions
+      canvas.width = w % 2 === 0 ? w : w - 1;
+      canvas.height = h % 2 === 0 ? h : h - 1;
+
+      const stream = canvas.captureStream(30);
+
+      // Add audio track if needed
+      if (keepAudio && (video as any).captureStream) {
+        try {
+          const videoStream = (video as any).captureStream();
+          const audioTracks = videoStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            stream.addTrack(audioTracks[0]);
+          }
+        } catch (e) {
+          console.warn('[mp4] Could not capture audio track:', e);
+        }
       }
 
-      args.push('-max_muxing_queue_size', '1024', '-y', outFile);
+      const mimeType = getSupportedMimeType();
+      console.log('[mp4] Using mime type:', mimeType);
 
-      const code = await withTimeout(ff.exec(args), EXEC_TIMEOUT, 'Conversão demorou demais');
-      if (code !== 0) throw new Error(`FFmpeg retornou código ${code}`);
-
-      const out = await ff.readFile(outFile);
-      if (typeof out === 'string') throw new Error('Saída inválida');
-
-      return new Blob([new Uint8Array(out)], { type: 'video/mp4' });
-    } catch (e) {
-      reset();
-      throw e;
-    } finally {
+      let recorder: MediaRecorder;
       try {
-        await ff.deleteFile(inFile);
-      } catch {}
-      try {
-        await ff.deleteFile(outFile);
-      } catch {}
+        recorder = new MediaRecorder(stream, {
+          mimeType,
+          videoBitsPerSecond: 4_000_000,
+        });
+      } catch {
+        recorder = new MediaRecorder(stream);
+      }
+
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        cleanup();
+        const outputType = mimeType.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+        const result = new Blob(chunks, { type: outputType });
+        resolve(result);
+      };
+
+      recorder.onerror = () => {
+        cleanup();
+        reject(new Error('Erro no MediaRecorder'));
+      };
+
+      // Safety timeout
+      const maxDuration = Math.max((video.duration || 30) * 1000 + 5000, 60000);
+      const safetyTimer = setTimeout(() => {
+        try { recorder.stop(); } catch {}
+        try { video.pause(); } catch {}
+      }, maxDuration);
+
+      recorder.start(100);
+      video.muted = !keepAudio;
+      video.currentTime = 0;
+      video.play().catch(() => {
+        cleanup();
+        clearTimeout(safetyTimer);
+        reject(new Error('Não foi possível reproduzir o vídeo'));
+      });
+
+      const drawFrame = () => {
+        if (video.paused || video.ended) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        requestAnimationFrame(drawFrame);
+      };
+      requestAnimationFrame(drawFrame);
+
+      video.onended = () => {
+        // Draw last frame
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        clearTimeout(safetyTimer);
+        setTimeout(() => {
+          try { recorder.stop(); } catch {}
+        }, 200);
+      };
     }
+
+    video.load();
   });
+}
+
+function getFileExtension(mimeType: string): string {
+  if (mimeType.startsWith('video/mp4')) return '.mp4';
+  return '.webm';
 }
 
 /* ── public API ── */
 
 export async function convertVideoToWhatsappMp4(inputBlob: Blob): Promise<Blob> {
-  const tid = toast.loading('Convertendo para MP4 com áudio...');
+  const tid = toast.loading('Convertendo vídeo com áudio...');
   try {
-    const result = await transcode(inputBlob, true);
-    toast.success('Vídeo MP4 com áudio pronto!', { id: tid });
+    const result = await reEncodeVideo(inputBlob, true);
+    toast.success('Vídeo com áudio pronto!', { id: tid });
     return result;
   } catch (err) {
-    console.error('[whatsappMp4] convert error:', err);
-    toast.error('Falha na conversão para MP4 com áudio.', { id: tid });
-    throw err instanceof Error ? err : new Error('Falha na conversão para MP4 com áudio');
+    console.error('[mp4] convert error:', err);
+    toast.error('Falha na conversão. Baixando original...', { id: tid });
+    // Fallback: return original blob
+    return inputBlob;
   }
 }
 
 export async function removeAudioFromVideo(inputBlob: Blob): Promise<Blob> {
-  const tid = toast.loading('Gerando MP4 sem áudio...');
+  const tid = toast.loading('Gerando vídeo sem áudio...');
   try {
-    const result = await transcode(inputBlob, false);
-    toast.success('Vídeo MP4 sem áudio pronto!', { id: tid });
+    const result = await reEncodeVideo(inputBlob, false);
+    toast.success('Vídeo sem áudio pronto!', { id: tid });
     return result;
   } catch (err) {
-    console.error('[whatsappMp4] remove audio error:', err);
-    toast.error('Falha na conversão para MP4 sem áudio.', { id: tid });
-    throw err instanceof Error ? err : new Error('Falha na conversão para MP4 sem áudio');
+    console.error('[mp4] remove audio error:', err);
+    toast.error('Falha na conversão. Baixando original...', { id: tid });
+    return inputBlob;
   }
 }
 
@@ -223,10 +191,13 @@ export async function downloadAsWhatsappMp4(url: string): Promise<Blob> {
 }
 
 export function triggerDownload(blob: Blob, fileName: string) {
+  const ext = getFileExtension(blob.type);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = fileName.endsWith('.mp4') ? fileName : fileName.replace(/\.\w+$/, '') + '.mp4';
+  // Use correct extension based on actual output format
+  const baseName = fileName.replace(/\.\w+$/, '');
+  a.download = baseName + ext;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
