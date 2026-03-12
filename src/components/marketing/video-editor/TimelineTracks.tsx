@@ -303,7 +303,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       timeline-clip absolute top-1 bottom-1 rounded-md cursor-pointer
                       border-2 transition-shadow overflow-hidden group
                       ${isSelected ? 'ring-2 ring-primary shadow-lg z-10' : 'hover:shadow-md'}
-                      ${clip.locked ? 'opacity-60 cursor-not-allowed' : ''}
+                      ${(clip.locked || track.locked) ? 'opacity-60 cursor-not-allowed' : ''}
                     `}
                     style={{
                       left,
