@@ -193,7 +193,7 @@ const AICreativeStudioInner: React.FC = () => {
   }, [fetchWorkflows]);
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'smoothstep' }, eds));
+    setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'studioEdge' }, eds));
   }, [setEdges]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
