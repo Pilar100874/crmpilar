@@ -829,7 +829,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
-      console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images for ${provider}`);
+      // Hero frame failed — do NOT proceed with partial references
+      throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
     }
   }
 
