@@ -1459,12 +1459,18 @@ const AICreativeStudioInner: React.FC = () => {
               {currentWorkflowName}
             </span>
           )}
-          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
-            <Clapperboard className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+          <Button size="icon" variant="ghost" onClick={() => setShowPresets(true)} className="h-7 w-7 sm:hidden shrink-0" title="Presets">
+            <Clapperboard className="h-3 w-3" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setShowSettings(true)} className="h-7 w-7 sm:hidden shrink-0" title="Config">
+            <Settings2 className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Clapperboard className="h-3.5 w-3.5" />
             Presets
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
-            <Settings2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Settings2 className="h-3.5 w-3.5" />
             Config
           </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
