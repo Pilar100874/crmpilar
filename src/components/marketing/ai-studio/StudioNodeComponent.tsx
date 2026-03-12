@@ -721,7 +721,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 onChange={(e) => handleInlineUpdate('systemPrompt', e.target.value)}
                 onBlur={() => setIsEditing(false)}
                 onKeyDown={(e) => { if (e.key === 'Escape') setIsEditing(false); }}
-                className="w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="nodrag nowheel w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
                 placeholder="Defina instruções do sistema..."
               />
             ) : (
