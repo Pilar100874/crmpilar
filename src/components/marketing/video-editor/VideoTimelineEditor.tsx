@@ -28,6 +28,9 @@ const VideoTimelineEditor: React.FC = () => {
   const { state } = timeline;
   const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media'>('media');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
+  const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
+  const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = state.selectedClipIds.length === 1
