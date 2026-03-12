@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen,
-  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronUp
+  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronUp, ChevronDown,
+  FolderKanban, MoreVertical, Pencil, Copy as CopyIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,12 +19,26 @@ import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
 import { TRACK_COLORS, TimelineClip } from './types';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
   name: string;
   src: string;
   duration?: number;
+  canvasJson?: string;
+}
+
+interface VideoProject {
+  id: string;
+  nome: string;
+  thumbnail: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const VideoTimelineEditor: React.FC = () => {
@@ -41,6 +56,7 @@ const VideoTimelineEditor: React.FC = () => {
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
   const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
   const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
+  const [canvasEditResourceId, setCanvasEditResourceId] = useState<string | null>(null);
   const [videoConfig, setVideoConfig] = useState<VideoConfig>({
     backgroundColor: '#000000',
     resolution: '1920x1080',
@@ -52,6 +68,129 @@ const VideoTimelineEditor: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Project management
+  const [projects, setProjects] = useState<VideoProject[]>([]);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState('');
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameProjectId, setRenameProjectId] = useState<string | null>(null);
+  const [renameName, setRenameName] = useState('');
+
+  const loadProjects = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    const { data } = await supabase
+      .from('video_projects')
+      .select('id, nome, thumbnail, created_at, updated_at')
+      .eq('estabelecimento_id', estabId)
+      .order('updated_at', { ascending: false });
+    if (data) setProjects(data as VideoProject[]);
+  }, []);
+
+  const saveProject = useCallback(async (name?: string) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+
+    const timelineData = {
+      tracks: state.tracks,
+      clips: state.clips,
+      duration: state.duration,
+      zoom: state.zoom,
+      fps: state.fps,
+    };
+
+    if (currentProjectId) {
+      await supabase
+        .from('video_projects')
+        .update({
+          nome: name || projectName || 'Projeto sem título',
+          timeline_data: timelineData as any,
+          video_config: videoConfig as any,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentProjectId);
+      toast.success('Projeto salvo!');
+    } else {
+      const finalName = name || projectName || `Projeto ${new Date().toLocaleDateString('pt-BR')}`;
+      const { data } = await supabase
+        .from('video_projects')
+        .insert({
+          estabelecimento_id: estabId,
+          nome: finalName,
+          timeline_data: timelineData as any,
+          video_config: videoConfig as any,
+        })
+        .select('id')
+        .single();
+      if (data) {
+        setCurrentProjectId(data.id);
+        setProjectName(finalName);
+        toast.success('Projeto criado!');
+      }
+    }
+    loadProjects();
+  }, [state, videoConfig, currentProjectId, projectName, loadProjects]);
+
+  const loadProject = useCallback(async (project: VideoProject) => {
+    const { data } = await supabase
+      .from('video_projects')
+      .select('*')
+      .eq('id', project.id)
+      .single();
+    if (!data) return;
+    
+    const td = data.timeline_data as any;
+    const vc = data.video_config as any;
+    
+    if (td.tracks) timeline.updateState({ tracks: td.tracks, clips: td.clips || [], duration: td.duration || 60, zoom: td.zoom || 40, fps: td.fps || 30 });
+    if (vc) setVideoConfig(vc);
+    setCurrentProjectId(project.id);
+    setProjectName(project.nome);
+    setProjectsOpen(false);
+    toast.success(`Projeto "${project.nome}" carregado`);
+  }, [timeline]);
+
+  const duplicateProject = useCallback(async (project: VideoProject) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    const { data: original } = await supabase
+      .from('video_projects')
+      .select('*')
+      .eq('id', project.id)
+      .single();
+    if (!original) return;
+    await supabase.from('video_projects').insert({
+      estabelecimento_id: estabId,
+      nome: `${original.nome} (cópia)`,
+      timeline_data: original.timeline_data,
+      video_config: original.video_config,
+      thumbnail: original.thumbnail,
+    });
+    loadProjects();
+    toast.success('Projeto duplicado!');
+  }, [loadProjects]);
+
+  const deleteProject = useCallback(async (id: string) => {
+    await supabase.from('video_projects').delete().eq('id', id);
+    if (currentProjectId === id) { setCurrentProjectId(null); setProjectName(''); }
+    loadProjects();
+    toast.success('Projeto excluído');
+  }, [currentProjectId, loadProjects]);
+
+  const renameProject = useCallback(async () => {
+    if (!renameProjectId || !renameName.trim()) return;
+    await supabase.from('video_projects').update({ nome: renameName.trim() }).eq('id', renameProjectId);
+    setRenameDialogOpen(false);
+    setRenameProjectId(null);
+    loadProjects();
+    if (renameProjectId === currentProjectId) setProjectName(renameName.trim());
+    toast.success('Projeto renomeado');
+  }, [renameProjectId, renameName, currentProjectId, loadProjects]);
+
+  useEffect(() => { loadProjects(); }, [loadProjects]);
 
   const handleExportVideo = useCallback(async () => {
     if (state.clips.length === 0) {
@@ -68,13 +207,11 @@ const VideoTimelineEditor: React.FC = () => {
       const duration = state.duration;
       const totalFrames = Math.ceil(duration * fps);
 
-      // Create offscreen canvas for rendering
       const canvas = document.createElement('canvas');
       canvas.width = resW;
       canvas.height = resH;
       const ctx = canvas.getContext('2d')!;
 
-      // Preload all media
       const mediaElements: Record<string, HTMLVideoElement | HTMLImageElement> = {};
       for (const clip of state.clips) {
         if (!clip.src) continue;
@@ -95,10 +232,7 @@ const VideoTimelineEditor: React.FC = () => {
         }
       }
 
-      // Use MediaRecorder on the canvas stream
       const stream = canvas.captureStream(fps);
-
-      // Add audio tracks from video elements if any
       const audioCtx = new AudioContext();
       const dest = audioCtx.createMediaStreamDestination();
       let hasAudio = false;
@@ -111,7 +245,7 @@ const VideoTimelineEditor: React.FC = () => {
             const source = audioCtx.createMediaElementSource(vid);
             source.connect(dest);
             hasAudio = true;
-          } catch { /* some videos may not have audio */ }
+          } catch { }
         }
         if (clip.type === 'audio' && clip.src) {
           try {
@@ -121,80 +255,68 @@ const VideoTimelineEditor: React.FC = () => {
             const source = audioCtx.createMediaElementSource(audio);
             source.connect(dest);
             hasAudio = true;
-          } catch { /* skip */ }
+          } catch { }
         }
       }
 
       if (hasAudio) {
-        for (const track of dest.stream.getAudioTracks()) {
-          stream.addTrack(track);
-        }
+        dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
       }
 
-      const chunks: Blob[] = [];
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : 'video/webm';
       const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+      const chunks: BlobPart[] = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 
       const recordingDone = new Promise<Blob>((resolve) => {
         recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
       });
-
       recorder.start(100);
 
-      // Render frame by frame
+      const sortedTracks = [...state.tracks];
       for (let frame = 0; frame < totalFrames; frame++) {
-        const time = frame / fps;
-        setExportProgress(Math.round((frame / totalFrames) * 100));
-
-        ctx.fillStyle = videoConfig.backgroundColor || '#000000';
+        const t = frame / fps;
+        ctx.fillStyle = videoConfig.backgroundColor;
         ctx.fillRect(0, 0, resW, resH);
 
-        // Get active clips at this time
-        const activeClips = state.clips.filter(c => {
-          const track = state.tracks.find(t => t.id === c.trackId);
-          if (!track?.visible) return false;
-          return time >= c.startTime && time < c.startTime + c.duration;
-        });
+        for (let ti = sortedTracks.length - 1; ti >= 0; ti--) {
+          const track = sortedTracks[ti];
+          if (!track.visible) continue;
+          const trackClips = state.clips
+            .filter(c => c.trackId === track.id && t >= c.startTime && t < c.startTime + c.duration)
+            .sort((a, b) => a.startTime - b.startTime);
 
-        // Sort by track order (lower tracks behind)
-        const trackIndexMap = new Map(state.tracks.map((t, i) => [t.id, i]));
-        activeClips.sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
+          for (const clip of trackClips) {
+            const el = mediaElements[clip.id];
+            if (!el) continue;
+            const x = ((clip.x ?? 0) / 100) * resW;
+            const y = ((clip.y ?? 0) / 100) * resH;
+            const w = ((clip.w ?? 100) / 100) * resW;
+            const h = ((clip.h ?? 100) / 100) * resH;
 
-        for (const clip of activeClips) {
-          const el = mediaElements[clip.id];
-          if (!el) continue;
-
-          if (el instanceof HTMLVideoElement) {
-            const clipTime = time - clip.startTime + (clip.trimStart || 0);
-            el.currentTime = clipTime;
-            await new Promise(r => setTimeout(r, 10)); // allow seek
+            ctx.globalAlpha = clip.opacity ?? 1;
+            if (el instanceof HTMLVideoElement) {
+              el.currentTime = t - clip.startTime + (clip.trimStart || 0);
+              ctx.drawImage(el, x, y, w, h);
+            } else {
+              ctx.drawImage(el, x, y, w, h);
+            }
+            ctx.globalAlpha = 1;
           }
-
-          const dx = (clip.x ?? 0) / 100 * resW;
-          const dy = (clip.y ?? 0) / 100 * resH;
-          const dw = (clip.w ?? 100) / 100 * resW;
-          const dh = (clip.h ?? 100) / 100 * resH;
-
-          ctx.globalAlpha = clip.opacity ?? 1;
-          ctx.drawImage(el, dx, dy, dw, dh);
-          ctx.globalAlpha = 1;
         }
 
-        // Wait for next frame timing
-        await new Promise(r => setTimeout(r, 1000 / fps / 2));
+        setExportProgress(Math.round((frame / totalFrames) * 90));
+        await new Promise(r => setTimeout(r, 1000 / fps));
       }
 
       recorder.stop();
       const blob = await recordingDone;
-      await audioCtx.close();
 
-      setExportProgress(95);
-
-      // Save to gallery
       const estabId = localStorage.getItem('estabelecimentoId');
       if (estabId) {
-        const fileName = `video_editor_${Date.now()}.webm`;
+        const fileName = `video_${Date.now()}.webm`;
         const path = `${estabId}/${fileName}`;
         const { error: uploadError } = await supabase.storage
           .from('marketing-videos')
@@ -212,22 +334,16 @@ const VideoTimelineEditor: React.FC = () => {
           });
           toast.success('Vídeo gerado e salvo na galeria!');
         } else {
-          // Download locally if upload fails
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
+          a.href = url; a.download = fileName; a.click();
           URL.revokeObjectURL(url);
           toast.info('Upload falhou. Vídeo baixado localmente.');
         }
       } else {
-        // No estab, download locally
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `video_editor_${Date.now()}.webm`;
-        a.click();
+        a.href = url; a.download = `video_editor_${Date.now()}.webm`; a.click();
         URL.revokeObjectURL(url);
         toast.success('Vídeo gerado e baixado!');
       }
@@ -312,13 +428,14 @@ const VideoTimelineEditor: React.FC = () => {
       opacity: 1,
       filters: [],
       src: media?.src,
-      canvasJson: (media as any)?.canvasJson,
+      canvasJson: media?.canvasJson,
       x: 0, y: 0, w: 100, h: 100,
     });
   }, [timeline]);
 
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
+    setCanvasEditResourceId(null);
     setCanvasEditJson(undefined);
     setCanvasDialogOpen(true);
   }, []);
@@ -326,25 +443,37 @@ const VideoTimelineEditor: React.FC = () => {
   const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
     if (clip.canvasJson) {
       setCanvasEditClipId(clip.id);
+      setCanvasEditResourceId(null);
       setCanvasEditJson(clip.canvasJson);
       setCanvasDialogOpen(true);
     }
   }, []);
 
+  const handleEditCanvasFromResource = useCallback((canvasJson: string, itemId: string) => {
+    setCanvasEditClipId(null);
+    setCanvasEditResourceId(itemId);
+    setCanvasEditJson(canvasJson);
+    setCanvasDialogOpen(true);
+  }, []);
+
   const handleCanvasEditConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
     setCanvasDialogOpen(false);
     if (canvasEditClipId) {
-      // Editing existing clip — update in place
+      // Editing existing clip in timeline
       timeline.updateClip(canvasEditClipId, { src: imageDataUrl, canvasJson });
+    } else if (canvasEditResourceId) {
+      // Editing existing canvas in resource panel
+      (resourcePanelRef.current as any)?.updateCanvasItem?.(canvasEditResourceId, imageDataUrl, canvasJson);
     } else {
-      // New canvas — add to resource panel (not timeline)
+      // New canvas — add to resource panel
       const clips = clipsRef.current;
       const name = `Canvas ${clips.filter(c => c.canvasJson).length + 1}`;
       resourcePanelRef.current?.addCanvasItem(name, imageDataUrl, canvasJson);
     }
     setCanvasEditClipId(null);
+    setCanvasEditResourceId(null);
     setCanvasEditJson(undefined);
-  }, [canvasEditClipId, timeline]);
+  }, [canvasEditClipId, canvasEditResourceId, timeline]);
 
   return (
     <div
@@ -355,7 +484,7 @@ const VideoTimelineEditor: React.FC = () => {
       tabIndex={0}
     >
       {/* Top toolbar — only controls */}
-      <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card/80 backdrop-blur">
+      <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card/80 backdrop-blur shrink-0">
         {/* Playback */}
         <div className="flex items-center gap-0.5">
           <Button size="icon" variant="ghost" onClick={() => timeline.seekTo(0)} title="Início" className="h-8 w-8">
@@ -406,6 +535,22 @@ const VideoTimelineEditor: React.FC = () => {
 
         <div className="flex-1" />
 
+        {/* Projects */}
+        <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setProjectsOpen(true); loadProjects(); }}>
+          <FolderKanban className="h-3.5 w-3.5" />
+          Projetos
+        </Button>
+
+        {/* Save */}
+        <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => {
+          if (currentProjectId) { saveProject(); } else { setSaveDialogOpen(true); }
+        }}>
+          <Save className="h-3.5 w-3.5" />
+          {currentProjectId ? 'Salvar' : 'Salvar como'}
+        </Button>
+
+        <div className="w-px h-5 bg-border mx-1" />
+
         {/* Zoom */}
         <div className="flex items-center gap-0.5">
           <Button size="icon" variant="ghost" onClick={timeline.zoomOut} className="h-8 w-8">
@@ -443,7 +588,7 @@ const VideoTimelineEditor: React.FC = () => {
             </>
           ) : (
             <>
-              <Save className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" />
               Gerar Vídeo
             </>
           )}
@@ -451,12 +596,13 @@ const VideoTimelineEditor: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Preview + Timeline */}
         <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Preview area */}
           {!previewCollapsed && (
             <div
-              className="border-b flex items-center justify-center relative shrink-0 overflow-hidden"
+              className="flex items-center justify-center relative shrink-0 overflow-hidden"
               style={{
                 height: previewHeight,
                 backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor,
@@ -489,129 +635,129 @@ const VideoTimelineEditor: React.FC = () => {
               </div>
             </div>
           )}
-          {/* Resize handle - fixed bar */}
-          {!previewCollapsed && showResizeBar && (
-            <div
-              className="h-6 bg-muted/60 border-y border-border/60 cursor-row-resize flex items-center justify-center shrink-0 group relative"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                resizingRef.current = true;
-                resizeStartRef.current = { y: e.clientY, height: previewHeight };
 
-                const onMouseMove = (ev: MouseEvent) => {
-                  if (!resizingRef.current) return;
-                  const delta = ev.clientY - resizeStartRef.current.y;
-                  const newHeight = Math.min(800, Math.max(120, resizeStartRef.current.height + delta));
-                  setPreviewHeight(newHeight);
-                };
-                const onMouseUp = () => {
-                  resizingRef.current = false;
-                  document.removeEventListener('mousemove', onMouseMove);
-                  document.removeEventListener('mouseup', onMouseUp);
-                  document.body.style.cursor = '';
-                  document.body.style.userSelect = '';
-                };
-                document.body.style.cursor = 'row-resize';
-                document.body.style.userSelect = 'none';
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-              }}
-            >
-              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-primary/70 transition-colors" />
-              {/* Toggle buttons */}
-              <div className="absolute right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Fixed bars — always between preview and timeline */}
+          <div className="shrink-0">
+            {/* Resize bar */}
+            {showResizeBar && !previewCollapsed && (
+              <div
+                className="h-5 bg-muted/40 border-y border-border/40 cursor-row-resize flex items-center justify-center group relative"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  resizingRef.current = true;
+                  resizeStartRef.current = { y: e.clientY, height: previewHeight };
+                  const onMouseMove = (ev: MouseEvent) => {
+                    if (!resizingRef.current) return;
+                    const delta = ev.clientY - resizeStartRef.current.y;
+                    const newHeight = Math.min(800, Math.max(120, resizeStartRef.current.height + delta));
+                    setPreviewHeight(newHeight);
+                  };
+                  const onMouseUp = () => {
+                    resizingRef.current = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                  };
+                  document.body.style.cursor = 'row-resize';
+                  document.body.style.userSelect = 'none';
+                  document.addEventListener('mousemove', onMouseMove);
+                  document.addEventListener('mouseup', onMouseUp);
+                }}
+              >
+                <GripHorizontal className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
                 <button
-                  className="p-0.5 rounded hover:bg-background/80 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); setPreviewCollapsed(true); }}
-                  title="Ocultar preview"
-                >
-                  <ChevronUp className="h-3 w-3" />
-                </button>
-                <button
-                  className="p-0.5 rounded hover:bg-background/80 text-muted-foreground hover:text-foreground"
+                  className="absolute right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-all"
                   onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}
-                  title="Ocultar barra de redimensionamento"
+                  title="Ocultar barra"
                 >
-                  <Minimize2 className="h-3 w-3" />
+                  <Minimize2 className="h-2.5 w-2.5" />
                 </button>
               </div>
-            </div>
-          )}
-          {!previewCollapsed && !showResizeBar && (
-            <div className="h-px bg-border shrink-0" />
-          )}
-          {previewCollapsed && (
-            <div className="border-b bg-muted/30 px-3 py-1 flex items-center gap-2 shrink-0">
-              <Button size="sm" variant="ghost" onClick={() => setPreviewCollapsed(false)} className="text-xs gap-1">
-                <Film className="h-3 w-3" />Mostrar Preview
-              </Button>
-              <span className="text-xs text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
-              {!showResizeBar && (
-                <Button size="sm" variant="ghost" onClick={() => setShowResizeBar(true)} className="text-xs gap-1 ml-auto">
-                  <GripHorizontal className="h-3 w-3" />Barra Resize
-                </Button>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* Timeline */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-            <div className="flex-1 flex overflow-hidden">
-              <TrackHeaders
-                tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
-                onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
-                onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
-              />
-              <div className="flex-1 overflow-auto relative flex flex-col">
-                <TimelineRuler
-                  duration={state.duration} zoom={state.zoom}
-                  currentTime={state.currentTime} onSeek={timeline.seekTo}
-                  onDurationChange={(d) => timeline.updateState({ duration: d })}
-                />
-                <TimelineTracks
-                  state={state} onSelectClip={timeline.selectClip}
-                  onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
-                  onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
-                  onAddClip={handleAddClip}
-                />
-              </div>
-            </div>
-
-            {/* Status bar - fixed at bottom */}
+            {/* Status bar */}
             {showStatusBar && (
-              <div className="h-7 bg-muted/50 border-t border-border/60 px-3 flex items-center justify-between shrink-0 select-none">
+              <div className="h-6 bg-muted/30 border-b border-border/40 px-3 flex items-center justify-between select-none">
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-2.5 w-2.5" />
                     {formatTime(state.currentTime)} / {formatTime(state.duration)}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Layers className="h-3 w-3" />
+                    <Layers className="h-2.5 w-2.5" />
                     {state.tracks.length} trilhas · {state.clips.length} clipes
                   </span>
-                  <span>Zoom: {Math.round(state.zoom)}x</span>
+                  {currentProjectId && (
+                    <span className="text-primary/70 font-medium">{projectName}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
-                  {!showResizeBar && (
+                  {!showResizeBar && !previewCollapsed && (
                     <button
-                      className="text-[10px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/80 transition-colors"
+                      className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80 transition-colors"
                       onClick={() => setShowResizeBar(true)}
-                      title="Mostrar barra de redimensionamento"
                     >
-                      <GripHorizontal className="h-3 w-3 inline mr-0.5" />
-                      Resize
+                      <GripHorizontal className="h-2.5 w-2.5 inline" />
                     </button>
                   )}
                   <button
-                    className="text-[10px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/80 transition-colors"
+                    className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80 transition-colors"
                     onClick={() => setShowStatusBar(false)}
-                    title="Ocultar barra de status"
                   >
                     <Minimize2 className="h-2.5 w-2.5" />
                   </button>
                 </div>
               </div>
             )}
+
+            {/* Collapsed preview bar */}
+            {previewCollapsed && (
+              <div className="bg-muted/30 px-3 py-1 flex items-center gap-2 border-b border-border/40">
+                <Button size="sm" variant="ghost" onClick={() => setPreviewCollapsed(false)} className="text-xs gap-1 h-6">
+                  <ChevronDown className="h-3 w-3" />Mostrar Preview
+                </Button>
+                <span className="text-[10px] text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
+              </div>
+            )}
+
+            {/* Hidden bars restore */}
+            {(!showResizeBar || !showStatusBar) && (
+              <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20">
+                {!showResizeBar && !previewCollapsed && (
+                  <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>
+                    ↕ Resize
+                  </button>
+                )}
+                {!showStatusBar && (
+                  <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>
+                    ▤ Status
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Timeline */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            <TrackHeaders
+              tracks={state.tracks} onUpdateTrack={timeline.updateTrack}
+              onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack}
+              onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack}
+            />
+            <div className="flex-1 overflow-auto relative flex flex-col">
+              <TimelineRuler
+                duration={state.duration} zoom={state.zoom}
+                currentTime={state.currentTime} onSeek={timeline.seekTo}
+                onDurationChange={(d) => timeline.updateState({ duration: d })}
+              />
+              <TimelineTracks
+                state={state} onSelectClip={timeline.selectClip}
+                onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll}
+                onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip}
+                onAddClip={handleAddClip}
+              />
+            </div>
           </div>
         </div>
 
@@ -634,7 +780,13 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'resources' && (
-              <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} />
+              <ResourcePanel
+                ref={resourcePanelRef}
+                onAddClip={handleAddClip}
+                tracks={state.tracks}
+                onOpenCanvas={handleOpenCanvasFromToolbar}
+                onEditCanvas={handleEditCanvasFromResource}
+              />
             )}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
             {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
@@ -643,12 +795,129 @@ const VideoTimelineEditor: React.FC = () => {
         </div>
       </div>
 
+      {/* Canvas Dialog */}
       <CanvasComposerDialog
         open={canvasDialogOpen}
-        onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditJson(undefined); }}
+        onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditResourceId(null); setCanvasEditJson(undefined); }}
         onConfirm={handleCanvasEditConfirm}
         initialCanvasJson={canvasEditJson}
       />
+
+      {/* Save Project Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>Salvar Projeto</DialogTitle>
+          <Input
+            placeholder="Nome do projeto"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { saveProject(projectName); setSaveDialogOpen(false); } }}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => setSaveDialogOpen(false)}>Cancelar</Button>
+            <Button size="sm" onClick={() => { saveProject(projectName); setSaveDialogOpen(false); }}>
+              <Save className="h-3.5 w-3.5 mr-1" />Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle>Renomear Projeto</DialogTitle>
+          <Input
+            value={renameName}
+            onChange={(e) => setRenameName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') renameProject(); }}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => setRenameDialogOpen(false)}>Cancelar</Button>
+            <Button size="sm" onClick={renameProject}>Renomear</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Projects Dialog */}
+      <Dialog open={projectsOpen} onOpenChange={setProjectsOpen}>
+        <DialogContent className="max-w-lg max-h-[70vh] flex flex-col p-0 gap-0">
+          <div className="flex items-center justify-between px-4 pt-6 pb-3 border-b">
+            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+              <FolderKanban className="h-4 w-4 text-primary" />
+              Meus Projetos de Vídeo
+            </DialogTitle>
+            <Button size="sm" variant="default" className="gap-1.5 text-xs" onClick={() => { setProjectsOpen(false); setSaveDialogOpen(true); }}>
+              <Save className="h-3.5 w-3.5" />Novo Projeto
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto p-4">
+            {projects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <FolderKanban className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">Nenhum projeto salvo</p>
+                <p className="text-xs mt-1 opacity-60">Salve seu trabalho para continuar depois</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className={`relative rounded-lg border-2 overflow-hidden transition-all group cursor-pointer hover:border-primary/50 ${
+                      currentProjectId === project.id ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+                    }`}
+                    onClick={() => loadProject(project)}
+                  >
+                    <div className="aspect-video bg-muted flex items-center justify-center">
+                      {project.thumbnail ? (
+                        <img src={project.thumbnail} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <Film className="h-8 w-8 text-muted-foreground/30" />
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <p className="text-xs font-medium truncate">{project.nome}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(project.updated_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    {/* Actions menu */}
+                    <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-6 w-6 bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-36">
+                          <DropdownMenuItem onClick={() => loadProject(project)} className="text-xs gap-2">
+                            <FolderOpen className="h-3 w-3" />Abrir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setRenameProjectId(project.id); setRenameName(project.nome); setRenameDialogOpen(true); }} className="text-xs gap-2">
+                            <Pencil className="h-3 w-3" />Renomear
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => duplicateProject(project)} className="text-xs gap-2">
+                            <CopyIcon className="h-3 w-3" />Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => deleteProject(project.id)} className="text-xs gap-2 text-destructive">
+                            <Trash2 className="h-3 w-3" />Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    {currentProjectId === project.id && (
+                      <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 rounded font-bold">
+                        ATUAL
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
