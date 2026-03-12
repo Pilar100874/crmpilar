@@ -733,6 +733,10 @@ export function useStudioExecution() {
               cfgScale: config.cfgScale ?? 7,
               imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : (imageInputs.length > 0 ? imageInputs : undefined),
               imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+              correctionMode: isCorrectionVideo,
+              sourceVideoUrl: correctionSourceVideoUrl,
+              sourceVideoId: correctionSourceProviderVideoId,
+              sourceProvider: correctionSourceProvider,
               estabelecimentoId: estabId,
             }, 300000); // 5 min timeout for video generation
             
