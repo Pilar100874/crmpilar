@@ -751,13 +751,9 @@ export function useStudioExecution() {
       }
 
       case 'audioGen': {
-        const textToSpeak = combinedInput || config.text || '';
-        
-        if (!textToSpeak.trim()) {
-          return {
-            text: '⚠️ Nenhum texto fornecido. Conecte um bloco de Texto/Prompt ao bloco de Áudio ou preencha o campo de texto no bloco.',
-          };
-        }
+        // Always use config.text or a default — ignore audio from connected prompt blocks
+        const textToSpeak = config.text || combinedInput || 'Olá! Este é um exemplo de áudio gerado pelo AI Creative Studio.';
+
         
         // Check if user has a paid TTS provider configured
         const estabId = localStorage.getItem('estabelecimentoId');
@@ -842,12 +838,9 @@ export function useStudioExecution() {
       }
 
       case 'musicGen': {
-        const rawMusicPrompt = combinedInput || config.prompt || '';
-        if (!rawMusicPrompt.trim()) {
-          return {
-            text: '⚠️ Nenhum prompt fornecido. Conecte um bloco de Texto/Prompt ao bloco de Música ou preencha o campo de prompt no bloco.',
-          };
-        }
+        // Always use config.prompt or a default — ignore audio from connected prompt blocks
+        const rawMusicPrompt = config.prompt || combinedInput || 'Uma trilha sonora alegre e energética para marketing digital';
+
         const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil/i) ? rawMusicPrompt : `${rawMusicPrompt} (em português brasileiro / Brazilian Portuguese)`;
         const estabId = localStorage.getItem('estabelecimentoId');
         let musicProvider: string | null = null;
