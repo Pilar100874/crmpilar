@@ -838,12 +838,9 @@ export function useStudioExecution() {
       }
 
       case 'musicGen': {
-        const rawMusicPrompt = combinedInput || config.prompt || '';
-        if (!rawMusicPrompt.trim()) {
-          return {
-            text: '⚠️ Nenhum prompt fornecido. Conecte um bloco de Texto/Prompt ao bloco de Música ou preencha o campo de prompt no bloco.',
-          };
-        }
+        // Always use config.prompt or a default — ignore audio from connected prompt blocks
+        const rawMusicPrompt = config.prompt || combinedInput || 'Uma trilha sonora alegre e energética para marketing digital';
+
         const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil/i) ? rawMusicPrompt : `${rawMusicPrompt} (em português brasileiro / Brazilian Portuguese)`;
         const estabId = localStorage.getItem('estabelecimentoId');
         let musicProvider: string | null = null;
