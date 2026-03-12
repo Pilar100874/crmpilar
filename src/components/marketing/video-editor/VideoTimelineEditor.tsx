@@ -361,6 +361,50 @@ const VideoTimelineEditor: React.FC = () => {
     }
   }, [state, videoConfig]);
 
+  const handleSaveExportedToGallery = useCallback(async () => {
+    if (!exportedVideoBlob) return;
+    setIsSavingToGallery(true);
+    try {
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+      const fileName = `video_${Date.now()}.webm`;
+      const path = `${estabId}/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('marketing-videos')
+        .upload(path, exportedVideoBlob, { contentType: 'video/webm' });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
+      await supabase.from('media_gallery').insert({
+        estabelecimento_id: estabId,
+        tipo: 'video',
+        nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
+        public_url: urlData.publicUrl,
+        storage_path: path,
+        duracao_segundos: exportedVideoDuration,
+      });
+      toast.success('Vídeo salvo na galeria!');
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+  }, [exportedVideoBlob, exportedVideoDuration]);
+
+  const handleDownloadExported = useCallback(() => {
+    if (!exportedVideoUrl) return;
+    const a = document.createElement('a');
+    a.href = exportedVideoUrl;
+    a.download = `video_editor_${Date.now()}.webm`;
+    a.click();
+    toast.success('Download iniciado!');
+  }, [exportedVideoUrl]);
+
+  const handleCloseExportPreview = useCallback(() => {
+    if (exportedVideoUrl) URL.revokeObjectURL(exportedVideoUrl);
+    setExportedVideoUrl(null);
+    setExportedVideoBlob(null);
+  }, [exportedVideoUrl]);
+
   const selectedClip = state.selectedClipIds.length === 1
     ? state.clips.find((c) => c.id === state.selectedClipIds[0])
     : null;
