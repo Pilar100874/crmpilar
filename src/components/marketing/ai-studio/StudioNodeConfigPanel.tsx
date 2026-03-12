@@ -1790,67 +1790,64 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const accent = nodeAccentMap[node.data.type] || '#64748b';
 
    return (
-    <div className="w-[85vw] sm:w-[340px] max-w-[340px] h-full border-l border-border/60 bg-gradient-to-b from-card to-card/95 flex flex-col shrink-0 shadow-[-4px_0_24px_-8px_hsl(var(--foreground)/0.06)]">
-      {/* Modern header with accent gradient */}
+    <div className="w-[85vw] sm:w-[340px] max-w-[340px] h-full border-l border-border/30 bg-gradient-to-b from-card via-card/98 to-card/95 flex flex-col shrink-0 shadow-[-2px_0_16px_-6px_hsl(var(--foreground)/0.04)]">
+      {/* Refined header with subtle accent */}
       <div
-        className="p-4 border-b border-border/40 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${accent}12, ${accent}05, transparent)` }}
+        className="px-4 py-3.5 border-b border-border/20 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${accent}08, transparent 60%)` }}
       >
-        <div className="absolute inset-0 opacity-[0.04]" style={{ background: `radial-gradient(circle at 80% 20%, ${accent}, transparent 50%)` }} />
-        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}30, transparent)` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}18, transparent)` }} />
         <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${accent}30, ${accent}15)`, border: `1px solid ${accent}30` }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: `${accent}12`, border: `1px solid ${accent}18` }}
             >
-              <span className="text-lg">{meta?.icon}</span>
+              <span className="text-sm">{meta?.icon}</span>
             </div>
             <div>
-              <h3 className="font-bold text-[13px] text-foreground leading-tight">{node.data.label}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{meta?.description || 'Configurações'}</p>
+              <h3 className="font-semibold text-[12px] text-foreground/90 leading-tight tracking-tight">{node.data.label}</h3>
+              <p className="text-[9px] text-muted-foreground/60 mt-0.5 tracking-wide">{meta?.description || 'Configurações'}</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-background/60">
-            <X className="h-3.5 w-3.5" />
+          <Button size="icon" variant="ghost" onClick={onClose} className="h-6 w-6 rounded-lg hover:bg-muted/50 text-muted-foreground/50 hover:text-foreground/70">
+            <X className="h-3 w-3" />
           </Button>
         </div>
       </div>
 
       {onExecuteFromNode && (
-        <div className="px-4 py-3 border-b border-border/40 bg-muted/15">
+        <div className="px-4 py-2.5 border-b border-border/20">
           <Button
             size="sm"
             onClick={() => onExecuteFromNode(node.id)}
-            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-xl text-xs h-9 font-semibold shadow-sm hover:shadow-md transition-all"
+            className="w-full gap-2 bg-primary/90 hover:bg-primary text-primary-foreground border-0 rounded-xl text-[11px] h-8 font-medium shadow-sm hover:shadow transition-all"
           >
-            <SkipForward className="h-3.5 w-3.5" />
+            <SkipForward className="h-3 w-3" />
             Executar deste ponto
           </Button>
         </div>
       )}
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-2.5">
+        <div className="p-3.5 space-y-2">
           {renderConfig()}
         </div>
 
         {activeResult && (
-          <div className="mx-4 mb-4 mt-3 pt-4 border-t border-border/40">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-primary" />
-              </div>
-              <Label className="text-xs font-bold text-primary">Resultado</Label>
+          <div className="mx-3.5 mb-4 mt-2 pt-3 border-t border-border/20">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="h-3 w-3 text-primary/60" />
+              <Label className="text-[10px] font-medium text-primary/70 tracking-wide">Resultado</Label>
             </div>
-            <div className="rounded-xl border border-border/50 bg-gradient-to-br from-muted/40 to-muted/20 p-3.5 shadow-sm">
+            <div className="rounded-xl border border-border/25 bg-gradient-to-br from-muted/20 to-muted/10 p-3 shadow-sm">
               {typeof activeResult === 'string' && (
-                <p className="text-xs whitespace-pre-wrap text-foreground/70 leading-relaxed">{activeResult}</p>
+                <p className="text-[11px] whitespace-pre-wrap text-foreground/60 leading-relaxed">{activeResult}</p>
               )}
               {activeResult?.imageUrl && (
                 <img src={activeResult.imageUrl} alt="Result" className="w-full rounded-lg shadow-sm" />
               )}
               {activeResult?.text && (
-                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/70 leading-relaxed">{activeResult.text}</p>
+                <p className="text-[11px] whitespace-pre-wrap mt-2 text-foreground/60 leading-relaxed">{activeResult.text}</p>
               )}
             </div>
           </div>
