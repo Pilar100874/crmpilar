@@ -816,21 +816,20 @@ export function useStudioExecution() {
           } catch (videoErr: any) {
             console.error('[Studio] Video generation failed:', videoErr);
             const msg = videoErr.message || '';
+            const modelLabel = (videoModel || 'desconhecido').split('/').pop();
             if (msg.includes('moderation') || msg.includes('blocked') || msg.includes('content policy') || msg.includes('safety')) {
-              throw new Error('⚠️ O conteúdo do prompt não pôde ser processado pelo provedor de IA. Tente reformular a descrição usando termos mais genéricos e neutros. Evite referências a marcas, pessoas reais ou conteúdo sensível.');
+              throw new Error(`⚠️ O modelo ${modelLabel} bloqueou o conteúdo por política de segurança. Reformule a descrição com termos mais neutros.`);
             }
             if (msg.includes('rate limit') || msg.includes('429') || msg.includes('too many')) {
-              throw new Error('⏳ Muitas solicitações em pouco tempo. Aguarde alguns segundos e tente novamente.');
+              throw new Error(`⏳ O modelo ${modelLabel} está com muitas solicitações. Aguarde alguns segundos e tente novamente.`);
             }
             if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
-              throw new Error('💳 Limite de uso atingido no provedor de IA. Verifique seu plano ou créditos disponíveis.');
+              throw new Error(`💳 Limite de uso do modelo ${modelLabel} atingido. Verifique seu plano ou créditos.`);
             }
             if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão') || msg.includes('excedeu o tempo limite')) {
-              const modelLabel = (videoModel || 'desconhecido').split('/').pop();
-              throw new Error(`A API do modelo ${modelLabel} não está respondendo. Tente novamente mais tarde.`);
+              throw new Error(`🌐 O servidor do modelo ${modelLabel} não respondeu a tempo. Isso é um problema temporário do provedor, tente novamente mais tarde.`);
             }
-            const modelLabel2 = (videoModel || 'desconhecido').split('/').pop();
-            throw new Error(`Erro na API do modelo ${modelLabel2}: ${msg.substring(0, 120)}`);
+            throw new Error(`❌ O servidor do modelo ${modelLabel} retornou um erro. Isso não é um problema no seu prompt. Tente novamente em alguns instantes.`);
           }
         }
         
