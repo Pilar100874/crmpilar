@@ -8,6 +8,20 @@ interface MediaItem {
   duration?: number;
 }
 
+// Which media types are allowed on which track types
+const TRACK_ACCEPTS: Record<string, string[]> = {
+  video: ['video'],
+  image: ['image'],
+  canvas: ['canvas', 'image'],
+  audio: ['audio', 'video'], // video on audio = extract audio only
+  effect: ['effect'],
+  text: ['text'],
+};
+
+function isCompatible(trackType: string, clipType: string): boolean {
+  return TRACK_ACCEPTS[trackType]?.includes(clipType) ?? false;
+}
+
 interface Props {
   state: TimelineState;
   onSelectClip: (id: string, multi?: boolean) => void;
@@ -20,16 +34,18 @@ interface Props {
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const draggingRef = useRef<{
     clipId: string;
     type: 'move' | 'resize-start' | 'resize-end';
     startX: number;
+    startY: number;
     originalStart: number;
     originalDuration: number;
     originalTrimStart: number;
+    originalTrackId: string;
   } | null>(null);
 
-  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const totalWidth = state.duration * state.zoom;
 
   const handleTrackClick = useCallback((e: React.MouseEvent) => {
@@ -42,6 +58,20 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     }
   }, [onDeselectAll, onSeek, state.zoom]);
 
+  // Find which track the mouse Y is over
+  const getTrackAtY = useCallback((clientY: number): string | null => {
+    if (!containerRef.current) return null;
+    const container = containerRef.current;
+    const trackElements = container.querySelectorAll('[data-track-id]');
+    for (const el of trackElements) {
+      const rect = el.getBoundingClientRect();
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        return el.getAttribute('data-track-id');
+      }
+    }
+    return null;
+  }, []);
+
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: TimelineClip, type: 'move' | 'resize-start' | 'resize-end') => {
     if (clip.locked) return;
     e.stopPropagation();
@@ -49,11 +79,13 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     onSelectClip(clip.id, e.ctrlKey || e.metaKey);
 
     const startX = e.clientX;
+    const startY = e.clientY;
     const originalStart = clip.startTime;
     const originalDuration = clip.duration;
     const originalTrimStart = clip.trimStart;
+    const originalTrackId = clip.trackId;
 
-    draggingRef.current = { clipId: clip.id, type, startX, originalStart, originalDuration, originalTrimStart };
+    draggingRef.current = { clipId: clip.id, type, startX, startY, originalStart, originalDuration, originalTrimStart, originalTrackId };
 
     const handleMouseMove = (me: MouseEvent) => {
       const dx = me.clientX - startX;
@@ -61,6 +93,27 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
 
       if (type === 'move') {
         onUpdateClip(clip.id, { startTime: Math.max(0, originalStart + dt) });
+
+        // Check vertical movement for track switching
+        const hoverTrackId = getTrackAtY(me.clientY);
+        if (hoverTrackId && hoverTrackId !== clip.trackId) {
+          const hoverTrack = state.tracks.find(t => t.id === hoverTrackId);
+          if (hoverTrack) {
+            // Check compatibility
+            if (isCompatible(hoverTrack.type, clip.type)) {
+              onUpdateClip(clip.id, { trackId: hoverTrackId, startTime: Math.max(0, originalStart + dt) });
+            } else if (clip.type === 'video' && hoverTrack.type === 'audio') {
+              // Video → audio track: convert to audio-only
+              onUpdateClip(clip.id, {
+                trackId: hoverTrackId,
+                type: 'audio',
+                name: `🔊 ${clip.name}`,
+                startTime: Math.max(0, originalStart + dt),
+                color: TRACK_COLORS.audio,
+              });
+            }
+          }
+        }
       } else if (type === 'resize-end') {
         onUpdateClip(clip.id, { duration: Math.max(0.5, originalDuration + dt) });
       } else if (type === 'resize-start') {
@@ -82,7 +135,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }, [state.zoom, onSelectClip, onUpdateClip]);
+  }, [state.zoom, state.tracks, onSelectClip, onUpdateClip, getTrackAtY]);
 
   // Memoize waveform bars to prevent re-render flicker
   const renderWaveform = useCallback((clip: TimelineClip, width: number, trackColor: string) => {
@@ -137,6 +190,34 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     return null;
   }, []);
 
+  // Handle external drag (from MediaBin) compatibility
+  const handleExternalDragOver = useCallback((e: React.DragEvent, track: typeof state.tracks[0]) => {
+    if (!e.dataTransfer.types.includes('application/timeline-media')) return;
+    e.preventDefault();
+
+    // Try to peek at the data type from the drag
+    e.dataTransfer.dropEffect = 'copy';
+    setDropTargetTrackId(track.id);
+  }, []);
+
+  const handleExternalDrop = useCallback((e: React.DragEvent, track: typeof state.tracks[0]) => {
+    e.preventDefault();
+    setDropTargetTrackId(null);
+    const raw = e.dataTransfer.getData('application/timeline-media');
+    if (!raw || !onAddClip) return;
+    try {
+      const media = JSON.parse(raw) as MediaItem;
+      // Type enforcement
+      if (isCompatible(track.type, media.type)) {
+        onAddClip(media.type, media, track.id);
+      } else if (media.type === 'video' && track.type === 'audio') {
+        // Video dropped on audio track → extract audio
+        onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id);
+      }
+      // Otherwise: incompatible, silently ignore
+    } catch {}
+  }, [onAddClip]);
+
   return (
     <div
       ref={containerRef}
@@ -150,26 +231,12 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           return (
             <div
               key={track.id}
+              data-track-id={track.id}
               className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60 bg-primary/10' : ''}`}
               style={{ height: track.height, opacity: track.visible ? 1 : 0.3 }}
-              onDragOver={(e) => {
-                const data = e.dataTransfer.types.includes('application/timeline-media');
-                if (!data) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-                setDropTargetTrackId(track.id);
-              }}
+              onDragOver={(e) => handleExternalDragOver(e, track)}
               onDragLeave={() => setDropTargetTrackId(null)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDropTargetTrackId(null);
-                const raw = e.dataTransfer.getData('application/timeline-media');
-                if (!raw || !onAddClip) return;
-                try {
-                  const media = JSON.parse(raw) as MediaItem;
-                  onAddClip(media.type, media, track.id);
-                } catch {}
-              }}
+              onDrop={(e) => handleExternalDrop(e, track)}
             >
               <div className="absolute inset-0 bg-muted/10" />
 
