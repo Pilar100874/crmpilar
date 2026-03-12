@@ -1358,14 +1358,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                             const resp = await fetch(resultVideo);
                             const originalBlob = await resp.blob();
                             const mp4Blob = await removeAudioFromVideo(originalBlob);
-                            const blobUrl = URL.createObjectURL(mp4Blob);
-                            const link = document.createElement('a');
-                            link.href = blobUrl;
-                            link.download = `studio-${nodeData.type}-${id}_sem-audio.mp4`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                            triggerDownload(mp4Blob, `studio-${nodeData.type}-${id}_sem-audio.mp4`);
                           } catch {
                             toast.error('Não foi possível remover o áudio.');
                           }
