@@ -769,6 +769,33 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       if (error) throw error;
       const imageUrl = data?.image || data?.imageUrl || '';
       if (imageUrl) {
+        // Upload base64 to storage to avoid localStorage quota issues
+        try {
+          const base64Match = imageUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/);
+          if (base64Match) {
+            const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
+            const base64Data = base64Match[2];
+            const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+            const fileName = `preset-ref-${Date.now()}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+              .from('catalog-ai-images')
+              .upload(fileName, byteArray, { contentType: `image/${base64Match[1]}`, upsert: true });
+            if (!uploadError) {
+              const { data: publicData } = supabase.storage
+                .from('catalog-ai-images')
+                .getPublicUrl(fileName);
+              if (publicData?.publicUrl) {
+                setGeneratedImage(publicData.publicUrl);
+                toast({ title: 'Imagem gerada!', description: 'Imagem de referência atualizada.' });
+                return;
+              }
+            }
+            console.warn('Upload failed, using base64 fallback:', uploadError);
+          }
+        } catch (uploadErr) {
+          console.warn('Upload to storage failed, using base64 fallback:', uploadErr);
+        }
+        // Fallback to base64
         setGeneratedImage(imageUrl);
         toast({ title: 'Imagem gerada!', description: 'Imagem de referência atualizada.' });
       } else {
