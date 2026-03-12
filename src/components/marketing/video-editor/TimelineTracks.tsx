@@ -254,15 +254,17 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           const canAccept = dragMediaType ? (isCompatible(track.type, dragMediaType) || (dragMediaType === 'video' && track.type === 'audio')) : true;
           const isDropTarget = dropTargetTrackId === track.id;
           const isDimmed = dragMediaType && !canAccept;
+          const hasSolo = state.tracks.some(t => t.solo);
+          const isTrackActive = !hasSolo || track.solo;
           
           return (
             <div
               key={track.id}
               data-track-id={track.id}
-              className={`relative border-b transition-all ${isDropTarget ? 'ring-2 ring-inset ring-primary/60' : ''}`}
+              className={`relative border-b transition-all ${isDropTarget ? 'ring-2 ring-inset ring-primary/60' : ''} ${track.locked ? 'cursor-not-allowed' : ''}`}
               style={{
                 height: track.height,
-                opacity: isDimmed ? 0.15 : (track.visible ? 1 : 0.3),
+                opacity: isDimmed ? 0.15 : (!track.visible || !isTrackActive) ? 0.25 : 1,
                 backgroundColor: isDropTarget && canAccept
                   ? `${TRACK_COLORS[track.type] || TRACK_COLORS.video}30`
                   : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
@@ -273,6 +275,20 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
             >
               {/* Left color indicator */}
               <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}60` }} />
+              
+              {/* Locked overlay */}
+              {track.locked && (
+                <div className="absolute inset-0 z-20 bg-muted/20 pointer-events-none flex items-center justify-center">
+                  <span className="text-[10px] text-muted-foreground/60 font-medium">🔒</span>
+                </div>
+              )}
+              
+              {/* Muted overlay */}
+              {track.muted && (track.type === 'audio' || track.type === 'video') && (
+                <div className="absolute top-0 right-1 z-20 pointer-events-none">
+                  <span className="text-[9px] text-destructive/60">🔇</span>
+                </div>
+              )}
 
               {trackClips.map((clip) => {
                 const left = clip.startTime * state.zoom;
