@@ -567,6 +567,9 @@ export function useStudioExecution() {
             referenceDescs.join('\n'),
           ].join('\n');
         }
+        // Inject language instruction into image prompt
+        enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: config.model,
