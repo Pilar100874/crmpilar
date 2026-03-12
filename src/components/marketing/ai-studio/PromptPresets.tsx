@@ -343,6 +343,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
+  const [detailPreset, setDetailPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
 
   // Load which presets are in use by saved workflows
