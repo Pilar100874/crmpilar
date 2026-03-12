@@ -17,7 +17,7 @@ import {
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
   Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X, Scissors
 } from 'lucide-react';
-import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
+import { convertVideoToWhatsappMp4, removeAudioFromVideo, triggerDownload } from '@/lib/video/whatsappMp4';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { VolumeX } from 'lucide-react';
 
@@ -1345,15 +1345,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           try {
                             const resp = await fetch(resultVideo);
                             const originalBlob = await resp.blob();
-                            const mp4Blob = new Blob([originalBlob], { type: 'video/mp4' });
-                            const blobUrl = URL.createObjectURL(mp4Blob);
-                            const link = document.createElement('a');
-                            link.href = blobUrl;
-                            link.download = `studio-${nodeData.type}-${id}.mp4`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                            const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+                            triggerDownload(mp4Blob, `studio-${nodeData.type}-${id}.mp4`);
                           } catch {
                             toast.error('Não foi possível baixar o vídeo.');
                           }
@@ -1365,14 +1358,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                             const resp = await fetch(resultVideo);
                             const originalBlob = await resp.blob();
                             const mp4Blob = await removeAudioFromVideo(originalBlob);
-                            const blobUrl = URL.createObjectURL(mp4Blob);
-                            const link = document.createElement('a');
-                            link.href = blobUrl;
-                            link.download = `studio-${nodeData.type}-${id}_sem-audio.mp4`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                            triggerDownload(mp4Blob, `studio-${nodeData.type}-${id}_sem-audio.mp4`);
                           } catch {
                             toast.error('Não foi possível remover o áudio.');
                           }
