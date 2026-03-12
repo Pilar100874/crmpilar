@@ -37,7 +37,10 @@ export function useTimelineState() {
   // Playback
   const play = useCallback(() => {
     if (playIntervalRef.current) return;
-    setState((prev) => ({ ...prev, isPlaying: true }));
+    setState((prev) => {
+      if (prev.clips.length === 0) return prev; // No content, don't play
+      return { ...prev, isPlaying: true };
+    });
     const interval = 1000 / 30;
     playIntervalRef.current = window.setInterval(() => {
       setState((prev) => {
