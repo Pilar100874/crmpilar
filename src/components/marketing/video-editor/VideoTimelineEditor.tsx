@@ -310,14 +310,46 @@ const VideoTimelineEditor: React.FC = () => {
       // Helper: seek video and wait for the frame to be ready
       const seekVideo = (vid: HTMLVideoElement, time: number): Promise<void> => {
         return new Promise((resolve) => {
-          if (Math.abs(vid.currentTime - time) < 0.01) { resolve(); return; }
-          const onSeeked = () => { vid.removeEventListener('seeked', onSeeked); resolve(); };
-          vid.addEventListener('seeked', onSeeked);
-          vid.currentTime = time;
+          const maxTime = Number.isFinite(vid.duration) ? Math.max(0, vid.duration - 0.001) : time;
+          const safeTime = Math.max(0, Math.min(time, maxTime));
+          const tolerance = 1 / (fps * 2);
+
+          if (Math.abs(vid.currentTime - safeTime) <= tolerance) {
+            resolve();
+            return;
+          }
+
+          let settled = false;
+          const done = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeoutId);
+            resolve();
+          };
+
+          const timeoutId = window.setTimeout(done, 350);
+          const onSeeked = () => done();
+          const onError = () => done();
+
+          vid.addEventListener('seeked', onSeeked, { once: true });
+          vid.addEventListener('error', onError, { once: true });
+          vid.currentTime = safeTime;
         });
       };
 
       const sortedTracks = [...state.tracks];
+      const clipsByTrack = new Map(
+        sortedTracks.map((track) => [
+          track.id,
+          state.clips
+            .filter((c) => c.trackId === track.id)
+            .sort((a, b) => a.startTime - b.startTime),
+        ])
+      );
+
+      const frameDurationMs = 1000 / fps;
+      const exportStartTs = performance.now();
+
       for (let frame = 0; frame < totalFrames; frame++) {
         const t = frame / fps;
         ctx.fillStyle = videoConfig.backgroundColor;
@@ -327,9 +359,9 @@ const VideoTimelineEditor: React.FC = () => {
           const track = sortedTracks[ti];
           if (!track.visible) continue;
           if (hasSoloTrack && !track.solo) continue;
-          const trackClips = state.clips
-            .filter(c => c.trackId === track.id && t >= c.startTime && t < c.startTime + c.duration)
-            .sort((a, b) => a.startTime - b.startTime);
+
+          const trackClips = (clipsByTrack.get(track.id) || [])
+            .filter(c => t >= c.startTime && t < c.startTime + c.duration);
 
           for (const clip of trackClips) {
             const el = mediaElements[clip.id];
@@ -389,8 +421,15 @@ const VideoTimelineEditor: React.FC = () => {
         }
 
         setExportProgress(Math.round((frame / totalFrames) * 90));
-        // Yield to browser to allow MediaRecorder to capture the frame
-        await new Promise(r => requestAnimationFrame(r));
+
+        const targetFrameTs = exportStartTs + (frame + 1) * frameDurationMs;
+        const waitMs = targetFrameTs - performance.now();
+
+        if (waitMs > 1) {
+          await new Promise((r) => setTimeout(r, waitMs));
+        } else {
+          await new Promise((r) => requestAnimationFrame(() => r(null)));
+        }
       }
 
       recorder.stop();
