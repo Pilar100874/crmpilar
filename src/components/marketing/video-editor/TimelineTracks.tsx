@@ -35,6 +35,7 @@ interface Props {
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
+  const [dragMediaType, setDragMediaType] = useState<string | null>(null);
   const draggingRef = useRef<{
     clipId: string;
     type: 'move' | 'resize-start' | 'resize-end';
@@ -195,7 +196,19 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     if (!e.dataTransfer.types.includes('application/timeline-media')) return;
     e.preventDefault();
 
-    // Try to peek at the data type from the drag
+    // Try to detect media type from custom type hint
+    const typeHint = e.dataTransfer.types.find(t => t.startsWith('mediatype/'));
+    const mediaType = typeHint ? typeHint.replace('mediatype/', '') : null;
+    
+    if (mediaType) {
+      setDragMediaType(mediaType);
+      const canAccept = isCompatible(track.type, mediaType) || (mediaType === 'video' && track.type === 'audio');
+      if (!canAccept) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+    }
+    
     e.dataTransfer.dropEffect = 'copy';
     setDropTargetTrackId(track.id);
   }, []);
@@ -203,43 +216,52 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const handleExternalDrop = useCallback((e: React.DragEvent, track: typeof state.tracks[0]) => {
     e.preventDefault();
     setDropTargetTrackId(null);
+    setDragMediaType(null);
     const raw = e.dataTransfer.getData('application/timeline-media');
     if (!raw || !onAddClip) return;
     try {
       const media = JSON.parse(raw) as MediaItem;
-      // Type enforcement
       if (isCompatible(track.type, media.type)) {
         onAddClip(media.type, media, track.id);
       } else if (media.type === 'video' && track.type === 'audio') {
-        // Video dropped on audio track → extract audio
         onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id);
       }
-      // Otherwise: incompatible, silently ignore
     } catch {}
   }, [onAddClip]);
+
+  const handleDragLeave = useCallback(() => {
+    setDropTargetTrackId(null);
+  }, []);
 
   return (
     <div
       ref={containerRef}
       className="flex-1 overflow-auto relative"
       onClick={handleTrackClick}
+      onDragEnd={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
+      onDrop={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
     >
       <div style={{ minWidth: totalWidth, position: 'relative' }}>
         {state.tracks.map((track) => {
           const trackClips = state.clips.filter((c) => c.trackId === track.id);
+          const canAccept = dragMediaType ? (isCompatible(track.type, dragMediaType) || (dragMediaType === 'video' && track.type === 'audio')) : true;
+          const isDropTarget = dropTargetTrackId === track.id;
+          const isDimmed = dragMediaType && !canAccept;
           
           return (
             <div
               key={track.id}
               data-track-id={track.id}
-              className={`relative border-b transition-colors ${dropTargetTrackId === track.id ? 'ring-2 ring-inset ring-primary/60' : ''}`}
+              className={`relative border-b transition-all ${isDropTarget ? 'ring-2 ring-inset ring-primary/60' : ''}`}
               style={{
                 height: track.height,
-                opacity: track.visible ? 1 : 0.3,
-                backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
+                opacity: isDimmed ? 0.15 : (track.visible ? 1 : 0.3),
+                backgroundColor: isDropTarget && canAccept
+                  ? `${TRACK_COLORS[track.type] || TRACK_COLORS.video}30`
+                  : `${TRACK_COLORS[track.type] || TRACK_COLORS.video}12`,
               }}
               onDragOver={(e) => handleExternalDragOver(e, track)}
-              onDragLeave={() => setDropTargetTrackId(null)}
+              onDragLeave={handleDragLeave}
               onDrop={(e) => handleExternalDrop(e, track)}
             >
               {/* Left color indicator */}
