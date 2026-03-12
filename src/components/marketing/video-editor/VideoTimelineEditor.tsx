@@ -68,15 +68,18 @@ const VideoTimelineEditor: React.FC = () => {
   const clipsRef = useRef(state.clips);
   clipsRef.current = state.clips;
 
-  const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem) => {
+  const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, targetTrackId?: string) => {
     const tracks = tracksRef.current;
     const clips = clipsRef.current;
 
-    const trackId = tracks.find((t) => {
-      if (type === 'audio') return t.type === 'audio';
-      if (type === 'text') return t.type === 'text';
-      return t.type === 'video';
-    })?.id;
+    let trackId = targetTrackId;
+    if (!trackId || !tracks.find(t => t.id === trackId)) {
+      trackId = tracks.find((t) => {
+        if (type === 'audio') return t.type === 'audio';
+        if (type === 'text') return t.type === 'text';
+        return t.type === 'video';
+      })?.id;
+    }
     if (!trackId) return;
 
     const lastClip = clips
