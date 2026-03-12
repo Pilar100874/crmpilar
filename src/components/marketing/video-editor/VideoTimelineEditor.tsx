@@ -2,8 +2,11 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
-  ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen
+  ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen,
+  Download, Loader2, Save
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useTimelineState } from './useTimelineState';
 import TimelineTracks from './TimelineTracks';
 import TimelineRuler from './TimelineRuler';
