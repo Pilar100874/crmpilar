@@ -353,6 +353,7 @@ const VideoTimelineEditor: React.FC = () => {
                 zoom={state.zoom}
                 currentTime={state.currentTime}
                 onSeek={timeline.seekTo}
+                onDurationChange={(d) => timeline.updateState({ duration: d })}
               />
               <TimelineTracks
                 state={state}
