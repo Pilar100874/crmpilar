@@ -307,6 +307,16 @@ const VideoTimelineEditor: React.FC = () => {
       });
       recorder.start(100);
 
+      // Helper: seek video and wait for the frame to be ready
+      const seekVideo = (vid: HTMLVideoElement, time: number): Promise<void> => {
+        return new Promise((resolve) => {
+          if (Math.abs(vid.currentTime - time) < 0.01) { resolve(); return; }
+          const onSeeked = () => { vid.removeEventListener('seeked', onSeeked); resolve(); };
+          vid.addEventListener('seeked', onSeeked);
+          vid.currentTime = time;
+        });
+      };
+
       const sortedTracks = [...state.tracks];
       for (let frame = 0; frame < totalFrames; frame++) {
         const t = frame / fps;
@@ -354,6 +364,12 @@ const VideoTimelineEditor: React.FC = () => {
               if (filterStr) ctx.filter = filterStr;
             }
 
+            // Seek video to exact frame and wait
+            if (el instanceof HTMLVideoElement) {
+              const seekTime = t - clip.startTime + (clip.trimStart || 0);
+              await seekVideo(el, seekTime);
+            }
+
             // Draw with aspect ratio preserved (object-contain)
             const elW = el instanceof HTMLVideoElement ? el.videoWidth : el.naturalWidth;
             const elH = el instanceof HTMLVideoElement ? el.videoHeight : el.naturalHeight;
@@ -363,15 +379,8 @@ const VideoTimelineEditor: React.FC = () => {
               const drawH = elH * scale;
               const drawX = destX + (destW - drawW) / 2;
               const drawY = destY + (destH - drawH) / 2;
-
-              if (el instanceof HTMLVideoElement) {
-                el.currentTime = t - clip.startTime + (clip.trimStart || 0);
-              }
               ctx.drawImage(el, drawX, drawY, drawW, drawH);
             } else {
-              if (el instanceof HTMLVideoElement) {
-                el.currentTime = t - clip.startTime + (clip.trimStart || 0);
-              }
               ctx.drawImage(el, destX, destY, destW, destH);
             }
 
@@ -380,7 +389,8 @@ const VideoTimelineEditor: React.FC = () => {
         }
 
         setExportProgress(Math.round((frame / totalFrames) * 90));
-        await new Promise(r => setTimeout(r, 1000 / fps));
+        // Yield to browser to allow MediaRecorder to capture the frame
+        await new Promise(r => requestAnimationFrame(r));
       }
 
       recorder.stop();
