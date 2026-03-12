@@ -295,6 +295,7 @@ const VideoTimelineEditor: React.FC = () => {
         for (let ti = sortedTracks.length - 1; ti >= 0; ti--) {
           const track = sortedTracks[ti];
           if (!track.visible) continue;
+          if (hasSoloTrack && !track.solo) continue;
           const trackClips = state.clips
             .filter(c => c.trackId === track.id && t >= c.startTime && t < c.startTime + c.duration)
             .sort((a, b) => a.startTime - b.startTime);
