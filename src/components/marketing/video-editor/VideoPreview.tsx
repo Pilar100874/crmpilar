@@ -81,8 +81,13 @@ function getTransitionStyle(
 const VideoPreview: React.FC<Props> = ({
   clips, currentTime, tracks, isPlaying,
   selectedClipIds = [], onUpdateClip, onSelectClip,
-  previewingTransition, previewingFilter,
+  previewingTransition, previewingFilter, resolution = '1920x1080',
 }) => {
+  const [resW, resH] = resolution.split('x').map(Number);
+  const aspectRatio = resW / resH;
+  const CANVAS_W = aspectRatio >= 1 ? Math.min(MAX_PREVIEW_W, MAX_PREVIEW_H * aspectRatio) : Math.min(MAX_PREVIEW_W, MAX_PREVIEW_H * aspectRatio);
+  const CANVAS_H = CANVAS_W / aspectRatio;
+
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
   const [previewAnim, setPreviewAnim] = useState<{ clipId: string; phase: 'entrance' | 'exit'; startTime: number } | null>(null);
