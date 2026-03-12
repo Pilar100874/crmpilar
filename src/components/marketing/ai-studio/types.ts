@@ -30,6 +30,7 @@ export type StudioNodeType =
   | 'lipSync'
   | 'videoMerge'
   | 'imageAnalyze'
+  | 'mediaCorrection'
   | 'loopOutput'
   | 'randomPick'
   | 'output';
