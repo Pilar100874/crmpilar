@@ -36,6 +36,8 @@ const VideoTimelineEditor: React.FC = () => {
   const [previewHeight, setPreviewHeight] = useState(300);
   const resizingRef = useRef(false);
   const resizeStartRef = useRef({ y: 0, height: 0 });
+  const [showResizeBar, setShowResizeBar] = useState(true);
+  const [showStatusBar, setShowStatusBar] = useState(true);
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
   const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
   const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
