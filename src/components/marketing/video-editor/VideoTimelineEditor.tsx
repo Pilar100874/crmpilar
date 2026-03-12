@@ -499,11 +499,38 @@ const VideoTimelineEditor: React.FC = () => {
   }, [canvasEditClipId, canvasEditResourceId, timeline]);
 
   const handleCloseEditor = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      setUnsavedDialogOpen(true);
+      return;
+    }
+    setShowEditor(false);
+    setCurrentProjectId(null);
+    setProjectName('');
+    loadProjects();
+  }, [loadProjects, hasUnsavedChanges]);
+
+  const handleForceClose = useCallback(() => {
+    setUnsavedDialogOpen(false);
     setShowEditor(false);
     setCurrentProjectId(null);
     setProjectName('');
     loadProjects();
   }, [loadProjects]);
+
+  const handleSaveAndClose = useCallback(async () => {
+    setUnsavedDialogOpen(false);
+    if (currentProjectId) {
+      await saveProject();
+    } else {
+      setSaveDialogOpen(true);
+      // After saving from dialog, user can manually go back
+      return;
+    }
+    setShowEditor(false);
+    setCurrentProjectId(null);
+    setProjectName('');
+    loadProjects();
+  }, [currentProjectId, saveProject, loadProjects]);
 
   // Landing page
   if (!showEditor) {
