@@ -1534,7 +1534,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="px-4 pb-5 space-y-2">
+            <div className="px-2.5 sm:px-4 pb-5 space-y-2">
               {visibleLayers.map((layer, idx) => {
                 const isExpanded = expandedLayer === layer.id;
                 const selected = selections[layer.id] || [];
