@@ -842,7 +842,12 @@ export function useStudioExecution() {
       }
 
       case 'musicGen': {
-        const rawMusicPrompt = combinedInput || config.prompt || 'Música ambiente corporativa';
+        const rawMusicPrompt = combinedInput || config.prompt || '';
+        if (!rawMusicPrompt.trim()) {
+          return {
+            text: '⚠️ Nenhum prompt fornecido. Conecte um bloco de Texto/Prompt ao bloco de Música ou preencha o campo de prompt no bloco.',
+          };
+        }
         const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil/i) ? rawMusicPrompt : `${rawMusicPrompt} (em português brasileiro / Brazilian Portuguese)`;
         const estabId = localStorage.getItem('estabelecimentoId');
         let musicProvider: string | null = null;
