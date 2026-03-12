@@ -200,6 +200,7 @@ const VideoTimelineEditor: React.FC = () => {
             tipo: 'video',
             nome: `Vídeo Editor ${new Date().toLocaleDateString('pt-BR')}`,
             public_url: urlData.publicUrl,
+            storage_path: path,
             duracao_segundos: Math.round(duration),
           });
           toast.success('Vídeo gerado e salvo na galeria!');
