@@ -790,12 +790,20 @@ export function useStudioExecution() {
         const estabId = localStorage.getItem('estabelecimentoId') || '';
         const studioDefaults = getStudioDefaults(estabId);
         const defaultLang = studioDefaults.defaultLanguage || 'pt-BR';
-        const langSuffix = getLanguagePromptSuffix(defaultLang);
-        const langCode = (config.lang || defaultLang).split('-')[0]; // e.g. "pt"
+
+        // IMPORTANT: prefer new `language` field from node config and fallback to global default.
+        // Ignore legacy `lang` when it is English and global default is non-English.
+        const legacyLang = typeof config.lang === 'string' ? config.lang : undefined;
+        const effectiveLanguage =
+          (typeof config.language === 'string' && config.language) ||
+          (legacyLang && !legacyLang.startsWith('en') ? legacyLang : defaultLang);
+
+        const langSuffix = getLanguagePromptSuffix(effectiveLanguage);
+        const langCode = effectiveLanguage.split('-')[0]; // e.g. "pt"
 
         // ALWAYS translate/rewrite text to the configured language before TTS
         // This ensures audio is NEVER in the wrong language regardless of prompt language
-        const targetLangPrefix = (config.lang || defaultLang).split('-')[0];
+        const targetLangPrefix = langCode;
         const wordCount = textToSpeak.split(/\s+/).length;
         
         if (targetLangPrefix !== 'en' && wordCount > 3) {
