@@ -425,6 +425,42 @@ export function useStudioExecution() {
         return { text: result };
       }
 
+      case 'mediaCorrection': {
+        // Gather media from input nodes (image or video)
+        const correctionPrompt = config.correctionPrompt || '';
+        if (!correctionPrompt.trim()) {
+          throw new Error('Escreva a instrução de correção no bloco antes de executar.');
+        }
+
+        // Find the source media from inputs
+        const sourceImageUrl = orderedImageInputs[0] || imageInputs[0];
+        const sourceVideoUrl = inputs.find(i => i?.videoUrl)?.videoUrl || inputs.find(i => i?._isVideo)?.videoUrl;
+        const sourceMedia = sourceVideoUrl || sourceImageUrl;
+
+        if (!sourceMedia) {
+          throw new Error('Conecte um bloco de Gerar Imagem ou Gerar Vídeo antes deste bloco de correção.');
+        }
+
+        // Build enriched correction context to pass forward
+        const isVideo = !!sourceVideoUrl;
+        const correctionText = [
+          `[CORREÇÃO SOLICITADA]`,
+          `Corrija/refine a ${isVideo ? 'cena do vídeo' : 'imagem'} anterior com as seguintes instruções:`,
+          correctionPrompt,
+          ``,
+          `A ${isVideo ? 'cena' : 'imagem'} original deve ser mantida como base, aplicando APENAS as correções solicitadas acima.`,
+          `Mantenha todos os outros elementos que não foram mencionados na correção exatamente como estão.`,
+        ].join('\n');
+
+        return {
+          text: correctionText,
+          ...(sourceImageUrl ? { imageUrl: sourceImageUrl, imageUrls: [sourceImageUrl] } : {}),
+          ...(sourceVideoUrl ? { videoUrl: sourceVideoUrl, _isVideo: true } : {}),
+          _isCorrection: true,
+          _correctionPrompt: correctionPrompt,
+        };
+      }
+
       case 'imageGen': {
         // Auto-detect product + influencer without explicit placement prompt → default to holding
         const hasProduct = inputs.some((i) => i?._referenceRole === 'produto');
