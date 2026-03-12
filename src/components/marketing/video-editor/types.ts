@@ -3,7 +3,7 @@
 export interface TimelineClip {
   id: string;
   trackId: string;
-  type: 'video' | 'audio' | 'image' | 'text' | 'effect';
+  type: 'video' | 'audio' | 'image' | 'text' | 'effect' | 'canvas';
   name: string;
   startTime: number; // in seconds
   duration: number;
@@ -69,7 +69,7 @@ export type TransitionType =
 export interface TimelineTrack {
   id: string;
   name: string;
-  type: 'video' | 'audio' | 'text' | 'effect';
+  type: 'video' | 'audio' | 'text' | 'effect' | 'canvas';
   height: number;
   muted: boolean;
   locked: boolean;
@@ -204,16 +204,18 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   },
 ];
 
-export const TRACK_COLORS = {
+export const TRACK_COLORS: Record<string, string> = {
   video: '#3b82f6',
   audio: '#22c55e',
   text: '#f59e0b',
   effect: '#a855f7',
+  canvas: '#ec4899',
 };
 
 export const DEFAULT_TRACKS: TimelineTrack[] = [
   { id: 'v1', name: 'Vídeo 1', type: 'video', height: 60, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'v2', name: 'Vídeo 2', type: 'video', height: 60, muted: false, locked: false, visible: true, volume: 1, solo: false },
+  { id: 'cv1', name: 'Canvas', type: 'canvas', height: 60, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'a1', name: 'Áudio 1', type: 'audio', height: 50, muted: false, locked: false, visible: true, volume: 1, solo: false },
   { id: 'a2', name: 'Música', type: 'audio', height: 50, muted: false, locked: false, visible: true, volume: 0.7, solo: false },
   { id: 't1', name: 'Texto', type: 'text', height: 40, muted: false, locked: false, visible: true, volume: 1, solo: false },

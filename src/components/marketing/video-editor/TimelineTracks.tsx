@@ -167,6 +167,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       {clip.type === 'image' && '🖼️'}
                       {clip.type === 'text' && '✏️'}
                       {clip.type === 'effect' && '✨'}
+                      {clip.type === 'canvas' && '🎨'}
                       <span className="truncate">{clip.name}</span>
                       {clip.muted && <span className="text-destructive">🔇</span>}
                     </div>

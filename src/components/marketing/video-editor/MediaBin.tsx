@@ -107,6 +107,9 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
     setShowCanvasDialog(true);
   }, []);
 
+  // Find canvas track id
+  const canvasTrackId = tracks.find(t => t.type === 'canvas')?.id || undefined;
+
   const handleCanvasConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
     setShowCanvasDialog(false);
 
@@ -123,8 +126,8 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
       name: clipName,
       src: imageDataUrl,
       canvasJson,
-    }, addToTrackId || undefined);
-  }, [onAddClip, addToTrackId, canvasClips.length, editingCanvasClipCallback]);
+    }, canvasTrackId);
+  }, [onAddClip, canvasTrackId, canvasClips.length, editingCanvasClipCallback]);
 
   const handleEditCanvasClip = useCallback((clip: CanvasClipRef, index: number) => {
     setEditingCanvasJson(clip.canvasJson);
@@ -137,7 +140,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
         name: clip.clipName + ' (editado)',
         src: dataUrl,
         canvasJson: json,
-      }, addToTrackId || undefined);
+      }, canvasTrackId);
     });
     setShowCanvasDialog(true);
   }, [onAddClip, addToTrackId]);
