@@ -92,6 +92,7 @@ const nodeIconColorMap: Record<string, string> = {
   textInput: 'text-indigo-400',
   systemPrompt: 'text-purple-400',
   imageInput: 'text-orange-400',
+  multiImageRef: 'text-orange-400',
   productImageSelect: 'text-emerald-400',
   multiProductSelect: 'text-emerald-500',
   galleryInfluencer: 'text-pink-400',
