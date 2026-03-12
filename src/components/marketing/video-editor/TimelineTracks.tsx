@@ -176,14 +176,14 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
         </div>
       );
     }
-    if (clip.type === 'image') {
+    if (clip.type === 'image' || clip.type === 'canvas') {
       return clip.src ? (
         <div className="flex items-center gap-1 h-full w-full py-1 overflow-hidden">
           <img src={clip.src} className="h-full rounded-sm object-cover" alt="" draggable={false} style={{ maxWidth: 40 }} />
           <span className="text-[9px] text-muted-foreground truncate">{clip.name}</span>
         </div>
       ) : (
-        <span className="text-[9px] text-muted-foreground truncate">🖼️ {clip.name}</span>
+        <span className="text-[9px] text-muted-foreground truncate">{clip.type === 'canvas' ? '🎨' : '🖼️'} {clip.name}</span>
       );
     }
     if (clip.type === 'text') {

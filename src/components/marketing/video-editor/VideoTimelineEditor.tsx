@@ -426,7 +426,7 @@ const VideoTimelineEditor: React.FC = () => {
     if (!trackId || !tracks.find(t => t.id === trackId)) {
       trackId = tracks.find((t) => {
         if (type === 'audio') return t.type === 'audio';
-        if (type === 'image') return t.type === 'image';
+        if (type === 'image') return t.type === 'image' || t.type === 'canvas';
         if (type === 'text') return t.type === 'text';
         return t.type === 'video';
       })?.id;
@@ -441,10 +441,11 @@ const VideoTimelineEditor: React.FC = () => {
     const trackType = targetTrack?.type || (type === 'image' ? 'video' : type);
     const color = TRACK_COLORS[trackType] || TRACK_COLORS.video;
     const clipDuration = media?.duration || (type === 'text' ? 3 : type === 'audio' ? 10 : 5);
+    const clipType = media?.canvasJson ? 'canvas' as const : type;
 
     timeline.addClip({
       trackId,
-      type,
+      type: clipType,
       name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${clips.length + 1}`,
       startTime,
       duration: clipDuration,
