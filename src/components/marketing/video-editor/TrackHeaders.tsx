@@ -15,6 +15,7 @@ interface Props {
   onAddTrack: (track: Omit<TimelineTrack, 'id'>) => void;
   onMoveTrack: (id: string, direction: 'up' | 'down') => void;
   onReorderTrack?: (id: string, toIndex: number) => void;
+  renderMode?: 'add-button' | 'tracks';
 }
 
 const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: React.ReactNode; defaultHeight: number }[] = [
@@ -25,7 +26,7 @@ const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: Re
   { type: 'effect', label: 'Efeitos', icon: <Sparkles className="h-3.5 w-3.5" />, defaultHeight: 50 },
 ];
 
-const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack, onReorderTrack }) => {
+const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, onAddTrack, onMoveTrack, onReorderTrack, renderMode }) => {
   const [addPopoverOpen, setAddPopoverOpen] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -45,38 +46,40 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
     setAddPopoverOpen(false);
   };
 
-  return (
-    <div className="w-44 border-r bg-card/80 shrink-0 flex flex-col">
-      {/* Ruler spacer */}
-      <div className="h-7 border-b bg-muted/40 flex items-center justify-center">
-        <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button size="icon" variant="ghost" className="h-5 w-5" title="Adicionar trilha">
-              <Plus className="h-3 w-3" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="w-44 p-1.5">
-            <p className="text-[10px] font-semibold text-muted-foreground px-2 py-1">Tipo de trilha</p>
-            {TRACK_TYPE_OPTIONS.map(opt => (
-              <button
-                key={opt.type}
-                onClick={() => handleAddTrack(opt)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-xs transition-colors text-left"
+  // Render only the add button for the ruler row
+  if (renderMode === 'add-button') {
+    return (
+      <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
+        <PopoverTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-5 w-5" title="Adicionar trilha">
+            <Plus className="h-3 w-3" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="bottom" align="start" className="w-44 p-1.5">
+          <p className="text-[10px] font-semibold text-muted-foreground px-2 py-1">Tipo de trilha</p>
+          {TRACK_TYPE_OPTIONS.map(opt => (
+            <button
+              key={opt.type}
+              onClick={() => handleAddTrack(opt)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-xs transition-colors text-left"
+            >
+              <div
+                className="w-5 h-5 rounded flex items-center justify-center"
+                style={{ backgroundColor: `${TRACK_COLORS[opt.type]}25`, color: TRACK_COLORS[opt.type] }}
               >
-                <div
-                  className="w-5 h-5 rounded flex items-center justify-center"
-                  style={{ backgroundColor: `${TRACK_COLORS[opt.type]}25`, color: TRACK_COLORS[opt.type] }}
-                >
-                  {opt.icon}
-                </div>
-                {opt.label}
-              </button>
-            ))}
-          </PopoverContent>
-        </Popover>
-      </div>
+                {opt.icon}
+              </div>
+              {opt.label}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
-      {/* Track headers */}
+  // Render only track rows (for 'tracks' mode or default without renderMode for backwards compat)
+  return (
+    <div className="flex flex-col">
       {tracks.map((track, index) => (
         <div
           key={track.id}
@@ -101,7 +104,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
             }
             setDraggingId(null);
           }}
-          className={`border-b flex items-center gap-1 px-1.5 group transition-all ${
+          className={`border-b border-r flex items-center gap-1 px-1.5 group transition-all ${
             draggingId === track.id ? 'opacity-40' : ''
           } ${dragOverIndex === index && draggingId !== track.id ? 'border-t-2 border-t-primary' : ''} ${
             track.locked ? 'bg-muted/30' : ''
