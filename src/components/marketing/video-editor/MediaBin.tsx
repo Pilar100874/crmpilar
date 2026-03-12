@@ -230,6 +230,8 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                         src: media.src,
                         duration: media.duration,
                       }));
+                      // Set type hint so tracks can filter during dragover
+                      e.dataTransfer.setData(`mediatype/${media.type}`, '');
                       e.dataTransfer.effectAllowed = 'copy';
                     }}
                     className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing"

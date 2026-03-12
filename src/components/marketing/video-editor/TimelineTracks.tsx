@@ -238,6 +238,8 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
       ref={containerRef}
       className="flex-1 overflow-auto relative"
       onClick={handleTrackClick}
+      onDragEnd={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
+      onDrop={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
     >
       <div style={{ minWidth: totalWidth, position: 'relative' }}>
         {state.tracks.map((track) => {
