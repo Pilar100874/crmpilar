@@ -191,6 +191,17 @@ export function useTimelineState() {
     });
   }, []);
 
+  const reorderTrack = useCallback((id: string, toIndex: number) => {
+    setState((prev) => {
+      const idx = prev.tracks.findIndex((t) => t.id === id);
+      if (idx < 0 || toIndex < 0 || toIndex >= prev.tracks.length || idx === toIndex) return prev;
+      const newTracks = [...prev.tracks];
+      const [removed] = newTracks.splice(idx, 1);
+      newTracks.splice(toIndex, 0, removed);
+      return { ...prev, tracks: newTracks };
+    });
+  }, []);
+
   // Zoom
   const zoomIn = useCallback(() => {
     setState((prev) => ({ ...prev, zoom: Math.min(200, prev.zoom * 1.3) }));
