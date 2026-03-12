@@ -1521,16 +1521,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         )}
       </div>
 
-      {/* Handles - cinematic glow style */}
+      {/* Handles - refined minimal style */}
       {hasInput && (
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3.5 !h-3.5 !rounded-full !border-[2px] !-left-[7px]"
+          className="!w-3 !h-3 !rounded-full !border-[2px] !-left-[6px] !transition-all !duration-200 hover:!scale-125"
           style={{
-            backgroundColor: accent,
-            borderColor: 'hsl(var(--card))',
-            boxShadow: `0 0 8px ${accent}50`,
+            backgroundColor: 'hsl(var(--card))',
+            borderColor: `${accent}80`,
+            boxShadow: `0 0 0 2px ${accent}15`,
           }}
         />
       )}
@@ -1538,11 +1538,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3.5 !h-3.5 !rounded-full !border-[2px] !-right-[7px]"
+          className="!w-3 !h-3 !rounded-full !border-[2px] !-right-[6px] !transition-all !duration-200 hover:!scale-125"
           style={{
             backgroundColor: accent,
             borderColor: 'hsl(var(--card))',
-            boxShadow: `0 0 8px ${accent}50`,
+            boxShadow: `0 0 0 2px ${accent}15`,
           }}
         />
       )}
