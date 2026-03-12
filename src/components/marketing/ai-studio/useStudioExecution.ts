@@ -30,7 +30,7 @@ export function useStudioExecution() {
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000, _retryCount = 0) => {
+  const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 300000, _retryCount = 0) => {
     const MAX_RETRIES = 2;
     console.log(`[Studio] Calling edge function: action=${action}${_retryCount > 0 ? ` (retry ${_retryCount})` : ''}`, params);
     const controller = new AbortController();
