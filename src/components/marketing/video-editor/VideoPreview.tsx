@@ -164,17 +164,18 @@ const VideoPreview: React.FC<Props> = ({
         <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
 
         {activeVisuals.length > 0 ? (
-          activeVisuals.map((clip) => {
+          activeVisuals.map((clip, layerIdx) => {
             const cx = clip.x ?? 0;
             const cy = clip.y ?? 0;
             const cw = clip.w ?? 100;
             const ch = clip.h ?? 100;
             const isSelected = selectedClipIds.includes(clip.id);
+            const zIndex = 10 + layerIdx; // Already sorted: first = bottom, last = top
 
             return (
               <div
                 key={clip.id}
-                className="absolute z-10 cursor-move"
+                className="absolute cursor-move"
                 style={{
                   left: `${cx}%`,
                   top: `${cy}%`,
@@ -184,6 +185,7 @@ const VideoPreview: React.FC<Props> = ({
                   opacity: clip.opacity ?? 1,
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px',
+                  zIndex,
                 }}
                 onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
               >
