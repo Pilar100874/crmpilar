@@ -71,7 +71,7 @@ async function reEncodeVideo(inputBlob: Blob, keepAudio: boolean): Promise<Blob>
       const stream = canvas.captureStream(30);
 
       // Add audio track if needed
-      if (keepAudio && video.captureStream) {
+      if (keepAudio && (video as any).captureStream) {
         try {
           const videoStream = (video as any).captureStream();
           const audioTracks = videoStream.getAudioTracks();
