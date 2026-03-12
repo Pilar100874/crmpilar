@@ -26,12 +26,13 @@ serve(async (req) => {
     }
 
     // Construir prompt publicitário
-    const adStyle = style || "modern, professional, high-quality advertising";
+    const adStyle = style || "moderno, profissional, alta qualidade publicitária";
     const fullPrompt = prompt || 
-      `Create a stunning advertising image for the product: "${productName}". 
-       Style: ${adStyle}. 
-       The image should be eye-catching, professional, suitable for social media marketing, 
-       with vibrant colors and clean composition. Product-focused commercial photography style.`;
+      `Crie uma imagem publicitária impressionante para o produto: "${productName}". 
+       Estilo: ${adStyle}. 
+       A imagem deve ser chamativa, profissional, adequada para marketing em redes sociais, 
+       com cores vibrantes e composição limpa. Estilo de fotografia comercial focada no produto.
+       IMPORTANTE: Todos os textos e elementos textuais na imagem devem estar em Português Brasileiro.`;
 
     console.log("Generating ad image with prompt:", fullPrompt);
 

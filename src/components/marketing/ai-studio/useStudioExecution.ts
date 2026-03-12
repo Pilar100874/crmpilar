@@ -489,13 +489,18 @@ export function useStudioExecution() {
         const correctionOnlyPromptImage = correctionInputImage?._correctionPrompt || '';
         const correctionSourceImage = correctionInputImage?.imageUrl;
 
+        // Get configured language for image generation
+        const imgEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const imgDefaults = getStudioDefaults(imgEstabId);
+        const imgLangSuffix = getLanguagePromptSuffix(imgDefaults.defaultLanguage || 'pt-BR');
+
         // Auto-detect product + influencer without explicit placement prompt → default to holding
         const hasProduct = inputs.some((i) => i?._referenceRole === 'produto');
         const hasInfluencer = inputs.some((i) => i?._referenceRole === 'influencer');
         const promptLower = (combinedInput || '').toLowerCase();
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
-        let enrichedPrompt = combinedInput || 'A beautiful scene';
+        let enrichedPrompt = combinedInput || 'Uma cena bonita';
 
         // If correction mode, override prompt to be edit-only
         if (isCorrectionImage && correctionSourceImage) {
@@ -562,6 +567,9 @@ export function useStudioExecution() {
             referenceDescs.join('\n'),
           ].join('\n');
         }
+        // Inject language instruction into image prompt
+        enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: config.model,
@@ -572,8 +580,13 @@ export function useStudioExecution() {
       }
 
       case 'imageEdit': {
+        const editEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const editDefaults = getStudioDefaults(editEstabId);
+        const editLangSuffix = getLanguagePromptSuffix(editDefaults.defaultLanguage || 'pt-BR');
+        const editPromptText = config.editPrompt || combinedInput || 'Melhore esta imagem';
+        const editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
         const result = await callStudio('edit_image', {
-          prompt: config.editPrompt || combinedInput || 'Enhance this image',
+          prompt: editPromptWithLang,
           imageUrls: imageInputs,
           model: config.model,
         });
@@ -581,6 +594,9 @@ export function useStudioExecution() {
       }
 
       case 'productComposite': {
+        const compEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const compDefaults = getStudioDefaults(compEstabId);
+        const compLangSuffix = getLanguagePromptSuffix(compDefaults.defaultLanguage || 'pt-BR');
         const modeDescriptions: Record<string, string> = {
           clothing: 'Vista esta roupa na pessoa da foto.',
           holding: 'Coloque este produto na mão da pessoa da foto.',
@@ -591,20 +607,21 @@ export function useStudioExecution() {
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         if (formatWidth && formatHeight) {
-          fullPrompt = `${fullPrompt}\n\n[FORMAT] Optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+          fullPrompt = `${fullPrompt}\n\n[FORMAT] Otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
         }
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
-              influencer: 'PERSON (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
-              pose: 'POSE REFERENCE', ambiente: 'ENVIRONMENT (flexible)',
+              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
+              influencer: 'PESSOA (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
+              pose: 'REFERÊNCIA DE POSE', ambiente: 'AMBIENTE (flexível)',
             };
-            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+            return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
-          const imagePositionHint = positionLabels.length > 0 ? `\n\n🔒 IMAGE ORDER:\n${positionLabels.join('\n')}` : '';
-          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nEnvironment references affect ONLY the background, NEVER the product, person or clothing.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          const imagePositionHint = positionLabels.length > 0 ? `\n\n🔒 ORDEM DAS IMAGENS:\n${positionLabels.join('\n')}` : '';
+          fullPrompt = `${fullPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA:\nReferências de ambiente afetam APENAS o fundo, NUNCA o produto, pessoa ou roupa.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
+        fullPrompt = `${fullPrompt}\n\n[IDIOMA] Todos os textos na imagem devem estar ${compLangSuffix}.`;
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
@@ -616,8 +633,12 @@ export function useStudioExecution() {
 
       case 'imageAnalyze': {
         const imageUrl = imageInputs[0];
+        const analyzeEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const analyzeDefaults = getStudioDefaults(analyzeEstabId);
+        const analyzeLangSuffix = getLanguagePromptSuffix(analyzeDefaults.defaultLanguage || 'pt-BR');
+        const analyzePrompt = `${config.prompt || combinedInput || 'Descreva esta imagem'}\n\n[IDIOMA] Responda ${analyzeLangSuffix}.`;
         const result = await callStudio('analyze_image', {
-          prompt: config.prompt || combinedInput || 'Describe this image',
+          prompt: analyzePrompt,
           imageUrl,
           model: config.model,
         });
@@ -718,6 +739,17 @@ export function useStudioExecution() {
             ``,
             referenceDescs.join('\n'),
           ].join('\n');
+        }
+        
+        // === PAID VIDEO MODEL PATH ===
+        {
+        // Get configured language for video generation
+        const vidEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const vidDefaults = getStudioDefaults(vidEstabId);
+        const vidLangSuffix = getLanguagePromptSuffix(vidDefaults.defaultLanguage || 'pt-BR');
+
+        // Inject language instruction into video prompt
+        videoPrompt = `${videoPrompt}\n\n[IDIOMA] Todos os textos, legendas, narrações e elementos textuais no vídeo devem estar ${vidLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
         }
         
         // === PAID VIDEO MODEL PATH ===
