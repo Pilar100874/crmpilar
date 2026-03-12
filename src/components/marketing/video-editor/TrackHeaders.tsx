@@ -17,6 +17,7 @@ interface Props {
 
 const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: React.ReactNode; defaultHeight: number }[] = [
   { type: 'video', label: 'Vídeo', icon: <Film className="h-3.5 w-3.5" />, defaultHeight: 50 },
+  { type: 'image', label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'canvas', label: 'Canvas', icon: <Palette className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'audio', label: 'Áudio', icon: <Music className="h-3.5 w-3.5" />, defaultHeight: 50 },
   { type: 'effect', label: 'Efeitos', icon: <Sparkles className="h-3.5 w-3.5" />, defaultHeight: 50 },
