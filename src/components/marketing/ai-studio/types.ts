@@ -5,6 +5,7 @@ export type StudioNodeType =
   | 'textInput'
   | 'systemPrompt'
   | 'imageInput'
+  | 'multiImageRef'
   | 'productImageSelect'
   | 'multiProductSelect'
   | 'galleryInfluencer'
