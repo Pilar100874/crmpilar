@@ -19,7 +19,7 @@ import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
-import { TRACK_COLORS, TimelineClip } from './types';
+import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS } from './types';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -81,6 +81,17 @@ const VideoTimelineEditor: React.FC = () => {
   const [renameName, setRenameName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
+  const [lastSavedState, setLastSavedState] = useState<string>('');
+
+  const getCurrentStateHash = useCallback(() => {
+    return JSON.stringify({ tracks: state.tracks, clips: state.clips, videoConfig });
+  }, [state.tracks, state.clips, videoConfig]);
+
+  const hasUnsavedChanges = useCallback(() => {
+    if (state.clips.length === 0 && state.tracks.length === DEFAULT_TRACKS.length) return false;
+    return getCurrentStateHash() !== lastSavedState;
+  }, [getCurrentStateHash, lastSavedState, state.clips.length, state.tracks.length]);
 
   const loadProjects = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -118,6 +129,7 @@ const VideoTimelineEditor: React.FC = () => {
         })
         .eq('id', currentProjectId);
       toast.success('Projeto salvo!');
+      setLastSavedState(getCurrentStateHash());
     } else {
       const finalName = name || projectName || `Projeto ${new Date().toLocaleDateString('pt-BR')}`;
       const { data } = await supabase
@@ -134,6 +146,7 @@ const VideoTimelineEditor: React.FC = () => {
         setCurrentProjectId(data.id);
         setProjectName(finalName);
         toast.success('Projeto criado!');
+        setLastSavedState(getCurrentStateHash());
       }
     }
     loadProjects();
@@ -156,7 +169,9 @@ const VideoTimelineEditor: React.FC = () => {
     setProjectName(project.nome);
     setShowEditor(true);
     toast.success(`Projeto "${project.nome}" carregado`);
-  }, [timeline]);
+    // Mark state as saved after loading
+    setTimeout(() => setLastSavedState(JSON.stringify({ tracks: td.tracks, clips: td.clips || [], videoConfig: vc || videoConfig })), 100);
+  }, [timeline, videoConfig]);
 
   const duplicateProject = useCallback(async (project: VideoProject) => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -488,11 +503,38 @@ const VideoTimelineEditor: React.FC = () => {
   }, [canvasEditClipId, canvasEditResourceId, timeline]);
 
   const handleCloseEditor = useCallback(() => {
+    if (hasUnsavedChanges()) {
+      setUnsavedDialogOpen(true);
+      return;
+    }
+    setShowEditor(false);
+    setCurrentProjectId(null);
+    setProjectName('');
+    loadProjects();
+  }, [loadProjects, hasUnsavedChanges]);
+
+  const handleForceClose = useCallback(() => {
+    setUnsavedDialogOpen(false);
     setShowEditor(false);
     setCurrentProjectId(null);
     setProjectName('');
     loadProjects();
   }, [loadProjects]);
+
+  const handleSaveAndClose = useCallback(async () => {
+    setUnsavedDialogOpen(false);
+    if (currentProjectId) {
+      await saveProject();
+    } else {
+      setSaveDialogOpen(true);
+      // After saving from dialog, user can manually go back
+      return;
+    }
+    setShowEditor(false);
+    setCurrentProjectId(null);
+    setProjectName('');
+    loadProjects();
+  }, [currentProjectId, saveProject, loadProjects]);
 
   // Landing page
   if (!showEditor) {
@@ -524,7 +566,7 @@ const VideoTimelineEditor: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-10">
               <Button
-                onClick={() => { setCurrentProjectId(null); setProjectName(''); setShowEditor(true); }}
+                onClick={() => { setCurrentProjectId(null); setProjectName(''); setLastSavedState(getCurrentStateHash()); setShowEditor(true); }}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm"
               >
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
@@ -808,6 +850,24 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Unsaved changes dialog */}
+      <AlertDialog open={unsavedDialogOpen} onOpenChange={setUnsavedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem modificações que não foram salvas. Deseja salvar antes de sair?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleForceClose}>Descartar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndClose}>
+              <Save className="h-3.5 w-3.5 mr-1" />Salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
