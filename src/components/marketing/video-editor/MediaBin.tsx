@@ -50,6 +50,9 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const [importedImages, setImportedImages] = useState<ImportedMedia[]>([]);
   const [activeTab, setActiveTab] = useState<'video' | 'image'>('video');
 
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const fetchGallery = useCallback(async (type: 'video' | 'image') => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) return;
