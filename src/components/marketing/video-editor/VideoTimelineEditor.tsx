@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, Sparkles, FolderOpen,
-  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronUp, ChevronDown,
-  FolderKanban, MoreVertical, Pencil, Copy as CopyIcon
+  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown,
+  Plus, ArrowLeft, Clapperboard
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useTimelineState } from './useTimelineState';
@@ -19,11 +20,10 @@ import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
 import { TRACK_COLORS, TimelineClip } from './types';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
