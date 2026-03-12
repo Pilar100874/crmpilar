@@ -850,6 +850,24 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Unsaved changes dialog */}
+      <AlertDialog open={unsavedDialogOpen} onOpenChange={setUnsavedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem modificações que não foram salvas. Deseja salvar antes de sair?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleForceClose}>Descartar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndClose}>
+              <Save className="h-3.5 w-3.5 mr-1" />Salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
