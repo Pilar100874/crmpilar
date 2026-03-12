@@ -873,8 +873,12 @@ export function useStudioExecution() {
         // Always use config.prompt or a default — ignore audio from connected prompt blocks
         const rawMusicPrompt = config.prompt || combinedInput || 'Uma trilha sonora alegre e energética para marketing digital';
 
-        const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil/i) ? rawMusicPrompt : `${rawMusicPrompt} (em português brasileiro / Brazilian Portuguese)`;
-        const estabId = localStorage.getItem('estabelecimentoId');
+        const musicEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const musicDefaults = getStudioDefaults(musicEstabId);
+        const musicLang = musicDefaults.defaultLanguage || 'pt-BR';
+        const musicLangSuffix = getLanguagePromptSuffix(musicLang);
+        const musicPrompt = rawMusicPrompt.match(/portugu[eê]s|pt-br|brazilian|brasil|english|español|french|deutsch/i) ? rawMusicPrompt : `${rawMusicPrompt} (${musicLangSuffix})`;
+        const estabId = musicEstabId;
         let musicProvider: string | null = null;
 
         if (estabId) {
