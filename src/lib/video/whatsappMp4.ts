@@ -15,11 +15,47 @@ async function fetchFile(input: Blob | string): Promise<Uint8Array> {
   return new Uint8Array(await resp.arrayBuffer());
 }
 
+type InputProbe = {
+  ext: 'mp4' | 'webm' | 'mov' | 'ogg';
+  formatArg?: 'webm' | 'mov' | 'ogg';
+};
+
+async function probeInput(blob: Blob): Promise<InputProbe> {
+  try {
+    const header = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
+
+    // WebM / Matroska (EBML)
+    if (header[0] === 0x1a && header[1] === 0x45 && header[2] === 0xdf && header[3] === 0xa3) {
+      return { ext: 'webm', formatArg: 'webm' };
+    }
+
+    // ISO BMFF (MP4/MOV): "ftyp" em bytes 4..7
+    if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
+      const majorBrand = String.fromCharCode(header[8], header[9], header[10], header[11]);
+      if (majorBrand === 'qt  ') return { ext: 'mov', formatArg: 'mov' };
+      return { ext: 'mp4' };
+    }
+
+    // OGG
+    if (header[0] === 0x4f && header[1] === 0x67 && header[2] === 0x67 && header[3] === 0x53) {
+      return { ext: 'ogg', formatArg: 'ogg' };
+    }
+  } catch {
+    // fallback abaixo
+  }
+
+  const mime = blob.type.toLowerCase();
+  if (mime.includes('webm')) return { ext: 'webm', formatArg: 'webm' };
+  if (mime.includes('quicktime') || mime.includes('mov')) return { ext: 'mov', formatArg: 'mov' };
+  if (mime.includes('ogg')) return { ext: 'ogg', formatArg: 'ogg' };
+  return { ext: 'mp4' };
+}
+
 /* ── FFmpeg singleton ── */
 
 const CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
 const LOAD_TIMEOUT = 60_000;
-const EXEC_TIMEOUT = 180_000;
+const EXEC_TIMEOUT = 240_000;
 
 let instance: FFmpeg | null = null;
 let loadPromise: Promise<FFmpeg> | null = null;
@@ -27,7 +63,9 @@ let queue: Promise<void> = Promise.resolve();
 
 function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
   let tid: ReturnType<typeof setTimeout>;
-  const tp = new Promise<T>((_, rej) => { tid = setTimeout(() => rej(new Error(msg)), ms); });
+  const tp = new Promise<T>((_, rej) => {
+    tid = setTimeout(() => rej(new Error(msg)), ms);
+  });
   return Promise.race([p, tp]).finally(() => clearTimeout(tid!)) as Promise<T>;
 }
 
@@ -38,7 +76,9 @@ function enqueue<T>(job: () => Promise<T>): Promise<T> {
 }
 
 function reset() {
-  try { instance?.terminate(); } catch {}
+  try {
+    instance?.terminate();
+  } catch {}
   instance = null;
   loadPromise = null;
 }
@@ -52,6 +92,7 @@ async function getFFmpeg(): Promise<FFmpeg> {
     ff.on('log', ({ message }) => {
       console.log('[ffmpeg]', message);
     });
+
     try {
       const [coreURL, wasmURL, workerURL] = await Promise.all([
         toBlobURL(`${CORE_URL}/ffmpeg-core.js`, 'text/javascript'),
@@ -62,7 +103,9 @@ async function getFFmpeg(): Promise<FFmpeg> {
       instance = ff;
       return ff;
     } catch (e) {
-      try { ff.terminate(); } catch {}
+      try {
+        ff.terminate();
+      } catch {}
       loadPromise = null;
       throw e;
     }
@@ -76,35 +119,53 @@ async function getFFmpeg(): Promise<FFmpeg> {
 async function transcode(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
   return enqueue(async () => {
     const ff = await getFFmpeg();
-    const ext = inputBlob.type.includes('webm') ? 'webm' : 'mp4';
+    const probe = await probeInput(inputBlob);
     const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const inFile = `in_${uid}.${ext}`;
+    const inFile = `in_${uid}.${probe.ext}`;
     const outFile = `out_${uid}.mp4`;
 
     try {
       const data = await fetchFile(inputBlob);
       await ff.writeFile(inFile, data);
 
-      const args: string[] = [
-        '-i', inFile,
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-profile:v', 'baseline',
-        '-level', '3.1',
-        '-pix_fmt', 'yuv420p',
-        '-movflags', '+faststart',
-        '-r', '30',
-        '-crf', '28',
-        '-threads', '1',
-      ];
+      const args: string[] = ['-hide_banner', '-loglevel', 'error'];
+
+      if (probe.formatArg) {
+        args.push('-f', probe.formatArg);
+      }
+
+      args.push(
+        '-i',
+        inFile,
+        '-map',
+        '0:v:0',
+        '-vf',
+        'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-profile:v',
+        'baseline',
+        '-level',
+        '3.1',
+        '-pix_fmt',
+        'yuv420p',
+        '-movflags',
+        '+faststart',
+        '-r',
+        '30',
+        '-crf',
+        '23',
+      );
 
       if (keepAudio) {
-        args.push('-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2');
+        args.push('-map', '0:a:0?', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2');
       } else {
         args.push('-an');
       }
 
-      args.push('-y', outFile);
+      args.push('-max_muxing_queue_size', '1024', '-y', outFile);
 
       const code = await withTimeout(ff.exec(args), EXEC_TIMEOUT, 'Conversão demorou demais');
       if (code !== 0) throw new Error(`FFmpeg retornou código ${code}`);
@@ -117,8 +178,12 @@ async function transcode(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
       reset();
       throw e;
     } finally {
-      try { await ff.deleteFile(inFile); } catch {}
-      try { await ff.deleteFile(outFile); } catch {}
+      try {
+        await ff.deleteFile(inFile);
+      } catch {}
+      try {
+        await ff.deleteFile(outFile);
+      } catch {}
     }
   });
 }
@@ -126,11 +191,6 @@ async function transcode(inputBlob: Blob, keepAudio: boolean): Promise<Blob> {
 /* ── public API ── */
 
 export async function convertVideoToWhatsappMp4(inputBlob: Blob): Promise<Blob> {
-  // Se já for MP4 nativo (ftyp header), retorna direto sem conversão
-  if (await isMp4Native(inputBlob)) {
-    return new Blob([inputBlob], { type: 'video/mp4' });
-  }
-
   const tid = toast.loading('Convertendo para MP4 com áudio...');
   try {
     const result = await transcode(inputBlob, true);
@@ -138,8 +198,8 @@ export async function convertVideoToWhatsappMp4(inputBlob: Blob): Promise<Blob> 
     return result;
   } catch (err) {
     console.error('[whatsappMp4] convert error:', err);
-    toast.error('Falha na conversão. Baixando original.', { id: tid });
-    return new Blob([inputBlob], { type: 'video/mp4' });
+    toast.error('Falha na conversão para MP4 com áudio.', { id: tid });
+    throw err instanceof Error ? err : new Error('Falha na conversão para MP4 com áudio');
   }
 }
 
@@ -151,8 +211,8 @@ export async function removeAudioFromVideo(inputBlob: Blob): Promise<Blob> {
     return result;
   } catch (err) {
     console.error('[whatsappMp4] remove audio error:', err);
-    toast.error('Falha ao remover áudio.', { id: tid });
-    return new Blob([inputBlob], { type: 'video/mp4' });
+    toast.error('Falha na conversão para MP4 sem áudio.', { id: tid });
+    throw err instanceof Error ? err : new Error('Falha na conversão para MP4 sem áudio');
   }
 }
 
@@ -171,16 +231,4 @@ export function triggerDownload(blob: Blob, fileName: string) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-}
-
-/* ── util: detect native MP4 by checking ftyp box ── */
-
-async function isMp4Native(blob: Blob): Promise<boolean> {
-  try {
-    const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
-    // ftyp at bytes 4-7
-    return header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70;
-  } catch {
-    return false;
-  }
 }
