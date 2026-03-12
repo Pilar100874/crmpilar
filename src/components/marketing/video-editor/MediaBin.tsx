@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Film, Image as ImageIcon, FolderOpen, Loader2, Check, Trash2, Play } from 'lucide-react';
+import { Film, Image as ImageIcon, FolderOpen, Loader2, Check, Trash2, Play, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack } from './types';
 
@@ -49,6 +49,9 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const [importedVideos, setImportedVideos] = useState<ImportedMedia[]>([]);
   const [importedImages, setImportedImages] = useState<ImportedMedia[]>([]);
   const [activeTab, setActiveTab] = useState<'video' | 'image'>('video');
+
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const fetchGallery = useCallback(async (type: 'video' | 'image') => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -144,11 +147,59 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
     }
   }, []);
 
+  const handleFileUpload = useCallback((files: FileList | null, type: 'video' | 'image') => {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      const url = URL.createObjectURL(file);
+      const imported: ImportedMedia = {
+        id: `upload_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: file.name,
+        src: url,
+        type,
+        duration: null,
+        thumbnail: null,
+      };
+
+      if (type === 'video') {
+        // Get video duration
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.onloadedmetadata = () => {
+          imported.duration = vid.duration;
+          setImportedVideos(prev => [...prev, imported]);
+        };
+        vid.onerror = () => setImportedVideos(prev => [...prev, imported]);
+        vid.src = url;
+      } else {
+        setImportedImages(prev => [...prev, imported]);
+      }
+    });
+    setActiveTab(type);
+  }, []);
+
   const currentList = activeTab === 'video' ? importedVideos : importedImages;
   const totalImported = importedVideos.length + importedImages.length;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
+      {/* Hidden file inputs */}
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileUpload(e.target.files, 'video')}
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileUpload(e.target.files, 'image')}
+      />
+
       <div className="p-3 border-b">
         <h3 className="font-semibold text-sm flex items-center gap-2">
           <FolderOpen className="h-4 w-4" />
@@ -158,28 +209,52 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
 
       {/* Insert buttons */}
       <div className="p-3 space-y-2 shrink-0">
-        <Button
-          onClick={() => handleOpenGallery('video')}
-          variant="outline"
-          className="w-full justify-start gap-2 text-xs h-10"
-        >
-          <Film className="h-4 w-4 text-primary" />
-          <span className="font-medium">Inserir Vídeo</span>
-          {importedVideos.length > 0 && (
-            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedVideos.length}</span>
-          )}
-        </Button>
-        <Button
-          onClick={() => handleOpenGallery('image')}
-          variant="outline"
-          className="w-full justify-start gap-2 text-xs h-10"
-        >
-          <ImageIcon className="h-4 w-4 text-primary" />
-          <span className="font-medium">Inserir Imagem</span>
-          {importedImages.length > 0 && (
-            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedImages.length}</span>
-          )}
-        </Button>
+        {/* Video */}
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => handleOpenGallery('video')}
+            variant="outline"
+            className="flex-1 justify-start gap-2 text-xs h-9"
+          >
+            <Film className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium">Vídeo</span>
+            {importedVideos.length > 0 && (
+              <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedVideos.length}</span>
+            )}
+          </Button>
+          <Button
+            onClick={() => videoInputRef.current?.click()}
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            title="Upload vídeo do computador"
+          >
+            <Upload className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+        {/* Image */}
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => handleOpenGallery('image')}
+            variant="outline"
+            className="flex-1 justify-start gap-2 text-xs h-9"
+          >
+            <ImageIcon className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium">Imagem</span>
+            {importedImages.length > 0 && (
+              <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedImages.length}</span>
+            )}
+          </Button>
+          <Button
+            onClick={() => imageInputRef.current?.click()}
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            title="Upload imagem do computador"
+          >
+            <Upload className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Tabs + imported list */}
@@ -288,93 +363,121 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
       )}
 
       {/* Gallery Popup */}
-      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-between px-4 pt-10 pb-2 pr-12">
-            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
-              {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
-              Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
-            </DialogTitle>
-          </div>
-          <div className="flex items-center justify-between px-4 pb-3 border-b">
-            {selectedIds.size > 0 ? (
-              <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Selecione os itens desejados</span>
-            )}
-            <Button
-              size="sm"
-              disabled={selectedIds.size === 0}
-              onClick={handleConfirmSelection}
-              className="gap-1.5 text-xs"
-            >
-              <Check className="h-3.5 w-3.5" />
-              Adicionar ({selectedIds.size})
-            </Button>
-          </div>
+      {galleryOpen && (
+        <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+          <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0 gap-0">
+            <div className="flex items-center justify-between px-4 pt-10 pb-2 pr-12">
+              <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+                {galleryType === 'video' ? <Film className="h-4 w-4 text-primary" /> : <ImageIcon className="h-4 w-4 text-primary" />}
+                Selecionar {galleryType === 'video' ? 'Vídeos' : 'Imagens'}
+              </DialogTitle>
+            </div>
+            <div className="flex items-center justify-between px-4 pb-3 border-b gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs"
+                onClick={() => {
+                  if (galleryType === 'video') videoInputRef.current?.click();
+                  else imageInputRef.current?.click();
+                  setGalleryOpen(false);
+                }}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload do PC
+              </Button>
+              <div className="flex items-center gap-2">
+                {selectedIds.size > 0 && (
+                  <span className="text-xs text-muted-foreground">{selectedIds.size} selecionado(s)</span>
+                )}
+                <Button
+                  size="sm"
+                  disabled={selectedIds.size === 0}
+                  onClick={handleConfirmSelection}
+                  className="gap-1.5 text-xs"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Adicionar ({selectedIds.size})
+                </Button>
+              </div>
+            </div>
 
-          <ScrollArea className="flex-1">
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : galleryItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                {galleryType === 'video' ? <Film className="h-10 w-10 mb-2" /> : <ImageIcon className="h-10 w-10 mb-2" />}
-                <p className="text-sm">Nenhum {galleryType === 'video' ? 'vídeo' : 'imagem'} na galeria</p>
-                <p className="text-xs mt-1">Salve mídias pelo AI Studio para usar aqui</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 p-4">
-                {galleryItems.map((item) => {
-                  const isSelected = selectedIds.has(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggleSelect(item.id)}
-                      className={`
-                        relative rounded-lg border-2 overflow-hidden transition-all group
-                        aspect-video bg-muted
-                        ${isSelected
-                          ? 'border-primary ring-2 ring-primary/30 scale-[0.97]'
-                          : 'border-border hover:border-primary/50'
-                        }
-                      `}
-                    >
-                      {galleryType === 'video' ? (
-                        <video
-                          src={item.public_url}
-                          className="w-full h-full object-cover"
-                          muted
-                          preload="metadata"
-                        />
-                      ) : (
-                        <img
-                          src={item.thumbnail_url || item.public_url}
-                          className="w-full h-full object-cover"
-                          alt={item.nome}
-                        />
-                      )}
-                      
-                      <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? 'bg-primary border-primary'
-                          : 'bg-background/80 border-border group-hover:border-primary/50'
-                      }`}>
-                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </div>
+            <ScrollArea className="flex-1">
+              {loading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : galleryItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  {galleryType === 'video' ? <Film className="h-10 w-10 mb-2" /> : <ImageIcon className="h-10 w-10 mb-2" />}
+                  <p className="text-sm">Nenhum {galleryType === 'video' ? 'vídeo' : 'imagem'} na galeria</p>
+                  <p className="text-xs mt-1 mb-4">Salve mídias pelo AI Studio ou faça upload</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      if (galleryType === 'video') videoInputRef.current?.click();
+                      else imageInputRef.current?.click();
+                      setGalleryOpen(false);
+                    }}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload do computador
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 p-4">
+                  {galleryItems.map((item) => {
+                    const isSelected = selectedIds.has(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => toggleSelect(item.id)}
+                        className={`
+                          relative rounded-lg border-2 overflow-hidden transition-all group
+                          aspect-video bg-muted
+                          ${isSelected
+                            ? 'border-primary ring-2 ring-primary/30 scale-[0.97]'
+                            : 'border-border hover:border-primary/50'
+                          }
+                        `}
+                      >
+                        {galleryType === 'video' ? (
+                          <video
+                            src={item.public_url}
+                            className="w-full h-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                        ) : (
+                          <img
+                            src={item.thumbnail_url || item.public_url}
+                            className="w-full h-full object-cover"
+                            alt={item.nome}
+                          />
+                        )}
+                        
+                        <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-primary border-primary'
+                            : 'bg-background/80 border-border group-hover:border-primary/50'
+                        }`}>
+                          {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
-                        <p className="text-[10px] text-white truncate">{item.nome}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                          <p className="text-[10px] text-white truncate">{item.nome}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
