@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelineTrack, TRACK_COLORS } from './types';
 import {
   Eye, EyeOff, Volume2, VolumeX, Lock, Unlock, Plus, Trash2,
-  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette
+  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
 } from 'lucide-react';
 
 interface Props {
