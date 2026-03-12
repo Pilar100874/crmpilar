@@ -125,26 +125,36 @@ const CanvasComposerInner: React.FC<{
   }, [fabricCanvas, initialCanvasJson]);
 
   const handleConfirm = useCallback(async () => {
-    if (!fabricCanvas) {
+    // Try context canvas first, then window fallback
+    const canvas = fabricCanvas || (window as any).fabricCanvas;
+    if (!canvas) {
       toast.error('Canvas não está pronto. Tente novamente.');
       return;
     }
+
+    const objects = canvas.getObjects();
+    if (!objects || objects.length === 0) {
+      toast.error('Canvas está vazio. Adicione elementos antes de usar.');
+      return;
+    }
+
     try {
       // Deselect all to avoid selection handles in export
-      fabricCanvas.discardActiveObject();
-      fabricCanvas.renderAll();
+      canvas.discardActiveObject();
+      canvas.renderAll();
 
       // Small delay to ensure render is complete
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 200));
 
-      const dataUrl = fabricCanvas.toDataURL({ format: 'png', multiplier: 2 });
-      const json = JSON.stringify(fabricCanvas.toJSON());
+      const dataUrl = canvas.toDataURL({ format: 'png', multiplier: 2 });
+      const json = JSON.stringify(canvas.toJSON());
       
-      if (!dataUrl || dataUrl.length < 100) {
-        toast.error('Canvas está vazio. Adicione elementos antes de usar.');
+      if (!dataUrl || dataUrl.length < 200) {
+        toast.error('Falha ao exportar canvas. Tente novamente.');
         return;
       }
-      
+
+      console.log('Canvas exported:', { objectCount: objects.length, dataUrlLength: dataUrl.length });
       onConfirm(dataUrl, json);
     } catch (e) {
       console.error('Erro ao exportar canvas:', e);
