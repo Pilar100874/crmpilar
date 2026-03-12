@@ -901,7 +901,7 @@ const AICreativeStudioInner: React.FC = () => {
       defaultConfig.duration = preset.duration || defaultConfig.duration || 5;
       defaultConfig.resolution = defaultConfig.resolution || '1080p';
       defaultConfig.aspectRatio = defaultConfig.aspectRatio || '16:9';
-      defaultConfig.videoModel = preset.videoModel || defaultConfig.videoModel || 'google/veo-3.1';
+      defaultConfig.videoModel = preset.videoModel || defaultConfig.videoModel || 'openai/sora-2';
     }
     if (targetType === 'imageGen') {
       defaultConfig.imageModel = preset.imageModel || defaultConfig.imageModel;
