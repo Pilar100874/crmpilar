@@ -308,27 +308,27 @@ const ModelSelectItem = ({ model, disabled }: { model: ModelInfo; disabled?: boo
 );
 
 const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-  <div className="flex items-center gap-2.5 mt-6 mb-3 px-0.5">
-    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/60 to-transparent" />
-    <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.15em] text-primary/60 font-bold whitespace-nowrap">
+  <div className="flex items-center gap-2 mt-5 mb-2 px-0.5">
+    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+    <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.12em] text-muted-foreground/70 font-semibold whitespace-nowrap">
       {icon}
       {children}
     </span>
-    <div className="h-px flex-1 bg-gradient-to-r from-border/60 via-transparent to-transparent" />
+    <div className="h-px flex-1 bg-gradient-to-r from-border/40 via-transparent to-transparent" />
   </div>
 );
 
 const ConfigField = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
-  <div className="rounded-lg bg-muted/30 border border-border/40 p-3 space-y-1.5 hover:border-border/70 transition-colors">
-    <Label className="text-[11px] font-semibold text-foreground/80">{label}</Label>
-    {hint && <p className="text-[10px] text-muted-foreground leading-relaxed">{hint}</p>}
+  <div className="rounded-xl bg-background/60 border border-border/30 p-3 space-y-1.5 hover:border-border/50 transition-all duration-200 hover:shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.06)]">
+    <Label className="text-[11px] font-medium text-foreground/70 tracking-wide">{label}</Label>
+    {hint && <p className="text-[10px] text-muted-foreground/60 leading-relaxed">{hint}</p>}
     {children}
   </div>
 );
 
 const ToggleField = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
-  <div className="flex items-center justify-between rounded-lg bg-muted/30 border border-border/40 px-3 py-2.5 hover:border-border/70 transition-colors">
-    <Label className="text-[11px] font-medium text-foreground/80">{label}</Label>
+  <div className="flex items-center justify-between rounded-xl bg-background/60 border border-border/30 px-3 py-2.5 hover:border-border/50 transition-all duration-200 hover:shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.06)]">
+    <Label className="text-[11px] font-medium text-foreground/70 tracking-wide">{label}</Label>
     <Switch checked={checked} onCheckedChange={onChange} />
   </div>
 );
