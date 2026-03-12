@@ -3,7 +3,7 @@
 export interface TimelineClip {
   id: string;
   trackId: string;
-  type: 'video' | 'audio' | 'image' | 'text' | 'effect';
+  type: 'video' | 'audio' | 'image' | 'text' | 'effect' | 'canvas';
   name: string;
   startTime: number; // in seconds
   duration: number;
