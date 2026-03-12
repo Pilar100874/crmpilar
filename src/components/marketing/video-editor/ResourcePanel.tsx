@@ -327,7 +327,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
                 key={media.id}
                 draggable
                 onDragStart={(e) => {
-                  const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.type;
+                  const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.resourceType === 'canvas' ? 'canvas' : media.type;
                   e.dataTransfer.setData('application/timeline-media', JSON.stringify({
                     type: dragType,
                     name: media.name,
