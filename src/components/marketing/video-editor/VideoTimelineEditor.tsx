@@ -87,7 +87,10 @@ const VideoTimelineEditor: React.FC = () => {
       .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
 
     const startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
-    const color = TRACK_COLORS[type === 'image' ? 'video' : type] || TRACK_COLORS.video;
+    // Determine color based on target track type
+    const targetTrack = tracks.find(t => t.id === trackId);
+    const trackType = targetTrack?.type || (type === 'image' ? 'video' : type);
+    const color = TRACK_COLORS[trackType] || TRACK_COLORS.video;
     const clipDuration = media?.duration || (type === 'text' ? 3 : type === 'audio' ? 10 : 5);
 
     timeline.addClip({
