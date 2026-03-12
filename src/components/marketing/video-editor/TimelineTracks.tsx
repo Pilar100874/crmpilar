@@ -10,7 +10,7 @@ interface Props {
   onDoubleClickClip?: (clip: TimelineClip) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<{
     clipId: string;
