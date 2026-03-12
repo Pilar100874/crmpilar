@@ -33,8 +33,20 @@ const VideoPreview: React.FC<Props> = ({
   }, [clips, tracks, currentTime]);
 
   const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
-  const activeVisuals = useMemo(() => activeClips.filter((c) => c.type === 'video' || c.type === 'image'), [activeClips]);
-  const activeTexts = useMemo(() => activeClips.filter((c) => c.type === 'text'), [activeClips]);
+
+  // Sort clips by track order: lower tracks (higher index) render first, upper tracks render on top
+  const sortedActiveClips = useMemo(() => {
+    const trackIndexMap = new Map(tracks.map((t, i) => [t.id, i]));
+    return [...activeClips].sort((a, b) => {
+      const idxA = trackIndexMap.get(a.trackId) ?? 0;
+      const idxB = trackIndexMap.get(b.trackId) ?? 0;
+      // Higher index = lower in timeline = rendered first (behind)
+      return idxB - idxA;
+    });
+  }, [activeClips, tracks]);
+
+  const activeVisuals = useMemo(() => sortedActiveClips.filter((c) => c.type === 'video' || c.type === 'image' || c.type === 'canvas'), [sortedActiveClips]);
+  const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
 
   // Stable key for video sync effect - only re-run when clip IDs or play state change
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
