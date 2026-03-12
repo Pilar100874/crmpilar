@@ -168,6 +168,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                       borderColor: isSelected ? 'hsl(var(--primary))' : `${clip.color || trackColor}80`,
                     }}
                     onMouseDown={(e) => handleClipMouseDown(e, clip, 'move')}
+                    onDoubleClick={(e) => { e.stopPropagation(); onDoubleClickClip?.(clip); }}
                   >
                     <div
                       className="px-1.5 py-0.5 text-[10px] font-medium truncate flex items-center gap-1"
