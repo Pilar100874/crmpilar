@@ -1,6 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { TimelineState, TimelineClip, TRACK_COLORS } from './types';
 
+interface MediaItem {
+  type: 'video' | 'audio' | 'image';
+  name: string;
+  src: string;
+  duration?: number;
+}
+
 interface Props {
   state: TimelineState;
   onSelectClip: (id: string, multi?: boolean) => void;
@@ -8,6 +15,7 @@ interface Props {
   onDeselectAll: () => void;
   onSeek: (time: number) => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
+  onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
 }
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip }) => {
