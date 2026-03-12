@@ -738,6 +738,17 @@ export function useStudioExecution() {
         }
         
         // === PAID VIDEO MODEL PATH ===
+        {
+        // Get configured language for video generation
+        const vidEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const vidDefaults = getStudioDefaults(vidEstabId);
+        const vidLangSuffix = getLanguagePromptSuffix(vidDefaults.defaultLanguage || 'pt-BR');
+
+        // Inject language instruction into video prompt
+        videoPrompt = `${videoPrompt}\n\n[IDIOMA] Todos os textos, legendas, narrações e elementos textuais no vídeo devem estar ${vidLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
+        }
+        
+        // === PAID VIDEO MODEL PATH ===
         if (videoModel !== 'free/gif-animated') {
           nodeResultStore.setResult(node.id, { 
             text: `🎬 Gerando vídeo com ${videoModel.split('/').pop()}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
