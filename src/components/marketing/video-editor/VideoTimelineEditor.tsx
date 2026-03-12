@@ -13,7 +13,8 @@ import ClipPropertiesPanel from './ClipPropertiesPanel';
 import MediaBin from './MediaBin';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
-import { TRACK_COLORS } from './types';
+import CanvasComposerDialog from './CanvasComposerDialog';
+import { TRACK_COLORS, TimelineClip } from './types';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -27,6 +28,9 @@ const VideoTimelineEditor: React.FC = () => {
   const { state } = timeline;
   const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media'>('media');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
+  const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
+  const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = state.selectedClipIds.length === 1
@@ -106,12 +110,31 @@ const VideoTimelineEditor: React.FC = () => {
       opacity: 1,
       filters: [],
       src: media?.src,
+      canvasJson: (media as any)?.canvasJson,
       x: 0,
       y: 0,
       w: 100,
       h: 100,
     });
   }, [timeline]);
+
+  // Double-click on a canvas clip opens the composer for editing
+  const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
+    if (clip.canvasJson) {
+      setCanvasEditClipId(clip.id);
+      setCanvasEditJson(clip.canvasJson);
+      setCanvasDialogOpen(true);
+    }
+  }, []);
+
+  const handleCanvasEditConfirm = useCallback((imageDataUrl: string, canvasJson: string) => {
+    setCanvasDialogOpen(false);
+    if (canvasEditClipId) {
+      timeline.updateClip(canvasEditClipId, { src: imageDataUrl, canvasJson });
+    }
+    setCanvasEditClipId(null);
+    setCanvasEditJson(undefined);
+  }, [canvasEditClipId, timeline]);
 
   return (
     <div ref={containerRef} className="flex flex-col h-[calc(100vh-200px)] min-h-[700px] border rounded-xl overflow-hidden bg-background" tabIndex={0}>
@@ -287,6 +310,7 @@ const VideoTimelineEditor: React.FC = () => {
                 onUpdateClip={timeline.updateClip}
                 onDeselectAll={timeline.deselectAll}
                 onSeek={timeline.seekTo}
+                onDoubleClickClip={handleDoubleClickClip}
               />
             </div>
           </div>
@@ -309,6 +333,13 @@ const VideoTimelineEditor: React.FC = () => {
           )}
         </div>
       </div>
+
+      <CanvasComposerDialog
+        open={canvasDialogOpen}
+        onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditJson(undefined); }}
+        onConfirm={handleCanvasEditConfirm}
+        initialCanvasJson={canvasEditJson}
+      />
     </div>
   );
 };

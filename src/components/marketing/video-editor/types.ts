@@ -18,6 +18,7 @@ export interface TimelineClip {
   transition?: ClipTransition;
   locked?: boolean;
   muted?: boolean;
+  canvasJson?: string; // JSON state for canvas compositions
   // Position and scale in the preview canvas (0-100 percentage based)
   x?: number; // left position (%)
   y?: number; // top position (%)
