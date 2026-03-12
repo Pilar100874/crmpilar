@@ -1522,6 +1522,8 @@ export function useStudioExecution() {
     if (abortRef.current) {
       abortRef.current.abort();
     }
+    setIsExecuting(false);
+    setCurrentNodeId(null);
   }, []);
 
   const clearLog = useCallback(() => {
