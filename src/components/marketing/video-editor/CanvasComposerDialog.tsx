@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
-import { Check, X, Palette } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Check, X, Palette, Home, LayoutTemplate, Image, Type, Shapes, Sticker, Sparkles, Layers, BookText, QrCode } from 'lucide-react';
 import { CanvasProvider, useCanvas } from '@/contexts/CanvasContext';
 import CanvasWorkspace from '@/components/canvas/CanvasWorkspace';
-import DesktopSidebar from '@/components/editor/DesktopSidebar';
 import { FloatingObjectToolbar } from '@/components/editor/FloatingObjectToolbar';
 import { ObjectActionsMenu } from '@/components/editor/ObjectActionsMenu';
 import ProjectsPanel from '@/components/editor/panels/ProjectsPanel';
@@ -30,15 +31,61 @@ interface CanvasComposerDialogProps {
   initialCanvasJson?: string;
 }
 
+// Inline sidebar to avoid DesktopSidebar's `fixed` positioning issues inside dialog
+const InlineSidebar: React.FC<{ activePanel: string; onPanelChange: (panel: string) => void }> = ({ activePanel, onPanelChange }) => {
+  const tools = [
+    { id: 'design', icon: Home, label: 'Início' },
+    { id: 'templates', icon: LayoutTemplate, label: 'Modelos' },
+    { id: 'text-templates', icon: BookText, label: 'Modelos de Texto' },
+    { id: 'images', icon: Image, label: 'Imagens' },
+    { id: 'text', icon: Type, label: 'Texto' },
+    { id: 'shapes', icon: Shapes, label: 'Formas' },
+    { id: 'elements', icon: Sticker, label: 'Elementos' },
+    { id: 'barcode', icon: QrCode, label: 'Códigos' },
+    { id: 'ai', icon: Sparkles, label: 'IA' },
+    { id: 'layers', icon: Layers, label: 'Camadas' },
+  ];
+
+  return (
+    <div className="w-16 bg-card border-r flex flex-col items-center py-4 gap-1.5 shrink-0 overflow-y-auto">
+      {tools.map((tool) => {
+        const Icon = tool.icon;
+        const isActive = activePanel === tool.id;
+        return (
+          <Tooltip key={tool.id}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`w-11 h-11 rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-md scale-105'
+                    : 'hover:bg-accent text-muted-foreground hover:scale-105'
+                }`}
+                onClick={() => onPanelChange(tool.id)}
+              >
+                <Icon className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="z-[9999]">
+              <p>{tool.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+};
+
 const CanvasComposerInner: React.FC<{
   onClose: () => void;
   onConfirm: (imageDataUrl: string, canvasJson: string) => void;
   initialCanvasJson?: string;
 }> = ({ onClose, onConfirm, initialCanvasJson }) => {
   const { fabricCanvas } = useCanvas();
-  const [activePanel, setActivePanel] = useState('design');
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [userSelectedPanel, setUserSelectedPanel] = useState(false);
+  const [activePanel, setActivePanel] = useState('images');
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [userSelectedPanel, setUserSelectedPanel] = useState(true);
   const [selectedObjectType, setSelectedObjectType] = useState<string | null>(null);
   const loadedRef = useRef(false);
 
@@ -78,10 +125,26 @@ const CanvasComposerInner: React.FC<{
   }, [fabricCanvas, initialCanvasJson]);
 
   const handleConfirm = useCallback(async () => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas) {
+      toast.error('Canvas não está pronto. Tente novamente.');
+      return;
+    }
     try {
+      // Deselect all to avoid selection handles in export
+      fabricCanvas.discardActiveObject();
+      fabricCanvas.renderAll();
+
+      // Small delay to ensure render is complete
+      await new Promise(r => setTimeout(r, 100));
+
       const dataUrl = fabricCanvas.toDataURL({ format: 'png', multiplier: 2 });
       const json = JSON.stringify(fabricCanvas.toJSON());
+      
+      if (!dataUrl || dataUrl.length < 100) {
+        toast.error('Canvas está vazio. Adicione elementos antes de usar.');
+        return;
+      }
+      
       onConfirm(dataUrl, json);
     } catch (e) {
       console.error('Erro ao exportar canvas:', e);
@@ -143,7 +206,7 @@ const CanvasComposerInner: React.FC<{
       case 'ai': return <AIPanel />;
       case 'layers': return <LayersPanel />;
       case 'properties': return <PropertiesPanel />;
-      default: return <ProjectsPanel />;
+      default: return <ImagesPanel />;
     }
   };
 
@@ -167,11 +230,8 @@ const CanvasComposerInner: React.FC<{
 
       {/* Canvas area with full tooling */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar icons */}
-        <DesktopSidebar
-          activePanel={activePanel}
-          onPanelChange={handlePanelChange}
-        />
+        {/* Inline sidebar (not fixed) */}
+        <InlineSidebar activePanel={activePanel} onPanelChange={handlePanelChange} />
 
         {/* Panel content */}
         {isPanelOpen && (
@@ -181,7 +241,7 @@ const CanvasComposerInner: React.FC<{
         )}
 
         {/* Canvas */}
-        <div className="flex-1 relative overflow-hidden bg-muted/30">
+        <div className="flex-1 relative overflow-hidden bg-muted/30" data-canvas-area>
           <CanvasWorkspace selectedSize="medio" />
           <FloatingObjectToolbar />
           <ObjectActionsMenu />
@@ -199,7 +259,10 @@ const CanvasComposerDialog: React.FC<CanvasComposerDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden [&>button]:hidden">
+      <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden [&>button]:hidden" aria-describedby={undefined}>
+        <VisuallyHidden>
+          <DialogTitle>Criar Composição Canvas</DialogTitle>
+        </VisuallyHidden>
         {open && (
           <CanvasProvider>
             <CanvasComposerInner
