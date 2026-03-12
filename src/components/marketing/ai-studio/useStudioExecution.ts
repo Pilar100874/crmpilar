@@ -462,6 +462,12 @@ export function useStudioExecution() {
       }
 
       case 'imageGen': {
+        // Check if this is a correction/refinement pass
+        const isCorrectionImage = inputs.some(i => i?._isCorrection);
+        const correctionInputImage = inputs.find(i => i?._isCorrection);
+        const correctionOnlyPromptImage = correctionInputImage?._correctionPrompt || '';
+        const correctionSourceImage = correctionInputImage?.imageUrl;
+
         // Auto-detect product + influencer without explicit placement prompt → default to holding
         const hasProduct = inputs.some((i) => i?._referenceRole === 'produto');
         const hasInfluencer = inputs.some((i) => i?._referenceRole === 'influencer');
@@ -469,6 +475,30 @@ export function useStudioExecution() {
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
         let enrichedPrompt = combinedInput || 'A beautiful scene';
+
+        // If correction mode, override prompt to be edit-only
+        if (isCorrectionImage && correctionSourceImage) {
+          enrichedPrompt = [
+            `🔒 MODO CORREÇÃO — EDIÇÃO MÍNIMA OBRIGATÓRIA`,
+            ``,
+            `A imagem fornecida é a BASE ORIGINAL. Você DEVE manter esta imagem EXATAMENTE como está, alterando SOMENTE o que foi solicitado abaixo.`,
+            ``,
+            `✏️ CORREÇÃO SOLICITADA:`,
+            correctionOnlyPromptImage,
+            ``,
+            `⚠️ REGRAS ABSOLUTAS:`,
+            `- NÃO regenere a imagem do zero. EDITE a imagem existente.`,
+            `- NÃO mude composição, enquadramento, iluminação, cores ou elementos que NÃO foram mencionados na correção.`,
+            `- NÃO mude rostos, produtos, logos ou qualquer elemento que NÃO foi explicitamente solicitado para correção.`,
+            `- A imagem resultante deve ser IDÊNTICA à original, exceto pela correção aplicada.`,
+            `- Se a correção pedir "mudar cor do fundo", SOMENTE o fundo muda. Todo o resto permanece pixel a pixel.`,
+          ].join('\n');
+          // Force the source image as input for editing
+          if (!imageInputs.includes(correctionSourceImage)) {
+            imageInputs.unshift(correctionSourceImage);
+            orderedImageInputs.unshift(correctionSourceImage);
+          }
+        }
         // Inject platform format dimensions into prompt
         if (formatWidth && formatHeight) {
           enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px). Compose the image to fit this exact aspect ratio perfectly.`;
@@ -574,8 +604,42 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
+        // Check if this is a correction/refinement pass
+        const isCorrectionVideo = inputs.some(i => i?._isCorrection);
+        const correctionInputVideo = inputs.find(i => i?._isCorrection);
+        const correctionOnlyPromptVideo = correctionInputVideo?._correctionPrompt || '';
+        const correctionSourceVideo = correctionInputVideo?.videoUrl || correctionInputVideo?.imageUrl;
+
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
+
+        // If correction mode, override prompt to preserve original and only apply the fix
+        if (isCorrectionVideo && correctionSourceVideo) {
+          const isVideoSource = !!correctionInputVideo?.videoUrl;
+          videoPrompt = [
+            `🔒 MODO CORREÇÃO — EDIÇÃO MÍNIMA OBRIGATÓRIA`,
+            ``,
+            `O ${isVideoSource ? 'vídeo' : 'conteúdo visual'} fornecido é a BASE ORIGINAL. Você DEVE manter ${isVideoSource ? 'o vídeo' : 'a cena'} EXATAMENTE como está, alterando SOMENTE o que foi solicitado abaixo.`,
+            ``,
+            `✏️ CORREÇÃO SOLICITADA:`,
+            correctionOnlyPromptVideo,
+            ``,
+            `⚠️ REGRAS ABSOLUTAS:`,
+            `- NÃO regenere ${isVideoSource ? 'o vídeo' : 'a cena'} do zero. EDITE ${isVideoSource ? 'o vídeo' : 'a cena'} existente.`,
+            `- NÃO mude composição, enquadramento, iluminação, cores, movimentos de câmera ou elementos que NÃO foram mencionados na correção.`,
+            `- NÃO mude rostos, produtos, logos, cenário ou qualquer elemento que NÃO foi explicitamente solicitado para correção.`,
+            `- O resultado deve ser IDÊNTICO ao original, exceto pela correção aplicada.`,
+            `- Mantenha a mesma duração, ritmo e estilo do original.`,
+          ].join('\n');
+          // Ensure source media is passed as reference
+          if (correctionInputVideo?.videoUrl && !inputs.some(i => i?.videoUrl === correctionInputVideo.videoUrl)) {
+            // videoUrl is already in the input
+          }
+          if (correctionInputVideo?.imageUrl && !imageInputs.includes(correctionInputVideo.imageUrl)) {
+            imageInputs.unshift(correctionInputVideo.imageUrl);
+            orderedImageInputs.unshift(correctionInputVideo.imageUrl);
+          }
+        }
         const videoModel = config.videoModel || 'free/gif-animated';
 
         // Auto-detect product + influencer without explicit placement prompt → default to holding (same as imageGen)
