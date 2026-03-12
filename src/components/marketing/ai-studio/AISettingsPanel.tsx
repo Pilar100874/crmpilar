@@ -111,11 +111,47 @@ const DEFAULTS_STORAGE_KEY = 'ai-studio-defaults';
 export interface StudioDefaults {
   imageNegativePrompt: string;
   videoNegativePrompt: string;
+  defaultLanguage: string;
 }
+
+export const SUPPORTED_LANGUAGES = [
+  { value: 'pt-BR', label: '🇧🇷 Português (Brasil)' },
+  { value: 'pt-PT', label: '🇵🇹 Português (Portugal)' },
+  { value: 'en-US', label: '🇺🇸 Inglês (EUA)' },
+  { value: 'en-GB', label: '🇬🇧 Inglês (Reino Unido)' },
+  { value: 'es-ES', label: '🇪🇸 Espanhol (Espanha)' },
+  { value: 'es-MX', label: '🇲🇽 Espanhol (México)' },
+  { value: 'fr-FR', label: '🇫🇷 Francês' },
+  { value: 'de-DE', label: '🇩🇪 Alemão' },
+  { value: 'it-IT', label: '🇮🇹 Italiano' },
+  { value: 'ja-JP', label: '🇯🇵 Japonês' },
+  { value: 'ko-KR', label: '🇰🇷 Coreano' },
+  { value: 'zh-CN', label: '🇨🇳 Chinês (Simplificado)' },
+];
+
+const LANGUAGE_PROMPT_MAP: Record<string, string> = {
+  'pt-BR': 'em português brasileiro / Brazilian Portuguese',
+  'pt-PT': 'em português europeu / European Portuguese',
+  'en-US': 'in American English',
+  'en-GB': 'in British English',
+  'es-ES': 'in Spanish (Spain)',
+  'es-MX': 'in Mexican Spanish',
+  'fr-FR': 'in French',
+  'de-DE': 'in German',
+  'it-IT': 'in Italian',
+  'ja-JP': 'in Japanese',
+  'ko-KR': 'in Korean',
+  'zh-CN': 'in Simplified Chinese',
+};
+
+export const getLanguagePromptSuffix = (lang: string): string => {
+  return LANGUAGE_PROMPT_MAP[lang] || LANGUAGE_PROMPT_MAP['pt-BR'];
+};
 
 export const DEFAULT_STUDIO_DEFAULTS: StudioDefaults = {
   imageNegativePrompt: "texto, marca d'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído",
   videoNegativePrompt: "texto na tela, marca d'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais",
+  defaultLanguage: 'pt-BR',
 };
 
 export const getStudioDefaults = (estabelecimentoId: string): StudioDefaults => {
