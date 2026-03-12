@@ -198,9 +198,6 @@ const VideoTimelineEditor: React.FC = () => {
           <Button size="icon" variant="ghost" onClick={() => handleAddClip('audio')} title="Adicionar áudio">
             <Music className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => handleAddClip('text')} title="Adicionar texto">
-            <Type className="h-4 w-4" />
-          </Button>
           <Button size="icon" variant="ghost" onClick={handleOpenCanvasFromToolbar} title="Criar no Canvas">
             <Palette className="h-4 w-4" />
           </Button>
