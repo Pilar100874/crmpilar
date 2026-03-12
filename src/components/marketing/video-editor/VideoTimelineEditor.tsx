@@ -13,7 +13,8 @@ import ClipPropertiesPanel from './ClipPropertiesPanel';
 import MediaBin from './MediaBin';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
-import { TRACK_COLORS } from './types';
+import CanvasComposerDialog from './CanvasComposerDialog';
+import { TRACK_COLORS, TimelineClip } from './types';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
