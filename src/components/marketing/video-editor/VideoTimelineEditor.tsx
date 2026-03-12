@@ -313,7 +313,7 @@ const VideoTimelineEditor: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Preview */}
           {!previewCollapsed && (
-            <div className="h-[300px] border-b bg-black/95 flex items-center justify-center relative shrink-0">
+            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0" style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}>
               <VideoPreview
                 clips={state.clips}
                 currentTime={state.currentTime}
