@@ -84,13 +84,15 @@ const VideoTimelineEditor: React.FC = () => {
 
   const loadProjects = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId) return;
+    if (!estabId) { setLoadingProjects(false); return; }
+    setLoadingProjects(true);
     const { data } = await supabase
       .from('video_projects')
       .select('id, nome, thumbnail, created_at, updated_at')
       .eq('estabelecimento_id', estabId)
       .order('updated_at', { ascending: false });
     if (data) setProjects(data as VideoProject[]);
+    setLoadingProjects(false);
   }, []);
 
   const saveProject = useCallback(async (name?: string) => {
