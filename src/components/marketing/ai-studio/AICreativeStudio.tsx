@@ -1000,7 +1000,7 @@ const AICreativeStudioInner: React.FC = () => {
       };
       newNodes.push(inputNode, processNode);
       newEdges.push(
-        { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
       );
 
       if (targetType === 'imageGen' || targetType === 'videoGen') {
