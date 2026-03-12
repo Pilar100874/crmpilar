@@ -248,14 +248,43 @@ const AICreativeStudioInner: React.FC = () => {
   }, [nodes, setNodes]);
 
   const togglePauseNode = useCallback((nodeId: string) => {
-    setNodes((nds) => nds.map((n) => {
-      if (n.id === nodeId) {
-        const d = n.data as StudioNodeData;
-        const paused = !d.config?._paused;
-        return { ...n, data: { ...d, config: { ...d.config, _paused: paused } } };
+    // Get all downstream node IDs (descendants)
+    const getDescendants = (startId: string, edgeList: StudioEdge[]): Set<string> => {
+      const descendants = new Set<string>();
+      const queue = [startId];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        edgeList.filter(e => e.source === current).forEach(e => {
+          if (!descendants.has(e.target)) {
+            descendants.add(e.target);
+            queue.push(e.target);
+          }
+        });
       }
-      return n;
-    }));
+      return descendants;
+    };
+
+    setNodes((nds) => {
+      const targetNode = nds.find(n => n.id === nodeId);
+      if (!targetNode) return nds;
+      const targetData = targetNode.data as StudioNodeData;
+      const newPaused = !targetData.config?._paused;
+
+      // If pausing, also pause all descendants
+      const affectedIds = new Set<string>([nodeId]);
+      if (newPaused) {
+        const descendants = getDescendants(nodeId, edges);
+        descendants.forEach(id => affectedIds.add(id));
+      }
+
+      return nds.map((n) => {
+        if (affectedIds.has(n.id)) {
+          const d = n.data as StudioNodeData;
+          return { ...n, data: { ...d, config: { ...d.config, _paused: newPaused } } };
+        }
+        return n;
+      });
+    });
     setContextMenu(null);
     toast.info('Estado do bloco alterado');
   }, [setNodes]);
