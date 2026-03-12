@@ -769,10 +769,10 @@ const VideoTimelineEditor: React.FC = () => {
             </div>
           )}
 
-          {/* Fixed bars */}
-          <div className="shrink-0">
+          {/* Fixed bars between preview and timeline */}
+          <div className="shrink-0 z-10 relative bg-card border-t border-border/30">
             {showResizeBar && !previewCollapsed && (
-              <div className="h-5 bg-muted/40 border-y border-border/40 cursor-row-resize flex items-center justify-center group relative"
+              <div className="h-5 bg-muted/40 border-b border-border/40 cursor-row-resize flex items-center justify-center group relative"
                 onMouseDown={(e) => {
                   e.preventDefault(); resizingRef.current = true; resizeStartRef.current = { y: e.clientY, height: previewHeight };
                   const onMouseMove = (ev: MouseEvent) => { if (!resizingRef.current) return; setPreviewHeight(Math.min(800, Math.max(120, resizeStartRef.current.height + ev.clientY - resizeStartRef.current.y))); };
@@ -803,17 +803,17 @@ const VideoTimelineEditor: React.FC = () => {
               </div>
             )}
             {(!showResizeBar || !showStatusBar) && (
-              <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20">
+              <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20 border-b border-border/20">
                 {!showResizeBar && !previewCollapsed && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>↕ Resize</button>}
                 {!showStatusBar && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>}
               </div>
             )}
           </div>
 
-          {/* Timeline */}
+          {/* Timeline - isolated scrollable area */}
           <div className="flex-1 flex overflow-hidden min-h-0">
             <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} />
-            <div className="flex-1 overflow-auto relative flex flex-col">
+            <div className="flex-1 overflow-auto relative flex flex-col min-h-0">
               <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
               <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
             </div>
