@@ -333,6 +333,13 @@ const VideoTimelineEditor: React.FC = () => {
           )}
         </div>
       </div>
+
+      <CanvasComposerDialog
+        open={canvasDialogOpen}
+        onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditJson(undefined); }}
+        onConfirm={handleCanvasEditConfirm}
+        initialCanvasJson={canvasEditJson}
+      />
     </div>
   );
 };
