@@ -383,8 +383,11 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-base">🚫</span>
-                          <span className="text-sm font-medium text-foreground">Prompts Negativos</span>
+                          <span className="text-base">⚙️</span>
+                          <div>
+                            <span className="text-sm font-medium text-foreground">Configurações Gerais</span>
+                            <p className="text-[10px] text-muted-foreground">Idioma, prompts negativos</p>
+                          </div>
                         </div>
                       </button>
                     </div>
