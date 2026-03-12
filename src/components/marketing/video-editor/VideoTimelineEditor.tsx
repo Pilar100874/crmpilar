@@ -169,7 +169,9 @@ const VideoTimelineEditor: React.FC = () => {
     setProjectName(project.nome);
     setShowEditor(true);
     toast.success(`Projeto "${project.nome}" carregado`);
-  }, [timeline]);
+    // Mark state as saved after loading
+    setTimeout(() => setLastSavedState(JSON.stringify({ tracks: td.tracks, clips: td.clips || [], videoConfig: vc || videoConfig })), 100);
+  }, [timeline, videoConfig]);
 
   const duplicateProject = useCallback(async (project: VideoProject) => {
     const estabId = localStorage.getItem('estabelecimentoId');
