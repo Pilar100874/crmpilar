@@ -811,10 +811,21 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
 
           {/* Timeline - isolated scrollable area */}
-          <div className="flex-1 flex overflow-hidden min-h-0">
-            <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} />
-            <div className="flex-1 overflow-auto relative flex flex-col min-h-0">
-              <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+            {/* Ruler row - sticky top */}
+            <div className="flex shrink-0">
+              <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center">
+                <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+              </div>
+            </div>
+            {/* Tracks row - synced vertical scroll */}
+            <div className="flex-1 flex overflow-auto min-h-0">
+              <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
+                <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
+              </div>
               <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
             </div>
           </div>
