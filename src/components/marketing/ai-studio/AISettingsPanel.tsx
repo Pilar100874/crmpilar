@@ -111,11 +111,47 @@ const DEFAULTS_STORAGE_KEY = 'ai-studio-defaults';
 export interface StudioDefaults {
   imageNegativePrompt: string;
   videoNegativePrompt: string;
+  defaultLanguage: string;
 }
+
+export const SUPPORTED_LANGUAGES = [
+  { value: 'pt-BR', label: '🇧🇷 Português (Brasil)' },
+  { value: 'pt-PT', label: '🇵🇹 Português (Portugal)' },
+  { value: 'en-US', label: '🇺🇸 Inglês (EUA)' },
+  { value: 'en-GB', label: '🇬🇧 Inglês (Reino Unido)' },
+  { value: 'es-ES', label: '🇪🇸 Espanhol (Espanha)' },
+  { value: 'es-MX', label: '🇲🇽 Espanhol (México)' },
+  { value: 'fr-FR', label: '🇫🇷 Francês' },
+  { value: 'de-DE', label: '🇩🇪 Alemão' },
+  { value: 'it-IT', label: '🇮🇹 Italiano' },
+  { value: 'ja-JP', label: '🇯🇵 Japonês' },
+  { value: 'ko-KR', label: '🇰🇷 Coreano' },
+  { value: 'zh-CN', label: '🇨🇳 Chinês (Simplificado)' },
+];
+
+const LANGUAGE_PROMPT_MAP: Record<string, string> = {
+  'pt-BR': 'em português brasileiro / Brazilian Portuguese',
+  'pt-PT': 'em português europeu / European Portuguese',
+  'en-US': 'in American English',
+  'en-GB': 'in British English',
+  'es-ES': 'in Spanish (Spain)',
+  'es-MX': 'in Mexican Spanish',
+  'fr-FR': 'in French',
+  'de-DE': 'in German',
+  'it-IT': 'in Italian',
+  'ja-JP': 'in Japanese',
+  'ko-KR': 'in Korean',
+  'zh-CN': 'in Simplified Chinese',
+};
+
+export const getLanguagePromptSuffix = (lang: string): string => {
+  return LANGUAGE_PROMPT_MAP[lang] || LANGUAGE_PROMPT_MAP['pt-BR'];
+};
 
 export const DEFAULT_STUDIO_DEFAULTS: StudioDefaults = {
   imageNegativePrompt: "texto, marca d'água, logo sobreposto, baixa resolução, desfocado, distorcido, artefatos, ruído, pixelado, bordas cortadas, iluminação artificial ruim, cores saturadas demais, fundo poluído",
   videoNegativePrompt: "texto na tela, marca d'água, logo sobreposto, baixa resolução, tremido, flickering, artefatos visuais, distorção facial, mãos deformadas, movimentos robóticos, transições bruscas, ruído visual, glitch, proporções irreais",
+  defaultLanguage: 'pt-BR',
 };
 
 export const getStudioDefaults = (estabelecimentoId: string): StudioDefaults => {
@@ -398,14 +434,42 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                     <div className="p-6 space-y-6">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
-                          🚫
+                          ⚙️
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-foreground">Prompts Negativos Padrão</h3>
-                          <p className="text-sm text-muted-foreground">Defina os textos negativos que serão preenchidos automaticamente em novos blocos de imagem e vídeo.</p>
+                          <h3 className="text-xl font-bold text-foreground">Configurações Padrão</h3>
+                          <p className="text-sm text-muted-foreground">Defina idioma e prompts negativos padrão para todo o Studio.</p>
                         </div>
                       </div>
 
+                      {/* Language Config */}
+                      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="space-y-2">
+                          <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                            🌐 Idioma Padrão
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">
+                            Todo conteúdo gerado (textos, áudios, músicas, scripts) será criado neste idioma.
+                          </p>
+                          <Select
+                            value={studioDefaults.defaultLanguage}
+                            onValueChange={(v) => setStudioDefaults(prev => ({ ...prev, defaultLanguage: v }))}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SUPPORTED_LANGUAGES.map(lang => (
+                                <SelectItem key={lang.value} value={lang.value}>
+                                  {lang.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Negative Prompts */}
                       <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
                         <div className="space-y-2">
                           <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
@@ -442,7 +506,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                         <Button
                           onClick={() => {
                             saveStudioDefaults(estabelecimentoId, studioDefaults);
-                            toast.success('Prompts negativos padrão salvos!');
+                            toast.success('Configurações padrão salvas!');
                           }}
                           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
                         >

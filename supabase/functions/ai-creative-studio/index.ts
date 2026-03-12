@@ -1137,11 +1137,13 @@ Deno.serve(async (req) => {
           const apiKey = await fetchApiKey(estabId, "google");
           if (!apiKey) throw new Error("Google API key not configured.");
           // Use Gemini AI Studio TTS endpoint instead of Cloud TTS (avoids 403 billing issues)
+          const langParam = (params.lang as string) || 'pt-BR';
+          const langSuffix = (params.languageSuffix as string) || 'em português brasileiro / Brazilian Portuguese';
           const ttsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: `Generate speech audio in Brazilian Portuguese (pt-BR). Speak the following text naturally in Portuguese: "${text}"` }] }],
+              contents: [{ parts: [{ text: `Generate speech audio ${langSuffix}. Speak the following text naturally: "${text}"` }] }],
               generationConfig: { response_modalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
             }),
           });
