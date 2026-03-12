@@ -1345,7 +1345,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           try {
                             const resp = await fetch(resultVideo);
                             const originalBlob = await resp.blob();
-                            const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+                            const mp4Blob = new Blob([originalBlob], { type: 'video/mp4' });
                             const blobUrl = URL.createObjectURL(mp4Blob);
                             const link = document.createElement('a');
                             link.href = blobUrl;
@@ -1355,11 +1355,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                             document.body.removeChild(link);
                             setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
                           } catch {
-                            const link = document.createElement('a');
-                            link.href = resultVideo;
-                            link.download = `studio-${nodeData.type}-${id}.mp4`;
-                            link.target = '_blank';
-                            link.click();
+                            toast.error('Não foi possível baixar o vídeo.');
                           }
                         }}>
                           <Volume2 className="h-3.5 w-3.5 mr-2" /> Com áudio

@@ -329,7 +329,6 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
       const a = document.createElement('a');
       a.href = img.image_url;
       a.download = img.nome || 'download';
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

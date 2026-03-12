@@ -266,7 +266,6 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       const a = document.createElement('a');
       a.href = item.content_url;
       a.download = item.resource_name || 'download';
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
