@@ -435,6 +435,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
       )}
     </div>
   );
-};
+});
+
+ResourcePanel.displayName = 'ResourcePanel';
 
 export default ResourcePanel;
