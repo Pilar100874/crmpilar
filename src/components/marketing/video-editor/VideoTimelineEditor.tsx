@@ -129,6 +129,7 @@ const VideoTimelineEditor: React.FC = () => {
         })
         .eq('id', currentProjectId);
       toast.success('Projeto salvo!');
+      setLastSavedState(getCurrentStateHash());
     } else {
       const finalName = name || projectName || `Projeto ${new Date().toLocaleDateString('pt-BR')}`;
       const { data } = await supabase
