@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelineTrack, TRACK_COLORS } from './types';
 import {
   Eye, EyeOff, Volume2, VolumeX, Lock, Unlock, Plus, Trash2,
-  ChevronUp, ChevronDown, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
+  GripVertical, Film, Music, Type, Sparkles, Palette, Image as ImageIcon
 } from 'lucide-react';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   onDeleteTrack: (id: string) => void;
   onAddTrack: (track: Omit<TimelineTrack, 'id'>) => void;
   onMoveTrack: (id: string, direction: 'up' | 'down') => void;
+  onReorderTrack?: (id: string, toIndex: number) => void;
 }
 
 const TRACK_TYPE_OPTIONS: { type: TimelineTrack['type']; label: string; icon: React.ReactNode; defaultHeight: number }[] = [
