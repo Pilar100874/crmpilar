@@ -30,8 +30,9 @@ export function useStudioExecution() {
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000) => {
-    console.log(`[Studio] Calling edge function: action=${action}`, params);
+  const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000, _retryCount = 0) => {
+    const MAX_RETRIES = 2;
+    console.log(`[Studio] Calling edge function: action=${action}${_retryCount > 0 ? ` (retry ${_retryCount})` : ''}`, params);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -66,9 +67,21 @@ export function useStudioExecution() {
         if (abortRef.current?.signal.aborted) {
           throw new Error('Execução cancelada pelo usuário.');
         }
-        throw new Error(`Timeout: a geração demorou mais de ${Math.round(timeoutMs / 1000)}s`);
+        // Timeout — retry if possible
+        if (_retryCount < MAX_RETRIES) {
+          console.warn(`[Studio] Timeout on attempt ${_retryCount + 1}, retrying...`);
+          await new Promise(r => setTimeout(r, 2000));
+          return callStudio(action, params, timeoutMs, _retryCount + 1);
+        }
+        throw new Error(`Timeout: a geração demorou mais de ${Math.round(timeoutMs / 1000)}s. Tente novamente.`);
       }
-      throw fetchErr;
+      // Network error (Failed to fetch) — retry if possible
+      if (_retryCount < MAX_RETRIES) {
+        console.warn(`[Studio] Network error on attempt ${_retryCount + 1}: ${fetchErr.message}, retrying in 3s...`);
+        await new Promise(r => setTimeout(r, 3000));
+        return callStudio(action, params, timeoutMs, _retryCount + 1);
+      }
+      throw new Error(`🌐 Falha de conexão após ${MAX_RETRIES + 1} tentativas. Verifique sua internet e tente novamente.`);
     }
     abortRef.current?.signal.removeEventListener('abort', onGlobalAbort);
     clearTimeout(timer);
