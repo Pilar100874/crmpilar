@@ -10945,6 +10945,39 @@ export type Database = {
           },
         ]
       }
+      video_projects: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          thumbnail: string | null
+          timeline_data: Json
+          updated_at: string
+          video_config: Json
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome?: string
+          thumbnail?: string | null
+          timeline_data?: Json
+          updated_at?: string
+          video_config?: Json
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          thumbnail?: string | null
+          timeline_data?: Json
+          updated_at?: string
+          video_config?: Json
+        }
+        Relationships: []
+      }
       webhook_chat_messages: {
         Row: {
           content: string
