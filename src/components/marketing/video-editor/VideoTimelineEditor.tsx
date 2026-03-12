@@ -65,6 +65,7 @@ const VideoTimelineEditor: React.FC = () => {
     format: 'mp4',
   });
   const resourcePanelRef = useRef<ResourcePanelHandle>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null);
   const [exportedVideoBlob, setExportedVideoBlob] = useState<Blob | null>(null);
   const [exportedVideoDuration, setExportedVideoDuration] = useState(0);
