@@ -254,7 +254,4 @@ const VideoConfigPanel: React.FC<Props> = ({ config, onChange }) => {
   );
 };
 
-// Need to import Check from lucide
-import { Check } from 'lucide-react';
-
 export default VideoConfigPanel;
