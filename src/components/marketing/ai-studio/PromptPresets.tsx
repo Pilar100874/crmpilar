@@ -515,7 +515,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                 }`}
               >
                 <button
-                  onClick={() => setSelectedId(preset.id)}
+                  onClick={() => { setSelectedId(preset.id); setDetailPreset(preset); }}
                   className="w-full text-left"
                 >
                   <div className="aspect-square relative overflow-hidden">
