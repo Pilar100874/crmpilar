@@ -10,32 +10,33 @@ interface Props {
 
 const TimelineRuler: React.FC<Props> = ({ duration, zoom, currentTime, onSeek, onDurationChange }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [draggingEnd, setDraggingEnd] = useState(false);
+  const isDraggingRef = useRef(false);
   const totalWidth = duration * zoom;
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    if (!ref.current || draggingEnd) return;
+    if (!ref.current || isDraggingRef.current) return;
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left + ref.current.scrollLeft;
     onSeek(x / zoom);
-  }, [zoom, onSeek, draggingEnd]);
+  }, [zoom, onSeek]);
 
   const handleEndDragStart = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setDraggingEnd(true);
+    isDraggingRef.current = true;
     const startX = e.clientX;
     const startDuration = duration;
 
     const handleMove = (me: MouseEvent) => {
       const dx = me.clientX - startX;
       const dt = dx / zoom;
-      const newDuration = Math.max(5, startDuration + dt);
-      onDurationChange?.(Math.round(newDuration));
+      const newDuration = Math.max(5, Math.round(startDuration + dt));
+      onDurationChange?.(newDuration);
     };
 
     const handleUp = () => {
-      setDraggingEnd(false);
+      // Delay resetting so the click handler doesn't fire
+      setTimeout(() => { isDraggingRef.current = false; }, 50);
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
@@ -58,12 +59,14 @@ const TimelineRuler: React.FC<Props> = ({ duration, zoom, currentTime, onSeek, o
     });
   }
 
+  const durationLabel = `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')}`;
+
   return (
     <div
       ref={ref}
-      className="h-7 bg-muted/40 border-b relative cursor-pointer shrink-0 overflow-hidden"
+      className="h-7 bg-muted/40 border-b relative cursor-pointer shrink-0"
       onClick={handleClick}
-      style={{ minWidth: totalWidth }}
+      style={{ minWidth: totalWidth + 20 }}
     >
       {ticks.map((tick, i) => (
         <div
@@ -81,18 +84,20 @@ const TimelineRuler: React.FC<Props> = ({ duration, zoom, currentTime, onSeek, o
         </div>
       ))}
 
-      {/* Duration end handle */}
+      {/* Duration end handle — always visible */}
       <div
-        className="absolute top-0 bottom-0 w-3 cursor-ew-resize z-30 group"
-        style={{ left: totalWidth - 6 }}
+        className="absolute top-0 bottom-0 cursor-ew-resize z-30 group flex items-center"
+        style={{ left: totalWidth - 2, width: 16 }}
         onMouseDown={handleEndDragStart}
-        title={`Duração: ${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, '0')} — arraste para redimensionar`}
+        title={`Duração: ${durationLabel} — arraste para redimensionar`}
       >
-        <div className="absolute inset-y-0 right-0 w-1 bg-primary/60 group-hover:bg-primary transition-colors rounded-r" />
-        <div className="absolute top-1/2 -translate-y-1/2 right-0 w-3 h-5 bg-primary rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Vertical line */}
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/80" />
+        {/* Grip tab */}
+        <div className="ml-1 w-3 h-6 bg-primary rounded-sm flex items-center justify-center shadow-sm">
           <div className="flex gap-px">
-            <div className="w-px h-2.5 bg-primary-foreground/80" />
-            <div className="w-px h-2.5 bg-primary-foreground/80" />
+            <div className="w-px h-3 bg-primary-foreground/80" />
+            <div className="w-px h-3 bg-primary-foreground/80" />
           </div>
         </div>
       </div>
