@@ -125,6 +125,7 @@ const nodeAccentMap: Record<string, string> = {
   textInput: '#6366f1',
   systemPrompt: '#a855f7',
   imageInput: '#f97316',
+  multiImageRef: '#e67e22',
   productImageSelect: '#10b981',
   multiProductSelect: '#059669',
   galleryInfluencer: '#ec4899',
