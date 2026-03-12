@@ -810,6 +810,9 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
         if (heroFrameUrl) {
           console.log(`[generate_video] Using hero frame as starting image for google`);
           params.imageUrls = [heroFrameUrl];
+          params._heroFrameUsed = true;
+        } else {
+          console.log(`[generate_video] Hero frame failed, keeping original ${(params.imageUrls || []).length} reference images`);
         }
         console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
         return await generateVideoGoogle(googleKey, params);
