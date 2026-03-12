@@ -336,6 +336,21 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     ],
   },
   {
+    id: 'refinement',
+    label: 'Refinamento',
+    icon: '🔧',
+    nodes: [
+      {
+        type: 'mediaCorrection',
+        label: 'Correção / Refinamento',
+        description: 'Recebe imagem ou vídeo e passa instrução de correção para o próximo bloco de geração',
+        icon: '🔧',
+        color: '#f97316',
+        defaultConfig: { correctionPrompt: '' },
+      },
+    ],
+  },
+  {
     id: 'loop',
     label: 'Looping',
     icon: '🔄',
