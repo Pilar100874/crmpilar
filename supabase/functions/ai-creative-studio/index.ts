@@ -90,21 +90,43 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
+  // Veo only accepts ONE image — pick the best one:
+  // 1) Hero frame (composite of all refs) if available
+  // 2) Influencer image (face is hardest to reproduce from text)
+  // 3) Product image
+  // 4) First available image
   let imagePayload: any = {};
-  const heroUrl = params.imageUrls?.[0];
-  if (heroUrl?.startsWith("http")) {
+  const allImageUrls = (params.imageUrls || []) as string[];
+  const allImageRoles = (params.imageRoles || []) as string[];
+  
+  // Find the best single image to use
+  let bestImageUrl = allImageUrls[0]; // default: first (could be hero frame)
+  if (allImageUrls.length > 1 && !params._heroFrameUsed) {
+    // No hero frame — pick influencer first (face fidelity matters most for video)
+    const influencerIdx = allImageRoles.findIndex(r => r?.includes('PERSON') || r?.includes('INFLUENCER'));
+    const productIdx = allImageRoles.findIndex(r => r?.includes('PRODUCT'));
+    if (influencerIdx >= 0 && allImageUrls[influencerIdx]) {
+      bestImageUrl = allImageUrls[influencerIdx];
+      console.log(`[generate_video] Google Veo: using INFLUENCER image (idx ${influencerIdx}) as primary reference`);
+    } else if (productIdx >= 0 && allImageUrls[productIdx]) {
+      bestImageUrl = allImageUrls[productIdx];
+      console.log(`[generate_video] Google Veo: using PRODUCT image (idx ${productIdx}) as primary reference`);
+    }
+  }
+  
+  if (bestImageUrl?.startsWith("http")) {
     try {
-      const imgResp = await fetch(heroUrl);
+      const imgResp = await fetch(bestImageUrl);
       if (imgResp.ok) {
         const contentType = imgResp.headers.get("content-type") || "image/png";
         const mimeType = contentType.split(";")[0].trim();
         const imgBuf = await imgResp.arrayBuffer();
         const b64 = base64Encode(imgBuf);
         imagePayload = { image: { bytesBase64Encoded: b64, mimeType } };
-        console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB, ${mimeType})`);
+        console.log(`[generate_video] Google Veo: image attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB, ${mimeType})`);
       }
     } catch (imgErr) {
-      console.warn(`[generate_video] Google Veo: failed to attach hero frame:`, imgErr);
+      console.warn(`[generate_video] Google Veo: failed to attach image:`, imgErr);
     }
   }
   
