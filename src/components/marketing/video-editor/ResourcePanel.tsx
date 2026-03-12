@@ -157,9 +157,10 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
     if (!files) return;
     Array.from(files).forEach(file => {
       const url = URL.createObjectURL(file);
-      const mediaType: 'video' | 'image' | 'audio' =
+      const mediaType: 'video' | 'image' | 'audio' | 'canvas' =
         resType === 'video' ? 'video' :
-        resType === 'image' || resType === 'canvas' ? 'image' :
+        resType === 'canvas' ? 'canvas' :
+        resType === 'image' ? 'image' :
         'audio';
 
       const imported: ImportedMedia = {
