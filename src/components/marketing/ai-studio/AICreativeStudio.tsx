@@ -924,9 +924,9 @@ const AICreativeStudioInner: React.FC = () => {
       };
       newNodes.push(personNode, productNode, promptNode, compositeNode);
       newEdges.push(
-        { id: `e_${personNode.id}_${compositeNode.id}`, source: personNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-        { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-        { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${personNode.id}_${compositeNode.id}`, source: personNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+        { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
+        { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
       );
     } else if (preset.variationPrompts && preset.variationPrompts.length > 0) {
       // Create 5 parallel chains — one for each variation
