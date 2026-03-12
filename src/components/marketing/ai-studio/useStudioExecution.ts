@@ -790,12 +790,20 @@ export function useStudioExecution() {
         const estabId = localStorage.getItem('estabelecimentoId') || '';
         const studioDefaults = getStudioDefaults(estabId);
         const defaultLang = studioDefaults.defaultLanguage || 'pt-BR';
-        const langSuffix = getLanguagePromptSuffix(defaultLang);
-        const langCode = (config.lang || defaultLang).split('-')[0]; // e.g. "pt"
+
+        // IMPORTANT: prefer new `language` field from node config and fallback to global default.
+        // Ignore legacy `lang` when it is English and global default is non-English.
+        const legacyLang = typeof config.lang === 'string' ? config.lang : undefined;
+        const effectiveLanguage =
+          (typeof config.language === 'string' && config.language) ||
+          (legacyLang && !legacyLang.startsWith('en') ? legacyLang : defaultLang);
+
+        const langSuffix = getLanguagePromptSuffix(effectiveLanguage);
+        const langCode = effectiveLanguage.split('-')[0]; // e.g. "pt"
 
         // ALWAYS translate/rewrite text to the configured language before TTS
         // This ensures audio is NEVER in the wrong language regardless of prompt language
-        const targetLangPrefix = (config.lang || defaultLang).split('-')[0];
+        const targetLangPrefix = langCode;
         const wordCount = textToSpeak.split(/\s+/).length;
         
         if (targetLangPrefix !== 'en' && wordCount > 3) {
@@ -851,7 +859,7 @@ export function useStudioExecution() {
 
             return {
               audioUrl: result.audioUrl,
-              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nIdioma: ${defaultLang}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nIdioma: ${effectiveLanguage}\nTexto: "${textToSpeak.substring(0, 80)}"`,
             };
           } catch (err: any) {
             console.error('[Studio] Paid TTS error:', err);
@@ -868,12 +876,12 @@ export function useStudioExecution() {
             }
 
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = config.lang || defaultLang;
+            utterance.lang = effectiveLanguage;
             utterance.rate = config.speed || 1.0;
             utterance.pitch = config.pitch || 1.0;
 
             const voices = speechSynthesis.getVoices();
-            const langPrefix = (config.lang || defaultLang).split('-')[0];
+            const langPrefix = effectiveLanguage.split('-')[0];
             const matchedVoice = voices.find(v => v.lang.startsWith(langPrefix)) || voices[0];
             if (matchedVoice) utterance.voice = matchedVoice;
 
@@ -885,9 +893,9 @@ export function useStudioExecution() {
           });
 
           return {
-            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${config.lang || defaultLang} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${effectiveLanguage} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
             _webSpeechText: textToSpeak,
-            _webSpeechLang: config.lang || defaultLang,
+            _webSpeechLang: effectiveLanguage,
             _webSpeechRate: config.speed || 1.0,
             _webSpeechPitch: config.pitch || 1.0,
           };
