@@ -92,6 +92,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         defaultConfig: { images: [] },
       },
       {
+        type: 'multiImageRef',
+        label: 'Referências Múltiplas',
+        description: 'Selecione várias imagens de referência (upload ou galeria)',
+        icon: '🖼️🖼️',
+        color: '#e67e22',
+        defaultConfig: { images: [], referenceRole: '' },
+      },
+      {
         type: 'productImageSelect',
         label: 'Imagem de Produto',
         description: 'Selecione imagem de um produto cadastrado',
