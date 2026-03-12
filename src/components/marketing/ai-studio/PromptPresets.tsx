@@ -746,28 +746,20 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
     }
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
+      const { data, error } = await supabase.functions.invoke('generate-ad-image', {
         body: {
-          action: 'generate_image',
-          params: {
-            model: 'google/gemini-2.5-flash-image',
-            prompt: `Create a cinematic reference thumbnail image that visually represents the following advertising concept. Do NOT include any text, logos, or watermarks. Pure visual representation:\n\n${prompt.slice(0, 500)}`,
-            imageUrls: [],
-            imageRoles: [],
-          },
+          prompt: `Create a cinematic reference thumbnail image that visually represents the following advertising concept. Do NOT include any text, logos, or watermarks. Pure visual representation:\n\n${prompt.slice(0, 500)}`,
+          style: 'cinematic, professional, advertising reference',
         },
       });
       if (error) throw error;
-      const rawUrl = data?.imageUrl || data?.result?.imageUrl || (typeof data?.result === 'string' ? data.result : null);
-      const imageUrl = typeof rawUrl === 'string' ? rawUrl : (rawUrl?.url || rawUrl?.image_url?.url || '');
+      const imageUrl = data?.image || data?.imageUrl || '';
       if (imageUrl) {
-        // Add cache-buster for storage URLs to force refresh
-        const bustUrl = imageUrl.includes('?') ? `${imageUrl}&_t=${Date.now()}` : `${imageUrl}?_t=${Date.now()}`;
-        setGeneratedImage(bustUrl);
+        setGeneratedImage(imageUrl);
         toast({ title: 'Imagem gerada!', description: 'Imagem de referência atualizada.' });
       } else {
         console.warn('No image in response:', JSON.stringify(data).slice(0, 300));
-        toast({ title: 'Imagem não retornada', description: 'O modelo não gerou uma imagem. Tente reformular o prompt.', variant: 'destructive' });
+        toast({ title: 'Imagem não retornada', description: data?.error || 'O modelo não gerou uma imagem. Tente reformular o prompt.', variant: 'destructive' });
       }
     } catch (err: any) {
       console.error('Failed to generate reference image:', err);
