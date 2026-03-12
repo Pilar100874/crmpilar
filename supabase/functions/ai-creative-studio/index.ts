@@ -384,20 +384,40 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     "runway/gen4": "gen4_turbo",
     "runway/gen3-alpha-turbo": "gen3a_turbo",
   };
-  const model = modelMap[params.model] || "gen3a_turbo";
 
-  const body: any = {
-    model,
-    promptText: params.prompt,
-    ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
-    duration: params.duration || 10,
-  };
+  const hasSourceVideo = typeof params.sourceVideoUrl === "string" && params.sourceVideoUrl.startsWith("http");
+  const useVideoToVideo = params.correctionMode === true && hasSourceVideo;
 
-  if (params.imageUrls?.[0]?.startsWith("http")) {
-    body.promptImage = params.imageUrls[0];
+  let endpoint = "https://api.dev.runwayml.com/v1/image_to_video";
+  let body: any;
+
+  if (useVideoToVideo) {
+    // Runway video-to-video gives much better fidelity for correction flows.
+    endpoint = "https://api.dev.runwayml.com/v1/video_to_video";
+    body = {
+      model: "gen4_aleph",
+      promptText: params.prompt,
+      videoUri: params.sourceVideoUrl,
+    };
+
+    if (params.seed !== undefined && params.seed !== null && `${params.seed}` !== "undefined" && !Number.isNaN(Number(params.seed))) {
+      body.seed = Number(params.seed);
+    }
+  } else {
+    const model = modelMap[params.model] || "gen3a_turbo";
+    body = {
+      model,
+      promptText: params.prompt,
+      ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
+      duration: params.duration || 10,
+    };
+
+    if (params.imageUrls?.[0]?.startsWith("http")) {
+      body.promptImage = params.imageUrls[0];
+    }
   }
 
-  const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -409,14 +429,15 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Runway API error ${response.status}: ${err.substring(0, 200)}`);
+    const mode = useVideoToVideo ? "video_to_video" : "image_to_video";
+    throw new Error(`Runway API (${mode}) error ${response.status}: ${err.substring(0, 200)}`);
   }
 
   const taskData = await response.json();
   const taskId = taskData.id;
   if (!taskId) throw new Error("No task ID from Runway");
 
-  console.log(`[generate_video] Runway task: ${taskId}`);
+  console.log(`[generate_video] Runway task (${useVideoToVideo ? "v2v" : "i2v"}): ${taskId}`);
 
   const result = await pollUntilDone<string>(async () => {
     const pollResp = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
@@ -437,7 +458,11 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
   const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
   const storedUrl = await uploadVideoToStorage(videoBytes);
 
-  return { videoUrl: storedUrl || result };
+  return {
+    videoUrl: storedUrl || result,
+    provider: "runway",
+    providerVideoId: taskId,
+  };
 }
 
 // --- Kling (Kuaishou) ---
