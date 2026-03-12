@@ -270,6 +270,7 @@ const VideoTimelineEditor: React.FC = () => {
               onUpdateTrack={timeline.updateTrack}
               onDeleteTrack={timeline.deleteTrack}
               onAddTrack={timeline.addTrack}
+              onMoveTrack={timeline.moveTrack}
             />
 
             {/* Timeline canvas */}
