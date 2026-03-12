@@ -82,6 +82,7 @@ const VideoTimelineEditor: React.FC = () => {
     if (!trackId || !tracks.find(t => t.id === trackId)) {
       trackId = tracks.find((t) => {
         if (type === 'audio') return t.type === 'audio';
+        if (type === 'image') return t.type === 'image';
         if (type === 'text') return t.type === 'text';
         return t.type === 'video';
       })?.id;
