@@ -46,7 +46,7 @@ const TrackHeaders: React.FC<Props> = ({ tracks, onUpdateTrack, onDeleteTrack, o
   };
 
   return (
-    <div className="w-44 border-r bg-card/80 shrink-0 flex flex-col">
+    <div className="w-44 border-r bg-card/80 shrink-0 flex flex-col overflow-hidden">
       {/* Ruler spacer */}
       <div className="h-7 border-b bg-muted/40 flex items-center justify-center">
         <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
