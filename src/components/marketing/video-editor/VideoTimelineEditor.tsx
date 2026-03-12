@@ -433,6 +433,30 @@ const VideoTimelineEditor: React.FC = () => {
           title={isFullscreen ? 'Sair (Esc)' : 'Tela cheia'}>
           {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
         </Button>
+
+        <div className="w-px h-5 bg-border mx-1" />
+
+        {/* Export / Generate */}
+        <Button
+          onClick={handleExportVideo}
+          disabled={isExporting || state.clips.length === 0}
+          variant="default"
+          size="sm"
+          className="gap-1.5 text-xs h-8 px-3"
+          title="Gerar vídeo e salvar na galeria"
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {exportProgress}%
+            </>
+          ) : (
+            <>
+              <Save className="h-3.5 w-3.5" />
+              Gerar Vídeo
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Main content */}
