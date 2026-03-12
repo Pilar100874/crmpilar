@@ -64,7 +64,7 @@ const nodeTypes = {
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
 
-const EDGE_STYLE = { stroke: '#22c55e', strokeWidth: 2, cursor: 'pointer' };
+const EDGE_STYLE = { stroke: 'hsl(var(--primary) / 0.5)', strokeWidth: 1.5, cursor: 'pointer' };
 
 const QUICK_TOOLS = [
   { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
