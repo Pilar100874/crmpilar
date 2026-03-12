@@ -1518,8 +1518,8 @@ const AICreativeStudioInner: React.FC = () => {
 
             {/* Empty state */}
             {nodes.length === 0 && (
-              <Panel position="top-center" className="!top-1/2 !-translate-y-1/2">
-                <div className="text-center p-8">
+              <Panel position="top-center" className="!top-1/2 !-translate-y-1/2 !left-1/2 !-translate-x-1/2">
+                <div className="text-center p-8 flex flex-col items-center justify-center">
                   <div className="text-6xl mb-4">🎬</div>
                   <h3 className="text-lg font-semibold mb-2 text-foreground/80">Arraste blocos para começar</h3>
                   <p className="text-sm max-w-md text-muted-foreground">
