@@ -1,6 +1,22 @@
 import { toast } from 'sonner';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+
+async function toBlobURL(url: string, mimeType: string): Promise<string> {
+  const response = await fetch(url);
+  const buf = await response.arrayBuffer();
+  const blob = new Blob([buf], { type: mimeType });
+  return URL.createObjectURL(blob);
+}
+
+async function fetchFile(input: Blob | string): Promise<Uint8Array> {
+  if (input instanceof Blob) {
+    const buf = await input.arrayBuffer();
+    return new Uint8Array(buf);
+  }
+  const response = await fetch(input);
+  const buf = await response.arrayBuffer();
+  return new Uint8Array(buf);
+}
 
 const FFMPEG_BASE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
 const FFMPEG_LOAD_TIMEOUT_MS = 45_000;
