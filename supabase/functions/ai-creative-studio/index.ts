@@ -737,6 +737,25 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   params.prompt = `${params.prompt || ""}\n\n[AUDIO DIRECTIVE]\n${audioDirective}`.trim();
   console.log(`[generate_video] Audio config: withAudio=${withAudio}, withMusic=${withMusic}`);
 
+  const hasCorrectionVideoSource =
+    params.correctionMode === true &&
+    typeof params.sourceVideoUrl === "string" &&
+    params.sourceVideoUrl.startsWith("http");
+
+  // Prefer true video-to-video for correction when source video exists.
+  if (hasCorrectionVideoSource && provider === "openai" && !params.sourceVideoId) {
+    const runwayKey = await fetchApiKey(estabelecimentoId, "runway");
+    if (runwayKey) {
+      console.log(`[generate_video] AUTO-ROUTING correction: OpenAI -> Runway video_to_video for higher fidelity`);
+      return await generateVideoRunway(runwayKey, {
+        ...params,
+        model: "runway/gen4",
+        correctionMode: true,
+      });
+    }
+    console.warn(`[generate_video] Correction source video provided, but Runway key not found. Proceeding with OpenAI fallback.`);
+  }
+
   // Check if there are strict references (product/influencer) that need preservation
   const imageRoles = (params.imageRoles || []) as string[];
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY'];
