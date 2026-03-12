@@ -614,6 +614,9 @@ export function useStudioExecution() {
         const correctionInputVideo = inputs.find(i => i?._isCorrection);
         const correctionOnlyPromptVideo = correctionInputVideo?._correctionPrompt || '';
         const correctionSourceVideo = correctionInputVideo?.videoUrl || correctionInputVideo?.imageUrl;
+        const correctionSourceVideoUrl = correctionInputVideo?.videoUrl;
+        const correctionSourceProvider = correctionInputVideo?._provider;
+        const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
