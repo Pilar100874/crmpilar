@@ -489,13 +489,18 @@ export function useStudioExecution() {
         const correctionOnlyPromptImage = correctionInputImage?._correctionPrompt || '';
         const correctionSourceImage = correctionInputImage?.imageUrl;
 
+        // Get configured language for image generation
+        const imgEstabId = localStorage.getItem('estabelecimentoId') || '';
+        const imgDefaults = getStudioDefaults(imgEstabId);
+        const imgLangSuffix = getLanguagePromptSuffix(imgDefaults.defaultLanguage || 'pt-BR');
+
         // Auto-detect product + influencer without explicit placement prompt → default to holding
         const hasProduct = inputs.some((i) => i?._referenceRole === 'produto');
         const hasInfluencer = inputs.some((i) => i?._referenceRole === 'influencer');
         const promptLower = (combinedInput || '').toLowerCase();
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
-        let enrichedPrompt = combinedInput || 'A beautiful scene';
+        let enrichedPrompt = combinedInput || 'Uma cena bonita';
 
         // If correction mode, override prompt to be edit-only
         if (isCorrectionImage && correctionSourceImage) {
