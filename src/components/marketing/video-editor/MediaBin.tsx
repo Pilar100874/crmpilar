@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Film, Image as ImageIcon, FolderOpen, Loader2, Check, X } from 'lucide-react';
+import { Film, Image as ImageIcon, FolderOpen, Loader2, Check, Trash2, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack } from './types';
 
@@ -30,12 +29,26 @@ interface GalleryItem {
   duracao_segundos: number | null;
 }
 
+interface ImportedMedia {
+  id: string;
+  name: string;
+  src: string;
+  type: 'video' | 'image';
+  duration?: number | null;
+  thumbnail?: string | null;
+}
+
 const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryType, setGalleryType] = useState<'video' | 'image'>('video');
-  const [items, setItems] = useState<GalleryItem[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Imported media lists
+  const [importedVideos, setImportedVideos] = useState<ImportedMedia[]>([]);
+  const [importedImages, setImportedImages] = useState<ImportedMedia[]>([]);
+  const [activeTab, setActiveTab] = useState<'video' | 'image'>('video');
 
   const fetchGallery = useCallback(async (type: 'video' | 'image') => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -50,7 +63,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
         .eq('tipo', tipoFilter)
         .order('created_at', { ascending: false })
         .limit(100);
-      if (!error && data) setItems(data);
+      if (!error && data) setGalleryItems(data);
     } finally {
       setLoading(false);
     }
@@ -59,7 +72,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const handleOpenGallery = useCallback((type: 'video' | 'image') => {
     setGalleryType(type);
     setSelectedIds(new Set());
-    setItems([]);
+    setGalleryItems([]);
     setGalleryOpen(true);
     fetchGallery(type);
   }, [fetchGallery]);
@@ -74,33 +87,68 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   }, []);
 
   const handleConfirmSelection = useCallback(() => {
-    const selected = items.filter(i => selectedIds.has(i.id));
+    const selected = galleryItems.filter(i => selectedIds.has(i.id));
     
     for (const item of selected) {
+      const imported: ImportedMedia = {
+        id: item.id,
+        name: item.nome,
+        src: item.public_url,
+        type: galleryType,
+        duration: item.duracao_segundos,
+        thumbnail: item.thumbnail_url,
+      };
+
       if (galleryType === 'video') {
-        const videoTrackId = tracks.find(t => t.type === 'video')?.id;
-        onAddClip('video', {
-          type: 'video',
-          name: item.nome,
-          src: item.public_url,
-          duration: item.duracao_segundos || undefined,
-        }, videoTrackId);
+        setImportedVideos(prev => {
+          if (prev.find(v => v.id === item.id)) return prev;
+          return [...prev, imported];
+        });
       } else {
-        const imageTrackId = tracks.find(t => t.type === 'image')?.id;
-        onAddClip('image', {
-          type: 'image',
-          name: item.nome,
-          src: item.public_url,
-        }, imageTrackId);
+        setImportedImages(prev => {
+          if (prev.find(v => v.id === item.id)) return prev;
+          return [...prev, imported];
+        });
       }
     }
-    
+
+    setActiveTab(galleryType);
     setGalleryOpen(false);
     setSelectedIds(new Set());
-  }, [items, selectedIds, galleryType, onAddClip, tracks]);
+  }, [galleryItems, selectedIds, galleryType]);
+
+  const handleAddToTimeline = useCallback((media: ImportedMedia) => {
+    if (media.type === 'video') {
+      const videoTrackId = tracks.find(t => t.type === 'video')?.id;
+      onAddClip('video', {
+        type: 'video',
+        name: media.name,
+        src: media.src,
+        duration: media.duration || undefined,
+      }, videoTrackId);
+    } else {
+      const imageTrackId = tracks.find(t => t.type === 'image')?.id;
+      onAddClip('image', {
+        type: 'image',
+        name: media.name,
+        src: media.src,
+      }, imageTrackId);
+    }
+  }, [onAddClip, tracks]);
+
+  const handleRemoveImported = useCallback((id: string, type: 'video' | 'image') => {
+    if (type === 'video') {
+      setImportedVideos(prev => prev.filter(v => v.id !== id));
+    } else {
+      setImportedImages(prev => prev.filter(v => v.id !== id));
+    }
+  }, []);
+
+  const currentList = activeTab === 'video' ? importedVideos : importedImages;
+  const totalImported = importedVideos.length + importedImages.length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="p-3 border-b">
         <h3 className="font-semibold text-sm flex items-center gap-2">
           <FolderOpen className="h-4 w-4" />
@@ -108,30 +156,124 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
         </h3>
       </div>
 
-      <div className="p-3 space-y-2">
+      {/* Insert buttons */}
+      <div className="p-3 space-y-2 shrink-0">
         <Button
           onClick={() => handleOpenGallery('video')}
           variant="outline"
-          className="w-full justify-start gap-2 text-xs h-12"
+          className="w-full justify-start gap-2 text-xs h-10"
         >
-          <Film className="h-5 w-5 text-primary" />
-          <div className="text-left">
-            <p className="font-medium">Vídeo</p>
-            <p className="text-[10px] text-muted-foreground">Selecionar da galeria</p>
-          </div>
+          <Film className="h-4 w-4 text-primary" />
+          <span className="font-medium">Inserir Vídeo</span>
+          {importedVideos.length > 0 && (
+            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedVideos.length}</span>
+          )}
         </Button>
         <Button
           onClick={() => handleOpenGallery('image')}
           variant="outline"
-          className="w-full justify-start gap-2 text-xs h-12"
+          className="w-full justify-start gap-2 text-xs h-10"
         >
-          <ImageIcon className="h-5 w-5 text-primary" />
-          <div className="text-left">
-            <p className="font-medium">Imagem</p>
-            <p className="text-[10px] text-muted-foreground">Selecionar da galeria</p>
-          </div>
+          <ImageIcon className="h-4 w-4 text-primary" />
+          <span className="font-medium">Inserir Imagem</span>
+          {importedImages.length > 0 && (
+            <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{importedImages.length}</span>
+          )}
         </Button>
       </div>
+
+      {/* Tabs + imported list */}
+      {totalImported > 0 && (
+        <div className="flex-1 flex flex-col overflow-hidden border-t">
+          {/* Tabs */}
+          <div className="flex border-b shrink-0">
+            <button
+              onClick={() => setActiveTab('video')}
+              className={`flex-1 text-xs py-2 px-3 flex items-center justify-center gap-1.5 transition-colors ${
+                activeTab === 'video'
+                  ? 'border-b-2 border-primary text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Film className="h-3 w-3" />
+              Vídeos ({importedVideos.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('image')}
+              className={`flex-1 text-xs py-2 px-3 flex items-center justify-center gap-1.5 transition-colors ${
+                activeTab === 'image'
+                  ? 'border-b-2 border-primary text-primary font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <ImageIcon className="h-3 w-3" />
+              Imagens ({importedImages.length})
+            </button>
+          </div>
+
+          {/* List */}
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {currentList.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground text-center py-6">
+                  Nenhum {activeTab === 'video' ? 'vídeo' : 'imagem'} importado
+                </p>
+              ) : (
+                currentList.map((media) => (
+                  <div
+                    key={media.id}
+                    className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-12 h-9 rounded bg-muted shrink-0 overflow-hidden relative">
+                      {media.type === 'video' ? (
+                        <>
+                          <video src={media.src} className="w-full h-full object-cover" muted preload="metadata" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Play className="h-3 w-3 text-white drop-shadow" />
+                          </div>
+                        </>
+                      ) : (
+                        <img src={media.thumbnail || media.src} className="w-full h-full object-cover" alt="" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-medium truncate">{media.name}</p>
+                      {media.duration && (
+                        <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6"
+                        onClick={() => handleAddToTimeline(media)}
+                        title="Adicionar à timeline"
+                      >
+                        <Check className="h-3 w-3 text-primary" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6"
+                        onClick={() => handleRemoveImported(media.id, media.type)}
+                        title="Remover"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
 
       {/* Gallery Popup */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
@@ -162,7 +304,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
               <div className="flex justify-center items-center py-20">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : items.length === 0 ? (
+            ) : galleryItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 {galleryType === 'video' ? <Film className="h-10 w-10 mb-2" /> : <ImageIcon className="h-10 w-10 mb-2" />}
                 <p className="text-sm">Nenhum {galleryType === 'video' ? 'vídeo' : 'imagem'} na galeria</p>
@@ -170,7 +312,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2 p-4">
-                {items.map((item) => {
+                {galleryItems.map((item) => {
                   const isSelected = selectedIds.has(item.id);
                   return (
                     <button
@@ -200,7 +342,6 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                         />
                       )}
                       
-                      {/* Selection indicator */}
                       <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                         isSelected
                           ? 'bg-primary border-primary'
@@ -209,7 +350,6 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                         {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                       </div>
 
-                      {/* Name overlay */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
                         <p className="text-[10px] text-white truncate">{item.nome}</p>
                       </div>

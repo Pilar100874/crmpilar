@@ -14,6 +14,7 @@ import MediaBin from './MediaBin';
 import EffectsPanel from './EffectsPanel';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
+import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
 import { TRACK_COLORS, TimelineClip } from './types';
 
 interface MediaItem {
@@ -26,12 +27,19 @@ interface MediaItem {
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
   const { state } = timeline;
-  const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media'>('media');
+  const [rightPanel, setRightPanel] = useState<'properties' | 'effects' | 'media' | 'config'>('media');
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canvasDialogOpen, setCanvasDialogOpen] = useState(false);
   const [canvasEditClipId, setCanvasEditClipId] = useState<string | null>(null);
   const [canvasEditJson, setCanvasEditJson] = useState<string | undefined>(undefined);
+  const [videoConfig, setVideoConfig] = useState<VideoConfig>({
+    backgroundColor: '#000000',
+    resolution: '1920x1080',
+    fps: 30,
+    destination: 'youtube',
+    format: 'mp4',
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = state.selectedClipIds.length === 1
@@ -305,7 +313,7 @@ const VideoTimelineEditor: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Preview */}
           {!previewCollapsed && (
-            <div className="h-[300px] border-b bg-black/95 flex items-center justify-center relative shrink-0">
+            <div className="h-[300px] border-b flex items-center justify-center relative shrink-0" style={{ backgroundColor: videoConfig.backgroundColor === '#transparent' ? 'transparent' : videoConfig.backgroundColor }}>
               <VideoPreview
                 clips={state.clips}
                 currentTime={state.currentTime}
@@ -360,19 +368,23 @@ const VideoTimelineEditor: React.FC = () => {
         {/* Right panel */}
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
           {/* Panel tabs inside the panel itself */}
-          <div className="flex items-center border-b px-2 py-1.5 gap-1">
-            <Button size="sm" variant={rightPanel === 'media' ? 'default' : 'ghost'} onClick={() => setRightPanel('media')} className="text-xs gap-1 flex-1">
+          <div className="flex items-center border-b px-1 py-1 gap-0.5">
+            <Button size="sm" variant={rightPanel === 'media' ? 'default' : 'ghost'} onClick={() => setRightPanel('media')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
               <Layers className="h-3 w-3" />Mídia
             </Button>
-            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-xs gap-1 flex-1">
+            <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
+              <Settings2 className="h-3 w-3" />Config
+            </Button>
+            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
               <Sparkles className="h-3 w-3" />Efeitos
             </Button>
-            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-xs gap-1 flex-1">
+            <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1.5">
               <Settings2 className="h-3 w-3" />Props
             </Button>
           </div>
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'media' && <MediaBin onAddClip={handleAddClip} tracks={state.tracks} />}
+            {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
             {rightPanel === 'effects' && (
               <EffectsPanel
                 selectedClip={selectedClip || undefined}
