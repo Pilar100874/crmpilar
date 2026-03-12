@@ -57,11 +57,27 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
 ];
 
-const ResourcePanel: React.FC<Props> = ({ onAddClip, tracks, onOpenCanvas }) => {
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, onOpenCanvas }, ref) => {
   const [activeTab, setActiveTab] = useState<ResourceType>('video');
   const [items, setItems] = useState<Record<ResourceType, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [],
   });
+
+  useImperativeHandle(ref, () => ({
+    addCanvasItem: (name: string, src: string, canvasJson?: string) => {
+      const imported: ImportedMedia = {
+        id: `canvas_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        src,
+        type: 'image',
+        duration: null,
+        thumbnail: null,
+        resourceType: 'canvas',
+      };
+      setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
+      setActiveTab('canvas');
+    },
+  }));
 
   // Gallery
   const [galleryOpen, setGalleryOpen] = useState(false);
