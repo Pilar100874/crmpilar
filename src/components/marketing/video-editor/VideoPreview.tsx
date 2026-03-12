@@ -33,8 +33,20 @@ const VideoPreview: React.FC<Props> = ({
   }, [clips, tracks, currentTime]);
 
   const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
-  const activeVisuals = useMemo(() => activeClips.filter((c) => c.type === 'video' || c.type === 'image'), [activeClips]);
-  const activeTexts = useMemo(() => activeClips.filter((c) => c.type === 'text'), [activeClips]);
+
+  // Sort clips by track order: lower tracks (higher index) render first, upper tracks render on top
+  const sortedActiveClips = useMemo(() => {
+    const trackIndexMap = new Map(tracks.map((t, i) => [t.id, i]));
+    return [...activeClips].sort((a, b) => {
+      const idxA = trackIndexMap.get(a.trackId) ?? 0;
+      const idxB = trackIndexMap.get(b.trackId) ?? 0;
+      // Higher index = lower in timeline = rendered first (behind)
+      return idxB - idxA;
+    });
+  }, [activeClips, tracks]);
+
+  const activeVisuals = useMemo(() => sortedActiveClips.filter((c) => c.type === 'video' || c.type === 'image' || c.type === 'canvas'), [sortedActiveClips]);
+  const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
 
   // Stable key for video sync effect - only re-run when clip IDs or play state change
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
@@ -152,17 +164,18 @@ const VideoPreview: React.FC<Props> = ({
         <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
 
         {activeVisuals.length > 0 ? (
-          activeVisuals.map((clip) => {
+          activeVisuals.map((clip, layerIdx) => {
             const cx = clip.x ?? 0;
             const cy = clip.y ?? 0;
             const cw = clip.w ?? 100;
             const ch = clip.h ?? 100;
             const isSelected = selectedClipIds.includes(clip.id);
+            const zIndex = 10 + layerIdx; // Already sorted: first = bottom, last = top
 
             return (
               <div
                 key={clip.id}
-                className="absolute z-10 cursor-move"
+                className="absolute cursor-move"
                 style={{
                   left: `${cx}%`,
                   top: `${cy}%`,
@@ -172,6 +185,7 @@ const VideoPreview: React.FC<Props> = ({
                   opacity: clip.opacity ?? 1,
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px',
+                  zIndex,
                 }}
                 onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
               >
