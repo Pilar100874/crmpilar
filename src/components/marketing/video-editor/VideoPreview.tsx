@@ -26,7 +26,9 @@ const VideoPreview: React.FC<Props> = ({
     return clips
       .filter((c) => {
         const track = tracks.find((t) => t.id === c.trackId);
-        if (!track || !track.visible || track.muted) return false;
+        if (!track || !track.visible) return false;
+        // muted only hides audio, not visuals
+        if (track.muted && (c.type === 'audio')) return false;
         return currentTime >= c.startTime && currentTime < c.startTime + c.duration;
       })
       .map(c => c.id);
