@@ -693,7 +693,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 onChange={(e) => handleInlineUpdate('text', e.target.value)}
                 onBlur={() => setIsEditing(false)}
                 onKeyDown={(e) => { if (e.key === 'Escape') setIsEditing(false); }}
-                className="w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="nodrag nowheel w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
                 placeholder="Escreva seu prompt aqui..."
               />
             ) : (
@@ -718,7 +721,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 onChange={(e) => handleInlineUpdate('systemPrompt', e.target.value)}
                 onBlur={() => setIsEditing(false)}
                 onKeyDown={(e) => { if (e.key === 'Escape') setIsEditing(false); }}
-                className="w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="nodrag nowheel w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
                 placeholder="Defina instruções do sistema..."
               />
             ) : (
@@ -863,8 +869,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               value={nodeData.config.text || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('text', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Texto para aplicar..."
-              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
             />
             <div className="flex items-center gap-1.5 flex-wrap">
               <select
@@ -882,7 +890,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 value={nodeData.config.fontSize || 48}
                 onChange={(e) => handleInlineUpdate('fontSize', parseInt(e.target.value) || 48)}
                 onClick={(e) => e.stopPropagation()}
-                className="h-6 w-12 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="nodrag nowheel h-6 w-12 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
                 title="Tamanho"
               />
               <input
@@ -919,23 +929,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               value={nodeData.config.title || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('title', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Título..."
-              className="w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
             />
             <input
               value={nodeData.config.subtitle || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('subtitle', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Subtítulo..."
-              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+              className="nodrag nowheel w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
             />
             <textarea
               value={nodeData.config.body || ''}
               onChange={(e) => { e.stopPropagation(); handleInlineUpdate('body', e.target.value); }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               placeholder="Corpo do texto..."
               rows={2}
-              className="w-full px-2 py-1 text-[10px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-none"
+              className="nodrag nowheel w-full px-2 py-1 text-[10px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-none"
             />
             {nodeData.config.title && (
               <div className="rounded-lg p-2.5 bg-muted/30 border border-border/30 overflow-hidden" style={{ textAlign: (nodeData.config.textAlign || 'center') as any }}>
@@ -1033,7 +1049,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     value={nodeData.config.width || 1080}
                     onChange={(e) => { e.stopPropagation(); handleInlineUpdate('width', parseInt(e.target.value) || 1080); }}
                     onClick={e => e.stopPropagation()}
-                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    onMouseDown={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                    className="nodrag nowheel w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
                     placeholder="Largura"
                   />
                   <span className="text-muted-foreground text-[10px] self-center">×</span>
@@ -1042,7 +1060,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     value={nodeData.config.height || 1080}
                     onChange={(e) => { e.stopPropagation(); handleInlineUpdate('height', parseInt(e.target.value) || 1080); }}
                     onClick={e => e.stopPropagation()}
-                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    onMouseDown={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                    className="nodrag nowheel w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
                     placeholder="Altura"
                   />
                 </div>
