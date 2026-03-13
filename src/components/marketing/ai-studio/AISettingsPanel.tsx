@@ -35,6 +35,7 @@ const PAID_PROVIDERS: PaidProvider[] = [
   { id: 'kling', name: 'Kling (Kuaishou)', icon: '🎥', category: 'video', description: 'Vídeos realistas de alta qualidade.', website: 'https://klingai.com', keyPlaceholder: 'sk-...' },
   { id: 'pika', name: 'Pika', icon: '🌊', category: 'video', description: 'Vídeos criativos e estilizados.', website: 'https://pika.art', keyPlaceholder: 'pk-...' },
   { id: 'luma', name: 'Luma Dream Machine', icon: '🌙', category: 'video', description: 'Geração de vídeos com Dream Machine.', website: 'https://lumalabs.ai', keyPlaceholder: 'lm-...' },
+  { id: 'replicate', name: 'Replicate (LTX-Video)', icon: '🔮', category: 'video', description: 'LTX-Video 2 open source, custo muito baixo (~$0.02/vídeo).', website: 'https://replicate.com/account/api-tokens', keyPlaceholder: 'r8_...' },
   { id: 'stability', name: 'Stability AI', icon: '🟣', category: 'image', description: 'Stable Diffusion para imagens e vídeos.', website: 'https://platform.stability.ai/account/keys', keyPlaceholder: 'sk-...' },
   { id: 'suno', name: 'Suno', icon: '🎵', category: 'music', description: 'Criação de músicas completas com IA.', website: 'https://suno.com/account', keyPlaceholder: 'sk-...' },
   { id: 'udio', name: 'Udio', icon: '🎶', category: 'music', description: 'Composição musical avançada.', website: 'https://udio.com', keyPlaceholder: 'sk-...' },
