@@ -668,7 +668,6 @@ async function generateVideoReplicate(apiKey: string, params: any): Promise<Vide
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      version: "8b27e4ea tried",
       model: "lightricks/ltx-video",
       input,
     }),
