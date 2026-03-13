@@ -9,6 +9,7 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { convertVideoToWhatsappMp4, triggerDownload } from '@/lib/video/whatsappMp4';
 import { useTimelineState } from './useTimelineState';
 import TimelineTracks from './TimelineTracks';
 import TimelineRuler from './TimelineRuler';
@@ -581,11 +582,18 @@ const VideoTimelineEditor: React.FC = () => {
     try {
       const estabId = localStorage.getItem('estabelecimentoId');
       if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
-      const fileName = `video_${Date.now()}.webm`;
+
+      // Convert to MP4 before saving
+      const mp4Blob = await convertVideoToWhatsappMp4(exportedVideoBlob);
+      const isMp4 = mp4Blob.type.startsWith('video/mp4');
+      const ext = isMp4 ? 'mp4' : 'webm';
+      const contentType = isMp4 ? 'video/mp4' : 'video/webm';
+
+      const fileName = `video_${Date.now()}.${ext}`;
       const path = `${estabId}/${fileName}`;
       const { error: uploadError } = await supabase.storage
         .from('marketing-videos')
-        .upload(path, exportedVideoBlob, { contentType: 'video/webm' });
+        .upload(path, mp4Blob, { contentType });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
       await supabase.from('media_gallery').insert({
@@ -604,14 +612,21 @@ const VideoTimelineEditor: React.FC = () => {
     }
   }, [exportedVideoBlob, exportedVideoDuration]);
 
-  const handleDownloadExported = useCallback(() => {
-    if (!exportedVideoUrl) return;
-    const a = document.createElement('a');
-    a.href = exportedVideoUrl;
-    a.download = `video_editor_${Date.now()}.webm`;
-    a.click();
-    toast.success('Download iniciado!');
-  }, [exportedVideoUrl]);
+  const [isConverting, setIsConverting] = useState(false);
+
+  const handleDownloadExported = useCallback(async () => {
+    if (!exportedVideoBlob) return;
+    setIsConverting(true);
+    try {
+      const mp4Blob = await convertVideoToWhatsappMp4(exportedVideoBlob);
+      triggerDownload(mp4Blob, `video_editor_${Date.now()}`);
+    } catch {
+      // Fallback to raw blob
+      triggerDownload(exportedVideoBlob, `video_editor_${Date.now()}`);
+    } finally {
+      setIsConverting(false);
+    }
+  }, [exportedVideoBlob]);
 
   const handleCloseExportPreview = useCallback(() => {
     if (exportedVideoUrl) URL.revokeObjectURL(exportedVideoUrl);
@@ -1128,9 +1143,10 @@ const VideoTimelineEditor: React.FC = () => {
                 variant="secondary"
                 className="gap-1.5 text-xs h-8 shadow-lg"
                 onClick={handleDownloadExported}
+                disabled={isConverting}
               >
-                <Download className="h-3.5 w-3.5" />
-                Baixar
+                {isConverting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                {isConverting ? 'Convertendo...' : 'Baixar MP4'}
               </Button>
               <Button
                 size="sm"
