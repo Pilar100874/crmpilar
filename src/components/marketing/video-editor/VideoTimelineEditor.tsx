@@ -230,8 +230,7 @@ const VideoTimelineEditor: React.FC = () => {
     try {
       const [resW, resH] = videoConfig.resolution.split('x').map(Number);
       const fps = videoConfig.fps;
-      const duration = state.duration;
-      const totalFrames = Math.ceil(duration * fps);
+      const duration = Math.max(0.05, state.duration);
 
       const canvas = document.createElement('canvas');
       canvas.width = resW;
@@ -239,100 +238,157 @@ const VideoTimelineEditor: React.FC = () => {
       const ctx = canvas.getContext('2d')!;
 
       const mediaElements: Record<string, HTMLVideoElement | HTMLImageElement> = {};
+      const audioElements: Record<string, HTMLAudioElement> = {};
+
       for (const clip of state.clips) {
         if (!clip.src) continue;
+
         if (clip.type === 'video') {
           const vid = document.createElement('video');
           vid.src = clip.src;
           vid.crossOrigin = 'anonymous';
           vid.muted = true;
           vid.preload = 'auto';
-          await new Promise<void>((res, rej) => { vid.onloadeddata = () => res(); vid.onerror = () => rej(); vid.load(); });
+          vid.playsInline = true;
+
+          await new Promise<void>((resolve, reject) => {
+            vid.onloadedmetadata = () => resolve();
+            vid.onerror = () => reject(new Error(`Falha ao carregar vídeo: ${clip.name}`));
+            vid.load();
+          });
+
           mediaElements[clip.id] = vid;
         } else if (clip.type === 'image' || clip.type === 'canvas') {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.src = clip.src;
-          await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(); });
+
+          await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${clip.name}`));
+          });
+
           mediaElements[clip.id] = img;
+        } else if (clip.type === 'audio') {
+          const audio = new Audio(clip.src);
+          audio.crossOrigin = 'anonymous';
+          audio.preload = 'auto';
+
+          await new Promise<void>((resolve, reject) => {
+            audio.onloadedmetadata = () => resolve();
+            audio.onerror = () => reject(new Error(`Falha ao carregar áudio: ${clip.name}`));
+            audio.load();
+          });
+
+          audioElements[clip.id] = audio;
         }
       }
 
       const stream = canvas.captureStream(fps);
+      const canvasTrack = stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | undefined;
       const audioCtx = new AudioContext();
       const dest = audioCtx.createMediaStreamDestination();
       let hasAudio = false;
-      const hasSoloTrack = state.tracks.some(t => t.solo);
+      const hasSoloTrack = state.tracks.some((t) => t.solo);
+
+      const isTrackMutedForExport = (trackId: string) => {
+        const track = state.tracks.find((t) => t.id === trackId);
+        return !!track?.muted || (hasSoloTrack && !track?.solo);
+      };
+
       for (const clip of state.clips) {
-        const clipTrack = state.tracks.find(t => t.id === clip.trackId);
-        // Skip audio for muted tracks or non-solo tracks when solo exists
-        const isTrackMuted = clipTrack?.muted || (hasSoloTrack && !clipTrack?.solo);
-        if (isTrackMuted) continue;
+        if (isTrackMutedForExport(clip.trackId)) continue;
 
         if (clip.type === 'video' && mediaElements[clip.id] instanceof HTMLVideoElement) {
           try {
             const vid = mediaElements[clip.id] as HTMLVideoElement;
             vid.muted = false;
-            vid.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
+            const trackVolume = state.tracks.find((t) => t.id === clip.trackId)?.volume ?? 1;
+            vid.volume = (clip.volume ?? 1) * trackVolume;
             const source = audioCtx.createMediaElementSource(vid);
             source.connect(dest);
             hasAudio = true;
-          } catch { }
+          } catch {
+            // ignore duplicate source connections
+          }
         }
-        if (clip.type === 'audio' && clip.src) {
+
+        if (clip.type === 'audio' && audioElements[clip.id]) {
           try {
-            const audio = new Audio(clip.src);
-            audio.crossOrigin = 'anonymous';
-            audio.volume = (clip.volume ?? 1) * (clipTrack?.volume ?? 1);
+            const audio = audioElements[clip.id];
+            const trackVolume = state.tracks.find((t) => t.id === clip.trackId)?.volume ?? 1;
+            audio.volume = (clip.volume ?? 1) * trackVolume;
             const source = audioCtx.createMediaElementSource(audio);
             source.connect(dest);
             hasAudio = true;
-          } catch { }
+          } catch {
+            // ignore duplicate source connections
+          }
         }
       }
 
       if (hasAudio) {
-        dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+        await audioCtx.resume().catch(() => undefined);
+        dest.stream.getAudioTracks().forEach((track) => stream.addTrack(track));
       }
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
         ? 'video/webm;codecs=vp9,opus'
         : 'video/webm';
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 10_000_000,
+      });
+
       const chunks: BlobPart[] = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
 
       const recordingDone = new Promise<Blob>((resolve) => {
         recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
       });
-      recorder.start(100);
 
-      // Helper: seek video and wait for the frame to be ready
+      recorder.start();
+
       const seekVideo = (vid: HTMLVideoElement, time: number): Promise<void> => {
         return new Promise((resolve) => {
           const maxTime = Number.isFinite(vid.duration) ? Math.max(0, vid.duration - 0.001) : time;
           const safeTime = Math.max(0, Math.min(time, maxTime));
-          const tolerance = 1 / (fps * 2);
+          const tolerance = Math.max(1 / (fps * 2), 0.01);
 
-          if (Math.abs(vid.currentTime - safeTime) <= tolerance) {
+          if (Math.abs(vid.currentTime - safeTime) <= tolerance && vid.readyState >= 2) {
             resolve();
             return;
           }
 
           let settled = false;
+          let timeoutId: number | undefined;
+          let frameCbId: number | undefined;
+
           const done = () => {
             if (settled) return;
             settled = true;
-            clearTimeout(timeoutId);
+            if (timeoutId) window.clearTimeout(timeoutId);
+            if (frameCbId !== undefined && 'cancelVideoFrameCallback' in vid) {
+              (vid as HTMLVideoElement & { cancelVideoFrameCallback?: (id: number) => void }).cancelVideoFrameCallback?.(frameCbId);
+            }
             resolve();
           };
 
-          const timeoutId = window.setTimeout(done, 350);
-          const onSeeked = () => done();
-          const onError = () => done();
+          const afterSeek = () => {
+            if ('requestVideoFrameCallback' in vid) {
+              frameCbId = (vid as HTMLVideoElement & { requestVideoFrameCallback: (cb: () => void) => number })
+                .requestVideoFrameCallback(() => done());
+            } else {
+              requestAnimationFrame(() => done());
+            }
+          };
 
-          vid.addEventListener('seeked', onSeeked, { once: true });
-          vid.addEventListener('error', onError, { once: true });
+          timeoutId = window.setTimeout(() => done(), 900);
+          vid.addEventListener('seeked', afterSeek, { once: true });
+          vid.addEventListener('error', done, { once: true });
           vid.currentTime = safeTime;
         });
       };
@@ -342,30 +398,37 @@ const VideoTimelineEditor: React.FC = () => {
         sortedTracks.map((track) => [
           track.id,
           state.clips
-            .filter((c) => c.trackId === track.id)
+            .filter((clip) => clip.trackId === track.id)
             .sort((a, b) => a.startTime - b.startTime),
         ])
       );
 
-      const frameDurationMs = 1000 / fps;
       const exportStartTs = performance.now();
+      let lastProgress = -1;
 
-      for (let frame = 0; frame < totalFrames; frame++) {
-        const t = frame / fps;
+      while (true) {
+        const t = Math.min(duration, (performance.now() - exportStartTs) / 1000);
+
         ctx.fillStyle = videoConfig.backgroundColor;
         ctx.fillRect(0, 0, resW, resH);
+
+        const activeVideoIds = new Set<string>();
 
         for (let ti = sortedTracks.length - 1; ti >= 0; ti--) {
           const track = sortedTracks[ti];
           if (!track.visible) continue;
           if (hasSoloTrack && !track.solo) continue;
 
-          const trackClips = (clipsByTrack.get(track.id) || [])
-            .filter(c => t >= c.startTime && t < c.startTime + c.duration);
+          const trackClips = (clipsByTrack.get(track.id) || []).filter(
+            (clip) => t >= clip.startTime && t < clip.startTime + clip.duration
+          );
 
           for (const clip of trackClips) {
+            if (clip.type === 'audio') continue;
+
             const el = mediaElements[clip.id];
             if (!el) continue;
+
             const destX = ((clip.x ?? 0) / 100) * resW;
             const destY = ((clip.y ?? 0) / 100) * resH;
             const destW = ((clip.w ?? 100) / 100) * resW;
@@ -374,11 +437,10 @@ const VideoTimelineEditor: React.FC = () => {
             ctx.save();
             ctx.globalAlpha = clip.opacity ?? 1;
 
-            // Apply filters
             if (clip.filters?.length) {
               const filterStr = clip.filters
-                .filter(f => f.enabled)
-                .map(f => {
+                .filter((f) => f.enabled)
+                .map((f) => {
                   switch (f.type) {
                     case 'brightness': return `brightness(${f.value / 50})`;
                     case 'contrast': return `contrast(${f.value / 50})`;
@@ -393,18 +455,29 @@ const VideoTimelineEditor: React.FC = () => {
                 })
                 .filter(Boolean)
                 .join(' ');
+
               if (filterStr) ctx.filter = filterStr;
             }
 
-            // Seek video to exact frame and wait
             if (el instanceof HTMLVideoElement) {
-              const seekTime = t - clip.startTime + (clip.trimStart || 0);
-              await seekVideo(el, seekTime);
+              activeVideoIds.add(clip.id);
+              const clipTime = Math.max(0, t - clip.startTime + (clip.trimStart || 0));
+              const maxTime = Number.isFinite(el.duration) ? Math.max(0, el.duration - 0.001) : clipTime;
+              const desiredTime = Math.max(0, Math.min(clipTime, maxTime));
+              const drift = Math.abs(el.currentTime - desiredTime);
+
+              if (el.paused || drift > Math.max(0.12, 1 / fps)) {
+                await seekVideo(el, desiredTime);
+              }
+
+              if (el.paused) {
+                try { await el.play(); } catch { }
+              }
             }
 
-            // Draw with aspect ratio preserved (object-contain)
             const elW = el instanceof HTMLVideoElement ? el.videoWidth : el.naturalWidth;
             const elH = el instanceof HTMLVideoElement ? el.videoHeight : el.naturalHeight;
+
             if (elW && elH) {
               const scale = Math.min(destW / elW, destH / elH);
               const drawW = elW * scale;
@@ -420,22 +493,73 @@ const VideoTimelineEditor: React.FC = () => {
           }
         }
 
-        setExportProgress(Math.round((frame / totalFrames) * 90));
-
-        const targetFrameTs = exportStartTs + (frame + 1) * frameDurationMs;
-        const waitMs = targetFrameTs - performance.now();
-
-        if (waitMs > 1) {
-          await new Promise((r) => setTimeout(r, waitMs));
-        } else {
-          await new Promise((r) => requestAnimationFrame(() => r(null)));
+        for (const [id, el] of Object.entries(mediaElements)) {
+          if (!(el instanceof HTMLVideoElement)) continue;
+          if (!activeVideoIds.has(id) && !el.paused) el.pause();
         }
+
+        for (const [audioId, audio] of Object.entries(audioElements)) {
+          const clip = state.clips.find((c) => c.id === audioId);
+          if (!clip || isTrackMutedForExport(clip.trackId)) {
+            if (!audio.paused) audio.pause();
+            continue;
+          }
+
+          const active = t >= clip.startTime && t < clip.startTime + clip.duration;
+          if (!active) {
+            if (!audio.paused) audio.pause();
+            continue;
+          }
+
+          const clipTime = Math.max(0, t - clip.startTime + (clip.trimStart || 0));
+          const maxTime = Number.isFinite(audio.duration) ? Math.max(0, audio.duration - 0.001) : clipTime;
+          const desiredTime = Math.max(0, Math.min(clipTime, maxTime));
+
+          if (audio.paused || Math.abs(audio.currentTime - desiredTime) > 0.18) {
+            audio.currentTime = desiredTime;
+          }
+
+          if (audio.paused) {
+            try { await audio.play(); } catch { }
+          }
+        }
+
+        const progress = Math.min(90, Math.round((t / duration) * 90));
+        if (progress !== lastProgress) {
+          lastProgress = progress;
+          setExportProgress(progress);
+        }
+
+        if (t >= duration) break;
+
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            try {
+              canvasTrack?.requestFrame();
+            } catch {
+              // track may not support requestFrame in all browsers
+            }
+            resolve();
+          });
+        });
       }
+
+      try {
+        canvasTrack?.requestFrame();
+      } catch {
+        // ignore
+      }
+
+      Object.values(mediaElements).forEach((el) => {
+        if (el instanceof HTMLVideoElement) el.pause();
+      });
+      Object.values(audioElements).forEach((audio) => audio.pause());
 
       recorder.stop();
       const blob = await recordingDone;
 
-      // Show preview dialog instead of auto-saving
+      await audioCtx.close().catch(() => undefined);
+
       const url = URL.createObjectURL(blob);
       setExportedVideoBlob(blob);
       setExportedVideoUrl(url);
