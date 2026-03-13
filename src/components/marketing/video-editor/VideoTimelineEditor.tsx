@@ -582,11 +582,18 @@ const VideoTimelineEditor: React.FC = () => {
     try {
       const estabId = localStorage.getItem('estabelecimentoId');
       if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
-      const fileName = `video_${Date.now()}.webm`;
+
+      // Convert to MP4 before saving
+      const mp4Blob = await convertVideoToWhatsappMp4(exportedVideoBlob);
+      const isMp4 = mp4Blob.type.startsWith('video/mp4');
+      const ext = isMp4 ? 'mp4' : 'webm';
+      const contentType = isMp4 ? 'video/mp4' : 'video/webm';
+
+      const fileName = `video_${Date.now()}.${ext}`;
       const path = `${estabId}/${fileName}`;
       const { error: uploadError } = await supabase.storage
         .from('marketing-videos')
-        .upload(path, exportedVideoBlob, { contentType: 'video/webm' });
+        .upload(path, mp4Blob, { contentType });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
       await supabase.from('media_gallery').insert({
