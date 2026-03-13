@@ -605,14 +605,21 @@ const VideoTimelineEditor: React.FC = () => {
     }
   }, [exportedVideoBlob, exportedVideoDuration]);
 
-  const handleDownloadExported = useCallback(() => {
-    if (!exportedVideoUrl) return;
-    const a = document.createElement('a');
-    a.href = exportedVideoUrl;
-    a.download = `video_editor_${Date.now()}.webm`;
-    a.click();
-    toast.success('Download iniciado!');
-  }, [exportedVideoUrl]);
+  const [isConverting, setIsConverting] = useState(false);
+
+  const handleDownloadExported = useCallback(async () => {
+    if (!exportedVideoBlob) return;
+    setIsConverting(true);
+    try {
+      const mp4Blob = await convertVideoToWhatsappMp4(exportedVideoBlob);
+      triggerDownload(mp4Blob, `video_editor_${Date.now()}`);
+    } catch {
+      // Fallback to raw blob
+      triggerDownload(exportedVideoBlob, `video_editor_${Date.now()}`);
+    } finally {
+      setIsConverting(false);
+    }
+  }, [exportedVideoBlob]);
 
   const handleCloseExportPreview = useCallback(() => {
     if (exportedVideoUrl) URL.revokeObjectURL(exportedVideoUrl);
