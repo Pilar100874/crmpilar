@@ -357,6 +357,7 @@ const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
   'luma/dream-machine-1.5': 'luma',
   'stability/stable-video': 'stability',
   'bytedance/seedvideo': 'bytedance',
+  'replicate/ltx-video': 'replicate',
 };
 
 const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
