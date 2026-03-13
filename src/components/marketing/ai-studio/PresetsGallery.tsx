@@ -78,6 +78,7 @@ const LAYERS: Layer[] = [
       { id: 'dream-machine', label: 'Dream Machine', emoji: '💭' },
       { id: 'seed-video', label: 'Seed Video', emoji: '🌱' },
       { id: 'svd', label: 'Stable Video Diffusion', emoji: '⚡' },
+      { id: 'ltx-video', label: 'LTX-Video 2', emoji: '🔮' },
     ],
   },
   {
@@ -1266,6 +1267,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       'veo3': 'google/veo-3.1', 'sora': 'openai/sora-2', 'kling': 'kling/v2.1',
       'gen4': 'runway/gen4', 'hailuo': 'hailuo/minimax-video-01', 'pika': 'pika/v2',
       'dream-machine': 'luma/dream-machine', 'seed-video': 'seed/video-01', 'svd': 'stability/svd',
+      'ltx-video': 'replicate/ltx-video',
     };
 
     const imageModelMap: Record<string, string> = {

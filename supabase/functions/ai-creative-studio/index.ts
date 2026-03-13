@@ -626,9 +626,93 @@ async function generateVideoStability(apiKey: string, params: any): Promise<Vide
   return { videoUrl: storedUrl || undefined };
 }
 
+// --- Replicate (LTX-Video 2) ---
+async function generateVideoReplicate(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const prompt = params.prompt || params.description || "A cinematic video";
+  const duration = Math.min(10, Math.max(2, Number(params.duration) || 5));
+  const aspectRatio = params.aspectRatio === "9:16" ? "9:16" : params.aspectRatio === "1:1" ? "1:1" : "16:9";
+  
+  // Map aspect ratio to resolution
+  const resolutionMap: Record<string, { width: number; height: number }> = {
+    "16:9": { width: 768, height: 512 },
+    "9:16": { width: 512, height: 768 },
+    "1:1": { width: 512, height: 512 },
+  };
+  const res = resolutionMap[aspectRatio] || resolutionMap["16:9"];
+
+  const input: any = {
+    prompt,
+    width: res.width,
+    height: res.height,
+    num_frames: Math.round(duration * 24), // ~24fps
+    guidance_scale: params.cfgScale || 3,
+    num_inference_steps: params.steps || 40,
+  };
+
+  // Support image-to-video if reference image provided
+  if (params.imageUrls?.[0]) {
+    input.image = params.imageUrls[0];
+  }
+
+  if (params.negativePrompt) {
+    input.negative_prompt = params.negativePrompt;
+  }
+
+  console.log(`[generate_video] Replicate LTX-Video: prompt="${prompt.substring(0, 100)}", ${res.width}x${res.height}, frames=${input.num_frames}`);
+
+  // Create prediction
+  const createResp = await fetch("https://api.replicate.com/v1/predictions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "lightricks/ltx-video",
+      input,
+    }),
+  });
+
+  if (!createResp.ok) {
+    const err = await createResp.text();
+    throw new Error(`Replicate API error ${createResp.status}: ${err.substring(0, 300)}`);
+  }
+
+  const prediction = await createResp.json();
+  const predictionId = prediction.id;
+  if (!predictionId) throw new Error("No prediction ID from Replicate");
+
+  console.log(`[generate_video] Replicate prediction created: ${predictionId}`);
+
+  // Poll for completion
+  const videoUrl = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    const pollData = await pollResp.json();
+
+    if (pollData.status === "succeeded") {
+      // Output can be a string URL or array of URLs
+      const output = pollData.output;
+      const url = Array.isArray(output) ? output[0] : output;
+      return { done: true, result: url };
+    }
+    if (pollData.status === "failed" || pollData.status === "canceled") {
+      return { done: true, error: pollData.error || "Replicate generation failed" };
+    }
+    return { done: false };
+  }, 4000, 180);
+
+  // Download and store
+  const videoResp = await fetch(videoUrl);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+  return { videoUrl: storedUrl || videoUrl };
+}
+
 // --- Generic handler for unsupported providers ---
 async function generateVideoUnsupported(model: string): Promise<VideoGenerationResult> {
-  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma ou Stability.` };
+  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma, Stability ou Replicate.` };
 }
 
 // Pre-generate a "hero frame" compositing product/influencer into the scene
@@ -853,6 +937,10 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       // Kling accepts 5 or 10
       params.duration = rawDur <= 7 ? 5 : 10;
       break;
+    case "replicate":
+      // LTX-Video accepts 2-10s
+      params.duration = Math.min(10, Math.max(2, Math.round(rawDur)));
+      break;
     default:
       // Luma, Stability, etc. — keep as-is or default
       params.duration = Math.max(4, Math.round(rawDur));
@@ -868,6 +956,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     case "kling": return generateVideoKling(apiKey, params);
     case "luma": return generateVideoLuma(apiKey, params);
     case "stability": return generateVideoStability(apiKey, params);
+    case "replicate": return generateVideoReplicate(apiKey, params);
     case "pika":
     case "minimax":
     case "bytedance":
