@@ -9,6 +9,7 @@ import {
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { convertVideoToWhatsappMp4, triggerDownload } from '@/lib/video/whatsappMp4';
 import { useTimelineState } from './useTimelineState';
 import TimelineTracks from './TimelineTracks';
 import TimelineRuler from './TimelineRuler';
