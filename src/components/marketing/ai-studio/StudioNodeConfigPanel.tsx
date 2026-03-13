@@ -68,6 +68,7 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma', cost: '$$', quality: 4, tip: 'Boa física e movimentos' },
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico' },
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
+  { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
