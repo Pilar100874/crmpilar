@@ -938,6 +938,10 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       // Kling accepts 5 or 10
       params.duration = rawDur <= 7 ? 5 : 10;
       break;
+    case "replicate":
+      // LTX-Video accepts 2-10s
+      params.duration = Math.min(10, Math.max(2, Math.round(rawDur)));
+      break;
     default:
       // Luma, Stability, etc. — keep as-is or default
       params.duration = Math.max(4, Math.round(rawDur));
