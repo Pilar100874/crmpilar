@@ -78,6 +78,7 @@ const LAYERS: Layer[] = [
       { id: 'dream-machine', label: 'Dream Machine', emoji: '💭' },
       { id: 'seed-video', label: 'Seed Video', emoji: '🌱' },
       { id: 'svd', label: 'Stable Video Diffusion', emoji: '⚡' },
+      { id: 'ltx-video', label: 'LTX-Video 2', emoji: '🔮' },
     ],
   },
   {
