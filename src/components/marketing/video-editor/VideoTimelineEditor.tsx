@@ -1136,9 +1136,10 @@ const VideoTimelineEditor: React.FC = () => {
                 variant="secondary"
                 className="gap-1.5 text-xs h-8 shadow-lg"
                 onClick={handleDownloadExported}
+                disabled={isConverting}
               >
-                <Download className="h-3.5 w-3.5" />
-                Baixar
+                {isConverting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                {isConverting ? 'Convertendo...' : 'Baixar MP4'}
               </Button>
               <Button
                 size="sm"
