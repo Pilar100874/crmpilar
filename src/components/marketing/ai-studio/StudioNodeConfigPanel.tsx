@@ -112,6 +112,11 @@ const MUSIC_MODELS: ModelInfo[] = [
   { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, experimental' },
   { value: 'meta/musicgen-large', label: '🔵 MusicGen Large', provider: 'Meta', cost: '$', quality: 3, tip: 'Open source, versátil' },
   { value: 'meta/musicgen-melody', label: '🔵 MusicGen Melody', provider: 'Meta', cost: '$', quality: 3, tip: 'Segue melodias de referência' },
+  // Apiframe music models
+  { value: 'apiframe/suno', label: '⚡ AF: Suno AI', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 2 créditos' },
+  { value: 'apiframe/udio', label: '⚡ AF: Udio', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 1-2 créditos' },
+  { value: 'apiframe/producer-ai', label: '⚡ AF: Producer AI', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, instrumental' },
+  { value: 'apiframe/eleven-music', label: '⚡ AF: Eleven Music', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, ElevenLabs' },
 ];
 
 // Voices / Locutores
