@@ -49,6 +49,17 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs', cost: '$', quality: 3, tip: 'Ultra rápido, qualidade OK' },
   { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram', cost: '$$', quality: 4, tip: 'Excelente com texto em imagens' },
   { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe', cost: '$$$', quality: 4, tip: 'Comercialmente seguro, boa qualidade' },
+  // Apiframe models
+  { value: 'apiframe/midjourney', label: '⚡ AF: Midjourney', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4-6 créditos' },
+  { value: 'apiframe/flux-schnell', label: '⚡ AF: Flux Schnell', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe, 1 crédito' },
+  { value: 'apiframe/flux-pro', label: '⚡ AF: Flux Pro', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 1 crédito' },
+  { value: 'apiframe/ideogram', label: '⚡ AF: Ideogram v3', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 3 créditos' },
+  { value: 'apiframe/dall-e', label: '⚡ AF: DALL-E', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/nano-banana', label: '⚡ AF: Nano Banana', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  { value: 'apiframe/kling-image', label: '⚡ AF: Kling Image', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
 ];
 
 const VIDEO_MODELS: ModelInfo[] = [
