@@ -604,6 +604,14 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                           onTogglePlayback={togglePlayback}
                         />
                       )}
+
+                      {/* Apiframe credit balance & info */}
+                      {selectedProviderData.id === 'apiframe' && (
+                        <ApiframeBalancePanel
+                          apiKey={apiKeys['apiframe'] || ''}
+                          estabelecimentoId={estabelecimentoId}
+                        />
+                      )}
                     </div>
                   </ScrollArea>
                 ) : (
