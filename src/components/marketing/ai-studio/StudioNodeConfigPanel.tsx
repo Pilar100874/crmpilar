@@ -49,6 +49,17 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs', cost: '$', quality: 3, tip: 'Ultra rápido, qualidade OK' },
   { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram', cost: '$$', quality: 4, tip: 'Excelente com texto em imagens' },
   { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe', cost: '$$$', quality: 4, tip: 'Comercialmente seguro, boa qualidade' },
+  // Apiframe models
+  { value: 'apiframe/midjourney', label: '⚡ AF: Midjourney', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4-6 créditos' },
+  { value: 'apiframe/flux-schnell', label: '⚡ AF: Flux Schnell', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe, 1 crédito' },
+  { value: 'apiframe/flux-pro', label: '⚡ AF: Flux Pro', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 1 crédito' },
+  { value: 'apiframe/ideogram', label: '⚡ AF: Ideogram v3', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 3 créditos' },
+  { value: 'apiframe/dall-e', label: '⚡ AF: DALL-E', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/nano-banana', label: '⚡ AF: Nano Banana', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  { value: 'apiframe/kling-image', label: '⚡ AF: Kling Image', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
 ];
 
 const VIDEO_MODELS: ModelInfo[] = [
@@ -69,6 +80,14 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico' },
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
+  // Apiframe video models
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, vídeo text-to-video' },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway ML', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
+  { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
@@ -93,6 +112,11 @@ const MUSIC_MODELS: ModelInfo[] = [
   { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, experimental' },
   { value: 'meta/musicgen-large', label: '🔵 MusicGen Large', provider: 'Meta', cost: '$', quality: 3, tip: 'Open source, versátil' },
   { value: 'meta/musicgen-melody', label: '🔵 MusicGen Melody', provider: 'Meta', cost: '$', quality: 3, tip: 'Segue melodias de referência' },
+  // Apiframe music models
+  { value: 'apiframe/suno', label: '⚡ AF: Suno AI', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 2 créditos' },
+  { value: 'apiframe/udio', label: '⚡ AF: Udio', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 1-2 créditos' },
+  { value: 'apiframe/producer-ai', label: '⚡ AF: Producer AI', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, instrumental' },
+  { value: 'apiframe/eleven-music', label: '⚡ AF: Eleven Music', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, ElevenLabs' },
 ];
 
 // Voices / Locutores
