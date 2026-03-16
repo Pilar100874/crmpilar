@@ -632,6 +632,208 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   );
 };
 
+// ── Apiframe Balance Panel subcomponent ────────────────────────────────────
+
+interface ApiframeBalancePanelProps {
+  apiKey: string;
+  estabelecimentoId: string;
+}
+
+const APIFRAME_MODELS_INFO = [
+  { category: '🎨 Imagem', models: ['Midjourney v6/v7', 'Flux (Schnell/Pro/Dev)', 'Ideogram v3', 'DALL-E', 'GPT Image', 'Kling Image', 'Nano Banana', 'Seedream', 'Reve'] },
+  { category: '🎬 Vídeo', models: ['Midjourney Video', 'Runway ML (Gen-3/Gen-4)', 'Kling 2.5/2.6', 'Luma AI', 'Google Veo', 'Sora 2'] },
+  { category: '🎵 Música', models: ['Suno AI', 'Udio', 'Producer AI', 'Eleven Music'] },
+  { category: '📸 Headshots', models: ['AI Headshots (Apiframe)'] },
+];
+
+const APIFRAME_CREDITS_TABLE = [
+  { action: 'Midjourney Imagine', credits: '4-6' },
+  { action: 'Flux Imagine', credits: '1' },
+  { action: 'Ideogram v3', credits: '3' },
+  { action: 'Runway ML', credits: '4' },
+  { action: 'Kling 2.6 (5s)', credits: '10' },
+  { action: 'Kling 2.6 (10s)', credits: '20' },
+  { action: 'Luma Imagine', credits: '6' },
+  { action: 'Suno Imagine', credits: '2' },
+  { action: 'Udio', credits: '1-2' },
+  { action: 'Faceswap', credits: '2' },
+];
+
+const ApiframeBalancePanel: React.FC<ApiframeBalancePanelProps> = ({ apiKey, estabelecimentoId }) => {
+  const [balance, setBalance] = useState<{ credits: number; plan: string; email: string; total_images: number } | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+
+  const checkBalance = async () => {
+    if (!apiKey) { toast.error('Configure a API Key primeiro'); return; }
+    setLoadingBalance(true);
+    setBalanceError(null);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/apiframe-proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ action: 'account', estabelecimentoId }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) {
+        setBalanceError(data.error || 'Erro ao consultar saldo');
+        return;
+      }
+      setBalance(data);
+      if (data.credits <= 0) {
+        toast.error('⚠️ Seus créditos no Apiframe acabaram! Recarregue em app.apiframe.ai para continuar gerando conteúdo.', { duration: 8000 });
+      } else if (data.credits < 10) {
+        toast.warning(`⚠️ Saldo baixo no Apiframe: ${data.credits} créditos restantes. Considere recarregar.`, { duration: 6000 });
+      }
+    } catch (err) {
+      setBalanceError('Erro de conexão ao verificar saldo');
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  useEffect(() => {
+    if (apiKey) checkBalance();
+  }, [apiKey]);
+
+  return (
+    <div className="space-y-5">
+      <Separator className="bg-border" />
+
+      {/* Balance Card */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+            </div>
+            Saldo de Créditos
+          </h4>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={checkBalance}
+            disabled={loadingBalance || !apiKey}
+            className="gap-1.5 text-xs"
+          >
+            {loadingBalance ? <Loader2 className="h-3 w-3 animate-spin" /> : <Settings2 className="h-3 w-3" />}
+            Atualizar
+          </Button>
+        </div>
+
+        {balanceError ? (
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              <AlertCircle className="h-4 w-4" />
+              {balanceError}
+            </p>
+          </div>
+        ) : balance ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className={`rounded-lg border p-3 text-center ${balance.credits <= 0 ? 'bg-destructive/10 border-destructive/30' : balance.credits < 10 ? 'bg-warning/10 border-warning/30' : 'bg-success/10 border-success/30'}`}>
+                <p className="text-2xl font-bold text-foreground">{balance.credits.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Créditos</p>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{balance.total_images.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Gerado</p>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-center">
+                <p className="text-lg font-bold text-foreground capitalize">{balance.plan}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Plano</p>
+              </div>
+            </div>
+
+            {balance.credits <= 0 && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                <p className="text-sm text-destructive font-semibold">⚠️ Créditos esgotados!</p>
+                <p className="text-xs text-destructive/80 mt-1">Todas as gerações via Apiframe estão pausadas. Recarregue seus créditos para continuar.</p>
+                <a
+                  href="https://app.apiframe.ai/dashboard/billing/subscription"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-semibold mt-2"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Recarregar Créditos
+                </a>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{apiKey ? 'Carregando saldo...' : 'Configure a API Key para ver o saldo.'}</p>
+        )}
+      </div>
+
+      {/* Available Models */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </div>
+          Modelos Disponíveis
+        </h4>
+        <p className="text-[11px] text-muted-foreground">
+          Com o Apiframe, você tem acesso a todos estes modelos usando uma única API Key. Eles aparecerão nos blocos do Studio com a tag <Badge variant="outline" className="text-[9px] px-1 py-0 mx-0.5">AF</Badge>.
+        </p>
+        <div className="space-y-3">
+          {APIFRAME_MODELS_INFO.map(({ category, models }) => (
+            <div key={category}>
+              <p className="text-xs font-semibold text-foreground mb-1.5">{category}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {models.map(m => (
+                  <Badge key={m} variant="outline" className="text-[10px] px-2 py-0.5 font-normal">{m}</Badge>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Credits Cost Table */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <DollarSign className="h-3.5 w-3.5 text-primary" />
+          </div>
+          Custo por Ação (Créditos)
+        </h4>
+        <div className="rounded-lg border border-border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground">Ação</th>
+                <th className="text-right px-3 py-2 text-xs font-semibold text-muted-foreground">Créditos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {APIFRAME_CREDITS_TABLE.map(({ action, credits }) => (
+                <tr key={action} className="border-t border-border/50">
+                  <td className="px-3 py-1.5 text-xs text-foreground">{action}</td>
+                  <td className="px-3 py-1.5 text-xs text-right font-mono text-muted-foreground">{credits}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <a
+          href="https://docs.apiframe.ai/my-account/image-credits"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium"
+        >
+          <ExternalLink className="h-3 w-3" />
+          Ver tabela completa de preços
+        </a>
+      </div>
+    </div>
+  );
+};
+
 // ── ElevenLabs extra configuration subcomponent ────────────────────────────
 
 interface ELExtraProps {
