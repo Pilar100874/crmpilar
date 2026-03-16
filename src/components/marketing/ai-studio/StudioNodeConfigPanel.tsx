@@ -80,6 +80,14 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico' },
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
+  // Apiframe video models
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, vídeo text-to-video' },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway ML', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
+  { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
