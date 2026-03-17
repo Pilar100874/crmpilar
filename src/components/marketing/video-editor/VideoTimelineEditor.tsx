@@ -761,6 +761,7 @@ const VideoTimelineEditor: React.FC = () => {
 
   const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
     if (clip.type === 'effect' && clip.effectType) {
+      setEditingEffectClipId(clip.id);
       setPreviewEffectFromTimeline(clip.effectType);
       return;
     }
