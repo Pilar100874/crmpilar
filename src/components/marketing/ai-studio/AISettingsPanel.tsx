@@ -242,8 +242,25 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
     if (open) {
       loadKeys();
       setStudioDefaults(getStudioDefaults(estabelecimentoId));
+      setActiveUnified(getActiveUnifiedProvider(estabelecimentoId));
     }
   }, [open, loadKeys, estabelecimentoId]);
+
+  const handleToggleUnified = (providerId: string) => {
+    if (activeUnified === providerId) {
+      setActiveUnifiedProvider(estabelecimentoId, null);
+      setActiveUnified(null);
+      toast.info('API unificada desativada. Modelos individuais serão exibidos.');
+    } else {
+      if (!apiKeys[providerId]) {
+        toast.error('Configure a API Key antes de ativar.');
+        return;
+      }
+      setActiveUnifiedProvider(estabelecimentoId, providerId);
+      setActiveUnified(providerId);
+      toast.success(`${UNIFIED_PROVIDERS.find(u => u.id === providerId)?.name} ativada! Modelos das outras APIs unificadas foram ocultados.`);
+    }
+  };
 
   const handleSave = async (providerId: string) => {
     if (!estabelecimentoId) { toast.error('Estabelecimento não encontrado'); return; }
