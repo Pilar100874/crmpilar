@@ -172,7 +172,7 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = 
   }, []);
 
   useEffect(() => {
-    if (isHovering) {
+    if (isHovering || autoPlay) {
       startRef.current = 0;
       rafRef.current = requestAnimationFrame(animate);
     } else {
@@ -180,7 +180,7 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = 
       setProgress(0);
     }
     return () => cancelAnimationFrame(rafRef.current);
-  }, [isHovering, animate]);
+  }, [isHovering, autoPlay, animate]);
 
   const overlay = isHovering ? getOverlayStyleMini(effectType, progress) : null;
 
