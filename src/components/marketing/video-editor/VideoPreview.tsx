@@ -112,7 +112,203 @@ function getTransitionStyle(
   }
 }
 
-const VideoPreview: React.FC<Props> = ({
+// Overlay effects that render BETWEEN clips during transitions
+function getOverlayStyle(
+  type: TransitionType,
+  progress: number // 0 = start of transition, 1 = end
+): { style: React.CSSProperties; elements: ReactNode } | null {
+  // Bell curve for intensity: peaks at 0.5
+  const bell = Math.sin(progress * Math.PI);
+  // Quick flash curve: peaks at 0.3
+  const flash = progress < 0.3 ? progress / 0.3 : (1 - progress) / 0.7;
+  const flashI = Math.pow(flash, 0.5);
+
+  const noOverlay = { style: {} as React.CSSProperties, elements: null as ReactNode };
+
+  switch (type) {
+    // Light flash for fades
+    case 'fade':
+    case 'dissolve':
+    case 'crossfade':
+      return {
+        style: { background: `radial-gradient(ellipse at center, rgba(255,255,255,${bell * 0.35}), transparent 70%)` },
+        elements: null,
+      };
+
+    case 'flash':
+    case 'light-leak':
+      return {
+        style: { background: `radial-gradient(ellipse at 40% 40%, rgba(255,240,200,${bell * 0.7}), rgba(255,180,100,${bell * 0.3}) 50%, transparent 80%)`, mixBlendMode: 'screen' },
+        elements: null,
+      };
+
+    case 'film-burn':
+      return {
+        style: {
+          background: `radial-gradient(ellipse at 60% 30%, rgba(255,120,40,${bell * 0.6}), rgba(255,60,10,${bell * 0.3}) 40%, transparent 70%)`,
+          mixBlendMode: 'screen',
+        },
+        elements: (
+          <>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: `radial-gradient(ellipse at 20% 70%, rgba(255,200,50,${bell * 0.4}), transparent 60%)`,
+              mixBlendMode: 'screen',
+            }} />
+          </>
+        ),
+      };
+
+    case 'fade-blur':
+    case 'blur-transition':
+      return {
+        style: { background: `rgba(255,255,255,${bell * 0.15})`, backdropFilter: `blur(${bell * 4}px)` },
+        elements: null,
+      };
+
+    case 'luma-fade':
+      return {
+        style: { background: `linear-gradient(to bottom, rgba(255,255,255,${bell * 0.3}), rgba(0,0,0,${bell * 0.2}))`, mixBlendMode: 'overlay' },
+        elements: null,
+      };
+
+    case 'glitch':
+      const r = Math.sin(progress * 50) * bell * 6;
+      return {
+        style: {},
+        elements: (
+          <>
+            <div style={{ position: 'absolute', inset: 0, background: `rgba(255,0,0,${bell * 0.2})`, transform: `translateX(${r}px)`, mixBlendMode: 'screen' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `rgba(0,255,255,${bell * 0.2})`, transform: `translateX(${-r}px)`, mixBlendMode: 'screen' }} />
+            {bell > 0.3 && (
+              <div style={{
+                position: 'absolute', left: 0, right: 0,
+                top: `${30 + Math.sin(progress * 80) * 20}%`, height: `${2 + bell * 4}%`,
+                background: `rgba(255,255,255,${bell * 0.5})`, mixBlendMode: 'overlay',
+              }} />
+            )}
+          </>
+        ),
+      };
+
+    case 'whip-pan':
+      return {
+        style: { background: `linear-gradient(90deg, transparent, rgba(255,255,255,${bell * 0.3}), transparent)`, backdropFilter: `blur(${bell * 8}px)` },
+        elements: null,
+      };
+
+    case 'cross-zoom':
+      return {
+        style: { background: `radial-gradient(circle at center, transparent 20%, rgba(255,255,255,${bell * 0.4}) 60%, transparent 90%)`, mixBlendMode: 'screen' },
+        elements: null,
+      };
+
+    case 'zoom-in':
+    case 'zoom-out':
+    case 'scale-up':
+    case 'scale-down':
+      return {
+        style: { background: `radial-gradient(circle at center, rgba(255,255,255,${flashI * 0.2}), transparent 60%)` },
+        elements: null,
+      };
+
+    case 'wipe-left':
+    case 'wipe-right':
+    case 'wipe-up':
+    case 'wipe-down':
+    case 'color-wipe': {
+      const isH = type === 'wipe-left' || type === 'wipe-right' || type === 'color-wipe';
+      const dir = isH ? '90deg' : '180deg';
+      const pos = progress * 100;
+      return {
+        style: {
+          background: `linear-gradient(${dir}, transparent ${pos - 5}%, rgba(255,255,255,${0.6}) ${pos}%, transparent ${pos + 5}%)`,
+          mixBlendMode: 'screen',
+        },
+        elements: null,
+      };
+    }
+
+    case 'wipe-circle':
+    case 'iris-open':
+    case 'iris-close':
+    case 'radial-wipe': {
+      const radius = progress * 75;
+      return {
+        style: {},
+        elements: (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(circle ${radius + 3}% at 50% 50%, transparent ${radius - 2}%, rgba(255,255,255,0.5) ${radius}%, transparent ${radius + 4}%)`,
+            mixBlendMode: 'screen',
+          }} />
+        ),
+      };
+    }
+
+    case 'cube-left':
+    case 'cube-right':
+    case 'page-curl':
+    case 'flip-x':
+    case 'flip-y':
+      return {
+        style: { background: `linear-gradient(135deg, rgba(255,255,255,${bell * 0.15}), transparent 50%, rgba(0,0,0,${bell * 0.2}))`, mixBlendMode: 'overlay' },
+        elements: null,
+      };
+
+    case 'spin-out':
+    case 'spiral':
+    case 'cross-spin':
+      return {
+        style: { background: `conic-gradient(from ${progress * 360}deg, transparent, rgba(255,255,255,${bell * 0.2}), transparent)`, mixBlendMode: 'screen' },
+        elements: null,
+      };
+
+    case 'ripple':
+      return {
+        style: {},
+        elements: (
+          <>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                position: 'absolute', inset: 0,
+                border: `2px solid rgba(255,255,255,${bell * 0.3 * (1 - i * 0.3)})`,
+                borderRadius: '50%',
+                transform: `scale(${0.3 + progress * 0.7 + i * 0.15})`,
+              }} />
+            ))}
+          </>
+        ),
+      };
+
+    case 'bounce':
+    case 'elastic':
+    case 'drop':
+      return {
+        style: { background: `radial-gradient(ellipse at 50% 80%, rgba(255,255,255,${flashI * 0.25}), transparent 60%)` },
+        elements: null,
+      };
+
+    case 'pixelate':
+    case 'mosaic':
+      return {
+        style: { background: `rgba(255,255,255,${bell * 0.1})`, backdropFilter: `blur(${bell * 3}px)` },
+        elements: null,
+      };
+
+    default:
+      // Subtle light for any other transition
+      if (bell > 0.05) {
+        return {
+          style: { background: `radial-gradient(ellipse at center, rgba(255,255,255,${bell * 0.15}), transparent 65%)` },
+          elements: null,
+        };
+      }
+      return null;
+  }
+}
+
+
   clips, currentTime, tracks, isPlaying,
   selectedClipIds = [], onUpdateClip, onSelectClip,
   previewingTransition, previewingFilter, resolution = '1920x1080',
