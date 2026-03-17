@@ -20,7 +20,7 @@ import FloatingEffectsToolbar from './FloatingEffectsToolbar';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
-import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS } from './types';
+import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS, TransitionType } from './types';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -732,6 +732,23 @@ const VideoTimelineEditor: React.FC = () => {
     });
   }, [timeline]);
 
+  const handleAddEffectClip = useCallback((trackId: string, startTime: number, effectType: TransitionType, label: string) => {
+    timeline.addClip({
+      trackId,
+      type: 'effect',
+      name: `✨ ${label}`,
+      startTime: Math.max(0, startTime),
+      duration: 2, // default 2 seconds
+      trimStart: 0,
+      trimEnd: 0,
+      color: TRACK_COLORS.effect,
+      volume: 1,
+      opacity: 1,
+      filters: [],
+      effectType,
+    });
+  }, [timeline]);
+
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
@@ -1107,7 +1124,7 @@ const VideoTimelineEditor: React.FC = () => {
                   <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
                     <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
                   </div>
-                  <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
+                  <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} />
                 </div>
               </div>
             </div>

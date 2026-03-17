@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { TimelineClip } from './types';
+import { TimelineClip, EFFECT_TRACK_PRESETS } from './types';
 import { Settings2 } from 'lucide-react';
 
 interface Props {
@@ -102,7 +102,29 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
           />
         </div>
 
-        {/* Position & Size */}
+        {/* Effect Type — for effect track clips */}
+        {clip.type === 'effect' && (
+          <div>
+            <Label className="text-xs font-semibold">Tipo de Efeito</Label>
+            <div className="grid grid-cols-2 gap-1 mt-1.5 max-h-48 overflow-auto">
+              {EFFECT_TRACK_PRESETS.map(preset => (
+                <button
+                  key={preset.type}
+                  className={`flex items-center gap-1 p-1.5 rounded-md text-left transition-colors border ${
+                    clip.effectType === preset.type
+                      ? 'bg-primary/20 border-primary text-foreground'
+                      : 'border-transparent hover:bg-accent text-muted-foreground'
+                  }`}
+                  onClick={() => onUpdateClip(clip.id, { effectType: preset.type, name: `✨ ${preset.label}` })}
+                >
+                  <span className="text-xs">{preset.icon}</span>
+                  <span className="text-[10px] truncate">{preset.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {(clip.type === 'video' || clip.type === 'image') && (
           <div>
             <Label className="text-xs font-semibold">Posição e Tamanho</Label>

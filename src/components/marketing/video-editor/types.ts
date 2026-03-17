@@ -24,6 +24,8 @@ export interface TimelineClip {
   y?: number;
   w?: number;
   h?: number;
+  // For effect track clips: the visual overlay effect type
+  effectType?: TransitionType;
 }
 
 export interface VideoFilter {
@@ -528,6 +530,37 @@ export const EFFECT_PRESETS: EffectPreset[] = [
       { type: 'hue-rotate', label: 'Matiz', value: 40, enabled: true },
     ],
   },
+];
+
+// Presets specifically for the Effects track — standalone visual overlays
+export const EFFECT_TRACK_PRESETS: { type: TransitionType; label: string; icon: string; description: string; category: string }[] = [
+  // Luz & Flash
+  { type: 'flash', label: 'Flash', icon: '⚡', description: 'Lampejo branco cinematográfico', category: 'Luz' },
+  { type: 'light-leak', label: 'Light Leak', icon: '🔆', description: 'Vazamento de luz dourada', category: 'Luz' },
+  { type: 'film-burn', label: 'Film Burn', icon: '🎞️', description: 'Queima de filme analógico', category: 'Luz' },
+  { type: 'luma-fade', label: 'Luma Fade', icon: '🌓', description: 'Fade por luminosidade', category: 'Luz' },
+  // Distorção
+  { type: 'glitch', label: 'Glitch', icon: '📺', description: 'Distorção digital RGB', category: 'Distorção' },
+  { type: 'shake', label: 'Shake', icon: '📳', description: 'Tremor de câmera', category: 'Distorção' },
+  { type: 'ripple', label: 'Ripple', icon: '🌊', description: 'Ondulação líquida', category: 'Distorção' },
+  { type: 'pixelate', label: 'Pixelate', icon: '🟩', description: 'Pixelização progressiva', category: 'Distorção' },
+  { type: 'mosaic', label: 'Mosaico', icon: '🧩', description: 'Transição em mosaico', category: 'Distorção' },
+  // Blur & Foco
+  { type: 'blur-transition', label: 'Blur', icon: '💫', description: 'Desfoque progressivo', category: 'Blur' },
+  { type: 'fade-blur', label: 'Fade + Blur', icon: '🌀', description: 'Fade com desfoque', category: 'Blur' },
+  // Movimento
+  { type: 'whip-pan', label: 'Whip Pan', icon: '🎬', description: 'Pan rápido com motion blur', category: 'Movimento' },
+  { type: 'cross-zoom', label: 'Cross Zoom', icon: '🔭', description: 'Zoom cruzado', category: 'Movimento' },
+  { type: 'cross-spin', label: 'Cross Spin', icon: '💫', description: 'Rotação cruzada', category: 'Movimento' },
+  // Revelação
+  { type: 'wipe-circle', label: 'Wipe Círculo', icon: '⭕', description: 'Revelação circular do centro', category: 'Revelação' },
+  { type: 'iris-open', label: 'Iris Open', icon: '👁️', description: 'Abertura tipo íris', category: 'Revelação' },
+  { type: 'radial-wipe', label: 'Radial Wipe', icon: '☀️', description: 'Wipe radial do centro', category: 'Revelação' },
+  { type: 'clock-wipe', label: 'Clock Wipe', icon: '🕐', description: 'Wipe circular tipo relógio', category: 'Revelação' },
+  // Especiais
+  { type: 'color-wipe', label: 'Color Wipe', icon: '🎨', description: 'Wipe com cor sólida', category: 'Especial' },
+  { type: 'fade', label: 'Fade', icon: '🌫️', description: 'Aparece/desaparece suavemente', category: 'Especial' },
+  { type: 'dissolve', label: 'Dissolve', icon: '✨', description: 'Dissolução com partículas', category: 'Especial' },
 ];
 
 export const TRACK_COLORS: Record<string, string> = {

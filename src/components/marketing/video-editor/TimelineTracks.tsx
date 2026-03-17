@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { TimelineState, TimelineClip, TRACK_COLORS } from './types';
+import { TimelineState, TimelineClip, TRACK_COLORS, EFFECT_TRACK_PRESETS, TransitionType } from './types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -30,12 +31,15 @@ interface Props {
   onSeek: (time: number) => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
   onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
+  onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const [dragMediaType, setDragMediaType] = useState<string | null>(null);
+  const [effectPopover, setEffectPopover] = useState<{ trackId: string; startTime: number; x: number; y: number } | null>(null);
+  const [effectCategory, setEffectCategory] = useState<string | null>(null);
   const draggingRef = useRef<{
     clipId: string;
     type: 'move' | 'resize-start' | 'resize-end';
@@ -244,7 +248,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     <div
       ref={containerRef}
       className="flex-1 overflow-auto relative"
-      onClick={handleTrackClick}
+      onClick={(e) => { handleTrackClick(e); setEffectPopover(null); }}
       onDragEnd={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
       onDrop={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
     >
@@ -272,6 +276,15 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               onDragOver={(e) => handleExternalDragOver(e, track)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleExternalDrop(e, track)}
+              onDoubleClick={(e) => {
+                if (track.type === 'effect' && !track.locked && !(e.target as HTMLElement).closest('.timeline-clip') && onAddEffectClip) {
+                  e.stopPropagation();
+                  const rect = containerRef.current?.getBoundingClientRect();
+                  const x = e.clientX - (rect?.left || 0) + (containerRef.current?.scrollLeft || 0);
+                  setEffectPopover({ trackId: track.id, startTime: x / state.zoom, x: e.clientX, y: e.clientY });
+                  setEffectCategory(null);
+                }
+              }}
             >
               {/* Left color indicator */}
               <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: `${TRACK_COLORS[track.type] || TRACK_COLORS.video}60` }} />
@@ -377,6 +390,13 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                   </div>
                 );
               })}
+
+              {/* Hint for empty effect tracks */}
+              {track.type === 'effect' && trackClips.length === 0 && !track.locked && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-[9px] text-muted-foreground/50">Dê duplo-clique para adicionar efeito</span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -386,6 +406,54 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           style={{ left: state.currentTime * state.zoom }}
         />
       </div>
+
+      {/* Effect type selection popover */}
+      {effectPopover && onAddEffectClip && (
+        <div
+          className="fixed z-[100] bg-popover border border-border rounded-lg shadow-xl p-2 w-64 max-h-80 overflow-auto"
+          style={{ left: effectPopover.x, top: effectPopover.y - 10, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[10px] font-semibold text-foreground px-1">✨ Adicionar Efeito na Track</p>
+            <button className="text-[10px] text-muted-foreground hover:text-foreground px-1" onClick={() => setEffectPopover(null)}>✕</button>
+          </div>
+
+          {/* Category tabs */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {Array.from(new Set(EFFECT_TRACK_PRESETS.map(p => p.category))).map(cat => (
+              <button
+                key={cat}
+                className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${effectCategory === cat ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'}`}
+                onClick={() => setEffectCategory(effectCategory === cat ? null : cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Effect items */}
+          <div className="grid grid-cols-2 gap-1">
+            {EFFECT_TRACK_PRESETS
+              .filter(p => !effectCategory || p.category === effectCategory)
+              .map(preset => (
+                <button
+                  key={preset.type}
+                  className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-accent text-left transition-colors"
+                  onClick={() => {
+                    onAddEffectClip(effectPopover.trackId, effectPopover.startTime, preset.type, preset.label);
+                    setEffectPopover(null);
+                  }}
+                >
+                  <span className="text-sm">{preset.icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-medium text-foreground truncate">{preset.label}</p>
+                    <p className="text-[8px] text-muted-foreground truncate">{preset.description}</p>
+                  </div>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
