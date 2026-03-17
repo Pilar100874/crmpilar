@@ -40,8 +40,6 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const [dragMediaType, setDragMediaType] = useState<string | null>(null);
   const [effectPopover, setEffectPopover] = useState<{ trackId: string; startTime: number; x: number; y: number } | null>(null);
   const [effectCategory, setEffectCategory] = useState<string | null>(null);
-  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
-  const [dragMediaType, setDragMediaType] = useState<string | null>(null);
   const draggingRef = useRef<{
     clipId: string;
     type: 'move' | 'resize-start' | 'resize-end';
