@@ -182,7 +182,8 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = 
     return () => cancelAnimationFrame(rafRef.current);
   }, [isHovering, autoPlay, animate]);
 
-  const overlay = isHovering ? getOverlayStyleMini(effectType, progress) : null;
+  const active = isHovering || autoPlay;
+  const overlay = active ? getOverlayStyleMini(effectType, progress) : null;
 
   return (
     <div
@@ -203,8 +204,8 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = 
           {overlay.elements}
         </div>
       )}
-      {/* Play hint when not hovering */}
-      {!isHovering && (
+      {/* Play hint when not active */}
+      {!active && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-4 h-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <div className="w-0 h-0 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent border-l-[5px] border-l-white/70 ml-0.5" />
