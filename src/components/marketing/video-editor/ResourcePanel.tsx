@@ -477,36 +477,43 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
                 {!isCollapsed && !isEffectTab && (
                   <div className="px-2 pb-2 pt-1.5 space-y-1.5">
-                    {/* Action buttons */}
-                    <div className="flex gap-1">
-                      {tab.key === 'canvas' ? (
-                        <>
-                          <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                            <Palette className="h-3 w-3" />Criar
-                          </Button>
-                          <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
-                            <Upload className="h-3 w-3" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          {(tab.key === 'video' || tab.key === 'image') && (
-                            <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                              <FolderOpen className="h-3 w-3" />Galeria
+                    {/* Action buttons — skip for transition tab (auto-populated) */}
+                    {tab.key !== 'transition' && (
+                      <div className="flex gap-1">
+                        {tab.key === 'canvas' ? (
+                          <>
+                            <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                              <Palette className="h-3 w-3" />Criar
                             </Button>
-                          )}
-                          <Button
-                            onClick={() => getInputRef(tab.key)?.current?.click()}
-                            variant="outline"
-                            className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
-                            title="Upload do computador"
-                          >
-                            <Upload className="h-3 w-3" />
-                            {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                            <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
+                              <Upload className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            {(tab.key === 'video' || tab.key === 'image') && (
+                              <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                                <FolderOpen className="h-3 w-3" />Galeria
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => getInputRef(tab.key)?.current?.click()}
+                              variant="outline"
+                              className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
+                              title="Upload do computador"
+                            >
+                              <Upload className="h-3 w-3" />
+                              {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {tab.key === 'transition' && sectionItems.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground text-center py-2 italic">
+                        Use o botão ✨ na timeline para gerar vídeos de transição AI entre clipes
+                      </p>
+                    )}
                     {/* Items */}
                     {renderSectionItems(tab, sectionItems)}
                   </div>
