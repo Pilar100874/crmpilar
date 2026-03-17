@@ -53,6 +53,8 @@ const VideoTimelineEditor: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(300);
+  const [rightPanelWidth, setRightPanelWidth] = useState(288); // 72 * 4 = 288px (w-72)
+  const rightPanelDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const resizingRef = useRef(false);
   const resizeStartRef = useRef({ y: 0, height: 0 });
   const [showResizeBar, setShowResizeBar] = useState(true);
