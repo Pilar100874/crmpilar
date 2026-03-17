@@ -106,6 +106,7 @@ const nodeIconColorMap: Record<string, string> = {
   galleryPose: 'text-indigo-400',
   galleryRoupa: 'text-fuchsia-400',
   gallerySalvas: 'text-blue-400',
+  mediaGallery: 'text-sky-400',
   textStyle: 'text-rose-400',
   textContent: 'text-violet-400',
   llmProcess: 'text-sky-400',
