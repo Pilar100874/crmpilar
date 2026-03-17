@@ -11,6 +11,7 @@ import {
   FolderOpen,
   
   Workflow,
+  Key,
   Link2,
   Server,
   GitBranch,
