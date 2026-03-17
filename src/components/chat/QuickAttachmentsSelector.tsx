@@ -85,11 +85,11 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     const estabId = await getEstabelecimentoId();
     if (!estabId) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from("media_gallery")
       .select("id, nome, tipo, public_url, thumbnail_url")
-      .eq("estabelecimento_id", estabId)
-      .eq("disponivel_chat" as any, true)
+      .eq("estabelecimento_id", estabId) as any)
+      .eq("disponivel_chat", true)
       .order("created_at", { ascending: false });
 
     if (error) {
