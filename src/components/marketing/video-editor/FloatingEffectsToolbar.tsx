@@ -438,44 +438,35 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
 
                 <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
-                  <div className="p-2 space-y-1.5">
+                  <div className="p-2 space-y-2">
                     {TRANSITION_CATEGORIES.map(cat => {
-                      const isExpanded = expandedCategories[cat.id] !== false;
                       const presets = TRANSITION_PRESETS.filter(p => cat.types.includes(p.type));
                       const activeType = transitionPhase === 'entrance' ? entranceTransition?.type : exitTransition?.type;
-                      const hasActive = presets.some(p => p.type === activeType);
 
                       return (
-                        <div key={cat.id} className={`border rounded-lg overflow-hidden ${hasActive ? 'border-primary/30' : ''}`}>
-                          <button
-                            onClick={() => setExpandedCategories(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
-                            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
-                          >
-                            {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                        <div key={cat.id}>
+                          <div className="flex items-center gap-1.5 px-1 mb-1">
                             <span className="text-xs">{cat.icon}</span>
-                            <span className="text-[10px] font-semibold flex-1">{cat.label}</span>
-                            {hasActive && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                            <span className="text-[8px] text-muted-foreground">{presets.length}</span>
-                          </button>
-                          {isExpanded && (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 p-1.5">
-                              {presets.map(preset => {
-                                const isActive = activeType === preset.type;
-                                return (
-                                  <button
-                                    key={preset.type}
-                                    onClick={() => setTransition(transitionPhase, preset.type)}
-                                    className={`flex flex-col items-center gap-0.5 p-1.5 rounded-md border transition-all ${
-                                      isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
-                                    }`}
-                                  >
-                                    <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={36} />
-                                    <span className="text-[7px] font-medium leading-tight">{preset.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
+                            <span className="text-[10px] font-semibold text-muted-foreground">{cat.label}</span>
+                            <span className="text-[8px] text-muted-foreground/60">({presets.length})</span>
+                          </div>
+                          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                            {presets.map(preset => {
+                              const isActive = activeType === preset.type;
+                              return (
+                                <button
+                                  key={preset.type}
+                                  onClick={() => setTransition(transitionPhase, preset.type)}
+                                  className={`flex-shrink-0 flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all w-[72px] ${
+                                    isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
+                                  }`}
+                                >
+                                  <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={40} />
+                                  <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
