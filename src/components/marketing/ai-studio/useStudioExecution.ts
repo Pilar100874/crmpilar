@@ -379,6 +379,21 @@ export function useStudioExecution() {
         return null;
       }
 
+      case 'mediaGallery': {
+        if (config.selectedUrl) {
+          const isVideo = config.mediaType === 'video';
+          if (isVideo) {
+            return { videoUrl: config.selectedUrl };
+          }
+          return { 
+            imageUrls: [config.selectedUrl], 
+            imageUrl: config.selectedUrl,
+            _referenceDesc: 'Use esta mídia da galeria como referência.',
+          };
+        }
+        return null;
+      }
+
       case 'textStyle':
         return {
           text: config.text || '',
@@ -1401,7 +1416,7 @@ export function useStudioExecution() {
               // Only re-execute processing nodes in the path, not pure inputs or galleries
               const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'productImageSelect', 'multiProductSelect',
                 'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura',
-                'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
+                'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas', 'mediaGallery'];
               return ancestors.has(id) && !inputTypes.includes(nType);
             });
 

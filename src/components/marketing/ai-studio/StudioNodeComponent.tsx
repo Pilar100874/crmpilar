@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import GallerySelectInline from './GallerySelectInline';
+import MediaGallerySelectInline from './MediaGallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
 import VideoTrimmer from './VideoTrimmer';
 import { 
@@ -37,6 +38,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   galleryPose: Move,
   galleryRoupa: Box,
   gallerySalvas: FolderOpen,
+  mediaGallery: FolderOpen,
   textStyle: TypeIcon,
   textContent: FileText,
   platformFormat: Monitor,
@@ -71,6 +73,7 @@ const nodeGradientMap: Record<string, string> = {
   galleryPose: 'from-indigo-500/20 to-blue-500/20',
   galleryRoupa: 'from-fuchsia-500/20 to-purple-500/20',
   gallerySalvas: 'from-blue-500/20 to-sky-500/20',
+  mediaGallery: 'from-sky-500/20 to-blue-500/20',
   textStyle: 'from-rose-500/20 to-pink-500/20',
   textContent: 'from-violet-500/20 to-purple-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
@@ -104,6 +107,7 @@ const nodeIconColorMap: Record<string, string> = {
   galleryPose: 'text-indigo-400',
   galleryRoupa: 'text-fuchsia-400',
   gallerySalvas: 'text-blue-400',
+  mediaGallery: 'text-sky-400',
   textStyle: 'text-rose-400',
   textContent: 'text-violet-400',
   llmProcess: 'text-sky-400',
@@ -137,6 +141,7 @@ const nodeAccentMap: Record<string, string> = {
   galleryPose: '#6366f1',
   galleryRoupa: '#d946ef',
   gallerySalvas: '#3b82f6',
+  mediaGallery: '#0ea5e9',
   textStyle: '#e11d48',
   textContent: '#7c3aed',
   llmProcess: '#0ea5e9',
@@ -570,7 +575,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'platformFormat', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -632,7 +637,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
-  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl)) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl) || (nodeData.type === 'mediaGallery' && nodeData.config?.selectedUrl)) ? 340 : 280;
 
   // Inline edit handler
   const handleInlineUpdate = useCallback((key: string, value: any) => {
@@ -984,6 +989,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {isGalleryType && (
           <GallerySelectInline
             categoria={galleryCategoryMap[nodeData.type]}
+            config={nodeData.config}
+            onUpdate={handleInlineUpdate}
+          />
+        )}
+
+        {/* Media Gallery inline selector */}
+        {nodeData.type === 'mediaGallery' && (
+          <MediaGallerySelectInline
             config={nodeData.config}
             onUpdate={handleInlineUpdate}
           />

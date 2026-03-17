@@ -33,6 +33,7 @@ export type StudioNodeType =
   | 'mediaCorrection'
   | 'loopOutput'
   | 'randomPick'
+  | 'mediaGallery'
   | 'output';
 
 export interface StudioNodeData {
@@ -370,6 +371,21 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🎲',
         color: '#e11d48',
         defaultConfig: { galleryCategory: 'salvas' },
+      },
+    ],
+  },
+  {
+    id: 'media',
+    label: 'Mídia',
+    icon: '📂',
+    nodes: [
+      {
+        type: 'mediaGallery',
+        label: 'Galeria',
+        description: 'Selecione imagens ou vídeos da galeria de mídia',
+        icon: '📂',
+        color: '#0ea5e9',
+        defaultConfig: { mediaType: 'image', selectedUrl: '', selectedName: '', selectedId: '' },
       },
     ],
   },
