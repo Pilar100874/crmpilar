@@ -6,6 +6,8 @@ export type StudioNodeType =
   | 'systemPrompt'
   | 'imageInput'
   | 'multiImageRef'
+  | 'videoInput'
+  | 'multiVideoRef'
   | 'productImageSelect'
   | 'multiProductSelect'
   | 'galleryInfluencer'
@@ -100,6 +102,22 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🖼️🖼️',
         color: '#e67e22',
         defaultConfig: { images: [], referenceRole: '' },
+      },
+      {
+        type: 'videoInput',
+        label: 'Vídeo de Referência',
+        description: 'Carregue vídeos como referência para geração',
+        icon: '🎬',
+        color: '#f59e0b',
+        defaultConfig: { videos: [] },
+      },
+      {
+        type: 'multiVideoRef',
+        label: 'Referências Múltiplas de Vídeo',
+        description: 'Selecione vários vídeos de referência (upload ou galeria)',
+        icon: '🎬🎬',
+        color: '#d97706',
+        defaultConfig: { videos: [] },
       },
       {
         type: 'productImageSelect',
@@ -371,21 +389,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🎲',
         color: '#e11d48',
         defaultConfig: { galleryCategory: 'salvas' },
-      },
-    ],
-  },
-  {
-    id: 'media',
-    label: 'Mídia',
-    icon: '📂',
-    nodes: [
-      {
-        type: 'mediaGallery',
-        label: 'Galeria',
-        description: 'Selecione imagens ou vídeos da galeria de mídia',
-        icon: '📂',
-        color: '#0ea5e9',
-        defaultConfig: { mediaType: 'image', selectedUrl: '', selectedName: '', selectedId: '' },
       },
     ],
   },

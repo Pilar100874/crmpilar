@@ -12,7 +12,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string 
   'ai-video': { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)', dot: '#f59e0b' },
   'ai-audio': { bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.15)', dot: '#22c55e' },
   loop: { bg: 'rgba(124,58,237,0.08)', border: 'rgba(124,58,237,0.15)', dot: '#7c3aed' },
-  media: { bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.15)', dot: '#0ea5e9' },
+  
   output: { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.15)', dot: '#64748b' },
   refinement: { bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.15)', dot: '#f97316' },
 };
