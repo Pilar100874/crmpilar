@@ -301,13 +301,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleExternalDrop(e, track)}
               onDoubleClick={(e) => {
-                if (track.type === 'effect' && !track.locked && !(e.target as HTMLElement).closest('.timeline-clip') && onAddEffectClip) {
-                  e.stopPropagation();
-                  const rect = containerRef.current?.getBoundingClientRect();
-                  const x = e.clientX - (rect?.left || 0) + (containerRef.current?.scrollLeft || 0);
-                  setEffectPopover({ trackId: track.id, startTime: x / state.zoom, x: e.clientX, y: e.clientY });
-                  setEffectCategory(null);
-                }
+                // Effect track double-click to add effects removed per user request
               }}
             >
               {/* Left color indicator */}
