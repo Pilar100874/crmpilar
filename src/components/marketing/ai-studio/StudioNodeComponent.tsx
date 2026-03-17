@@ -406,6 +406,7 @@ const ImageInputWithGallery: React.FC<{
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [gallerySearch, setGallerySearch] = useState('');
   const [loadingGallery, setLoadingGallery] = useState(false);
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchGalleryImages = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -426,7 +427,8 @@ const ImageInputWithGallery: React.FC<{
     if (showGalleryPicker && galleryImages.length === 0) fetchGalleryImages();
   }, [showGalleryPicker, fetchGalleryImages, galleryImages.length]);
 
-  const filteredGallery = galleryImages.filter(img =>
+  const { folders, filteredItems: folderFilteredGallery } = getFilteredItems(galleryImages);
+  const filteredGallery = folderFilteredGallery.filter(img =>
     !gallerySearch || img.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
   );
 
