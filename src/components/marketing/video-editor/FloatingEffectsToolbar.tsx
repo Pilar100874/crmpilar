@@ -437,7 +437,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
 
-                <ScrollArea className="max-h-[280px]">
+                <ScrollArea className="max-h-[50vh]">
                   <div className="p-2 space-y-1.5">
                     {TRANSITION_CATEGORIES.map(cat => {
                       const isExpanded = expandedCategories[cat.id] !== false;
