@@ -994,6 +994,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           />
         )}
 
+        {/* Media Gallery inline selector */}
+        {nodeData.type === 'mediaGallery' && (
+          <MediaGallerySelectInline
+            config={nodeData.config}
+            onUpdate={handleInlineUpdate}
+          />
+        )}
+
         {/* Text Style inline editor */}
         {nodeData.type === 'textStyle' && (
           <div className="px-3 pb-3 pt-1 space-y-2">
