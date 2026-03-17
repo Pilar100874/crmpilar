@@ -545,6 +545,11 @@ async function generateVideoLuma(apiKey: string, params: any): Promise<VideoGene
   };
   if (params.imageUrls?.[0]?.startsWith("http")) {
     body.keyframes = { frame0: { type: "image", url: params.imageUrls[0] } };
+    // Bridge mode: add end keyframe for Luma
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      body.keyframes.frame1 = { type: "image", url: params.imageUrls[1] };
+      console.log(`[generate_video] Luma bridge mode: frame0 (start) + frame1 (end)`);
+    }
   }
 
   const response = await fetch("https://api.lumalabs.ai/dream-machine/v1/generations", {
