@@ -72,6 +72,7 @@ const nodeGradientMap: Record<string, string> = {
   galleryPose: 'from-indigo-500/20 to-blue-500/20',
   galleryRoupa: 'from-fuchsia-500/20 to-purple-500/20',
   gallerySalvas: 'from-blue-500/20 to-sky-500/20',
+  mediaGallery: 'from-sky-500/20 to-blue-500/20',
   textStyle: 'from-rose-500/20 to-pink-500/20',
   textContent: 'from-violet-500/20 to-purple-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
