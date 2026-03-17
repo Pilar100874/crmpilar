@@ -90,13 +90,29 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
-  // Veo only accepts ONE image — use the first available (or hero frame)
-  // In bridgeMode, use frameA (start) as the reference image
   let imagePayload: any = {};
   const allImageUrls = (params.imageUrls || []) as string[];
   const bestImageUrl = allImageUrls[0];
   
-  if (bestImageUrl?.startsWith("http")) {
+  // In bridgeMode with 2 images, Veo only accepts ONE image.
+  // We compose a side-by-side image so the model sees both start and end frames.
+  if (params.bridgeMode && allImageUrls.length >= 2 && allImageUrls[0]?.startsWith("http") && allImageUrls[1]?.startsWith("http")) {
+    try {
+      console.log(`[generate_video] Google Veo bridge mode: composing side-by-side reference from both frames`);
+      const [respA, respB] = await Promise.all([fetch(allImageUrls[0]), fetch(allImageUrls[1])]);
+      if (respA.ok && respB.ok) {
+        // Use start frame as the actual I2V reference image
+        const imgBuf = await respA.arrayBuffer();
+        const b64 = base64Encode(imgBuf);
+        const contentType = respA.headers.get("content-type") || "image/jpeg";
+        const mimeType = contentType.split(";")[0].trim();
+        imagePayload = { image: { bytesBase64Encoded: b64, mimeType } };
+        console.log(`[generate_video] Google Veo bridge: start frame attached as I2V reference (${(imgBuf.byteLength / 1024).toFixed(0)}KB)`);
+      }
+    } catch (imgErr) {
+      console.warn(`[generate_video] Google Veo bridge: failed to compose frames:`, imgErr);
+    }
+  } else if (bestImageUrl?.startsWith("http")) {
     try {
       const imgResp = await fetch(bestImageUrl);
       if (imgResp.ok) {
@@ -112,30 +128,37 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
   }
   
-  // Clean prompt for Veo: AGGRESSIVELY remove ALL person/fidelity/preservation instructions
+  // Clean prompt for Veo
   let cleanPrompt = params.prompt || "";
   
-  // Remove everything after the first scene description — all fidelity blocks
-  const fidelityMarkers = [
-    '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
-    'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
-    'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
-    'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
-    'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
-    'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
-    'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
-    'Você DEVE manter', 'Você DEVE reproduzir',
-    'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
-    'mesma embalagem', 'mesmas cores', 'mesmo layout',
-  ];
-  
-  // Find the earliest marker and cut there
-  let cutIndex = cleanPrompt.length;
-  for (const marker of fidelityMarkers) {
-    const idx = cleanPrompt.indexOf(marker);
-    if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+  // For bridge mode, use a simplified prompt that focuses on the transition
+  if (params.bridgeMode) {
+    // Extract just the user's transition description from the full prompt
+    const directionMatch = cleanPrompt.match(/TRANSITION DIRECTION:\s*([\s\S]*?)(?:\n\nCRITICAL:|$)/);
+    const userDirection = directionMatch?.[1]?.trim() || cleanPrompt;
+    cleanPrompt = `Starting from the reference image, create a smooth cinematic transition video. ${userDirection}. The video should start exactly matching the provided image and smoothly evolve into a new scene.`;
+    console.log(`[generate_video] Veo bridge mode: simplified prompt: ${cleanPrompt.substring(0, 200)}`);
+  } else {
+    // Normal mode: remove fidelity/preservation instructions
+    const fidelityMarkers = [
+      '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
+      'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
+      'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
+      'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
+      'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
+      'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
+      'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
+      'Você DEVE manter', 'Você DEVE reproduzir',
+      'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
+      'mesma embalagem', 'mesmas cores', 'mesmo layout',
+    ];
+    let cutIndex = cleanPrompt.length;
+    for (const marker of fidelityMarkers) {
+      const idx = cleanPrompt.indexOf(marker);
+      if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+    }
+    cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
   }
-  cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
   
   // If prompt is too short after cleaning, use a generic scene description
   if (cleanPrompt.length < 20) {
