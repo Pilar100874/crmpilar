@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search, X } from "lucide-react";
+import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search, X, Video, Play } from "lucide-react";
 import { getFileTypeIcon } from "@/lib/imageUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,14 @@ interface QuickAttachment {
   thumbnail_url?: string | null;
 }
 
+interface GalleryMediaItem {
+  id: string;
+  nome: string;
+  tipo: string;
+  public_url: string;
+  thumbnail_url: string | null;
+}
+
 interface QuickAttachmentsSelectorProps {
   onSelect: (attachment: QuickAttachment) => void;
   disabled?: boolean;
@@ -39,12 +47,16 @@ interface QuickAttachmentsSelectorProps {
 export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAttachmentsSelectorProps) {
   const [open, setOpen] = useState(false);
   const [quickAttachments, setQuickAttachments] = useState<QuickAttachment[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryMediaItem[]>([]);
+  const [galleryVideos, setGalleryVideos] = useState<GalleryMediaItem[]>([]);
   const [previewImage, setPreviewImage] = useState<QuickAttachment | null>(null);
+  const [previewVideo, setPreviewVideo] = useState<GalleryMediaItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (open) {
       loadQuickAttachments();
+      loadGalleryMedia();
     }
   }, [open]);
 
@@ -69,11 +81,48 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     setQuickAttachments((data || []) as QuickAttachment[]);
   };
 
+  const loadGalleryMedia = async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const { data, error } = await supabase
+      .from("media_gallery")
+      .select("id, nome, tipo, public_url, thumbnail_url")
+      .eq("estabelecimento_id", estabId)
+      .eq("disponivel_chat" as any, true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar galeria:", error);
+      return;
+    }
+
+    const items = (data || []) as GalleryMediaItem[];
+    setGalleryImages(items.filter(i => i.tipo === 'image'));
+    setGalleryVideos(items.filter(i => i.tipo === 'video'));
+  };
+
   const handleSelect = (attachment: QuickAttachment) => {
     onSelect(attachment);
     setOpen(false);
     setPreviewImage(null);
     toast.success(`${attachment.title} selecionado`);
+  };
+
+  const handleGallerySelect = (item: GalleryMediaItem) => {
+    const asAttachment: QuickAttachment = {
+      id: item.id,
+      title: item.nome,
+      type: 'file',
+      url: item.public_url,
+      is_global: false,
+      file_type: item.tipo === 'video' ? 'video' : 'image',
+      thumbnail_url: item.thumbnail_url,
+    };
+    onSelect(asAttachment);
+    setOpen(false);
+    setPreviewVideo(null);
+    toast.success(`${item.nome} selecionado`);
   };
 
   const handleImageClick = (attachment: QuickAttachment) => {
@@ -87,6 +136,14 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
   // Filter by search query
   const filteredAttachments = quickAttachments.filter((attachment) =>
     attachment.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredGalleryImages = galleryImages.filter(i =>
+    i.nome.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredGalleryVideos = galleryVideos.filter(i =>
+    i.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const links = filteredAttachments.filter((a) => a.type === "link");
