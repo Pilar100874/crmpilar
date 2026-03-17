@@ -379,6 +379,21 @@ export function useStudioExecution() {
         return null;
       }
 
+      case 'mediaGallery': {
+        if (config.selectedUrl) {
+          const isVideo = config.mediaType === 'video';
+          if (isVideo) {
+            return { videoUrl: config.selectedUrl };
+          }
+          return { 
+            imageUrls: [config.selectedUrl], 
+            imageUrl: config.selectedUrl,
+            _referenceDesc: 'Use esta mídia da galeria como referência.',
+          };
+        }
+        return null;
+      }
+
       case 'textStyle':
         return {
           text: config.text || '',
