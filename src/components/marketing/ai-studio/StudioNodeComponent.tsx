@@ -140,6 +140,7 @@ const nodeAccentMap: Record<string, string> = {
   galleryPose: '#6366f1',
   galleryRoupa: '#d946ef',
   gallerySalvas: '#3b82f6',
+  mediaGallery: '#0ea5e9',
   textStyle: '#e11d48',
   textContent: '#7c3aed',
   llmProcess: '#0ea5e9',
