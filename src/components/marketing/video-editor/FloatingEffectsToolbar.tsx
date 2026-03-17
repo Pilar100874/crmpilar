@@ -373,9 +373,28 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
+    <div
+      ref={toolbarRef}
+      className="fixed z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200"
+      style={{
+        bottom: position.y === 0 ? '16px' : 'auto',
+        left: position.x === 0 ? '50%' : 'auto',
+        transform: position.x === 0 && position.y === 0 ? 'translateX(-50%)' : 'none',
+        top: position.y !== 0 ? `${position.y}px` : undefined,
+        left: position.x !== 0 ? `${position.x}px` : position.x === 0 ? '50%' : undefined,
+      }}
+    >
       <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-3 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
+        <div className={`flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-1 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max ${isDragging ? 'cursor-grabbing' : ''}`}>
+
+          {/* Drag handle */}
+          <div
+            className="flex items-center justify-center w-7 h-8 cursor-grab active:cursor-grabbing rounded-full hover:bg-muted/60 transition-colors shrink-0"
+            onMouseDown={handleDragStart}
+            title="Arraste para mover"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground/60" />
+          </div>
 
           {/* Clip info */}
           <div className="flex items-center gap-1.5 pr-2 border-r border-border/40">
