@@ -90,7 +90,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [presetInitialSelections, setPresetInitialSelections] = useState<Record<string, string[]> | undefined>(undefined);
   const [reloadingPresetNodeId, setReloadingPresetNodeId] = useState<string | null>(null);
   const [showCanvas, setShowCanvas] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [pendingPreset, setPendingPreset] = useState<Preset | null>(null);
@@ -1173,10 +1173,6 @@ const AICreativeStudioInner: React.FC = () => {
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Workflow
               </Button>
-              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
-                <Settings2 className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                Config
-              </Button>
               <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Galeria
@@ -1350,7 +1346,6 @@ const AICreativeStudioInner: React.FC = () => {
 
         </div>
 
-        <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
         <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
 
@@ -1489,16 +1484,9 @@ const AICreativeStudioInner: React.FC = () => {
           <Button size="icon" variant="ghost" onClick={() => setShowPresets(true)} className="h-7 w-7 sm:hidden shrink-0" title="Presets">
             <Clapperboard className="h-3 w-3" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => setShowSettings(true)} className="h-7 w-7 sm:hidden shrink-0" title="Config">
-            <Settings2 className="h-3 w-3" />
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
-            <Settings2 className="h-3.5 w-3.5" />
-            Config
           </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
@@ -1665,7 +1653,7 @@ const AICreativeStudioInner: React.FC = () => {
         )}
       </div>
 
-      <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
+      
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
 
