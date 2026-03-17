@@ -56,10 +56,10 @@ export const UNIFIED_PROVIDERS: UnifiedProvider[] = [
     keyPlaceholder: 'YOUR_AIMLAPI_KEY',
     coveredModelPrefixes: ['aimlapi/'],
     availableModels: [
-      { category: '🎨 Imagem', models: ['Flux Pro/Dev/Schnell', 'DALL-E 3', 'Stable Diffusion 3/XL', 'Midjourney', 'Ideogram', 'Recraft V3'] },
-      { category: '🎬 Vídeo', models: ['Runway Gen-3', 'Kling v2', 'Luma Dream Machine', 'Minimax Video', 'CogVideoX', 'Haiper 2.0'] },
-      { category: '🔊 Áudio', models: ['ElevenLabs TTS', 'OpenAI TTS', 'Xtts-v2'] },
-      { category: '🎵 Música', models: ['Suno v4', 'Udio v2', 'MusicGen'] },
+      { category: '🎨 Imagem', models: ['Flux Pro/Dev/Schnell', 'DALL-E 3', 'Stable Diffusion 3/XL', 'Midjourney', 'Ideogram', 'Recraft V3', 'Playground v3'] },
+      { category: '🎬 Vídeo', models: ['Runway Gen-3', 'Kling v2', 'Luma Dream Machine', 'Minimax Video', 'CogVideoX', 'Haiper 2.0', 'Pika', 'Wan Video', 'Stable Video'] },
+      { category: '🔊 Áudio', models: ['ElevenLabs TTS', 'OpenAI TTS', 'Xtts-v2', 'Bark'] },
+      { category: '🎵 Música', models: ['Suno v4', 'Udio v2', 'MusicGen', 'Stable Audio'] },
     ],
     creditsTable: [
       { action: 'Flux Schnell', credits: '$0.003' },
@@ -69,6 +69,7 @@ export const UNIFIED_PROVIDERS: UnifiedProvider[] = [
       { action: 'Runway Gen-3 (5s)', credits: '$0.25' },
       { action: 'Kling v2 (5s)', credits: '$0.28' },
       { action: 'Luma (5s)', credits: '$0.20' },
+      { action: 'Pika (4s)', credits: '$0.15' },
       { action: 'ElevenLabs TTS', credits: '$0.30/1k chars' },
       { action: 'Suno v4', credits: '$0.05' },
     ],
