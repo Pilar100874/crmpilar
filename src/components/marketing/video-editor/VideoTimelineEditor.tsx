@@ -756,6 +756,57 @@ const VideoTimelineEditor: React.FC = () => {
     });
   }, [timeline]);
 
+  const handleOpenBridgeVideo = useCallback(() => {
+    const selected = state.selectedClipIds;
+    if (selected.length !== 2) {
+      toast.error('Selecione exatamente 2 clipes adjacentes (vídeo ou imagem) para criar o vídeo de transição');
+      return;
+    }
+    const clips = selected.map(id => state.clips.find(c => c.id === id)).filter(Boolean) as TimelineClip[];
+    const validTypes = ['video', 'image', 'canvas'];
+    if (!clips.every(c => validTypes.includes(c.type))) {
+      toast.error('Os clipes selecionados devem ser do tipo vídeo, imagem ou canvas');
+      return;
+    }
+    // Sort by startTime
+    clips.sort((a, b) => a.startTime - b.startTime);
+    setBridgeClipA(clips[0]);
+    setBridgeClipB(clips[1]);
+    setBridgeDialogOpen(true);
+  }, [state.selectedClipIds, state.clips]);
+
+  const handleBridgeVideoGenerated = useCallback((videoUrl: string, duration: number) => {
+    if (!bridgeClipA || !bridgeClipB) return;
+    // Insert the generated video between the two clips
+    const insertTime = bridgeClipA.startTime + bridgeClipA.duration;
+    // Shift clipB and all later clips to make room
+    const gap = duration;
+    state.clips.forEach(c => {
+      if (c.startTime >= insertTime && c.id !== bridgeClipA!.id) {
+        timeline.updateClip(c.id, { startTime: c.startTime + gap });
+      }
+    });
+
+    // Find a video track
+    const videoTrack = state.tracks.find(t => t.type === 'video');
+    if (!videoTrack) return;
+
+    timeline.addClip({
+      trackId: bridgeClipA.trackId,
+      type: 'video',
+      name: `🎬 Transição AI`,
+      startTime: insertTime,
+      duration: duration,
+      trimStart: 0,
+      trimEnd: 0,
+      color: TRACK_COLORS.video,
+      volume: 1,
+      opacity: 1,
+      filters: [],
+      src: videoUrl,
+    });
+  }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
+
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
