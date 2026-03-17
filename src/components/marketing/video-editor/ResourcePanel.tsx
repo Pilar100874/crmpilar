@@ -115,7 +115,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         canvasJson,
       };
       setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
-      setActiveTab('canvas');
+      // tab auto-switched by section visibility
     },
     updateCanvasItem: (itemId: string, src: string, canvasJson: string) => {
       setItems(prev => ({
