@@ -1171,10 +1171,9 @@ const VideoTimelineEditor: React.FC = () => {
                 <span className="text-[10px] text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
               </div>
             )}
-            {(!showResizeBar || !showStatusBar) && (
+            {!showStatusBar && (
               <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20 border-b border-border/20">
-                {!showResizeBar && !previewCollapsed && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>↕ Resize</button>}
-                {!showStatusBar && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>}
+                <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>
               </div>
             )}
           </div>
