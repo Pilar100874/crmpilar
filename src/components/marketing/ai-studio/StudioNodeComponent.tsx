@@ -1089,8 +1089,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             nodeType={nodeData.type}
           />
         )}
+        {/* Video input with inline upload + gallery */}
+        {(nodeData.type === 'videoInput' || nodeData.type === 'multiVideoRef') && (
+          <VideoInputWithGallery
+            videos={nodeData.config.videos || []}
+            onUpdateVideos={(vids) => handleInlineUpdate('videos', vids)}
+            nodeType={nodeData.type}
+          />
+        )}
 
-        {/* Product image select inline display */}
         {nodeData.type === 'productImageSelect' && (
           <ProductImageSelectInline config={nodeData.config} onUpdate={handleInlineUpdate} />
         )}
