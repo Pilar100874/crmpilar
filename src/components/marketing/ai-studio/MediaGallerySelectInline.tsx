@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, ImageIcon, Film, Loader2, X } from 'lucide-react';
+import { useGalleryFolders } from '@/hooks/useGalleryFolders';
+import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 
 interface MediaGallerySelectInlineProps {
   config: Record<string, any>;
@@ -12,6 +14,7 @@ const MediaGallerySelectInline: React.FC<MediaGallerySelectInlineProps> = ({ con
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchItems = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -33,7 +36,8 @@ const MediaGallerySelectInline: React.FC<MediaGallerySelectInlineProps> = ({ con
     fetchItems();
   }, [fetchItems]);
 
-  const filtered = items.filter(i =>
+  const { folders, filteredItems: folderFiltered } = getFilteredItems(items);
+  const filtered = folderFiltered.filter(i =>
     !search || i.nome?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -94,6 +98,11 @@ const MediaGallerySelectInline: React.FC<MediaGallerySelectInlineProps> = ({ con
             </button>
           </div>
         </div>
+      )}
+
+      {/* Folder tabs */}
+      {folders.length > 0 && (
+        <GalleryFolderTabs folders={folders} activeFolder={activeFolder} onSelectFolder={setActiveFolder} />
       )}
 
       {/* Search */}

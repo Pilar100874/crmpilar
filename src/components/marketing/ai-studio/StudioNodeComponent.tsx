@@ -634,6 +634,9 @@ const VideoInputWithGallery: React.FC<{
               className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
             >✕ Fechar</button>
           </div>
+          {folders.length > 0 && (
+            <GalleryFolderTabs folders={folders} activeFolder={activeFolder} onSelectFolder={setActiveFolder} />
+          )}
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <input
