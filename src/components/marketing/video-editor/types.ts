@@ -24,6 +24,8 @@ export interface TimelineClip {
   y?: number;
   w?: number;
   h?: number;
+  // For effect track clips: the visual overlay effect type
+  effectType?: TransitionType;
 }
 
 export interface VideoFilter {
