@@ -42,7 +42,7 @@ import { MarketingCatalogo } from '@/components/marketing/catalogo';
 import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing';
 import { AICreativeStudio } from '@/components/marketing/ai-studio';
 import { VideoTimelineEditor } from '@/components/marketing/video-editor';
-import ElevenLabsConfig from '@/components/marketing/ElevenLabsConfig';
+
 
 interface TabItem {
   id: string;
