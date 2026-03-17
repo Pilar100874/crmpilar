@@ -17,7 +17,8 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
-  GripVertical
+  GripVertical,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG, PublishChannel } from './types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import VideoTrimmer from './ai-studio/VideoTrimmer';
 import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
@@ -60,6 +63,7 @@ interface MarketingContentItem {
   created_at: string;
   _source?: 'marketing_content' | 'media_gallery';
   _folder?: string | null;
+  disponivel_chat?: boolean;
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
@@ -168,6 +172,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
             status: null,
             created_at: item.created_at || new Date().toISOString(),
             _source: 'media_gallery' as const,
+            disponivel_chat: item.disponivel_chat || false,
           }));
         }
       }
@@ -228,6 +233,23 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
 
     window.open(item.content_url, '_blank');
   };
+
+  const handleToggleDisponibilidadeChat = useCallback(async (item: MarketingContentItem) => {
+    if (item._source !== 'media_gallery') return;
+    const newValue = !item.disponivel_chat;
+    try {
+      const { error } = await supabase
+        .from('media_gallery')
+        .update({ disponivel_chat: newValue } as any)
+        .eq('id', item.id);
+      if (error) throw error;
+      setContent(prev => prev.map(c => c.id === item.id ? { ...c, disponivel_chat: newValue } : c));
+      toast.success(newValue ? 'Disponível no chat ✅' : 'Removido do chat');
+    } catch (err) {
+      console.error('Erro ao atualizar disponibilidade:', err);
+      toast.error('Erro ao atualizar');
+    }
+  }, []);
 
   const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
@@ -584,6 +606,31 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                             {RETURN_TYPE_LABELS[item.content_type as ReturnType] || item.content_type}
                           </Badge>
                         </div>
+
+                        {/* Toggle para disponibilidade no chat */}
+                        {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="flex items-center gap-2 mb-2 cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageSquare className={`h-3.5 w-3.5 ${item.disponivel_chat ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  <span className="text-xs text-muted-foreground">Chat</span>
+                                  <Switch
+                                    checked={!!item.disponivel_chat}
+                                    onCheckedChange={() => handleToggleDisponibilidadeChat(item)}
+                                    className="scale-75"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {item.disponivel_chat ? 'Disponível nos anexos rápidos do chat' : 'Habilitar para anexos rápidos do chat'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
 
                         {item.channels && item.channels.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-3">
