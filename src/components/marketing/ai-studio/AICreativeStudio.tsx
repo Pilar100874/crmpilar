@@ -1484,9 +1484,6 @@ const AICreativeStudioInner: React.FC = () => {
           <Button size="icon" variant="ghost" onClick={() => setShowPresets(true)} className="h-7 w-7 sm:hidden shrink-0" title="Presets">
             <Clapperboard className="h-3 w-3" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => setShowSettings(true)} className="h-7 w-7 sm:hidden shrink-0" title="Config">
-            <Settings2 className="h-3 w-3" />
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
