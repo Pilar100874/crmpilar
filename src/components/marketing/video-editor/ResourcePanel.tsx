@@ -67,7 +67,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
 
 const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAddEffectClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
   const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
-    video: [], image: [], canvas: [], music: [], audio: [],
+    video: [], image: [], canvas: [], music: [], audio: [], transition: [],
   });
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
