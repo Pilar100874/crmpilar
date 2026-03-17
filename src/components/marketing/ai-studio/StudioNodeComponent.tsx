@@ -571,6 +571,7 @@ const VideoInputWithGallery: React.FC<{
   const [galleryVideos, setGalleryVideos] = useState<any[]>([]);
   const [gallerySearch, setGallerySearch] = useState('');
   const [loadingGallery, setLoadingGallery] = useState(false);
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchGalleryVideos = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -591,7 +592,8 @@ const VideoInputWithGallery: React.FC<{
     if (showGalleryPicker && galleryVideos.length === 0) fetchGalleryVideos();
   }, [showGalleryPicker, fetchGalleryVideos, galleryVideos.length]);
 
-  const filteredGallery = galleryVideos.filter(v =>
+  const { folders, filteredItems: folderFilteredGallery } = getFilteredItems(galleryVideos);
+  const filteredGallery = folderFilteredGallery.filter(v =>
     !gallerySearch || v.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
   );
 
