@@ -274,7 +274,7 @@ const MiniFilterPreview: React.FC<{
 const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({ basic: true });
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({ basic: true, movement: true, scale: true, dynamic: true, reveal: true, special: true });
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
