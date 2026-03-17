@@ -196,17 +196,122 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
               />
             </div>
           </div>
-          <Tabs defaultValue="links" className="w-full">
-            <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
-              <TabsTrigger value="links" className="gap-2">
-                <LinkIcon className="h-4 w-4" />
+          <Tabs defaultValue="gallery-images" className="w-full">
+            <TabsList className="w-full grid grid-cols-4 rounded-none border-b">
+              <TabsTrigger value="gallery-images" className="gap-1.5 text-xs">
+                <ImageIcon className="h-3.5 w-3.5" />
+                Imagens ({filteredGalleryImages.length})
+              </TabsTrigger>
+              <TabsTrigger value="gallery-videos" className="gap-1.5 text-xs">
+                <Video className="h-3.5 w-3.5" />
+                Vídeos ({filteredGalleryVideos.length})
+              </TabsTrigger>
+              <TabsTrigger value="links" className="gap-1.5 text-xs">
+                <LinkIcon className="h-3.5 w-3.5" />
                 Links ({links.length})
               </TabsTrigger>
-              <TabsTrigger value="files" className="gap-2">
-                <FileUp className="h-4 w-4" />
+              <TabsTrigger value="files" className="gap-1.5 text-xs">
+                <FileUp className="h-3.5 w-3.5" />
                 Arquivos ({files.length})
               </TabsTrigger>
             </TabsList>
+
+          {/* Gallery Images Tab */}
+          <TabsContent value="gallery-images" className="mt-0">
+            <ScrollArea className="h-[400px]">
+              <div className="p-3">
+                {filteredGalleryImages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma imagem habilitada para o chat
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Habilite imagens na Galeria de Conteúdo do Marketing
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredGalleryImages.map((item) => (
+                      <Card
+                        key={item.id}
+                        className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
+                        onClick={() => handleGallerySelect(item)}
+                      >
+                        <div className="aspect-square relative">
+                          <img 
+                            src={item.thumbnail_url || item.public_url} 
+                            alt={item.nome}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <ZoomIn className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                        <div className="p-2 border-t bg-background">
+                          <p className="text-xs font-medium truncate">{item.nome}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Gallery Videos Tab */}
+          <TabsContent value="gallery-videos" className="mt-0">
+            <ScrollArea className="h-[400px]">
+              <div className="p-3">
+                {filteredGalleryVideos.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum vídeo habilitado para o chat
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Habilite vídeos na Galeria de Conteúdo do Marketing
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredGalleryVideos.map((item) => (
+                      <Card
+                        key={item.id}
+                        className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
+                        onClick={() => {
+                          setPreviewVideo(item);
+                        }}
+                      >
+                        <div className="aspect-video relative bg-black">
+                          {item.thumbnail_url ? (
+                            <img 
+                              src={item.thumbnail_url} 
+                              alt={item.nome}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video 
+                              src={item.public_url}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play className="h-8 w-8 text-white fill-white" />
+                          </div>
+                        </div>
+                        <div className="p-2 border-t bg-background">
+                          <p className="text-xs font-medium truncate">{item.nome}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
 
           <TabsContent value="links" className="mt-0">
             <ScrollArea className="h-[400px]">
