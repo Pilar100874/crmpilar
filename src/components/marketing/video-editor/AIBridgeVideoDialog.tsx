@@ -360,41 +360,65 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
       const trimStart = Math.max(0, clip.trimStart || 0);
       const trimEnd = Math.max(0, clip.trimEnd || 0);
+      const maxVideoTime = Math.max(0, video.duration - 0.001);
       const mediaEnd = Math.max(trimStart, video.duration - trimEnd);
       const visibleEnd = Math.max(trimStart, Math.min(mediaEnd, trimStart + Math.max(clip.duration, 0)));
-      const endFrameOffset = Math.max(1 / 30, 0.034);
-      const targetTime = position === 'first'
-        ? Math.min(trimStart, Math.max(0, video.duration - 0.001))
-        : Math.max(trimStart, Math.min(Math.max(0, video.duration - 0.001), visibleEnd - endFrameOffset));
+      const clampedVisibleEnd = Math.max(trimStart, Math.min(maxVideoTime, visibleEnd));
+      const captureCandidates = position === 'first'
+        ? [Math.max(0, Math.min(maxVideoTime, trimStart + 0.001)), Math.max(0, Math.min(maxVideoTime, trimStart))]
+        : Array.from(new Set([
+            clampedVisibleEnd,
+            Math.max(trimStart, clampedVisibleEnd - 0.001),
+            Math.max(trimStart, clampedVisibleEnd - 1 / 240),
+            Math.max(trimStart, clampedVisibleEnd - 1 / 120),
+            Math.max(trimStart, clampedVisibleEnd - 1 / 60),
+            Math.max(trimStart, clampedVisibleEnd - 1 / 30),
+          ].map((time) => Number(time.toFixed(6)))));
 
-      await seekVideoPrecisely(video, targetTime);
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      let selectedTime = captureCandidates[0] ?? 0;
+      let captured = false;
+
+      for (const candidateTime of captureCandidates) {
+        await seekVideoPrecisely(video, candidateTime);
+        video.pause();
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        if (!video.videoWidth || !video.videoHeight) continue;
+
+        selectedTime = candidateTime;
+
+        try {
+          const bitmap = await createImageBitmap(video);
+          drawContain(ctx, bitmap, bitmap.width, bitmap.height);
+          bitmap.close();
+          captured = true;
+          break;
+        } catch {
+          drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+          captured = true;
+          break;
+        }
+      }
 
       console.log('[AI Bridge] frame capture', {
         clipName: clip.name,
         position,
-        targetTime,
+        captureCandidates,
+        selectedTime,
         currentTime: video.currentTime,
         duration: video.duration,
         trimStart,
         trimEnd,
         visibleEnd,
+        clampedVisibleEnd,
         readyState: video.readyState,
         videoWidth: video.videoWidth,
         videoHeight: video.videoHeight,
         src: clip.src,
       });
 
-      if (!video.videoWidth || !video.videoHeight) {
+      if (!captured) {
         throw new Error(`Vídeo sem frame decodificado: ${clip.name}`);
-      }
-
-      try {
-        const bitmap = await createImageBitmap(video);
-        drawContain(ctx, bitmap, bitmap.width, bitmap.height);
-        bitmap.close();
-      } catch {
-        drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
       }
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
