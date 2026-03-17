@@ -60,11 +60,47 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
 ];
 
-const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, onOpenCanvas, onEditCanvas }, ref) => {
-  const [activeTab, setActiveTab] = useState<ResourceType>('video');
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
   const [items, setItems] = useState<Record<ResourceType, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [],
   });
+
+  // Sync timeline clips into resource panel so every clip on a track appears in its group
+  useEffect(() => {
+    setItems(prev => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const clip of clips) {
+        let resType: ResourceType;
+        if (clip.type === 'video') resType = 'video';
+        else if (clip.type === 'image') resType = 'image';
+        else if (clip.type === 'canvas') resType = 'canvas';
+        else if (clip.type === 'audio') resType = 'audio';
+        else continue;
+
+        const alreadyExists = next[resType].some(item => item.id === clip.id || item.src === clip.src);
+        if (!alreadyExists && clip.src) {
+          changed = true;
+          const mediaType: 'video' | 'image' | 'audio' =
+            clip.type === 'video' ? 'video' :
+            clip.type === 'audio' ? 'audio' : 'image';
+          next[resType] = [...next[resType], {
+            id: clip.id,
+            name: clip.name,
+            src: clip.src,
+            type: mediaType,
+            duration: clip.duration || null,
+            thumbnail: clip.thumbnail || null,
+            resourceType: resType,
+            canvasJson: clip.canvasJson,
+          }];
+        }
+      }
+
+      return changed ? next : prev;
+    });
+  }, [clips]);
 
   useImperativeHandle(ref, () => ({
     addCanvasItem: (name: string, src: string, canvasJson?: string) => {
