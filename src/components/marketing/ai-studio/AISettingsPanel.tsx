@@ -345,9 +345,15 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
 
   const selectedProviderData = PAID_PROVIDERS.find(p => p.id === selectedProvider);
 
+  const isUnifiedProvider = (id: string) => UNIFIED_PROVIDERS.some(u => u.id === id);
+
   const statusBadge = (providerId: string) => {
     const key = apiKeys[providerId];
     const status = statuses[providerId];
+    // For unified providers, show active/inactive toggle status
+    if (isUnifiedProvider(providerId) && activeUnified === providerId) {
+      return <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0"><Zap className="h-2.5 w-2.5 mr-0.5" />Em Uso</Badge>;
+    }
     if (status === 'valid') return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
     if (key) return <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
     return <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
