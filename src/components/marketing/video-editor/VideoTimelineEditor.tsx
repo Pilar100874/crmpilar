@@ -1302,8 +1302,31 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </div>
 
+        {/* Right panel resize handle */}
+        <div
+          className="w-1.5 shrink-0 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors relative group"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            rightPanelDragRef.current = { startX: e.clientX, startWidth: rightPanelWidth };
+            const handleMove = (me: MouseEvent) => {
+              if (!rightPanelDragRef.current) return;
+              const dx = rightPanelDragRef.current.startX - me.clientX;
+              setRightPanelWidth(Math.max(200, Math.min(500, rightPanelDragRef.current.startWidth + dx)));
+            };
+            const handleUp = () => {
+              rightPanelDragRef.current = null;
+              window.removeEventListener('mousemove', handleMove);
+              window.removeEventListener('mouseup', handleUp);
+            };
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleUp);
+          }}
+        >
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-border group-hover:bg-primary/50 transition-colors" />
+        </div>
+
         {/* Right panel */}
-        <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
+        <div className="border-l bg-card shrink-0 flex flex-col overflow-hidden" style={{ width: rightPanelWidth }}>
           <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
             <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
             <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
