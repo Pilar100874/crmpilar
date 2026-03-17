@@ -138,12 +138,12 @@ const EffectsPanel: React.FC<Props> = ({ selectedClip, onUpdateClip, onPreviewTr
   return (
     <div className="h-full flex flex-col">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="w-full shrink-0 h-8 rounded-none border-b">
-          <TabsTrigger value="transitions" className="text-[10px] gap-1 flex-1 h-7">
-            <Zap className="h-3 w-3" /> Transições
+        <TabsList className="w-full shrink-0 h-9 rounded-none bg-muted/40 px-1">
+          <TabsTrigger value="transitions" className="text-[11px] gap-1.5 flex-1 h-7 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium">
+            <Zap className="h-3.5 w-3.5" /> Transições
           </TabsTrigger>
-          <TabsTrigger value="filters" className="text-[10px] gap-1 flex-1 h-7">
-            <Wand2 className="h-3 w-3" /> Filtros
+          <TabsTrigger value="filters" className="text-[11px] gap-1.5 flex-1 h-7 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium">
+            <Wand2 className="h-3.5 w-3.5" /> Filtros
           </TabsTrigger>
         </TabsList>
 
