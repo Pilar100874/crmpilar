@@ -4,12 +4,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
-  Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown
+  Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { TimelineTrack, TimelineClip } from './types';
+import { TimelineTrack, TimelineClip, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 
-type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio';
+type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio' | 'effect';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
