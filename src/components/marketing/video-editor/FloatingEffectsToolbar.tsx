@@ -376,13 +376,11 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     <div
       ref={toolbarRef}
       className="fixed z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200"
-      style={{
-        bottom: position.y === 0 ? '16px' : 'auto',
-        left: position.x === 0 ? '50%' : 'auto',
-        transform: position.x === 0 && position.y === 0 ? 'translateX(-50%)' : 'none',
-        top: position.y !== 0 ? `${position.y}px` : undefined,
-        left: position.x !== 0 ? `${position.x}px` : position.x === 0 ? '50%' : undefined,
-      }}
+      style={
+        position.x === 0 && position.y === 0
+          ? { bottom: '16px', left: '50%', transform: 'translateX(-50%)' }
+          : { top: `${position.y}px`, left: `${position.x}px` }
+      }
     >
       <div className="overflow-x-auto scrollbar-hide">
         <div className={`flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-1 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max ${isDragging ? 'cursor-grabbing' : ''}`}>
