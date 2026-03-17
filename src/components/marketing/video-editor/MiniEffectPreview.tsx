@@ -4,6 +4,7 @@ import { TransitionType } from './types';
 interface Props {
   effectType: TransitionType;
   size?: number;
+  autoPlay?: boolean;
 }
 
 function getOverlayStyleMini(
