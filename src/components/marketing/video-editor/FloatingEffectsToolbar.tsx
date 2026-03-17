@@ -396,11 +396,12 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
       <div className="overflow-x-auto scrollbar-hide">
         <div className={`flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-1 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max ${isDragging ? 'cursor-grabbing' : ''}`}>
 
-          {/* Drag handle */}
+          {/* Drag handle - double click to reset position */}
           <div
             className="flex items-center justify-center w-7 h-8 cursor-grab active:cursor-grabbing rounded-full hover:bg-muted/60 transition-colors shrink-0"
             onMouseDown={handleDragStart}
-            title="Arraste para mover"
+            onDoubleClick={() => setPosition({ x: 0, y: 0 })}
+            title="Arraste para mover · Duplo clique para centralizar"
           >
             <GripVertical className="h-4 w-4 text-muted-foreground/60" />
           </div>
