@@ -381,23 +381,37 @@ const ImagesPanel = () => {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : savedImages.length > 0 ? (
-              <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5">
-                {savedImages.map((img) => (
-                  <div
-                    key={img.id}
-                    className="aspect-square cursor-pointer overflow-hidden rounded border hover:border-primary transition-colors"
-                    onClick={() => addImageToCanvas(img.public_url)}
-                    title={img.nome}
-                  >
-                    <img
-                      src={img.public_url}
-                      alt={img.nome}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
+              <>
+                {(() => {
+                  const { folders, filteredItems } = getFilteredItems(savedImages);
+                  return (
+                    <>
+                      {folders.length > 0 && (
+                        <div className="mb-2">
+                          <GalleryFolderTabs folders={folders} activeFolder={activeFolder} onSelectFolder={setActiveFolder} />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5">
+                        {filteredItems.map((img: any) => (
+                          <div
+                            key={img.id}
+                            className="aspect-square cursor-pointer overflow-hidden rounded border hover:border-primary transition-colors"
+                            onClick={() => addImageToCanvas(img.public_url)}
+                            title={img.nome}
+                          >
+                            <img
+                              src={img.public_url}
+                              alt={img.nome}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform"
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
             ) : (
               <div className="text-center py-6 text-muted-foreground text-xs">
                 Nenhuma imagem salva ainda. Salve imagens no AI Studio para vê-las aqui.
