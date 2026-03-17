@@ -5660,6 +5660,7 @@ export type Database = {
         Row: {
           created_at: string | null
           descricao: string | null
+          disponivel_chat: boolean
           duracao_segundos: number | null
           estabelecimento_id: string
           id: string
@@ -5676,6 +5677,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           descricao?: string | null
+          disponivel_chat?: boolean
           duracao_segundos?: number | null
           estabelecimento_id: string
           id?: string
@@ -5692,6 +5694,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           descricao?: string | null
+          disponivel_chat?: boolean
           duracao_segundos?: number | null
           estabelecimento_id?: string
           id?: string
