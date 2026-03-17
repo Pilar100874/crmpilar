@@ -80,6 +80,9 @@ const VideoTimelineEditor: React.FC = () => {
   const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const [filterPreviewActive, setFilterPreviewActive] = useState(false);
   const [showFloatingScrollbar, setShowFloatingScrollbar] = useState(true);
+  const [bridgeDialogOpen, setBridgeDialogOpen] = useState(false);
+  const [bridgeClipA, setBridgeClipA] = useState<TimelineClip | null>(null);
+  const [bridgeClipB, setBridgeClipB] = useState<TimelineClip | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
