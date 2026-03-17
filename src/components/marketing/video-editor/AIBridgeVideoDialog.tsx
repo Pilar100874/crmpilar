@@ -370,7 +370,33 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       await seekVideoPrecisely(video, targetTime);
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-      drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+      console.log('[AI Bridge] frame capture', {
+        clipName: clip.name,
+        position,
+        targetTime,
+        currentTime: video.currentTime,
+        duration: video.duration,
+        trimStart,
+        trimEnd,
+        visibleEnd,
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        src: clip.src,
+      });
+
+      if (!video.videoWidth || !video.videoHeight) {
+        throw new Error(`Vídeo sem frame decodificado: ${clip.name}`);
+      }
+
+      try {
+        const bitmap = await createImageBitmap(video);
+        drawContain(ctx, bitmap, bitmap.width, bitmap.height);
+        bitmap.close();
+      } catch {
+        drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+      }
+
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
       if (blobUrl) URL.revokeObjectURL(blobUrl);
