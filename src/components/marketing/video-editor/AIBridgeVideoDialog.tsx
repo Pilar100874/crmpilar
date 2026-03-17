@@ -337,12 +337,8 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
       await seekVideoPrecisely(video, targetTime);
 
-      // Ensure at least one frame is decoded
-      if ('requestVideoFrameCallback' in video) {
-        await new Promise<void>(r => { (video as any).requestVideoFrameCallback(() => r()); });
-      } else {
-        await new Promise(r => setTimeout(r, 100));
-      }
+      // Small delay to ensure the seeked frame is fully decoded and painted
+      await new Promise(r => setTimeout(r, 150));
 
       drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
