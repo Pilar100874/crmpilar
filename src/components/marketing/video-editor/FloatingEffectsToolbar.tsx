@@ -546,10 +546,9 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                         return (
                           <button
                             key={f.type}
-                            onClick={() => addFilter(f.type)}
-                            disabled={alreadyAdded}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
-                              alreadyAdded ? 'opacity-40 cursor-not-allowed border-border/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
+                            onClick={() => toggleFilter(f.type)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all cursor-pointer ${
+                              alreadyAdded ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5'
                             }`}
                           >
                             <span className="text-lg leading-none">{f.icon}</span>
