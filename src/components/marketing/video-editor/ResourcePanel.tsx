@@ -7,7 +7,7 @@ import {
   Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { TimelineTrack } from './types';
+import { TimelineTrack, TimelineClip } from './types';
 
 type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio';
 
