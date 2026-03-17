@@ -172,6 +172,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
             status: null,
             created_at: item.created_at || new Date().toISOString(),
             _source: 'media_gallery' as const,
+            disponivel_chat: item.disponivel_chat || false,
           }));
         }
       }
