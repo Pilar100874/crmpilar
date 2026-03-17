@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -69,6 +69,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
   const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [], transition: [],
   });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
 
@@ -273,6 +275,37 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     setItems(prev => ({ ...prev, [resType]: prev[resType].filter(v => v.id !== id) }));
   }, []);
 
+  const startRename = useCallback((media: ImportedMedia) => {
+    setEditingId(media.id);
+    setEditingName(media.name);
+  }, []);
+
+  const commitRename = useCallback((id: string, resType: ResourceType) => {
+    const trimmed = editingName.trim();
+    if (trimmed) {
+      setItems(prev => ({
+        ...prev,
+        [resType]: prev[resType].map(item => item.id === id ? { ...item, name: trimmed } : item),
+      }));
+    }
+    setEditingId(null);
+    setEditingName('');
+  }, [editingName]);
+
+  const cancelRename = useCallback(() => {
+    setEditingId(null);
+    setEditingName('');
+  }, []);
+
+  const handleRenameKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>, id: string, resType: ResourceType) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitRename(id, resType);
+    } else if (e.key === 'Escape') {
+      cancelRename();
+    }
+  }, [commitRename, cancelRename]);
+
   const handleDoubleClickCanvas = useCallback((media: ImportedMedia) => {
     if (media.canvasJson && onEditCanvas) {
       onEditCanvas(media.canvasJson, media.id);
@@ -302,8 +335,9 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
         sectionItems.map((media) => (
           <div
             key={media.id}
-            draggable
+            draggable={editingId !== media.id}
             onDragStart={(e) => {
+              if (editingId === media.id) { e.preventDefault(); return; }
               const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.resourceType === 'canvas' ? 'canvas' : media.type;
               e.dataTransfer.setData('application/timeline-media', JSON.stringify({
                 type: dragType,
@@ -344,7 +378,29 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium truncate">{media.name}</p>
+              {editingId === media.id ? (
+                <input
+                  autoFocus
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={() => commitRename(media.id, media.resourceType)}
+                  onKeyDown={(e) => handleRenameKeyDown(e, media.id, media.resourceType)}
+                  className="text-[11px] font-medium w-full bg-background border border-primary/50 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+                  onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <p
+                  className="text-[11px] font-medium truncate cursor-text hover:text-primary/80 transition-colors"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    startRename(media);
+                  }}
+                  title="Duplo clique para renomear"
+                >
+                  {media.name}
+                </p>
+              )}
               {media.duration && (
                 <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
               )}
@@ -355,9 +411,14 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
             {/* Actions */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {editingId !== media.id && (
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); startRename(media); }} title="Renomear">
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </Button>
+              )}
               {media.resourceType === 'canvas' && media.canvasJson && (
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
-                  <Pencil className="h-3 w-3 text-purple-400" />
+                  <Palette className="h-3 w-3 text-purple-400" />
                 </Button>
               )}
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
