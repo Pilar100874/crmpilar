@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
-  Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
+  Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen, Wand2,
   Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles
 } from 'lucide-react';
 import MiniEffectPreview from './MiniEffectPreview';
