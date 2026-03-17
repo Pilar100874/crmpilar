@@ -601,23 +601,6 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </PopoverContent>
           </Popover>
 
-          <div className="h-4 sm:h-5 w-px bg-border/40" />
-
-          {/* Simulate in main preview */}
-          <Button
-            variant={isSimulating ? 'default' : 'outline'}
-            size="sm"
-            className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5"
-            onClick={() => {
-              onSimulate?.(!isSimulating);
-              onToggleFilterPreview?.(!isSimulating);
-            }}
-            disabled={!hasFilters && !hasTransitions}
-            title="Simular efeitos no preview principal"
-          >
-            {isSimulating ? <Pause className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> : <Eye className="h-3 sm:h-3.5 w-3 sm:w-3.5" />}
-            <span className="text-[10px] sm:text-xs">{isSimulating ? 'Simulando' : 'Preview'}</span>
-          </Button>
 
           <div className="h-4 sm:h-5 w-px bg-border/40" />
 
