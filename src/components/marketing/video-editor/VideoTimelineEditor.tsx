@@ -1152,6 +1152,18 @@ const VideoTimelineEditor: React.FC = () => {
 
           {/* Fixed bars between preview and timeline */}
           <div className="shrink-0 z-10 relative bg-card border-t border-border/30">
+            {showResizeBar && !previewCollapsed && (
+              <div className="h-5 bg-muted/40 border-b border-border/40 cursor-row-resize flex items-center justify-center group relative"
+                onMouseDown={(e) => {
+                  e.preventDefault(); resizingRef.current = true; resizeStartRef.current = { y: e.clientY, height: previewHeight };
+                  const onMouseMove = (ev: MouseEvent) => { if (!resizingRef.current) return; setPreviewHeight(Math.min(800, Math.max(120, resizeStartRef.current.height + ev.clientY - resizeStartRef.current.y))); };
+                  const onMouseUp = () => { resizingRef.current = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); document.body.style.cursor = ''; document.body.style.userSelect = ''; };
+                  document.body.style.cursor = 'row-resize'; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+                }}>
+                <GripHorizontal className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+                <button className="absolute right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-all" onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}><Minimize2 className="h-2.5 w-2.5" /></button>
+              </div>
+            )}
             {showStatusBar && (
               <div className="h-6 bg-muted/30 border-b border-border/40 px-3 flex items-center justify-between select-none">
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
@@ -1160,7 +1172,7 @@ const VideoTimelineEditor: React.FC = () => {
                   {currentProjectId && <span className="text-primary/70 font-medium">{projectName}</span>}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80" onClick={() => setShowStatusBar(false)}><Minimize2 className="h-2.5 w-2.5" /></button>
+                  {!showResizeBar && !previewCollapsed && <button className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80" onClick={() => setShowResizeBar(true)}><GripHorizontal className="h-2.5 w-2.5 inline" /></button>}
                   <button className="text-[10px] text-muted-foreground hover:text-foreground px-1 py-0.5 rounded hover:bg-background/80" onClick={() => setShowStatusBar(false)}><Minimize2 className="h-2.5 w-2.5" /></button>
                 </div>
               </div>
@@ -1171,9 +1183,10 @@ const VideoTimelineEditor: React.FC = () => {
                 <span className="text-[10px] text-muted-foreground">{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
               </div>
             )}
-            {!showStatusBar && (
+            {(!showResizeBar || !showStatusBar) && (
               <div className="flex items-center justify-end px-2 py-0.5 gap-1 bg-muted/20 border-b border-border/20">
-                <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>
+                {!showResizeBar && !previewCollapsed && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowResizeBar(true)}>↕ Resize</button>}
+                {!showStatusBar && <button className="text-[9px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-background/60" onClick={() => setShowStatusBar(true)}>▤ Status</button>}
               </div>
             )}
           </div>
