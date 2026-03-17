@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,8 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Sparkles, Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause
+  Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
+  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause, RefreshCw
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
@@ -59,6 +59,218 @@ const EASING_OPTIONS = [
   { value: 'elastic', label: 'Elástico' },
 ];
 
+// === Transition animation style calculator (mirrors VideoPreview) ===
+function getTransitionStyle(type: TransitionType, progress: number, isExit: boolean): React.CSSProperties {
+  const p = isExit ? 1 - progress : progress;
+  switch (type) {
+    case 'fade': return { opacity: p };
+    case 'dissolve': return { opacity: p };
+    case 'crossfade': return { opacity: p };
+    case 'fade-blur': return { opacity: p, filter: `blur(${(1 - p) * 12}px)` };
+    case 'slide-left': return { transform: `translateX(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-right': return { transform: `translateX(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-up': return { transform: `translateY(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
+    case 'slide-down': return { transform: `translateY(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
+    case 'roll-left': return { transform: `translateX(${(1 - p) * 100}%) rotate(${(1 - p) * 45}deg)`, opacity: p };
+    case 'roll-right': return { transform: `translateX(${(1 - p) * -100}%) rotate(${(1 - p) * -45}deg)`, opacity: p };
+    case 'zoom-in': return { transform: `scale(${0.3 + p * 0.7})`, opacity: p };
+    case 'zoom-out': return { transform: `scale(${1 + (1 - p) * 0.5})`, opacity: p };
+    case 'scale-up': { const b = p < 0.7 ? p / 0.7 : 1 + Math.sin((p - 0.7) / 0.3 * Math.PI) * 0.1; return { transform: `scale(${b * 0.5 + 0.5})`, opacity: Math.min(1, p * 1.5) }; }
+    case 'scale-down': return { transform: `scale(${1 + (1 - p) * 0.3})`, opacity: p };
+    case 'morph-scale': return { transform: `scale(${0.5 + p * 0.5}) scaleX(${0.7 + p * 0.3})`, opacity: p };
+    case 'rotate-in': return { transform: `rotate(${(1 - p) * 90}deg) scale(${0.5 + p * 0.5})`, opacity: p };
+    case 'rotate-out': return { transform: `rotate(${(1 - p) * -90}deg) scale(${0.5 + p * 0.5})`, opacity: p };
+    case 'spiral': return { transform: `rotate(${(1 - p) * 360}deg) scale(${p})`, opacity: p };
+    case 'flip-x': return { transform: `perspective(800px) rotateY(${(1 - p) * 90}deg)`, opacity: Math.min(1, p * 1.5) };
+    case 'flip-y': return { transform: `perspective(800px) rotateX(${(1 - p) * 90}deg)`, opacity: Math.min(1, p * 1.5) };
+    case 'bounce': { const e = p < 1 ? 1 - Math.pow(2, -10 * p) * Math.cos((p * 10 - 0.75) * (2 * Math.PI) / 3) : 1; return { transform: `scale(${e})`, opacity: Math.min(1, p * 2) }; }
+    case 'elastic': { const e = p < 1 ? 1 - Math.pow(2, -8 * p) * Math.cos((p * 12 - 0.5) * (2 * Math.PI) / 3) : 1; return { transform: `scaleX(${e}) scaleY(${2 - e})`, opacity: Math.min(1, p * 2) }; }
+    case 'swing': return { transform: `rotate(${Math.sin(p * Math.PI * 3) * (1 - p) * 25}deg)`, opacity: p };
+    case 'wipe-left': return { clipPath: `inset(0 ${(1 - p) * 100}% 0 0)` };
+    case 'wipe-right': return { clipPath: `inset(0 0 0 ${(1 - p) * 100}%)` };
+    case 'wipe-up': return { clipPath: `inset(${(1 - p) * 100}% 0 0 0)` };
+    case 'wipe-down': return { clipPath: `inset(0 0 ${(1 - p) * 100}% 0)` };
+    case 'wipe-circle': return { clipPath: `circle(${p * 75}% at 50% 50%)` };
+    case 'wipe-diamond': return { clipPath: `polygon(50% ${50 - p * 50}%, ${50 + p * 50}% 50%, 50% ${50 + p * 50}%, ${50 - p * 50}% 50%)` };
+    case 'iris-open': return { clipPath: `circle(${p * 72}% at 50% 50%)` };
+    case 'iris-close': return { clipPath: `circle(${(1 - p) * 72}% at 50% 50%)` };
+    case 'split-horizontal': return { clipPath: `inset(${(1 - p) * 50}% 0)` };
+    case 'split-vertical': return { clipPath: `inset(0 ${(1 - p) * 50}%)` };
+    case 'blur-transition': return { filter: `blur(${(1 - p) * 15}px)`, opacity: p };
+    case 'flash': return { opacity: p, filter: `brightness(${1 + (1 - p) * 3})` };
+    case 'glitch': { const offset = Math.sin(p * 30) * (1 - p) * 8; return { transform: `translateX(${offset}px)`, opacity: 0.6 + p * 0.4, filter: `hue-rotate(${(1 - p) * 120}deg)` }; }
+    case 'pixelate': return { filter: `blur(${(1 - p) * 8}px)`, opacity: p };
+    default: return {};
+  }
+}
+
+// === Build CSS filter string from clip filters ===
+function buildFilterCss(filters: VideoFilter[] | undefined): string {
+  if (!filters?.length) return 'none';
+  return filters.filter(f => f.enabled).map(f => {
+    switch (f.type) {
+      case 'brightness': return `brightness(${f.value / 50})`;
+      case 'contrast': return `contrast(${f.value / 50})`;
+      case 'saturation': return `saturate(${f.value / 50})`;
+      case 'hue-rotate': return `hue-rotate(${f.value * 3.6}deg)`;
+      case 'blur': return `blur(${f.value / 10}px)`;
+      case 'grayscale': return `grayscale(${f.value}%)`;
+      case 'sepia': return `sepia(${f.value}%)`;
+      case 'invert': return `invert(${f.value}%)`;
+      case 'opacity': return `opacity(${f.value}%)`;
+      case 'drop-shadow': return `drop-shadow(0 ${f.value / 10}px ${f.value / 5}px rgba(0,0,0,0.5))`;
+      default: return '';
+    }
+  }).filter(Boolean).join(' ') || 'none';
+}
+
+// === Mini Transition Preview Component ===
+const MiniTransitionPreview: React.FC<{
+  type: TransitionType | undefined;
+  isExit: boolean;
+  clipSrc?: string;
+  clipType?: string;
+}> = ({ type, isExit, clipSrc, clipType }) => {
+  const [progress, setProgress] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const rafRef = useRef<number>(0);
+  const startRef = useRef(performance.now());
+
+  const restart = useCallback(() => {
+    startRef.current = performance.now();
+    setPlaying(true);
+  }, []);
+
+  useEffect(() => {
+    restart();
+  }, [type, isExit, restart]);
+
+  useEffect(() => {
+    if (!playing || !type || type === 'none') return;
+    const duration = 1500; // 1.5s animation loop
+    const animate = () => {
+      const elapsed = performance.now() - startRef.current;
+      const p = Math.min(elapsed / duration, 1);
+      setProgress(p);
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      } else {
+        // Pause 600ms at end, then loop
+        setTimeout(() => {
+          startRef.current = performance.now();
+          rafRef.current = requestAnimationFrame(animate);
+        }, 600);
+      }
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [playing, type]);
+
+  if (!type || type === 'none') {
+    return (
+      <div className="w-full h-24 rounded-lg bg-muted/40 flex items-center justify-center">
+        <p className="text-[10px] text-muted-foreground">Selecione uma transição para simular</p>
+      </div>
+    );
+  }
+
+  const style = getTransitionStyle(type, progress, isExit);
+  const hasThumbnail = clipSrc && (clipType === 'image' || clipType === 'canvas');
+
+  return (
+    <div className="w-full h-28 rounded-lg bg-muted/60 overflow-hidden relative">
+      {/* Background checkerboard */}
+      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-conic-gradient(hsl(var(--muted-foreground)) 0% 25%, transparent 0% 50%)', backgroundSize: '12px 12px' }} />
+
+      {/* Animated element */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-[85%] h-[85%] rounded-md overflow-hidden" style={style}>
+          {hasThumbnail ? (
+            <img src={clipSrc} alt="preview" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/80 via-primary/50 to-primary/30 flex items-center justify-center">
+              <span className="text-primary-foreground/80 text-lg font-bold">{isExit ? '🎬 Saída' : '🎬 Entrada'}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/40">
+        <div className="h-full bg-primary/60 transition-none" style={{ width: `${progress * 100}%` }} />
+      </div>
+
+      {/* Replay button */}
+      <button
+        onClick={restart}
+        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+        title="Repetir"
+      >
+        <RefreshCw className="h-3 w-3 text-muted-foreground" />
+      </button>
+
+      {/* Label */}
+      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-background/70 backdrop-blur-sm">
+        <span className="text-[8px] font-medium text-muted-foreground">
+          {TRANSITION_PRESETS.find(p => p.type === type)?.label} · {isExit ? 'Saída' : 'Entrada'}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// === Mini Filter Preview Component ===
+const MiniFilterPreview: React.FC<{
+  filters: VideoFilter[] | undefined;
+  clipSrc?: string;
+  clipType?: string;
+}> = ({ filters, clipSrc, clipType }) => {
+  const filterCss = buildFilterCss(filters);
+  const hasFilters = filters && filters.length > 0;
+  const hasThumbnail = clipSrc && (clipType === 'image' || clipType === 'canvas');
+
+  const sampleContent = hasThumbnail ? (
+    <img src={clipSrc} alt="preview" className="w-full h-full object-cover" />
+  ) : (
+    <div className="w-full h-full bg-gradient-to-br from-primary/70 via-accent/40 to-secondary/60 flex items-center justify-center">
+      <div className="text-center">
+        <span className="text-2xl">🎬</span>
+        <p className="text-[8px] text-primary-foreground/70 font-medium mt-0.5">Exemplo</p>
+      </div>
+    </div>
+  );
+
+  if (!hasFilters) {
+    return (
+      <div className="w-full h-24 rounded-lg bg-muted/40 flex items-center justify-center">
+        <p className="text-[10px] text-muted-foreground">Aplique filtros para ver a simulação</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-28 rounded-lg overflow-hidden relative flex">
+      {/* Before */}
+      <div className="flex-1 relative overflow-hidden border-r border-background/50">
+        {sampleContent}
+        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-background/70 backdrop-blur-sm">
+          <span className="text-[7px] font-semibold text-muted-foreground uppercase tracking-wider">Original</span>
+        </div>
+      </div>
+      {/* After */}
+      <div className="flex-1 relative overflow-hidden" style={{ filter: filterCss }}>
+        {sampleContent}
+        <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-background/70 backdrop-blur-sm">
+          <span className="text-[7px] font-semibold text-primary uppercase tracking-wider">Com Filtros</span>
+        </div>
+      </div>
+      {/* Center divider */}
+      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-background/80 z-10" />
+    </div>
+  );
+};
+
+// === Main Toolbar ===
 const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
@@ -156,13 +368,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   {hasTransitions && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" side="top" align="center">
+              <PopoverContent className="w-[420px] p-0" side="top" align="center">
+                {/* === LIVE SIMULATION PREVIEW === */}
+                <div className="p-2 border-b bg-muted/10">
+                  <MiniTransitionPreview
+                    type={activeTransition?.type}
+                    isExit={transitionPhase === 'exit'}
+                    clipSrc={selectedClip.src}
+                    clipType={selectedClip.type}
+                  />
+                </div>
+
                 <div className="p-3 border-b bg-muted/20">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold flex items-center gap-1.5">
-                      <Zap className="h-3.5 w-3.5 text-primary" /> Transições
-                    </p>
-                  </div>
                   {/* Phase toggle */}
                   <div className="flex rounded-lg border overflow-hidden">
                     <button
@@ -194,8 +411,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                           <span className="text-[10px] font-semibold">{TRANSITION_PRESETS.find(p => p.type === activeTransition.type)?.label}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
-                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onPreviewTransition?.(selectedClip.id, transitionPhase)} title="Simular">
-                            <Eye className="h-3 w-3" />
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onPreviewTransition?.(selectedClip.id, transitionPhase)} title="Simular no preview principal">
+                            <Play className="h-3 w-3" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeTransition(transitionPhase)}>
                             <X className="h-3 w-3" />
@@ -220,7 +437,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
 
-                <ScrollArea className="max-h-[320px]">
+                <ScrollArea className="max-h-[280px]">
                   <div className="p-2 space-y-1.5">
                     {TRANSITION_CATEGORIES.map(cat => {
                       const isExpanded = expandedCategories[cat.id] !== false;
@@ -279,7 +496,16 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 {hasFilters && <span className="text-[9px] bg-primary-foreground/20 px-1.5 rounded-full">{selectedClip.filters?.length}</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[380px] p-0" side="top" align="center">
+            <PopoverContent className="w-[400px] p-0" side="top" align="center">
+              {/* === LIVE FILTER SIMULATION === */}
+              <div className="p-2 border-b bg-muted/10">
+                <MiniFilterPreview
+                  filters={selectedClip.filters}
+                  clipSrc={selectedClip.src}
+                  clipType={selectedClip.type}
+                />
+              </div>
+
               <div className="p-3 border-b bg-muted/20">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
@@ -291,7 +517,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[380px]">
+              <ScrollArea className="max-h-[320px]">
                 <div className="p-2 space-y-2">
                   {/* Presets by category */}
                   {FILTER_CATEGORIES.map(cat => {
@@ -394,20 +620,20 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           <div className="h-5 w-px bg-border/40" />
 
-          {/* Simulate button */}
+          {/* Simulate in main preview */}
           <Button
             variant={isSimulating ? 'default' : 'outline'}
             size="sm"
-            className={`h-8 px-3 rounded-full gap-1.5 ${isSimulating ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+            className="h-8 px-3 rounded-full gap-1.5"
             onClick={() => {
               onSimulate?.(!isSimulating);
               onToggleFilterPreview?.(!isSimulating);
             }}
             disabled={!hasFilters && !hasTransitions}
-            title="Simular efeitos no preview em tempo real"
+            title="Simular efeitos no preview principal"
           >
             {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            <span className="text-xs">{isSimulating ? 'Simulando' : 'Simular'}</span>
+            <span className="text-xs">{isSimulating ? 'Simulando' : 'Preview'}</span>
           </Button>
 
           <div className="h-5 w-px bg-border/40" />
