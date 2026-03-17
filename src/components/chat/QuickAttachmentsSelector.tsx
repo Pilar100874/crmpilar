@@ -659,6 +659,33 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Video Preview Dialog */}
+    <Dialog open={!!previewVideo} onOpenChange={(open) => !open && setPreviewVideo(null)}>
+      <DialogContent className="max-w-3xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>{previewVideo?.nome}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="relative rounded-2xl overflow-hidden bg-black">
+            <video
+              src={previewVideo?.public_url}
+              controls
+              className="w-full max-h-[60vh]"
+              autoPlay
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setPreviewVideo(null)} className="rounded-full">
+              Cancelar
+            </Button>
+            <Button onClick={() => previewVideo && handleGallerySelect(previewVideo)} className="rounded-full">
+              Inserir Vídeo
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
