@@ -362,13 +362,13 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
           {isVisual && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-8 px-3 rounded-full gap-1.5">
-                  <Zap className="h-3.5 w-3.5" />
-                  <span className="text-xs">Transições</span>
+                <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
+                  <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  <span className="text-[10px] sm:text-xs">Transições</span>
                   {hasTransitions && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[420px] p-0" side="top" align="center">
+              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[420px] p-0" side="top" align="center">
                 {/* === LIVE SIMULATION PREVIEW === */}
                 <div className="p-2 border-b bg-muted/10">
                   <MiniTransitionPreview
