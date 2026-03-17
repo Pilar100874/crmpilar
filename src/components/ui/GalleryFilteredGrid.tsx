@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Check, Film, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { Check } from 'lucide-react';
 import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { useGalleryFolders } from '@/hooks/useGalleryFolders';
 
@@ -19,7 +19,7 @@ interface Props {
 }
 
 const GalleryFilteredGrid: React.FC<Props> = ({ items, galleryType, selectedIds, onToggleSelect }) => {
-  const { getFilteredItems } = useGalleryFolders();
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
   const { folders, filteredItems } = getFilteredItems(items);
 
   return (
@@ -28,8 +28,8 @@ const GalleryFilteredGrid: React.FC<Props> = ({ items, galleryType, selectedIds,
         <div className="px-4 pt-2">
           <GalleryFolderTabs
             folders={folders}
-            activeFolder={getFilteredItems(items).activeFolder}
-            onSelectFolder={getFilteredItems(items).setActiveFolder}
+            activeFolder={activeFolder}
+            onSelectFolder={setActiveFolder}
           />
         </div>
       )}
