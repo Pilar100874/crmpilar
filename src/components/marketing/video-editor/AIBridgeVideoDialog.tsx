@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles } from 'lucide-react';
+import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
+import { getActiveUnifiedProvider, shouldHideModel } from '../ai-studio/unifiedProvidersConfig';
 
 interface AIBridgeVideoDialogProps {
   open: boolean;
@@ -18,14 +19,88 @@ interface AIBridgeVideoDialogProps {
   onVideoGenerated: (videoUrl: string, duration: number) => void;
 }
 
-const VIDEO_MODELS = [
-  { value: 'google/veo-3.1', label: 'Google Veo 3.1', provider: 'google' },
-  { value: 'google/veo-2', label: 'Google Veo 2', provider: 'google' },
-  { value: 'openai/sora-2', label: 'OpenAI Sora 2', provider: 'openai' },
-  { value: 'runway/gen4', label: 'Runway Gen-4', provider: 'runway' },
-  { value: 'replicate/ltx-video-2', label: 'LTX-Video 2 (Replicate)', provider: 'replicate' },
-  { value: 'kling/v2.1', label: 'Kling v2.1', provider: 'kling' },
+interface VideoModelInfo {
+  value: string;
+  label: string;
+  provider: string;
+  cost?: string;
+  tip?: string;
+}
+
+const ALL_VIDEO_MODELS: VideoModelInfo[] = [
+  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'google', cost: '$$$$' },
+  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'google', cost: '$$$' },
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'google', cost: '$$$' },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'google', cost: '$$' },
+  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'openai', cost: '$$$$' },
+  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'openai', cost: '$$$' },
+  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'runway', cost: '$$$$' },
+  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'runway', cost: '$$' },
+  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'kling', cost: '$$' },
+  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'kling', cost: '$' },
+  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'pika', cost: '$$' },
+  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'minimax', cost: '$' },
+  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$' },
+  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'stability', cost: '$' },
+  { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2', provider: 'replicate', cost: '$' },
+  // Apiframe
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'apiframe', cost: '$$' },
+  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'apiframe', cost: '$$$' },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'apiframe', cost: '$$' },
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$' },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$' },
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$' },
+  { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'apiframe', cost: '$$$' },
+  { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'apiframe', cost: '$$$' },
+  { value: 'apiframe/pika', label: '⚡ AF: Pika', provider: 'apiframe', cost: '$$' },
+  { value: 'apiframe/hailuo-minimax', label: '⚡ AF: Hailuo MiniMax', provider: 'apiframe', cost: '$' },
+  { value: 'apiframe/wan-video', label: '⚡ AF: Wan Video', provider: 'apiframe', cost: '$' },
+  { value: 'apiframe/vidu', label: '⚡ AF: Vidu', provider: 'apiframe', cost: '$' },
+  { value: 'apiframe/pixverse', label: '⚡ AF: Pixverse', provider: 'apiframe', cost: '$' },
+  { value: 'apiframe/seedance', label: '⚡ AF: Seedance', provider: 'apiframe', cost: '$' },
+  // AIML API
+  { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'aimlapi', cost: '$$' },
+  { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'aimlapi', cost: '$$' },
+  { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'aimlapi', cost: '$$' },
+  { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'aimlapi', cost: '$' },
+  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'aimlapi', cost: '$' },
+  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'aimlapi', cost: '$' },
+  { value: 'aimlapi/pika', label: '🤖 ML: Pika', provider: 'aimlapi', cost: '$$' },
+  { value: 'aimlapi/wan-video', label: '🤖 ML: Wan Video', provider: 'aimlapi', cost: '$' },
+  { value: 'aimlapi/stable-video', label: '🤖 ML: Stable Video', provider: 'aimlapi', cost: '$' },
+  // Pollo AI
+  { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'polloai', cost: '$$' },
+  { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'polloai', cost: '$$' },
+  { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'polloai', cost: '$' },
+  { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'polloai', cost: '$$' },
+  { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'polloai', cost: '$' },
+  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'polloai', cost: '$' },
+  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'polloai', cost: '$' },
+  { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'polloai', cost: '$$' },
+  { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'polloai', cost: '$' },
 ];
+
+const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
+const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
+  'google/veo-3.1': 'google', 'google/veo-3.1-fast': 'google', 'google/veo-3': 'google', 'google/veo-2': 'google',
+  'openai/sora-3': 'openai', 'openai/sora-2': 'openai',
+  'runway/gen4': 'runway', 'runway/gen3-alpha-turbo': 'runway',
+  'kling/v2.1': 'kling', 'kling/v1.6': 'kling',
+  'pika/v2.2': 'pika', 'minimax/video-01': 'minimax',
+  'luma/dream-machine-1.5': 'luma', 'stability/stable-video': 'stability',
+  'replicate/ltx-video': 'replicate',
+};
+
+const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
+  const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
+  if (unifiedPrefix) {
+    const providerName = unifiedPrefix.replace('/', '');
+    return configuredProviders.some(cp => cp.toLowerCase() === providerName);
+  }
+  const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
+  if (!requiredProvider) return true;
+  return configuredProviders.some(cp => cp.toLowerCase() === requiredProvider);
+};
 
 const DEFAULT_TRANSITION_PROMPTS = [
   { id: '1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
@@ -93,6 +168,29 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [duration, setDuration] = useState(4);
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
+
+  // Load configured providers
+  useEffect(() => {
+    if (!estabelecimentoId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('ai_api_keys')
+        .select('provider')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('is_active', true);
+      if (data) setConfiguredProviders(data.map(d => d.provider));
+    })();
+  }, [estabelecimentoId]);
+
+  const filteredModels = useMemo(() => {
+    return ALL_VIDEO_MODELS
+      .filter(m => !shouldHideModel(m.value, activeUnified))
+      .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+  }, [configuredProviders, activeUnified]);
 
   // Prompt suggestions state
   const [suggestions, setSuggestions] = useState(loadCustomPrompts);
@@ -553,10 +651,23 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         <div className="flex gap-3 mt-2">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
-            <Select value={model} onValueChange={setModel} disabled={isGenerating}>
+            <Select value={model} onValueChange={(v) => setModel(v)} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {VIDEO_MODELS.map(m => <SelectItem key={m.value} value={m.value} className="text-xs">{m.label}</SelectItem>)}
+              <SelectContent className="max-h-[300px]">
+                {filteredModels.map(m => (
+                  <SelectItem
+                    key={m.value}
+                    value={m.value}
+                    className="text-xs"
+                    disabled={m.disabled}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {m.label}
+                      {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
+                      {m.disabled && <Lock className="h-2.5 w-2.5 text-muted-foreground/50" />}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
