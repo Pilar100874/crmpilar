@@ -811,6 +811,7 @@ const VideoTimelineEditor: React.FC = () => {
       opacity: 1,
       filters: [],
       src: videoUrl,
+      locked: true,
     });
 
     // Also add to resource panel under "Transições AI" group

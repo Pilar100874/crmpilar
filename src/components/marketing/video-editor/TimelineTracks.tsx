@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { TimelineState, TimelineClip, TRACK_COLORS, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useToast } from '@/hooks/use-toast';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -35,6 +36,7 @@ interface Props {
 }
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
+  const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const [dragMediaType, setDragMediaType] = useState<string | null>(null);
@@ -80,7 +82,12 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: TimelineClip, type: 'move' | 'resize-start' | 'resize-end') => {
     // Block interaction if clip or its track is locked
     const track = state.tracks.find(t => t.id === clip.trackId);
-    if (clip.locked || track?.locked) return;
+    if (clip.locked || track?.locked) {
+      if (clip.locked && clip.name?.includes('Transição AI')) {
+        toast?.({ title: '🔒 Clipe bloqueado', description: 'Transições AI são travadas para preservar a continuidade. Desbloqueie manualmente se necessário.', variant: 'destructive' });
+      }
+      return;
+    }
     e.stopPropagation();
     e.preventDefault();
     onSelectClip(clip.id, e.ctrlKey || e.metaKey);
