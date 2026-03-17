@@ -192,6 +192,17 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
   }, [configuredProviders, activeUnified]);
 
+  // Prompt suggestions state
+  const [suggestions, setSuggestions] = useState(loadCustomPrompts);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newText, setNewText] = useState('');
+
+  useEffect(() => {
+    if (open) setSuggestions(loadCustomPrompts());
+  }, [open]);
+
   // Extract frames when dialog opens
   useEffect(() => {
     if (!open) return;
