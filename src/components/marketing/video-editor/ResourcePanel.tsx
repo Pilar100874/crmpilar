@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
-  Play, Check, Trash2, Loader2, Plus, Mic, Pencil
+  Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack } from './types';
