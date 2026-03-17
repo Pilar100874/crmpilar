@@ -651,10 +651,23 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         <div className="flex gap-3 mt-2">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
-            <Select value={model} onValueChange={setModel} disabled={isGenerating}>
+            <Select value={model} onValueChange={(v) => setModel(v)} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {VIDEO_MODELS.map(m => <SelectItem key={m.value} value={m.value} className="text-xs">{m.label}</SelectItem>)}
+              <SelectContent className="max-h-[300px]">
+                {filteredModels.map(m => (
+                  <SelectItem
+                    key={m.value}
+                    value={m.value}
+                    className="text-xs"
+                    disabled={m.disabled}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {m.label}
+                      {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
+                      {m.disabled && <Lock className="h-2.5 w-2.5 text-muted-foreground/50" />}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
