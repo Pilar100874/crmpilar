@@ -238,8 +238,14 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {filteredGalleryImages.map((item) => (
+                  <>
+                    {imageFolders.length > 0 && (
+                      <div className="mb-3">
+                        <GalleryFolderTabs folders={imageFolders} activeFolder={imgFolders.activeFolder} onSelectFolder={imgFolders.setActiveFolder} />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                    {filteredGalleryImages.map((item: any) => (
                       <Card
                         key={item.id}
                         className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
