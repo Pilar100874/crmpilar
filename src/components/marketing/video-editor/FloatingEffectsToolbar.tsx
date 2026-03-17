@@ -485,7 +485,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </Popover>
           )}
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Filters Popover */}
           <Popover>
