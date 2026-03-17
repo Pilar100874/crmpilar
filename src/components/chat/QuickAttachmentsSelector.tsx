@@ -327,6 +327,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                         </div>
                       </Card>
                     ))}
+                    </div>
                   </div>
                 )}
               </div>
