@@ -636,7 +636,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             <span className="text-[10px] sm:text-xs">{isSimulating ? 'Simulando' : 'Preview'}</span>
           </Button>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Close */}
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
