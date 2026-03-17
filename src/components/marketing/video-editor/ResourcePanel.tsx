@@ -241,6 +241,94 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
   const currentItems = items[activeTab];
   const activeTabInfo = TABS.find(t => t.key === activeTab)!;
 
+  const renderSectionItems = (tab: typeof TABS[number], sectionItems: ImportedMedia[]) => (
+    <div className="space-y-1">
+      {sectionItems.length === 0 ? (
+        <p className="text-[10px] text-muted-foreground/60 text-center py-2">Nenhum item</p>
+      ) : (
+        sectionItems.map((media) => (
+          <div
+            key={media.id}
+            draggable
+            onDragStart={(e) => {
+              const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.resourceType === 'canvas' ? 'canvas' : media.type;
+              e.dataTransfer.setData('application/timeline-media', JSON.stringify({
+                type: dragType,
+                name: media.name,
+                src: media.src,
+                duration: media.duration,
+                canvasJson: media.canvasJson,
+              }));
+              e.dataTransfer.setData(`mediatype/${dragType}`, '');
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
+            onDoubleClick={() => {
+              if (media.resourceType === 'canvas' && media.canvasJson) {
+                handleDoubleClickCanvas(media);
+              }
+            }}
+            className={`flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing ${
+              media.resourceType === 'canvas' && media.canvasJson ? 'cursor-pointer' : ''
+            }`}
+          >
+            {/* Thumbnail */}
+            <div className="w-11 h-8 rounded bg-muted shrink-0 overflow-hidden relative">
+              {media.type === 'video' ? (
+                <>
+                  <video src={media.src} className="w-full h-full object-cover" muted preload="metadata" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Play className="h-3 w-3 text-white drop-shadow" />
+                  </div>
+                </>
+              ) : media.type === 'image' ? (
+                <img src={media.thumbnail || media.src} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Music className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium truncate">{media.name}</p>
+              {media.duration && (
+                <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
+              )}
+              {media.resourceType === 'canvas' && media.canvasJson && (
+                <p className="text-[9px] text-purple-400">Duplo clique para editar</p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {media.resourceType === 'canvas' && media.canvasJson && (
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
+                  <Pencil className="h-3 w-3 text-purple-400" />
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
+                <Plus className="h-3 w-3 text-primary" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType)} title="Remover">
+                <Trash2 className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const [collapsedSections, setCollapsedSections] = useState<Set<ResourceType>>(new Set());
+  const toggleSection = (key: ResourceType) => {
+    setCollapsedSections(prev => {
+      const n = new Set(prev);
+      n.has(key) ? n.delete(key) : n.add(key);
+      return n;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Hidden file inputs */}
@@ -249,150 +337,66 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
       <input ref={audioInputRef} type="file" accept="audio/*" multiple className="hidden" onChange={(e) => handleFileUpload(e.target.files, 'audio')} />
       <input ref={musicInputRef} type="file" accept="audio/*" multiple className="hidden" onChange={(e) => handleFileUpload(e.target.files, 'music')} />
 
-      {/* Vertical icon tabs */}
-      <div className="flex border-b shrink-0">
-        {TABS.map(tab => {
-          const count = items[tab.key].length;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] transition-all relative ${
-                activeTab === tab.key
-                  ? `${tab.color} font-semibold border-b-2 border-current`
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title={tab.label}
-            >
-              {tab.icon}
-              <span className="leading-none">{tab.label}</span>
-              {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 text-[8px] bg-primary text-primary-foreground rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Action buttons for active tab */}
-      <div className="p-2 border-b shrink-0 space-y-1.5">
-        {activeTab === 'canvas' ? (
-          <div className="flex gap-1.5">
-            <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-2 text-xs h-8">
-              <Palette className="h-3.5 w-3.5" />
-              Criar no Canvas
-            </Button>
-            <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-8 w-8 shrink-0" title="Upload imagem">
-              <Upload className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex gap-1.5">
-            {(activeTab === 'video' || activeTab === 'image') && (
-              <Button onClick={() => handleOpenGallery(activeTab)} variant="outline" className="flex-1 gap-2 text-xs h-8">
-                <FolderOpen className="h-3.5 w-3.5" />
-                Galeria
-              </Button>
-            )}
-            <Button
-              onClick={() => {
-                const ref = getInputRef(activeTab);
-                ref?.current?.click();
-              }}
-              variant="outline"
-              className={`${activeTab === 'video' || activeTab === 'image' ? '' : 'flex-1'} gap-2 text-xs h-8`}
-              title="Upload do computador"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {activeTab !== 'video' && activeTab !== 'image' && 'Upload do PC'}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Items list */}
+      {/* All sections in a single scroll */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
-          {currentItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <div className={`${activeTabInfo.color} mb-2 opacity-40`}>{activeTabInfo.icon}</div>
-              <p className="text-[11px]">Nenhum item adicionado</p>
-              <p className="text-[10px] mt-0.5 opacity-60">Use os botões acima para importar</p>
-            </div>
-          ) : (
-            currentItems.map((media) => (
-              <div
-                key={media.id}
-                draggable
-                onDragStart={(e) => {
-                  const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.resourceType === 'canvas' ? 'canvas' : media.type;
-                  e.dataTransfer.setData('application/timeline-media', JSON.stringify({
-                    type: dragType,
-                    name: media.name,
-                    src: media.src,
-                    duration: media.duration,
-                    canvasJson: media.canvasJson,
-                  }));
-                  e.dataTransfer.setData(`mediatype/${dragType}`, '');
-                  e.dataTransfer.effectAllowed = 'copy';
-                }}
-                onDoubleClick={() => {
-                  if (media.resourceType === 'canvas' && media.canvasJson) {
-                    handleDoubleClickCanvas(media);
-                  }
-                }}
-                className={`flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors group cursor-grab active:cursor-grabbing ${
-                  media.resourceType === 'canvas' && media.canvasJson ? 'cursor-pointer' : ''
-                }`}
-              >
-                {/* Thumbnail */}
-                <div className="w-11 h-8 rounded bg-muted shrink-0 overflow-hidden relative">
-                  {media.type === 'video' ? (
-                    <>
-                      <video src={media.src} className="w-full h-full object-cover" muted preload="metadata" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Play className="h-3 w-3 text-white drop-shadow" />
-                      </div>
-                    </>
-                  ) : media.type === 'image' ? (
-                    <img src={media.thumbnail || media.src} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Music className="h-3.5 w-3.5 text-muted-foreground" />
+          {TABS.map(tab => {
+            const sectionItems = items[tab.key];
+            const isCollapsed = collapsedSections.has(tab.key);
+            return (
+              <div key={tab.key} className="border border-border/40 rounded-lg overflow-hidden">
+                {/* Section header */}
+                <button
+                  onClick={() => toggleSection(tab.key)}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <span className={tab.color}>{tab.icon}</span>
+                  <span className="text-[11px] font-semibold flex-1 text-left">{tab.label}</span>
+                  {sectionItems.length > 0 && (
+                    <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-medium">{sectionItems.length}</span>
+                  )}
+                  <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                </button>
+
+                {!isCollapsed && (
+                  <div className="px-2 pb-2 pt-1.5 space-y-1.5">
+                    {/* Action buttons */}
+                    <div className="flex gap-1">
+                      {tab.key === 'canvas' ? (
+                        <>
+                          <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                            <Palette className="h-3 w-3" />Criar
+                          </Button>
+                          <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
+                            <Upload className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          {(tab.key === 'video' || tab.key === 'image') && (
+                            <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                              <FolderOpen className="h-3 w-3" />Galeria
+                            </Button>
+                          )}
+                          <Button
+                            onClick={() => getInputRef(tab.key)?.current?.click()}
+                            variant="outline"
+                            className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
+                            title="Upload do computador"
+                          >
+                            <Upload className="h-3 w-3" />
+                            {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
+                          </Button>
+                        </>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium truncate">{media.name}</p>
-                  {media.duration && (
-                    <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
-                  )}
-                  {media.resourceType === 'canvas' && media.canvasJson && (
-                    <p className="text-[9px] text-purple-400">Duplo clique para editar</p>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {media.resourceType === 'canvas' && media.canvasJson && (
-                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
-                      <Pencil className="h-3 w-3 text-purple-400" />
-                    </Button>
-                  )}
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
-                    <Plus className="h-3 w-3 text-primary" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType)} title="Remover">
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
-                </div>
+                    {/* Items */}
+                    {renderSectionItems(tab, sectionItems)}
+                  </div>
+                )}
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
       </ScrollArea>
 
