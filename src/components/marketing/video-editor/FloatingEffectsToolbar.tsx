@@ -69,12 +69,22 @@ function getTransitionStyle(type: TransitionType, progress: number, isExit: bool
     case 'dissolve': return { opacity: p };
     case 'crossfade': return { opacity: p };
     case 'fade-blur': return { opacity: p, filter: `blur(${(1 - p) * 12}px)` };
+    case 'luma-fade': return { opacity: p, filter: `brightness(${0.5 + p * 0.5}) contrast(${0.8 + p * 0.2})` };
     case 'slide-left': return { transform: `translateX(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
     case 'slide-right': return { transform: `translateX(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
     case 'slide-up': return { transform: `translateY(${(1 - p) * 100}%)`, opacity: Math.min(1, p * 2) };
     case 'slide-down': return { transform: `translateY(${(1 - p) * -100}%)`, opacity: Math.min(1, p * 2) };
     case 'roll-left': return { transform: `translateX(${(1 - p) * 100}%) rotate(${(1 - p) * 45}deg)`, opacity: p };
     case 'roll-right': return { transform: `translateX(${(1 - p) * -100}%) rotate(${(1 - p) * -45}deg)`, opacity: p };
+    case 'push-left': return { transform: `translateX(${(1 - p) * 100}%)` };
+    case 'push-right': return { transform: `translateX(${(1 - p) * -100}%)` };
+    case 'push-up': return { transform: `translateY(${(1 - p) * 100}%)` };
+    case 'push-down': return { transform: `translateY(${(1 - p) * -100}%)` };
+    case 'cover-left': return { transform: `translateX(${(1 - p) * 100}%)`, zIndex: 10 };
+    case 'cover-right': return { transform: `translateX(${(1 - p) * -100}%)`, zIndex: 10 };
+    case 'reveal-left': return { transform: `translateX(${-p * 100}%)` };
+    case 'reveal-right': return { transform: `translateX(${p * 100}%)` };
+    case 'whip-pan': return { transform: `translateX(${(1 - p) * 120}%)`, filter: `blur(${(1 - p) * 20}px)` };
     case 'zoom-in': return { transform: `scale(${0.3 + p * 0.7})`, opacity: p };
     case 'zoom-out': return { transform: `scale(${1 + (1 - p) * 0.5})`, opacity: p };
     case 'scale-up': { const b = p < 0.7 ? p / 0.7 : 1 + Math.sin((p - 0.7) / 0.3 * Math.PI) * 0.1; return { transform: `scale(${b * 0.5 + 0.5})`, opacity: Math.min(1, p * 1.5) }; }
@@ -85,9 +95,14 @@ function getTransitionStyle(type: TransitionType, progress: number, isExit: bool
     case 'spiral': return { transform: `rotate(${(1 - p) * 360}deg) scale(${p})`, opacity: p };
     case 'flip-x': return { transform: `perspective(800px) rotateY(${(1 - p) * 90}deg)`, opacity: Math.min(1, p * 1.5) };
     case 'flip-y': return { transform: `perspective(800px) rotateX(${(1 - p) * 90}deg)`, opacity: Math.min(1, p * 1.5) };
+    case 'cross-zoom': return { transform: `scale(${p < 0.5 ? 1 + (0.5 - p) * 4 : 1 + (p - 0.5) * 4})`, opacity: p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2, filter: `blur(${Math.abs(p - 0.5) * 16}px)` };
+    case 'cross-spin': return { transform: `rotate(${(1 - p) * 180}deg) scale(${p})`, opacity: p };
     case 'bounce': { const e = p < 1 ? 1 - Math.pow(2, -10 * p) * Math.cos((p * 10 - 0.75) * (2 * Math.PI) / 3) : 1; return { transform: `scale(${e})`, opacity: Math.min(1, p * 2) }; }
     case 'elastic': { const e = p < 1 ? 1 - Math.pow(2, -8 * p) * Math.cos((p * 12 - 0.5) * (2 * Math.PI) / 3) : 1; return { transform: `scaleX(${e}) scaleY(${2 - e})`, opacity: Math.min(1, p * 2) }; }
     case 'swing': return { transform: `rotate(${Math.sin(p * Math.PI * 3) * (1 - p) * 25}deg)`, opacity: p };
+    case 'shake': return { transform: `translateX(${Math.sin(p * 40) * (1 - p) * 15}px) translateY(${Math.cos(p * 35) * (1 - p) * 8}px)`, opacity: p };
+    case 'drop': { const g = p < 0.6 ? (p / 0.6) * (p / 0.6) : 1 - Math.sin((p - 0.6) / 0.4 * Math.PI * 3) * (1 - p) * 0.3; return { transform: `translateY(${(1 - g) * -200}px)`, opacity: Math.min(1, p * 2) }; }
+    case 'tumble': return { transform: `perspective(600px) rotateX(${(1 - p) * 90}deg) translateY(${(1 - p) * -50}px)`, opacity: p, transformOrigin: 'bottom center' };
     case 'wipe-left': return { clipPath: `inset(0 ${(1 - p) * 100}% 0 0)` };
     case 'wipe-right': return { clipPath: `inset(0 0 0 ${(1 - p) * 100}%)` };
     case 'wipe-up': return { clipPath: `inset(${(1 - p) * 100}% 0 0 0)` };
@@ -98,10 +113,29 @@ function getTransitionStyle(type: TransitionType, progress: number, isExit: bool
     case 'iris-close': return { clipPath: `circle(${(1 - p) * 72}% at 50% 50%)` };
     case 'split-horizontal': return { clipPath: `inset(${(1 - p) * 50}% 0)` };
     case 'split-vertical': return { clipPath: `inset(0 ${(1 - p) * 50}%)` };
+    case 'clock-wipe': { const angle = p * 360; return { clipPath: `polygon(50% 50%, 50% 0%, ${angle > 90 ? '100% 0%,' : `${50 + Math.tan(angle * Math.PI / 180) * 50}% 0%,`} ${angle > 90 ? (angle > 180 ? '100% 100%,' : `100% ${Math.tan((angle - 90) * Math.PI / 180) * 50}%,`) : ''} ${angle > 180 ? (angle > 270 ? '0% 100%,' : `${100 - Math.tan((angle - 180) * Math.PI / 180) * 50}% 100%,`) : ''} ${angle > 270 ? `0% ${100 - Math.tan((angle - 270) * Math.PI / 180) * 50}%` : ''})`.replace(/,\s*\)/, ')') }; }
+    case 'radial-wipe': return { clipPath: `circle(${p * 100}% at 50% 50%)` };
+    case 'blinds-h': { const n = 6; const s = p * 100 / n; return { clipPath: Array.from({ length: n }, (_, i) => `inset(${i * 100 / n}% 0 ${100 - (i + 1) * 100 / n}% 0)`).join(','), opacity: p > 0.1 ? 1 : p * 10 }; }
+    case 'blinds-v': { return { clipPath: `inset(0 ${(1 - p) * 50}% 0 ${(1 - p) * 50}%)`, opacity: p }; }
+    case 'color-wipe': return { clipPath: `inset(0 ${(1 - p) * 100}% 0 0)`, boxShadow: `inset 3px 0 0 0 hsl(var(--primary))` };
+    case 'cube-left': return { transform: `perspective(800px) rotateY(${(1 - p) * -90}deg)`, opacity: p, transformOrigin: 'right center' };
+    case 'cube-right': return { transform: `perspective(800px) rotateY(${(1 - p) * 90}deg)`, opacity: p, transformOrigin: 'left center' };
+    case 'page-curl': return { transform: `perspective(800px) rotateY(${(1 - p) * 90}deg) scale(${0.8 + p * 0.2})`, opacity: p, transformOrigin: 'left center' };
+    case 'door-open': return { clipPath: `inset(0 ${(1 - p) * 50}%)` };
+    case 'door-close': return { clipPath: `inset(0 ${p * 50}%)` };
+    case 'stretch-h': return { transform: `scaleX(${p})`, opacity: p, transformOrigin: 'center' };
+    case 'stretch-v': return { transform: `scaleY(${p})`, opacity: p, transformOrigin: 'center' };
+    case 'fly-in': return { transform: `perspective(800px) translateZ(${(1 - p) * -500}px)`, opacity: p };
+    case 'fly-out': return { transform: `perspective(800px) translateZ(${(1 - p) * 500}px)`, opacity: p };
     case 'blur-transition': return { filter: `blur(${(1 - p) * 15}px)`, opacity: p };
     case 'flash': return { opacity: p, filter: `brightness(${1 + (1 - p) * 3})` };
     case 'glitch': { const offset = Math.sin(p * 30) * (1 - p) * 8; return { transform: `translateX(${offset}px)`, opacity: 0.6 + p * 0.4, filter: `hue-rotate(${(1 - p) * 120}deg)` }; }
     case 'pixelate': return { filter: `blur(${(1 - p) * 8}px)`, opacity: p };
+    case 'light-leak': return { opacity: p, filter: `brightness(${1 + (1 - p) * 2}) saturate(${1 + (1 - p) * 1.5})` };
+    case 'film-burn': return { opacity: p, filter: `brightness(${1 + (1 - p) * 4}) contrast(${1 + (1 - p)}) sepia(${(1 - p) * 80}%)` };
+    case 'ripple': return { transform: `scale(${1 + Math.sin(p * Math.PI * 4) * (1 - p) * 0.1})`, opacity: p, filter: `blur(${(1 - p) * 4}px)` };
+    case 'mosaic': return { filter: `blur(${(1 - p) * 10}px)`, opacity: p, transform: `scale(${1 + (1 - p) * 0.05})` };
+    case 'spin-out': return { transform: `rotate(${(1 - p) * 720}deg) scale(${p})`, opacity: p };
     default: return {};
   }
 }
