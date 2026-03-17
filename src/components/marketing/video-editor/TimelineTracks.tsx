@@ -301,13 +301,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleExternalDrop(e, track)}
               onDoubleClick={(e) => {
-                if (track.type === 'effect' && !track.locked && !(e.target as HTMLElement).closest('.timeline-clip') && onAddEffectClip) {
-                  e.stopPropagation();
-                  const rect = containerRef.current?.getBoundingClientRect();
-                  const x = e.clientX - (rect?.left || 0) + (containerRef.current?.scrollLeft || 0);
-                  setEffectPopover({ trackId: track.id, startTime: x / state.zoom, x: e.clientX, y: e.clientY });
-                  setEffectCategory(null);
-                }
+                // Effect track double-click to add effects removed per user request
               }}
             >
               {/* Left color indicator */}
@@ -438,11 +432,6 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               })}
 
               {/* Hint for empty effect tracks */}
-              {track.type === 'effect' && trackClips.length === 0 && !track.locked && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-[9px] text-muted-foreground/50">Dê duplo-clique para adicionar efeito</span>
-                </div>
-              )}
             </div>
           );
         })}
