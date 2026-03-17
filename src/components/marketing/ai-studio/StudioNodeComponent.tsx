@@ -64,6 +64,8 @@ const nodeGradientMap: Record<string, string> = {
   multiImageRef: 'from-orange-400/20 to-amber-500/20',
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
   imageInput: 'from-orange-500/20 to-amber-500/20',
+  videoInput: 'from-amber-500/20 to-yellow-500/20',
+  multiVideoRef: 'from-amber-400/20 to-yellow-500/20',
   productImageSelect: 'from-emerald-500/20 to-teal-500/20',
   multiProductSelect: 'from-emerald-600/20 to-green-500/20',
   galleryInfluencer: 'from-pink-500/20 to-rose-500/20',
