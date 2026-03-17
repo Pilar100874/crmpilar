@@ -274,8 +274,8 @@ const MiniFilterPreview: React.FC<{
 const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({ basic: true, movement: true, scale: true, dynamic: true, reveal: true, special: true });
-  const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({});
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
@@ -347,28 +347,28 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
+    <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
       <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-3 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
+        <div className="flex items-center gap-1 sm:gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-2 sm:px-3 py-1.5 sm:py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
 
           {/* Clip info */}
-          <div className="flex items-center gap-1.5 pr-2 border-r border-border/40">
-            <span className="text-sm">{clipIcon}</span>
-            <span className="text-[10px] font-semibold truncate max-w-[100px]">{selectedClip.name}</span>
-            <span className="text-[9px] text-muted-foreground">{selectedClip.duration.toFixed(1)}s</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 pr-1.5 sm:pr-2 border-r border-border/40">
+            <span className="text-xs sm:text-sm">{clipIcon}</span>
+            <span className="text-[9px] sm:text-[10px] font-semibold truncate max-w-[60px] sm:max-w-[100px]">{selectedClip.name}</span>
+            <span className="text-[8px] sm:text-[9px] text-muted-foreground hidden sm:inline">{selectedClip.duration.toFixed(1)}s</span>
           </div>
 
           {/* Transitions Popover */}
           {isVisual && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-8 px-3 rounded-full gap-1.5">
-                  <Zap className="h-3.5 w-3.5" />
-                  <span className="text-xs">Transições</span>
+                <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
+                  <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  <span className="text-[10px] sm:text-xs">Transições</span>
                   {hasTransitions && <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[420px] p-0" side="top" align="center">
+              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[420px] p-0" side="top" align="center">
                 {/* === LIVE SIMULATION PREVIEW === */}
                 <div className="p-2 border-b bg-muted/10">
                   <MiniTransitionPreview
@@ -437,7 +437,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
 
-                <ScrollArea className="max-h-[50vh]">
+                <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
                   <div className="p-2 space-y-1.5">
                     {TRANSITION_CATEGORIES.map(cat => {
                       const isExpanded = expandedCategories[cat.id] !== false;
@@ -458,7 +458,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                             <span className="text-[8px] text-muted-foreground">{presets.length}</span>
                           </button>
                           {isExpanded && (
-                            <div className="grid grid-cols-4 gap-1 p-1.5">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 p-1.5">
                               {presets.map(preset => {
                                 const isActive = activeType === preset.type;
                                 return (
@@ -485,18 +485,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </Popover>
           )}
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Filters Popover */}
           <Popover>
-            <PopoverTrigger asChild>
-              <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-8 px-3 rounded-full gap-1.5">
-                <Wand2 className="h-3.5 w-3.5" />
-                <span className="text-xs">Filtros</span>
-                {hasFilters && <span className="text-[9px] bg-primary-foreground/20 px-1.5 rounded-full">{selectedClip.filters?.length}</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" side="top" align="center">
+              <PopoverTrigger asChild>
+                <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
+                  <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  <span className="text-[10px] sm:text-xs">Filtros</span>
+                  {hasFilters && <span className="text-[8px] sm:text-[9px] bg-primary-foreground/20 px-1 sm:px-1.5 rounded-full">{selectedClip.filters?.length}</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[400px] p-0" side="top" align="center">
               {/* === LIVE FILTER SIMULATION === */}
               <div className="p-2 border-b bg-muted/10">
                 <MiniFilterPreview
@@ -517,7 +517,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[50vh]">
+              <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
                 <div className="p-2 space-y-2">
                   {/* Presets by category */}
                   {FILTER_CATEGORIES.map(cat => {
@@ -618,13 +618,13 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </PopoverContent>
           </Popover>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Simulate in main preview */}
           <Button
             variant={isSimulating ? 'default' : 'outline'}
             size="sm"
-            className="h-8 px-3 rounded-full gap-1.5"
+            className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5"
             onClick={() => {
               onSimulate?.(!isSimulating);
               onToggleFilterPreview?.(!isSimulating);
@@ -632,15 +632,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             disabled={!hasFilters && !hasTransitions}
             title="Simular efeitos no preview principal"
           >
-            {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            <span className="text-xs">{isSimulating ? 'Simulando' : 'Preview'}</span>
+            {isSimulating ? <Pause className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> : <Eye className="h-3 sm:h-3.5 w-3 sm:w-3.5" />}
+            <span className="text-[10px] sm:text-xs">{isSimulating ? 'Simulando' : 'Preview'}</span>
           </Button>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Close */}
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
+            <X className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
           </Button>
         </div>
       </div>
