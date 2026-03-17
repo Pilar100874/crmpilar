@@ -80,6 +80,24 @@ const VideoTimelineEditor: React.FC = () => {
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
 
+  // Keep floating scrollbar dimensions in sync with the timeline container
+  useEffect(() => {
+    const el = timelineScrollRef.current;
+    if (!el) return;
+    const sync = () => {
+      setScrollState({
+        scrollLeft: el.scrollLeft, scrollTop: el.scrollTop,
+        scrollWidth: el.scrollWidth, scrollHeight: el.scrollHeight,
+        clientWidth: el.clientWidth, clientHeight: el.clientHeight,
+      });
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => ro.disconnect();
+  }, [state.tracks.length, state.clips.length, state.zoom, state.duration]);
+
   // Project management
   const [showEditor, setShowEditor] = useState(false);
   const [projects, setProjects] = useState<VideoProject[]>([]);
