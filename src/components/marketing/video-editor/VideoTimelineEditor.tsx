@@ -1341,6 +1341,22 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Effect preview dialog from timeline double-click */}
+      {previewEffectFromTimeline && (
+        <Dialog open onOpenChange={() => setPreviewEffectFromTimeline(null)}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold">
+              {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Preview
+            </DialogTitle>
+            <div className="flex flex-col items-center gap-3 p-4">
+              <MiniEffectPreview effectType={previewEffectFromTimeline} size={280} autoPlay />
+              <p className="text-xs text-muted-foreground text-center">
+                {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.description}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
