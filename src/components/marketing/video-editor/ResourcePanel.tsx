@@ -68,6 +68,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     video: [], image: [], canvas: [], music: [], audio: [],
   });
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
+  const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
 
   // Sync timeline clips into resource panel so every clip on a track appears in its group
   useEffect(() => {
