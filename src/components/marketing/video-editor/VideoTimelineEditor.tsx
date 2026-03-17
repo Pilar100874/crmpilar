@@ -749,6 +749,7 @@ const VideoTimelineEditor: React.FC = () => {
     });
   }, [timeline]);
 
+  const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
     setCanvasEditJson(undefined);
