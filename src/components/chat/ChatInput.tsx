@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { convertVideoToWhatsappMp4 } from "@/lib/video/whatsappMp4";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target, Globe, X } from "lucide-react";
@@ -489,14 +490,13 @@ export default function ChatInput({
     }
   };
 
-  const handleQuickAttachmentSelect = (attachment: any) => {
+  const handleQuickAttachmentSelect = async (attachment: any) => {
     console.log("📎 Anexo rápido selecionado:", attachment);
     
     // Determinar o contentType baseado no tipo do anexo
     let contentType: Message["contentType"] = "text";
     
     if (attachment.type === "file") {
-      // Mapear file_type para contentType apropriado
       if (attachment.file_type === "image") {
         contentType = "image";
       } else if (attachment.file_type === "pdf" || attachment.file_type === "excel" || attachment.file_type === "word") {
@@ -506,20 +506,54 @@ export default function ChatInput({
       }
     }
     
-    console.log("📎 Content type determinado:", contentType);
-    console.log("📎 URL do arquivo:", attachment.url);
+    const isVideo = attachment.file_type === "video";
+    let finalUrl = attachment.url;
     
-    // Construir mensagem descritiva
+    // Se for vídeo, converter para MP4 compatível com WhatsApp e re-upload
+    if (isVideo && attachment.url) {
+      try {
+        toast.info("Convertendo vídeo para formato WhatsApp...");
+        const resp = await fetch(attachment.url);
+        const originalBlob = await resp.blob();
+        const mp4Blob = await convertVideoToWhatsappMp4(originalBlob);
+        
+        // Upload do vídeo convertido para o bucket de chat
+        const estabId = await getEstabelecimentoId();
+        const fileName = `video_chat_${Date.now()}.mp4`;
+        const storagePath = `${estabId}/${fileName}`;
+        
+        const { error: upErr } = await supabase.storage
+          .from('chat-attachments')
+          .upload(storagePath, mp4Blob, { contentType: 'video/mp4' });
+        
+        if (upErr) throw upErr;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-attachments')
+          .getPublicUrl(storagePath);
+        
+        finalUrl = publicUrl;
+        console.log("📎 Vídeo convertido e uploaded:", finalUrl);
+      } catch (err) {
+        console.error("Erro ao converter vídeo:", err);
+        toast.error("Erro ao converter vídeo para WhatsApp");
+        return;
+      }
+    }
+    
+    console.log("📎 Content type determinado:", contentType);
+    console.log("📎 URL do arquivo:", finalUrl);
+    
     const messageText = attachment.type === "link" 
       ? attachment.title
       : `${attachment.title}`;
     
-    console.log("📎 Enviando mensagem:", { messageText, contentType, url: attachment.url, title: attachment.title });
+    console.log("📎 Enviando mensagem:", { messageText, contentType, url: finalUrl, title: attachment.title });
     
     onSendMessage(
       messageText,
       contentType,
-      attachment.url,
+      finalUrl,
       attachment.title
     );
   };
