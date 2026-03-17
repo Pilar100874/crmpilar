@@ -1068,8 +1068,7 @@ const VideoTimelineEditor: React.FC = () => {
           <div className="relative flex-1 min-h-0">
             <div
               ref={timelineScrollRef}
-              className="absolute inset-0 overflow-auto"
-              style={{ scrollbarWidth: showFloatingScrollbar ? 'none' : 'auto' }}
+              className={`absolute inset-0 overflow-auto ${showFloatingScrollbar ? 'scrollbar-hide' : ''}`}
               onScroll={(e) => {
                 const t = e.currentTarget;
                 setScrollState({ scrollLeft: t.scrollLeft, scrollTop: t.scrollTop, scrollWidth: t.scrollWidth, scrollHeight: t.scrollHeight, clientWidth: t.clientWidth, clientHeight: t.clientHeight });
