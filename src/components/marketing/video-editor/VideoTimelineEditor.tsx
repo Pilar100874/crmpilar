@@ -811,7 +811,8 @@ const VideoTimelineEditor: React.FC = () => {
       opacity: 1,
       filters: [],
       src: videoUrl,
-      locked: true,
+      locked: false,
+      lockedEdge: 'both' as any,
     });
 
     // Lock adjacent clip edges to preserve transition continuity
