@@ -607,6 +607,31 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                           </Badge>
                         </div>
 
+                        {/* Toggle para disponibilidade no chat */}
+                        {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="flex items-center gap-2 mb-2 cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MessageSquare className={`h-3.5 w-3.5 ${item.disponivel_chat ? 'text-primary' : 'text-muted-foreground'}`} />
+                                  <span className="text-xs text-muted-foreground">Chat</span>
+                                  <Switch
+                                    checked={!!item.disponivel_chat}
+                                    onCheckedChange={() => handleToggleDisponibilidadeChat(item)}
+                                    className="scale-75"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {item.disponivel_chat ? 'Disponível nos anexos rápidos do chat' : 'Habilitar para anexos rápidos do chat'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+
                         {item.channels && item.channels.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-3">
                             {item.channels.map((channel) => (
