@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { TimelineClip, TimelineTrack, TransitionType } from './types';
 
 interface Props {
