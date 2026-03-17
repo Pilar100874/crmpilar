@@ -275,7 +275,6 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
-  const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const entranceTransition = selectedClip.transitions?.entrance;
