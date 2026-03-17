@@ -183,6 +183,7 @@ export const saveStudioDefaults = (estabelecimentoId: string, defaults: StudioDe
 interface Props {
   open: boolean;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
