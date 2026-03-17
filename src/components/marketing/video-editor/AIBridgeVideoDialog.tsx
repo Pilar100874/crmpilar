@@ -486,7 +486,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     onKeyDown={e => { if (e.key === 'Enter') handleAddNew(); if (e.key === 'Escape') setIsAddingNew(false); }}
                   />
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleAddNew} disabled={!newText.trim()}>
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className="h-3 w-3 text-primary" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setIsAddingNew(false)}>
                     <X className="h-3 w-3 text-destructive" />
@@ -506,7 +506,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                         onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }}
                       />
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
-                        <Check className="h-3 w-3 text-green-500" />
+                        <Check className="h-3 w-3 text-primary" />
                       </Button>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
                         <X className="h-3 w-3 text-destructive" />
