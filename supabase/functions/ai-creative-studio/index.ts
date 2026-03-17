@@ -489,20 +489,38 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
 
 // --- Kling (Kuaishou) ---
 async function generateVideoKling(apiKey: string, params: any): Promise<VideoGenerationResult> {
-  const response = await fetch("https://api.klingai.com/v1/videos/text2video", {
+  // Use image-to-video endpoint when reference images are provided
+  const hasStartImage = params.imageUrls?.[0]?.startsWith("http");
+  const endpoint = hasStartImage
+    ? "https://api.klingai.com/v1/videos/image2video"
+    : "https://api.klingai.com/v1/videos/text2video";
+
+  const klingBody: any = {
+    prompt: params.prompt,
+    negative_prompt: params.negativePrompt || "",
+    cfg_scale: params.cfgScale || 0.5,
+    mode: params.model === "kling/v2.1" ? "highquality" : "std",
+    aspect_ratio: params.aspectRatio || "16:9",
+    duration: String(params.duration || 5),
+  };
+
+  if (hasStartImage) {
+    klingBody.image = params.imageUrls[0];
+    console.log(`[generate_video] Kling: using image-to-video with start frame`);
+    // Bridge mode: add tail image for Kling if supported
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      klingBody.image_tail = params.imageUrls[1];
+      console.log(`[generate_video] Kling bridge mode: image (start) + image_tail (end)`);
+    }
+  }
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      prompt: params.prompt,
-      negative_prompt: params.negativePrompt || "",
-      cfg_scale: params.cfgScale || 0.5,
-      mode: params.model === "kling/v2.1" ? "highquality" : "std",
-      aspect_ratio: params.aspectRatio || "16:9",
-      duration: String(params.duration || 5),
-    }),
+    body: JSON.stringify(klingBody),
   });
 
   if (!response.ok) {
