@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -7,7 +7,7 @@ import {
   Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { TimelineTrack } from './types';
+import { TimelineTrack, TimelineClip } from './types';
 
 type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio';
 
@@ -26,6 +26,7 @@ export interface ResourcePanelHandle {
 interface Props {
   onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   tracks: TimelineTrack[];
+  clips: TimelineClip[];
   onOpenCanvas: () => void;
   onEditCanvas?: (canvasJson: string, itemId: string) => void;
 }
@@ -59,11 +60,47 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
 ];
 
-const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, onOpenCanvas, onEditCanvas }, ref) => {
-  const [activeTab, setActiveTab] = useState<ResourceType>('video');
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
   const [items, setItems] = useState<Record<ResourceType, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [],
   });
+
+  // Sync timeline clips into resource panel so every clip on a track appears in its group
+  useEffect(() => {
+    setItems(prev => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const clip of clips) {
+        let resType: ResourceType;
+        if (clip.type === 'video') resType = 'video';
+        else if (clip.type === 'image') resType = 'image';
+        else if (clip.type === 'canvas') resType = 'canvas';
+        else if (clip.type === 'audio') resType = 'audio';
+        else continue;
+
+        const alreadyExists = next[resType].some(item => item.id === clip.id || item.src === clip.src);
+        if (!alreadyExists && clip.src) {
+          changed = true;
+          const mediaType: 'video' | 'image' | 'audio' =
+            clip.type === 'video' ? 'video' :
+            clip.type === 'audio' ? 'audio' : 'image';
+          next[resType] = [...next[resType], {
+            id: clip.id,
+            name: clip.name,
+            src: clip.src,
+            type: mediaType,
+            duration: clip.duration || null,
+            thumbnail: clip.thumbnail || null,
+            resourceType: resType,
+            canvasJson: clip.canvasJson,
+          }];
+        }
+      }
+
+      return changed ? next : prev;
+    });
+  }, [clips]);
 
   useImperativeHandle(ref, () => ({
     addCanvasItem: (name: string, src: string, canvasJson?: string) => {
@@ -78,7 +115,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         canvasJson,
       };
       setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
-      setActiveTab('canvas');
+      // tab auto-switched by section visibility
     },
     updateCanvasItem: (itemId: string, src: string, canvasJson: string) => {
       setItems(prev => ({
@@ -148,7 +185,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         return { ...prev, [resType]: [...prev[resType], imported] };
       });
     }
-    setActiveTab(resType);
+    // items added to their section automatically
     setGalleryOpen(false);
     setSelectedIds(new Set());
   }, [galleryItems, selectedIds, galleryType]);
@@ -194,7 +231,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         setItems(prev => ({ ...prev, [resType]: [...prev[resType], imported] }));
       }
     });
-    setActiveTab(resType);
+    // items added to section automatically
   }, []);
 
   const handleAddToTimeline = useCallback((media: ImportedMedia) => {
@@ -238,8 +275,6 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
     return 'audio/*';
   };
 
-  const currentItems = items[activeTab];
-  const activeTabInfo = TABS.find(t => t.key === activeTab)!;
 
   const renderSectionItems = (tab: typeof TABS[number], sectionItems: ImportedMedia[]) => (
     <div className="space-y-1">
