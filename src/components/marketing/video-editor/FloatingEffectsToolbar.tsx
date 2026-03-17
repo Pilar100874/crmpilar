@@ -458,7 +458,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                             <span className="text-[8px] text-muted-foreground">{presets.length}</span>
                           </button>
                           {isExpanded && (
-                            <div className="grid grid-cols-4 gap-1 p-1.5">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 p-1.5">
                               {presets.map(preset => {
                                 const isActive = activeType === preset.type;
                                 return (
