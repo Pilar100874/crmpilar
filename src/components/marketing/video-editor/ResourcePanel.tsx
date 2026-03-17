@@ -6,6 +6,7 @@ import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
   Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles
 } from 'lucide-react';
+import MiniEffectPreview from './MiniEffectPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack, TimelineClip, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 
