@@ -90,11 +90,11 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
-  // Veo only accepts ONE image — use the hero frame (composite of all refs)
-  // If no hero frame, use the first available image (product has priority)
+  // Veo only accepts ONE image — use the first available (or hero frame)
+  // In bridgeMode, use frameA (start) as the reference image
   let imagePayload: any = {};
   const allImageUrls = (params.imageUrls || []) as string[];
-  const bestImageUrl = allImageUrls[0]; // hero frame or product (by priority)
+  const bestImageUrl = allImageUrls[0];
   
   if (bestImageUrl?.startsWith("http")) {
     try {
@@ -432,6 +432,11 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     if (params.imageUrls?.[0]?.startsWith("http")) {
       body.promptImage = params.imageUrls[0];
     }
+    // Bridge mode: use last_frame for Runway Gen-3 to create start→end transition
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      body.lastFrame = params.imageUrls[1];
+      console.log(`[generate_video] Runway bridge mode: promptImage (start) + lastFrame (end)`);
+    }
   }
 
   const response = await fetch(endpoint, {
@@ -484,20 +489,38 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
 
 // --- Kling (Kuaishou) ---
 async function generateVideoKling(apiKey: string, params: any): Promise<VideoGenerationResult> {
-  const response = await fetch("https://api.klingai.com/v1/videos/text2video", {
+  // Use image-to-video endpoint when reference images are provided
+  const hasStartImage = params.imageUrls?.[0]?.startsWith("http");
+  const endpoint = hasStartImage
+    ? "https://api.klingai.com/v1/videos/image2video"
+    : "https://api.klingai.com/v1/videos/text2video";
+
+  const klingBody: any = {
+    prompt: params.prompt,
+    negative_prompt: params.negativePrompt || "",
+    cfg_scale: params.cfgScale || 0.5,
+    mode: params.model === "kling/v2.1" ? "highquality" : "std",
+    aspect_ratio: params.aspectRatio || "16:9",
+    duration: String(params.duration || 5),
+  };
+
+  if (hasStartImage) {
+    klingBody.image = params.imageUrls[0];
+    console.log(`[generate_video] Kling: using image-to-video with start frame`);
+    // Bridge mode: add tail image for Kling if supported
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      klingBody.image_tail = params.imageUrls[1];
+      console.log(`[generate_video] Kling bridge mode: image (start) + image_tail (end)`);
+    }
+  }
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      prompt: params.prompt,
-      negative_prompt: params.negativePrompt || "",
-      cfg_scale: params.cfgScale || 0.5,
-      mode: params.model === "kling/v2.1" ? "highquality" : "std",
-      aspect_ratio: params.aspectRatio || "16:9",
-      duration: String(params.duration || 5),
-    }),
+    body: JSON.stringify(klingBody),
   });
 
   if (!response.ok) {
@@ -540,6 +563,11 @@ async function generateVideoLuma(apiKey: string, params: any): Promise<VideoGene
   };
   if (params.imageUrls?.[0]?.startsWith("http")) {
     body.keyframes = { frame0: { type: "image", url: params.imageUrls[0] } };
+    // Bridge mode: add end keyframe for Luma
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      body.keyframes.frame1 = { type: "image", url: params.imageUrls[1] };
+      console.log(`[generate_video] Luma bridge mode: frame0 (start) + frame1 (end)`);
+    }
   }
 
   const response = await fetch("https://api.lumalabs.ai/dream-machine/v1/generations", {
