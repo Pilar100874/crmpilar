@@ -34,8 +34,12 @@ interface Props {
   onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
+  const [dragMediaType, setDragMediaType] = useState<string | null>(null);
+  const [effectPopover, setEffectPopover] = useState<{ trackId: string; startTime: number; x: number; y: number } | null>(null);
+  const [effectCategory, setEffectCategory] = useState<string | null>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const [dragMediaType, setDragMediaType] = useState<string | null>(null);
   const draggingRef = useRef<{
