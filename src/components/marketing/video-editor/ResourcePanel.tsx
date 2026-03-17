@@ -306,6 +306,12 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     }
   }, [commitRename, cancelRename]);
 
+  const handleDoubleClickCanvas = useCallback((media: ImportedMedia) => {
+    if (media.canvasJson && onEditCanvas) {
+      onEditCanvas(media.canvasJson, media.id);
+    }
+  }, [onEditCanvas]);
+
   const getInputRef = (tab: ResourceType) => {
     if (tab === 'video') return videoInputRef;
     if (tab === 'image') return imageInputRef;
@@ -329,8 +335,9 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
         sectionItems.map((media) => (
           <div
             key={media.id}
-            draggable
+            draggable={editingId !== media.id}
             onDragStart={(e) => {
+              if (editingId === media.id) { e.preventDefault(); return; }
               const dragType = media.resourceType === 'music' || media.resourceType === 'audio' ? 'audio' : media.resourceType === 'canvas' ? 'canvas' : media.type;
               e.dataTransfer.setData('application/timeline-media', JSON.stringify({
                 type: dragType,
@@ -371,7 +378,29 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium truncate">{media.name}</p>
+              {editingId === media.id ? (
+                <input
+                  autoFocus
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={() => commitRename(media.id, media.resourceType)}
+                  onKeyDown={(e) => handleRenameKeyDown(e, media.id, media.resourceType)}
+                  className="text-[11px] font-medium w-full bg-background border border-primary/50 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+                  onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <p
+                  className="text-[11px] font-medium truncate cursor-text hover:text-primary/80 transition-colors"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    startRename(media);
+                  }}
+                  title="Duplo clique para renomear"
+                >
+                  {media.name}
+                </p>
+              )}
               {media.duration && (
                 <p className="text-[10px] text-muted-foreground">{Math.round(media.duration)}s</p>
               )}
@@ -382,9 +411,14 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
             {/* Actions */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {editingId !== media.id && (
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); startRename(media); }} title="Renomear">
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </Button>
+              )}
               {media.resourceType === 'canvas' && media.canvasJson && (
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
-                  <Pencil className="h-3 w-3 text-purple-400" />
+                  <Palette className="h-3 w-3 text-purple-400" />
                 </Button>
               )}
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
