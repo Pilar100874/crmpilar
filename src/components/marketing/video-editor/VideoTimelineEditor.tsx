@@ -20,7 +20,8 @@ import FloatingEffectsToolbar from './FloatingEffectsToolbar';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
-import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS, TransitionType } from './types';
+import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS, TransitionType, EFFECT_TRACK_PRESETS } from './types';
+import MiniEffectPreview from './MiniEffectPreview';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -67,6 +68,7 @@ const VideoTimelineEditor: React.FC = () => {
     format: 'mp4',
   });
   const resourcePanelRef = useRef<ResourcePanelHandle>(null);
+  const [previewEffectFromTimeline, setPreviewEffectFromTimeline] = useState<TransitionType | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null);
   const [exportedVideoBlob, setExportedVideoBlob] = useState<Blob | null>(null);
@@ -757,6 +759,10 @@ const VideoTimelineEditor: React.FC = () => {
   }, []);
 
   const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
+    if (clip.type === 'effect' && clip.effectType) {
+      setPreviewEffectFromTimeline(clip.effectType);
+      return;
+    }
     if (clip.canvasJson) {
       setCanvasEditClipId(clip.id);
       setCanvasEditResourceId(null);
@@ -1335,6 +1341,22 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Effect preview dialog from timeline double-click */}
+      {previewEffectFromTimeline && (
+        <Dialog open onOpenChange={() => setPreviewEffectFromTimeline(null)}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold">
+              {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Preview
+            </DialogTitle>
+            <div className="flex flex-col items-center gap-3 p-4">
+              <MiniEffectPreview effectType={previewEffectFromTimeline} size={280} autoPlay />
+              <p className="text-xs text-muted-foreground text-center">
+                {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.description}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

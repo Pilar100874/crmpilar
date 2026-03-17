@@ -4,6 +4,7 @@ import { TransitionType } from './types';
 interface Props {
   effectType: TransitionType;
   size?: number;
+  autoPlay?: boolean;
 }
 
 function getOverlayStyleMini(
@@ -155,7 +156,7 @@ function getOverlayStyleMini(
   }
 }
 
-const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64 }) => {
+const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = false }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
@@ -171,7 +172,7 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64 }) => {
   }, []);
 
   useEffect(() => {
-    if (isHovering) {
+    if (isHovering || autoPlay) {
       startRef.current = 0;
       rafRef.current = requestAnimationFrame(animate);
     } else {
@@ -179,9 +180,10 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64 }) => {
       setProgress(0);
     }
     return () => cancelAnimationFrame(rafRef.current);
-  }, [isHovering, animate]);
+  }, [isHovering, autoPlay, animate]);
 
-  const overlay = isHovering ? getOverlayStyleMini(effectType, progress) : null;
+  const active = isHovering || autoPlay;
+  const overlay = active ? getOverlayStyleMini(effectType, progress) : null;
 
   return (
     <div
@@ -202,8 +204,8 @@ const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64 }) => {
           {overlay.elements}
         </div>
       )}
-      {/* Play hint when not hovering */}
-      {!isHovering && (
+      {/* Play hint when not active */}
+      {!active && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-4 h-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <div className="w-0 h-0 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent border-l-[5px] border-l-white/70 ml-0.5" />
