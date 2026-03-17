@@ -238,6 +238,28 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
             onCheckedChange={(v) => onUpdateClip(clip.id, { locked: v })}
           />
         </div>
+
+        {/* Locked Edge (for AI transition adjacent clips) */}
+        {clip.lockedEdge && (
+          <div className="flex items-center justify-between p-2 rounded-md bg-destructive/10 border border-destructive/20">
+            <div>
+              <Label className="text-xs flex items-center gap-1">
+                🔒 Borda {clip.lockedEdge === 'start' ? 'inicial' : 'final'} travada
+              </Label>
+              <p className="text-[9px] text-muted-foreground">
+                Travada para preservar continuidade com transição AI adjacente
+              </p>
+            </div>
+            <Switch
+              checked={true}
+              onCheckedChange={(v) => {
+                if (!v) {
+                  onUpdateClip(clip.id, { lockedEdge: null });
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </ScrollArea>
   );

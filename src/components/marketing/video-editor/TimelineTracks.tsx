@@ -399,14 +399,34 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
 
                     {!clip.locked && !track.locked && (
                       <>
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-l"
-                          onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-start')}
-                        />
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-r"
-                          onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-end')}
-                        />
+                        {clip.lockedEdge !== 'start' && (
+                          <div
+                            className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-l"
+                            onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-start')}
+                          />
+                        )}
+                        {clip.lockedEdge === 'start' && (
+                          <div
+                            className="absolute left-0 top-0 bottom-0 w-2 opacity-0 group-hover:opacity-100 bg-destructive/30 rounded-l cursor-not-allowed flex items-center justify-center"
+                            onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-start')}
+                          >
+                            <span className="text-[6px]">🔒</span>
+                          </div>
+                        )}
+                        {clip.lockedEdge !== 'end' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 bg-foreground/20 rounded-r"
+                            onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-end')}
+                          />
+                        )}
+                        {clip.lockedEdge === 'end' && (
+                          <div
+                            className="absolute right-0 top-0 bottom-0 w-2 opacity-0 group-hover:opacity-100 bg-destructive/30 rounded-r cursor-not-allowed flex items-center justify-center"
+                            onMouseDown={(e) => handleClipMouseDown(e, clip, 'resize-end')}
+                          >
+                            <span className="text-[6px]">🔒</span>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
