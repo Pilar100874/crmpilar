@@ -275,8 +275,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
     return 'audio/*';
   };
 
-  const currentItems = items[activeTab];
-  const activeTabInfo = TABS.find(t => t.key === activeTab)!;
+  // These were used by old tab UI, kept for potential getInputRef/getAccept usage
+  const _unused1 = items; // all items accessed per-section now
 
   const renderSectionItems = (tab: typeof TABS[number], sectionItems: ImportedMedia[]) => (
     <div className="space-y-1">
