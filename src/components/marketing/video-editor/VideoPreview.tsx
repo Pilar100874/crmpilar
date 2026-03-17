@@ -308,7 +308,7 @@ function getOverlayStyle(
   }
 }
 
-
+const VideoPreview: React.FC<Props> = ({
   clips, currentTime, tracks, isPlaying,
   selectedClipIds = [], onUpdateClip, onSelectClip,
   previewingTransition, previewingFilter, resolution = '1920x1080',
