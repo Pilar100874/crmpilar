@@ -149,6 +149,13 @@ const AUDIO_MODELS: ModelInfo[] = [
   { value: 'suno/bark', label: '🐕 Bark', provider: 'Suno', cost: '$', quality: 3, tip: 'Open source, expressivo' },
   { value: 'microsoft/azure-tts', label: '🔵 Azure Neural TTS', provider: 'Microsoft', cost: '$$', quality: 4, tip: 'Muitas vozes, boa qualidade' },
   { value: 'amazon/polly-neural', label: '🟡 Amazon Polly Neural', provider: 'AWS', cost: '$', quality: 3, tip: 'Estável, integração AWS' },
+  // AIML API audio models
+  { value: 'aimlapi/elevenlabs-tts', label: '🤖 ML: ElevenLabs TTS', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.30/1k chars' },
+  { value: 'aimlapi/openai-tts', label: '🤖 ML: OpenAI TTS', provider: 'AIML API', cost: '$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/xtts-v2', label: '🤖 ML: Xtts-v2', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API, open source' },
+  { value: 'aimlapi/bark', label: '🤖 ML: Bark', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  // Pollo AI audio models
+  { value: 'polloai/fish-speech', label: '🐔 PL: Fish Speech TTS', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const MUSIC_MODELS: ModelInfo[] = [
@@ -169,6 +176,7 @@ const MUSIC_MODELS: ModelInfo[] = [
   { value: 'aimlapi/suno-v4', label: '🤖 ML: Suno v4', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.05' },
   { value: 'aimlapi/udio-v2', label: '🤖 ML: Udio v2', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API' },
   { value: 'aimlapi/musicgen', label: '🤖 ML: MusicGen', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/stable-audio', label: '🤖 ML: Stable Audio', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
 ];
 
 // Voices / Locutores
