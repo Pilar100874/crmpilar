@@ -393,21 +393,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     ],
   },
   {
-    id: 'media',
-    label: 'Mídia',
-    icon: '📂',
-    nodes: [
-      {
-        type: 'mediaGallery',
-        label: 'Galeria',
-        description: 'Selecione imagens ou vídeos da galeria de mídia',
-        icon: '📂',
-        color: '#0ea5e9',
-        defaultConfig: { mediaType: 'image', selectedUrl: '', selectedName: '', selectedId: '' },
-      },
-    ],
-  },
-  {
     id: 'output',
     label: 'Saída',
     icon: '📤',
