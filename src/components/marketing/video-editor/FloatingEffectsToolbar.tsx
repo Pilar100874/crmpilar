@@ -639,8 +639,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
           <div className="h-4 sm:h-5 w-px bg-border/40" />
 
           {/* Close */}
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={onClose}>
+            <X className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
           </Button>
         </div>
       </div>
