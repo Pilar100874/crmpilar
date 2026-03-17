@@ -122,7 +122,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
         canvasJson,
       };
       setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
-      // tab auto-switched by section visibility
+    },
+    addTransitionItem: (name: string, src: string, duration: number) => {
+      const imported: ImportedMedia = {
+        id: `transition_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        src,
+        type: 'video',
+        duration,
+        thumbnail: null,
+        resourceType: 'transition',
+      };
+      setItems(prev => ({ ...prev, transition: [...prev.transition, imported] }));
     },
     updateCanvasItem: (itemId: string, src: string, canvasJson: string) => {
       setItems(prev => ({
