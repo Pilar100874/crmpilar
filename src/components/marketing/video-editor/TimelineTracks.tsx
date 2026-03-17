@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { TimelineState, TimelineClip, TRACK_COLORS } from './types';
+import { TimelineState, TimelineClip, TRACK_COLORS, EFFECT_TRACK_PRESETS, TransitionType } from './types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -30,6 +31,7 @@ interface Props {
   onSeek: (time: number) => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
   onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
+  onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
 }
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip }) => {
