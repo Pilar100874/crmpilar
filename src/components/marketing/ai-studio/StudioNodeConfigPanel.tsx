@@ -61,6 +61,22 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
   { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
   { value: 'apiframe/kling-image', label: '⚡ AF: Kling Image', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  // AIML API models
+  { value: 'aimlapi/flux-schnell', label: '🤖 ML: Flux Schnell', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API, $0.003' },
+  { value: 'aimlapi/flux-pro', label: '🤖 ML: Flux Pro', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.05' },
+  { value: 'aimlapi/flux-dev', label: '🤖 ML: Flux Dev', provider: 'AIML API', cost: '$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/dall-e-3', label: '🤖 ML: DALL-E 3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.04' },
+  { value: 'aimlapi/sd3', label: '🤖 ML: Stable Diffusion 3', provider: 'AIML API', cost: '$', quality: 4, tip: 'Via AIML API, $0.035' },
+  { value: 'aimlapi/sdxl', label: '🤖 ML: SDXL', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/midjourney', label: '🤖 ML: Midjourney', provider: 'AIML API', cost: '$$$', quality: 5, tip: 'Via AIML API' },
+  { value: 'aimlapi/ideogram', label: '🤖 ML: Ideogram', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/recraft-v3', label: '🤖 ML: Recraft V3', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
+  // Pollo AI models
+  { value: 'polloai/flux-schnell', label: '🐔 PL: Flux Schnell', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 1 crédito' },
+  { value: 'polloai/flux-pro', label: '🐔 PL: Flux Pro', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 5 créditos' },
+  { value: 'polloai/ideogram', label: '🐔 PL: Ideogram v2', provider: 'Pollo AI', cost: '$', quality: 4, tip: 'Via Pollo AI, 2 créditos' },
+  { value: 'polloai/recraft-v3', label: '🐔 PL: Recraft V3', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI' },
+  { value: 'polloai/kolors', label: '🐔 PL: Kolors', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const VIDEO_MODELS: ModelInfo[] = [
