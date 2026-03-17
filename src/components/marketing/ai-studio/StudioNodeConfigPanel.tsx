@@ -427,8 +427,10 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   return configuredProviders.some((cp) => cp.toLowerCase() === requiredProvider);
 };
 
-const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[]): ModelInfo[] => {
+const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): ModelInfo[] => {
   return models.filter((m) => {
+    // Hide models from inactive unified providers
+    if (shouldHideModel(m.value, activeUnified)) return false;
     // Always show Lovable AI gateway models (for LLM/Image)
     if (isLovableGatewayModel(m.value)) return true;
     // Show if the provider prefix matches a configured key
@@ -438,11 +440,13 @@ const filterModelsByProviders = (models: ModelInfo[], configuredProviders: strin
 };
 
 // For video: show ALL models but mark unconfigured as disabled
-const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[]): (ModelInfo & { disabled: boolean })[] => {
-  return models.map((m) => ({
-    ...m,
-    disabled: !isModelConfigured(m.value, configuredProviders),
-  }));
+const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): (ModelInfo & { disabled: boolean })[] => {
+  return models
+    .filter((m) => !shouldHideModel(m.value, activeUnified))
+    .map((m) => ({
+      ...m,
+      disabled: !isModelConfigured(m.value, configuredProviders),
+    }));
 };
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
@@ -452,6 +456,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const activeResult = storeResult ?? node.data.result;
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
 
   useEffect(() => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -468,11 +474,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     })();
   }, []);
 
-  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
-  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
-  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders), [configuredProviders]);
-  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
-  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
+  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
