@@ -59,6 +59,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'video', label: 'Vídeo', icon: <Film className="h-4 w-4" />, color: 'text-blue-400' },
   { key: 'image', label: 'Imagem', icon: <ImageIcon className="h-4 w-4" />, color: 'text-green-400' },
   { key: 'canvas', label: 'Canvas', icon: <Palette className="h-4 w-4" />, color: 'text-purple-400' },
+  { key: 'transition', label: 'Transições AI', icon: <Wand2 className="h-4 w-4" />, color: 'text-cyan-400' },
   { key: 'music', label: 'Música', icon: <Music className="h-4 w-4" />, color: 'text-yellow-400' },
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
   { key: 'effect', label: 'Efeitos', icon: <Sparkles className="h-4 w-4" />, color: 'text-pink-400' },
