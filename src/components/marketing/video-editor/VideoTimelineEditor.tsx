@@ -1080,7 +1080,7 @@ const VideoTimelineEditor: React.FC = () => {
                 <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
                   <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
                 </div>
-                <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
+                <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
               </div>
             </div>
           </div>
