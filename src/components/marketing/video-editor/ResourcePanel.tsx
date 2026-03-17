@@ -453,29 +453,50 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
       {/* All sections in a single scroll */}
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="p-1.5 space-y-0.5">
           {TABS.map(tab => {
             const isEffectTab = tab.key === 'effect';
             const sectionItems = isEffectTab ? [] : items[tab.key as Exclude<ResourceType, 'effect'>];
             const isCollapsed = collapsedSections.has(tab.key);
             const effectCount = isEffectTab ? EFFECT_TRACK_PRESETS.length : 0;
+            const itemCount = isEffectTab ? effectCount : sectionItems.length;
             return (
-              <div key={tab.key} className="border border-border/40 rounded-lg overflow-hidden">
-                {/* Section header */}
+              <div key={tab.key} className="rounded-md overflow-hidden">
+                {/* Section header — compact, always visible */}
                 <button
                   onClick={() => toggleSection(tab.key)}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center gap-1.5 px-2 py-1 hover:bg-muted/40 transition-colors rounded-md"
                 >
-                  <span className={tab.color}>{tab.icon}</span>
-                  <span className="text-[11px] font-semibold flex-1 text-left">{tab.label}</span>
-                  {(isEffectTab ? effectCount > 0 : sectionItems.length > 0) && (
-                    <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-medium">{isEffectTab ? effectCount : sectionItems.length}</span>
+                  <ChevronDown className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                  <span className={`${tab.color} shrink-0`}>{tab.icon}</span>
+                  <span className="text-[11px] font-medium flex-1 text-left">{tab.label}</span>
+                  {itemCount > 0 && (
+                    <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium min-w-[18px] text-center">{itemCount}</span>
                   )}
-                  <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                  {/* Inline action buttons in header */}
+                  {!isEffectTab && tab.key !== 'transition' && (
+                    <span className="flex items-center gap-0.5 ml-0.5" onClick={(e) => e.stopPropagation()}>
+                      {(tab.key === 'video' || tab.key === 'image') && (
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} title="Galeria">
+                          <FolderOpen className="h-3 w-3 text-muted-foreground" />
+                        </Button>
+                      )}
+                      {tab.key === 'canvas' ? (
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={onOpenCanvas} title="Criar canvas">
+                          <Plus className="h-3 w-3 text-muted-foreground" />
+                        </Button>
+                      ) : (
+                        <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => getInputRef(tab.key)?.current?.click()} title="Upload">
+                          <Upload className="h-2.5 w-2.5 text-muted-foreground" />
+                        </Button>
+                      )}
+                    </span>
+                  )}
                 </button>
 
+                {/* Collapsible content */}
                 {!isCollapsed && isEffectTab && (
-                  <div className="px-2 pb-2 pt-1.5 space-y-1.5">
+                  <div className="pl-6 pr-2 pb-1.5 pt-0.5 space-y-1.5">
                     {/* Category filter */}
                     <div className="flex flex-wrap gap-1">
                       {Array.from(new Set(EFFECT_TRACK_PRESETS.map(p => p.category))).map(cat => (
@@ -537,45 +558,12 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                 )}
 
                 {!isCollapsed && !isEffectTab && (
-                  <div className="px-2 pb-2 pt-1.5 space-y-1.5">
-                    {/* Action buttons — skip for transition tab (auto-populated) */}
-                    {tab.key !== 'transition' && (
-                      <div className="flex gap-1">
-                        {tab.key === 'canvas' ? (
-                          <>
-                            <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                              <Palette className="h-3 w-3" />Criar
-                            </Button>
-                            <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
-                              <Upload className="h-3 w-3" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            {(tab.key === 'video' || tab.key === 'image') && (
-                              <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                                <FolderOpen className="h-3 w-3" />Galeria
-                              </Button>
-                            )}
-                            <Button
-                              onClick={() => getInputRef(tab.key)?.current?.click()}
-                              variant="outline"
-                              className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
-                              title="Upload do computador"
-                            >
-                              <Upload className="h-3 w-3" />
-                              {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
+                  <div className="pl-6 pr-2 pb-1.5 pt-0.5">
                     {tab.key === 'transition' && sectionItems.length === 0 && (
-                      <p className="text-[10px] text-muted-foreground text-center py-2 italic">
-                        Use o botão ✨ na timeline para gerar vídeos de transição AI entre clipes
+                      <p className="text-[10px] text-muted-foreground text-center py-1.5 italic">
+                        Use ✨ na timeline para gerar transições AI
                       </p>
                     )}
-                    {/* Items */}
                     {renderSectionItems(tab, sectionItems)}
                   </div>
                 )}
