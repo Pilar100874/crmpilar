@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause, RefreshCw
+  RotateCcw, Plus, Play, Pause, RefreshCw
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
@@ -274,8 +274,6 @@ const MiniFilterPreview: React.FC<{
 const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({});
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
@@ -438,44 +436,35 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
 
                 <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
-                  <div className="p-2 space-y-1.5">
+                  <div className="p-2 space-y-2">
                     {TRANSITION_CATEGORIES.map(cat => {
-                      const isExpanded = expandedCategories[cat.id] !== false;
                       const presets = TRANSITION_PRESETS.filter(p => cat.types.includes(p.type));
                       const activeType = transitionPhase === 'entrance' ? entranceTransition?.type : exitTransition?.type;
-                      const hasActive = presets.some(p => p.type === activeType);
 
                       return (
-                        <div key={cat.id} className={`border rounded-lg overflow-hidden ${hasActive ? 'border-primary/30' : ''}`}>
-                          <button
-                            onClick={() => setExpandedCategories(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
-                            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
-                          >
-                            {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                        <div key={cat.id}>
+                          <div className="flex items-center gap-1.5 px-1 mb-1">
                             <span className="text-xs">{cat.icon}</span>
-                            <span className="text-[10px] font-semibold flex-1">{cat.label}</span>
-                            {hasActive && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                            <span className="text-[8px] text-muted-foreground">{presets.length}</span>
-                          </button>
-                          {isExpanded && (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 p-1.5">
-                              {presets.map(preset => {
-                                const isActive = activeType === preset.type;
-                                return (
-                                  <button
-                                    key={preset.type}
-                                    onClick={() => setTransition(transitionPhase, preset.type)}
-                                    className={`flex flex-col items-center gap-0.5 p-1.5 rounded-md border transition-all ${
-                                      isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
-                                    }`}
-                                  >
-                                    <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={36} />
-                                    <span className="text-[7px] font-medium leading-tight">{preset.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
+                            <span className="text-[10px] font-semibold text-muted-foreground">{cat.label}</span>
+                            <span className="text-[8px] text-muted-foreground/60">({presets.length})</span>
+                          </div>
+                          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                            {presets.map(preset => {
+                              const isActive = activeType === preset.type;
+                              return (
+                                <button
+                                  key={preset.type}
+                                  onClick={() => setTransition(transitionPhase, preset.type)}
+                                  className={`flex-shrink-0 flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all w-[72px] ${
+                                    isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
+                                  }`}
+                                >
+                                  <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={40} />
+                                  <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
@@ -519,45 +508,39 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
               <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
                 <div className="p-2 space-y-2">
-                  {/* Presets by category */}
+                  {/* Presets by category - horizontal scroll */}
                   {FILTER_CATEGORIES.map(cat => {
-                    const isExpanded = expandedFilterCats[cat.id] !== false;
                     const presets = EFFECT_PRESETS.filter(p => cat.presets.includes(p.id));
                     return (
-                      <div key={cat.id} className="border rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setExpandedFilterCats(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
-                          className="w-full flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
-                        >
-                          {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
-                          <span className="text-[10px] font-semibold flex-1">{cat.label}</span>
-                          <span className="text-[8px] text-muted-foreground">{presets.length}</span>
-                        </button>
-                        {isExpanded && (
-                          <div className="grid grid-cols-3 gap-1 p-1.5">
-                            {presets.map(preset => (
-                              <button
-                                key={preset.id}
-                                onClick={() => applyPreset(preset.id)}
-                                className="flex flex-col items-center gap-0.5 p-1.5 rounded-md border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
-                                title={preset.description}
-                              >
-                                <span className="text-sm leading-none">{preset.icon}</span>
-                                <span className="text-[8px] font-medium leading-tight">{preset.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                      <div key={cat.id}>
+                        <div className="flex items-center gap-1.5 px-1 mb-1">
+                          <span className="text-[10px] font-semibold text-muted-foreground">{cat.label}</span>
+                          <span className="text-[8px] text-muted-foreground/60">({presets.length})</span>
+                        </div>
+                        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                          {presets.map(preset => (
+                            <button
+                              key={preset.id}
+                              onClick={() => applyPreset(preset.id)}
+                              className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all w-[72px]"
+                              title={preset.description}
+                            >
+                              <span className="text-lg leading-none">{preset.icon}</span>
+                              <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.name}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
 
-                  {/* Add individual filter */}
-                  <div className="border rounded-lg p-2">
-                    <Label className="text-[10px] font-semibold flex items-center gap-1 mb-1.5">
-                      <Plus className="h-3 w-3" /> Filtro Individual
-                    </Label>
-                    <div className="grid grid-cols-2 gap-1">
+                  {/* Add individual filter - horizontal scroll */}
+                  <div>
+                    <div className="flex items-center gap-1 px-1 mb-1">
+                      <Plus className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground">Filtro Individual</span>
+                    </div>
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                       {INDIVIDUAL_FILTERS.map(f => {
                         const alreadyAdded = selectedClip.filters?.some(ef => ef.type === f.type);
                         return (
@@ -565,12 +548,12 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                             key={f.type}
                             onClick={() => addFilter(f.type)}
                             disabled={alreadyAdded}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-medium border transition-all ${
+                            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg border transition-all w-[64px] ${
                               alreadyAdded ? 'opacity-40 cursor-not-allowed border-border/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
                             }`}
                           >
-                            <span className="text-xs">{f.icon}</span>
-                            {f.label}
+                            <span className="text-lg leading-none">{f.icon}</span>
+                            <span className="text-[8px] font-medium leading-tight text-center">{f.label}</span>
                           </button>
                         );
                       })}
