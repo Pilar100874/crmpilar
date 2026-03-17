@@ -15,6 +15,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string 
   media: { bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.15)', dot: '#0ea5e9' },
   output: { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.15)', dot: '#64748b' },
   refinement: { bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.15)', dot: '#f97316' },
+};
 
 const StudioNodeLibrary: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
