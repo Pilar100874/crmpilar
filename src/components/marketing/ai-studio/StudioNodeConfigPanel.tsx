@@ -444,10 +444,19 @@ const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
   'replicate/ltx-video': 'replicate',
 };
 
+// Unified provider prefixes for model configuration check
+const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
+
 const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
   if (modelValue === 'free/gif-animated') return true;
+  // Unified provider models: check if the unified provider is configured
+  const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
+  if (unifiedPrefix) {
+    const providerName = unifiedPrefix.replace('/', '');
+    return configuredProviders.some((cp) => cp.toLowerCase() === providerName);
+  }
   const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
-  if (!requiredProvider) return true; // Not in the list = always available
+  if (!requiredProvider) return true;
   return configuredProviders.some((cp) => cp.toLowerCase() === requiredProvider);
 };
 

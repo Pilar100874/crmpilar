@@ -83,8 +83,8 @@ export const UNIFIED_PROVIDERS: UnifiedProvider[] = [
     keyPlaceholder: 'YOUR_POLLO_KEY',
     coveredModelPrefixes: ['polloai/'],
     availableModels: [
-      { category: '🎨 Imagem', models: ['Flux Pro/Schnell', 'Ideogram v2', 'Recraft V3', 'Kolors'] },
-      { category: '🎬 Vídeo', models: ['Runway Gen-3 Alpha Turbo', 'Kling v1.5/v2', 'Luma Dream Machine', 'Minimax Video', 'Hunyuan Video', 'CogVideoX'] },
+      { category: '🎨 Imagem', models: ['Flux Pro/Schnell', 'Ideogram v2', 'Recraft V3', 'Kolors', 'SDXL'] },
+      { category: '🎬 Vídeo', models: ['Runway Gen-3', 'Kling v1.5/v2', 'Luma Dream Machine', 'Minimax Video', 'Hunyuan Video', 'CogVideoX', 'Pika', 'Wan Video'] },
       { category: '🔊 Áudio', models: ['Fish Speech TTS'] },
     ],
     creditsTable: [
@@ -94,6 +94,7 @@ export const UNIFIED_PROVIDERS: UnifiedProvider[] = [
       { action: 'Kling v2 (5s)', credits: '8' },
       { action: 'Luma (5s)', credits: '6' },
       { action: 'Minimax Video', credits: '5' },
+      { action: 'Pika', credits: '6' },
       { action: 'Ideogram v2', credits: '2' },
     ],
   },
