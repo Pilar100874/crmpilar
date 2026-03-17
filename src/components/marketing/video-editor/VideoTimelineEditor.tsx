@@ -1152,18 +1152,6 @@ const VideoTimelineEditor: React.FC = () => {
 
           {/* Fixed bars between preview and timeline */}
           <div className="shrink-0 z-10 relative bg-card border-t border-border/30">
-            {showResizeBar && !previewCollapsed && (
-              <div className="h-5 bg-muted/40 border-b border-border/40 cursor-row-resize flex items-center justify-center group relative"
-                onMouseDown={(e) => {
-                  e.preventDefault(); resizingRef.current = true; resizeStartRef.current = { y: e.clientY, height: previewHeight };
-                  const onMouseMove = (ev: MouseEvent) => { if (!resizingRef.current) return; setPreviewHeight(Math.min(800, Math.max(120, resizeStartRef.current.height + ev.clientY - resizeStartRef.current.y))); };
-                  const onMouseUp = () => { resizingRef.current = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); document.body.style.cursor = ''; document.body.style.userSelect = ''; };
-                  document.body.style.cursor = 'row-resize'; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
-                }}>
-                <GripHorizontal className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
-                <button className="absolute right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-all" onClick={(e) => { e.stopPropagation(); setShowResizeBar(false); }}><Minimize2 className="h-2.5 w-2.5" /></button>
-              </div>
-            )}
             {showStatusBar && (
               <div className="h-6 bg-muted/30 border-b border-border/40 px-3 flex items-center justify-between select-none">
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
