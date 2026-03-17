@@ -17,7 +17,8 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
-  GripVertical
+  GripVertical,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG, PublishChannel } from './types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import VideoTrimmer from './ai-studio/VideoTrimmer';
 import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/whatsappMp4';
