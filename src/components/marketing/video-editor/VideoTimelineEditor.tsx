@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, FolderOpen,
-  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown,
+  Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown, Wand2,
   Plus, ArrowLeft, Clapperboard
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -26,6 +26,7 @@ import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import AIBridgeVideoDialog from './AIBridgeVideoDialog';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -79,6 +80,9 @@ const VideoTimelineEditor: React.FC = () => {
   const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const [filterPreviewActive, setFilterPreviewActive] = useState(false);
   const [showFloatingScrollbar, setShowFloatingScrollbar] = useState(true);
+  const [bridgeDialogOpen, setBridgeDialogOpen] = useState(false);
+  const [bridgeClipA, setBridgeClipA] = useState<TimelineClip | null>(null);
+  const [bridgeClipB, setBridgeClipB] = useState<TimelineClip | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
@@ -752,6 +756,57 @@ const VideoTimelineEditor: React.FC = () => {
     });
   }, [timeline]);
 
+  const handleOpenBridgeVideo = useCallback(() => {
+    const selected = state.selectedClipIds;
+    if (selected.length !== 2) {
+      toast.error('Selecione exatamente 2 clipes adjacentes (vídeo ou imagem) para criar o vídeo de transição');
+      return;
+    }
+    const clips = selected.map(id => state.clips.find(c => c.id === id)).filter(Boolean) as TimelineClip[];
+    const validTypes = ['video', 'image', 'canvas'];
+    if (!clips.every(c => validTypes.includes(c.type))) {
+      toast.error('Os clipes selecionados devem ser do tipo vídeo, imagem ou canvas');
+      return;
+    }
+    // Sort by startTime
+    clips.sort((a, b) => a.startTime - b.startTime);
+    setBridgeClipA(clips[0]);
+    setBridgeClipB(clips[1]);
+    setBridgeDialogOpen(true);
+  }, [state.selectedClipIds, state.clips]);
+
+  const handleBridgeVideoGenerated = useCallback((videoUrl: string, duration: number) => {
+    if (!bridgeClipA || !bridgeClipB) return;
+    // Insert the generated video between the two clips
+    const insertTime = bridgeClipA.startTime + bridgeClipA.duration;
+    // Shift clipB and all later clips to make room
+    const gap = duration;
+    state.clips.forEach(c => {
+      if (c.startTime >= insertTime && c.id !== bridgeClipA!.id) {
+        timeline.updateClip(c.id, { startTime: c.startTime + gap });
+      }
+    });
+
+    // Find a video track
+    const videoTrack = state.tracks.find(t => t.type === 'video');
+    if (!videoTrack) return;
+
+    timeline.addClip({
+      trackId: bridgeClipA.trackId,
+      type: 'video',
+      name: `🎬 Transição AI`,
+      startTime: insertTime,
+      duration: duration,
+      trimStart: 0,
+      trimEnd: 0,
+      color: TRACK_COLORS.video,
+      volume: 1,
+      opacity: 1,
+      filters: [],
+      src: videoUrl,
+    });
+  }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
+
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
@@ -1014,6 +1069,9 @@ const VideoTimelineEditor: React.FC = () => {
           </Button>
           <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8" onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
             <Magnet className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleOpenBridgeVideo} disabled={state.selectedClipIds.length !== 2} title="Gerar Vídeo de Transição AI entre 2 clipes">
+            <Wand2 className="h-3.5 w-3.5" />
           </Button>
         </div>
 
@@ -1396,6 +1454,16 @@ const VideoTimelineEditor: React.FC = () => {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+      {/* AI Bridge Video Dialog */}
+      {bridgeDialogOpen && bridgeClipA && bridgeClipB && (
+        <AIBridgeVideoDialog
+          open={bridgeDialogOpen}
+          onClose={() => { setBridgeDialogOpen(false); setBridgeClipA(null); setBridgeClipB(null); }}
+          clipA={bridgeClipA}
+          clipB={bridgeClipB}
+          onVideoGenerated={handleBridgeVideoGenerated}
+        />
       )}
     </div>
   );
