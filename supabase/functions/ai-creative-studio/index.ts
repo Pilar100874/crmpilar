@@ -432,6 +432,11 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     if (params.imageUrls?.[0]?.startsWith("http")) {
       body.promptImage = params.imageUrls[0];
     }
+    // Bridge mode: use last_frame for Runway Gen-3 to create start→end transition
+    if (params.bridgeMode && params.imageUrls?.[1]?.startsWith("http")) {
+      body.lastFrame = params.imageUrls[1];
+      console.log(`[generate_video] Runway bridge mode: promptImage (start) + lastFrame (end)`);
+    }
   }
 
   const response = await fetch(endpoint, {
