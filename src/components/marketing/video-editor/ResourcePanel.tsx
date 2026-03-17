@@ -22,6 +22,7 @@ interface MediaItem {
 
 export interface ResourcePanelHandle {
   addCanvasItem: (name: string, src: string, canvasJson?: string) => void;
+  addTransitionItem: (name: string, src: string, duration: number) => void;
 }
 
 interface Props {
