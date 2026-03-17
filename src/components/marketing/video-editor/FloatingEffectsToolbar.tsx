@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause, RefreshCw, GripVertical
+  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause, RefreshCw
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
@@ -278,43 +278,6 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
-  // Drag state
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-
-    // If still in centered mode, compute actual pixel position first
-    let origX = position.x;
-    let origY = position.y;
-    if (origX === 0 && origY === 0 && toolbarRef.current) {
-      const rect = toolbarRef.current.getBoundingClientRect();
-      origX = rect.left;
-      origY = rect.top;
-      setPosition({ x: origX, y: origY });
-    }
-
-    dragRef.current = { startX: e.clientX, startY: e.clientY, origX, origY };
-
-    const handleMove = (ev: MouseEvent) => {
-      if (!dragRef.current) return;
-      const dx = ev.clientX - dragRef.current.startX;
-      const dy = ev.clientY - dragRef.current.startY;
-      setPosition({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
-    };
-    const handleUp = () => {
-      setIsDragging(false);
-      dragRef.current = null;
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
-  }, [position]);
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const entranceTransition = selectedClip.transitions?.entrance;
   const exitTransition = selectedClip.transitions?.exit;
@@ -384,27 +347,9 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
 
   return (
-    <div
-      ref={toolbarRef}
-      className="fixed z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200"
-      style={
-        position.x === 0 && position.y === 0
-          ? { bottom: '16px', left: '50%', transform: 'translateX(-50%)' }
-          : { top: `${position.y}px`, left: `${position.x}px` }
-      }
-    >
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
       <div className="overflow-x-auto scrollbar-hide">
-        <div className={`flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-1 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max ${isDragging ? 'cursor-grabbing' : ''}`}>
-
-          {/* Drag handle - double click to reset position */}
-          <div
-            className="flex items-center justify-center w-7 h-8 cursor-grab active:cursor-grabbing rounded-full hover:bg-muted/60 transition-colors shrink-0"
-            onMouseDown={handleDragStart}
-            onDoubleClick={() => setPosition({ x: 0, y: 0 })}
-            title="Arraste para mover · Duplo clique para centralizar"
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground/60" />
-          </div>
+        <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-3 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
 
           {/* Clip info */}
           <div className="flex items-center gap-1.5 pr-2 border-r border-border/40">
