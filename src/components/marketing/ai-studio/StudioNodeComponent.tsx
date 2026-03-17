@@ -37,6 +37,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   galleryPose: Move,
   galleryRoupa: Box,
   gallerySalvas: FolderOpen,
+  mediaGallery: FolderOpen,
   textStyle: TypeIcon,
   textContent: FileText,
   platformFormat: Monitor,
