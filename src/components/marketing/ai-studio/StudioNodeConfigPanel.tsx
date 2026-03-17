@@ -98,13 +98,28 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
   // Apiframe video models
-  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, vídeo text-to-video' },
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/runway', label: '⚡ AF: Runway ML', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  // AIML API video models
+  { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25' },
+  { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28' },
+  { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.20' },
+  { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  // Pollo AI video models
+  { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'Pollo AI', cost: '$$', quality: 5, tip: 'Via Pollo AI, 10 créditos' },
+  { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 8 créditos' },
+  { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 6 créditos' },
+  { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 5 créditos' },
+  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
