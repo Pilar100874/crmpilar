@@ -499,8 +499,6 @@ export default function ChatInput({
     if (attachment.type === "file") {
       if (attachment.file_type === "image") {
         contentType = "image";
-      } else if (attachment.file_type === "video") {
-        contentType = "video";
       } else if (attachment.file_type === "pdf" || attachment.file_type === "excel" || attachment.file_type === "word") {
         contentType = "file";
       } else {
@@ -508,10 +506,11 @@ export default function ChatInput({
       }
     }
     
+    const isVideo = attachment.file_type === "video";
     let finalUrl = attachment.url;
     
     // Se for vídeo, converter para MP4 compatível com WhatsApp e re-upload
-    if (contentType === "video" && attachment.url) {
+    if (isVideo && attachment.url) {
       try {
         toast.info("Convertendo vídeo para formato WhatsApp...");
         const resp = await fetch(attachment.url);
