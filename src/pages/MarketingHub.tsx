@@ -55,6 +55,7 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'ai-studio', label: 'AI Creative Studio', icon: Sparkles, description: 'Crie conteúdo com IA: imagens, vídeos, áudio e música' },
   { id: 'video-editor', label: 'Editor de Vídeo', icon: Clapperboard, description: 'Timeline completa com efeitos, cortes e transições' },
+  { id: 'config-apis', label: 'Config APIs', icon: Key, description: 'Gerencie chaves de API dos serviços de IA pagos' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
