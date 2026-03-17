@@ -186,7 +186,7 @@ interface Props {
   embedded?: boolean;
 }
 
-const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
+const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) => {
   const [selectedProvider, setSelectedProvider] = useState<string>('elevenlabs');
   const [selectedSection, setSelectedSection] = useState<'providers' | 'defaults'>('providers');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
