@@ -20,7 +20,7 @@ import FloatingEffectsToolbar from './FloatingEffectsToolbar';
 import VideoPreview from './VideoPreview';
 import CanvasComposerDialog from './CanvasComposerDialog';
 import VideoConfigPanel, { VideoConfig } from './VideoConfigPanel';
-import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS } from './types';
+import { TRACK_COLORS, TimelineClip, DEFAULT_TRACKS, TransitionType } from './types';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
