@@ -33,6 +33,7 @@ export type StudioNodeType =
   | 'mediaCorrection'
   | 'loopOutput'
   | 'randomPick'
+  | 'mediaGallery'
   | 'output';
 
 export interface StudioNodeData {
