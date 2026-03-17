@@ -248,7 +248,7 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     <div
       ref={containerRef}
       className="flex-1 overflow-auto relative"
-      onClick={handleTrackClick}
+      onClick={(e) => { handleTrackClick(e); setEffectPopover(null); }}
       onDragEnd={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
       onDrop={() => { setDropTargetTrackId(null); setDragMediaType(null); }}
     >
