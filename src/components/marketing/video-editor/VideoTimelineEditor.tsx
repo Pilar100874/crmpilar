@@ -75,7 +75,10 @@ const VideoTimelineEditor: React.FC = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const [filterPreviewActive, setFilterPreviewActive] = useState(false);
+  const [showFloatingScrollbar, setShowFloatingScrollbar] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timelineScrollRef = useRef<HTMLDivElement>(null);
+  const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
 
   // Project management
   const [showEditor, setShowEditor] = useState(false);
@@ -1062,25 +1065,109 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
 
           {/* Timeline - single scrollable area */}
-          <div className="flex-1 overflow-auto min-h-0">
-            <div className="inline-flex flex-col" style={{ minWidth: '100%' }}>
-              {/* Ruler row */}
-              <div className="flex sticky top-0 z-20">
-                <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center sticky left-0 z-30">
-                  <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
+          <div className="relative flex-1 min-h-0">
+            <div
+              ref={timelineScrollRef}
+              className={`absolute inset-0 overflow-auto ${showFloatingScrollbar ? 'scrollbar-hide' : ''}`}
+              onScroll={(e) => {
+                const t = e.currentTarget;
+                setScrollState({ scrollLeft: t.scrollLeft, scrollTop: t.scrollTop, scrollWidth: t.scrollWidth, scrollHeight: t.scrollHeight, clientWidth: t.clientWidth, clientHeight: t.clientHeight });
+              }}
+            >
+              <div className="inline-flex flex-col" style={{ minWidth: '100%' }}>
+                {/* Ruler row */}
+                <div className="flex sticky top-0 z-20">
+                  <div className="w-44 shrink-0 h-7 border-b border-r bg-muted/40 flex items-center justify-center sticky left-0 z-30">
+                    <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="add-button" />
+                  </div>
+                  <div className="flex-1">
+                    <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <TimelineRuler duration={state.duration} zoom={state.zoom} currentTime={state.currentTime} onSeek={timeline.seekTo} onDurationChange={(d) => timeline.updateState({ duration: d })} />
+                {/* Tracks - headers stick left, content scrolls */}
+                <div className="flex">
+                  <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
+                    <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
+                  </div>
+                  <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
                 </div>
-              </div>
-              {/* Tracks - headers stick left, content scrolls */}
-              <div className="flex">
-                <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
-                  <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
-                </div>
-                <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
               </div>
             </div>
+
+            {/* Floating scrollbars */}
+            {showFloatingScrollbar && (() => {
+              const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = scrollState;
+              const hasHScroll = scrollWidth > clientWidth;
+              const hasVScroll = scrollHeight > clientHeight;
+              const hThumbW = hasHScroll ? Math.max(30, (clientWidth / scrollWidth) * (clientWidth - 20)) : 0;
+              const hThumbLeft = hasHScroll ? (scrollLeft / (scrollWidth - clientWidth)) * (clientWidth - 20 - hThumbW) : 0;
+              const vThumbH = hasVScroll ? Math.max(30, (clientHeight / scrollHeight) * (clientHeight - 20)) : 0;
+              const vThumbTop = hasVScroll ? (scrollTop / (scrollHeight - clientHeight)) * (clientHeight - 20 - vThumbH) : 0;
+
+              const handleHDrag = (e: React.MouseEvent) => {
+                e.preventDefault();
+                const startX = e.clientX;
+                const startScroll = timelineScrollRef.current?.scrollLeft || 0;
+                const ratio = (scrollWidth - clientWidth) / (clientWidth - 20 - hThumbW);
+                const onMove = (ev: MouseEvent) => {
+                  if (timelineScrollRef.current) timelineScrollRef.current.scrollLeft = startScroll + (ev.clientX - startX) * ratio;
+                };
+                const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+              };
+
+              const handleVDrag = (e: React.MouseEvent) => {
+                e.preventDefault();
+                const startY = e.clientY;
+                const startScroll = timelineScrollRef.current?.scrollTop || 0;
+                const ratio = (scrollHeight - clientHeight) / (clientHeight - 20 - vThumbH);
+                const onMove = (ev: MouseEvent) => {
+                  if (timelineScrollRef.current) timelineScrollRef.current.scrollTop = startScroll + (ev.clientY - startY) * ratio;
+                };
+                const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+              };
+
+              return (
+                <>
+                  {/* Horizontal scrollbar */}
+                  {hasHScroll && (
+                    <div className="absolute bottom-1 left-2 right-4 h-3 z-30 pointer-events-none">
+                      <div className="relative w-full h-full rounded-full bg-muted/30 backdrop-blur-sm pointer-events-auto">
+                        <div
+                          className="absolute top-0.5 h-2 rounded-full bg-primary/40 hover:bg-primary/60 active:bg-primary/80 transition-colors cursor-grab active:cursor-grabbing"
+                          style={{ left: hThumbLeft, width: hThumbW }}
+                          onMouseDown={handleHDrag}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {/* Vertical scrollbar */}
+                  {hasVScroll && (
+                    <div className="absolute top-2 bottom-4 right-1 w-3 z-30 pointer-events-none">
+                      <div className="relative w-full h-full rounded-full bg-muted/30 backdrop-blur-sm pointer-events-auto">
+                        <div
+                          className="absolute left-0.5 w-2 rounded-full bg-primary/40 hover:bg-primary/60 active:bg-primary/80 transition-colors cursor-grab active:cursor-grabbing"
+                          style={{ top: vThumbTop, height: vThumbH }}
+                          onMouseDown={handleVDrag}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Toggle scrollbar button */}
+            <button
+              onClick={() => setShowFloatingScrollbar(prev => !prev)}
+              className="absolute top-1 right-1 z-40 w-5 h-5 rounded bg-muted/60 hover:bg-muted backdrop-blur-sm flex items-center justify-center transition-colors"
+              title={showFloatingScrollbar ? 'Ocultar barra de rolagem' : 'Mostrar barra de rolagem'}
+            >
+              <GripHorizontal className="h-3 w-3 text-muted-foreground" />
+            </button>
           </div>
         </div>
 
