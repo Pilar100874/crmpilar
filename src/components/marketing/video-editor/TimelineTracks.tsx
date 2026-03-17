@@ -229,16 +229,24 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     setDragMediaType(null);
     if (track.locked) return; // Block drops on locked tracks
     const raw = e.dataTransfer.getData('application/timeline-media');
-    if (!raw || !onAddClip) return;
+    if (!raw) return;
     try {
-      const media = JSON.parse(raw) as MediaItem;
+      const media = JSON.parse(raw);
+      // Handle effect drops
+      if (media.type === 'effect' && track.type === 'effect' && onAddEffectClip && media.effectType) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        const x = e.clientX - (rect?.left || 0) + (containerRef.current?.scrollLeft || 0);
+        onAddEffectClip(track.id, Math.max(0, x / state.zoom), media.effectType, media.name);
+        return;
+      }
+      if (!onAddClip) return;
       if (isCompatible(track.type, media.type)) {
         onAddClip(media.type, media, track.id);
       } else if (media.type === 'video' && track.type === 'audio') {
         onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id);
       }
     } catch {}
-  }, [onAddClip]);
+  }, [onAddClip, onAddEffectClip, state.zoom]);
 
   const handleDragLeave = useCallback(() => {
     setDropTargetTrackId(null);
