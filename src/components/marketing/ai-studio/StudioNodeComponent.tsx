@@ -554,6 +554,164 @@ const ImageInputWithGallery: React.FC<{
   );
 };
 
+// Inline video input with gallery picker (used by videoInput and multiVideoRef)
+const VideoInputWithGallery: React.FC<{
+  videos: string[];
+  onUpdateVideos: (vids: string[]) => void;
+  nodeType: string;
+}> = ({ videos, onUpdateVideos, nodeType }) => {
+  const [showGalleryPicker, setShowGalleryPicker] = useState(false);
+  const [galleryVideos, setGalleryVideos] = useState<any[]>([]);
+  const [gallerySearch, setGallerySearch] = useState('');
+  const [loadingGallery, setLoadingGallery] = useState(false);
+
+  const fetchGalleryVideos = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    setLoadingGallery(true);
+    const { data } = await supabase
+      .from('media_gallery')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .in('tipo', ['video', 'vídeo'])
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setGalleryVideos(data || []);
+    setLoadingGallery(false);
+  }, []);
+
+  useEffect(() => {
+    if (showGalleryPicker && galleryVideos.length === 0) fetchGalleryVideos();
+  }, [showGalleryPicker, fetchGalleryVideos, galleryVideos.length]);
+
+  const filteredGallery = galleryVideos.filter(v =>
+    !gallerySearch || v.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
+  );
+
+  return (
+    <div className="px-3 pb-3 pt-1">
+      {videos.length > 0 && (
+        <div className="space-y-1.5 mb-2">
+          {videos.slice(0, 4).map((vid: string, idx: number) => (
+            <div key={idx} className="rounded-lg overflow-hidden border border-border/50 relative group/vid">
+              <video src={vid} className="w-full h-20 object-cover" muted />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateVideos(videos.filter((_: any, i: number) => i !== idx));
+                }}
+                className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover/vid:opacity-100 transition-opacity text-[8px]"
+              >✕</button>
+              <div className="absolute bottom-0.5 left-0.5 px-1 py-0.5 rounded bg-black/60 text-white text-[8px]">
+                <Film className="h-2.5 w-2.5 inline mr-0.5" />Vídeo {idx + 1}
+              </div>
+            </div>
+          ))}
+          {videos.length > 4 && (
+            <div className="rounded-lg border border-border/50 h-10 flex items-center justify-center bg-muted/50">
+              <span className="text-xs text-muted-foreground font-medium">+{videos.length - 4}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Gallery Picker */}
+      {showGalleryPicker && (
+        <div className="space-y-2 mb-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-medium text-muted-foreground">🎬 Galeria de Vídeos</p>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowGalleryPicker(false); }}
+              className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
+            >✕ Fechar</button>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <input
+              autoFocus
+              value={gallerySearch}
+              onChange={(e) => setGallerySearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              placeholder="Buscar vídeos..."
+              className="nodrag nowheel w-full h-7 pl-7 pr-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+          <div className="max-h-[180px] overflow-y-auto rounded-lg">
+            {loadingGallery && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+            {!loadingGallery && filteredGallery.length === 0 && (
+              <p className="text-[10px] text-muted-foreground text-center py-3">Nenhum vídeo na galeria</p>
+            )}
+            <div className="space-y-1">
+              {filteredGallery.map((vid) => {
+                const isSelected = videos.includes(vid.public_url);
+                return (
+                  <button
+                    key={vid.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isSelected) {
+                        onUpdateVideos(videos.filter((u: string) => u !== vid.public_url));
+                      } else {
+                        onUpdateVideos([...videos, vid.public_url]);
+                      }
+                    }}
+                    className={`w-full flex items-center gap-2 p-1.5 rounded-lg border-2 transition-colors ${
+                      isSelected ? 'border-primary ring-1 ring-primary/30 bg-primary/5' : 'border-border/30 hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="w-16 h-10 rounded overflow-hidden bg-muted/50 shrink-0">
+                      <video src={vid.public_url} className="w-full h-full object-cover" muted />
+                    </div>
+                    <span className="text-[10px] text-foreground truncate flex-1 text-left">{vid.nome || 'Sem nome'}</span>
+                    {isSelected && (
+                      <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[8px] font-bold shrink-0">✓</div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex gap-1.5">
+        <label className="flex-1 flex flex-col items-center gap-1 py-2.5 border border-dashed border-border/50 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors">
+          <Upload className="h-4 w-4 text-muted-foreground/40" />
+          <p className="text-[9px] text-muted-foreground">Upload</p>
+          <input
+            type="file"
+            accept="video/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              files.forEach((file) => {
+                const url = URL.createObjectURL(file);
+                onUpdateVideos([...videos, url]);
+              });
+              e.target.value = '';
+            }}
+          />
+        </label>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowGalleryPicker(!showGalleryPicker); }}
+          className="flex-1 flex flex-col items-center gap-1 py-2.5 border border-dashed border-amber-500/30 rounded-xl cursor-pointer hover:bg-amber-500/5 transition-colors"
+        >
+          <FolderOpen className="h-4 w-4 text-amber-500/40" />
+          <p className="text-[9px] text-muted-foreground">Galeria</p>
+        </button>
+      </div>
+
+      {videos.length > 0 && (
+        <p className="text-[10px] text-muted-foreground mt-1.5">{videos.length} vídeo(s) de referência</p>
+      )}
+    </div>
+  );
+};
+
 const formatTimestamp = (s: number) => {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
