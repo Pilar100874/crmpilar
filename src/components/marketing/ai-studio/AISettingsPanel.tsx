@@ -638,11 +638,15 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                         />
                       )}
 
-                      {/* Apiframe credit balance & info */}
-                      {selectedProviderData.id === 'apiframe' && (
-                        <ApiframeBalancePanel
-                          apiKey={apiKeys['apiframe'] || ''}
+                      {/* Unified API toggle & info */}
+                      {isUnifiedProvider(selectedProviderData.id) && (
+                        <UnifiedProviderPanel
+                          providerId={selectedProviderData.id}
+                          apiKey={apiKeys[selectedProviderData.id] || ''}
                           estabelecimentoId={estabelecimentoId}
+                          isActive={activeUnified === selectedProviderData.id}
+                          otherActiveId={activeUnified && activeUnified !== selectedProviderData.id ? activeUnified : null}
+                          onToggle={() => handleToggleUnified(selectedProviderData.id)}
                         />
                       )}
                     </div>
