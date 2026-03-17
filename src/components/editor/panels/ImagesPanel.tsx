@@ -22,6 +22,7 @@ const ImagesPanel = () => {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { fabricCanvas } = useCanvas();
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchSavedImages = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
