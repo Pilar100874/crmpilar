@@ -1090,14 +1090,12 @@ const VideoTimelineEditor: React.FC = () => {
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
           <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
             <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
-            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Sparkles className="h-3 w-3" />Efeitos</Button>
             <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
             <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Props</Button>
           </div>
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
-            {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} onPreviewTransition={(clipId, phase) => setPreviewingTransition({ clipId, phase })} onToggleFilterPreview={setFilterPreviewActive} />}
             {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
           </div>
         </div>
