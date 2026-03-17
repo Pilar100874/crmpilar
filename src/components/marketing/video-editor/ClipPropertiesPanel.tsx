@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { TimelineClip } from './types';
+import { TimelineClip, EFFECT_TRACK_PRESETS } from './types';
 import { Settings2 } from 'lucide-react';
 
 interface Props {
