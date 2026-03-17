@@ -90,11 +90,11 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
-  // Veo only accepts ONE image — use the hero frame (composite of all refs)
-  // If no hero frame, use the first available image (product has priority)
+  // Veo only accepts ONE image — use the first available (or hero frame)
+  // In bridgeMode, use frameA (start) as the reference image
   let imagePayload: any = {};
   const allImageUrls = (params.imageUrls || []) as string[];
-  const bestImageUrl = allImageUrls[0]; // hero frame or product (by priority)
+  const bestImageUrl = allImageUrls[0];
   
   if (bestImageUrl?.startsWith("http")) {
     try {
