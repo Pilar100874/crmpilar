@@ -1355,7 +1355,7 @@ const VideoTimelineEditor: React.FC = () => {
                   variant="destructive"
                   className="h-7 text-xs"
                   onClick={() => {
-                    timeline.deleteClip(editingEffectClipId);
+                    timeline.deleteClips([editingEffectClipId]);
                     setPreviewEffectFromTimeline(null);
                     setEditingEffectClipId(null);
                   }}
