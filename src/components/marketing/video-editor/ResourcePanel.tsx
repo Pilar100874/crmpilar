@@ -231,7 +231,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         setItems(prev => ({ ...prev, [resType]: [...prev[resType], imported] }));
       }
     });
-    setActiveTab(resType);
+    // items added to section automatically
   }, []);
 
   const handleAddToTimeline = useCallback((media: ImportedMedia) => {
