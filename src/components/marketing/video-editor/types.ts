@@ -18,7 +18,7 @@ export interface TimelineClip {
   transition?: ClipTransition;
   transitions?: ClipTransitions;
   locked?: boolean;
-  lockedEdge?: 'start' | 'end' | null; // Locks only one edge (start or end) to preserve AI transitions
+  lockedEdge?: 'start' | 'end' | 'both' | null; // Locks edges to preserve AI transitions
   muted?: boolean;
   canvasJson?: string;
   x?: number;

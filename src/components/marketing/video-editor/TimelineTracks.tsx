@@ -90,7 +90,9 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     }
     // Block resize on locked edges (to preserve AI transition continuity)
     if (clip.lockedEdge) {
-      if ((clip.lockedEdge === 'end' && type === 'resize-end') || (clip.lockedEdge === 'start' && type === 'resize-start')) {
+      const blocksEnd = clip.lockedEdge === 'end' || clip.lockedEdge === 'both';
+      const blocksStart = clip.lockedEdge === 'start' || clip.lockedEdge === 'both';
+      if ((blocksEnd && type === 'resize-end') || (blocksStart && type === 'resize-start')) {
         toast?.({ title: '🔒 Borda bloqueada', description: 'Esta borda está travada para preservar a continuidade com a transição AI adjacente. Desbloqueie nas propriedades do clipe se necessário.', variant: 'destructive' });
         return;
       }
