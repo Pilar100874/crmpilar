@@ -1343,18 +1343,56 @@ const VideoTimelineEditor: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Effect preview dialog from timeline double-click */}
+      {/* Effect edit dialog from timeline double-click */}
       {previewEffectFromTimeline && (
-        <Dialog open onOpenChange={() => setPreviewEffectFromTimeline(null)}>
-          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
-            <DialogTitle className="px-4 pt-4 text-sm font-semibold">
-              {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Preview
+        <Dialog open onOpenChange={() => { setPreviewEffectFromTimeline(null); setEditingEffectClipId(null); }}>
+          <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background max-h-[85vh] flex flex-col">
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold flex items-center justify-between">
+              <span>{EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Editar</span>
+              {editingEffectClipId && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    timeline.deleteClip(editingEffectClipId);
+                    setPreviewEffectFromTimeline(null);
+                    setEditingEffectClipId(null);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                </Button>
+              )}
             </DialogTitle>
-            <div className="flex flex-col items-center gap-3 p-4">
-              <MiniEffectPreview effectType={previewEffectFromTimeline} size={280} autoPlay />
+            <div className="flex flex-col items-center gap-3 px-4 pt-2">
+              <MiniEffectPreview effectType={previewEffectFromTimeline} size={200} autoPlay />
               <p className="text-xs text-muted-foreground text-center">
                 {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.description}
               </p>
+            </div>
+            <div className="border-t px-4 py-3 overflow-y-auto flex-1">
+              <p className="text-xs font-semibold mb-2 text-muted-foreground">Trocar efeito:</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {EFFECT_TRACK_PRESETS.map(preset => (
+                  <button
+                    key={preset.type}
+                    className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-colors ${
+                      preset.type === previewEffectFromTimeline
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border/50 hover:bg-muted/30'
+                    }`}
+                    onClick={() => {
+                      setPreviewEffectFromTimeline(preset.type);
+                      if (editingEffectClipId) {
+                        timeline.updateClip(editingEffectClipId, { effectType: preset.type, name: preset.label });
+                      }
+                    }}
+                  >
+                    <MiniEffectPreview effectType={preset.type} size={48} />
+                    <span className="text-[8px] font-medium truncate w-full text-center">{preset.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
