@@ -1132,27 +1132,31 @@ const VideoTimelineEditor: React.FC = () => {
 
               return (
                 <>
-                  {/* Horizontal scrollbar */}
+                  {/* Floating horizontal scrollbar */}
                   {hasHScroll && (
-                    <div className="absolute bottom-1 left-2 right-4 h-3 z-30 pointer-events-none">
-                      <div className="relative w-full h-full rounded-full bg-muted/30 backdrop-blur-sm pointer-events-auto">
-                        <div
-                          className="absolute top-0.5 h-2 rounded-full bg-primary/40 hover:bg-primary/60 active:bg-primary/80 transition-colors cursor-grab active:cursor-grabbing"
-                          style={{ left: hThumbLeft, width: hThumbW }}
-                          onMouseDown={handleHDrag}
-                        />
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none" style={{ width: '60%', maxWidth: clientWidth - 60 }}>
+                      <div className="relative h-5 rounded-full bg-background/80 backdrop-blur-md border border-border/40 shadow-lg shadow-black/20 ring-1 ring-white/5 pointer-events-auto flex items-center px-1.5">
+                        <div className="relative w-full h-2">
+                          <div
+                            className="absolute top-0 h-2 rounded-full bg-primary/50 hover:bg-primary/70 active:bg-primary transition-colors cursor-grab active:cursor-grabbing shadow-sm"
+                            style={{ left: `${(hThumbLeft / (clientWidth - 20)) * 100}%`, width: `${(hThumbW / (clientWidth - 20)) * 100}%` }}
+                            onMouseDown={handleHDrag}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
-                  {/* Vertical scrollbar */}
+                  {/* Floating vertical scrollbar */}
                   {hasVScroll && (
-                    <div className="absolute top-2 bottom-4 right-1 w-3 z-30 pointer-events-none">
-                      <div className="relative w-full h-full rounded-full bg-muted/30 backdrop-blur-sm pointer-events-auto">
-                        <div
-                          className="absolute left-0.5 w-2 rounded-full bg-primary/40 hover:bg-primary/60 active:bg-primary/80 transition-colors cursor-grab active:cursor-grabbing"
-                          style={{ top: vThumbTop, height: vThumbH }}
-                          onMouseDown={handleVDrag}
-                        />
+                    <div className="absolute top-1/2 -translate-y-1/2 right-3 z-30 pointer-events-none" style={{ height: '60%', maxHeight: clientHeight - 60 }}>
+                      <div className="relative w-5 h-full rounded-full bg-background/80 backdrop-blur-md border border-border/40 shadow-lg shadow-black/20 ring-1 ring-white/5 pointer-events-auto flex justify-center py-1.5">
+                        <div className="relative h-full w-2">
+                          <div
+                            className="absolute left-0 w-2 rounded-full bg-primary/50 hover:bg-primary/70 active:bg-primary transition-colors cursor-grab active:cursor-grabbing shadow-sm"
+                            style={{ top: `${(vThumbTop / (clientHeight - 20)) * 100}%`, height: `${(vThumbH / (clientHeight - 20)) * 100}%` }}
+                            onMouseDown={handleVDrag}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
