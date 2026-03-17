@@ -149,6 +149,10 @@ const MUSIC_MODELS: ModelInfo[] = [
   { value: 'apiframe/udio', label: '⚡ AF: Udio', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 1-2 créditos' },
   { value: 'apiframe/producer-ai', label: '⚡ AF: Producer AI', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, instrumental' },
   { value: 'apiframe/eleven-music', label: '⚡ AF: Eleven Music', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, ElevenLabs' },
+  // AIML API music models
+  { value: 'aimlapi/suno-v4', label: '🤖 ML: Suno v4', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.05' },
+  { value: 'aimlapi/udio-v2', label: '🤖 ML: Udio v2', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API' },
+  { value: 'aimlapi/musicgen', label: '🤖 ML: MusicGen', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
 ];
 
 // Voices / Locutores
