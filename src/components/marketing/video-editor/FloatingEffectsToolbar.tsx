@@ -351,7 +351,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
 
   return (
-    <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
+    <div className="fixed bottom-10 sm:bottom-12 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-1 sm:gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-2 sm:px-3 py-1.5 sm:py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
 
