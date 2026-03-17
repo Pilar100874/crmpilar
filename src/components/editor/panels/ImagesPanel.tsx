@@ -1,4 +1,6 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { useGalleryFolders } from "@/hooks/useGalleryFolders";
+import { GalleryFolderTabs } from "@/components/ui/GalleryFolderTabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Upload, ExternalLink, WrapText, Loader2, FolderOpen } from "lucide-react";
