@@ -636,7 +636,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
-  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl)) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl) || (nodeData.type === 'mediaGallery' && nodeData.config?.selectedUrl)) ? 340 : 280;
 
   // Inline edit handler
   const handleInlineUpdate = useCallback((key: string, value: any) => {
