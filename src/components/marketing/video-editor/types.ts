@@ -214,6 +214,44 @@ export const TRANSITION_PRESETS: { type: TransitionType; label: string; icon: st
   { type: 'flash', label: 'Flash', icon: '⚡', description: 'Lampejo branco cinematográfico' },
   { type: 'glitch', label: 'Glitch', icon: '📺', description: 'Distorção digital RGB' },
   { type: 'pixelate', label: 'Pixelate', icon: '🟩', description: 'Pixelização progressiva' },
+  { type: 'light-leak', label: 'Light Leak', icon: '🔆', description: 'Vazamento de luz cinematográfico' },
+  { type: 'film-burn', label: 'Film Burn', icon: '🎞️', description: 'Queima de filme analógico' },
+  { type: 'luma-fade', label: 'Luma Fade', icon: '🌓', description: 'Fade por luminosidade' },
+  { type: 'shake', label: 'Shake', icon: '📳', description: 'Tremor de câmera' },
+  { type: 'ripple', label: 'Ripple', icon: '🌊', description: 'Ondulação líquida' },
+  { type: 'mosaic', label: 'Mosaico', icon: '🧩', description: 'Transição em mosaico' },
+  { type: 'color-wipe', label: 'Color Wipe', icon: '🎨', description: 'Wipe com cor sólida' },
+  // Premiere Push/Cover/Reveal
+  { type: 'push-left', label: 'Push ←', icon: '👈', description: 'Empurra o clipe para a esquerda' },
+  { type: 'push-right', label: 'Push →', icon: '👉', description: 'Empurra o clipe para a direita' },
+  { type: 'push-up', label: 'Push ↑', icon: '👆', description: 'Empurra o clipe para cima' },
+  { type: 'push-down', label: 'Push ↓', icon: '👇', description: 'Empurra o clipe para baixo' },
+  { type: 'cover-left', label: 'Cover ←', icon: '📕', description: 'Cobre deslizando da direita' },
+  { type: 'cover-right', label: 'Cover →', icon: '📗', description: 'Cobre deslizando da esquerda' },
+  { type: 'reveal-left', label: 'Reveal ←', icon: '🎪', description: 'Revela deslizando para esquerda' },
+  { type: 'reveal-right', label: 'Reveal →', icon: '🎠', description: 'Revela deslizando para direita' },
+  // After Effects 3D & Motion
+  { type: 'cross-zoom', label: 'Cross Zoom', icon: '🔭', description: 'Zoom cruzado entre clipes' },
+  { type: 'cross-spin', label: 'Cross Spin', icon: '💫', description: 'Rotação cruzada entre clipes' },
+  { type: 'whip-pan', label: 'Whip Pan', icon: '🎬', description: 'Pan rápido com motion blur' },
+  { type: 'cube-left', label: 'Cubo ←', icon: '🧊', description: 'Rotação de cubo 3D horizontal' },
+  { type: 'cube-right', label: 'Cubo →', icon: '📦', description: 'Rotação de cubo 3D horizontal' },
+  { type: 'page-curl', label: 'Page Curl', icon: '📄', description: 'Virar de página 3D' },
+  { type: 'door-open', label: 'Door Open', icon: '🚪', description: 'Portas abrindo ao centro' },
+  { type: 'door-close', label: 'Door Close', icon: '🔒', description: 'Portas fechando ao centro' },
+  { type: 'stretch-h', label: 'Stretch H', icon: '↔️', description: 'Estica horizontalmente' },
+  { type: 'stretch-v', label: 'Stretch V', icon: '↕️', description: 'Estica verticalmente' },
+  // Wipes avançados
+  { type: 'blinds-h', label: 'Blinds H', icon: '🪟', description: 'Persianas horizontais' },
+  { type: 'blinds-v', label: 'Blinds V', icon: '🏢', description: 'Persianas verticais' },
+  { type: 'clock-wipe', label: 'Clock Wipe', icon: '🕐', description: 'Wipe circular tipo relógio' },
+  { type: 'radial-wipe', label: 'Radial Wipe', icon: '☀️', description: 'Wipe radial do centro' },
+  // Motion
+  { type: 'spin-out', label: 'Spin Out', icon: '🌪️', description: 'Gira e desaparece' },
+  { type: 'tumble', label: 'Tumble', icon: '🎲', description: 'Cai girando 3D' },
+  { type: 'drop', label: 'Drop', icon: '⬇️', description: 'Cai com gravidade e bounce' },
+  { type: 'fly-in', label: 'Fly In', icon: '✈️', description: 'Voa de longe com perspectiva' },
+  { type: 'fly-out', label: 'Fly Out', icon: '🚀', description: 'Voa para longe com perspectiva' },
 ];
 
 export const EFFECT_PRESETS: EffectPreset[] = [
@@ -244,16 +282,6 @@ export const EFFECT_PRESETS: EffectPreset[] = [
       { type: 'sepia', label: 'Sépia', value: 40, enabled: true },
       { type: 'contrast', label: 'Contraste', value: 60, enabled: true },
       { type: 'brightness', label: 'Brilho', value: 55, enabled: true },
-    ],
-  },
-  {
-    id: 'retro-vhs', name: 'VHS Retro', icon: '📼', category: 'Estilo',
-    description: 'Estética de fita VHS dos anos 80/90',
-    filters: [
-      { type: 'contrast', label: 'Contraste', value: 55, enabled: true },
-      { type: 'saturation', label: 'Saturação', value: 65, enabled: true },
-      { type: 'brightness', label: 'Brilho', value: 52, enabled: true },
-      { type: 'blur', label: 'Blur', value: 3, enabled: true },
     ],
   },
   {
@@ -311,6 +339,16 @@ export const EFFECT_PRESETS: EffectPreset[] = [
   },
   // Estilo
   {
+    id: 'retro-vhs', name: 'VHS Retro', icon: '📼', category: 'Estilo',
+    description: 'Estética de fita VHS dos anos 80/90',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 55, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 65, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 52, enabled: true },
+      { type: 'blur', label: 'Blur', value: 3, enabled: true },
+    ],
+  },
+  {
     id: 'dreamy', name: 'Sonho', icon: '☁️', category: 'Estilo',
     description: 'Visual etéreo e onírico',
     filters: [
@@ -356,6 +394,86 @@ export const EFFECT_PRESETS: EffectPreset[] = [
       { type: 'brightness', label: 'Brilho', value: 48, enabled: true },
     ],
   },
+  // Premiere / AE Pro Looks
+  {
+    id: 'lumetri-basic', name: 'Lumetri Basic', icon: '🎬', category: 'Pro',
+    description: 'Correção de cor base estilo Premiere Lumetri',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 58, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 52, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 50, enabled: true },
+      { type: 'sharpen', label: 'Nitidez', value: 25, enabled: true },
+    ],
+  },
+  {
+    id: 'blockbuster', name: 'Blockbuster', icon: '🎥', category: 'Pro',
+    description: 'Visual de filme de ação: contraste extremo, azulado',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 75, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 35, enabled: true },
+      { type: 'hue-rotate', label: 'Matiz', value: 55, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 44, enabled: true },
+    ],
+  },
+  {
+    id: 'horror', name: 'Horror', icon: '👻', category: 'Pro',
+    description: 'Atmosfera sombria e desaturada para terror',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 70, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 20, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 38, enabled: true },
+    ],
+  },
+  {
+    id: 'documentary', name: 'Documentário', icon: '📹', category: 'Pro',
+    description: 'Visual natural e limpo para documentários',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 55, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 48, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 52, enabled: true },
+    ],
+  },
+  {
+    id: 'music-video', name: 'Music Video', icon: '🎵', category: 'Pro',
+    description: 'Visual vibrante e stylizado para clipes musicais',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 65, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 78, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 55, enabled: true },
+      { type: 'sharpen', label: 'Nitidez', value: 30, enabled: true },
+    ],
+  },
+  {
+    id: 'sci-fi', name: 'Sci-Fi', icon: '🛸', category: 'Pro',
+    description: 'Visual futurista com tons frios e alto contraste',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 68, enabled: true },
+      { type: 'hue-rotate', label: 'Matiz', value: 45, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 55, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 46, enabled: true },
+    ],
+  },
+  {
+    id: 'anamorphic', name: 'Anamorphic', icon: '🎞️', category: 'Pro',
+    description: 'Simula lente anamórfica: flares e tons quentes',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 60, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 50, enabled: true },
+      { type: 'hue-rotate', label: 'Matiz', value: 10, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 54, enabled: true },
+    ],
+  },
+  {
+    id: 'cross-process', name: 'Cross Process', icon: '🔬', category: 'Pro',
+    description: 'Revelação cruzada: cores surreais e intensas',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 65, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 75, enabled: true },
+      { type: 'hue-rotate', label: 'Matiz', value: 25, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 50, enabled: true },
+    ],
+  },
+  // Especial
   {
     id: 'negative', name: 'Negativo', icon: '🔄', category: 'Especial',
     description: 'Inversão total de cores',
@@ -380,6 +498,34 @@ export const EFFECT_PRESETS: EffectPreset[] = [
       { type: 'saturation', label: 'Saturação', value: 80, enabled: true },
       { type: 'hue-rotate', label: 'Matiz', value: 75, enabled: true },
       { type: 'brightness', label: 'Brilho', value: 48, enabled: true },
+    ],
+  },
+  {
+    id: 'thermal', name: 'Térmica', icon: '🌡️', category: 'Especial',
+    description: 'Visão térmica com tons quentes/frios',
+    filters: [
+      { type: 'hue-rotate', label: 'Matiz', value: 85, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 90, enabled: true },
+      { type: 'contrast', label: 'Contraste', value: 80, enabled: true },
+    ],
+  },
+  {
+    id: 'posterize', name: 'Posterize', icon: '🖼️', category: 'Especial',
+    description: 'Redução de cores estilo poster',
+    filters: [
+      { type: 'contrast', label: 'Contraste', value: 90, enabled: true },
+      { type: 'saturation', label: 'Saturação', value: 80, enabled: true },
+      { type: 'brightness', label: 'Brilho', value: 55, enabled: true },
+    ],
+  },
+  {
+    id: 'duotone', name: 'Duotone', icon: '🎨', category: 'Especial',
+    description: 'Duas cores: sombra e destaque',
+    filters: [
+      { type: 'grayscale', label: 'Cinza', value: 100, enabled: true },
+      { type: 'sepia', label: 'Sépia', value: 50, enabled: true },
+      { type: 'contrast', label: 'Contraste', value: 65, enabled: true },
+      { type: 'hue-rotate', label: 'Matiz', value: 40, enabled: true },
     ],
   },
 ];
