@@ -47,8 +47,6 @@ const VideoTimelineEditor: React.FC = () => {
   const { state } = timeline;
   const [rightPanel, setRightPanel] = useState<'resources' | 'config' | 'properties'>('resources');
   const [effectsPanelOpen, setEffectsPanelOpen] = useState(false);
-  const [effectsPanelPosition, setEffectsPanelPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const effectsPanelRef = useRef<HTMLDivElement>(null);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(1);
