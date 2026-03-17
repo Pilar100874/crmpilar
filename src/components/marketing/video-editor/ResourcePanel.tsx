@@ -573,6 +573,39 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Effect full-size preview dialog */}
+      {previewEffect && (
+        <Dialog open onOpenChange={() => setPreviewEffect(null)}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold">
+              {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffect)?.label || 'Efeito'} — Preview
+            </DialogTitle>
+            <div className="flex flex-col items-center gap-3 p-4">
+              <MiniEffectPreview effectType={previewEffect} size={280} autoPlay />
+              <p className="text-xs text-muted-foreground text-center">
+                {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffect)?.description}
+              </p>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (onAddEffectClip) {
+                    const effectTrack = tracks.find(t => t.type === 'effect');
+                    if (effectTrack) {
+                      const trackClips = clips.filter(c => c.trackId === effectTrack.id);
+                      const endTime = trackClips.reduce((max, c) => Math.max(max, c.startTime + c.duration), 0);
+                      onAddEffectClip(effectTrack.id, endTime, previewEffect, EFFECT_TRACK_PRESETS.find(p => p.type === previewEffect)?.label || 'Efeito');
+                    }
+                  }
+                  setPreviewEffect(null);
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Adicionar à timeline
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 });
