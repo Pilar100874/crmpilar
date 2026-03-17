@@ -437,41 +437,38 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
 
-                <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
-                  <div className="p-2 space-y-2">
-                    {TRANSITION_CATEGORIES.map(cat => {
-                      const presets = TRANSITION_PRESETS.filter(p => cat.types.includes(p.type));
+                <div className="p-2">
+                  <Select value={selectedTransCat} onValueChange={setSelectedTransCat}>
+                    <SelectTrigger className="h-7 text-[10px] mb-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRANSITION_CATEGORIES.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id} className="text-[11px]">
+                          {cat.icon} {cat.label} ({cat.types.length})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                    {TRANSITION_PRESETS.filter(p => TRANSITION_CATEGORIES.find(c => c.id === selectedTransCat)?.types.includes(p.type)).map(preset => {
                       const activeType = transitionPhase === 'entrance' ? entranceTransition?.type : exitTransition?.type;
-
+                      const isActive = activeType === preset.type;
                       return (
-                        <div key={cat.id}>
-                          <div className="flex items-center gap-1.5 px-1 mb-1">
-                            <span className="text-xs">{cat.icon}</span>
-                            <span className="text-[10px] font-semibold text-muted-foreground">{cat.label}</span>
-                            <span className="text-[8px] text-muted-foreground/60">({presets.length})</span>
-                          </div>
-                          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                            {presets.map(preset => {
-                              const isActive = activeType === preset.type;
-                              return (
-                                <button
-                                  key={preset.type}
-                                  onClick={() => setTransition(transitionPhase, preset.type)}
-                                  className={`flex-shrink-0 flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all w-[72px] ${
-                                    isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
-                                  }`}
-                                >
-                                  <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={40} />
-                                  <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.label}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
+                        <button
+                          key={preset.type}
+                          onClick={() => setTransition(transitionPhase, preset.type)}
+                          className={`flex flex-col items-center gap-1 p-1.5 rounded-lg border transition-all ${
+                            isActive ? 'border-primary bg-primary/10 ring-1 ring-primary/30 shadow-sm' : 'border-border/50 hover:border-border hover:bg-muted/40'
+                          }`}
+                        >
+                          <TransitionPreviewThumb type={preset.type} isExit={transitionPhase === 'exit'} isActive={isActive} size={36} />
+                          <span className="text-[7px] font-medium leading-tight text-center truncate w-full">{preset.label}</span>
+                        </button>
                       );
                     })}
                   </div>
-                </ScrollArea>
+                </div>
               </PopoverContent>
             </Popover>
           )}
