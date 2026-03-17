@@ -599,6 +599,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                 </Button>
               </div>
             </div>
+            <GalleryFolderTabsForDialog items={galleryItems} />
             <ScrollArea className="flex-1">
               {loading ? (
                 <div className="flex justify-center items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -611,7 +612,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-2 p-4">
+                <GalleryFilteredGrid items={galleryItems} galleryType={galleryType} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
                   {galleryItems.map((item) => {
                     const isSelected = selectedIds.has(item.id);
                     return (
