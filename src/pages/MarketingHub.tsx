@@ -33,7 +33,7 @@ import MarketingAutomacoes from './MarketingAutomacoes';
 import MarketingCampanhas from './MarketingCampanhas';
 import MarketingRecursos from '@/components/marketing/MarketingRecursos';
 import MarketingGaleria from '@/components/marketing/MarketingGaleria';
-import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
+
 import IntegrationCredentialsManager from '@/components/marketing/IntegrationCredentialsManager';
 import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
 import RailwayVariables from '@/components/marketing/RailwayVariables';
