@@ -80,7 +80,12 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const handleClipMouseDown = useCallback((e: React.MouseEvent, clip: TimelineClip, type: 'move' | 'resize-start' | 'resize-end') => {
     // Block interaction if clip or its track is locked
     const track = state.tracks.find(t => t.id === clip.trackId);
-    if (clip.locked || track?.locked) return;
+    if (clip.locked || track?.locked) {
+      if (clip.locked && clip.name?.includes('Transição AI')) {
+        toast?.({ title: '🔒 Clipe bloqueado', description: 'Transições AI são travadas para preservar a continuidade. Desbloqueie manualmente se necessário.', variant: 'destructive' });
+      }
+      return;
+    }
     e.stopPropagation();
     e.preventDefault();
     onSelectClip(clip.id, e.ctrlKey || e.metaKey);
