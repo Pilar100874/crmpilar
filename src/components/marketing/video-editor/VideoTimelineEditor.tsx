@@ -45,7 +45,10 @@ interface VideoProject {
 const VideoTimelineEditor: React.FC = () => {
   const timeline = useTimelineState();
   const { state } = timeline;
-  const [rightPanel, setRightPanel] = useState<'resources' | 'effects' | 'config' | 'properties'>('resources');
+  const [rightPanel, setRightPanel] = useState<'resources' | 'config' | 'properties'>('resources');
+  const [effectsPanelOpen, setEffectsPanelOpen] = useState(false);
+  const [effectsPanelPosition, setEffectsPanelPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const effectsPanelRef = useRef<HTMLDivElement>(null);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(1);
@@ -1077,7 +1080,7 @@ const VideoTimelineEditor: React.FC = () => {
                 <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
                   <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
                 </div>
-                <TimelineTracks state={state} onSelectClip={timeline.selectClip} onUpdateClip={timeline.updateClip} onDeselectAll={timeline.deselectAll} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
+                <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); setEffectsPanelOpen(true); }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} />
               </div>
             </div>
           </div>
@@ -1087,18 +1090,53 @@ const VideoTimelineEditor: React.FC = () => {
         <div className="w-72 border-l bg-card shrink-0 flex flex-col overflow-hidden">
           <div className="flex items-center border-b px-1 py-1 gap-0.5 shrink-0">
             <Button size="sm" variant={rightPanel === 'resources' ? 'default' : 'ghost'} onClick={() => setRightPanel('resources')} className="text-[10px] gap-1 flex-1 h-7 px-1"><FolderOpen className="h-3 w-3" />Recursos</Button>
-            <Button size="sm" variant={rightPanel === 'effects' ? 'default' : 'ghost'} onClick={() => setRightPanel('effects')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Sparkles className="h-3 w-3" />Efeitos</Button>
             <Button size="sm" variant={rightPanel === 'config' ? 'default' : 'ghost'} onClick={() => setRightPanel('config')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Config</Button>
             <Button size="sm" variant={rightPanel === 'properties' ? 'default' : 'ghost'} onClick={() => setRightPanel('properties')} className="text-[10px] gap-1 flex-1 h-7 px-1"><Settings2 className="h-3 w-3" />Props</Button>
           </div>
           <div className="flex-1 overflow-hidden">
             {rightPanel === 'resources' && <ResourcePanel ref={resourcePanelRef} onAddClip={handleAddClip} tracks={state.tracks} onOpenCanvas={handleOpenCanvasFromToolbar} onEditCanvas={handleEditCanvasFromResource} />}
             {rightPanel === 'config' && <VideoConfigPanel config={videoConfig} onChange={setVideoConfig} />}
-            {rightPanel === 'effects' && <EffectsPanel selectedClip={selectedClip || undefined} onUpdateClip={timeline.updateClip} onPreviewTransition={(clipId, phase) => setPreviewingTransition({ clipId, phase })} onToggleFilterPreview={setFilterPreviewActive} />}
             {rightPanel === 'properties' && <ClipPropertiesPanel clip={selectedClip || undefined} onUpdateClip={timeline.updateClip} />}
           </div>
         </div>
       </div>
+
+      {/* Floating Effects Panel */}
+      {effectsPanelOpen && selectedClip && (
+        <div
+          ref={effectsPanelRef}
+          className="fixed z-[9999] bottom-16 left-1/2 -translate-x-1/2 w-[520px] max-h-[420px] rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-black/20 ring-1 ring-white/10 overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b bg-gradient-to-r from-primary/10 via-transparent to-primary/5 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/15">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold leading-tight">Efeitos & Transições</p>
+                <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                  <span>{selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊'}</span>
+                  <span className="font-medium truncate max-w-[140px]">{selectedClip.name}</span>
+                  <span>· {selectedClip.duration.toFixed(1)}s</span>
+                </div>
+              </div>
+            </div>
+            <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg hover:bg-destructive/10 hover:text-destructive" onClick={() => setEffectsPanelOpen(false)}>
+              <span className="text-lg leading-none">×</span>
+            </Button>
+          </div>
+          {/* Content */}
+          <div className="flex-1 overflow-hidden">
+            <EffectsPanel
+              selectedClip={selectedClip || undefined}
+              onUpdateClip={timeline.updateClip}
+              onPreviewTransition={(clipId, phase) => setPreviewingTransition({ clipId, phase })}
+              onToggleFilterPreview={setFilterPreviewActive}
+            />
+          </div>
+        </div>
+      )}
 
       <CanvasComposerDialog open={canvasDialogOpen} onClose={() => { setCanvasDialogOpen(false); setCanvasEditClipId(null); setCanvasEditResourceId(null); setCanvasEditJson(undefined); }} onConfirm={handleCanvasEditConfirm} initialCanvasJson={canvasEditJson} />
 

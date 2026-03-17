@@ -61,13 +61,7 @@ const EffectsPanel: React.FC<Props> = ({ selectedClip, onUpdateClip, onPreviewTr
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
 
   if (!selectedClip) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-        <Sparkles className="h-10 w-10 text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground">Selecione um clipe para aplicar efeitos</p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1">Clique em um item na timeline</p>
-      </div>
-    );
+    return null;
   }
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
@@ -143,24 +137,13 @@ const EffectsPanel: React.FC<Props> = ({ selectedClip, onUpdateClip, onPreviewTr
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-3 py-2 border-b bg-muted/30 shrink-0">
-        <p className="text-[11px] font-medium truncate">{selectedClip.name}</p>
-        <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          <span>{selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊'}</span>
-          <span>{selectedClip.duration.toFixed(1)}s</span>
-          {entranceTransition && entranceTransition.type !== 'none' && <span className="text-emerald-500 font-medium">▶ IN</span>}
-          {exitTransition && exitTransition.type !== 'none' && <span className="text-amber-500 font-medium">OUT ◀</span>}
-          {(selectedClip.filters?.length ?? 0) > 0 && <span className="text-primary font-medium">🎨 {selectedClip.filters?.length}</span>}
-        </div>
-      </div>
-
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="w-full shrink-0 h-8 rounded-none border-b">
-          <TabsTrigger value="transitions" className="text-[10px] gap-1 flex-1 h-7">
-            <Zap className="h-3 w-3" /> Transições
+        <TabsList className="w-full shrink-0 h-9 rounded-none bg-muted/40 px-1">
+          <TabsTrigger value="transitions" className="text-[11px] gap-1.5 flex-1 h-7 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium">
+            <Zap className="h-3.5 w-3.5" /> Transições
           </TabsTrigger>
-          <TabsTrigger value="filters" className="text-[10px] gap-1 flex-1 h-7">
-            <Wand2 className="h-3 w-3" /> Filtros
+          <TabsTrigger value="filters" className="text-[11px] gap-1.5 flex-1 h-7 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium">
+            <Wand2 className="h-3.5 w-3.5" /> Filtros
           </TabsTrigger>
         </TabsList>
 
