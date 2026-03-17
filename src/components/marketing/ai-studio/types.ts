@@ -104,6 +104,22 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         defaultConfig: { images: [], referenceRole: '' },
       },
       {
+        type: 'videoInput',
+        label: 'Vídeo de Referência',
+        description: 'Carregue vídeos como referência para geração',
+        icon: '🎬',
+        color: '#f59e0b',
+        defaultConfig: { videos: [] },
+      },
+      {
+        type: 'multiVideoRef',
+        label: 'Referências Múltiplas de Vídeo',
+        description: 'Selecione vários vídeos de referência (upload ou galeria)',
+        icon: '🎬🎬',
+        color: '#d97706',
+        defaultConfig: { videos: [] },
+      },
+      {
         type: 'productImageSelect',
         label: 'Imagem de Produto',
         description: 'Selecione imagem de um produto cadastrado',
