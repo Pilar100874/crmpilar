@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useGalleryFolders } from '@/hooks/useGalleryFolders';
+import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
@@ -406,6 +408,7 @@ const ImageInputWithGallery: React.FC<{
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [gallerySearch, setGallerySearch] = useState('');
   const [loadingGallery, setLoadingGallery] = useState(false);
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchGalleryImages = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -426,7 +429,8 @@ const ImageInputWithGallery: React.FC<{
     if (showGalleryPicker && galleryImages.length === 0) fetchGalleryImages();
   }, [showGalleryPicker, fetchGalleryImages, galleryImages.length]);
 
-  const filteredGallery = galleryImages.filter(img =>
+  const { folders, filteredItems: folderFilteredGallery } = getFilteredItems(galleryImages);
+  const filteredGallery = folderFilteredGallery.filter(img =>
     !gallerySearch || img.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
   );
 
@@ -464,6 +468,9 @@ const ImageInputWithGallery: React.FC<{
               className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
             >✕ Fechar</button>
           </div>
+          {folders.length > 0 && (
+            <GalleryFolderTabs folders={folders} activeFolder={activeFolder} onSelectFolder={setActiveFolder} />
+          )}
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <input
@@ -564,6 +571,7 @@ const VideoInputWithGallery: React.FC<{
   const [galleryVideos, setGalleryVideos] = useState<any[]>([]);
   const [gallerySearch, setGallerySearch] = useState('');
   const [loadingGallery, setLoadingGallery] = useState(false);
+  const { getFilteredItems, activeFolder, setActiveFolder } = useGalleryFolders();
 
   const fetchGalleryVideos = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -584,7 +592,8 @@ const VideoInputWithGallery: React.FC<{
     if (showGalleryPicker && galleryVideos.length === 0) fetchGalleryVideos();
   }, [showGalleryPicker, fetchGalleryVideos, galleryVideos.length]);
 
-  const filteredGallery = galleryVideos.filter(v =>
+  const { folders, filteredItems: folderFilteredGallery } = getFilteredItems(galleryVideos);
+  const filteredGallery = folderFilteredGallery.filter(v =>
     !gallerySearch || v.nome?.toLowerCase().includes(gallerySearch.toLowerCase())
   );
 
@@ -625,6 +634,9 @@ const VideoInputWithGallery: React.FC<{
               className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
             >✕ Fechar</button>
           </div>
+          {folders.length > 0 && (
+            <GalleryFolderTabs folders={folders} activeFolder={activeFolder} onSelectFolder={setActiveFolder} />
+          )}
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
             <input

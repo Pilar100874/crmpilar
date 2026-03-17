@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useGalleryFolders } from "@/hooks/useGalleryFolders";
+import { GalleryFolderTabs } from "@/components/ui/GalleryFolderTabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,11 +140,16 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     attachment.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredGalleryImages = galleryImages.filter(i =>
+  const imgFolders = useGalleryFolders();
+  const vidFolders = useGalleryFolders();
+
+  const { folders: imageFolders, filteredItems: folderFilteredImages } = imgFolders.getFilteredItems(galleryImages);
+  const filteredGalleryImages = folderFilteredImages.filter((i: any) =>
     i.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredGalleryVideos = galleryVideos.filter(i =>
+  const { folders: videoFolders, filteredItems: folderFilteredVideos } = vidFolders.getFilteredItems(galleryVideos);
+  const filteredGalleryVideos = folderFilteredVideos.filter((i: any) =>
     i.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -231,28 +238,35 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {filteredGalleryImages.map((item) => (
-                      <Card
-                        key={item.id}
-                        className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
-                        onClick={() => handleGallerySelect(item)}
-                      >
-                        <div className="aspect-square relative">
-                          <img 
-                            src={item.thumbnail_url || item.public_url} 
-                            alt={item.nome}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <ZoomIn className="h-8 w-8 text-white" />
+                  <div>
+                    {imageFolders.length > 0 && (
+                      <div className="mb-3">
+                        <GalleryFolderTabs folders={imageFolders} activeFolder={imgFolders.activeFolder} onSelectFolder={imgFolders.setActiveFolder} />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      {filteredGalleryImages.map((item: any) => (
+                        <Card
+                          key={item.id}
+                          className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
+                          onClick={() => handleGallerySelect(item)}
+                        >
+                          <div className="aspect-square relative">
+                            <img 
+                              src={item.thumbnail_url || item.public_url} 
+                              alt={item.nome}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <ZoomIn className="h-8 w-8 text-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="p-2 border-t bg-background">
-                          <p className="text-xs font-medium truncate">{item.nome}</p>
-                        </div>
-                      </Card>
-                    ))}
+                          <div className="p-2 border-t bg-background">
+                            <p className="text-xs font-medium truncate">{item.nome}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -274,8 +288,14 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {filteredGalleryVideos.map((item) => (
+                  <div>
+                    {videoFolders.length > 0 && (
+                      <div className="mb-3">
+                        <GalleryFolderTabs folders={videoFolders} activeFolder={vidFolders.activeFolder} onSelectFolder={vidFolders.setActiveFolder} />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                    {filteredGalleryVideos.map((item: any) => (
                       <Card
                         key={item.id}
                         className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
@@ -307,6 +327,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                         </div>
                       </Card>
                     ))}
+                    </div>
                   </div>
                 )}
               </div>
