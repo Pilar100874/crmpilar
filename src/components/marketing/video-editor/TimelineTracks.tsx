@@ -36,6 +36,7 @@ interface Props {
 }
 
 const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
+  const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
   const [dragMediaType, setDragMediaType] = useState<string | null>(null);
