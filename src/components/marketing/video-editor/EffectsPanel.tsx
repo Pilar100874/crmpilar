@@ -61,13 +61,7 @@ const EffectsPanel: React.FC<Props> = ({ selectedClip, onUpdateClip, onPreviewTr
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
 
   if (!selectedClip) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-        <Sparkles className="h-10 w-10 text-muted-foreground/30 mb-3" />
-        <p className="text-sm text-muted-foreground">Selecione um clipe para aplicar efeitos</p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1">Clique em um item na timeline</p>
-      </div>
-    );
+    return null;
   }
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
