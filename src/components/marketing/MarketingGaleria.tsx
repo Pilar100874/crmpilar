@@ -63,6 +63,7 @@ interface MarketingContentItem {
   created_at: string;
   _source?: 'marketing_content' | 'media_gallery';
   _folder?: string | null;
+  disponivel_chat?: boolean;
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
