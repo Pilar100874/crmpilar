@@ -814,6 +814,12 @@ const VideoTimelineEditor: React.FC = () => {
       locked: true,
     });
 
+    // Lock adjacent clip edges to preserve transition continuity
+    // ClipA (before transition): lock its end edge
+    timeline.updateClip(bridgeClipA.id, { lockedEdge: 'end' });
+    // ClipB (after transition): lock its start edge
+    timeline.updateClip(bridgeClipB.id, { lockedEdge: 'start' });
+
     // Also add to resource panel under "Transições AI" group
     resourcePanelRef.current?.addTransitionItem(transitionName, videoUrl, duration);
   }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
