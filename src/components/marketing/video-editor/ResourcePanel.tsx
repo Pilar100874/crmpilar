@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
-  Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen,
+  Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen, Wand2,
   Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles
 } from 'lucide-react';
 import MiniEffectPreview from './MiniEffectPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack, TimelineClip, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 
-type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio' | 'effect';
+type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio' | 'effect' | 'transition';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -22,6 +22,7 @@ interface MediaItem {
 
 export interface ResourcePanelHandle {
   addCanvasItem: (name: string, src: string, canvasJson?: string) => void;
+  addTransitionItem: (name: string, src: string, duration: number) => void;
 }
 
 interface Props {
@@ -58,6 +59,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'video', label: 'Vídeo', icon: <Film className="h-4 w-4" />, color: 'text-blue-400' },
   { key: 'image', label: 'Imagem', icon: <ImageIcon className="h-4 w-4" />, color: 'text-green-400' },
   { key: 'canvas', label: 'Canvas', icon: <Palette className="h-4 w-4" />, color: 'text-purple-400' },
+  { key: 'transition', label: 'Transições AI', icon: <Wand2 className="h-4 w-4" />, color: 'text-cyan-400' },
   { key: 'music', label: 'Música', icon: <Music className="h-4 w-4" />, color: 'text-yellow-400' },
   { key: 'audio', label: 'Áudio', icon: <Mic className="h-4 w-4" />, color: 'text-orange-400' },
   { key: 'effect', label: 'Efeitos', icon: <Sparkles className="h-4 w-4" />, color: 'text-pink-400' },
@@ -65,7 +67,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
 
 const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAddEffectClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
   const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
-    video: [], image: [], canvas: [], music: [], audio: [],
+    video: [], image: [], canvas: [], music: [], audio: [], transition: [],
   });
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
@@ -120,7 +122,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
         canvasJson,
       };
       setItems(prev => ({ ...prev, canvas: [...prev.canvas, imported] }));
-      // tab auto-switched by section visibility
+    },
+    addTransitionItem: (name: string, src: string, duration: number) => {
+      const imported: ImportedMedia = {
+        id: `transition_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        src,
+        type: 'video',
+        duration,
+        thumbnail: null,
+        resourceType: 'transition',
+      };
+      setItems(prev => ({ ...prev, transition: [...prev.transition, imported] }));
     },
     updateCanvasItem: (itemId: string, src: string, canvasJson: string) => {
       setItems(prev => ({
@@ -464,36 +477,43 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
                 {!isCollapsed && !isEffectTab && (
                   <div className="px-2 pb-2 pt-1.5 space-y-1.5">
-                    {/* Action buttons */}
-                    <div className="flex gap-1">
-                      {tab.key === 'canvas' ? (
-                        <>
-                          <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                            <Palette className="h-3 w-3" />Criar
-                          </Button>
-                          <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
-                            <Upload className="h-3 w-3" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          {(tab.key === 'video' || tab.key === 'image') && (
-                            <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
-                              <FolderOpen className="h-3 w-3" />Galeria
+                    {/* Action buttons — skip for transition tab (auto-populated) */}
+                    {tab.key !== 'transition' && (
+                      <div className="flex gap-1">
+                        {tab.key === 'canvas' ? (
+                          <>
+                            <Button onClick={onOpenCanvas} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                              <Palette className="h-3 w-3" />Criar
                             </Button>
-                          )}
-                          <Button
-                            onClick={() => getInputRef(tab.key)?.current?.click()}
-                            variant="outline"
-                            className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
-                            title="Upload do computador"
-                          >
-                            <Upload className="h-3 w-3" />
-                            {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                            <Button onClick={() => imageInputRef.current?.click()} variant="outline" size="icon" className="h-7 w-7 shrink-0" title="Upload imagem">
+                              <Upload className="h-3 w-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            {(tab.key === 'video' || tab.key === 'image') && (
+                              <Button onClick={() => handleOpenGallery(tab.key as 'video' | 'image')} variant="outline" className="flex-1 gap-1.5 text-[10px] h-7">
+                                <FolderOpen className="h-3 w-3" />Galeria
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => getInputRef(tab.key)?.current?.click()}
+                              variant="outline"
+                              className={`${tab.key === 'video' || tab.key === 'image' ? '' : 'flex-1'} gap-1.5 text-[10px] h-7`}
+                              title="Upload do computador"
+                            >
+                              <Upload className="h-3 w-3" />
+                              {tab.key !== 'video' && tab.key !== 'image' && 'Upload'}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {tab.key === 'transition' && sectionItems.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground text-center py-2 italic">
+                        Use o botão ✨ na timeline para gerar vídeos de transição AI entre clipes
+                      </p>
+                    )}
                     {/* Items */}
                     {renderSectionItems(tab, sectionItems)}
                   </div>
