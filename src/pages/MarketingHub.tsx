@@ -61,8 +61,6 @@ const tabItems: TabItem[] = [
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
-  { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
-  { id: 'elevenlabs', label: 'ElevenLabs', icon: Mic, description: 'Configurar áudio e voz via ElevenLabs' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
   
 ];
