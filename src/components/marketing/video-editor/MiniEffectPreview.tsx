@@ -156,7 +156,7 @@ function getOverlayStyleMini(
   }
 }
 
-const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64 }) => {
+const MiniEffectPreview: React.FC<Props> = ({ effectType, size = 64, autoPlay = false }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
