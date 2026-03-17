@@ -140,11 +140,16 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     attachment.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredGalleryImages = galleryImages.filter(i =>
+  const imgFolders = useGalleryFolders();
+  const vidFolders = useGalleryFolders();
+
+  const { folders: imageFolders, filteredItems: folderFilteredImages } = imgFolders.getFilteredItems(galleryImages);
+  const filteredGalleryImages = folderFilteredImages.filter((i: any) =>
     i.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredGalleryVideos = galleryVideos.filter(i =>
+  const { folders: videoFolders, filteredItems: folderFilteredVideos } = vidFolders.getFilteredItems(galleryVideos);
+  const filteredGalleryVideos = folderFilteredVideos.filter((i: any) =>
     i.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
