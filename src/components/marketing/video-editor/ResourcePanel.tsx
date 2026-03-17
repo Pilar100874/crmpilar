@@ -185,7 +185,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, track
         return { ...prev, [resType]: [...prev[resType], imported] };
       });
     }
-    setActiveTab(resType);
+    // items added to their section automatically
     setGalleryOpen(false);
     setSelectedIds(new Set());
   }, [galleryItems, selectedIds, galleryType]);
