@@ -6,6 +6,8 @@ export type StudioNodeType =
   | 'systemPrompt'
   | 'imageInput'
   | 'multiImageRef'
+  | 'videoInput'
+  | 'multiVideoRef'
   | 'productImageSelect'
   | 'multiProductSelect'
   | 'galleryInfluencer'
