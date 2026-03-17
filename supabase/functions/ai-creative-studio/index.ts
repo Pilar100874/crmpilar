@@ -921,6 +921,20 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     console.warn(`[generate_video] Correction source video provided, but Runway key not found. Proceeding with OpenAI fallback.`);
   }
 
+  // Bridge mode needs both start and end frames; OpenAI Sora only uses one reference.
+  // When available, route bridge requests to Google Veo which now receives a combined start/end reference image.
+  if (params.bridgeMode === true && provider === "openai") {
+    const googleKey = await fetchApiKey(estabelecimentoId, "google");
+    if (googleKey) {
+      console.log(`[generate_video] AUTO-ROUTING bridge mode: OpenAI -> Google Veo for dual-frame transition reference`);
+      return await generateVideoGoogle(googleKey, {
+        ...params,
+        model: "google/veo-3.1",
+      });
+    }
+    console.warn(`[generate_video] Bridge mode requested with OpenAI, but Google key not found. Proceeding with OpenAI fallback.`);
+  }
+
   // Check if there are strict references (product/influencer) that need preservation
   const imageRoles = (params.imageRoles || []) as string[];
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY'];
