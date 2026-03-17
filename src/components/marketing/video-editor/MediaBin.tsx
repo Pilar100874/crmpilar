@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Film, Image as ImageIcon, FolderOpen, Loader2, Check, Trash2, Play, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack } from './types';
+import GalleryFilteredGrid from '@/components/ui/GalleryFilteredGrid';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
