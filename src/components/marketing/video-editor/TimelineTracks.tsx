@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { TimelineState, TimelineClip, TRACK_COLORS, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useToast } from '@/hooks/use-toast';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
