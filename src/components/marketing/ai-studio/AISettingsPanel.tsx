@@ -29,7 +29,15 @@ interface PaidProvider {
 }
 
 const PAID_PROVIDERS: PaidProvider[] = [
-  { id: 'apiframe', name: 'Apiframe (Unified)', icon: '⚡', category: 'unified', description: 'Uma única API para Midjourney, Flux, Runway, Kling, Luma, Suno, Udio e mais. Configure 1 chave e acesse todos os modelos.', website: 'https://app.apiframe.ai/dashboard', keyPlaceholder: 'YOUR_API_KEY' },
+  ...UNIFIED_PROVIDERS.map(u => ({
+    id: u.id,
+    name: u.name,
+    icon: u.icon,
+    category: 'unified' as const,
+    description: u.description,
+    website: u.website,
+    keyPlaceholder: u.keyPlaceholder,
+  })),
   { id: 'elevenlabs', name: 'ElevenLabs', icon: '🔊', category: 'audio', description: 'Vozes realistas, TTS e narração de alta qualidade.', website: 'https://elevenlabs.io/app/settings/api-keys', keyPlaceholder: 'xi-...', hasExtraConfig: true },
   { id: 'google', name: 'Google (Veo / TTS)', icon: '🟦', category: 'video', description: 'Veo 2/3/3.1 para vídeos e WaveNet/Neural2 para áudio. Use sua própria chave Google AI Studio.', website: 'https://aistudio.google.com/apikey', keyPlaceholder: 'AIza...' },
   { id: 'openai', name: 'OpenAI (Sora / TTS)', icon: '🟢', category: 'video', description: 'Sora 2/3 para vídeos e TTS para áudio. Use sua própria chave OpenAI.', website: 'https://platform.openai.com/api-keys', keyPlaceholder: 'sk-...' },
