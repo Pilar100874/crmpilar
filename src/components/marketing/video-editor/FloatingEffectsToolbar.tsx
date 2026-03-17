@@ -517,7 +517,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[320px]">
+              <ScrollArea className="max-h-[50vh]">
                 <div className="p-2 space-y-2">
                   {/* Presets by category */}
                   {FILTER_CATEGORIES.map(cat => {
