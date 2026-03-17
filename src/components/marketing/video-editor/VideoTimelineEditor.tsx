@@ -75,7 +75,10 @@ const VideoTimelineEditor: React.FC = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [previewingTransition, setPreviewingTransition] = useState<{ clipId: string; phase: 'entrance' | 'exit' } | null>(null);
   const [filterPreviewActive, setFilterPreviewActive] = useState(false);
+  const [showFloatingScrollbar, setShowFloatingScrollbar] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timelineScrollRef = useRef<HTMLDivElement>(null);
+  const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
 
   // Project management
   const [showEditor, setShowEditor] = useState(false);
