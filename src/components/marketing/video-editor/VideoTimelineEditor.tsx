@@ -789,14 +789,17 @@ const VideoTimelineEditor: React.FC = () => {
       }
     });
 
-    // Find a video track
+    // Always insert into a video track
     const videoTrack = state.tracks.find(t => t.type === 'video');
     if (!videoTrack) return;
+    const targetTrackId = state.tracks.find(t => t.id === bridgeClipA.trackId && t.type === 'video')
+      ? bridgeClipA.trackId
+      : videoTrack.id;
 
     const transitionName = `🎬 Transição AI ${state.clips.filter(c => c.name?.includes('Transição AI')).length + 1}`;
 
     timeline.addClip({
-      trackId: bridgeClipA.trackId,
+      trackId: targetTrackId,
       type: 'video',
       name: transitionName,
       startTime: insertTime,
