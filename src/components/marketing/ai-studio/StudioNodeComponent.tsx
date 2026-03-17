@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import GallerySelectInline from './GallerySelectInline';
+import MediaGallerySelectInline from './MediaGallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
 import VideoTrimmer from './VideoTrimmer';
 import { 
