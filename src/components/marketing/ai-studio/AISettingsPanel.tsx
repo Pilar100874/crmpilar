@@ -202,6 +202,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const [studioDefaults, setStudioDefaults] = useState<StudioDefaults>(DEFAULT_STUDIO_DEFAULTS);
+  const [activeUnified, setActiveUnified] = useState<string | null>(null);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
