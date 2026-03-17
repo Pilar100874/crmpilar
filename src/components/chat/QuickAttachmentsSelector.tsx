@@ -238,36 +238,36 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                     </p>
                   </div>
                 ) : (
-                  <>
+                  <div>
                     {imageFolders.length > 0 && (
                       <div className="mb-3">
                         <GalleryFolderTabs folders={imageFolders} activeFolder={imgFolders.activeFolder} onSelectFolder={imgFolders.setActiveFolder} />
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-3">
-                    {filteredGalleryImages.map((item: any) => (
-                      <Card
-                        key={item.id}
-                        className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
-                        onClick={() => handleGallerySelect(item)}
-                      >
-                        <div className="aspect-square relative">
-                          <img 
-                            src={item.thumbnail_url || item.public_url} 
-                            alt={item.nome}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <ZoomIn className="h-8 w-8 text-white" />
+                      {filteredGalleryImages.map((item: any) => (
+                        <Card
+                          key={item.id}
+                          className="group relative overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl"
+                          onClick={() => handleGallerySelect(item)}
+                        >
+                          <div className="aspect-square relative">
+                            <img 
+                              src={item.thumbnail_url || item.public_url} 
+                              alt={item.nome}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <ZoomIn className="h-8 w-8 text-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="p-2 border-t bg-background">
-                          <p className="text-xs font-medium truncate">{item.nome}</p>
-                        </div>
-                      </Card>
-                    ))}
+                          <div className="p-2 border-t bg-background">
+                            <p className="text-xs font-medium truncate">{item.nome}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                )}
               </div>
             </ScrollArea>
           </TabsContent>
