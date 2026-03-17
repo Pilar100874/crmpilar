@@ -137,17 +137,6 @@ const EffectsPanel: React.FC<Props> = ({ selectedClip, onUpdateClip, onPreviewTr
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-3 py-2 border-b bg-muted/30 shrink-0">
-        <p className="text-[11px] font-medium truncate">{selectedClip.name}</p>
-        <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          <span>{selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊'}</span>
-          <span>{selectedClip.duration.toFixed(1)}s</span>
-          {entranceTransition && entranceTransition.type !== 'none' && <span className="text-emerald-500 font-medium">▶ IN</span>}
-          {exitTransition && exitTransition.type !== 'none' && <span className="text-amber-500 font-medium">OUT ◀</span>}
-          {(selectedClip.filters?.length ?? 0) > 0 && <span className="text-primary font-medium">🎨 {selectedClip.filters?.length}</span>}
-        </div>
-      </div>
-
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="w-full shrink-0 h-8 rounded-none border-b">
           <TabsTrigger value="transitions" className="text-[10px] gap-1 flex-1 h-7">
