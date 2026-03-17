@@ -360,42 +360,27 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
     return <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
   };
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl shadow-lg overflow-hidden flex flex-col"
-            style={{ boxShadow: 'var(--shadow-lg)' }}
-          >
-            {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-primary to-primary-glow px-6 py-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-                    <DollarSign className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-primary-foreground">APIs Pagas — Configuração</h2>
-                    <p className="text-xs text-primary-foreground/70">Gerencie as chaves de API dos serviços externos pagos</p>
-                  </div>
-                </div>
-                <Button size="icon" variant="ghost" onClick={onClose} className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10">
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
+  const content = (
+    <div className={embedded ? "w-full h-full bg-card border border-border rounded-2xl shadow-lg overflow-hidden flex flex-col" : "w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl shadow-lg overflow-hidden flex flex-col"} style={{ boxShadow: 'var(--shadow-lg)' }}>
+      {/* Header with gradient */}
+      <div className="bg-gradient-to-r from-primary to-primary-glow px-6 py-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-primary-foreground" />
             </div>
+            <div>
+              <h2 className="text-lg font-bold text-primary-foreground">APIs Pagas — Configuração</h2>
+              <p className="text-xs text-primary-foreground/70">Gerencie as chaves de API dos serviços externos pagos</p>
+            </div>
+          </div>
+          {!embedded && (
+            <Button size="icon" variant="ghost" onClick={onClose} className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10">
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+      </div>
 
             {/* Content */}
             <div className="flex flex-1 overflow-hidden">
