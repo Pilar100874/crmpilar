@@ -69,6 +69,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
   const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [], transition: [],
   });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
 
