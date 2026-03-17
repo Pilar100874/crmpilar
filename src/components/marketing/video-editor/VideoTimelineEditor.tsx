@@ -1455,6 +1455,16 @@ const VideoTimelineEditor: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+      {/* AI Bridge Video Dialog */}
+      {bridgeDialogOpen && bridgeClipA && bridgeClipB && (
+        <AIBridgeVideoDialog
+          open={bridgeDialogOpen}
+          onClose={() => { setBridgeDialogOpen(false); setBridgeClipA(null); setBridgeClipB(null); }}
+          clipA={bridgeClipA}
+          clipB={bridgeClipB}
+          onVideoGenerated={handleBridgeVideoGenerated}
+        />
+      )}
     </div>
   );
 };
