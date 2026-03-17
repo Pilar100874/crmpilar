@@ -793,10 +793,12 @@ const VideoTimelineEditor: React.FC = () => {
     const videoTrack = state.tracks.find(t => t.type === 'video');
     if (!videoTrack) return;
 
+    const transitionName = `🎬 Transição AI ${state.clips.filter(c => c.name?.includes('Transição AI')).length + 1}`;
+
     timeline.addClip({
       trackId: bridgeClipA.trackId,
       type: 'video',
-      name: `🎬 Transição AI`,
+      name: transitionName,
       startTime: insertTime,
       duration: duration,
       trimStart: 0,
@@ -807,6 +809,9 @@ const VideoTimelineEditor: React.FC = () => {
       filters: [],
       src: videoUrl,
     });
+
+    // Also add to resource panel under "Transições AI" group
+    resourcePanelRef.current?.addTransitionItem(transitionName, videoUrl, duration);
   }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
 
   const handleOpenCanvasFromToolbar = useCallback(() => {
