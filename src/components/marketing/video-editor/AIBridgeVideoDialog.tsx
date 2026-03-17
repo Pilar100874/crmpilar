@@ -252,50 +252,56 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   }, []);
 
   const seekVideoPrecisely = useCallback(async (video: HTMLVideoElement, time: number) => {
-    const maxTime = Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.05) : time;
+    const maxTime = Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.001) : time;
     const safeTime = Math.max(0, Math.min(time, maxTime));
+    const tolerance = 0.01;
 
     await new Promise<void>((resolve, reject) => {
+      if (Math.abs(video.currentTime - safeTime) <= tolerance && video.readyState >= 2) {
+        resolve();
+        return;
+      }
+
       let settled = false;
       let timeoutId: number | undefined;
+      let frameCbId: number | undefined;
 
       const cleanup = () => {
-        video.onseeked = null;
-        video.onerror = null;
         if (timeoutId) window.clearTimeout(timeoutId);
+        video.removeEventListener('seeked', afterSeek);
+        video.removeEventListener('error', onError);
+        if (frameCbId !== undefined && 'cancelVideoFrameCallback' in video) {
+          (video as HTMLVideoElement & { cancelVideoFrameCallback?: (id: number) => void }).cancelVideoFrameCallback?.(frameCbId);
+        }
       };
 
       const done = () => {
         if (settled) return;
         settled = true;
         cleanup();
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        resolve();
       };
 
-      video.onseeked = () => done();
-      video.onerror = () => {
+      const onError = () => {
         if (settled) return;
         settled = true;
         cleanup();
         reject(new Error('Falha ao posicionar o frame do vídeo'));
       };
 
-      timeoutId = window.setTimeout(() => {
-        if (video.readyState >= 2) {
-          done();
-          return;
+      const afterSeek = () => {
+        if ('requestVideoFrameCallback' in video) {
+          frameCbId = (video as HTMLVideoElement & { requestVideoFrameCallback: (cb: () => void) => number })
+            .requestVideoFrameCallback(() => done());
+        } else {
+          requestAnimationFrame(() => done());
         }
-        if (settled) return;
-        settled = true;
-        cleanup();
-        reject(new Error('Timeout ao buscar frame do vídeo'));
-      }, 4000);
+      };
 
-      if (Math.abs(video.currentTime - safeTime) < 0.01) {
-        done();
-      } else {
-        video.currentTime = safeTime;
-      }
+      timeoutId = window.setTimeout(() => done(), 900);
+      video.addEventListener('seeked', afterSeek, { once: true });
+      video.addEventListener('error', onError, { once: true });
+      video.currentTime = safeTime;
     });
   }, []);
 
@@ -317,52 +323,64 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       video.muted = true;
       video.preload = 'auto';
       video.playsInline = true;
+      video.poster = '';
 
-      // Download as blob to avoid tainted canvas issues with Supabase/external URLs
       let blobUrl: string | null = null;
       try {
         const resp = await fetch(clip.src || '', { mode: 'cors' });
         const blob = await resp.blob();
         blobUrl = URL.createObjectURL(blob);
       } catch {
-        // Fallback to direct src if fetch fails
         blobUrl = null;
       }
 
       const videoSrc = blobUrl || clip.src || '';
 
       await new Promise<void>((resolve, reject) => {
-        video.onloadeddata = () => resolve();
-        video.onerror = () => reject(new Error(`Falha ao carregar vídeo: ${clip.name}`));
+        const onReady = () => {
+          video.removeEventListener('loadeddata', onReady);
+          video.removeEventListener('error', onFail);
+          resolve();
+        };
+        const onFail = () => {
+          video.removeEventListener('loadeddata', onReady);
+          video.removeEventListener('error', onFail);
+          reject(new Error(`Falha ao carregar vídeo: ${clip.name}`));
+        };
+        video.addEventListener('loadeddata', onReady, { once: true });
+        video.addEventListener('error', onFail, { once: true });
         video.src = videoSrc;
+        video.load();
       });
 
-      // For webm with bad duration, force duration detection
       if (!Number.isFinite(video.duration) || video.duration === Infinity) {
         video.currentTime = 1e101;
         await new Promise<void>(r => { video.ontimeupdate = () => { video.ontimeupdate = null; r(); }; });
       }
 
       const trimStart = Math.max(0, clip.trimStart || 0);
-      const endByTrim = Math.max(trimStart, video.duration - Math.max(0, clip.trimEnd || 0) - 0.05);
-      const endByVisibleDuration = Math.max(trimStart, trimStart + Math.max(clip.duration - 0.05, 0));
+      const trimEnd = Math.max(0, clip.trimEnd || 0);
+      const mediaEnd = Math.max(trimStart, video.duration - trimEnd);
+      const visibleEnd = Math.max(trimStart, Math.min(mediaEnd, trimStart + Math.max(clip.duration, 0)));
+      const endFrameOffset = Math.max(1 / 30, 0.034);
       const targetTime = position === 'first'
         ? Math.min(trimStart, Math.max(0, video.duration - 0.001))
-        : Math.max(trimStart, Math.min(Math.max(0, video.duration - 0.001), endByTrim, endByVisibleDuration));
+        : Math.max(trimStart, Math.min(Math.max(0, video.duration - 0.001), visibleEnd - endFrameOffset));
 
       await seekVideoPrecisely(video, targetTime);
-
-      // Small delay to ensure the seeked frame is fully decoded and painted
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
       drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-      // Clean up blob URL
       if (blobUrl) URL.revokeObjectURL(blobUrl);
-
       return dataUrl;
     }
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.92);
+  }, [drawContain, loadImage, seekVideoPrecisely]);
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
