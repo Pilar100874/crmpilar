@@ -287,7 +287,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
-    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
+
+    // If still in centered mode, compute actual pixel position first
+    let origX = position.x;
+    let origY = position.y;
+    if (origX === 0 && origY === 0 && toolbarRef.current) {
+      const rect = toolbarRef.current.getBoundingClientRect();
+      origX = rect.left;
+      origY = rect.top;
+      setPosition({ x: origX, y: origY });
+    }
+
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX, origY };
 
     const handleMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
