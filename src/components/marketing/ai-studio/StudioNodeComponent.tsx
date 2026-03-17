@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useGalleryFolders } from '@/hooks/useGalleryFolders';
+import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
