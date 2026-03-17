@@ -414,8 +414,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                         </button>
                       ))}
                     </div>
-                    {/* Draggable effect items */}
-                    <div className="space-y-0.5">
+                    {/* Draggable effect items — grid layout */}
+                    <div className="grid grid-cols-3 gap-1.5">
                       {EFFECT_TRACK_PRESETS
                         .filter(p => !effectCategoryFilter || p.category === effectCategoryFilter)
                         .map(preset => (
@@ -432,33 +432,30 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                               e.dataTransfer.setData('mediatype/effect', '');
                               e.dataTransfer.effectAllowed = 'copy';
                             }}
-                            className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing group"
+                            onClick={() => setPreviewEffect(preset.type)}
+                            className="flex flex-col items-center gap-1 p-1 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing group"
                           >
-                            <MiniEffectPreview effectType={preset.type} size={40} />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[11px] font-medium truncate">{preset.label}</p>
-                              <p className="text-[9px] text-muted-foreground truncate">{preset.description}</p>
-                            </div>
-                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6"
-                                onClick={() => {
-                                  if (onAddEffectClip) {
-                                    const effectTrack = tracks.find(t => t.type === 'effect');
-                                    if (effectTrack) {
-                                      const trackClips = clips.filter(c => c.trackId === effectTrack.id);
-                                      const endTime = trackClips.reduce((max, c) => Math.max(max, c.startTime + c.duration), 0);
-                                      onAddEffectClip(effectTrack.id, endTime, preset.type, preset.label);
-                                    }
+                            <MiniEffectPreview effectType={preset.type} size={72} />
+                            <p className="text-[9px] font-medium truncate w-full text-center">{preset.label}</p>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onAddEffectClip) {
+                                  const effectTrack = tracks.find(t => t.type === 'effect');
+                                  if (effectTrack) {
+                                    const trackClips = clips.filter(c => c.trackId === effectTrack.id);
+                                    const endTime = trackClips.reduce((max, c) => Math.max(max, c.startTime + c.duration), 0);
+                                    onAddEffectClip(effectTrack.id, endTime, preset.type, preset.label);
                                   }
-                                }}
-                                title="Adicionar à timeline"
-                              >
-                                <Plus className="h-3 w-3 text-primary" />
-                              </Button>
-                            </div>
+                                }
+                              }}
+                              title="Adicionar à timeline"
+                            >
+                              <Plus className="h-3 w-3 text-primary" />
+                            </Button>
                           </div>
                         ))}
                     </div>
