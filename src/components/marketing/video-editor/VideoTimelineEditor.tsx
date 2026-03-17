@@ -1410,25 +1410,19 @@ const VideoTimelineEditor: React.FC = () => {
         </DialogContent>
       </Dialog>
       {/* Effect edit dialog from timeline double-click */}
-      {previewEffectFromTimeline && (
-        <Dialog open onOpenChange={() => { setPreviewEffectFromTimeline(null); setEditingEffectClipId(null); }}>
+      {previewEffectFromTimeline && editingEffectClipId && (
+        <Dialog open onOpenChange={() => {
+          // Cancel: revert to original effect
+          if (originalEffectType && originalEffectType !== previewEffectFromTimeline) {
+            timeline.updateClip(editingEffectClipId, { effectType: originalEffectType, name: EFFECT_TRACK_PRESETS.find(p => p.type === originalEffectType)?.label || 'Efeito' });
+          }
+          setPreviewEffectFromTimeline(null);
+          setEditingEffectClipId(null);
+          setOriginalEffectType(null);
+        }}>
           <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background max-h-[85vh] flex flex-col">
-            <DialogTitle className="px-4 pt-4 text-sm font-semibold flex items-center justify-between">
-              <span>{EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Editar</span>
-              {editingEffectClipId && (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    timeline.deleteClips([editingEffectClipId]);
-                    setPreviewEffectFromTimeline(null);
-                    setEditingEffectClipId(null);
-                  }}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" /> Excluir
-                </Button>
-              )}
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold">
+              {EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito'} — Editar
             </DialogTitle>
             <div className="flex flex-col items-center gap-3 px-4 pt-2">
               <MiniEffectPreview effectType={previewEffectFromTimeline} size={200} autoPlay />
@@ -1449,9 +1443,6 @@ const VideoTimelineEditor: React.FC = () => {
                     }`}
                     onClick={() => {
                       setPreviewEffectFromTimeline(preset.type);
-                      if (editingEffectClipId) {
-                        timeline.updateClip(editingEffectClipId, { effectType: preset.type, name: preset.label });
-                      }
                     }}
                   >
                     <MiniEffectPreview effectType={preset.type} size={48} />
@@ -1459,6 +1450,101 @@ const VideoTimelineEditor: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="border-t px-4 py-3 flex items-center justify-between gap-2">
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 text-xs"
+                onClick={() => {
+                  timeline.deleteClips([editingEffectClipId]);
+                  setPreviewEffectFromTimeline(null);
+                  setEditingEffectClipId(null);
+                  setOriginalEffectType(null);
+                }}
+              >
+                <Trash2 className="h-3 w-3 mr-1" /> Excluir
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    // Revert
+                    if (originalEffectType && originalEffectType !== previewEffectFromTimeline) {
+                      timeline.updateClip(editingEffectClipId, { effectType: originalEffectType, name: EFFECT_TRACK_PRESETS.find(p => p.type === originalEffectType)?.label || 'Efeito' });
+                    }
+                    setPreviewEffectFromTimeline(null);
+                    setEditingEffectClipId(null);
+                    setOriginalEffectType(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    // Apply the selected effect
+                    timeline.updateClip(editingEffectClipId, { effectType: previewEffectFromTimeline, name: EFFECT_TRACK_PRESETS.find(p => p.type === previewEffectFromTimeline)?.label || 'Efeito' });
+                    setPreviewEffectFromTimeline(null);
+                    setEditingEffectClipId(null);
+                    setOriginalEffectType(null);
+                    toast.success('Efeito atualizado!');
+                  }}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Clip detail popup for video/image/audio double-click */}
+      {clipDetailDialog && (
+        <Dialog open onOpenChange={() => setClipDetailDialog(null)}>
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-background">
+            <DialogTitle className="px-4 pt-4 text-sm font-semibold flex items-center gap-2">
+              {clipDetailDialog.type === 'video' && <Film className="h-4 w-4 text-primary" />}
+              {clipDetailDialog.type === 'image' && <Layers className="h-4 w-4 text-primary" />}
+              {clipDetailDialog.type === 'audio' && <Clapperboard className="h-4 w-4 text-primary" />}
+              {clipDetailDialog.name}
+            </DialogTitle>
+            <div className="px-4 pt-2">
+              {(clipDetailDialog.type === 'video' || clipDetailDialog.type === 'image') && clipDetailDialog.src && (
+                <div className="rounded-lg overflow-hidden border border-border bg-black flex items-center justify-center" style={{ maxHeight: 260 }}>
+                  {clipDetailDialog.type === 'video' ? (
+                    <video src={clipDetailDialog.src} controls className="w-full max-h-[260px] object-contain" />
+                  ) : (
+                    <img src={clipDetailDialog.src} alt={clipDetailDialog.name} className="w-full max-h-[260px] object-contain" />
+                  )}
+                </div>
+              )}
+              {clipDetailDialog.type === 'audio' && clipDetailDialog.src && (
+                <audio src={clipDetailDialog.src} controls className="w-full" />
+              )}
+            </div>
+            <div className="px-4 py-3 space-y-1.5 text-xs text-muted-foreground">
+              <div className="flex justify-between"><span>Tipo</span><span className="font-medium text-foreground capitalize">{clipDetailDialog.type}</span></div>
+              <div className="flex justify-between"><span>Início</span><span className="font-medium text-foreground">{clipDetailDialog.startTime.toFixed(2)}s</span></div>
+              <div className="flex justify-between"><span>Duração</span><span className="font-medium text-foreground">{clipDetailDialog.duration.toFixed(2)}s</span></div>
+              {clipDetailDialog.volume !== undefined && (
+                <div className="flex justify-between"><span>Volume</span><span className="font-medium text-foreground">{Math.round(clipDetailDialog.volume * 100)}%</span></div>
+              )}
+            </div>
+            <div className="border-t px-4 py-3 flex justify-between">
+              <Button size="sm" variant="destructive" className="h-8 text-xs" onClick={() => {
+                timeline.deleteClips([clipDetailDialog.id]);
+                setClipDetailDialog(null);
+                toast.success('Clipe excluído');
+              }}>
+                <Trash2 className="h-3 w-3 mr-1" /> Excluir
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setClipDetailDialog(null)}>
+                Fechar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
