@@ -390,6 +390,13 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
                   </div>
                 );
               })}
+
+              {/* Hint for empty effect tracks */}
+              {track.type === 'effect' && trackClips.length === 0 && !track.locked && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <span className="text-[9px] text-muted-foreground/50">Dê duplo-clique para adicionar efeito</span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -399,6 +406,54 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
           style={{ left: state.currentTime * state.zoom }}
         />
       </div>
+
+      {/* Effect type selection popover */}
+      {effectPopover && onAddEffectClip && (
+        <div
+          className="fixed z-[100] bg-popover border border-border rounded-lg shadow-xl p-2 w-64 max-h-80 overflow-auto"
+          style={{ left: effectPopover.x, top: effectPopover.y - 10, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[10px] font-semibold text-foreground px-1">✨ Adicionar Efeito na Track</p>
+            <button className="text-[10px] text-muted-foreground hover:text-foreground px-1" onClick={() => setEffectPopover(null)}>✕</button>
+          </div>
+
+          {/* Category tabs */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {Array.from(new Set(EFFECT_TRACK_PRESETS.map(p => p.category))).map(cat => (
+              <button
+                key={cat}
+                className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${effectCategory === cat ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'}`}
+                onClick={() => setEffectCategory(effectCategory === cat ? null : cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Effect items */}
+          <div className="grid grid-cols-2 gap-1">
+            {EFFECT_TRACK_PRESETS
+              .filter(p => !effectCategory || p.category === effectCategory)
+              .map(preset => (
+                <button
+                  key={preset.type}
+                  className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-accent text-left transition-colors"
+                  onClick={() => {
+                    onAddEffectClip(effectPopover.trackId, effectPopover.startTime, preset.type, preset.label);
+                    setEffectPopover(null);
+                  }}
+                >
+                  <span className="text-sm">{preset.icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-medium text-foreground truncate">{preset.label}</p>
+                    <p className="text-[8px] text-muted-foreground truncate">{preset.description}</p>
+                  </div>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
