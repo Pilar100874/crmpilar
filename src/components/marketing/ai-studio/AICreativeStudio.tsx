@@ -1653,7 +1653,7 @@ const AICreativeStudioInner: React.FC = () => {
         )}
       </div>
 
-      <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
+      
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
 
