@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useGalleryFolders } from "@/hooks/useGalleryFolders";
+import { GalleryFolderTabs } from "@/components/ui/GalleryFolderTabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
