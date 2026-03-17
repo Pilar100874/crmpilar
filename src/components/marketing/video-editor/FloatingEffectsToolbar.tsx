@@ -505,66 +505,63 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
-                <div className="p-2 space-y-2">
-                  {/* Presets by category - horizontal scroll */}
-                  {FILTER_CATEGORIES.map(cat => {
-                    const presets = EFFECT_PRESETS.filter(p => cat.presets.includes(p.id));
-                    return (
-                      <div key={cat.id}>
-                        <div className="flex items-center gap-1.5 px-1 mb-1">
-                          <span className="text-[10px] font-semibold text-muted-foreground">{cat.label}</span>
-                          <span className="text-[8px] text-muted-foreground/60">({presets.length})</span>
-                        </div>
-                        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                          {presets.map(preset => (
-                            <button
-                              key={preset.id}
-                              onClick={() => applyPreset(preset.id)}
-                              className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all w-[72px]"
-                              title={preset.description}
-                            >
-                              <span className="text-lg leading-none">{preset.icon}</span>
-                              <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+              <div className="p-2 space-y-2">
+                {/* Category dropdown + grid */}
+                <Select value={selectedFilterCat} onValueChange={setSelectedFilterCat}>
+                  <SelectTrigger className="h-7 text-[10px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...FILTER_CATEGORIES, { id: 'individual', label: 'Filtro Individual', presets: [] }].map(cat => (
+                      <SelectItem key={cat.id} value={cat.id} className="text-[11px]">
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  {/* Add individual filter - horizontal scroll */}
-                  <div>
-                    <div className="flex items-center gap-1 px-1 mb-1">
-                      <Plus className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-[10px] font-semibold text-muted-foreground">Filtro Individual</span>
-                    </div>
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                      {INDIVIDUAL_FILTERS.map(f => {
-                        const alreadyAdded = selectedClip.filters?.some(ef => ef.type === f.type);
-                        return (
-                          <button
-                            key={f.type}
-                            onClick={() => addFilter(f.type)}
-                            disabled={alreadyAdded}
-                            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg border transition-all w-[64px] ${
-                              alreadyAdded ? 'opacity-40 cursor-not-allowed border-border/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
-                            }`}
-                          >
-                            <span className="text-lg leading-none">{f.icon}</span>
-                            <span className="text-[8px] font-medium leading-tight text-center">{f.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                {selectedFilterCat !== 'individual' ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    {EFFECT_PRESETS.filter(p => FILTER_CATEGORIES.find(c => c.id === selectedFilterCat)?.presets.includes(p.id)).map(preset => (
+                      <button
+                        key={preset.id}
+                        onClick={() => applyPreset(preset.id)}
+                        className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                        title={preset.description}
+                      >
+                        <span className="text-lg leading-none">{preset.icon}</span>
+                        <span className="text-[8px] font-medium leading-tight text-center truncate w-full">{preset.name}</span>
+                      </button>
+                    ))}
                   </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    {INDIVIDUAL_FILTERS.map(f => {
+                      const alreadyAdded = selectedClip.filters?.some(ef => ef.type === f.type);
+                      return (
+                        <button
+                          key={f.type}
+                          onClick={() => addFilter(f.type)}
+                          disabled={alreadyAdded}
+                          className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
+                            alreadyAdded ? 'opacity-40 cursor-not-allowed border-border/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
+                          }`}
+                        >
+                          <span className="text-lg leading-none">{f.icon}</span>
+                          <span className="text-[8px] font-medium leading-tight text-center">{f.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
-                  {/* Active filters with sliders */}
-                  {hasFilters && (
-                    <div className="border rounded-lg p-2">
-                      <Label className="text-[10px] font-semibold mb-1.5 flex items-center gap-1">
-                        <Wand2 className="h-3 w-3" /> Ativos ({selectedClip.filters?.length})
-                      </Label>
+                {/* Active filters with sliders */}
+                {hasFilters && (
+                  <div className="border rounded-lg p-2">
+                    <Label className="text-[10px] font-semibold mb-1.5 flex items-center gap-1">
+                      <Wand2 className="h-3 w-3" /> Ativos ({selectedClip.filters?.length})
+                    </Label>
+                    <ScrollArea className="max-h-[120px]">
                       <div className="space-y-1.5">
                         {selectedClip.filters!.map((filter) => {
                           const def = INDIVIDUAL_FILTERS.find(f => f.type === filter.type);
@@ -593,10 +590,10 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                           );
                         })}
                       </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
             </PopoverContent>
           </Popover>
 
