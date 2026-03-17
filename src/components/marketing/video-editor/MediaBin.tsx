@@ -428,52 +428,12 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-2 p-4">
-                  {galleryItems.map((item) => {
-                    const isSelected = selectedIds.has(item.id);
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => toggleSelect(item.id)}
-                        className={`
-                          relative rounded-lg border-2 overflow-hidden transition-all group
-                          aspect-video bg-muted
-                          ${isSelected
-                            ? 'border-primary ring-2 ring-primary/30 scale-[0.97]'
-                            : 'border-border hover:border-primary/50'
-                          }
-                        `}
-                      >
-                        {galleryType === 'video' ? (
-                          <video
-                            src={item.public_url}
-                            className="w-full h-full object-cover"
-                            muted
-                            preload="metadata"
-                          />
-                        ) : (
-                          <img
-                            src={item.thumbnail_url || item.public_url}
-                            className="w-full h-full object-cover"
-                            alt={item.nome}
-                          />
-                        )}
-                        
-                        <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? 'bg-primary border-primary'
-                            : 'bg-background/80 border-border group-hover:border-primary/50'
-                        }`}>
-                          {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                        </div>
-
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
-                          <p className="text-[10px] text-white truncate">{item.nome}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <GalleryFilteredGrid
+                  items={galleryItems}
+                  galleryType={galleryType}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                />
               )}
             </ScrollArea>
           </DialogContent>
