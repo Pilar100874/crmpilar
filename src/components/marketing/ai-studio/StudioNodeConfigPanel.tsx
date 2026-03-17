@@ -103,12 +103,19 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
   // Apiframe video models
   { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
-  { value: 'apiframe/runway', label: '⚡ AF: Runway ML', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
+  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  { value: 'apiframe/pika', label: '⚡ AF: Pika', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe' },
+  { value: 'apiframe/hailuo-minimax', label: '⚡ AF: Hailuo MiniMax', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/wan-video', label: '⚡ AF: Wan Video', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/vidu', label: '⚡ AF: Vidu', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/pixverse', label: '⚡ AF: Pixverse', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
+  { value: 'apiframe/seedance', label: '⚡ AF: Seedance', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe, ByteDance' },
   // AIML API video models
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25' },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28' },
@@ -116,6 +123,9 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
   { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
   { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/pika', label: '🤖 ML: Pika', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/wan-video', label: '🤖 ML: Wan Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/stable-video', label: '🤖 ML: Stable Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
   // Pollo AI video models
   { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'Pollo AI', cost: '$$', quality: 5, tip: 'Via Pollo AI, 10 créditos' },
   { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 8 créditos' },
@@ -124,6 +134,8 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 5 créditos' },
   { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
   { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI' },
+  { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
