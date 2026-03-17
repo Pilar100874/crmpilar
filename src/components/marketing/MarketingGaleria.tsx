@@ -234,6 +234,23 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     window.open(item.content_url, '_blank');
   };
 
+  const handleToggleDisponibilidadeChat = useCallback(async (item: MarketingContentItem) => {
+    if (item._source !== 'media_gallery') return;
+    const newValue = !item.disponivel_chat;
+    try {
+      const { error } = await supabase
+        .from('media_gallery')
+        .update({ disponivel_chat: newValue } as any)
+        .eq('id', item.id);
+      if (error) throw error;
+      setContent(prev => prev.map(c => c.id === item.id ? { ...c, disponivel_chat: newValue } : c));
+      toast.success(newValue ? 'Disponível no chat ✅' : 'Removido do chat');
+    } catch (err) {
+      console.error('Erro ao atualizar disponibilidade:', err);
+      toast.error('Erro ao atualizar');
+    }
+  }, []);
+
   const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
     try {
