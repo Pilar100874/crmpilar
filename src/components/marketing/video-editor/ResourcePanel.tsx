@@ -62,10 +62,11 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'effect', label: 'Efeitos', icon: <Sparkles className="h-4 w-4" />, color: 'text-pink-400' },
 ];
 
-const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
-  const [items, setItems] = useState<Record<ResourceType, ImportedMedia[]>>({
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAddEffectClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
+  const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [],
   });
+  const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
 
   // Sync timeline clips into resource panel so every clip on a track appears in its group
   useEffect(() => {
