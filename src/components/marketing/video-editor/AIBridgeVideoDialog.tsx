@@ -303,11 +303,30 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       video.preload = 'auto';
       video.playsInline = true;
 
+      // Download as blob to avoid tainted canvas issues with Supabase/external URLs
+      let blobUrl: string | null = null;
+      try {
+        const resp = await fetch(clip.src || '', { mode: 'cors' });
+        const blob = await resp.blob();
+        blobUrl = URL.createObjectURL(blob);
+      } catch {
+        // Fallback to direct src if fetch fails
+        blobUrl = null;
+      }
+
+      const videoSrc = blobUrl || clip.src || '';
+
       await new Promise<void>((resolve, reject) => {
-        video.onloadedmetadata = () => resolve();
+        video.onloadeddata = () => resolve();
         video.onerror = () => reject(new Error(`Falha ao carregar vídeo: ${clip.name}`));
-        video.src = clip.src || '';
+        video.src = videoSrc;
       });
+
+      // For webm with bad duration, force duration detection
+      if (!Number.isFinite(video.duration) || video.duration === Infinity) {
+        video.currentTime = 1e101;
+        await new Promise<void>(r => { video.ontimeupdate = () => { video.ontimeupdate = null; r(); }; });
+      }
 
       const trimStart = Math.max(0, clip.trimStart || 0);
       const endByTrim = Math.max(trimStart, video.duration - Math.max(0, clip.trimEnd || 0) - 0.05);
@@ -317,8 +336,21 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
         : Math.max(trimStart, Math.min(Math.max(0, video.duration - 0.001), endByTrim, endByVisibleDuration));
 
       await seekVideoPrecisely(video, targetTime);
+
+      // Ensure at least one frame is decoded
+      if ('requestVideoFrameCallback' in video) {
+        await new Promise<void>(r => { (video as any).requestVideoFrameCallback(() => r()); });
+      } else {
+        await new Promise(r => setTimeout(r, 100));
+      }
+
       drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
-      return canvas.toDataURL('image/jpeg', 0.92);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+      // Clean up blob URL
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+
+      return dataUrl;
     }
 
     ctx.fillStyle = '#000';
