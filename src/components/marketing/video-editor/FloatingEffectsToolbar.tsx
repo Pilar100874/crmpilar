@@ -24,12 +24,14 @@ interface Props {
 }
 
 const TRANSITION_CATEGORIES = [
-  { id: 'basic', label: 'Básicas', icon: '✨', types: ['fade', 'dissolve', 'crossfade', 'fade-blur'] as TransitionType[] },
-  { id: 'movement', label: 'Movimento', icon: '🔀', types: ['slide-left', 'slide-right', 'slide-up', 'slide-down', 'roll-left', 'roll-right'] as TransitionType[] },
-  { id: 'scale', label: 'Escala & Rotação', icon: '🔍', types: ['zoom-in', 'zoom-out', 'scale-up', 'scale-down', 'morph-scale', 'rotate-in', 'rotate-out', 'spiral', 'flip-x', 'flip-y'] as TransitionType[] },
-  { id: 'dynamic', label: 'Dinâmicas', icon: '🎢', types: ['bounce', 'elastic', 'swing'] as TransitionType[] },
-  { id: 'reveal', label: 'Revelação & Wipe', icon: '🎭', types: ['wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'wipe-circle', 'wipe-diamond', 'iris-open', 'iris-close', 'split-horizontal', 'split-vertical'] as TransitionType[] },
-  { id: 'special', label: 'Efeitos Especiais', icon: '⚡', types: ['blur-transition', 'flash', 'glitch', 'pixelate'] as TransitionType[] },
+  { id: 'basic', label: 'Básicas', icon: '✨', types: ['fade', 'dissolve', 'crossfade', 'fade-blur', 'luma-fade'] as TransitionType[] },
+  { id: 'movement', label: 'Movimento', icon: '🔀', types: ['slide-left', 'slide-right', 'slide-up', 'slide-down', 'roll-left', 'roll-right', 'whip-pan'] as TransitionType[] },
+  { id: 'push-cover', label: 'Push/Cover', icon: '📑', types: ['push-left', 'push-right', 'push-up', 'push-down', 'cover-left', 'cover-right', 'reveal-left', 'reveal-right'] as TransitionType[] },
+  { id: 'scale', label: 'Escala & Rotação', icon: '🔍', types: ['zoom-in', 'zoom-out', 'scale-up', 'scale-down', 'morph-scale', 'rotate-in', 'rotate-out', 'spiral', 'flip-x', 'flip-y', 'cross-zoom', 'cross-spin'] as TransitionType[] },
+  { id: 'dynamic', label: 'Dinâmicas', icon: '🎢', types: ['bounce', 'elastic', 'swing', 'shake', 'drop', 'tumble'] as TransitionType[] },
+  { id: 'reveal', label: 'Revelação & Wipe', icon: '🎭', types: ['wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'wipe-circle', 'wipe-diamond', 'iris-open', 'iris-close', 'split-horizontal', 'split-vertical', 'clock-wipe', 'radial-wipe', 'blinds-h', 'blinds-v', 'color-wipe'] as TransitionType[] },
+  { id: '3d', label: '3D & Perspectiva', icon: '🧊', types: ['cube-left', 'cube-right', 'page-curl', 'door-open', 'door-close', 'stretch-h', 'stretch-v', 'fly-in', 'fly-out'] as TransitionType[] },
+  { id: 'special', label: 'Efeitos Especiais', icon: '⚡', types: ['blur-transition', 'flash', 'glitch', 'pixelate', 'light-leak', 'film-burn', 'ripple', 'mosaic', 'spin-out'] as TransitionType[] },
 ];
 
 const FILTER_CATEGORIES = [
