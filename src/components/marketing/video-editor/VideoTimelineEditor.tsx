@@ -819,6 +819,7 @@ const VideoTimelineEditor: React.FC = () => {
   const handleDoubleClickClip = useCallback((clip: TimelineClip) => {
     if (clip.type === 'effect' && clip.effectType) {
       setEditingEffectClipId(clip.id);
+      setOriginalEffectType(clip.effectType);
       setPreviewEffectFromTimeline(clip.effectType);
       return;
     }
@@ -827,6 +828,11 @@ const VideoTimelineEditor: React.FC = () => {
       setCanvasEditResourceId(null);
       setCanvasEditJson(clip.canvasJson);
       setCanvasDialogOpen(true);
+      return;
+    }
+    // Open detail popup for video/image/audio clips
+    if (['video', 'image', 'audio'].includes(clip.type)) {
+      setClipDetailDialog(clip);
     }
   }, []);
 
