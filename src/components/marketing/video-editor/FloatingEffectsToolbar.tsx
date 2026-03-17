@@ -319,14 +319,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { filters });
   };
 
-  const addFilter = (type: FilterType) => {
+  const toggleFilter = (type: FilterType) => {
     const def = INDIVIDUAL_FILTERS.find(f => f.type === type);
     if (!def) return;
     const existing = selectedClip.filters || [];
-    if (existing.some(f => f.type === type)) return;
-    onUpdateClip(selectedClip.id, {
-      filters: [...existing, { id: `f_${Date.now()}`, type, label: def.label, value: def.defaultValue, enabled: true }],
-    });
+    const found = existing.find(f => f.type === type);
+    if (found) {
+      onUpdateClip(selectedClip.id, { filters: existing.filter(f => f.type !== type) });
+    } else {
+      onUpdateClip(selectedClip.id, {
+        filters: [...existing, { id: `f_${Date.now()}`, type, label: def.label, value: def.defaultValue, enabled: true }],
+      });
+    }
   };
 
   const updateFilter = (filterId: string, updates: Partial<VideoFilter>) => {
@@ -542,10 +546,9 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                         return (
                           <button
                             key={f.type}
-                            onClick={() => addFilter(f.type)}
-                            disabled={alreadyAdded}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all ${
-                              alreadyAdded ? 'opacity-40 cursor-not-allowed border-border/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
+                            onClick={() => toggleFilter(f.type)}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-all cursor-pointer ${
+                              alreadyAdded ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5'
                             }`}
                           >
                             <span className="text-lg leading-none">{f.icon}</span>
