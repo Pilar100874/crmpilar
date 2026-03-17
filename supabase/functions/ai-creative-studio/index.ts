@@ -128,30 +128,37 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
   }
   
-  // Clean prompt for Veo: AGGRESSIVELY remove ALL person/fidelity/preservation instructions
+  // Clean prompt for Veo
   let cleanPrompt = params.prompt || "";
   
-  // Remove everything after the first scene description — all fidelity blocks
-  const fidelityMarkers = [
-    '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
-    'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
-    'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
-    'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
-    'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
-    'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
-    'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
-    'Você DEVE manter', 'Você DEVE reproduzir',
-    'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
-    'mesma embalagem', 'mesmas cores', 'mesmo layout',
-  ];
-  
-  // Find the earliest marker and cut there
-  let cutIndex = cleanPrompt.length;
-  for (const marker of fidelityMarkers) {
-    const idx = cleanPrompt.indexOf(marker);
-    if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+  // For bridge mode, use a simplified prompt that focuses on the transition
+  if (params.bridgeMode) {
+    // Extract just the user's transition description from the full prompt
+    const directionMatch = cleanPrompt.match(/TRANSITION DIRECTION:\s*([\s\S]*?)(?:\n\nCRITICAL:|$)/);
+    const userDirection = directionMatch?.[1]?.trim() || cleanPrompt;
+    cleanPrompt = `Starting from the reference image, create a smooth cinematic transition video. ${userDirection}. The video should start exactly matching the provided image and smoothly evolve into a new scene.`;
+    console.log(`[generate_video] Veo bridge mode: simplified prompt: ${cleanPrompt.substring(0, 200)}`);
+  } else {
+    // Normal mode: remove fidelity/preservation instructions
+    const fidelityMarkers = [
+      '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
+      'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
+      'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
+      'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
+      'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
+      'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
+      'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
+      'Você DEVE manter', 'Você DEVE reproduzir',
+      'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
+      'mesma embalagem', 'mesmas cores', 'mesmo layout',
+    ];
+    let cutIndex = cleanPrompt.length;
+    for (const marker of fidelityMarkers) {
+      const idx = cleanPrompt.indexOf(marker);
+      if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+    }
+    cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
   }
-  cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
   
   // If prompt is too short after cleaning, use a generic scene description
   if (cleanPrompt.length < 20) {
