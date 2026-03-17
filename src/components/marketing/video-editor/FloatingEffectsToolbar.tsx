@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, ChevronDown, ChevronRight, Play, Pause, RefreshCw
+  RotateCcw, Plus, Play, Pause, RefreshCw
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
