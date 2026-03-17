@@ -599,6 +599,13 @@ const VideoPreview: React.FC<Props> = ({
           </div>
         )}
 
+        {/* Effect track overlays — standalone effects independent of clips */}
+        {effectTrackOverlays.map(eo => (
+          <div key={eo.id} className="absolute inset-0 pointer-events-none z-50" style={eo.style}>
+            {eo.elements}
+          </div>
+        ))}
+
         {activeTexts.map((clip) => (
           <div key={clip.id} className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <p className="text-white text-2xl font-bold drop-shadow-lg px-4 text-center">{clip.name}</p>
