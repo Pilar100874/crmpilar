@@ -168,17 +168,29 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [duration, setDuration] = useState(4);
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
-  // Prompt suggestions state
-  const [suggestions, setSuggestions] = useState(loadCustomPrompts);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newText, setNewText] = useState('');
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
 
+  // Load configured providers
   useEffect(() => {
-    if (open) setSuggestions(loadCustomPrompts());
-  }, [open]);
+    if (!estabelecimentoId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('ai_api_keys')
+        .select('provider')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('is_active', true);
+      if (data) setConfiguredProviders(data.map(d => d.provider));
+    })();
+  }, [estabelecimentoId]);
+
+  const filteredModels = useMemo(() => {
+    return ALL_VIDEO_MODELS
+      .filter(m => !shouldHideModel(m.value, activeUnified))
+      .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+  }, [configuredProviders, activeUnified]);
 
   // Extract frames when dialog opens
   useEffect(() => {
