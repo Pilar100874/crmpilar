@@ -962,9 +962,10 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
         console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
         return await generateVideoGoogle(googleKey, params);
       } catch (veoErr: any) {
-        const is429 = veoErr?.message?.includes("429") || veoErr?.message?.includes("quota");
-        if (is429) {
-          console.warn(`[generate_video] Google Veo quota exceeded (429). Falling back to original provider (Sora).`);
+        const errMsg = veoErr?.message || "";
+        const isRecoverable = errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("400") || errMsg.includes("billing") || errMsg.includes("exclusively available");
+        if (isRecoverable) {
+          console.warn(`[generate_video] Google Veo error (recoverable). Falling back to original provider (Sora). Error: ${errMsg.substring(0, 150)}`);
           provider = "openai";
           params.model = model;
           // Continue to Sora below
