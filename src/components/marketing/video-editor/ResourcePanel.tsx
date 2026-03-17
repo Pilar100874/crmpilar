@@ -433,9 +433,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                             }}
                             className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing group"
                           >
-                            <div className="w-8 h-8 rounded bg-muted/60 flex items-center justify-center text-base shrink-0">
-                              {preset.icon}
-                            </div>
+                            <MiniEffectPreview effectType={preset.type} size={40} />
                             <div className="min-w-0 flex-1">
                               <p className="text-[11px] font-medium truncate">{preset.label}</p>
                               <p className="text-[9px] text-muted-foreground truncate">{preset.description}</p>
