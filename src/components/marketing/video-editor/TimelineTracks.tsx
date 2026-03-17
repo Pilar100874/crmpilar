@@ -432,11 +432,6 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
               })}
 
               {/* Hint for empty effect tracks */}
-              {track.type === 'effect' && trackClips.length === 0 && !track.locked && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  <span className="text-[9px] text-muted-foreground/50">Dê duplo-clique para adicionar efeito</span>
-                </div>
-              )}
             </div>
           );
         })}
