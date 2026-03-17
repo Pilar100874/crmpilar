@@ -127,6 +127,65 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     extract();
   }, [open, clipA, clipB]);
 
+  const drawContain = useCallback((
+    ctx: CanvasRenderingContext2D,
+    source: CanvasImageSource,
+    sourceWidth: number,
+    sourceHeight: number,
+  ) => {
+    const { canvas } = ctx;
+    const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
+    const w = sourceWidth * scale;
+    const h = sourceHeight * scale;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(source, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+  }, []);
+
+  const loadImage = useCallback(async (src: string, name: string) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${name}`));
+      img.src = src;
+    });
+    return img;
+  }, []);
+
+  const seekVideoPrecisely = useCallback(async (video: HTMLVideoElement, time: number) => {
+    const maxTime = Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.001) : time;
+    const safeTime = Math.max(0, Math.min(time, maxTime));
+
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      let frameCbId: number | undefined;
+      let timeoutId: number | undefined;
+
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        if (timeoutId) window.clearTimeout(timeoutId);
+        if (frameCbId !== undefined && 'cancelVideoFrameCallback' in video) {
+          (video as HTMLVideoElement & { cancelVideoFrameCallback?: (id: number) => void }).cancelVideoFrameCallback?.(frameCbId);
+        }
+        resolve();
+      };
+
+      video.onseeked = () => {
+        if ('requestVideoFrameCallback' in video) {
+          frameCbId = (video as HTMLVideoElement & { requestVideoFrameCallback: (cb: () => void) => number })
+            .requestVideoFrameCallback(() => done());
+        } else {
+          requestAnimationFrame(() => done());
+        }
+      };
+
+      timeoutId = window.setTimeout(done, 250);
+      video.currentTime = safeTime;
+    });
+  }, []);
+
   const extractFrame = useCallback(async (clip: TimelineClip, position: 'first' | 'last'): Promise<string> => {
     const canvas = document.createElement('canvas');
     canvas.width = 1280;
@@ -134,20 +193,9 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const ctx = canvas.getContext('2d')!;
 
     if (clip.type === 'image' || clip.type === 'canvas') {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${clip.name}`));
-        img.src = clip.src || '';
-      });
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-      return canvas.toDataURL('image/jpeg', 0.9);
+      const img = await loadImage(clip.src || '', clip.name);
+      drawContain(ctx, img, img.width, img.height);
+      return canvas.toDataURL('image/jpeg', 0.92);
     }
 
     if (clip.type === 'video') {
@@ -156,27 +204,115 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       video.muted = true;
       video.preload = 'auto';
       video.playsInline = true;
+
       await new Promise<void>((resolve, reject) => {
         video.onloadedmetadata = () => resolve();
         video.onerror = () => reject(new Error(`Falha ao carregar vídeo: ${clip.name}`));
         video.src = clip.src || '';
       });
-      const targetTime = position === 'last' ? Math.max(0, video.duration - 0.1) : (clip.trimStart || 0);
-      await new Promise<void>((resolve) => { video.onseeked = () => resolve(); video.currentTime = targetTime; });
-      await new Promise(r => setTimeout(r, 100));
-      const scale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
-      const w = video.videoWidth * scale;
-      const h = video.videoHeight * scale;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(video, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-      return canvas.toDataURL('image/jpeg', 0.9);
+
+      const trimStart = Math.max(0, clip.trimStart || 0);
+      const endByTrim = Math.max(trimStart, video.duration - Math.max(0, clip.trimEnd || 0) - 0.05);
+      const endByVisibleDuration = Math.max(trimStart, trimStart + Math.max(clip.duration - 0.05, 0));
+      const targetTime = position === 'first'
+        ? Math.min(trimStart, Math.max(0, video.duration - 0.001))
+        : Math.max(trimStart, Math.min(Math.max(0, video.duration - 0.001), endByTrim, endByVisibleDuration));
+
+      await seekVideoPrecisely(video, targetTime);
+      drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.92);
     }
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.9);
-  }, []);
+    return canvas.toDataURL('image/jpeg', 0.92);
+  }, [drawContain, loadImage, seekVideoPrecisely]);
+
+  const enforceExactBridgeFrames = useCallback(async (
+    generatedVideoUrl: string,
+    startFrameDataUrl: string,
+    endFrameDataUrl: string,
+    finalDuration: number,
+    estabId: string,
+  ) => {
+    try {
+      const [startImg, endImg] = await Promise.all([
+        loadImage(startFrameDataUrl, `${clipA.name} (frame inicial)`),
+        loadImage(endFrameDataUrl, `${clipB.name} (frame final)`),
+      ]);
+
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.preload = 'auto';
+      video.playsInline = true;
+
+      await new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error('Falha ao carregar o vídeo gerado para ajuste dos frames'));
+        video.src = generatedVideoUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(2, video.videoWidth || 1280);
+      canvas.height = Math.max(2, video.videoHeight || 720);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas indisponível para compor a transição');
+
+      const fps = 24;
+      const totalFrames = Math.max(8, Math.round(finalDuration * fps));
+      const edgeFrames = Math.min(Math.max(2, Math.round(fps * 0.25)), Math.max(2, Math.floor(totalFrames / 3)));
+      const middleFrames = Math.max(1, totalFrames - edgeFrames * 2);
+      const stream = canvas.captureStream(fps);
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+      const chunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+
+      const recordingDone = new Promise<Blob>((resolve) => {
+        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+      });
+
+      recorder.start();
+
+      for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
+        if (frameIndex < edgeFrames) {
+          drawContain(ctx, startImg, startImg.width, startImg.height);
+        } else if (frameIndex >= totalFrames - edgeFrames) {
+          drawContain(ctx, endImg, endImg.width, endImg.height);
+        } else {
+          const progress = middleFrames <= 1 ? 0 : (frameIndex - edgeFrames) / (middleFrames - 1);
+          const sourceTime = Math.max(0, Math.min(progress * Math.max(video.duration, 0.001), Math.max(0, video.duration - 0.001)));
+          await seekVideoPrecisely(video, sourceTime);
+          drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+        }
+
+        (stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | undefined)?.requestFrame?.();
+        await new Promise((resolve) => window.setTimeout(resolve, 1000 / fps));
+      }
+
+      recorder.stop();
+      const composedBlob = await recordingDone;
+      const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+      const path = `${estabId}/bridge/${Date.now()}_bridge_exact.${ext}`;
+      const { error } = await supabase.storage.from('marketing-videos').upload(path, composedBlob, {
+        contentType: composedBlob.type || `video/${ext}`,
+        upsert: true,
+      });
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
+      return urlData.publicUrl || generatedVideoUrl;
+    } catch (error) {
+      console.warn('[bridge-video] Falha ao aplicar frames exatos nas bordas:', error);
+      return generatedVideoUrl;
+    }
+  }, [clipA.name, clipB.name, drawContain, loadImage, seekVideoPrecisely]);
 
   const handleSelectSuggestion = (text: string) => {
     setPrompt(text);
@@ -243,31 +379,28 @@ TRANSITION DIRECTION: ${prompt.trim()}
 
 CRITICAL: The generated video must begin looking identical to Image 1 and gradually transform/transition to look identical to Image 2 by the end. This is a bridge/transition between two scenes.`;
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'generate_video',
+          params: {
+            model,
+            prompt: fullPrompt,
+            imageUrls: [frameAUrl, frameBUrl],
+            imageRoles: ['STARTING FRAME', 'ENDING FRAME'],
+            aspectRatio: '16:9',
+            duration,
+            estabelecimentoId: estabId,
+            withAudio: false,
+            withMusic: false,
+            bridgeMode: true,
           },
-          body: JSON.stringify({
-            action: 'generate_video',
-            params: {
-              model,
-              prompt: fullPrompt,
-              imageUrls: [frameAUrl, frameBUrl],
-              imageRoles: ['STARTING FRAME', 'ENDING FRAME'],
-              aspectRatio: '16:9',
-              duration,
-              estabelecimentoId: estabId,
-              withAudio: false,
-              withMusic: false,
-              bridgeMode: true,
-            },
-          }),
-        }
-      );
+        }),
+      });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
@@ -277,13 +410,12 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       const data = await response.json();
       const result = data.result;
       if (result?.error) throw new Error(result.error);
-      if (result?.videoUrl) {
-        toast.success('Vídeo de transição gerado com sucesso!');
-        onVideoGenerated(result.videoUrl, duration);
-        onClose();
-      } else {
-        throw new Error('Nenhuma URL de vídeo retornada');
-      }
+      if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
+
+      const exactVideoUrl = await enforceExactBridgeFrames(result.videoUrl, frameA, frameB, duration, estabId);
+      toast.success('Vídeo de transição gerado com os frames inicial e final exatos!');
+      onVideoGenerated(exactVideoUrl, duration);
+      onClose();
     } catch (err: any) {
       const msg = err.message || 'Erro desconhecido';
       if (msg.includes('429') || msg.includes('quota')) toast.error('Limite de requisições atingido.');
@@ -292,7 +424,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     } finally {
       setIsGenerating(false);
     }
-  }, [frameA, frameB, prompt, model, duration, onVideoGenerated, onClose]);
+  }, [duration, enforceExactBridgeFrames, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
@@ -354,7 +486,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     onKeyDown={e => { if (e.key === 'Enter') handleAddNew(); if (e.key === 'Escape') setIsAddingNew(false); }}
                   />
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleAddNew} disabled={!newText.trim()}>
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className="h-3 w-3 text-primary" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setIsAddingNew(false)}>
                     <X className="h-3 w-3 text-destructive" />
@@ -374,7 +506,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                         onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }}
                       />
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
-                        <Check className="h-3 w-3 text-green-500" />
+                        <Check className="h-3 w-3 text-primary" />
                       </Button>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
                         <X className="h-3 w-3 text-destructive" />
