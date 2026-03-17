@@ -161,15 +161,15 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
         uploadFrame(frameB, 'frame_end'),
       ]);
 
-      // Build prompt with frame context
-      const fullPrompt = `Create a smooth transition video that connects these two scenes naturally.
+      // Build prompt that strongly directs start→end transition
+      const fullPrompt = `IMAGE-TO-VIDEO TRANSITION: You MUST start this video from Image 1 (the starting frame) and smoothly transition to end at Image 2 (the ending frame).
 
-STARTING FRAME (Image 1): This is the last frame of the previous scene.
-ENDING FRAME (Image 2): This is the first frame of the next scene.
+START FROM THIS EXACT IMAGE (Image 1): The video's first frame must visually match this image exactly.
+END AT THIS EXACT IMAGE (Image 2): The video's last frame must visually match this image exactly.
 
-USER DIRECTION: ${prompt.trim()}
+TRANSITION DIRECTION: ${prompt.trim()}
 
-The video must start visually similar to Image 1 and end visually similar to Image 2, creating a fluid cinematic bridge between the two scenes. Make the transition feel natural, creative and professional.`;
+CRITICAL: The generated video must begin looking identical to Image 1 and gradually transform/transition to look identical to Image 2 by the end. This is a bridge/transition between two scenes.`;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`,
@@ -191,6 +191,7 @@ The video must start visually similar to Image 1 and end visually similar to Ima
               estabelecimentoId: estabId,
               withAudio: false,
               withMusic: false,
+              bridgeMode: true,
             },
           }),
         }
