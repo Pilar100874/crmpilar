@@ -278,6 +278,32 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
+  // Drag state
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: position.x, origY: position.y };
+
+    const handleMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      setPosition({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
+    };
+    const handleUp = () => {
+      setIsDragging(false);
+      dragRef.current = null;
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+  }, [position]);
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const entranceTransition = selectedClip.transitions?.entrance;
   const exitTransition = selectedClip.transitions?.exit;
