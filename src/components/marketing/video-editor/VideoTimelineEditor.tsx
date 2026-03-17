@@ -1291,14 +1291,7 @@ const VideoTimelineEditor: React.FC = () => {
               );
             })()}
 
-            {/* Toggle scrollbar button */}
-            <button
-              onClick={() => setShowFloatingScrollbar(prev => !prev)}
-              className="absolute top-1 right-1 z-40 w-5 h-5 rounded bg-muted/60 hover:bg-muted backdrop-blur-sm flex items-center justify-center transition-colors"
-              title={showFloatingScrollbar ? 'Ocultar barra de rolagem' : 'Mostrar barra de rolagem'}
-            >
-              <GripHorizontal className="h-3 w-3 text-muted-foreground" />
-            </button>
+
           </div>
         </div>
 
