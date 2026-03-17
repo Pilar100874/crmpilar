@@ -484,7 +484,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   {hasFilters && <span className="text-[8px] sm:text-[9px] bg-primary-foreground/20 px-1 sm:px-1.5 rounded-full">{selectedClip.filters?.length}</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[400px] p-0" side="top" align="center">
+              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[440px] p-0" side="top" align="center">
               {/* === LIVE FILTER SIMULATION === */}
               <div className="p-2 border-b bg-muted/10">
                 <MiniFilterPreview
