@@ -104,10 +104,6 @@ const MarketingHub: React.FC = () => {
         return <MarketingAutomacoes />;
       case 'campanhas':
         return <MarketingCampanhas />;
-      case 'api-keys':
-        return <AIApiKeysManager />;
-      case 'elevenlabs':
-        return <ElevenLabsConfig />;
       case 'integrations':
         return <IntegrationCredentialsManager />;
       case 'n8n-editor':
