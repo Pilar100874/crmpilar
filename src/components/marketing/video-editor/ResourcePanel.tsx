@@ -275,11 +275,36 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     setItems(prev => ({ ...prev, [resType]: prev[resType].filter(v => v.id !== id) }));
   }, []);
 
-  const handleDoubleClickCanvas = useCallback((media: ImportedMedia) => {
-    if (media.canvasJson && onEditCanvas) {
-      onEditCanvas(media.canvasJson, media.id);
+  const startRename = useCallback((media: ImportedMedia) => {
+    setEditingId(media.id);
+    setEditingName(media.name);
+  }, []);
+
+  const commitRename = useCallback((id: string, resType: ResourceType) => {
+    const trimmed = editingName.trim();
+    if (trimmed) {
+      setItems(prev => ({
+        ...prev,
+        [resType]: prev[resType].map(item => item.id === id ? { ...item, name: trimmed } : item),
+      }));
     }
-  }, [onEditCanvas]);
+    setEditingId(null);
+    setEditingName('');
+  }, [editingName]);
+
+  const cancelRename = useCallback(() => {
+    setEditingId(null);
+    setEditingName('');
+  }, []);
+
+  const handleRenameKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>, id: string, resType: ResourceType) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitRename(id, resType);
+    } else if (e.key === 'Escape') {
+      cancelRename();
+    }
+  }, [commitRename, cancelRename]);
 
   const getInputRef = (tab: ResourceType) => {
     if (tab === 'video') return videoInputRef;
