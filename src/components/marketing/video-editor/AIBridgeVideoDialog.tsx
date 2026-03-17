@@ -252,35 +252,50 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   }, []);
 
   const seekVideoPrecisely = useCallback(async (video: HTMLVideoElement, time: number) => {
-    const maxTime = Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.001) : time;
+    const maxTime = Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.05) : time;
     const safeTime = Math.max(0, Math.min(time, maxTime));
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       let settled = false;
-      let frameCbId: number | undefined;
       let timeoutId: number | undefined;
+
+      const cleanup = () => {
+        video.onseeked = null;
+        video.onerror = null;
+        if (timeoutId) window.clearTimeout(timeoutId);
+      };
 
       const done = () => {
         if (settled) return;
         settled = true;
-        if (timeoutId) window.clearTimeout(timeoutId);
-        if (frameCbId !== undefined && 'cancelVideoFrameCallback' in video) {
-          (video as HTMLVideoElement & { cancelVideoFrameCallback?: (id: number) => void }).cancelVideoFrameCallback?.(frameCbId);
-        }
-        resolve();
+        cleanup();
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       };
 
-      video.onseeked = () => {
-        if ('requestVideoFrameCallback' in video) {
-          frameCbId = (video as HTMLVideoElement & { requestVideoFrameCallback: (cb: () => void) => number })
-            .requestVideoFrameCallback(() => done());
-        } else {
-          requestAnimationFrame(() => done());
-        }
+      video.onseeked = () => done();
+      video.onerror = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('Falha ao posicionar o frame do vídeo'));
       };
 
-      timeoutId = window.setTimeout(done, 250);
-      video.currentTime = safeTime;
+      timeoutId = window.setTimeout(() => {
+        if (video.readyState >= 2) {
+          done();
+          return;
+        }
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('Timeout ao buscar frame do vídeo'));
+      }, 4000);
+
+      if (Math.abs(video.currentTime - safeTime) < 0.01) {
+        done();
+      } else {
+        video.currentTime = safeTime;
+      }
     });
   }, []);
 
