@@ -89,6 +89,8 @@ const MarketingHub: React.FC = () => {
         return <AICreativeStudio />;
       case 'video-editor':
         return <VideoTimelineEditor />;
+      case 'config-apis':
+        return <AISettingsPage />;
       case 'envio-massa':
         return <EnvioMassaMarketing />;
       case 'recursos':
