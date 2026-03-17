@@ -71,6 +71,8 @@ const VideoTimelineEditor: React.FC = () => {
   const resourcePanelRef = useRef<ResourcePanelHandle>(null);
   const [previewEffectFromTimeline, setPreviewEffectFromTimeline] = useState<TransitionType | null>(null);
   const [editingEffectClipId, setEditingEffectClipId] = useState<string | null>(null);
+  const [originalEffectType, setOriginalEffectType] = useState<TransitionType | null>(null);
+  const [clipDetailDialog, setClipDetailDialog] = useState<TimelineClip | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null);
   const [exportedVideoBlob, setExportedVideoBlob] = useState<Blob | null>(null);
