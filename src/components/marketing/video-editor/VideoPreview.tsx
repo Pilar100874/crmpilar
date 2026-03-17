@@ -498,6 +498,26 @@ const VideoPreview: React.FC<Props> = ({
     return null;
   }, [activeVisuals, currentTime, previewAnim, previewProgress, clips]);
 
+  // Effect track clips — standalone overlays independent from media clips
+  const effectTrackOverlays = useMemo(() => {
+    const effectTracks = tracks.filter(t => t.type === 'effect' && t.visible);
+    const effectTrackIds = new Set(effectTracks.map(t => t.id));
+    const activeEffects = clips.filter(c =>
+      c.type === 'effect' &&
+      effectTrackIds.has(c.trackId) &&
+      c.effectType &&
+      c.effectType !== 'none' &&
+      currentTime >= c.startTime &&
+      currentTime < c.startTime + c.duration
+    );
+    return activeEffects.map(clip => {
+      const elapsed = currentTime - clip.startTime;
+      const progress = Math.min(Math.max(elapsed / clip.duration, 0), 1);
+      const overlay = getOverlayStyle(clip.effectType!, progress);
+      return overlay ? { id: clip.id, ...overlay } : null;
+    }).filter(Boolean) as { id: string; style: React.CSSProperties; elements: React.ReactNode }[];
+  }, [clips, tracks, currentTime]);
+
   return (
     <div className="w-full h-full flex items-center justify-center"
       onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
