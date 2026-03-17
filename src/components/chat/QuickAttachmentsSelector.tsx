@@ -268,7 +268,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
                       ))}
                     </div>
                   </div>
-              </div>
+                )}
             </ScrollArea>
           </TabsContent>
 
