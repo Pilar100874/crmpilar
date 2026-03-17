@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
+import { getActiveUnifiedProvider, shouldHideModel } from './unifiedProvidersConfig';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,6 +61,22 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
   { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
   { value: 'apiframe/kling-image', label: '⚡ AF: Kling Image', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe' },
+  // AIML API models
+  { value: 'aimlapi/flux-schnell', label: '🤖 ML: Flux Schnell', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API, $0.003' },
+  { value: 'aimlapi/flux-pro', label: '🤖 ML: Flux Pro', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.05' },
+  { value: 'aimlapi/flux-dev', label: '🤖 ML: Flux Dev', provider: 'AIML API', cost: '$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/dall-e-3', label: '🤖 ML: DALL-E 3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.04' },
+  { value: 'aimlapi/sd3', label: '🤖 ML: Stable Diffusion 3', provider: 'AIML API', cost: '$', quality: 4, tip: 'Via AIML API, $0.035' },
+  { value: 'aimlapi/sdxl', label: '🤖 ML: SDXL', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/midjourney', label: '🤖 ML: Midjourney', provider: 'AIML API', cost: '$$$', quality: 5, tip: 'Via AIML API' },
+  { value: 'aimlapi/ideogram', label: '🤖 ML: Ideogram', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
+  { value: 'aimlapi/recraft-v3', label: '🤖 ML: Recraft V3', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
+  // Pollo AI models
+  { value: 'polloai/flux-schnell', label: '🐔 PL: Flux Schnell', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 1 crédito' },
+  { value: 'polloai/flux-pro', label: '🐔 PL: Flux Pro', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 5 créditos' },
+  { value: 'polloai/ideogram', label: '🐔 PL: Ideogram v2', provider: 'Pollo AI', cost: '$', quality: 4, tip: 'Via Pollo AI, 2 créditos' },
+  { value: 'polloai/recraft-v3', label: '🐔 PL: Recraft V3', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI' },
+  { value: 'polloai/kolors', label: '🐔 PL: Kolors', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const VIDEO_MODELS: ModelInfo[] = [
@@ -81,13 +98,28 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
   // Apiframe video models
-  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, vídeo text-to-video' },
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/runway', label: '⚡ AF: Runway ML', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  // AIML API video models
+  { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25' },
+  { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28' },
+  { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.20' },
+  { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  // Pollo AI video models
+  { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'Pollo AI', cost: '$$', quality: 5, tip: 'Via Pollo AI, 10 créditos' },
+  { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 8 créditos' },
+  { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 6 créditos' },
+  { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 5 créditos' },
+  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
@@ -117,6 +149,10 @@ const MUSIC_MODELS: ModelInfo[] = [
   { value: 'apiframe/udio', label: '⚡ AF: Udio', provider: 'Apiframe', cost: '$', quality: 5, tip: 'Via Apiframe, 1-2 créditos' },
   { value: 'apiframe/producer-ai', label: '⚡ AF: Producer AI', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, instrumental' },
   { value: 'apiframe/eleven-music', label: '⚡ AF: Eleven Music', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, ElevenLabs' },
+  // AIML API music models
+  { value: 'aimlapi/suno-v4', label: '🤖 ML: Suno v4', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.05' },
+  { value: 'aimlapi/udio-v2', label: '🤖 ML: Udio v2', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API' },
+  { value: 'aimlapi/musicgen', label: '🤖 ML: MusicGen', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
 ];
 
 // Voices / Locutores
@@ -391,8 +427,10 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   return configuredProviders.some((cp) => cp.toLowerCase() === requiredProvider);
 };
 
-const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[]): ModelInfo[] => {
+const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): ModelInfo[] => {
   return models.filter((m) => {
+    // Hide models from inactive unified providers
+    if (shouldHideModel(m.value, activeUnified)) return false;
     // Always show Lovable AI gateway models (for LLM/Image)
     if (isLovableGatewayModel(m.value)) return true;
     // Show if the provider prefix matches a configured key
@@ -402,11 +440,13 @@ const filterModelsByProviders = (models: ModelInfo[], configuredProviders: strin
 };
 
 // For video: show ALL models but mark unconfigured as disabled
-const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[]): (ModelInfo & { disabled: boolean })[] => {
-  return models.map((m) => ({
-    ...m,
-    disabled: !isModelConfigured(m.value, configuredProviders),
-  }));
+const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): (ModelInfo & { disabled: boolean })[] => {
+  return models
+    .filter((m) => !shouldHideModel(m.value, activeUnified))
+    .map((m) => ({
+      ...m,
+      disabled: !isModelConfigured(m.value, configuredProviders),
+    }));
 };
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
@@ -416,6 +456,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const activeResult = storeResult ?? node.data.result;
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
 
   useEffect(() => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -432,11 +474,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     })();
   }, []);
 
-  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
-  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
-  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders), [configuredProviders]);
-  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
-  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
+  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
