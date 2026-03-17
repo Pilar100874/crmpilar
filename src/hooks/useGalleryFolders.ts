@@ -70,4 +70,4 @@ export function useGalleryFolders() {
  * Compact folder tabs component for inline gallery pickers.
  * Shows "Todos" + folder buttons in a scrollable row.
  */
-export { GalleryFolderTabs } from './GalleryFolderTabs';
+
