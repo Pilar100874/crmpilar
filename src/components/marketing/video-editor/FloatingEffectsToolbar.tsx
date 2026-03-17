@@ -347,15 +347,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
+    <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
       <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-3 py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
+        <div className="flex items-center gap-1 sm:gap-1.5 bg-background/95 backdrop-blur-xl border border-border/60 rounded-full px-2 sm:px-3 py-1.5 sm:py-2 shadow-2xl shadow-black/20 ring-1 ring-white/10 min-w-max">
 
           {/* Clip info */}
-          <div className="flex items-center gap-1.5 pr-2 border-r border-border/40">
-            <span className="text-sm">{clipIcon}</span>
-            <span className="text-[10px] font-semibold truncate max-w-[100px]">{selectedClip.name}</span>
-            <span className="text-[9px] text-muted-foreground">{selectedClip.duration.toFixed(1)}s</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 pr-1.5 sm:pr-2 border-r border-border/40">
+            <span className="text-xs sm:text-sm">{clipIcon}</span>
+            <span className="text-[9px] sm:text-[10px] font-semibold truncate max-w-[60px] sm:max-w-[100px]">{selectedClip.name}</span>
+            <span className="text-[8px] sm:text-[9px] text-muted-foreground hidden sm:inline">{selectedClip.duration.toFixed(1)}s</span>
           </div>
 
           {/* Transitions Popover */}
