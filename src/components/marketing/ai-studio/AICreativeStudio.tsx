@@ -1488,10 +1488,6 @@ const AICreativeStudioInner: React.FC = () => {
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
-            <Settings2 className="h-3.5 w-3.5" />
-            Config
-          </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
             size="icon"
