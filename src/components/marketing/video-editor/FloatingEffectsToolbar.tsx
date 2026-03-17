@@ -274,7 +274,7 @@ const MiniFilterPreview: React.FC<{
 const FloatingEffectsToolbar: React.FC<Props> = ({
   selectedClip, onUpdateClip, onPreviewTransition, onToggleFilterPreview, onClose, onSimulate, isSimulating
 }) => {
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({ basic: true });
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({ basic: true, movement: true, scale: true, dynamic: true, reveal: true, special: true });
   const [expandedFilterCats, setExpandedFilterCats] = useState<Record<string, boolean>>({ cor: true, estilo: true, especial: true });
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
 
@@ -437,7 +437,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
 
-                <ScrollArea className="max-h-[280px]">
+                <ScrollArea className="max-h-[50vh]">
                   <div className="p-2 space-y-1.5">
                     {TRANSITION_CATEGORIES.map(cat => {
                       const isExpanded = expandedCategories[cat.id] !== false;
@@ -517,7 +517,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[320px]">
+              <ScrollArea className="max-h-[50vh]">
                 <div className="p-2 space-y-2">
                   {/* Presets by category */}
                   {FILTER_CATEGORIES.map(cat => {
