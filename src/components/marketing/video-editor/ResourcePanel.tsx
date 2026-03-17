@@ -10,7 +10,7 @@ import MiniEffectPreview from './MiniEffectPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineTrack, TimelineClip, EFFECT_TRACK_PRESETS, TransitionType } from './types';
 
-type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio' | 'effect';
+type ResourceType = 'video' | 'image' | 'canvas' | 'music' | 'audio' | 'effect' | 'transition';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
