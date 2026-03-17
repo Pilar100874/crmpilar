@@ -267,6 +267,41 @@ const VideoPreview: React.FC<Props> = ({
   // Filter preview indicator
   const showFilterBadge = previewingFilter && selectedClipIds.length > 0;
 
+  // Detect transition overlays between clips
+  const transitionOverlay = useMemo(() => {
+    for (const clip of activeVisuals) {
+      const transitions = clip.transitions;
+      if (!transitions) continue;
+      const clipElapsed = currentTime - clip.startTime;
+      const clipRemaining = (clip.startTime + clip.duration) - currentTime;
+
+      if (transitions.entrance && transitions.entrance.type !== 'none') {
+        const dur = transitions.entrance.duration;
+        if (clipElapsed >= 0 && clipElapsed < dur) {
+          const p = clipElapsed / dur;
+          return getOverlayStyle(transitions.entrance.type, p);
+        }
+      }
+      if (transitions.exit && transitions.exit.type !== 'none') {
+        const dur = transitions.exit.duration;
+        if (clipRemaining >= 0 && clipRemaining < dur) {
+          const p = clipRemaining / dur;
+          return getOverlayStyle(transitions.exit.type, 1 - p);
+        }
+      }
+    }
+    // preview animation overlay
+    if (previewAnim && previewProgress !== null) {
+      const clip = clips.find(c => c.id === previewAnim.clipId);
+      const trans = previewAnim.phase === 'entrance' ? clip?.transitions?.entrance : clip?.transitions?.exit;
+      if (trans) {
+        const p = previewAnim.phase === 'exit' ? 1 - previewProgress : previewProgress;
+        return getOverlayStyle(trans.type, previewAnim.phase === 'exit' ? 1 - previewProgress : previewProgress);
+      }
+    }
+    return null;
+  }, [activeVisuals, currentTime, previewAnim, previewProgress, clips]);
+
   return (
     <div className="w-full h-full flex items-center justify-center"
       onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
@@ -338,6 +373,13 @@ const VideoPreview: React.FC<Props> = ({
               <span className="text-3xl">📽️</span>
               <p className="text-white/40 text-xs mt-2">Sem conteúdo neste ponto</p>
             </div>
+          </div>
+        )}
+
+        {/* Transition overlay effects (light flash, lens flare, etc.) */}
+        {transitionOverlay && (
+          <div className="absolute inset-0 pointer-events-none z-50" style={transitionOverlay.style}>
+            {transitionOverlay.elements}
           </div>
         )}
 
