@@ -869,7 +869,6 @@ const UnifiedProviderPanel: React.FC<UnifiedProviderPanelProps> = ({ providerId,
     </div>
   );
 };
-};
 
 // ── ElevenLabs extra configuration subcomponent ────────────────────────────
 
