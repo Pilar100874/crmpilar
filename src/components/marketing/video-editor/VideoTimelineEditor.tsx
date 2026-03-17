@@ -732,7 +732,23 @@ const VideoTimelineEditor: React.FC = () => {
     });
   }, [timeline]);
 
-  const handleOpenCanvasFromToolbar = useCallback(() => {
+  const handleAddEffectClip = useCallback((trackId: string, startTime: number, effectType: TransitionType, label: string) => {
+    timeline.addClip({
+      trackId,
+      type: 'effect',
+      name: `✨ ${label}`,
+      startTime: Math.max(0, startTime),
+      duration: 2, // default 2 seconds
+      trimStart: 0,
+      trimEnd: 0,
+      color: TRACK_COLORS.effect,
+      volume: 1,
+      opacity: 1,
+      filters: [],
+      effectType,
+    });
+  }, [timeline]);
+
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
     setCanvasEditJson(undefined);
