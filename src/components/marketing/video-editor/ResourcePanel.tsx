@@ -379,8 +379,10 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
           {TABS.map(tab => {
-            const sectionItems = items[tab.key];
+            const isEffectTab = tab.key === 'effect';
+            const sectionItems = isEffectTab ? [] : items[tab.key as Exclude<ResourceType, 'effect'>];
             const isCollapsed = collapsedSections.has(tab.key);
+            const effectCount = isEffectTab ? EFFECT_TRACK_PRESETS.length : 0;
             return (
               <div key={tab.key} className="border border-border/40 rounded-lg overflow-hidden">
                 {/* Section header */}
@@ -390,13 +392,80 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                 >
                   <span className={tab.color}>{tab.icon}</span>
                   <span className="text-[11px] font-semibold flex-1 text-left">{tab.label}</span>
-                  {sectionItems.length > 0 && (
-                    <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-medium">{sectionItems.length}</span>
+                  {(isEffectTab ? effectCount > 0 : sectionItems.length > 0) && (
+                    <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-medium">{isEffectTab ? effectCount : sectionItems.length}</span>
                   )}
                   <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
                 </button>
 
-                {!isCollapsed && (
+                {!isCollapsed && isEffectTab && (
+                  <div className="px-2 pb-2 pt-1.5 space-y-1.5">
+                    {/* Category filter */}
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from(new Set(EFFECT_TRACK_PRESETS.map(p => p.category))).map(cat => (
+                        <button
+                          key={cat}
+                          className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${effectCategoryFilter === cat ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'}`}
+                          onClick={() => setEffectCategoryFilter(effectCategoryFilter === cat ? null : cat)}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Draggable effect items */}
+                    <div className="space-y-0.5">
+                      {EFFECT_TRACK_PRESETS
+                        .filter(p => !effectCategoryFilter || p.category === effectCategoryFilter)
+                        .map(preset => (
+                          <div
+                            key={preset.type}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('application/timeline-media', JSON.stringify({
+                                type: 'effect',
+                                name: preset.label,
+                                src: '',
+                                effectType: preset.type,
+                              }));
+                              e.dataTransfer.setData('mediatype/effect', '');
+                              e.dataTransfer.effectAllowed = 'copy';
+                            }}
+                            className="flex items-center gap-2 p-1.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing group"
+                          >
+                            <div className="w-8 h-8 rounded bg-muted/60 flex items-center justify-center text-base shrink-0">
+                              {preset.icon}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-medium truncate">{preset.label}</p>
+                              <p className="text-[9px] text-muted-foreground truncate">{preset.description}</p>
+                            </div>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                onClick={() => {
+                                  if (onAddEffectClip) {
+                                    const effectTrack = tracks.find(t => t.type === 'effect');
+                                    if (effectTrack) {
+                                      const trackClips = clips.filter(c => c.trackId === effectTrack.id);
+                                      const endTime = trackClips.reduce((max, c) => Math.max(max, c.startTime + c.duration), 0);
+                                      onAddEffectClip(effectTrack.id, endTime, preset.type, preset.label);
+                                    }
+                                  }
+                                }}
+                                title="Adicionar à timeline"
+                              >
+                                <Plus className="h-3 w-3 text-primary" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {!isCollapsed && !isEffectTab && (
                   <div className="px-2 pb-2 pt-1.5 space-y-1.5">
                     {/* Action buttons */}
                     <div className="flex gap-1">
