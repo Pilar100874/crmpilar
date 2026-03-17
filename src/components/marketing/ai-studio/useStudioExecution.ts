@@ -314,6 +314,26 @@ export function useStudioExecution() {
         };
       }
 
+      case 'videoInput': {
+        const videos = config.videos || [];
+        if (videos.length === 0) return null;
+        return {
+          videoUrl: videos[0],
+          videoUrls: videos,
+          _isVideo: true,
+        };
+      }
+
+      case 'multiVideoRef': {
+        const mVideos = config.videos || [];
+        if (mVideos.length === 0) return null;
+        return {
+          videoUrl: mVideos[0],
+          videoUrls: mVideos,
+          _isVideo: true,
+        };
+      }
+
       case 'productImageSelect':
         // Return the selected product image as reference with role context
         if (config.selectedImageUrl) {
