@@ -359,65 +359,68 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [transPopoverOpen, setTransPopoverOpen] = useState(false);
   const [audioPopoverOpen, setAudioPopoverOpen] = useState(false);
   const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
-  const [originalAudioState, setOriginalAudioState] = useState<{
+  const originalAudioRef = useRef<{
     audioFilters?: AudioFilter[];
     volumeEnvelope?: VolumeEnvelopePoint[];
     playbackRate?: number;
     volume?: number;
   } | null>(null);
-  const [originalTransitions, setOriginalTransitions] = useState<TimelineClip['transitions'] | null>(null);
-  const [originalFilters, setOriginalFilters] = useState<VideoFilter[] | null>(null);
+  const originalTransitionsRef = useRef<TimelineClip['transitions'] | null>(null);
+  const originalFiltersRef = useRef<VideoFilter[] | null>(null);
 
   // === Audio capture/restore/apply ===
   const captureOriginalAudioState = useCallback(() => {
-    setOriginalAudioState({
-      audioFilters: selectedClip.audioFilters ? JSON.parse(JSON.stringify(selectedClip.audioFilters)) : undefined,
-      volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
-      playbackRate: selectedClip.playbackRate,
-      volume: selectedClip.volume,
-    });
-  }, [selectedClip]);
+    originalAudioRef.current = {
+      audioFilters: selectedClip.audioFilters ? JSON.parse(JSON.stringify(selectedClip.audioFilters)) : [],
+      volumeEnvelope: selectedClip.volumeEnvelope ? JSON.parse(JSON.stringify(selectedClip.volumeEnvelope)) : undefined,
+      playbackRate: selectedClip.playbackRate ?? 1,
+      volume: selectedClip.volume ?? 1,
+    };
+  }, [selectedClip.audioFilters, selectedClip.volumeEnvelope, selectedClip.playbackRate, selectedClip.volume]);
 
   const restoreOriginalAudio = useCallback(() => {
-    if (!originalAudioState) return;
+    const orig = originalAudioRef.current;
+    if (!orig) return;
     onUpdateClip(selectedClip.id, {
-      audioFilters: originalAudioState.audioFilters || [],
-      volumeEnvelope: originalAudioState.volumeEnvelope,
-      playbackRate: originalAudioState.playbackRate,
-      volume: originalAudioState.volume,
+      audioFilters: orig.audioFilters || [],
+      volumeEnvelope: orig.volumeEnvelope,
+      playbackRate: orig.playbackRate,
+      volume: orig.volume,
     });
-  }, [originalAudioState, selectedClip.id, onUpdateClip]);
+  }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmAudio = useCallback(() => {
-    setOriginalAudioState(null);
+    originalAudioRef.current = null;
   }, []);
 
   // === Transitions capture/restore/apply ===
   const captureOriginalTransitions = useCallback(() => {
-    setOriginalTransitions(selectedClip.transitions ? JSON.parse(JSON.stringify(selectedClip.transitions)) : {});
+    originalTransitionsRef.current = selectedClip.transitions ? JSON.parse(JSON.stringify(selectedClip.transitions)) : {};
   }, [selectedClip.transitions]);
 
   const restoreOriginalTransitions = useCallback(() => {
-    if (originalTransitions === null) return;
-    onUpdateClip(selectedClip.id, { transitions: originalTransitions });
-  }, [originalTransitions, selectedClip.id, onUpdateClip]);
+    const orig = originalTransitionsRef.current;
+    if (orig === null) return;
+    onUpdateClip(selectedClip.id, { transitions: JSON.parse(JSON.stringify(orig)) });
+  }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmTransitions = useCallback(() => {
-    setOriginalTransitions(null);
+    originalTransitionsRef.current = null;
   }, []);
 
   // === Filters capture/restore/apply ===
   const captureOriginalFilters = useCallback(() => {
-    setOriginalFilters(selectedClip.filters ? JSON.parse(JSON.stringify(selectedClip.filters)) : []);
+    originalFiltersRef.current = selectedClip.filters ? JSON.parse(JSON.stringify(selectedClip.filters)) : [];
   }, [selectedClip.filters]);
 
   const restoreOriginalFilters = useCallback(() => {
-    if (originalFilters === null) return;
-    onUpdateClip(selectedClip.id, { filters: originalFilters });
-  }, [originalFilters, selectedClip.id, onUpdateClip]);
+    const orig = originalFiltersRef.current;
+    if (orig === null) return;
+    onUpdateClip(selectedClip.id, { filters: JSON.parse(JSON.stringify(orig)) });
+  }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmFilters = useCallback(() => {
-    setOriginalFilters(null);
+    originalFiltersRef.current = null;
   }, []);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
