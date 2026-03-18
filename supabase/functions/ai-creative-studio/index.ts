@@ -1610,6 +1610,20 @@ Deno.serve(async (req) => {
         });
       }
 
+      case "start_apiframe_video": {
+        const started = await startVideoApiframe(params.estabelecimentoId, params);
+        return new Response(JSON.stringify({ result: started }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "fetch_apiframe_video": {
+        const result = await fetchVideoApiframe(params.estabelecimentoId, params.taskId);
+        return new Response(JSON.stringify({ result }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       case "generate_audio": {
         const provider = (params.provider || "elevenlabs") as string;
         const text = params.text as string;
