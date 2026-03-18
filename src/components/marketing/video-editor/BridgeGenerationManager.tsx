@@ -146,6 +146,13 @@ export function useBridgeGenerations() {
     clipBName: string;
     minimized?: boolean;
   }): Promise<string> => {
+    // Limit to 2 simultaneous generations
+    const activeCount = tasks.filter(t => t.status === 'generating').length;
+    if (activeCount >= 2) {
+      toast.error('Máximo de 2 gerações simultâneas. Aguarde uma finalizar ou cancele uma existente.');
+      return '';
+    }
+
     const taskId = `bridge_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const controller = new AbortController();
     abortControllers.current.set(taskId, controller);
