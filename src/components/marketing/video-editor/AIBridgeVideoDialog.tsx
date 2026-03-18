@@ -1026,7 +1026,9 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
 
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
-              <Button variant="outline" size="sm" onClick={onClose} disabled={isGenerating}>Cancelar</Button>
+              <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
+                {isGenerating ? 'Cancelar Geração' : 'Cancelar'}
+              </Button>
               <Button
                 size="sm"
                 onClick={handleGenerate}
