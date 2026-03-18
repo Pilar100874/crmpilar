@@ -77,38 +77,115 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   if (!requiredProvider) return true;
   return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
-const DEFAULT_TRANSITION_PROMPTS = [
-  { id: '1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
-  { id: '2', text: 'Câmera gira 360° ao redor do objeto principal e dissolve para a próxima imagem' },
-  { id: '3', text: 'Efeito de partículas douradas se formam e se dissolvem revelando a nova cena' },
-  { id: '4', text: 'Fade suave com raios de luz passando pela câmera durante a transição' },
-  { id: '5', text: 'Movimento de câmera dolly para frente atravessando a cena até chegar na próxima' },
-  { id: '6', text: 'Efeito de ondas distorcendo a imagem como reflexo na água, revelando nova cena' },
-  { id: '7', text: 'Transição com desfoque de movimento rápido (motion blur) horizontal entre cenas' },
-  { id: '8', text: 'Câmera faz um tilt up dramático para o céu e desce revelando o novo cenário' },
-  { id: '9', text: 'Pétalas de flores voam pela tela cobrindo a imagem e revelando a próxima' },
-  { id: '10', text: 'Efeito de espelho se quebrando, fragmentos revelam gradualmente a nova cena' },
-  { id: '11', text: 'Fumaça cinematográfica preenche a tela e se dissipa mostrando o novo ambiente' },
-  { id: '12', text: 'Câmera orbita lentamente enquanto a cena se transforma suavemente' },
-  { id: '13', text: 'Flash de luz branca estilo fotográfico que revela a próxima composição' },
-  { id: '14', text: 'Transição com efeito de tinta se espalhando em aquarela pela tela' },
-  { id: '15', text: 'Zoom extremo no detalhe de um objeto que se transforma na próxima cena' },
-  { id: '16', text: 'Efeito de portal luminoso se abrindo no centro da tela com a nova cena dentro' },
-  { id: '17', text: 'Câmera atravessa uma cortina de luz, revelando o novo cenário do outro lado' },
-  { id: '18', text: 'Transição com efeito glitch digital rápido entre as duas cenas' },
-  { id: '19', text: 'Folhas de outono caem cobrindo a tela e são sopradas revelando nova imagem' },
-  { id: '20', text: 'Efeito de câmera lenta com bokeh luminoso transitando entre cenas' },
-  { id: '21', text: 'Pan horizontal cinematográfico com desfoque gaussiano na transição' },
-  { id: '22', text: 'Cristais de gelo se formam sobre a imagem e derretem revelando a próxima' },
-  { id: '23', text: 'Efeito de dupla exposição mesclando as duas cenas de forma artística' },
-  { id: '24', text: 'Câmera faz movimento crane ascendente saindo da cena atual para a próxima' },
-  { id: '25', text: 'Transição com efeito de página virando como um livro elegante' },
-  { id: '26', text: 'Ondas de energia luminosa expandem do centro transformando a cena' },
-  { id: '27', text: 'Efeito de areia se espalhando pelo vento, cobrindo e revelando cenas' },
-  { id: '28', text: 'Câmera faz whip pan ultra rápido girando e parando na nova cena' },
-  { id: '29', text: 'Bolhas de sabão flutuam pela tela refletindo a nova cena dentro delas' },
-  { id: '30', text: 'Transição com efeito de pinceladas de tinta revelando progressivamente a nova imagem' },
+interface TransitionPromptGroup {
+  id: string;
+  label: string;
+  icon: string;
+  prompts: { id: string; text: string }[];
+}
+
+const TRANSITION_PROMPT_GROUPS: TransitionPromptGroup[] = [
+  {
+    id: 'cinematic', label: 'Cinematográfico', icon: '🎬',
+    prompts: [
+      { id: 'c1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
+      { id: 'c2', text: 'Câmera gira 360° ao redor do objeto principal e dissolve para a próxima imagem' },
+      { id: 'c3', text: 'Movimento de câmera dolly para frente atravessando a cena até chegar na próxima' },
+      { id: 'c4', text: 'Câmera faz um tilt up dramático para o céu e desce revelando o novo cenário' },
+      { id: 'c5', text: 'Fumaça cinematográfica preenche a tela e se dissipa mostrando o novo ambiente' },
+      { id: 'c6', text: 'Câmera orbita lentamente enquanto a cena se transforma suavemente' },
+      { id: 'c7', text: 'Pan horizontal cinematográfico com desfoque gaussiano na transição' },
+      { id: 'c8', text: 'Câmera faz movimento crane ascendente saindo da cena atual para a próxima' },
+      { id: 'c9', text: 'Efeito de câmera lenta com bokeh luminoso transitando entre cenas' },
+      { id: 'c10', text: 'Fade suave com raios de luz passando pela câmera durante a transição' },
+      { id: 'c11', text: 'Dolly zoom (efeito Vertigo) criando distorção de perspectiva entre as cenas — estilo Hitchcock' },
+      { id: 'c12', text: 'Rack focus suave do primeiro plano para o fundo, revelando a próxima cena com mudança de foco' },
+      { id: 'c13', text: 'Câmera em steadicam contorna o cenário e revela a próxima cena em plano sequência' },
+      { id: 'c14', text: 'Slow motion dramático com partículas flutuando no ar entre as cenas — estilo trailer épico' },
+      { id: 'c15', text: 'Lens flare anamórfico atravessa a tela horizontalmente revelando a nova cena — estilo J.J. Abrams' },
+    ],
+  },
+  {
+    id: 'ugc', label: 'UGC / Social', icon: '📱',
+    prompts: [
+      { id: 'u1', text: 'Corte rápido estilo TikTok com zoom punch entre as cenas, movimento energético' },
+      { id: 'u2', text: 'Swipe vertical para cima revelando a próxima cena como stories do Instagram' },
+      { id: 'u3', text: 'Câmera chacoalha levemente e faz jump cut para a próxima cena — estilo vlog autêntico' },
+      { id: 'u4', text: 'Mão cobre a câmera e ao remover revela a nova cena — transição viral do TikTok' },
+      { id: 'u5', text: 'Flip rápido de câmera frontal para traseira revelando novo ângulo — selfie style' },
+      { id: 'u6', text: 'Zoom rápido no rosto/produto com desfoque de movimento e corte seco para próxima cena' },
+      { id: 'u7', text: 'Transição whip pan ultra rápida com motion blur — estilo Casey Neistat' },
+      { id: 'u8', text: 'Câmera faz spin 360° rápido e para revelando a nova cena com energia de Reels' },
+      { id: 'u9', text: 'Snap zoom para o objeto e corte com beat drop para a próxima cena' },
+      { id: 'u10', text: 'Efeito boomerang rápido no final da cena antes de revelar a próxima — Instagram style' },
+      { id: 'u11', text: 'Transição com glitch digital rápido e colorido — estilo conteúdo Gen Z' },
+      { id: 'u12', text: 'Pan rápido lateral com o celular seguindo o movimento — estilo POV viral' },
+    ],
+  },
+  {
+    id: 'brands-nike', label: 'Nike / Esportivo', icon: '✓',
+    prompts: [
+      { id: 'n1', text: 'Câmera segue o movimento do atleta em slow motion e corta com flash branco para a próxima cena — estilo "Just Do It"' },
+      { id: 'n2', text: 'Transição com whoosh de vento e partículas de velocidade, corte dinâmico entre ação e produto' },
+      { id: 'n3', text: 'Slow motion épico do suor/impacto seguido de speed ramp até a próxima cena — estilo Nike Running' },
+      { id: 'n4', text: 'Câmera orbital em slow motion ao redor do produto com luz dramática e corte para close-up' },
+    ],
+  },
+  {
+    id: 'brands-apple', label: 'Apple / Tech Premium', icon: '🍎',
+    prompts: [
+      { id: 'a1', text: 'Fade ultra-lento para preto (2 segundos) e emerge suavemente na nova cena — Apple keynote style' },
+      { id: 'a2', text: 'Câmera desliza suavemente sobre superfície minimalista e revela o produto em fundo branco puro' },
+      { id: 'a3', text: 'Zoom elegante e preciso no detalhe do produto com reflexos sutis — estilo "Shot on iPhone"' },
+      { id: 'a4', text: 'Transição com profundidade de campo extrema, foco muda de uma cena para outra com bokeh luxuoso' },
+    ],
+  },
+  {
+    id: 'brands-luxury', label: 'Luxo / Moda', icon: '👑',
+    prompts: [
+      { id: 'l1', text: 'Cortina dourada elegante desliza lentamente revelando a nova cena — estilo Louis Vuitton/Chanel' },
+      { id: 'l2', text: 'Dupla exposição artística mesclando as duas cenas com tons dourados — estilo Dior' },
+      { id: 'l3', text: 'Câmera em slow motion com reflexos de jóias e cristais transitando entre cenas — Tiffany & Co style' },
+      { id: 'l4', text: 'Transição com tecido de seda fluindo sobre a câmera, revelando a nova composição — Gucci/Prada' },
+      { id: 'l5', text: 'Fade elegante com textura de mármore e partículas douradas entre cenas — haute couture' },
+    ],
+  },
+  {
+    id: 'brands-food', label: 'Food / Bebidas', icon: '🍔',
+    prompts: [
+      { id: 'f1', text: 'Splash de líquido em câmera lenta cobrindo a tela e revelando a nova cena — Coca-Cola style' },
+      { id: 'f2', text: 'Câmera mergulha no ingrediente em macro extremo e emerge na próxima composição — estilo McDonald\'s' },
+      { id: 'f3', text: 'Vapor/fumaça sobe do prato em slow motion e dissolve na próxima cena — food photography premium' },
+      { id: 'f4', text: 'Corte sincronizado com ação (morder, servir, verter) e transição com movimento do ingrediente' },
+    ],
+  },
+  {
+    id: 'brands-auto', label: 'Automotivo', icon: '🏎️',
+    prompts: [
+      { id: 'au1', text: 'Speed ramp dramático — carro em alta velocidade desacelera em slow motion e corta para próxima cena — BMW/Mercedes style' },
+      { id: 'au2', text: 'Reflexo no capô do carro transiciona para o novo cenário com distorção de luz — estilo Audi' },
+      { id: 'au3', text: 'Câmera drone orbita o veículo em plano aberto épico e faz dolly in para o detalhe — Porsche style' },
+      { id: 'au4', text: 'Faróis iluminam a escuridão e revelam a nova cena com raios de luz cinematográficos' },
+    ],
+  },
+  {
+    id: 'effects', label: 'Efeitos Especiais', icon: '✨',
+    prompts: [
+      { id: 'e1', text: 'Efeito de partículas douradas se formam e se dissolvem revelando a nova cena' },
+      { id: 'e2', text: 'Efeito de ondas distorcendo a imagem como reflexo na água, revelando nova cena' },
+      { id: 'e3', text: 'Efeito de espelho se quebrando, fragmentos revelam gradualmente a nova cena' },
+      { id: 'e4', text: 'Flash de luz branca estilo fotográfico que revela a próxima composição' },
+      { id: 'e5', text: 'Transição com efeito de tinta se espalhando em aquarela pela tela' },
+      { id: 'e6', text: 'Efeito de portal luminoso se abrindo no centro da tela com a nova cena dentro' },
+      { id: 'e7', text: 'Cristais de gelo se formam sobre a imagem e derretem revelando a próxima' },
+      { id: 'e8', text: 'Ondas de energia luminosa expandem do centro transformando a cena' },
+      { id: 'e9', text: 'Efeito de dupla exposição mesclando as duas cenas de forma artística' },
+      { id: 'e10', text: 'Pétalas de flores voam pela tela cobrindo a imagem e revelando a próxima' },
+    ],
+  },
 ];
+
+const DEFAULT_TRANSITION_PROMPTS = TRANSITION_PROMPT_GROUPS.flatMap(g => g.prompts);
 
 const STORAGE_KEY = 'bridge-transition-prompts';
 
