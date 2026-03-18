@@ -884,7 +884,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     <p className="text-xs font-semibold flex items-center gap-1.5">
                       <Headphones className="h-3.5 w-3.5 text-primary" /> Efeitos de Áudio Profissional
                     </p>
-                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={clearAllTransitionsToOriginal} disabled={!hasTransitions}>
+                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={restoreAssetOriginalAudio}>
                       <RotateCcw className="h-3 w-3" /> Original
                     </Button>
                   </div>
