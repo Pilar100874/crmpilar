@@ -484,10 +484,12 @@ const filterModelsByProviders = (models: ModelInfo[], configuredProviders: strin
 };
 
 const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[]): (ModelInfo & { disabled: boolean })[] => {
-  return models.map((m) => ({
-    ...m,
-    disabled: !isModelConfigured(m.value, configuredProviders),
-  }));
+  return models
+    .map((m) => ({
+      ...m,
+      disabled: !isModelConfigured(m.value, configuredProviders),
+    }))
+    .sort((a, b) => Number(a.disabled) - Number(b.disabled));
 };
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
