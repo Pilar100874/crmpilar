@@ -1240,7 +1240,7 @@ const VideoTimelineEditor: React.FC = () => {
                   <div className="w-44 shrink-0 sticky left-0 z-10 bg-card/95">
                     <TrackHeaders tracks={state.tracks} onUpdateTrack={timeline.updateTrack} onDeleteTrack={timeline.deleteTrack} onAddTrack={timeline.addTrack} onMoveTrack={timeline.moveTrack} onReorderTrack={timeline.reorderTrack} renderMode="tracks" />
                   </div>
-                  <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); const clip = state.clips.find(c => c.id === id); if (clip?.type !== 'effect') { setEffectsPanelOpen(true); } }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} />
+                  <TimelineTracks state={state} onSelectClip={(id, multi) => { timeline.selectClip(id, multi); const clip = state.clips.find(c => c.id === id); if (clip?.type !== 'effect') { setEffectsPanelOpen(true); } }} onUpdateClip={timeline.updateClip} onDeselectAll={() => { timeline.deselectAll(); setEffectsPanelOpen(false); }} onSeek={timeline.seekTo} onPause={timeline.pause} onDoubleClickClip={handleDoubleClickClip} onAddClip={handleAddClip} onAddEffectClip={handleAddEffectClip} />
                 </div>
               </div>
             </div>
