@@ -82,11 +82,11 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0"
+                  className={`h-6 w-6 p-0 ${task.status === 'done' ? 'animate-pulse' : ''}`}
                   onClick={() => onMaximize(task.id)}
                   title="Maximizar"
                 >
-                  <Maximize2 className="h-3 w-3" />
+                  <Maximize2 className={`h-3 w-3 ${task.status === 'done' ? 'text-success animate-bounce' : ''}`} />
                 </Button>
                 <Button
                   variant="ghost"
