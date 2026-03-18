@@ -731,66 +731,69 @@ const VideoTimelineEditor: React.FC = () => {
     const clipDuration = media?.duration || (type === 'text' ? 3 : type === 'audio' ? 10 : 5);
     const clipType = media?.canvasJson ? 'canvas' as const : type;
 
+    const [resW, resH] = (videoConfig.resolution || '1920x1080').split('x').map(Number);
+    const canvasAspect = resW / resH;
+
+    const addWithFit = (naturalW: number, naturalH: number) => {
+      const mediaAspect = naturalW / naturalH;
+      let w = 100, h = 100;
+      if (mediaAspect > canvasAspect) {
+        w = 100;
+        h = (canvasAspect / mediaAspect) * 100;
+      } else {
+        h = 100;
+        w = (mediaAspect / canvasAspect) * 100;
+      }
+      const x = (100 - w) / 2;
+      const y = (100 - h) / 2;
+      timeline.addClip({
+        trackId, type: clipType,
+        name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${clips.length + 1}`,
+        startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
+        color, volume: 1, opacity: 1, filters: [],
+        src: media?.src, canvasJson: media?.canvasJson,
+        x, y, w, h,
+      });
+    };
+
+    const addDefault = () => {
+      timeline.addClip({
+        trackId, type: clipType,
+        name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${clips.length + 1}`,
+        startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
+        color, volume: 1, opacity: 1, filters: [],
+        src: media?.src, canvasJson: media?.canvasJson,
+        x: 0, y: 0, w: 100, h: 100,
+      });
+    };
+
     // For images/canvas, load actual dimensions to preserve aspect ratio
     if ((clipType === 'image' || clipType === 'canvas') && media?.src) {
       const img = new Image();
-      img.onload = () => {
-        // Parse resolution to get canvas dimensions
-        const [resW, resH] = (videoConfig.resolution || '1920x1080').split('x').map(Number);
-        const imgAspect = img.naturalWidth / img.naturalHeight;
-        const canvasAspect = resW / resH;
-        let w = 100, h = 100;
-        if (imgAspect > canvasAspect) {
-          // Image is wider — fit to width
-          w = 100;
-          h = (canvasAspect / imgAspect) * 100;
-        } else {
-          // Image is taller — fit to height
-          h = 100;
-          w = (imgAspect / canvasAspect) * 100;
-        }
-        const x = (100 - w) / 2;
-        const y = (100 - h) / 2;
-
-        timeline.addClip({
-          trackId, type: clipType,
-          name: media?.name || `Imagem ${clips.length + 1}`,
-          startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
-          color, volume: 1, opacity: 1, filters: [],
-          src: media?.src, canvasJson: media?.canvasJson,
-          x, y, w, h,
-        });
-      };
-      img.onerror = () => {
-        timeline.addClip({
-          trackId, type: clipType,
-          name: media?.name || `Imagem ${clips.length + 1}`,
-          startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
-          color, volume: 1, opacity: 1, filters: [],
-          src: media?.src, canvasJson: media?.canvasJson,
-          x: 0, y: 0, w: 100, h: 100,
-        });
-      };
+      img.onload = () => addWithFit(img.naturalWidth, img.naturalHeight);
+      img.onerror = () => addDefault();
       img.src = media.src;
       return;
     }
 
-    timeline.addClip({
-      trackId,
-      type: clipType,
-      name: media?.name || `${type === 'video' ? 'Cena' : type === 'audio' ? 'Áudio' : type === 'text' ? 'Texto' : 'Imagem'} ${clips.length + 1}`,
-      startTime,
-      duration: clipDuration,
-      trimStart: 0,
-      trimEnd: 0,
-      color,
-      volume: 1,
-      opacity: 1,
-      filters: [],
-      src: media?.src,
-      canvasJson: media?.canvasJson,
-      x: 0, y: 0, w: 100, h: 100,
-    });
+    // For video clips, load to get actual dimensions
+    if (clipType === 'video' && media?.src) {
+      const vid = document.createElement('video');
+      vid.preload = 'metadata';
+      vid.onloadedmetadata = () => {
+        if (vid.videoWidth > 0 && vid.videoHeight > 0) {
+          addWithFit(vid.videoWidth, vid.videoHeight);
+        } else {
+          addDefault();
+        }
+        vid.src = '';
+      };
+      vid.onerror = () => addDefault();
+      vid.src = media.src;
+      return;
+    }
+
+    addDefault();
   }, [timeline, videoConfig.resolution]);
 
   const handleAddEffectClip = useCallback((trackId: string, startTime: number, effectType: TransitionType, label: string) => {
