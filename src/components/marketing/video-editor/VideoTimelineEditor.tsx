@@ -4,7 +4,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, FolderOpen,
   Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown, Wand2,
-  Plus, ArrowLeft, Clapperboard
+  Plus, ArrowLeft, Clapperboard, Link2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
