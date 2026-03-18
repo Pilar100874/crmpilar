@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import AIBridgeVideoDialog from './AIBridgeVideoDialog';
+import { BridgeGenerationManager, useBridgeGenerations } from './BridgeGenerationManager';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
