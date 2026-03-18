@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock } from 'lucide-react';
+import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
@@ -731,6 +731,38 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     }
   }, [duration, frameA, frameB, model, prompt]);
 
+  const [isSavingToGallery, setIsSavingToGallery] = useState(false);
+
+  const handleSaveToGallery = useCallback(async () => {
+    if (!generatedVideoUrl) return;
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+    setIsSavingToGallery(true);
+    try {
+      const resp = await fetch(generatedVideoUrl);
+      const blob = await resp.blob();
+      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+      const fileName = `transition_ai_${Date.now()}.${ext}`;
+      const path = `${estabId}/${fileName}`;
+      const { error: uploadError } = await supabase.storage.from('marketing-videos').upload(path, blob, { contentType: blob.type, upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
+      await supabase.from('media_gallery').insert({
+        estabelecimento_id: estabId,
+        tipo: 'video',
+        nome: `Transição AI ${new Date().toLocaleDateString('pt-BR')}`,
+        public_url: urlData.publicUrl,
+        storage_path: path,
+        duracao_segundos: generatedDuration,
+      });
+      toast.success('Transição salva na galeria!');
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+  }, [generatedVideoUrl, generatedDuration]);
+
   const handleInsert = useCallback(() => {
     if (generatedVideoUrl && generatedDuration > 0) {
       onVideoGenerated(generatedVideoUrl, generatedDuration);
@@ -801,7 +833,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -809,7 +841,17 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 className="gap-1.5"
               >
                 <X className="h-3.5 w-3.5" />
-                Descartar e Tentar Novamente
+                Descartar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveToGallery}
+                disabled={isSavingToGallery || videoLoading || videoError}
+                className="gap-1.5"
+              >
+                {isSavingToGallery ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                Salvar na Galeria
               </Button>
               <Button
                 variant="outline"

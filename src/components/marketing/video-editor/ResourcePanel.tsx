@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect, KeyboardEvent, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useGalleryFolders } from '@/hooks/useGalleryFolders';
 import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import GalleryFilteredGrid from '@/components/ui/GalleryFilteredGrid';
 import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen, Wand2,
-  Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles
+  Play, Check, Trash2, Loader2, Plus, Mic, Pencil, ChevronDown, Sparkles, Save
 } from 'lucide-react';
 import MiniEffectPreview from './MiniEffectPreview';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,6 +77,48 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
   const [editingName, setEditingName] = useState('');
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
+  const [savingToGalleryId, setSavingToGalleryId] = useState<string | null>(null);
+
+  const handleSaveTransitionToGallery = useCallback(async (media: ImportedMedia) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+    setSavingToGalleryId(media.id);
+    try {
+      // Check if URL is already in storage
+      const isStorageUrl = media.src.includes('supabase.co/storage');
+      let publicUrl = media.src;
+      let storagePath = '';
+
+      if (!isStorageUrl) {
+        const resp = await fetch(media.src);
+        const blob = await resp.blob();
+        const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+        const fileName = `transition_ai_${Date.now()}.${ext}`;
+        storagePath = `${estabId}/${fileName}`;
+        const { error: uploadError } = await supabase.storage.from('marketing-videos').upload(storagePath, blob, { contentType: blob.type, upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(storagePath);
+        publicUrl = urlData.publicUrl;
+      } else {
+        const match = media.src.match(/marketing-videos\/(.+)$/);
+        storagePath = match?.[1] || '';
+      }
+
+      await supabase.from('media_gallery').insert({
+        estabelecimento_id: estabId,
+        tipo: 'video',
+        nome: media.name || `Transição AI ${new Date().toLocaleDateString('pt-BR')}`,
+        public_url: publicUrl,
+        storage_path: storagePath ? `${storagePath}` : undefined,
+        duracao_segundos: media.duration || null,
+      });
+      toast.success('Transição salva na galeria!');
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setSavingToGalleryId(null);
+    }
+  }, []);
 
   // Sync timeline clips into resource panel so every clip on a track appears in its group
   useEffect(() => {
@@ -422,6 +465,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
               {media.resourceType === 'canvas' && media.canvasJson && (
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleDoubleClickCanvas(media)} title="Editar canvas">
                   <Palette className="h-3 w-3 text-purple-400" />
+                </Button>
+              )}
+              {media.resourceType === 'transition' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  onClick={(e) => { e.stopPropagation(); handleSaveTransitionToGallery(media); }}
+                  disabled={savingToGalleryId === media.id}
+                  title="Salvar na galeria"
+                >
+                  {savingToGalleryId === media.id ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <Save className="h-3 w-3 text-primary" />}
                 </Button>
               )}
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
