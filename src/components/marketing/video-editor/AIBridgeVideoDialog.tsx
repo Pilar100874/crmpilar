@@ -19,6 +19,17 @@ interface AIBridgeVideoDialogProps {
   clipA: TimelineClip;
   clipB: TimelineClip;
   onVideoGenerated: (videoUrl: string, duration: number) => void;
+  onStartBackgroundGeneration?: (params: {
+    frameA: string;
+    frameB: string;
+    prompt: string;
+    model: string;
+    duration: number;
+    clipAName: string;
+    clipBName: string;
+    minimized: boolean;
+  }) => void;
+  activeTask?: BridgeGenerationTask | null;
 }
 
 interface VideoModelInfo {
