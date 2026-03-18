@@ -818,13 +818,19 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
   const effectiveGenerating = isGenerating || (activeTask?.status === 'generating');
   const effectiveProgress = activeTask?.progress ?? 0;
 
-  // If activeTask completed with video, show it
+  // If activeTask completed with video, show it and clear local generating
   useEffect(() => {
-    if (activeTask?.status === 'done' && activeTask.videoUrl && !generatedVideoUrl) {
-      setVideoLoading(true);
-      setVideoError(false);
-      setGeneratedVideoUrl(activeTask.videoUrl);
-      setGeneratedDuration(activeTask.duration);
+    if (activeTask?.status === 'done') {
+      setIsGenerating(false);
+      if (activeTask.videoUrl && !generatedVideoUrl) {
+        setVideoLoading(true);
+        setVideoError(false);
+        setGeneratedVideoUrl(activeTask.videoUrl);
+        setGeneratedDuration(activeTask.duration);
+      }
+    }
+    if (activeTask?.status === 'error') {
+      setIsGenerating(false);
     }
   }, [activeTask?.status, activeTask?.videoUrl, activeTask?.duration, generatedVideoUrl]);
 
@@ -833,7 +839,18 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
   }, [onClose]);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { if (isGenerating && abortRef.current) abortRef.current.abort(); onClose(); } }}>
+    <Dialog open={open} onOpenChange={(o) => {
+      if (!o) {
+        // If using background manager and generating, just minimize (don't abort)
+        if (effectiveGenerating && onStartBackgroundGeneration) {
+          onClose();
+          return;
+        }
+        // Legacy: abort local generation
+        if (isGenerating && abortRef.current) abortRef.current.abort();
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
           <Wand2 className="h-4 w-4 text-primary" />
