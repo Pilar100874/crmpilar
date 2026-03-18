@@ -746,13 +746,35 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 <span className="text-xs font-semibold text-primary">Prévia do Vídeo de Transição</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{generatedDuration}s</span>
               </div>
-              <div className="aspect-video bg-black flex items-center justify-center">
+              <div className="aspect-video bg-black flex items-center justify-center relative">
+                {videoLoading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-xs text-white/70">Carregando vídeo...</span>
+                  </div>
+                )}
+                {videoError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
+                    <X className="h-8 w-8 text-destructive" />
+                    <span className="text-xs text-white/70">Erro ao carregar o vídeo. Tente descartar e gerar novamente.</span>
+                  </div>
+                )}
                 <video
                   src={generatedVideoUrl}
                   controls
                   autoPlay
                   loop
                   className="w-full h-full object-contain"
+                  onLoadedData={() => {
+                    setVideoLoading(false);
+                    setVideoError(false);
+                    toast.success('Vídeo de transição pronto! Confira o resultado.');
+                  }}
+                  onError={() => {
+                    setVideoLoading(false);
+                    setVideoError(true);
+                    toast.error('Falha ao carregar o vídeo gerado. Tente novamente.');
+                  }}
                 />
               </div>
             </div>
