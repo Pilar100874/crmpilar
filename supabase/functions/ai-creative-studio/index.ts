@@ -800,15 +800,32 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     return { error: "Configuração do servidor incompleta (SUPABASE_URL/SERVICE_ROLE_KEY)." };
   }
 
-  // Build apiframe params
+  // Build apiframe params — field names vary per provider
   const afParams: Record<string, any> = {};
   if (params.prompt) afParams.prompt = params.prompt;
-  if (params.imageUrls?.[0]) {
-    afParams.image_url = params.imageUrls[0];
-    afParams.generation_type = "image2video";
+
+  const startImageUrl = params.imageUrls?.[0] || null;
+  const endImageUrl = params.imageUrls?.[1] || null;
+  const isBridge = params.bridgeMode === true;
+
+  if (subModel === "kling-2.5") {
+    // Kling 2.5 Turbo Pro uses start_image / end_image
+    if (startImageUrl) afParams.start_image = startImageUrl;
+    if (endImageUrl && isBridge) afParams.end_image = endImageUrl;
+  } else if (subModel === "kling-2.6") {
+    // Kling 2.6 only supports image_url (first frame)
+    if (startImageUrl) afParams.image_url = startImageUrl;
   } else {
-    afParams.generation_type = "text2video";
+    // Runway & Luma use image_url / end_image_url
+    if (startImageUrl) {
+      afParams.image_url = startImageUrl;
+      afParams.generation_type = "image2video";
+    } else {
+      afParams.generation_type = "text2video";
+    }
+    if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
   }
+
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
   if (params.duration) afParams.duration = params.duration;
 

@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       "midjourney-video-extend": "/extend-video",
       "runway-imagine": "/runway-imagine",
       "kling-2.6": "/kling-imagine-2-6",
-      "kling-2.5-turbo": "/kling-imagine",
+      "kling-2.5-turbo": "/kling-imagine-2-5-turbo-pro",
       "luma-imagine": "/luma-imagine",
       "luma-extend": "/luma-extend",
       // Music
