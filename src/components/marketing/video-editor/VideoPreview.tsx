@@ -539,7 +539,19 @@ const VideoPreview: React.FC<Props> = ({
       if (dragging.mode === 'move') {
         onUpdateClip(dragging.clipId, { x: Math.max(-50, Math.min(150, dragging.origX + dx)), y: Math.max(-50, Math.min(150, dragging.origY + dy)) });
       } else {
-        onUpdateClip(dragging.clipId, { w: Math.max(10, Math.min(200, dragging.origW + dx)), h: Math.max(10, Math.min(200, dragging.origH + dy)) });
+        // Maintain aspect ratio: use the larger delta to scale proportionally
+        const clip = clipsRef.current.find(c => c.id === dragging.clipId);
+        const isVisual = clip && (clip.type === 'image' || clip.type === 'canvas' || clip.type === 'video');
+        if (isVisual && dragging.origW > 0 && dragging.origH > 0) {
+          const aspectRatio = dragging.origW / dragging.origH;
+          // Use diagonal movement for proportional scaling
+          const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy * aspectRatio;
+          const newW = Math.max(10, Math.min(200, dragging.origW + delta));
+          const newH = newW / aspectRatio;
+          onUpdateClip(dragging.clipId, { w: newW, h: Math.max(10, Math.min(200, newH)) });
+        } else {
+          onUpdateClip(dragging.clipId, { w: Math.max(10, Math.min(200, dragging.origW + dx)), h: Math.max(10, Math.min(200, dragging.origH + dy)) });
+        }
       }
     }
   }, [dragging, onUpdateClip]);
