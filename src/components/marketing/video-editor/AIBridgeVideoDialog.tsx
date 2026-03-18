@@ -536,7 +536,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     } finally {
       setIsGenerating(false);
     }
-  }, [duration, enforceExactBridgeFrames, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
+  }, [duration, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
