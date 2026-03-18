@@ -140,7 +140,40 @@ export type TransitionType =
   | 'tumble'
   | 'drop'
   | 'fly-in'
-  | 'fly-out';
+  | 'fly-out'
+  // Cinematográfico
+  | 'cinematic-fade'
+  | 'dolly-zoom'
+  | 'lens-flare'
+  | 'anamorphic-wipe'
+  | 'rack-focus'
+  | 'letterbox-reveal'
+  | 'speed-ramp'
+  | 'film-grain-fade'
+  | 'smoke-reveal'
+  | 'prism-shift'
+  // UGC / Social
+  | 'snap-cut'
+  | 'phone-swipe-up'
+  | 'phone-swipe-left'
+  | 'tiktok-zoom'
+  | 'vlog-jump'
+  | 'selfie-flip'
+  | 'story-slide'
+  | 'boomerang'
+  | 'hand-block'
+  | 'quick-pan'
+  // Marcas Famosas
+  | 'nike-swoosh'
+  | 'apple-fade'
+  | 'netflix-punch'
+  | 'adidas-stripe'
+  | 'coca-wave'
+  | 'samsung-fold'
+  | 'google-morph'
+  | 'disney-sparkle'
+  | 'supreme-drop'
+  | 'luxury-curtain';
 
 export interface TimelineTrack {
   id: string;
