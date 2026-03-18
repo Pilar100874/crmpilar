@@ -1210,14 +1210,31 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       // Kling accepts 5 or 10
       params.duration = rawDur <= 7 ? 5 : 10;
       break;
-    case "replicate":
-      // LTX-Video accepts 2-10s
-      params.duration = Math.min(10, Math.max(2, Math.round(rawDur)));
-      break;
-    default:
-      // Luma, Stability, etc. — keep as-is or default
-      params.duration = Math.max(4, Math.round(rawDur));
-      break;
+     case "replicate":
+       // LTX-Video accepts 2-10s
+       params.duration = Math.min(10, Math.max(2, Math.round(rawDur)));
+       break;
+     case "apiframe": {
+       // Apiframe normalizes internally per sub-model, pass reasonable default
+       const sub = (params.model || "").replace("apiframe/", "");
+       if (sub.includes("kling") || sub.includes("runway") || sub.includes("luma")) {
+         params.duration = rawDur <= 7 ? 5 : 10;
+       } else {
+         params.duration = Math.max(4, Math.round(rawDur));
+       }
+       break;
+     }
+     case "luma":
+       // Luma accepts 5 or 10
+       params.duration = rawDur <= 7 ? 5 : 10;
+       break;
+     case "stability":
+       // Stability SVD accepts ~2-4s
+       params.duration = Math.min(4, Math.max(2, Math.round(rawDur)));
+       break;
+     default:
+       params.duration = Math.max(4, Math.round(rawDur));
+       break;
   }
 
   console.log(`[generate_video] Provider=${provider}, Model=${model}, Duration=${params.duration}s`);
