@@ -827,6 +827,27 @@ const VideoTimelineEditor: React.FC = () => {
     resourcePanelRef.current?.addTransitionItem(transitionName, videoUrl, duration);
   }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
 
+  const handleSnapTogether = useCallback(() => {
+    const selectedIds = state.selectedClipIds;
+    if (selectedIds.length < 2) {
+      toast.error('Selecione pelo menos 2 clipes para grudar');
+      return;
+    }
+    const selectedClips = state.clips
+      .filter(c => selectedIds.includes(c.id))
+      .sort((a, b) => a.startTime - b.startTime);
+
+    let currentEnd = selectedClips[0].startTime + selectedClips[0].duration;
+    for (let i = 1; i < selectedClips.length; i++) {
+      const clip = selectedClips[i];
+      if (clip.startTime !== currentEnd) {
+        timeline.updateClip(clip.id, { startTime: currentEnd });
+      }
+      currentEnd = currentEnd + clip.duration;
+    }
+    toast.success('Clipes grudados em sequência!');
+  }, [state.selectedClipIds, state.clips, timeline]);
+
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
