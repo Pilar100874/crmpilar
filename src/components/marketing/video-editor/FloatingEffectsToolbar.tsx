@@ -356,6 +356,9 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [transPopoverOpen, setTransPopoverOpen] = useState(false);
+  const [audioPopoverOpen, setAudioPopoverOpen] = useState(false);
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   const [originalAudioState, setOriginalAudioState] = useState<{
     audioFilters?: AudioFilter[];
     volumeEnvelope?: VolumeEnvelopePoint[];
