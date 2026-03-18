@@ -847,7 +847,20 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   }
 
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
-  if (params.duration) afParams.duration = params.duration;
+   // AUTO-NORMALIZE duration for apiframe sub-models
+   const afRawDur = Number(params.duration) || 5;
+   if (subModel.includes("kling")) {
+     // Kling via Apiframe accepts only 5 or 10
+     afParams.duration = afRawDur <= 7 ? 5 : 10;
+   } else if (subModel.includes("runway")) {
+     // Runway via Apiframe accepts only 5 or 10
+     afParams.duration = afRawDur <= 7 ? 5 : 10;
+   } else if (subModel.includes("luma")) {
+     // Luma via Apiframe accepts 5 or 10
+     afParams.duration = afRawDur <= 7 ? 5 : 10;
+   } else {
+     afParams.duration = afRawDur;
+   }
 
   console.log(`[apiframe-video] Calling action="${action}" for model="${model}", bridge=${isBridge}, hasStart=${!!startImageUrl}, hasEnd=${!!endImageUrl}`);
 

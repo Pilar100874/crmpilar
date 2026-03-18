@@ -140,14 +140,23 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [prompt, setPrompt] = useState('');
    const [model, setModel] = useState('google/veo-3.1');
 
-   const getDurationOptionsForModel = (m: string): number[] => {
-     if (m.startsWith('kling/')) return [5, 10];
-     if (m.startsWith('runway/')) return [5, 10];
-     if (m.startsWith('openai/sora')) return [4, 8, 12];
-     if (m.startsWith('google/')) return [4, 5, 6, 7, 8];
-     if (m.startsWith('luma/')) return [4, 5];
-     return [2, 3, 4, 5, 6, 8, 10];
-   };
+    const getDurationOptionsForModel = (m: string): number[] => {
+      // Kling (direto ou via Apiframe) aceita apenas 5 ou 10
+      if (m.startsWith('kling/') || m.includes('kling')) return [5, 10];
+      // Runway (direto ou via Apiframe) aceita apenas 5 ou 10
+      if (m.startsWith('runway/') || m.includes('runway')) return [5, 10];
+      // OpenAI Sora aceita apenas 4, 8 ou 12
+      if (m.startsWith('openai/sora')) return [4, 8, 12];
+      // Google Veo aceita 4 a 8
+      if (m.startsWith('google/')) return [4, 5, 6, 7, 8];
+      // Luma (direto ou via Apiframe) aceita 5 ou 10
+      if (m.startsWith('luma/') || m.includes('luma')) return [5, 10];
+      // Stability aceita 2 a 4
+      if (m.startsWith('stability/')) return [2, 3, 4];
+      // Replicate LTX aceita 2 a 10
+      if (m.startsWith('replicate/')) return [2, 3, 4, 5, 6, 7, 8, 9, 10];
+      return [4, 5, 6, 8, 10];
+    };
    const durationOptions = getDurationOptionsForModel(model);
    const [duration, setDuration] = useState(() => getDurationOptionsForModel('google/veo-3.1')[0]);
 
