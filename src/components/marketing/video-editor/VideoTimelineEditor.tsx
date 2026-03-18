@@ -441,11 +441,20 @@ const VideoTimelineEditor: React.FC = () => {
         ])
       );
 
-      const exportStartTs = performance.now();
+      const totalFrames = Math.ceil(duration * fps);
+      const frameInterval = 1 / fps;
       let lastProgress = -1;
 
-      while (true) {
-        const t = Math.min(duration, (performance.now() - exportStartTs) / 1000);
+      // Pause all videos before frame-by-frame export (no real-time playback)
+      for (const el of Object.values(mediaElements)) {
+        if (el instanceof HTMLVideoElement) el.pause();
+      }
+      for (const audio of Object.values(audioElements)) {
+        audio.pause();
+      }
+
+      for (let frameIdx = 0; frameIdx <= totalFrames; frameIdx++) {
+        const t = Math.min(duration, frameIdx * frameInterval);
 
         ctx.fillStyle = videoConfig.backgroundColor;
         ctx.fillRect(0, 0, resW, resH);
@@ -502,15 +511,9 @@ const VideoTimelineEditor: React.FC = () => {
               const clipTime = Math.max(0, t - clip.startTime + (clip.trimStart || 0));
               const maxTime = Number.isFinite(el.duration) ? Math.max(0, el.duration - 0.001) : clipTime;
               const desiredTime = Math.max(0, Math.min(clipTime, maxTime));
-              const drift = Math.abs(el.currentTime - desiredTime);
 
-              if (el.paused || drift > Math.max(0.12, 1 / fps)) {
-                await seekVideo(el, desiredTime);
-              }
-
-              if (el.paused) {
-                try { await el.play(); } catch { }
-              }
+              // Always seek precisely in frame-by-frame mode
+              await seekVideo(el, desiredTime);
             }
 
             const elW = el instanceof HTMLVideoElement ? el.videoWidth : el.naturalWidth;
@@ -531,54 +534,36 @@ const VideoTimelineEditor: React.FC = () => {
           }
         }
 
-        for (const [id, el] of Object.entries(mediaElements)) {
-          if (!(el instanceof HTMLVideoElement)) continue;
-          if (!activeVideoIds.has(id) && !el.paused) el.pause();
-        }
-
+        // Handle audio timing for clips that have audio tracks
         for (const [audioId, audio] of Object.entries(audioElements)) {
           const clip = state.clips.find((c) => c.id === audioId);
-          if (!clip || isTrackMutedForExport(clip.trackId)) {
-            if (!audio.paused) audio.pause();
-            continue;
-          }
+          if (!clip || isTrackMutedForExport(clip.trackId)) continue;
 
           const active = t >= clip.startTime && t < clip.startTime + clip.duration;
-          if (!active) {
-            if (!audio.paused) audio.pause();
-            continue;
-          }
+          if (!active) continue;
 
           const clipTime = Math.max(0, t - clip.startTime + (clip.trimStart || 0));
           const maxTime = Number.isFinite(audio.duration) ? Math.max(0, audio.duration - 0.001) : clipTime;
           const desiredTime = Math.max(0, Math.min(clipTime, maxTime));
-
-          if (audio.paused || Math.abs(audio.currentTime - desiredTime) > 0.18) {
-            audio.currentTime = desiredTime;
-          }
-
-          if (audio.paused) {
-            try { await audio.play(); } catch { }
-          }
+          audio.currentTime = desiredTime;
         }
 
-        const progress = Math.min(90, Math.round((t / duration) * 90));
+        const progress = Math.min(90, Math.round((frameIdx / totalFrames) * 90));
         if (progress !== lastProgress) {
           lastProgress = progress;
           setExportProgress(progress);
         }
 
-        if (t >= duration) break;
+        // Request the frame from the canvas capture stream
+        try {
+          canvasTrack?.requestFrame();
+        } catch {
+          // track may not support requestFrame in all browsers
+        }
 
+        // Yield to browser to allow MediaRecorder to process the frame
         await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
-            try {
-              canvasTrack?.requestFrame();
-            } catch {
-              // track may not support requestFrame in all browsers
-            }
-            resolve();
-          });
+          requestAnimationFrame(() => resolve());
         });
       }
 
