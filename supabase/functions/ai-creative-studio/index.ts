@@ -1079,6 +1079,11 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     }
   }
 
+  // Apiframe handles its own key via the proxy edge function
+  if (provider === "apiframe") {
+    return generateVideoApiframe(estabelecimentoId, params);
+  }
+
   const apiKey = await fetchApiKey(estabelecimentoId, provider);
   if (!apiKey) {
     throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
