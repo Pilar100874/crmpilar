@@ -502,8 +502,14 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const applyPreset = (presetId: string) => {
     const preset = EFFECT_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
-    const filters: VideoFilter[] = preset.filters.map((f, i) => ({ ...f, id: `f_${Date.now()}_${i}` }));
-    onUpdateClip(selectedClip.id, { filters });
+
+    const existing = selectedClip.filters || [];
+    const presetFilters: VideoFilter[] = preset.filters.map((f, i) => ({
+      ...f,
+      id: `f_${Date.now()}_${i}`,
+    }));
+
+    onUpdateClip(selectedClip.id, { filters: [...existing, ...presetFilters] });
   };
 
   const toggleFilter = (type: FilterType) => {
@@ -534,12 +540,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { filters: [] });
   };
 
+  const restoreAssetOriginalFilters = () => {
+    onUpdateClip(selectedClip.id, { filters: [] });
+  };
+
   // === Audio filter handlers ===
   const addAudioFilter = (type: AudioFilterType) => {
     const def = AUDIO_FILTER_DEFS.find(f => f.type === type);
     if (!def) return;
     const existing = selectedClip.audioFilters || [];
-    if (existing.some(f => f.type === type)) return;
     const params: Record<string, number> = {};
     def.params?.forEach(p => { params[p.key] = p.defaultValue; });
     onUpdateClip(selectedClip.id, {
@@ -568,16 +577,32 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { audioFilters: [] });
   };
 
+  const restoreAssetOriginalAudio = () => {
+    onUpdateClip(selectedClip.id, {
+      audioFilters: [],
+      volumeEnvelope: undefined,
+      playbackRate: 1,
+      volume: 1,
+    });
+  };
+
+  const clearAllTransitionsToOriginal = () => {
+    onUpdateClip(selectedClip.id, { transitions: {} });
+  };
+
   const applyAudioPreset = (presetId: string) => {
     const preset = AUDIO_PRESETS.find(p => p.id === presetId);
     if (!preset) return;
+
+    const existing = selectedClip.audioFilters || [];
     const audioFilters: AudioFilter[] = preset.filters.map((f, i) => {
       const def = AUDIO_FILTER_DEFS.find(d => d.type === f.type);
       const params: Record<string, number> = {};
       def?.params?.forEach(p => { params[p.key] = p.defaultValue; });
       return { ...f, id: `af_${Date.now()}_${i}`, params: Object.keys(params).length > 0 ? params : undefined };
     });
-    onUpdateClip(selectedClip.id, { audioFilters });
+
+    onUpdateClip(selectedClip.id, { audioFilters: [...existing, ...audioFilters] });
   };
 
   // === Volume envelope helpers ===
@@ -859,8 +884,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     <p className="text-xs font-semibold flex items-center gap-1.5">
                       <Headphones className="h-3.5 w-3.5 text-primary" /> Efeitos de Áudio Profissional
                     </p>
-                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={resetAudioFilters} disabled={!hasAudioFilters}>
-                      <RotateCcw className="h-3 w-3" /> Resetar
+                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={restoreAssetOriginalAudio}>
+                      <RotateCcw className="h-3 w-3" /> Original
                     </Button>
                   </div>
                   {/* Tab switcher */}
@@ -1179,8 +1204,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   <p className="text-xs font-semibold flex items-center gap-1.5">
                     <Wand2 className="h-3.5 w-3.5 text-primary" /> Filtros & Presets
                   </p>
-                  <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={resetFilters} disabled={!hasFilters}>
-                    <RotateCcw className="h-3 w-3" /> Resetar
+                  <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={restoreAssetOriginalFilters}>
+                    <RotateCcw className="h-3 w-3" /> Original
                   </Button>
                 </div>
               </div>
