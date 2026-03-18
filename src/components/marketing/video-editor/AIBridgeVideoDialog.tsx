@@ -352,10 +352,15 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // If clip has custom position/size/rotation, apply transforms
-    const hasCustomTransform = clip && (
-      clip.x !== undefined || clip.y !== undefined ||
-      clip.w !== undefined || clip.h !== undefined ||
+    // Always fit the image to the full canvas first (contain mode)
+    const fitScale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
+    const w = sourceWidth * fitScale;
+    const h = sourceHeight * fitScale;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // Check if clip has visual transforms (rotation, flip, skew) — NOT position/size
+    const hasVisualTransform = clip && (
       (clip.rotation && clip.rotation !== 0) ||
       (clip.scaleX !== undefined && clip.scaleX !== 1) ||
       (clip.scaleY !== undefined && clip.scaleY !== 1) ||
@@ -363,14 +368,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       (clip.skewY && clip.skewY !== 0)
     );
 
-    if (hasCustomTransform && clip) {
-      // Use clip's transform properties relative to a 1280x720 composition
-      const compW = canvas.width;
-      const compH = canvas.height;
-      const drawW = clip.w ?? compW;
-      const drawH = clip.h ?? compH;
-      const drawX = clip.x ?? ((compW - drawW) / 2);
-      const drawY = clip.y ?? ((compH - drawH) / 2);
+    if (hasVisualTransform && clip) {
       const rotation = (clip.rotation || 0) * Math.PI / 180;
       const sx = clip.scaleX ?? 1;
       const sy = clip.scaleY ?? 1;
@@ -378,20 +376,13 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       const skewYRad = (clip.skewY || 0) * Math.PI / 180;
 
       ctx.save();
-      // Translate to center of clip area, apply transforms, then draw centered
-      const cx = drawX + drawW / 2;
-      const cy = drawY + drawH / 2;
       ctx.translate(cx, cy);
       ctx.rotate(rotation);
       ctx.scale(sx, sy);
       ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
-      ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.drawImage(source, -w / 2, -h / 2, w, h);
       ctx.restore();
     } else {
-      // Default: fit to canvas (contain)
-      const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
-      const w = sourceWidth * scale;
-      const h = sourceHeight * scale;
       ctx.drawImage(source, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
     }
   }, []);
