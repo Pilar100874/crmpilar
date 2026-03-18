@@ -4,7 +4,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Scissors, Copy, Trash2,
   ZoomIn, ZoomOut, Film, Maximize2, Minimize2, Settings2, Magnet, FolderOpen,
   Download, Loader2, Save, GripHorizontal, Clock, Layers, ChevronDown, Wand2,
-  Plus, ArrowLeft, Clapperboard
+  Plus, ArrowLeft, Clapperboard, Link2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -827,6 +827,27 @@ const VideoTimelineEditor: React.FC = () => {
     resourcePanelRef.current?.addTransitionItem(transitionName, videoUrl, duration);
   }, [bridgeClipA, bridgeClipB, state.clips, state.tracks, timeline]);
 
+  const handleSnapTogether = useCallback(() => {
+    const selectedIds = state.selectedClipIds;
+    if (selectedIds.length < 2) {
+      toast.error('Selecione pelo menos 2 clipes para grudar');
+      return;
+    }
+    const selectedClips = state.clips
+      .filter(c => selectedIds.includes(c.id))
+      .sort((a, b) => a.startTime - b.startTime);
+
+    let currentEnd = selectedClips[0].startTime + selectedClips[0].duration;
+    for (let i = 1; i < selectedClips.length; i++) {
+      const clip = selectedClips[i];
+      if (clip.startTime !== currentEnd) {
+        timeline.updateClip(clip.id, { startTime: currentEnd });
+      }
+      currentEnd = currentEnd + clip.duration;
+    }
+    toast.success('Clipes grudados em sequência!');
+  }, [state.selectedClipIds, state.clips, timeline]);
+
   const handleOpenCanvasFromToolbar = useCallback(() => {
     setCanvasEditClipId(null);
     setCanvasEditResourceId(null);
@@ -1095,6 +1116,9 @@ const VideoTimelineEditor: React.FC = () => {
           </Button>
           <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8" onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
             <Magnet className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSnapTogether} disabled={state.selectedClipIds.length < 2} title="Grudar clipes selecionados (remover gaps)">
+            <Link2 className="h-3.5 w-3.5" />
           </Button>
           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleOpenBridgeVideo} disabled={state.selectedClipIds.length !== 2} title="Gerar Vídeo de Transição AI entre 2 clipes">
             <Wand2 className="h-3.5 w-3.5" />
