@@ -250,6 +250,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
    };
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
@@ -575,8 +576,11 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsGenerating(true);
     try {
+      const signal = controller.signal;
       const uploadFrame = async (dataUrl: string, label: string): Promise<string> => {
         const resp = await fetch(dataUrl);
         const blob = await resp.blob();
@@ -624,6 +628,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({ action: 'generate_video', params: requestParams }),
+          signal,
         });
 
         if (!response.ok) {
@@ -650,6 +655,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ action: 'start_apiframe_video', params: requestParams }),
+        signal,
       });
 
       if (!startResp.ok) {
@@ -672,7 +678,11 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (!started?.taskId) throw new Error('Nenhuma tarefa de vídeo foi iniciada');
 
       for (let attempt = 0; attempt < 120; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        if (signal.aborted) throw new DOMException('Geração cancelada', 'AbortError');
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(resolve, 5000);
+          signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Geração cancelada', 'AbortError')); }, { once: true });
+        });
 
         const pollResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
           method: 'POST',
@@ -684,6 +694,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
             action: 'fetch_apiframe_video',
             params: { estabelecimentoId: estabId, taskId: started.taskId },
           }),
+          signal,
         });
 
         if (!pollResp.ok) {
@@ -706,11 +717,16 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
 
       throw new Error('Timeout: a geração demorou mais de 10 minutos. Tente novamente.');
     } catch (err: any) {
-      const msg = err?.message || 'Erro desconhecido';
-      if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
-      else if (msg.includes('402') || msg.includes('billing') || msg.includes('insufficient') || msg.includes('Credits') || msg.includes('exclusively available')) toast.error('Créditos insuficientes. Adicione saldo no provedor.');
-      else toast.error('Erro ao gerar vídeo: ' + msg.substring(0, 120));
+      if (err?.name === 'AbortError') {
+        toast.info('Geração cancelada.');
+      } else {
+        const msg = err?.message || 'Erro desconhecido';
+        if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
+        else if (msg.includes('402') || msg.includes('billing') || msg.includes('insufficient') || msg.includes('Credits') || msg.includes('exclusively available')) toast.error('Créditos insuficientes. Adicione saldo no provedor.');
+        else toast.error('Erro ao gerar vídeo: ' + msg.substring(0, 120));
+      }
     } finally {
+      abortRef.current = null;
       setIsGenerating(false);
     }
   }, [duration, frameA, frameB, model, prompt]);
@@ -722,6 +738,13 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     }
   }, [generatedVideoUrl, generatedDuration, onVideoGenerated, onClose]);
 
+  const handleCancelGeneration = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    onClose();
+  }, [onClose]);
+
   const handleDiscardPreview = useCallback(() => {
     setGeneratedVideoUrl(null);
     setGeneratedDuration(0);
@@ -730,7 +753,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { if (isGenerating && abortRef.current) abortRef.current.abort(); onClose(); } }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
           <Wand2 className="h-4 w-4 text-primary" />
@@ -1003,7 +1026,9 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
 
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
-              <Button variant="outline" size="sm" onClick={onClose} disabled={isGenerating}>Cancelar</Button>
+              <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
+                {isGenerating ? 'Cancelar Geração' : 'Cancelar'}
+              </Button>
               <Button
                 size="sm"
                 onClick={handleGenerate}
