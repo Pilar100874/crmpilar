@@ -662,7 +662,8 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (started?.error) throw new Error(started.error);
 
       if (started?.videoUrl) {
-        toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+        setVideoLoading(true);
+        setVideoError(false);
         setGeneratedVideoUrl(started.videoUrl);
         setGeneratedDuration(duration);
         return;
