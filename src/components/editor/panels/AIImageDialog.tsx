@@ -84,12 +84,13 @@ const AIImageDialog = ({ open, onOpenChange, provider = 'lovable-ai' }: AIImageD
 
     } catch (error: any) {
       console.error("Erro:", error);
-      if (error?.message?.includes('429')) {
+      const errMsg = error?.message || '';
+      if (errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('Rate limit')) {
         toast.error("Limite de requisições excedido. Tente novamente mais tarde.");
-      } else if (error?.message?.includes('402')) {
-        toast.error("Créditos insuficientes. Adicione mais créditos.");
+      } else if (errMsg.includes('402') || errMsg.includes('billing') || errMsg.includes('insufficient') || errMsg.includes('Credits') || errMsg.includes('exclusively available')) {
+        toast.error("Créditos insuficientes. Adicione saldo no provedor.");
       } else {
-        toast.error(error?.message || "Erro ao gerar imagem");
+        toast.error(errMsg.substring(0, 150) || "Erro ao gerar imagem");
       }
     } finally {
       setIsGenerating(false);
