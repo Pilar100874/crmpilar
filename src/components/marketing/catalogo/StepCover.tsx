@@ -215,7 +215,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
       }
     } catch (error: any) {
       console.error('Error generating text:', error);
-      toast.error(error.message || 'Erro ao gerar texto');
+      const msg = error?.message || '';
+      if (msg.includes('402') || msg.includes('Créditos') || msg.includes('credits') || msg.includes('billing')) {
+        toast.error('💳 Créditos insuficientes. Adicione saldo no provedor.');
+      } else if (msg.includes('429') || msg.includes('Limite') || msg.includes('Rate limit')) {
+        toast.error('⏳ Limite de requisições excedido. Aguarde e tente novamente.');
+      } else {
+        toast.error(msg.substring(0, 150) || 'Erro ao gerar texto');
+      }
     } finally {
       setGeneratingText(false);
     }
