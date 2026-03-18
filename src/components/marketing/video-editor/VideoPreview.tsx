@@ -399,21 +399,21 @@ const VideoPreview: React.FC<Props> = ({
 
   const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
 
+  const trackIndexMap = useMemo(() => new Map(tracks.map((t, i) => [t.id, i])), [tracks]);
+
   const sortedActiveClips = useMemo(() => {
-    const trackIndexMap = new Map(tracks.map((t, i) => [t.id, i]));
     return [...activeClips].sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
-  }, [activeClips, tracks]);
+  }, [activeClips, trackIndexMap]);
 
   const activeVisuals = useMemo(() => sortedActiveClips.filter((c) => c.type === 'video' || c.type === 'image' || c.type === 'canvas'), [sortedActiveClips]);
   const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
 
-  // Pre-load upcoming video clips (within 1s) to avoid flash on transition
   const PRELOAD_WINDOW = 1.0;
   const preloadVideoClips = useMemo(() => {
     return clips.filter(c => {
       if (c.type !== 'video' || !c.src) return false;
-      if (activeClipIds.includes(c.id)) return false; // already active
+      if (activeClipIds.includes(c.id)) return false;
       const track = tracks.find(t => t.id === c.trackId);
       if (!track || !track.visible) return false;
       const timeUntilStart = c.startTime - currentTime;
@@ -421,30 +421,33 @@ const VideoPreview: React.FC<Props> = ({
     });
   }, [clips, tracks, currentTime, activeClipIds]);
 
+  const stagedVisuals = useMemo(() => {
+    const merged = new Map<string, TimelineClip>();
+    activeVisuals.forEach(clip => merged.set(clip.id, clip));
+    preloadVideoClips.forEach(clip => merged.set(clip.id, clip));
+    return [...merged.values()].sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
+  }, [activeVisuals, preloadVideoClips, trackIndexMap]);
+
   const clipsRef = useRef(clips);
   clipsRef.current = clips;
 
-  // Sync active + preloaded video elements to correct time
   useEffect(() => {
-    const allVideoIds = activeVideoIds.split(',').filter(Boolean);
+    const allVideoIds = [
+      ...activeVideoIds.split(',').filter(Boolean),
+      ...preloadVideoClips.map(clip => clip.id),
+    ];
+
     allVideoIds.forEach((clipId) => {
       const vid = videoRefs.current[clipId];
       const clip = clipsRef.current.find(c => c.id === clipId);
-      if (vid && clip?.src) {
-        const clipTime = currentTime - clip.startTime + (clip.trimStart || 0);
-        if (Math.abs(vid.currentTime - clipTime) > 0.12) vid.currentTime = clipTime;
-      }
+      if (!vid || !clip?.src) return;
+
+      const isPreload = !activeClipIds.includes(clipId);
+      const clipTime = isPreload ? (clip.trimStart || 0) : currentTime - clip.startTime + (clip.trimStart || 0);
+      if (Math.abs(vid.currentTime - clipTime) > 0.12) vid.currentTime = clipTime;
+      if (isPreload && !vid.paused) vid.pause();
     });
-    // Pre-seek upcoming clips to their start frame
-    preloadVideoClips.forEach((clip) => {
-      const vid = videoRefs.current[clip.id];
-      if (vid) {
-        const seekTo = clip.trimStart || 0;
-        if (Math.abs(vid.currentTime - seekTo) > 0.12) vid.currentTime = seekTo;
-        if (!vid.paused) vid.pause();
-      }
-    });
-  }, [currentTime, activeVideoIds, preloadVideoClips]);
+  }, [currentTime, activeVideoIds, preloadVideoClips, activeClipIds]);
 
   useEffect(() => {
     activeVideoIds.split(',').filter(Boolean).forEach((clipId) => {
