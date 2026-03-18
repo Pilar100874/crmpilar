@@ -591,6 +591,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
     // Use background generation manager if available
     if (onStartBackgroundGeneration) {
+      setIsGenerating(true);
       onStartBackgroundGeneration({
         frameA,
         frameB,
