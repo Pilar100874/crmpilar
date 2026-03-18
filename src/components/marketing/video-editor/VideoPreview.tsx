@@ -580,6 +580,8 @@ const VideoPreview: React.FC<Props> = ({
                   outlineOffset: '-1px', zIndex, transition: 'none',
                   transform: [
                     `rotate(${clip.rotation ?? 0}deg)`,
+                    `skewX(${clip.skewX ?? 0}deg)`,
+                    `skewY(${clip.skewY ?? 0}deg)`,
                     `scaleX(${clip.scaleX ?? 1})`,
                     `scaleY(${clip.scaleY ?? 1})`,
                     transitionStyle.transform || '',
@@ -589,6 +591,8 @@ const VideoPreview: React.FC<Props> = ({
                   ...((() => {
                     const combinedTransform = [
                       `rotate(${clip.rotation ?? 0}deg)`,
+                      `skewX(${clip.skewX ?? 0}deg)`,
+                      `skewY(${clip.skewY ?? 0}deg)`,
                       `scaleX(${clip.scaleX ?? 1})`,
                       `scaleY(${clip.scaleY ?? 1})`,
                       transitionStyle.transform || '',
