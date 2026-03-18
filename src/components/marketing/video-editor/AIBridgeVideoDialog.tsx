@@ -296,6 +296,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [editText, setEditText] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newText, setNewText] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ cinematic: true, ugc: true });
 
   useEffect(() => {
     if (open) setSuggestions(loadCustomPrompts());
