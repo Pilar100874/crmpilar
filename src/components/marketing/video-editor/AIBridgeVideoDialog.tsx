@@ -1136,6 +1136,18 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
               <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
                 {effectiveGenerating ? 'Cancelar Geração' : 'Cancelar'}
               </Button>
+              {effectiveGenerating && onStartBackgroundGeneration && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMinimize}
+                  className="gap-1.5"
+                  title="Minimizar e continuar em segundo plano"
+                >
+                  <Minimize2 className="h-3.5 w-3.5" />
+                  Minimizar
+                </Button>
+              )}
               <Button
                 size="sm"
                 onClick={handleGenerate}
