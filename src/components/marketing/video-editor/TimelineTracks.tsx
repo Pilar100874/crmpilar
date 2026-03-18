@@ -30,12 +30,13 @@ interface Props {
   onUpdateClip: (id: string, updates: Partial<TimelineClip>) => void;
   onDeselectAll: () => void;
   onSeek: (time: number) => void;
+  onPause?: () => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
   onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
 }
 
-const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
+const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, onDeselectAll, onSeek, onPause, onDoubleClickClip, onAddClip, onAddEffectClip }) => {
   const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropTargetTrackId, setDropTargetTrackId] = useState<string | null>(null);
