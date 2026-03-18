@@ -67,12 +67,10 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
 const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
 const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
   'google/veo-3.1': 'google', 'google/veo-3.1-fast': 'google', 'google/veo-3': 'google', 'google/veo-2': 'google',
-  'openai/sora-3': 'openai', 'openai/sora-2': 'openai',
   'runway/gen4': 'runway', 'runway/gen3-alpha-turbo': 'runway',
   'kling/v2.1': 'kling', 'kling/v1.6': 'kling',
   'pika/v2.2': 'pika', 'minimax/video-01': 'minimax',
   'luma/dream-machine-1.5': 'luma', 'stability/stable-video': 'stability',
-  'replicate/ltx-video': 'replicate',
 };
 
 const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
