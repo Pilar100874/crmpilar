@@ -352,7 +352,7 @@ const VideoPreview: React.FC<Props> = ({
   const CANVAS_H = CANVAS_W / aspectRatio;
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
-  const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize' | 'rotate'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number; origRotation?: number; centerX?: number; centerY?: number } | null>(null);
+  const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize' | 'rotate'; handle?: 'tl' | 'tr' | 'bl' | 'br' | 't' | 'b' | 'l' | 'r'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number; origRotation?: number; centerX?: number; centerY?: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewAnim, setPreviewAnim] = useState<{ clipId: string; phase: 'entrance' | 'exit'; startTime: number } | null>(null);
 
@@ -499,7 +499,7 @@ const VideoPreview: React.FC<Props> = ({
     return {};
   }, [currentTime, previewAnim, previewProgress]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize' | 'rotate') => {
+  const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize' | 'rotate', handle?: 'tl' | 'tr' | 'bl' | 'br' | 't' | 'b' | 'l' | 'r') => {
     e.stopPropagation(); e.preventDefault();
     const clip = clipsRef.current.find(c => c.id === clipId);
     if (!clip || clip.locked) return;
@@ -514,9 +514,9 @@ const VideoPreview: React.FC<Props> = ({
       const ch = clip.h ?? 100;
       const centerX = rect.left + ((cx + cw / 2) / 100) * rect.width;
       const centerY = rect.top + ((cy + ch / 2) / 100) * rect.height;
-      setDragging({ clipId, mode, startX: e.clientX, startY: e.clientY, origX: cx, origY: cy, origW: cw, origH: ch, origRotation: clip.rotation ?? 0, centerX, centerY });
+      setDragging({ clipId, mode, handle, startX: e.clientX, startY: e.clientY, origX: cx, origY: cy, origW: cw, origH: ch, origRotation: clip.rotation ?? 0, centerX, centerY });
     } else {
-      setDragging({ clipId, mode, startX: e.clientX, startY: e.clientY, origX: clip.x ?? 0, origY: clip.y ?? 0, origW: clip.w ?? 100, origH: clip.h ?? 100 });
+      setDragging({ clipId, mode, handle, startX: e.clientX, startY: e.clientY, origX: clip.x ?? 0, origY: clip.y ?? 0, origW: clip.w ?? 100, origH: clip.h ?? 100 });
     }
   }, [onSelectClip]);
 
@@ -528,7 +528,6 @@ const VideoPreview: React.FC<Props> = ({
       let deltaDeg = ((currentAngle - startAngle) * 180) / Math.PI;
       let newRotation = ((dragging.origRotation ?? 0) + deltaDeg) % 360;
       if (newRotation < 0) newRotation += 360;
-      // Snap to 0/90/180/270 when close
       for (const snap of [0, 90, 180, 270, 360]) {
         if (Math.abs(newRotation - snap) < 5) { newRotation = snap % 360; break; }
       }
@@ -539,17 +538,46 @@ const VideoPreview: React.FC<Props> = ({
       if (dragging.mode === 'move') {
         onUpdateClip(dragging.clipId, { x: Math.max(-50, Math.min(150, dragging.origX + dx)), y: Math.max(-50, Math.min(150, dragging.origY + dy)) });
       } else {
-        const clip = clipsRef.current.find(c => c.id === dragging.clipId);
-        const isVisual = clip && (clip.type === 'image' || clip.type === 'canvas' || clip.type === 'video');
-        if (isVisual && dragging.origW > 0 && dragging.origH > 0) {
-          const aspectRatio = dragging.origW / dragging.origH;
-          const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy * aspectRatio;
-          const newW = Math.max(5, dragging.origW + delta);
-          const newH = newW / aspectRatio;
-          onUpdateClip(dragging.clipId, { w: newW, h: Math.max(5, newH) });
+        const h = dragging.handle;
+        const updates: Partial<TimelineClip> = {};
+
+        if (h === 'l') {
+          // Left edge: move x, shrink/grow width
+          const newW = Math.max(5, dragging.origW - dx);
+          updates.x = dragging.origX + (dragging.origW - newW);
+          updates.w = newW;
+        } else if (h === 'r') {
+          updates.w = Math.max(5, dragging.origW + dx);
+        } else if (h === 't') {
+          const newH = Math.max(5, dragging.origH - dy);
+          updates.y = dragging.origY + (dragging.origH - newH);
+          updates.h = newH;
+        } else if (h === 'b') {
+          updates.h = Math.max(5, dragging.origH + dy);
+        } else if (h === 'tl') {
+          const newW = Math.max(5, dragging.origW - dx);
+          const newH = Math.max(5, dragging.origH - dy);
+          updates.x = dragging.origX + (dragging.origW - newW);
+          updates.y = dragging.origY + (dragging.origH - newH);
+          updates.w = newW;
+          updates.h = newH;
+        } else if (h === 'tr') {
+          const newH = Math.max(5, dragging.origH - dy);
+          updates.y = dragging.origY + (dragging.origH - newH);
+          updates.w = Math.max(5, dragging.origW + dx);
+          updates.h = newH;
+        } else if (h === 'bl') {
+          const newW = Math.max(5, dragging.origW - dx);
+          updates.x = dragging.origX + (dragging.origW - newW);
+          updates.w = newW;
+          updates.h = Math.max(5, dragging.origH + dy);
         } else {
-          onUpdateClip(dragging.clipId, { w: Math.max(5, dragging.origW + dx), h: Math.max(5, dragging.origH + dy) });
+          // br (default) — free resize from bottom-right
+          updates.w = Math.max(5, dragging.origW + dx);
+          updates.h = Math.max(5, dragging.origH + dy);
         }
+
+        onUpdateClip(dragging.clipId, updates);
       }
     }
   }, [dragging, onUpdateClip]);
@@ -691,8 +719,8 @@ const VideoPreview: React.FC<Props> = ({
 
                 {isSelected && (
                   <>
-                    {/* Resize handle - bottom right */}
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')}>
+                    {/* Resize handle - bottom right (main grip) */}
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'br')}>
                       <svg viewBox="0 0 16 16" className="w-full h-full text-primary-foreground p-0.5">
                         <path d="M14 2v12H2" fill="none" stroke="currentColor" strokeWidth="2" />
                       </svg>
@@ -737,9 +765,15 @@ const VideoPreview: React.FC<Props> = ({
                     </div>
 
                     {/* Corner resize handles */}
-                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-nw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
-                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-ne-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
-                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-sw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
+                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-nw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'tl')} />
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-ne-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'tr')} />
+                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-sw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'bl')} />
+
+                    {/* Edge resize handles */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-1.5 bg-primary border border-primary-foreground rounded-sm cursor-n-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 't')} />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-1.5 bg-primary border border-primary-foreground rounded-sm cursor-s-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'b')} />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary border border-primary-foreground rounded-sm cursor-w-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'l')} />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary border border-primary-foreground rounded-sm cursor-e-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'r')} />
                   </>
                 )}
               </div>
