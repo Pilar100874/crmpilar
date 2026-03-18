@@ -223,7 +223,7 @@ function saveCustomPrompts(prompts: typeof DEFAULT_TRANSITION_PROMPTS) {
 }
 
 const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
-  open, onClose, clipA, clipB, onVideoGenerated, onStartBackgroundGeneration, activeTask
+  open, onClose, clipA, clipB, onVideoGenerated, onStartBackgroundGeneration, activeTask, hasActiveGeneration
 }) => {
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
