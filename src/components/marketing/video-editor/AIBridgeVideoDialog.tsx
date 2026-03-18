@@ -555,9 +555,9 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (result?.error) throw new Error(result.error);
       if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
 
-      toast.success('Vídeo de transição gerado com sucesso!');
-      onVideoGenerated(result.videoUrl, duration);
-      onClose();
+      toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+      setGeneratedVideoUrl(result.videoUrl);
+      setGeneratedDuration(duration);
     } catch (err: any) {
       const msg = err?.message || 'Erro desconhecido';
       if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
