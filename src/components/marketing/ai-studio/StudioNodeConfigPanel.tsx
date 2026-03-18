@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
-import { getActiveUnifiedProvider, shouldHideModel } from './unifiedProvidersConfig';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
