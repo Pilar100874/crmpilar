@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight
+  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge
 } from 'lucide-react';
-import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS } from './types';
+import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS, VolumeEnvelopePoint } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
 
 interface Props {
@@ -351,8 +351,11 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [selectedFilterCat, setSelectedFilterCat] = useState<string>('cor');
   const [selectedAudioCat, setSelectedAudioCat] = useState<string>('Equalizador');
   const [selectedAudioPresetCat, setSelectedAudioPresetCat] = useState<string>('Podcast');
-  const [audioTab, setAudioTab] = useState<'presets' | 'filters' | 'active'>('presets');
+  const [audioTab, setAudioTab] = useState<'presets' | 'filters' | 'active' | 'wave' | 'speed'>('presets');
   const [expandedAudioParams, setExpandedAudioParams] = useState<Record<string, boolean>>({});
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const isAudio = selectedClip.type === 'audio';
@@ -471,9 +474,124 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { audioFilters });
   };
 
+  // === Volume envelope helpers ===
+  const ENVELOPE_PRESETS = [
+    { id: 'linear', label: 'Linear', icon: '📏', points: [{ time: 0, value: 1 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-in', label: 'Fade In', icon: '📈', points: [{ time: 0, value: 0 }, { time: 0.3, value: 1 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-out', label: 'Fade Out', icon: '📉', points: [{ time: 0, value: 1 }, { time: 0.7, value: 1 }, { time: 1, value: 0 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-in-out', label: 'Fade In/Out', icon: '🔔', points: [{ time: 0, value: 0 }, { time: 0.15, value: 1 }, { time: 0.85, value: 1 }, { time: 1, value: 0 }] as VolumeEnvelopePoint[] },
+    { id: 'crescendo', label: 'Crescendo', icon: '📐', points: [{ time: 0, value: 0.2 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'decrescendo', label: 'Decresc.', icon: '📐', points: [{ time: 0, value: 1 }, { time: 1, value: 0.2 }] as VolumeEnvelopePoint[] },
+    { id: 'duck', label: 'Ducking', icon: '🦆', points: [{ time: 0, value: 1 }, { time: 0.1, value: 0.3 }, { time: 0.9, value: 0.3 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'swell', label: 'Swell', icon: '🌊', points: [{ time: 0, value: 0.3 }, { time: 0.5, value: 1 }, { time: 1, value: 0.3 }] as VolumeEnvelopePoint[] },
+    { id: 'pulse', label: 'Pulso', icon: '💓', points: [
+      { time: 0, value: 0.5 }, { time: 0.125, value: 1 }, { time: 0.25, value: 0.5 },
+      { time: 0.375, value: 1 }, { time: 0.5, value: 0.5 }, { time: 0.625, value: 1 },
+      { time: 0.75, value: 0.5 }, { time: 0.875, value: 1 }, { time: 1, value: 0.5 },
+    ] as VolumeEnvelopePoint[] },
+    { id: 'staircase', label: 'Escada', icon: '🪜', points: [
+      { time: 0, value: 0.2 }, { time: 0.25, value: 0.2 }, { time: 0.25, value: 0.4 },
+      { time: 0.5, value: 0.4 }, { time: 0.5, value: 0.7 }, { time: 0.75, value: 0.7 },
+      { time: 0.75, value: 1 }, { time: 1, value: 1 },
+    ] as VolumeEnvelopePoint[] },
+  ];
+
+  const SVG_W = 400, SVG_H = 110, SVG_PAD_X = 10, SVG_PAD_Y = 12;
+  const GRAPH_W = SVG_W - SVG_PAD_X * 2, GRAPH_H = SVG_H - SVG_PAD_Y * 2;
+  const toSvgX = (t: number) => SVG_PAD_X + t * GRAPH_W;
+  const toSvgY = (v: number) => SVG_PAD_Y + (1 - v) * GRAPH_H;
+  const fromSvgX = (sx: number) => Math.max(0, Math.min(1, (sx - SVG_PAD_X) / GRAPH_W));
+  const fromSvgY = (sy: number) => Math.max(0, Math.min(1, 1 - (sy - SVG_PAD_Y) / GRAPH_H));
+
+  const envelope = useMemo(() => {
+    return selectedClip.volumeEnvelope && selectedClip.volumeEnvelope.length >= 2
+      ? selectedClip.volumeEnvelope
+      : [{ time: 0, value: selectedClip.volume ?? 1 }, { time: 1, value: selectedClip.volume ?? 1 }];
+  }, [selectedClip.volumeEnvelope, selectedClip.volume]);
+
+  const waveformBars = useMemo(() => {
+    const count = 60;
+    return Array.from({ length: count }, (_, i) => {
+      const t = i / count;
+      let envVal = 1;
+      for (let p = 0; p < envelope.length - 1; p++) {
+        if (t >= envelope[p].time && t <= envelope[p + 1].time) {
+          const segLen = envelope[p + 1].time - envelope[p].time;
+          const frac = segLen > 0 ? (t - envelope[p].time) / segLen : 0;
+          envVal = envelope[p].value + (envelope[p + 1].value - envelope[p].value) * frac;
+          break;
+        }
+      }
+      const baseHeight = 0.3 + Math.abs(Math.sin(i * 0.7 + selectedClip.startTime) * 0.35 + Math.sin(i * 1.5) * 0.25);
+      return baseHeight * envVal;
+    });
+  }, [envelope, selectedClip.startTime]);
+
+  const envelopePath = envelope.map((p, i) => `${i === 0 ? 'M' : 'L'} ${toSvgX(p.time)} ${toSvgY(p.value)}`).join(' ');
+  const fillPath = `${envelopePath} L ${toSvgX(1)} ${toSvgY(0)} L ${toSvgX(0)} ${toSvgY(0)} Z`;
+
+  const handleEnvMouseDown = useCallback((idx: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingIdx(idx);
+  }, []);
+
+  useEffect(() => {
+    if (draggingIdx === null) return;
+    const handleMove = (e: MouseEvent) => {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const scaleX = SVG_W / rect.width;
+      const scaleY = SVG_H / rect.height;
+      const sx = (e.clientX - rect.left) * scaleX;
+      const sy = (e.clientY - rect.top) * scaleY;
+      const newPoints = [...envelope];
+      const isFirst = draggingIdx === 0;
+      const isLast = draggingIdx === newPoints.length - 1;
+      const newTime = isFirst ? 0 : isLast ? 1 : fromSvgX(sx);
+      const newValue = fromSvgY(sy);
+      let clampedTime = newTime;
+      if (!isFirst && !isLast) {
+        clampedTime = Math.max(newPoints[draggingIdx - 1].time + 0.01, Math.min(newPoints[draggingIdx + 1].time - 0.01, newTime));
+      }
+      newPoints[draggingIdx] = { time: clampedTime, value: Math.round(newValue * 100) / 100 };
+      onUpdateClip(selectedClip.id, { volumeEnvelope: newPoints });
+    };
+    const handleUp = () => setDraggingIdx(null);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [draggingIdx, envelope, selectedClip.id, onUpdateClip]);
+
+  const addEnvPoint = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (draggingIdx !== null) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const sx = (e.clientX - rect.left) * (SVG_W / rect.width);
+    const sy = (e.clientY - rect.top) * (SVG_H / rect.height);
+    const t = fromSvgX(sx);
+    const v = fromSvgY(sy);
+    if (envelope.some(p => Math.abs(p.time - t) < 0.02)) return;
+    const newPoints = [...envelope, { time: t, value: Math.round(v * 100) / 100 }].sort((a, b) => a.time - b.time);
+    onUpdateClip(selectedClip.id, { volumeEnvelope: newPoints });
+  }, [envelope, selectedClip.id, onUpdateClip, draggingIdx]);
+
+  const removeEnvPoint = useCallback((idx: number) => {
+    if (idx === 0 || idx === envelope.length - 1) return;
+    onUpdateClip(selectedClip.id, { volumeEnvelope: envelope.filter((_, i) => i !== idx) });
+  }, [envelope, selectedClip.id, onUpdateClip]);
+
+  const playbackRate = selectedClip.playbackRate ?? 1;
+  const SPEED_PRESETS = [
+    { value: 0.25, label: '0.25x' }, { value: 0.5, label: '0.5x' }, { value: 0.75, label: '0.75x' },
+    { value: 1, label: '1x' }, { value: 1.25, label: '1.25x' }, { value: 1.5, label: '1.5x' },
+    { value: 2, label: '2x' }, { value: 3, label: '3x' }, { value: 4, label: '4x' },
+  ];
+
   const clipIcon = selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊';
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
-
   const AUDIO_CATEGORIES = [...new Set(AUDIO_FILTER_DEFS.map(f => f.category))];
   const AUDIO_PRESET_CATEGORIES = [...new Set(AUDIO_PRESETS.map(p => p.category))];
 
@@ -629,15 +747,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   </div>
                   {/* Tab switcher */}
                   <div className="flex mt-2 rounded-lg border overflow-hidden">
-                    {(['presets', 'filters', 'active'] as const).map(tab => (
+                    {(['presets', 'filters', 'active', 'wave', 'speed'] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setAudioTab(tab)}
-                        className={`flex-1 py-1.5 text-[10px] font-medium transition-colors ${
+                        className={`flex-1 py-1.5 text-[9px] font-medium transition-colors border-r last:border-r-0 ${
                           audioTab === tab ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50'
-                        } ${tab !== 'active' ? 'border-r' : ''}`}
+                        }`}
                       >
-                        {tab === 'presets' ? '🎛️ Presets' : tab === 'filters' ? '🔧 Filtros' : `🎚️ Ativos (${selectedClip.audioFilters?.length || 0})`}
+                        {tab === 'presets' ? '🎛️ Presets' : tab === 'filters' ? '🔧 Filtros' : tab === 'active' ? `🎚️ (${selectedClip.audioFilters?.length || 0})` : tab === 'wave' ? '🎵 Onda' : '⚡ Vel.'}
                       </button>
                     ))}
                   </div>
@@ -790,6 +908,118 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                           </div>
                         )}
                       </>
+                    )}
+
+                    {/* WAVE TAB - Volume Envelope */}
+                    {audioTab === 'wave' && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold flex items-center gap-1">🎵 Curva de Volume</span>
+                          <Button size="sm" variant="ghost" className="h-5 text-[8px] gap-0.5" onClick={() => onUpdateClip(selectedClip.id, { volumeEnvelope: undefined })}>
+                            <RotateCcw className="h-2.5 w-2.5" /> Reset
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1">
+                          {ENVELOPE_PRESETS.map(preset => (
+                            <button
+                              key={preset.id}
+                              onClick={() => onUpdateClip(selectedClip.id, { volumeEnvelope: [...preset.points] })}
+                              className="flex flex-col items-center gap-0.5 p-1 rounded-md border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
+                              title={preset.label}
+                            >
+                              <span className="text-xs leading-none">{preset.icon}</span>
+                              <span className="text-[7px] font-medium leading-tight">{preset.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="relative border rounded-lg bg-muted/20 overflow-hidden">
+                          <svg
+                            ref={svgRef}
+                            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+                            className="w-full cursor-crosshair"
+                            style={{ height: 110 }}
+                            onDoubleClick={addEnvPoint}
+                          >
+                            {[0, 0.25, 0.5, 0.75, 1].map(v => (
+                              <line key={v} x1={SVG_PAD_X} y1={toSvgY(v)} x2={SVG_PAD_X + GRAPH_W} y2={toSvgY(v)} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray={v === 0 || v === 1 ? '' : '2,2'} opacity={0.5} />
+                            ))}
+                            {waveformBars.map((h, i) => {
+                              const barW = GRAPH_W / waveformBars.length;
+                              const x = SVG_PAD_X + i * barW;
+                              const barH = h * GRAPH_H;
+                              return <rect key={i} x={x} y={SVG_PAD_Y + GRAPH_H - barH} width={Math.max(barW - 1, 1)} height={barH} fill="hsl(var(--primary))" opacity={0.15} rx={0.5} />;
+                            })}
+                            <path d={fillPath} fill="hsl(var(--primary))" opacity={0.08} />
+                            <path d={envelopePath} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinejoin="round" />
+                            {envelope.map((point, idx) => {
+                              const cx = toSvgX(point.time);
+                              const cy = toSvgY(point.value);
+                              const isFirst = idx === 0;
+                              const isLast = idx === envelope.length - 1;
+                              const isHov = hoveredIdx === idx;
+                              const isDrag = draggingIdx === idx;
+                              return (
+                                <g key={idx}>
+                                  <circle cx={cx} cy={cy} r={12} fill="transparent" className="cursor-grab active:cursor-grabbing"
+                                    onMouseDown={(e) => handleEnvMouseDown(idx, e)}
+                                    onMouseEnter={() => setHoveredIdx(idx)}
+                                    onMouseLeave={() => setHoveredIdx(null)}
+                                    onDoubleClick={(e) => { e.stopPropagation(); if (!isFirst && !isLast) removeEnvPoint(idx); }}
+                                  />
+                                  <circle cx={cx} cy={cy} r={isDrag ? 5 : isHov ? 4 : 3}
+                                    fill={isFirst || isLast ? 'hsl(var(--primary))' : 'hsl(var(--background))'}
+                                    stroke="hsl(var(--primary))" strokeWidth={2} className="pointer-events-none"
+                                  />
+                                  {(isHov || isDrag) && (
+                                    <text x={cx} y={cy - 8} fontSize="7" fill="hsl(var(--foreground))" textAnchor="middle" className="pointer-events-none">
+                                      {(point.time * selectedClip.duration).toFixed(1)}s·{Math.round(point.value * 100)}%
+                                    </text>
+                                  )}
+                                </g>
+                              );
+                            })}
+                          </svg>
+                          <div className="absolute bottom-0.5 right-1.5 text-[7px] text-muted-foreground/60 pointer-events-none">
+                            Duplo-clique: add/remover pontos
+                          </div>
+                        </div>
+                        <p className="text-[8px] text-muted-foreground">{envelope.length} pontos · Arraste para ajustar</p>
+                      </div>
+                    )}
+
+                    {/* SPEED TAB */}
+                    {audioTab === 'speed' && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold flex items-center gap-1">⚡ Velocidade</span>
+                          <span className="text-[9px] font-mono text-muted-foreground">{playbackRate.toFixed(2)}x</span>
+                        </div>
+                        <Slider
+                          value={[playbackRate]}
+                          onValueChange={([v]) => onUpdateClip(selectedClip.id, { playbackRate: Math.round(v * 100) / 100 })}
+                          min={0.25} max={4} step={0.05}
+                        />
+                        <div className="grid grid-cols-3 gap-1">
+                          {SPEED_PRESETS.map(preset => (
+                            <button
+                              key={preset.value}
+                              onClick={() => onUpdateClip(selectedClip.id, { playbackRate: preset.value })}
+                              className={`text-[9px] py-1 px-2 rounded-md border transition-all ${
+                                Math.abs(playbackRate - preset.value) < 0.01
+                                  ? 'border-primary bg-primary/10 text-primary font-semibold'
+                                  : 'border-border/50 hover:border-primary/30 hover:bg-muted/50'
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                        {playbackRate !== 1 && (
+                          <p className="text-[8px] text-muted-foreground">
+                            Duração efetiva: {(selectedClip.duration / playbackRate).toFixed(2)}s (original: {selectedClip.duration.toFixed(2)}s)
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </ScrollArea>
