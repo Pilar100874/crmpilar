@@ -4,7 +4,8 @@ import { useGalleryFolders } from '@/hooks/useGalleryFolders';
 import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import GalleryFilteredGrid from '@/components/ui/GalleryFilteredGrid';
 import {
   Film, Image as ImageIcon, Music, Palette, Upload, FolderOpen, Wand2,
