@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Loader2, Maximize2, X, Check, Film, Wand2, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -33,6 +33,16 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
   tasks, onMaximize, onDismiss, onInsert
 }) => {
   const minimizedTasks = tasks.filter(t => t.minimized);
+  
+  // Force re-render every second to update elapsed time
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (minimizedTasks.some(t => t.status === 'generating')) {
+      const interval = setInterval(() => setTick(n => n + 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [minimizedTasks.length, minimizedTasks.some(t => t.status === 'generating')]);
+
   if (minimizedTasks.length === 0) return null;
 
   return (
