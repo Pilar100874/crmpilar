@@ -362,18 +362,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     playbackRate?: number;
     volume?: number;
   } | null>(null);
+  const [originalTransitions, setOriginalTransitions] = useState<TimelineClip['transitions'] | null>(null);
+  const [originalFilters, setOriginalFilters] = useState<VideoFilter[] | null>(null);
 
-  // Capture original state when popover opens
+  // === Audio capture/restore/apply ===
   const captureOriginalAudioState = useCallback(() => {
-    if (originalAudioState === null) {
-      setOriginalAudioState({
-        audioFilters: selectedClip.audioFilters ? [...selectedClip.audioFilters] : undefined,
-        volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
-        playbackRate: selectedClip.playbackRate,
-        volume: selectedClip.volume,
-      });
-    }
-  }, [selectedClip, originalAudioState]);
+    setOriginalAudioState({
+      audioFilters: selectedClip.audioFilters ? JSON.parse(JSON.stringify(selectedClip.audioFilters)) : undefined,
+      volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
+      playbackRate: selectedClip.playbackRate,
+      volume: selectedClip.volume,
+    });
+  }, [selectedClip]);
 
   const restoreOriginalAudio = useCallback(() => {
     if (!originalAudioState) return;
@@ -387,6 +387,34 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
   const applyAndConfirmAudio = useCallback(() => {
     setOriginalAudioState(null);
+  }, []);
+
+  // === Transitions capture/restore/apply ===
+  const captureOriginalTransitions = useCallback(() => {
+    setOriginalTransitions(selectedClip.transitions ? JSON.parse(JSON.stringify(selectedClip.transitions)) : {});
+  }, [selectedClip.transitions]);
+
+  const restoreOriginalTransitions = useCallback(() => {
+    if (originalTransitions === null) return;
+    onUpdateClip(selectedClip.id, { transitions: originalTransitions });
+  }, [originalTransitions, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmTransitions = useCallback(() => {
+    setOriginalTransitions(null);
+  }, []);
+
+  // === Filters capture/restore/apply ===
+  const captureOriginalFilters = useCallback(() => {
+    setOriginalFilters(selectedClip.filters ? JSON.parse(JSON.stringify(selectedClip.filters)) : []);
+  }, [selectedClip.filters]);
+
+  const restoreOriginalFilters = useCallback(() => {
+    if (originalFilters === null) return;
+    onUpdateClip(selectedClip.id, { filters: originalFilters });
+  }, [originalFilters, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmFilters = useCallback(() => {
+    setOriginalFilters(null);
   }, []);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
