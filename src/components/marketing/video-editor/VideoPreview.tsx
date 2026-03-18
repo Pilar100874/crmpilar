@@ -552,7 +552,23 @@ const VideoPreview: React.FC<Props> = ({
                   opacity: clip.opacity ?? 1,
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px', zIndex, transition: 'none',
+                  transform: [
+                    `rotate(${clip.rotation ?? 0}deg)`,
+                    `scaleX(${clip.scaleX ?? 1})`,
+                    `scaleY(${clip.scaleY ?? 1})`,
+                    transitionStyle.transform || '',
+                  ].filter(Boolean).join(' '),
                   ...transitionStyle,
+                  // Override transform with our combined one
+                  ...((() => {
+                    const combinedTransform = [
+                      `rotate(${clip.rotation ?? 0}deg)`,
+                      `scaleX(${clip.scaleX ?? 1})`,
+                      `scaleY(${clip.scaleY ?? 1})`,
+                      transitionStyle.transform || '',
+                    ].filter(Boolean).join(' ');
+                    return { transform: combinedTransform };
+                  })()),
                   ...(transitionStyle.opacity !== undefined ? { opacity: (clip.opacity ?? 1) * (transitionStyle.opacity as number) } : {}),
                   ...(transitionStyle.filter ? { filter: [buildFilter(clip), transitionStyle.filter].filter(f => f && f !== 'none').join(' ') || 'none' } : {}),
                 }}

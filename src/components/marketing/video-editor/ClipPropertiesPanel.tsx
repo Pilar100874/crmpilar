@@ -125,7 +125,7 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
           </div>
         )}
 
-        {(clip.type === 'video' || clip.type === 'image') && (
+        {(clip.type === 'video' || clip.type === 'image' || clip.type === 'canvas') && (
           <div>
             <Label className="text-xs font-semibold">Posição e Tamanho</Label>
             <div className="grid grid-cols-2 gap-2 mt-1">
@@ -179,6 +179,101 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
               onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
             >
               Resetar para tela cheia
+            </Button>
+          </div>
+        )}
+
+        {/* Transform: Rotation, Flip, Scale */}
+        {(clip.type === 'video' || clip.type === 'image' || clip.type === 'canvas') && (
+          <div>
+            <Label className="text-xs font-semibold">Transformar</Label>
+
+            {/* Rotation */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px]">Rotação ({clip.rotation ?? 0}°)</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => onUpdateClip(clip.id, { rotation: 0 })}
+                  title="Resetar rotação"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+              </div>
+              <Slider
+                value={[clip.rotation ?? 0]}
+                onValueChange={([v]) => onUpdateClip(clip.id, { rotation: v })}
+                min={0}
+                max={360}
+                step={1}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Scale X / Y */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div>
+                <Label className="text-[10px]">Escala X ({((clip.scaleX ?? 1) * 100).toFixed(0)}%)</Label>
+                <Slider
+                  value={[Math.abs(clip.scaleX ?? 1)]}
+                  onValueChange={([v]) => {
+                    const sign = (clip.scaleX ?? 1) < 0 ? -1 : 1;
+                    onUpdateClip(clip.id, { scaleX: v * sign });
+                  }}
+                  min={0.1}
+                  max={3}
+                  step={0.05}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px]">Escala Y ({((clip.scaleY ?? 1) * 100).toFixed(0)}%)</Label>
+                <Slider
+                  value={[Math.abs(clip.scaleY ?? 1)]}
+                  onValueChange={([v]) => {
+                    const sign = (clip.scaleY ?? 1) < 0 ? -1 : 1;
+                    onUpdateClip(clip.id, { scaleY: v * sign });
+                  }}
+                  min={0.1}
+                  max={3}
+                  step={0.05}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            {/* Flip buttons */}
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant={(clip.scaleX ?? 1) < 0 ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 text-xs gap-1.5 h-8"
+                onClick={() => onUpdateClip(clip.id, { scaleX: (clip.scaleX ?? 1) * -1 })}
+              >
+                <FlipHorizontal className="h-3.5 w-3.5" />
+                Inverter H
+              </Button>
+              <Button
+                variant={(clip.scaleY ?? 1) < 0 ? 'default' : 'outline'}
+                size="sm"
+                className="flex-1 text-xs gap-1.5 h-8"
+                onClick={() => onUpdateClip(clip.id, { scaleY: (clip.scaleY ?? 1) * -1 })}
+              >
+                <FlipVertical className="h-3.5 w-3.5" />
+                Inverter V
+              </Button>
+            </div>
+
+            {/* Reset all transforms */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs"
+              onClick={() => onUpdateClip(clip.id, { rotation: 0, scaleX: 1, scaleY: 1 })}
+            >
+              Resetar transformações
             </Button>
           </div>
         )}
