@@ -34,8 +34,6 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'google', cost: '$$$', bridgeSupport: 'full' },
   { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'google', cost: '$$$', bridgeSupport: 'full' },
   { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'google', cost: '$$', bridgeSupport: 'full' },
-  // Runway Gen-4: NÃO suporta end frame (lastFrame)
-  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'runway', cost: '$$$$', bridgeSupport: 'start-only' },
   // Runway Gen-3: suporta lastFrame
   { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'runway', cost: '$$', bridgeSupport: 'full' },
   // Kling (suporta image_tail)
@@ -43,10 +41,6 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'kling', cost: '$', bridgeSupport: 'full' },
   // Luma (suporta frame0 + frame1)
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$', bridgeSupport: 'full' },
-  // Stability: NÃO suporta end frame
-  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'stability', cost: '$', bridgeSupport: 'start-only' },
-  // Apiframe — Runway Gen-4: NÃO suporta end frame
-  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'apiframe', cost: '$$$', bridgeSupport: 'start-only' },
   // Apiframe — Runway Gen-3: suporta end_image_url
   { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
   // Apiframe — Kling: suporta end_image
