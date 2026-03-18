@@ -215,7 +215,8 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   }, [estabelecimentoId]);
 
   const filteredModels = useMemo(() => {
-    return ALL_VIDEO_MODELS.map((m) => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+    const withStatus = ALL_VIDEO_MODELS.map((m) => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+    return withStatus.sort((a, b) => Number(a.disabled) - Number(b.disabled));
   }, [configuredProviders]);
 
   // Prompt suggestions state
