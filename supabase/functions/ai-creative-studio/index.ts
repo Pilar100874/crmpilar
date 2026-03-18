@@ -803,7 +803,12 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   // Build apiframe params
   const afParams: Record<string, any> = {};
   if (params.prompt) afParams.prompt = params.prompt;
-  if (params.imageUrls?.[0]) afParams.image_url = params.imageUrls[0];
+  if (params.imageUrls?.[0]) {
+    afParams.image_url = params.imageUrls[0];
+    afParams.generation_type = "image2video";
+  } else {
+    afParams.generation_type = "text2video";
+  }
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
   if (params.duration) afParams.duration = params.duration;
 
