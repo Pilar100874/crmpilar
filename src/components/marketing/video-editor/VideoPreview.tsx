@@ -439,23 +439,48 @@ const VideoPreview: React.FC<Props> = ({
     return {};
   }, [currentTime, previewAnim, previewProgress]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize') => {
+  const handlePointerDown = useCallback((e: React.PointerEvent, clipId: string, mode: 'move' | 'resize' | 'rotate') => {
     e.stopPropagation(); e.preventDefault();
     const clip = clipsRef.current.find(c => c.id === clipId);
     if (!clip || clip.locked) return;
     onSelectClip?.(clipId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    setDragging({ clipId, mode, startX: e.clientX, startY: e.clientY, origX: clip.x ?? 0, origY: clip.y ?? 0, origW: clip.w ?? 100, origH: clip.h ?? 100 });
+
+    if (mode === 'rotate' && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const cx = clip.x ?? 0;
+      const cy = clip.y ?? 0;
+      const cw = clip.w ?? 100;
+      const ch = clip.h ?? 100;
+      const centerX = rect.left + ((cx + cw / 2) / 100) * rect.width;
+      const centerY = rect.top + ((cy + ch / 2) / 100) * rect.height;
+      setDragging({ clipId, mode, startX: e.clientX, startY: e.clientY, origX: cx, origY: cy, origW: cw, origH: ch, origRotation: clip.rotation ?? 0, centerX, centerY });
+    } else {
+      setDragging({ clipId, mode, startX: e.clientX, startY: e.clientY, origX: clip.x ?? 0, origY: clip.y ?? 0, origW: clip.w ?? 100, origH: clip.h ?? 100 });
+    }
   }, [onSelectClip]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragging || !onUpdateClip) return;
-    const dx = ((e.clientX - dragging.startX) / CANVAS_W) * 100;
-    const dy = ((e.clientY - dragging.startY) / CANVAS_H) * 100;
-    if (dragging.mode === 'move') {
-      onUpdateClip(dragging.clipId, { x: Math.max(-50, Math.min(150, dragging.origX + dx)), y: Math.max(-50, Math.min(150, dragging.origY + dy)) });
+    if (dragging.mode === 'rotate' && dragging.centerX !== undefined && dragging.centerY !== undefined) {
+      const startAngle = Math.atan2(dragging.startY - dragging.centerY, dragging.startX - dragging.centerX);
+      const currentAngle = Math.atan2(e.clientY - dragging.centerY, e.clientX - dragging.centerX);
+      let deltaDeg = ((currentAngle - startAngle) * 180) / Math.PI;
+      let newRotation = ((dragging.origRotation ?? 0) + deltaDeg) % 360;
+      if (newRotation < 0) newRotation += 360;
+      // Snap to 0/90/180/270 when close
+      for (const snap of [0, 90, 180, 270, 360]) {
+        if (Math.abs(newRotation - snap) < 5) { newRotation = snap % 360; break; }
+      }
+      onUpdateClip(dragging.clipId, { rotation: Math.round(newRotation) });
     } else {
-      onUpdateClip(dragging.clipId, { w: Math.max(10, Math.min(200, dragging.origW + dx)), h: Math.max(10, Math.min(200, dragging.origH + dy)) });
+      const dx = ((e.clientX - dragging.startX) / CANVAS_W) * 100;
+      const dy = ((e.clientY - dragging.startY) / CANVAS_H) * 100;
+      if (dragging.mode === 'move') {
+        onUpdateClip(dragging.clipId, { x: Math.max(-50, Math.min(150, dragging.origX + dx)), y: Math.max(-50, Math.min(150, dragging.origY + dy)) });
+      } else {
+        onUpdateClip(dragging.clipId, { w: Math.max(10, Math.min(200, dragging.origW + dx)), h: Math.max(10, Math.min(200, dragging.origH + dy)) });
+      }
     }
   }, [dragging, onUpdateClip]);
 
