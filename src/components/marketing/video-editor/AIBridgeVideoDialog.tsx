@@ -725,6 +725,8 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
   const handleDiscardPreview = useCallback(() => {
     setGeneratedVideoUrl(null);
     setGeneratedDuration(0);
+    setVideoLoading(false);
+    setVideoError(false);
   }, []);
 
   return (
