@@ -820,10 +820,10 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 </Button>
               </div>
 
-              <ScrollArea className="h-[140px] rounded-lg border border-border/50 bg-muted/30 p-1.5">
-                <div className="grid grid-cols-1 gap-1">
+              <ScrollArea className="h-[200px] rounded-lg border border-border/50 bg-muted/30 p-1.5">
+                <div className="grid grid-cols-1 gap-0.5">
                   {isAddingNew && (
-                    <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
+                    <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30 mb-1">
                       <Input
                         value={newText}
                         onChange={e => setNewText(e.target.value)}
@@ -841,42 +841,70 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     </div>
                   )}
 
-                  {suggestions.map((s) => (
+                  {/* Custom prompts (user-added) */}
+                  {suggestions.filter(s => !DEFAULT_TRANSITION_PROMPTS.find(d => d.id === s.id)).map((s) => (
                     <div key={s.id}>
                       {editingId === s.id ? (
                         <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
-                          <Input
-                            value={editText}
-                            onChange={e => setEditText(e.target.value)}
-                            className="h-7 text-[11px] flex-1"
-                            autoFocus
-                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }}
-                          />
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
-                            <Check className="h-3 w-3 text-primary" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
-                            <X className="h-3 w-3 text-destructive" />
-                          </Button>
+                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="h-7 text-[11px] flex-1" autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }} />
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}><Check className="h-3 w-3 text-primary" /></Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}><X className="h-3 w-3 text-destructive" /></Button>
                         </div>
                       ) : (
-                        <div
-                          className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
-                          onClick={() => handleSelectSuggestion(s.text)}
-                        >
+                        <div className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
+                          onClick={() => handleSelectSuggestion(s.text)}>
                           <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}
-                          >
-                            <Pencil className="h-2.5 w-2.5 text-muted-foreground" />
-                          </Button>
+                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}><Pencil className="h-2.5 w-2.5 text-muted-foreground" /></Button>
                         </div>
                       )}
                     </div>
                   ))}
+
+                  {/* Grouped prompt suggestions */}
+                  {TRANSITION_PROMPT_GROUPS.map((group) => {
+                    const isExpanded = expandedGroups[group.id] !== false;
+                    const groupPrompts = group.prompts.map(gp => suggestions.find(s => s.id === gp.id) || gp);
+                    return (
+                      <div key={group.id} className="mb-0.5">
+                        <button
+                          className="w-full flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-accent/40 transition-colors text-left"
+                          onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !isExpanded }))}
+                        >
+                          {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          <span className="text-[10px]">{group.icon}</span>
+                          <span className="text-[11px] font-semibold text-foreground/90">{group.label}</span>
+                          <span className="text-[9px] text-muted-foreground ml-auto">{group.prompts.length}</span>
+                        </button>
+                        {isExpanded && (
+                          <div className="ml-2 pl-2 border-l border-border/40">
+                            {groupPrompts.map((s) => (
+                              <div key={s.id}>
+                                {editingId === s.id ? (
+                                  <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
+                                    <Input value={editText} onChange={e => setEditText(e.target.value)} className="h-7 text-[11px] flex-1" autoFocus
+                                      onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }} />
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}><Check className="h-3 w-3 text-primary" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}><X className="h-3 w-3 text-destructive" /></Button>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
+                                    onClick={() => handleSelectSuggestion(s.text)}
+                                  >
+                                    <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
+                                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}><Pencil className="h-2.5 w-2.5 text-muted-foreground" /></Button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
