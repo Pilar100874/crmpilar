@@ -79,6 +79,16 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
 
+const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
+  open, onClose, clipA, clipB, onVideoGenerated
+}) => {
+  const [frameA, setFrameA] = useState<string | null>(null);
+  const [frameB, setFrameB] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState('');
+  const [model, setModel] = useState('google/veo-3.1');
+  const [duration, setDuration] = useState(4);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
