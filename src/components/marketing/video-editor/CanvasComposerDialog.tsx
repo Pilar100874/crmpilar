@@ -156,20 +156,69 @@ const CanvasComposerInner: React.FC<{
       // Small delay to ensure render is complete
       await new Promise(r => setTimeout(r, 200));
 
-      const dataUrl = canvas.toDataURL({ format: 'png', multiplier: 2 });
+      // Calculate bounding box of all objects to crop tightly
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      objects.forEach((obj: any) => {
+        const bound = obj.getBoundingRect();
+        if (bound.left < minX) minX = bound.left;
+        if (bound.top < minY) minY = bound.top;
+        if (bound.left + bound.width > maxX) maxX = bound.left + bound.width;
+        if (bound.top + bound.height > maxY) maxY = bound.top + bound.height;
+      });
+
+      // Add a small padding (4px)
+      const pad = 4;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(canvas.width || 1920, maxX + pad);
+      maxY = Math.min(canvas.height || 1080, maxY + pad);
+
+      const cropW = maxX - minX;
+      const cropH = maxY - minY;
+
+      // Export only the cropped region
+      const multiplier = 2;
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cropW * multiplier;
+      tempCanvas.height = cropH * multiplier;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // Render full canvas to an offscreen element first
+      const fullDataUrl = canvas.toDataURL({ format: 'png', multiplier });
       
       // Restore original background
       canvas.backgroundColor = originalBg;
       canvas.renderAll();
-      const json = JSON.stringify(canvas.toJSON());
-      
-      if (!dataUrl || dataUrl.length < 200) {
-        toast.error('Falha ao exportar canvas. Tente novamente.');
-        return;
-      }
 
-      console.log('Canvas exported:', { objectCount: objects.length, dataUrlLength: dataUrl.length });
-      onConfirm(dataUrl, json);
+      const json = JSON.stringify(canvas.toJSON());
+
+      // Load full image then crop
+      const fullImg = new window.Image();
+      fullImg.onload = () => {
+        if (tempCtx) {
+          tempCtx.drawImage(
+            fullImg,
+            minX * multiplier, minY * multiplier,
+            cropW * multiplier, cropH * multiplier,
+            0, 0,
+            cropW * multiplier, cropH * multiplier
+          );
+        }
+        const croppedDataUrl = tempCanvas.toDataURL('image/png');
+
+        if (!croppedDataUrl || croppedDataUrl.length < 200) {
+          toast.error('Falha ao exportar canvas. Tente novamente.');
+          return;
+        }
+
+        console.log('Canvas exported (cropped):', { objectCount: objects.length, crop: { minX, minY, cropW, cropH }, dataUrlLength: croppedDataUrl.length });
+        onConfirm(croppedDataUrl, json);
+      };
+      fullImg.onerror = () => {
+        // Fallback: use full image
+        onConfirm(fullDataUrl, json);
+      };
+      fullImg.src = fullDataUrl;
     } catch (e) {
       console.error('Erro ao exportar canvas:', e);
       toast.error('Erro ao exportar o canvas');
