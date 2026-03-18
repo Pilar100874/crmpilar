@@ -1204,8 +1204,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   <p className="text-xs font-semibold flex items-center gap-1.5">
                     <Wand2 className="h-3.5 w-3.5 text-primary" /> Filtros & Presets
                   </p>
-                  <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={resetFilters} disabled={!hasFilters}>
-                    <RotateCcw className="h-3 w-3" /> Resetar
+                  <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={restoreAssetOriginalFilters}>
+                    <RotateCcw className="h-3 w-3" /> Original
                   </Button>
                 </div>
               </div>
