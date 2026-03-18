@@ -158,10 +158,10 @@ export function useBridgeGenerations() {
     clipBName: string;
     minimized?: boolean;
   }): Promise<string> => {
-    // Limit to 2 simultaneous generations
+    // Limit to 1 simultaneous generation
     const activeCount = tasksRef.current.filter(t => t.status === 'generating').length;
-    if (activeCount >= 2) {
-      toast.error('Máximo de 2 gerações simultâneas. Aguarde uma finalizar ou cancele uma existente.');
+    if (activeCount >= 1) {
+      toast.error('Aguarde a geração atual finalizar antes de iniciar outra.');
       return '';
     }
 
