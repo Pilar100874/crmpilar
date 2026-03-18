@@ -818,8 +818,7 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     if (dirMatch?.[1]?.trim()) {
       cleanPrompt = dirMatch[1].trim();
     }
-    // Prepend a concise instruction that works well with image-to-video APIs
-    cleanPrompt = `Smooth cinematic transition from the start image to the end image. ${cleanPrompt}`;
+    // Keep the user's original transition prompt as-is — don't dilute with generic text
     console.log(`[apiframe-video] Bridge mode: cleaned prompt to "${cleanPrompt.substring(0, 120)}..."`);
   }
   afParams.prompt = cleanPrompt;
@@ -836,8 +835,18 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     // Luma uses image_url / end_image_url — NO generation_type field
     if (startImageUrl) afParams.image_url = startImageUrl;
     if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
+  } else if (subModel === "runway") {
+    // Runway Gen-3 via Apiframe — MUST specify model=gen3a_turbo to avoid Gen-4 default
+    afParams.model = "gen3a_turbo";
+    if (startImageUrl) {
+      afParams.image_url = startImageUrl;
+      afParams.generation_type = "image2video";
+    } else {
+      afParams.generation_type = "text2video";
+    }
+    if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
   } else {
-    // Runway uses image_url / end_image_url + generation_type
+    // Other Runway sub-models
     if (startImageUrl) {
       afParams.image_url = startImageUrl;
       afParams.generation_type = "image2video";
