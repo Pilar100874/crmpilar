@@ -25,11 +25,12 @@ async function fetchApiframeKey(estabelecimentoId: string): Promise<string | nul
 }
 
 function mapErrorMessage(status: number, body: string): string {
-  if (status === 401) return "API Key do Apiframe inválida. Verifique nas configurações.";
-  if (status === 402) return "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
-  if (status === 429) return "Limite de requisições atingido. Aguarde e tente novamente.";
+  const lower = body.toLowerCase();
+  if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid api key')) return "API Key do Apiframe inválida. Verifique nas configurações.";
+  if (status === 402 || lower.includes('billing') || lower.includes('payment') || lower.includes('insufficient') || lower.includes('credits')) return "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
+  if (status === 429 || lower.includes('rate limit') || lower.includes('too many') || lower.includes('quota')) return "Limite de requisições atingido. Aguarde e tente novamente.";
   if (status >= 500) return "Erro interno do Apiframe. Tente novamente mais tarde.";
-  return `Erro Apiframe (${status}): ${body}`;
+  return `Erro Apiframe (${status}): ${body.substring(0, 200)}`;
 }
 
 Deno.serve(async (req) => {
