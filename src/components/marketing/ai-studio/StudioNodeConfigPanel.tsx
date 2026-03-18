@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
-import { getActiveUnifiedProvider, shouldHideModel } from './unifiedProvidersConfig';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -442,39 +442,52 @@ const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
 // Unified provider prefixes for model configuration check
 const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
 
-const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
-  if (modelValue === 'free/gif-animated') return true;
-  // Unified provider models: check if the unified provider is configured
-  const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
-  if (unifiedPrefix) {
-    const providerName = unifiedPrefix.replace('/', '');
-    return configuredProviders.some((cp) => cp.toLowerCase() === providerName);
-  }
-  const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
-  if (!requiredProvider) return true;
-  return configuredProviders.some((cp) => cp.toLowerCase() === requiredProvider);
+const normalizeProvider = (provider: string): string => {
+  const compact = provider.toLowerCase().trim().replace(/[\s._-]/g, '');
+  if (compact === 'apiframe' || compact === 'apiframeai') return 'apiframe';
+  if (compact === 'aimlapi' || compact === 'aiml') return 'aimlapi';
+  if (compact === 'polloai' || compact === 'pollo') return 'polloai';
+  return compact;
 };
 
-const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): ModelInfo[] => {
+const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
+  if (modelValue === 'free/gif-animated') return true;
+
+  const normalizedProviders = configuredProviders.map(normalizeProvider);
+  const unifiedPrefix = UNIFIED_PREFIXES.find((p) => modelValue.startsWith(p));
+
+  if (unifiedPrefix) {
+    const providerName = normalizeProvider(unifiedPrefix.replace('/', ''));
+    return normalizedProviders.includes(providerName);
+  }
+
+  const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
+  if (!requiredProvider) return true;
+  return normalizedProviders.includes(normalizeProvider(requiredProvider));
+};
+
+const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[]): ModelInfo[] => {
+  const normalizedProviders = configuredProviders.map(normalizeProvider);
+
   return models.filter((m) => {
-    // Hide models from inactive unified providers
-    if (shouldHideModel(m.value, activeUnified)) return false;
-    // Always show Lovable AI gateway models (for LLM/Image)
     if (isLovableGatewayModel(m.value)) return true;
-    // Show if the provider prefix matches a configured key
-    const prefix = m.value.split('/')[0].toLowerCase();
-    return configuredProviders.some((cp) => cp.toLowerCase() === prefix);
+
+    const unifiedPrefix = UNIFIED_PREFIXES.find((p) => m.value.startsWith(p));
+    if (unifiedPrefix) {
+      const providerName = normalizeProvider(unifiedPrefix.replace('/', ''));
+      return normalizedProviders.includes(providerName);
+    }
+
+    const prefix = normalizeProvider(m.value.split('/')[0] ?? '');
+    return normalizedProviders.includes(prefix);
   });
 };
 
-// For video: show ALL models but mark unconfigured as disabled
-const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[], activeUnified: string | null): (ModelInfo & { disabled: boolean })[] => {
-  return models
-    .filter((m) => !shouldHideModel(m.value, activeUnified))
-    .map((m) => ({
-      ...m,
-      disabled: !isModelConfigured(m.value, configuredProviders),
-    }));
+const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[]): (ModelInfo & { disabled: boolean })[] => {
+  return models.map((m) => ({
+    ...m,
+    disabled: !isModelConfigured(m.value, configuredProviders),
+  }));
 };
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
@@ -485,28 +498,44 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
-  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
 
   useEffect(() => {
-    const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId) return;
+    let mounted = true;
+
     (async () => {
+      let estabId = estabelecimentoId;
+
+      if (!estabId) {
+        const { data: rpcEstab } = await supabase.rpc('get_auth_user_estabelecimento_id');
+        if (typeof rpcEstab === 'string') estabId = rpcEstab;
+      }
+
+      if (!estabId) {
+        if (mounted) setConfiguredProviders([]);
+        return;
+      }
+
       const { data } = await supabase
         .from('ai_api_keys')
         .select('provider')
         .eq('estabelecimento_id', estabId)
         .eq('is_active', true);
-      if (data) {
-        setConfiguredProviders(data.map((d) => d.provider));
+
+      if (mounted && data) {
+        setConfiguredProviders(data.map((d) => normalizeProvider(d.provider)));
       }
     })();
-  }, []);
 
-  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
-  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
-  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
-  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
-  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders, activeUnified), [configuredProviders, activeUnified]);
+    return () => {
+      mounted = false;
+    };
+  }, [estabelecimentoId]);
+
+  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
+  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
+  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders), [configuredProviders]);
+  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
+  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });

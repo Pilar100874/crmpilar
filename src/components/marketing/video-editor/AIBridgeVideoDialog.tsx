@@ -59,17 +59,25 @@ const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
   'luma/dream-machine-1.5': 'luma', 'stability/stable-video': 'stability',
 };
 
+const normalizeProvider = (provider: string): string => {
+  const compact = provider.toLowerCase().trim().replace(/[\s._-]/g, '');
+  if (compact === 'apiframe' || compact === 'apiframeai') return 'apiframe';
+  if (compact === 'aimlapi' || compact === 'aiml') return 'aimlapi';
+  if (compact === 'polloai' || compact === 'pollo') return 'polloai';
+  return compact;
+};
+
 const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
-  const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
+  const normalizedProviders = configuredProviders.map(normalizeProvider);
+  const unifiedPrefix = UNIFIED_PREFIXES.find((p) => modelValue.startsWith(p));
   if (unifiedPrefix) {
-    const providerName = unifiedPrefix.replace('/', '');
-    return configuredProviders.some(cp => cp.toLowerCase() === providerName);
+    const providerName = normalizeProvider(unifiedPrefix.replace('/', ''));
+    return normalizedProviders.includes(providerName);
   }
   const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
   if (!requiredProvider) return true;
-  return configuredProviders.some(cp => cp.toLowerCase() === requiredProvider);
+  return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
-
 const DEFAULT_TRANSITION_PROMPTS = [
   { id: '1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
   { id: '2', text: 'Câmera gira 360° ao redor do objeto principal e dissolve para a próxima imagem' },
@@ -110,8 +118,7 @@ function loadCustomPrompts(): typeof DEFAULT_TRANSITION_PROMPTS {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Merge: defaults + custom, custom overrides by id
-      const map = new Map(DEFAULT_TRANSITION_PROMPTS.map(p => [p.id, p]));
+      const map = new Map(DEFAULT_TRANSITION_PROMPTS.map((p) => [p.id, p]));
       parsed.forEach((p: any) => map.set(p.id, p));
       return Array.from(map.values());
     }
@@ -120,9 +127,8 @@ function loadCustomPrompts(): typeof DEFAULT_TRANSITION_PROMPTS {
 }
 
 function saveCustomPrompts(prompts: typeof DEFAULT_TRANSITION_PROMPTS) {
-  // Only save non-default or modified
-  const defaultMap = new Map(DEFAULT_TRANSITION_PROMPTS.map(p => [p.id, p.text]));
-  const toSave = prompts.filter(p => !defaultMap.has(p.id) || defaultMap.get(p.id) !== p.text);
+  const defaultMap = new Map(DEFAULT_TRANSITION_PROMPTS.map((p) => [p.id, p.text]));
+  const toSave = prompts.filter((p) => !defaultMap.has(p.id) || defaultMap.get(p.id) !== p.text);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
@@ -139,34 +145,42 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
-  
 
-  // Load configured providers
+  // Load configured providers (with fallback to auth-based estabelecimento lookup)
   useEffect(() => {
-    if (!estabelecimentoId) return;
+    let mounted = true;
+
     (async () => {
+      let estabId = estabelecimentoId;
+
+      if (!estabId) {
+        const { data: rpcEstab } = await supabase.rpc('get_auth_user_estabelecimento_id');
+        if (typeof rpcEstab === 'string') estabId = rpcEstab;
+      }
+
+      if (!estabId) {
+        if (mounted) setConfiguredProviders([]);
+        return;
+      }
+
       const { data } = await supabase
         .from('ai_api_keys')
         .select('provider')
-        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('estabelecimento_id', estabId)
         .eq('is_active', true);
-      if (data) setConfiguredProviders(data.map(d => d.provider));
+
+      if (mounted && data) {
+        setConfiguredProviders(data.map((d) => normalizeProvider(d.provider)));
+      }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, [estabelecimentoId]);
 
   const filteredModels = useMemo(() => {
-    return ALL_VIDEO_MODELS
-      .filter(m => {
-        // For unified provider models (e.g. apiframe/), show if that provider's key is configured
-        const unifiedPrefix = UNIFIED_PREFIXES.find(p => m.value.startsWith(p));
-        if (unifiedPrefix) {
-          const providerName = unifiedPrefix.replace('/', '');
-          return configuredProviders.some(cp => cp.toLowerCase() === providerName);
-        }
-        // Non-unified models always show
-        return true;
-      })
-      .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+    return ALL_VIDEO_MODELS.map((m) => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
   }, [configuredProviders]);
 
   // Prompt suggestions state
