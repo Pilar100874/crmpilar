@@ -678,6 +678,12 @@ const VideoTimelineEditor: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Don't intercept keys when fabric.js text is being edited
+      const fabricCanvas = (window as any).fabricCanvas;
+      const activeObj = fabricCanvas?.getActiveObject?.();
+      if (activeObj && activeObj.isEditing) return;
+      // Don't intercept when canvas dialog is open (target inside dialog overlay)
+      if ((e.target as HTMLElement)?.closest('[role="dialog"]')) return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const ids = stateRef.current.selectedClipIds;
