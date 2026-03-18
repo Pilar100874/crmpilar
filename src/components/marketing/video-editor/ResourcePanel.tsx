@@ -128,7 +128,8 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
 
       for (const clip of clips) {
         let resType: ResourceType;
-        if (clip.type === 'video') resType = 'video';
+        if (clip.type === 'video' && clip.name?.includes('Transição AI')) resType = 'transition';
+        else if (clip.type === 'video') resType = 'video';
         else if (clip.type === 'image') resType = 'image';
         else if (clip.type === 'canvas') resType = 'canvas';
         else if (clip.type === 'audio') resType = 'audio';
