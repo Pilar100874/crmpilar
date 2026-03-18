@@ -750,10 +750,15 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     className="text-xs"
                     disabled={m.disabled}
                   >
-                    <span className="flex items-center gap-1.5">
+                     <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
                       {m.label}
                       {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
-                      {m.disabled && <Lock className="h-2.5 w-2.5 text-muted-foreground/50" />}
+                      {m.disabled && (
+                        <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
+                          <Lock className="h-2.5 w-2.5" />
+                          sem créditos
+                        </span>
+                      )}
                     </span>
                   </SelectItem>
                 ))}
