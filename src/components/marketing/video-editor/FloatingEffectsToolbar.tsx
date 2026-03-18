@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight
+  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge
 } from 'lucide-react';
-import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS } from './types';
+import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS, VolumeEnvelopePoint } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
 
 interface Props {
