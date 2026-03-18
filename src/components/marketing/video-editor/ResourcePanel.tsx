@@ -498,7 +498,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
                 <Plus className="h-3 w-3 text-primary" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType)} title="Remover">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType, media)} title="Remover">
                 <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
             </div>
