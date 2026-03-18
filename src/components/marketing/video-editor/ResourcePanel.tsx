@@ -32,6 +32,7 @@ export interface ResourcePanelHandle {
 interface Props {
   onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
+  onDeleteClips?: (ids: string[]) => void;
   tracks: TimelineTrack[];
   clips: TimelineClip[];
   onOpenCanvas: () => void;
@@ -69,7 +70,7 @@ const TABS: { key: ResourceType; label: string; icon: React.ReactNode; color: st
   { key: 'effect', label: 'Efeitos', icon: <Sparkles className="h-4 w-4" />, color: 'text-pink-400' },
 ];
 
-const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAddEffectClip, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
+const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAddEffectClip, onDeleteClips, tracks, clips, onOpenCanvas, onEditCanvas }, ref) => {
   const [items, setItems] = useState<Record<Exclude<ResourceType, 'effect'>, ImportedMedia[]>>({
     video: [], image: [], canvas: [], music: [], audio: [], transition: [],
   });
@@ -318,9 +319,23 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     }
   }, [onAddClip, tracks]);
 
-  const handleRemove = useCallback((id: string, resType: ResourceType) => {
+  const handleRemove = useCallback((id: string, resType: ResourceType, media: ImportedMedia) => {
+    // Find clips in the timeline that use this resource's src
+    const matchingClipIds = clips.filter(c => c.src && media.src && c.src === media.src).map(c => c.id);
+    const hasClips = matchingClipIds.length > 0;
+
+    const msg = hasClips
+      ? `Remover "${media.name}"? Isso também removerá ${matchingClipIds.length} clipe(s) inserido(s) na timeline.`
+      : `Remover "${media.name}" dos recursos?`;
+
+    if (!window.confirm(msg)) return;
+
     setItems(prev => ({ ...prev, [resType]: prev[resType].filter(v => v.id !== id) }));
-  }, []);
+    if (hasClips && onDeleteClips) {
+      onDeleteClips(matchingClipIds);
+      toast.success(`${matchingClipIds.length} clipe(s) removido(s) da timeline`);
+    }
+  }, [clips, onDeleteClips]);
 
   const startRename = useCallback((media: ImportedMedia) => {
     setEditingId(media.id);
@@ -483,7 +498,7 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
                 <Plus className="h-3 w-3 text-primary" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType)} title="Remover">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemove(media.id, media.resourceType, media)} title="Remover">
                 <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
             </div>
