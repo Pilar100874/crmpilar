@@ -129,6 +129,8 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
 // Hook to manage background generations
 export function useBridgeGenerations() {
   const [tasks, setTasks] = useState<BridgeGenerationTask[]>([]);
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
   const abortControllers = useRef<Map<string, AbortController>>(new Map());
   const progressIntervals = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
@@ -146,6 +148,13 @@ export function useBridgeGenerations() {
     clipBName: string;
     minimized?: boolean;
   }): Promise<string> => {
+    // Limit to 2 simultaneous generations
+    const activeCount = tasksRef.current.filter(t => t.status === 'generating').length;
+    if (activeCount >= 2) {
+      toast.error('Máximo de 2 gerações simultâneas. Aguarde uma finalizar ou cancele uma existente.');
+      return '';
+    }
+
     const taskId = `bridge_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const controller = new AbortController();
     abortControllers.current.set(taskId, controller);
