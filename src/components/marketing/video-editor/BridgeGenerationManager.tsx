@@ -33,6 +33,16 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
   tasks, onMaximize, onDismiss, onInsert
 }) => {
   const minimizedTasks = tasks.filter(t => t.minimized);
+  
+  // Force re-render every second to update elapsed time
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (minimizedTasks.some(t => t.status === 'generating')) {
+      const interval = setInterval(() => setTick(n => n + 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [minimizedTasks.length, minimizedTasks.some(t => t.status === 'generating')]);
+
   if (minimizedTasks.length === 0) return null;
 
   return (
