@@ -399,21 +399,21 @@ const VideoPreview: React.FC<Props> = ({
 
   const activeClips = useMemo(() => clips.filter(c => activeClipIds.includes(c.id)), [clips, activeClipIds]);
 
+  const trackIndexMap = useMemo(() => new Map(tracks.map((t, i) => [t.id, i])), [tracks]);
+
   const sortedActiveClips = useMemo(() => {
-    const trackIndexMap = new Map(tracks.map((t, i) => [t.id, i]));
     return [...activeClips].sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
-  }, [activeClips, tracks]);
+  }, [activeClips, trackIndexMap]);
 
   const activeVisuals = useMemo(() => sortedActiveClips.filter((c) => c.type === 'video' || c.type === 'image' || c.type === 'canvas'), [sortedActiveClips]);
   const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
 
-  // Pre-load upcoming video clips (within 1s) to avoid flash on transition
   const PRELOAD_WINDOW = 1.0;
   const preloadVideoClips = useMemo(() => {
     return clips.filter(c => {
       if (c.type !== 'video' || !c.src) return false;
-      if (activeClipIds.includes(c.id)) return false; // already active
+      if (activeClipIds.includes(c.id)) return false;
       const track = tracks.find(t => t.id === c.trackId);
       if (!track || !track.visible) return false;
       const timeUntilStart = c.startTime - currentTime;
@@ -421,30 +421,33 @@ const VideoPreview: React.FC<Props> = ({
     });
   }, [clips, tracks, currentTime, activeClipIds]);
 
+  const stagedVisuals = useMemo(() => {
+    const merged = new Map<string, TimelineClip>();
+    activeVisuals.forEach(clip => merged.set(clip.id, clip));
+    preloadVideoClips.forEach(clip => merged.set(clip.id, clip));
+    return [...merged.values()].sort((a, b) => (trackIndexMap.get(b.trackId) ?? 0) - (trackIndexMap.get(a.trackId) ?? 0));
+  }, [activeVisuals, preloadVideoClips, trackIndexMap]);
+
   const clipsRef = useRef(clips);
   clipsRef.current = clips;
 
-  // Sync active + preloaded video elements to correct time
   useEffect(() => {
-    const allVideoIds = activeVideoIds.split(',').filter(Boolean);
+    const allVideoIds = [
+      ...activeVideoIds.split(',').filter(Boolean),
+      ...preloadVideoClips.map(clip => clip.id),
+    ];
+
     allVideoIds.forEach((clipId) => {
       const vid = videoRefs.current[clipId];
       const clip = clipsRef.current.find(c => c.id === clipId);
-      if (vid && clip?.src) {
-        const clipTime = currentTime - clip.startTime + (clip.trimStart || 0);
-        if (Math.abs(vid.currentTime - clipTime) > 0.12) vid.currentTime = clipTime;
-      }
+      if (!vid || !clip?.src) return;
+
+      const isPreload = !activeClipIds.includes(clipId);
+      const clipTime = isPreload ? (clip.trimStart || 0) : currentTime - clip.startTime + (clip.trimStart || 0);
+      if (Math.abs(vid.currentTime - clipTime) > 0.12) vid.currentTime = clipTime;
+      if (isPreload && !vid.paused) vid.pause();
     });
-    // Pre-seek upcoming clips to their start frame
-    preloadVideoClips.forEach((clip) => {
-      const vid = videoRefs.current[clip.id];
-      if (vid) {
-        const seekTo = clip.trimStart || 0;
-        if (Math.abs(vid.currentTime - seekTo) > 0.12) vid.currentTime = seekTo;
-        if (!vid.paused) vid.pause();
-      }
-    });
-  }, [currentTime, activeVideoIds, preloadVideoClips]);
+  }, [currentTime, activeVideoIds, preloadVideoClips, activeClipIds]);
 
   useEffect(() => {
     activeVideoIds.split(',').filter(Boolean).forEach((clipId) => {
@@ -615,15 +618,16 @@ const VideoPreview: React.FC<Props> = ({
 
         <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
 
-        {activeVisuals.length > 0 ? (
-          activeVisuals.map((clip, layerIdx) => {
+        {stagedVisuals.length > 0 ? (
+          stagedVisuals.map((clip, layerIdx) => {
             const cx = clip.x ?? 0;
             const cy = clip.y ?? 0;
             const cw = clip.w ?? 100;
             const ch = clip.h ?? 100;
             const isSelected = selectedClipIds.includes(clip.id);
+            const isActiveVisual = activeVisuals.some(activeClip => activeClip.id === clip.id);
             const zIndex = 10 + layerIdx;
-            const transitionStyle = getClipTransitionStyle(clip);
+            const transitionStyle = isActiveVisual ? getClipTransitionStyle(clip) : {};
 
             return (
               <div
@@ -632,7 +636,7 @@ const VideoPreview: React.FC<Props> = ({
                 style={{
                   left: `${cx}%`, top: `${cy}%`, width: `${cw}%`, height: `${ch}%`,
                   filter: buildFilter(clip),
-                  opacity: clip.opacity ?? 1,
+                  opacity: isActiveVisual ? (clip.opacity ?? 1) : 0,
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px', zIndex, transition: 'none',
                   transform: [
@@ -644,7 +648,6 @@ const VideoPreview: React.FC<Props> = ({
                     transitionStyle.transform || '',
                   ].filter(Boolean).join(' '),
                   ...transitionStyle,
-                  // Override transform with our combined one
                   ...((() => {
                     const combinedTransform = [
                       `rotate(${clip.rotation ?? 0}deg)`,
@@ -656,14 +659,14 @@ const VideoPreview: React.FC<Props> = ({
                     ].filter(Boolean).join(' ');
                     return { transform: combinedTransform };
                   })()),
-                  ...(transitionStyle.opacity !== undefined ? { opacity: (clip.opacity ?? 1) * (transitionStyle.opacity as number) } : {}),
+                  ...(transitionStyle.opacity !== undefined ? { opacity: ((isActiveVisual ? (clip.opacity ?? 1) : 0) * (transitionStyle.opacity as number)) } : {}),
                   ...(transitionStyle.filter ? { filter: [buildFilter(clip), transitionStyle.filter].filter(f => f && f !== 'none').join(' ') || 'none' } : {}),
                 }}
-                onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
+                onPointerDown={(e) => isActiveVisual && handlePointerDown(e, clip.id, 'move')}
               >
                 {clip.src ? (
                   clip.type === 'video' ? (
-                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-contain pointer-events-none" muted={clip.muted} playsInline preload="metadata" />
+                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-contain pointer-events-none" muted={clip.muted} playsInline preload="auto" />
                   ) : (
                     <img src={clip.src} className="w-full h-full object-contain pointer-events-none" alt="" draggable={false} />
                   )
@@ -776,18 +779,6 @@ const VideoPreview: React.FC<Props> = ({
           {resW}×{resH}
         </div>
 
-        {/* Hidden preloaded video elements for seamless transitions */}
-        {preloadVideoClips.map(clip => (
-          <video
-            key={`preload_${clip.id}`}
-            ref={(el) => { videoRefs.current[clip.id] = el; }}
-            src={clip.src}
-            className="absolute w-0 h-0 opacity-0 pointer-events-none"
-            muted
-            playsInline
-            preload="auto"
-          />
-        ))}
       </div>
     </div>
   );
