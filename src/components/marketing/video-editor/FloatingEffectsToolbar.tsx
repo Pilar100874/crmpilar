@@ -351,8 +351,11 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [selectedFilterCat, setSelectedFilterCat] = useState<string>('cor');
   const [selectedAudioCat, setSelectedAudioCat] = useState<string>('Equalizador');
   const [selectedAudioPresetCat, setSelectedAudioPresetCat] = useState<string>('Podcast');
-  const [audioTab, setAudioTab] = useState<'presets' | 'filters' | 'active'>('presets');
+  const [audioTab, setAudioTab] = useState<'presets' | 'filters' | 'active' | 'wave' | 'speed'>('presets');
   const [expandedAudioParams, setExpandedAudioParams] = useState<Record<string, boolean>>({});
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const isAudio = selectedClip.type === 'audio';
