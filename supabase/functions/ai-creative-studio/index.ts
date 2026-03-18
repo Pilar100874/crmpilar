@@ -1591,10 +1591,40 @@ Deno.serve(async (req) => {
   } catch (e: any) {
     console.error("ai-creative-studio error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
+    const msgLower = msg.toLowerCase();
     let status = e?.status || 500;
-    if (msg.includes("429") || msg.includes("quota")) status = 429;
-    if (msg.includes("402") || msg.includes("billing")) status = 402;
-    return new Response(JSON.stringify({ error: msg }), {
+    let friendlyMsg = msg;
+    
+    // Map billing/credit errors
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("payment") || 
+        msgLower.includes("insufficient") || msgLower.includes("credits") || 
+        msgLower.includes("exclusively available") || msgLower.includes("quota exceeded") ||
+        msgLower.includes("balance") || msgLower.includes("subscription")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes no provedor. Adicione saldo na sua conta do provedor de IA.";
+    }
+    // Map rate limit errors
+    else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("too many") || 
+             msgLower.includes("quota") || msgLower.includes("throttl")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições excedido. Aguarde alguns segundos e tente novamente.";
+    }
+    // Map auth errors
+    else if (msgLower.includes("401") || msgLower.includes("unauthorized") || msgLower.includes("incorrect api key") || msgLower.includes("invalid api key") || msgLower.includes("invalid_api_key")) {
+      status = 401;
+      friendlyMsg = "Chave de API inválida ou expirada. Verifique sua chave em Configurações → APIs Pagas.";
+    }
+    // Map moderation/safety errors
+    else if (msgLower.includes("blocked") || msgLower.includes("moderation") || msgLower.includes("safety") || msgLower.includes("content_policy") || msgLower.includes("nsfw")) {
+      status = 400;
+      friendlyMsg = "Conteúdo bloqueado pela moderação do provedor. Reformule o prompt e tente novamente.";
+    }
+    // Truncate unknown errors
+    else {
+      friendlyMsg = msg.substring(0, 300);
+    }
+    
+    return new Response(JSON.stringify({ error: friendlyMsg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -25,11 +25,12 @@ async function fetchApiframeKey(estabelecimentoId: string): Promise<string | nul
 }
 
 function mapErrorMessage(status: number, body: string): string {
-  if (status === 401) return "API Key do Apiframe inválida. Verifique nas configurações.";
-  if (status === 402) return "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
-  if (status === 429) return "Limite de requisições atingido. Aguarde e tente novamente.";
+  const lower = body.toLowerCase();
+  if (status === 401 || lower.includes('unauthorized') || lower.includes('invalid api key')) return "API Key do Apiframe inválida. Verifique nas configurações.";
+  if (status === 402 || lower.includes('billing') || lower.includes('payment') || lower.includes('insufficient') || lower.includes('credits')) return "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
+  if (status === 429 || lower.includes('rate limit') || lower.includes('too many') || lower.includes('quota')) return "Limite de requisições atingido. Aguarde e tente novamente.";
   if (status >= 500) return "Erro interno do Apiframe. Tente novamente mais tarde.";
-  return `Erro Apiframe (${status}): ${body}`;
+  return `Erro Apiframe (${status}): ${body.substring(0, 200)}`;
 }
 
 Deno.serve(async (req) => {
@@ -157,9 +158,20 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[apiframe-proxy] Error:", err);
+    const msg = err instanceof Error ? err.message : "Erro desconhecido";
+    const msgLower = msg.toLowerCase();
+    let status = 500;
+    let friendlyMsg = msg;
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("credits") || msgLower.includes("insufficient")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
+    } else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("quota")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições atingido. Aguarde e tente novamente.";
+    }
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: friendlyMsg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

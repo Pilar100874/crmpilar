@@ -57,14 +57,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI Gateway error:", response.status, errorText);
+      const errLower = (errorText || '').toLowerCase();
       
-      if (response.status === 429) {
+      if (response.status === 429 || errLower.includes('rate limit') || errLower.includes('too many') || errLower.includes('quota')) {
         return new Response(
-          JSON.stringify({ error: "Rate limit excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response.status === 402 || errLower.includes('billing') || errLower.includes('payment') || 
+          errLower.includes('insufficient') || errLower.includes('credits') || errLower.includes('exclusively available')) {
         return new Response(
           JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -102,9 +104,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error generating ad image:", error);
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    const msgLower = msg.toLowerCase();
+    let status = 500;
+    let friendlyMsg = msg;
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("payment") || 
+        msgLower.includes("insufficient") || msgLower.includes("credits") || msgLower.includes("exclusively available")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes. Adicione créditos ao workspace.";
+    } else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("too many") || msgLower.includes("quota")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições excedido. Tente novamente.";
+    }
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: friendlyMsg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
