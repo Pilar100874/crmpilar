@@ -319,7 +319,8 @@ const VideoPreview: React.FC<Props> = ({
   const CANVAS_H = CANVAS_W / aspectRatio;
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
-  const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
+  const [dragging, setDragging] = useState<{ clipId: string; mode: 'move' | 'resize' | 'rotate'; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number; origRotation?: number; centerX?: number; centerY?: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [previewAnim, setPreviewAnim] = useState<{ clipId: string; phase: 'entrance' | 'exit'; startTime: number } | null>(null);
 
   useEffect(() => {
