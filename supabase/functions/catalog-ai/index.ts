@@ -68,21 +68,23 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
       });
 
       if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        const errorText = await response.text().catch(() => '');
+        const errLower = errorText.toLowerCase();
+        if (response.status === 429 || errLower.includes('rate limit') || errLower.includes('too many') || errLower.includes('quota')) {
+          return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente." }), {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        if (response.status === 402) {
-          return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
+        if (response.status === 402 || errLower.includes('billing') || errLower.includes('payment') || 
+            errLower.includes('insufficient') || errLower.includes('credits') || errLower.includes('exclusively available')) {
+          return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        const errorText = await response.text();
         console.error("AI gateway error:", response.status, errorText);
-        throw new Error("Failed to generate image");
+        throw new Error("Falha ao gerar imagem");
       }
 
       const data = await response.json();
