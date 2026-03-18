@@ -802,11 +802,27 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
 
   // Build apiframe params — field names vary per provider
   const afParams: Record<string, any> = {};
-  if (params.prompt) afParams.prompt = params.prompt;
 
   const startImageUrl = params.imageUrls?.[0] || null;
   const endImageUrl = params.imageUrls?.[1] || null;
   const isBridge = params.bridgeMode === true;
+
+  // --- Bridge-mode prompt cleanup ---
+  // Apiframe models receive start/end frames as separate parameters,
+  // so the prompt should be SHORT and only describe the desired transition motion.
+  // The verbose "IMAGE-TO-VIDEO TRANSITION..." wrapper confuses the model.
+  let cleanPrompt = params.prompt || "";
+  if (isBridge) {
+    // Extract just the user's transition direction from the verbose wrapper
+    const dirMatch = cleanPrompt.match(/TRANSITION DIRECTION:\s*([\s\S]*?)(?:\n\nCRITICAL:|$)/);
+    if (dirMatch?.[1]?.trim()) {
+      cleanPrompt = dirMatch[1].trim();
+    }
+    // Prepend a concise instruction that works well with image-to-video APIs
+    cleanPrompt = `Smooth cinematic transition from the start image to the end image. ${cleanPrompt}`;
+    console.log(`[apiframe-video] Bridge mode: cleaned prompt to "${cleanPrompt.substring(0, 120)}..."`);
+  }
+  afParams.prompt = cleanPrompt;
 
   if (subModel === "kling-2.5") {
     // Kling 2.5 Turbo Pro uses start_image / end_image
@@ -815,8 +831,12 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   } else if (subModel === "kling-2.6") {
     // Kling 2.6 only supports image_url (first frame)
     if (startImageUrl) afParams.image_url = startImageUrl;
+  } else if (subModel === "luma") {
+    // Luma uses image_url / end_image_url — NO generation_type field
+    if (startImageUrl) afParams.image_url = startImageUrl;
+    if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
   } else {
-    // Runway & Luma use image_url / end_image_url
+    // Runway uses image_url / end_image_url + generation_type
     if (startImageUrl) {
       afParams.image_url = startImageUrl;
       afParams.generation_type = "image2video";
@@ -829,7 +849,7 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
   if (params.duration) afParams.duration = params.duration;
 
-  console.log(`[apiframe-video] Calling action="${action}" for model="${model}"`);
+  console.log(`[apiframe-video] Calling action="${action}" for model="${model}", bridge=${isBridge}, hasStart=${!!startImageUrl}, hasEnd=${!!endImageUrl}`);
 
   // Call apiframe-proxy edge function
   const proxyUrl = `${supabaseUrl}/functions/v1/apiframe-proxy`;
