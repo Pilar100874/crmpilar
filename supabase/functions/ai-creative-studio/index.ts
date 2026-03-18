@@ -1137,6 +1137,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     case "luma": return generateVideoLuma(apiKey, params);
     case "stability": return generateVideoStability(apiKey, params);
     case "replicate": return generateVideoReplicate(apiKey, params);
+    case "apiframe": return generateVideoApiframe(estabelecimentoId, params);
     case "pika":
     case "minimax":
     case "bytedance":
