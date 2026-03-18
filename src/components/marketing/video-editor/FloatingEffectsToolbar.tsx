@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge
+  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge, Check
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS, VolumeEnvelopePoint } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
@@ -356,6 +356,38 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [originalAudioState, setOriginalAudioState] = useState<{
+    audioFilters?: AudioFilter[];
+    volumeEnvelope?: VolumeEnvelopePoint[];
+    playbackRate?: number;
+    volume?: number;
+  } | null>(null);
+
+  // Capture original state when popover opens
+  const captureOriginalAudioState = useCallback(() => {
+    if (originalAudioState === null) {
+      setOriginalAudioState({
+        audioFilters: selectedClip.audioFilters ? [...selectedClip.audioFilters] : undefined,
+        volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
+        playbackRate: selectedClip.playbackRate,
+        volume: selectedClip.volume,
+      });
+    }
+  }, [selectedClip, originalAudioState]);
+
+  const restoreOriginalAudio = useCallback(() => {
+    if (!originalAudioState) return;
+    onUpdateClip(selectedClip.id, {
+      audioFilters: originalAudioState.audioFilters || [],
+      volumeEnvelope: originalAudioState.volumeEnvelope,
+      playbackRate: originalAudioState.playbackRate,
+      volume: originalAudioState.volume,
+    });
+  }, [originalAudioState, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmAudio = useCallback(() => {
+    setOriginalAudioState(null);
+  }, []);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const isAudio = selectedClip.type === 'audio';
@@ -726,7 +758,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* === AUDIO EFFECTS POPOVER (for audio clips) === */}
           {isAudio ? (
-            <Popover>
+            <Popover onOpenChange={(open) => { if (open) captureOriginalAudioState(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasAudioFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Headphones className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -1023,6 +1055,28 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     )}
                   </div>
                 </ScrollArea>
+                {/* Footer: Apply / Restore */}
+                <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-7 text-[10px] gap-1 border-dashed"
+                    onClick={restoreOriginalAudio}
+                    disabled={!originalAudioState}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Restaurar Original
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1 h-7 text-[10px] gap-1"
+                    onClick={applyAndConfirmAudio}
+                  >
+                    <Check className="h-3 w-3" />
+                    Aplicar
+                  </Button>
+                </div>
               </PopoverContent>
             </Popover>
           ) : (
