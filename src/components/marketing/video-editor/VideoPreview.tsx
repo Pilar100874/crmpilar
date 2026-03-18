@@ -719,8 +719,8 @@ const VideoPreview: React.FC<Props> = ({
 
                 {isSelected && (
                   <>
-                    {/* Resize handle - bottom right */}
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')}>
+                    {/* Resize handle - bottom right (main grip) */}
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'br')}>
                       <svg viewBox="0 0 16 16" className="w-full h-full text-primary-foreground p-0.5">
                         <path d="M14 2v12H2" fill="none" stroke="currentColor" strokeWidth="2" />
                       </svg>
@@ -765,9 +765,15 @@ const VideoPreview: React.FC<Props> = ({
                     </div>
 
                     {/* Corner resize handles */}
-                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-nw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
-                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-ne-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
-                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-sw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
+                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-nw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'tl')} />
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-ne-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'tr')} />
+                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-sw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'bl')} />
+
+                    {/* Edge resize handles */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-1.5 bg-primary border border-primary-foreground rounded-sm cursor-n-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 't')} />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-1.5 bg-primary border border-primary-foreground rounded-sm cursor-s-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'b')} />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary border border-primary-foreground rounded-sm cursor-w-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'l')} />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary border border-primary-foreground rounded-sm cursor-e-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize', 'r')} />
                   </>
                 )}
               </div>
