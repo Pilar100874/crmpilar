@@ -408,19 +408,43 @@ const VideoPreview: React.FC<Props> = ({
   const activeTexts = useMemo(() => sortedActiveClips.filter((c) => c.type === 'text'), [sortedActiveClips]);
   const activeVideoIds = useMemo(() => activeVisuals.filter(c => c.type === 'video' && c.src).map(c => c.id).join(','), [activeVisuals]);
 
+  // Pre-load upcoming video clips (within 1s) to avoid flash on transition
+  const PRELOAD_WINDOW = 1.0;
+  const preloadVideoClips = useMemo(() => {
+    return clips.filter(c => {
+      if (c.type !== 'video' || !c.src) return false;
+      if (activeClipIds.includes(c.id)) return false; // already active
+      const track = tracks.find(t => t.id === c.trackId);
+      if (!track || !track.visible) return false;
+      const timeUntilStart = c.startTime - currentTime;
+      return timeUntilStart > 0 && timeUntilStart <= PRELOAD_WINDOW;
+    });
+  }, [clips, tracks, currentTime, activeClipIds]);
+
   const clipsRef = useRef(clips);
   clipsRef.current = clips;
 
+  // Sync active + preloaded video elements to correct time
   useEffect(() => {
-    activeVideoIds.split(',').filter(Boolean).forEach((clipId) => {
+    const allVideoIds = activeVideoIds.split(',').filter(Boolean);
+    allVideoIds.forEach((clipId) => {
       const vid = videoRefs.current[clipId];
       const clip = clipsRef.current.find(c => c.id === clipId);
       if (vid && clip?.src) {
         const clipTime = currentTime - clip.startTime + (clip.trimStart || 0);
-        if (Math.abs(vid.currentTime - clipTime) > 0.5) vid.currentTime = clipTime;
+        if (Math.abs(vid.currentTime - clipTime) > 0.12) vid.currentTime = clipTime;
       }
     });
-  }, [currentTime, activeVideoIds]);
+    // Pre-seek upcoming clips to their start frame
+    preloadVideoClips.forEach((clip) => {
+      const vid = videoRefs.current[clip.id];
+      if (vid) {
+        const seekTo = clip.trimStart || 0;
+        if (Math.abs(vid.currentTime - seekTo) > 0.12) vid.currentTime = seekTo;
+        if (!vid.paused) vid.pause();
+      }
+    });
+  }, [currentTime, activeVideoIds, preloadVideoClips]);
 
   useEffect(() => {
     activeVideoIds.split(',').filter(Boolean).forEach((clipId) => {
