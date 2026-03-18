@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { TimelineClip, EFFECT_TRACK_PRESETS } from './types';
-import { Settings2, FlipHorizontal, FlipVertical, RotateCcw } from 'lucide-react';
+import { Settings2, FlipHorizontal, FlipVertical, RotateCcw, Maximize, Move } from 'lucide-react';
 
 interface Props {
   clip?: TimelineClip;
@@ -172,18 +172,31 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
                 />
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full mt-2 text-xs"
-              onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
-            >
-              Resetar para tela cheia
-            </Button>
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-xs gap-1.5"
+                onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
+              >
+                <Move className="h-3 w-3" />
+                Resetar posição
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="flex-1 text-xs gap-1.5"
+                onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100, rotation: 0, skewX: 0, skewY: 0, scaleX: 1, scaleY: 1 })}
+                title="Preencher todo o quadro do vídeo"
+              >
+                <Maximize className="h-3 w-3" />
+                Preencher quadro
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Transform: Rotation, Flip, Scale */}
+        {/* Transform: Rotation, Flip, Skew, Scale */}
         {(clip.type === 'video' || clip.type === 'image' || clip.type === 'canvas') && (
           <div>
             <Label className="text-xs font-semibold">Transformar</Label>
@@ -210,6 +223,21 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
                 step={1}
                 className="mt-1"
               />
+            </div>
+
+            {/* Quick rotation presets */}
+            <div className="flex gap-1 mt-1">
+              {[0, 90, 180, 270].map(deg => (
+                <Button
+                  key={deg}
+                  variant={(clip.rotation ?? 0) === deg ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1 text-[10px] h-6 px-1"
+                  onClick={() => onUpdateClip(clip.id, { rotation: deg })}
+                >
+                  {deg}°
+                </Button>
+              ))}
             </div>
 
             {/* Scale X / Y */}
@@ -244,6 +272,32 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
               </div>
             </div>
 
+            {/* Skew / Distort */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div>
+                <Label className="text-[10px]">Distorcer H ({clip.skewX ?? 0}°)</Label>
+                <Slider
+                  value={[clip.skewX ?? 0]}
+                  onValueChange={([v]) => onUpdateClip(clip.id, { skewX: v })}
+                  min={-45}
+                  max={45}
+                  step={1}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px]">Distorcer V ({clip.skewY ?? 0}°)</Label>
+                <Slider
+                  value={[clip.skewY ?? 0]}
+                  onValueChange={([v]) => onUpdateClip(clip.id, { skewY: v })}
+                  min={-45}
+                  max={45}
+                  step={1}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
             {/* Flip buttons */}
             <div className="flex gap-2 mt-2">
               <Button
@@ -271,7 +325,7 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
               variant="outline"
               size="sm"
               className="w-full mt-2 text-xs"
-              onClick={() => onUpdateClip(clip.id, { rotation: 0, scaleX: 1, scaleY: 1 })}
+              onClick={() => onUpdateClip(clip.id, { rotation: 0, scaleX: 1, scaleY: 1, skewX: 0, skewY: 0 })}
             >
               Resetar transformações
             </Button>

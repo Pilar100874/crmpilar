@@ -28,6 +28,8 @@ export interface TimelineClip {
   rotation?: number;      // degrees (0-360)
   scaleX?: number;        // 1 = normal, -1 = flip horizontal
   scaleY?: number;        // 1 = normal, -1 = flip vertical
+  skewX?: number;         // degrees of horizontal skew
+  skewY?: number;         // degrees of vertical skew
   // For effect track clips: the visual overlay effect type
   effectType?: TransitionType;
 }
