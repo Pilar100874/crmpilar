@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { TimelineClip, EFFECT_TRACK_PRESETS } from './types';
-import { Settings2, FlipHorizontal, FlipVertical, RotateCcw, Maximize, Move } from 'lucide-react';
+import { Settings2, FlipHorizontal, FlipVertical, RotateCcw, Maximize, Move, Undo2 } from 'lucide-react';
 
 interface Props {
   clip?: TimelineClip;
