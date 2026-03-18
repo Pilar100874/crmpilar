@@ -28,12 +28,11 @@ interface VideoModelInfo {
 }
 
 const ALL_VIDEO_MODELS: VideoModelInfo[] = [
+  // Modelos com suporte a Image-to-Video (transição entre frames)
   { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'google', cost: '$$$$' },
   { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'google', cost: '$$$' },
   { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'google', cost: '$$$' },
   { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'google', cost: '$$' },
-  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'openai', cost: '$$$$' },
-  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'openai', cost: '$$$' },
   { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'runway', cost: '$$$$' },
   { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'runway', cost: '$$' },
   { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'kling', cost: '$$' },
@@ -42,36 +41,27 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'minimax', cost: '$' },
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$' },
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'stability', cost: '$' },
-  { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2', provider: 'replicate', cost: '$' },
-  // Apiframe
-  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'apiframe', cost: '$$' },
+  // Apiframe (I2V)
   { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'apiframe', cost: '$$$' },
   { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'apiframe', cost: '$$' },
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'apiframe', cost: '$$$' },
-  { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'apiframe', cost: '$$$' },
-  // AIML API
+  // AIML API (I2V)
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'aimlapi', cost: '$$' },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'aimlapi', cost: '$$' },
   { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'aimlapi', cost: '$$' },
   { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'aimlapi', cost: '$' },
-  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'aimlapi', cost: '$' },
-  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'aimlapi', cost: '$' },
   { value: 'aimlapi/pika', label: '🤖 ML: Pika', provider: 'aimlapi', cost: '$$' },
-  { value: 'aimlapi/wan-video', label: '🤖 ML: Wan Video', provider: 'aimlapi', cost: '$' },
   { value: 'aimlapi/stable-video', label: '🤖 ML: Stable Video', provider: 'aimlapi', cost: '$' },
-  // Pollo AI
+  // Pollo AI (I2V)
   { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'polloai', cost: '$$' },
   { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'polloai', cost: '$$' },
   { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'polloai', cost: '$' },
   { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'polloai', cost: '$$' },
   { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'polloai', cost: '$' },
-  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'polloai', cost: '$' },
-  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'polloai', cost: '$' },
   { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'polloai', cost: '$$' },
-  { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'polloai', cost: '$' },
 ];
 
 const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
