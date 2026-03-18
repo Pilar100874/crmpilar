@@ -872,6 +872,11 @@ const VideoTimelineEditor: React.FC = () => {
   }, [timeline]);
 
   const handleOpenBridgeVideo = useCallback(() => {
+    // Block only if there's an active generation running
+    if (bridgeGen.tasks.some(t => t.status === 'generating')) {
+      toast.error('Aguarde a geração atual finalizar antes de iniciar outra.');
+      return;
+    }
     const selected = state.selectedClipIds;
     if (selected.length !== 2) {
       toast.error('Selecione exatamente 2 clipes adjacentes (vídeo ou imagem) para criar o vídeo de transição');
@@ -885,10 +890,12 @@ const VideoTimelineEditor: React.FC = () => {
     }
     // Sort by startTime
     clips.sort((a, b) => a.startTime - b.startTime);
+    // Reset active task so dialog opens fresh (not showing old result)
+    setActiveBridgeTaskId(null);
     setBridgeClipA(clips[0]);
     setBridgeClipB(clips[1]);
     setBridgeDialogOpen(true);
-  }, [state.selectedClipIds, state.clips]);
+  }, [state.selectedClipIds, state.clips, bridgeGen.tasks]);
 
   const handleBridgeVideoGenerated = useCallback((videoUrl: string, duration: number) => {
     if (!bridgeClipA || !bridgeClipB) return;
