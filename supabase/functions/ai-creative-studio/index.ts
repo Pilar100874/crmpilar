@@ -854,7 +854,8 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     const pollData = await pollResp.json();
 
     if (pollData.status === "finished" || pollData.status === "completed" || pollData.status === "succeeded") {
-      const url = pollData.video_url || pollData.result_url || pollData.output;
+      // Apiframe returns video_urls (array) or video_url (string)
+      const url = pollData.video_urls?.[0] || pollData.video_url || pollData.result_url || pollData.output;
       if (url) return { done: true, result: url };
       return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
     }
