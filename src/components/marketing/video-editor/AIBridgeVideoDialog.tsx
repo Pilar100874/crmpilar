@@ -424,91 +424,8 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   }, [drawContain, loadImage, seekVideoPrecisely]);
 
 
-  const enforceExactBridgeFrames = useCallback(async (
-    generatedVideoUrl: string,
-    startFrameDataUrl: string,
-    endFrameDataUrl: string,
-    finalDuration: number,
-    estabId: string,
-  ) => {
-    try {
-      const [startImg, endImg] = await Promise.all([
-        loadImage(startFrameDataUrl, `${clipA.name} (frame inicial)`),
-        loadImage(endFrameDataUrl, `${clipB.name} (frame final)`),
-      ]);
 
-      const video = document.createElement('video');
-      video.crossOrigin = 'anonymous';
-      video.muted = true;
-      video.preload = 'auto';
-      video.playsInline = true;
 
-      await new Promise<void>((resolve, reject) => {
-        video.onloadedmetadata = () => resolve();
-        video.onerror = () => reject(new Error('Falha ao carregar o vídeo gerado para ajuste dos frames'));
-        video.src = generatedVideoUrl;
-      });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(2, video.videoWidth || 1280);
-      canvas.height = Math.max(2, video.videoHeight || 720);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas indisponível para compor a transição');
-
-      const fps = 24;
-      const totalFrames = Math.max(8, Math.round(finalDuration * fps));
-      const edgeFrames = Math.min(Math.max(2, Math.round(fps * 0.25)), Math.max(2, Math.floor(totalFrames / 3)));
-      const middleFrames = Math.max(1, totalFrames - edgeFrames * 2);
-      const stream = canvas.captureStream(fps);
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
-      const chunks: BlobPart[] = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.push(event.data);
-      };
-
-      const recordingDone = new Promise<Blob>((resolve) => {
-        recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
-      });
-
-      recorder.start();
-
-      for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
-        if (frameIndex < edgeFrames) {
-          drawContain(ctx, startImg, startImg.width, startImg.height);
-        } else if (frameIndex >= totalFrames - edgeFrames) {
-          drawContain(ctx, endImg, endImg.width, endImg.height);
-        } else {
-          const progress = middleFrames <= 1 ? 0 : (frameIndex - edgeFrames) / (middleFrames - 1);
-          const sourceTime = Math.max(0, Math.min(progress * Math.max(video.duration, 0.001), Math.max(0, video.duration - 0.001)));
-          await seekVideoPrecisely(video, sourceTime);
-          drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
-        }
-
-        (stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | undefined)?.requestFrame?.();
-        await new Promise((resolve) => window.setTimeout(resolve, 1000 / fps));
-      }
-
-      recorder.stop();
-      const composedBlob = await recordingDone;
-      const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-      const path = `${estabId}/bridge/${Date.now()}_bridge_exact.${ext}`;
-      const { error } = await supabase.storage.from('marketing-videos').upload(path, composedBlob, {
-        contentType: composedBlob.type || `video/${ext}`,
-        upsert: true,
-      });
-      if (error) throw error;
-
-      const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(path);
-      return urlData.publicUrl || generatedVideoUrl;
-    } catch (error) {
-      console.warn('[bridge-video] Falha ao aplicar frames exatos nas bordas:', error);
-      return generatedVideoUrl;
-    }
-  }, [clipA.name, clipB.name, drawContain, loadImage, seekVideoPrecisely]);
 
   const handleSelectSuggestion = (text: string) => {
     setPrompt(text);
@@ -608,9 +525,8 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (result?.error) throw new Error(result.error);
       if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
 
-      const exactVideoUrl = await enforceExactBridgeFrames(result.videoUrl, frameA, frameB, duration, estabId);
-      toast.success('Vídeo de transição gerado com os frames inicial e final exatos!');
-      onVideoGenerated(exactVideoUrl, duration);
+      toast.success('Vídeo de transição gerado com sucesso!');
+      onVideoGenerated(result.videoUrl, duration);
       onClose();
     } catch (err: any) {
       const msg = err?.message || 'Erro desconhecido';
@@ -620,7 +536,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     } finally {
       setIsGenerating(false);
     }
-  }, [duration, enforceExactBridgeFrames, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
+  }, [duration, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
