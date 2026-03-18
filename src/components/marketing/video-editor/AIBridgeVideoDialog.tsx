@@ -78,6 +78,59 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   if (!requiredProvider) return true;
   return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
+const DEFAULT_TRANSITION_PROMPTS = [
+  { id: '1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
+  { id: '2', text: 'Câmera gira 360° ao redor do objeto principal e dissolve para a próxima imagem' },
+  { id: '3', text: 'Efeito de partículas douradas se formam e se dissolvem revelando a nova cena' },
+  { id: '4', text: 'Fade suave com raios de luz passando pela câmera durante a transição' },
+  { id: '5', text: 'Movimento de câmera dolly para frente atravessando a cena até chegar na próxima' },
+  { id: '6', text: 'Efeito de ondas distorcendo a imagem como reflexo na água, revelando nova cena' },
+  { id: '7', text: 'Transição com desfoque de movimento rápido (motion blur) horizontal entre cenas' },
+  { id: '8', text: 'Câmera faz um tilt up dramático para o céu e desce revelando o novo cenário' },
+  { id: '9', text: 'Pétalas de flores voam pela tela cobrindo a imagem e revelando a próxima' },
+  { id: '10', text: 'Efeito de espelho se quebrando, fragmentos revelam gradualmente a nova cena' },
+  { id: '11', text: 'Fumaça cinematográfica preenche a tela e se dissipa mostrando o novo ambiente' },
+  { id: '12', text: 'Câmera orbita lentamente enquanto a cena se transforma suavemente' },
+  { id: '13', text: 'Flash de luz branca estilo fotográfico que revela a próxima composição' },
+  { id: '14', text: 'Transição com efeito de tinta se espalhando em aquarela pela tela' },
+  { id: '15', text: 'Zoom extremo no detalhe de um objeto que se transforma na próxima cena' },
+  { id: '16', text: 'Efeito de portal luminoso se abrindo no centro da tela com a nova cena dentro' },
+  { id: '17', text: 'Câmera atravessa uma cortina de luz, revelando o novo cenário do outro lado' },
+  { id: '18', text: 'Transição com efeito glitch digital rápido entre as duas cenas' },
+  { id: '19', text: 'Folhas de outono caem cobrindo a tela e são sopradas revelando nova imagem' },
+  { id: '20', text: 'Efeito de câmera lenta com bokeh luminoso transitando entre cenas' },
+  { id: '21', text: 'Pan horizontal cinematográfico com desfoque gaussiano na transição' },
+  { id: '22', text: 'Cristais de gelo se formam sobre a imagem e derretem revelando a próxima' },
+  { id: '23', text: 'Efeito de dupla exposição mesclando as duas cenas de forma artística' },
+  { id: '24', text: 'Câmera faz movimento crane ascendente saindo da cena atual para a próxima' },
+  { id: '25', text: 'Transição com efeito de página virando como um livro elegante' },
+  { id: '26', text: 'Ondas de energia luminosa expandem do centro transformando a cena' },
+  { id: '27', text: 'Efeito de areia se espalhando pelo vento, cobrindo e revelando cenas' },
+  { id: '28', text: 'Câmera faz whip pan ultra rápido girando e parando na nova cena' },
+  { id: '29', text: 'Bolhas de sabão flutuam pela tela refletindo a nova cena dentro delas' },
+  { id: '30', text: 'Transição com efeito de pinceladas de tinta revelando progressivamente a nova imagem' },
+];
+
+const STORAGE_KEY = 'bridge-transition-prompts';
+
+function loadCustomPrompts(): typeof DEFAULT_TRANSITION_PROMPTS {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const map = new Map(DEFAULT_TRANSITION_PROMPTS.map((p) => [p.id, p]));
+      parsed.forEach((p: any) => map.set(p.id, p));
+      return Array.from(map.values());
+    }
+  } catch {}
+  return [...DEFAULT_TRANSITION_PROMPTS];
+}
+
+function saveCustomPrompts(prompts: typeof DEFAULT_TRANSITION_PROMPTS) {
+  const defaultMap = new Map(DEFAULT_TRANSITION_PROMPTS.map((p) => [p.id, p.text]));
+  const toSave = prompts.filter((p) => !defaultMap.has(p.id) || defaultMap.get(p.id) !== p.text);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+}
 
 const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   open, onClose, clipA, clipB, onVideoGenerated
