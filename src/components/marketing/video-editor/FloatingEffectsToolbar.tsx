@@ -1118,7 +1118,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </Popover>
           ) : (
             /* === VISUAL FILTERS POPOVER (for visual clips) === */
-            <Popover>
+            <Popover onOpenChange={(open) => { if (open) captureOriginalFilters(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
