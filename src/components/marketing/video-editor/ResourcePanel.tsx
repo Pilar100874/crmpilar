@@ -728,6 +728,29 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-destructive" />
+              Remover recurso
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm && deleteConfirm.matchingClipIds.length > 0
+                ? <>Tem certeza que deseja remover <strong>"{deleteConfirm.media.name}"</strong>? Isso também removerá <strong>{deleteConfirm.matchingClipIds.length} clipe(s)</strong> inserido(s) na timeline.</>
+                : <>Tem certeza que deseja remover <strong>"{deleteConfirm?.media.name}"</strong> dos recursos?</>
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 });
