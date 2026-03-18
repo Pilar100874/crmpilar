@@ -589,6 +589,22 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
 
+    // Use background generation manager if available
+    if (onStartBackgroundGeneration) {
+      onStartBackgroundGeneration({
+        frameA,
+        frameB,
+        prompt: prompt.trim(),
+        model,
+        duration,
+        clipAName: clipA.name,
+        clipBName: clipB.name,
+        minimized: false,
+      });
+      return;
+    }
+
+    // Legacy fallback (without background manager)
     const controller = new AbortController();
     abortRef.current = controller;
     setIsGenerating(true);
@@ -742,7 +758,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       abortRef.current = null;
       setIsGenerating(false);
     }
-  }, [duration, frameA, frameB, model, prompt]);
+  }, [duration, frameA, frameB, model, prompt, onStartBackgroundGeneration, clipA, clipB]);
 
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
 
