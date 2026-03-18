@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { X, Settings2, Key, Lock, ExternalLink, Save, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, TestTube, Play, Pause, Mic, DollarSign, Sparkles, Power, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { UNIFIED_PROVIDERS, getActiveUnifiedProvider, setActiveUnifiedProvider } from './unifiedProvidersConfig';
+import { UNIFIED_PROVIDERS } from './unifiedProvidersConfig';
 
 // ── Paid providers that need API keys ──────────────────────────────────────
 
@@ -192,6 +192,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
+  const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -203,7 +204,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const [studioDefaults, setStudioDefaults] = useState<StudioDefaults>(DEFAULT_STUDIO_DEFAULTS);
-  const [activeUnified, setActiveUnified] = useState<string | null>(null);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -219,9 +219,11 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
       if (data) {
         const keys: Record<string, string> = {};
         const sts: Record<string, 'none' | 'pending' | 'valid' | 'invalid'> = {};
+        const actives: Record<string, boolean> = {};
         data.forEach((row) => {
           keys[row.provider] = row.api_key || '';
           sts[row.provider] = (row.validation_status as any) || 'none';
+          actives[row.provider] = row.is_active !== false;
           if (row.provider === 'elevenlabs' && row.base_url) {
             try {
               const extra = JSON.parse(row.base_url);
@@ -231,6 +233,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
         });
         setApiKeys(keys);
         setStatuses(sts);
+        setActiveStates(actives);
       }
     } catch (err) {
       console.error('Error loading API keys:', err);
@@ -243,23 +246,53 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
     if (open) {
       loadKeys();
       setStudioDefaults(getStudioDefaults(estabelecimentoId));
-      setActiveUnified(getActiveUnifiedProvider(estabelecimentoId));
     }
   }, [open, loadKeys, estabelecimentoId]);
 
-  const handleToggleUnified = (providerId: string) => {
-    if (activeUnified === providerId) {
-      setActiveUnifiedProvider(estabelecimentoId, null);
-      setActiveUnified(null);
-      toast.info('API unificada desativada. Modelos individuais serão exibidos.');
-    } else {
-      if (!apiKeys[providerId]) {
-        toast.error('Configure a API Key antes de ativar.');
-        return;
+  const handleToggleActive = async (providerId: string) => {
+    const newState = !activeStates[providerId];
+    
+    // Optimistic update
+    setActiveStates(prev => ({ ...prev, [providerId]: newState }));
+
+    try {
+      const { data: existing } = await supabase
+        .from('ai_api_keys')
+        .select('id')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('provider', providerId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('ai_api_keys')
+          .update({ is_active: newState })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        // Create record with active state but no key yet
+        const provider = PAID_PROVIDERS.find(p => p.id === providerId);
+        const { error } = await supabase
+          .from('ai_api_keys')
+          .insert([{
+            estabelecimento_id: estabelecimentoId,
+            provider: providerId,
+            provider_display_name: provider?.name || providerId,
+            is_active: newState,
+            validation_status: 'none',
+          }] as any);
+        if (error) throw error;
       }
-      setActiveUnifiedProvider(estabelecimentoId, providerId);
-      setActiveUnified(providerId);
-      toast.success(`${UNIFIED_PROVIDERS.find(u => u.id === providerId)?.name} ativada! Modelos das outras APIs unificadas foram ocultados.`);
+
+      toast.success(newState
+        ? `${PAID_PROVIDERS.find(p => p.id === providerId)?.name || providerId} ativado!`
+        : `${PAID_PROVIDERS.find(p => p.id === providerId)?.name || providerId} desativado.`
+      );
+    } catch (err) {
+      console.error(err);
+      // Rollback
+      setActiveStates(prev => ({ ...prev, [providerId]: !newState }));
+      toast.error('Erro ao alterar status');
     }
   };
 
@@ -351,11 +384,13 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const statusBadge = (providerId: string) => {
     const key = apiKeys[providerId];
     const status = statuses[providerId];
-    // For unified providers, show active/inactive toggle status
-    if (isUnifiedProvider(providerId) && activeUnified === providerId) {
-      return <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0"><Zap className="h-2.5 w-2.5 mr-0.5" />Em Uso</Badge>;
+    const isActive = activeStates[providerId] !== false;
+    if (key && status === 'valid' && isActive) {
+      return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
     }
-    if (status === 'valid') return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
+    if (key && !isActive) {
+      return <Badge className="bg-muted text-muted-foreground border-border text-[9px] px-1.5 py-0"><Power className="h-2.5 w-2.5 mr-0.5" />Desativado</Badge>;
+    }
     if (key) return <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
     return <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
   };
@@ -423,23 +458,33 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                             <span>{icon}</span> {label}
                           </p>
                           {providers.map((provider) => (
-                            <button
-                              key={provider.id}
-                              onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
-                              className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
-                                selectedSection === 'providers' && selectedProvider === provider.id
-                                  ? 'bg-accent border-primary/30 shadow-sm'
-                                  : 'bg-card border-border hover:bg-accent/50 hover:border-border'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-base">{provider.icon}</span>
-                                  <span className="text-sm font-medium text-foreground">{provider.name}</span>
+                            <div key={provider.id} className={`flex items-center rounded-lg border transition-all mb-1 ${
+                              selectedSection === 'providers' && selectedProvider === provider.id
+                                ? 'bg-accent border-primary/30 shadow-sm'
+                                : 'bg-card border-border hover:bg-accent/50 hover:border-border'
+                            }`}>
+                              <button
+                                onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
+                                className="flex-1 text-left p-2.5"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-base">{provider.icon}</span>
+                                    <span className="text-sm font-medium text-foreground">{provider.name}</span>
+                                  </div>
+                                  {statusBadge(provider.id)}
                                 </div>
-                                {statusBadge(provider.id)}
-                              </div>
-                            </button>
+                              </button>
+                              {apiKeys[provider.id] && (
+                                <div className="pr-2.5" onClick={(e) => e.stopPropagation()}>
+                                  <Switch
+                                    checked={activeStates[provider.id] !== false}
+                                    onCheckedChange={() => handleToggleActive(provider.id)}
+                                    className="scale-75"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       );
@@ -624,15 +669,40 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                         />
                       )}
 
-                      {/* Unified API toggle & info */}
+                      {/* Provider activation toggle */}
+                      <div className={`rounded-xl border-2 p-5 space-y-3 transition-colors ${activeStates[selectedProviderData.id] !== false ? 'border-primary bg-primary/5' : 'border-border bg-card'}`} style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${activeStates[selectedProviderData.id] !== false ? 'bg-primary/20' : 'bg-muted'}`}>
+                              <Power className={`h-3.5 w-3.5 ${activeStates[selectedProviderData.id] !== false ? 'text-primary' : 'text-muted-foreground'}`} />
+                            </div>
+                            {activeStates[selectedProviderData.id] !== false ? 'Provedor Ativo' : 'Provedor Desativado'}
+                          </h4>
+                          <Switch
+                            checked={activeStates[selectedProviderData.id] !== false}
+                            onCheckedChange={() => handleToggleActive(selectedProviderData.id)}
+                            disabled={!apiKeys[selectedProviderData.id]}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {activeStates[selectedProviderData.id] !== false
+                            ? '✅ Modelos deste provedor estão habilitados no Studio e Editor de Vídeo.'
+                            : 'Desativado. Os modelos deste provedor não aparecerão nas listas de seleção.'}
+                        </p>
+                        {!apiKeys[selectedProviderData.id] && (
+                          <p className="text-[11px] text-muted-foreground">Configure a API Key acima antes de ativar.</p>
+                        )}
+                      </div>
+
+                      {/* Unified API extra info (available models, credits table) */}
                       {isUnifiedProvider(selectedProviderData.id) && (
                         <UnifiedProviderPanel
                           providerId={selectedProviderData.id}
                           apiKey={apiKeys[selectedProviderData.id] || ''}
                           estabelecimentoId={estabelecimentoId}
-                          isActive={activeUnified === selectedProviderData.id}
-                          otherActiveId={activeUnified && activeUnified !== selectedProviderData.id ? activeUnified : null}
-                          onToggle={() => handleToggleUnified(selectedProviderData.id)}
+                          isActive={activeStates[selectedProviderData.id] !== false}
+                          otherActiveId={null}
+                          onToggle={() => handleToggleActive(selectedProviderData.id)}
                         />
                       )}
                     </div>
@@ -726,52 +796,6 @@ const UnifiedProviderPanel: React.FC<UnifiedProviderPanelProps> = ({ providerId,
   return (
     <div className="space-y-5">
       <Separator className="bg-border" />
-
-      {/* Activation Toggle */}
-      <div className={`rounded-xl border-2 p-5 space-y-3 transition-colors ${isActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`} style={{ boxShadow: 'var(--shadow-sm)' }}>
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
-              <Power className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-            </div>
-            {isActive ? 'API Unificada Ativa' : 'Ativar API Unificada'}
-          </h4>
-          <Button
-            size="sm"
-            onClick={onToggle}
-            disabled={!apiKey && !isActive}
-            variant={isActive ? 'destructive' : 'default'}
-            className="gap-1.5 text-xs"
-          >
-            <Power className="h-3 w-3" />
-            {isActive ? 'Desativar' : 'Ativar'}
-          </Button>
-        </div>
-
-        {isActive && (
-          <p className="text-xs text-primary font-medium">
-            ✅ {provider.name} está ativa. Modelos de outras APIs unificadas estão ocultos no Studio.
-          </p>
-        )}
-
-        {!isActive && otherProvider && (
-          <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
-            <p className="text-xs text-warning">
-              ⚠️ <strong>{otherProvider.name}</strong> está ativa. Desative-a primeiro para usar {provider.name}. Apenas 1 API unificada pode ficar ativa por vez.
-            </p>
-          </div>
-        )}
-
-        {!isActive && !otherProvider && apiKey && (
-          <p className="text-[11px] text-muted-foreground">
-            Ao ativar, os modelos desta API aparecerão no Studio e os modelos de outras APIs unificadas serão ocultados.
-          </p>
-        )}
-
-        {!apiKey && (
-          <p className="text-[11px] text-muted-foreground">Configure a API Key acima antes de ativar.</p>
-        )}
-      </div>
 
       {/* Apiframe Balance (only for apiframe) */}
       {providerId === 'apiframe' && (
