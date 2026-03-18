@@ -590,6 +590,11 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     { value: 2, label: '2x' }, { value: 3, label: '3x' }, { value: 4, label: '4x' },
   ];
 
+  const clipIcon = selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊';
+  const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
+  const AUDIO_CATEGORIES = [...new Set(AUDIO_FILTER_DEFS.map(f => f.category))];
+  const AUDIO_PRESET_CATEGORIES = [...new Set(AUDIO_PRESETS.map(p => p.category))];
+
   return (
     <div className="fixed bottom-10 sm:bottom-12 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
       <div className="overflow-x-auto scrollbar-hide">
