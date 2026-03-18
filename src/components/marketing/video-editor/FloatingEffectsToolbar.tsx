@@ -356,6 +356,9 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [transPopoverOpen, setTransPopoverOpen] = useState(false);
+  const [audioPopoverOpen, setAudioPopoverOpen] = useState(false);
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   const [originalAudioState, setOriginalAudioState] = useState<{
     audioFilters?: AudioFilter[];
     volumeEnvelope?: VolumeEnvelopePoint[];
@@ -669,7 +672,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* Transitions Popover - only for visual clips */}
           {isVisual && (
-            <Popover onOpenChange={(open) => { if (open) captureOriginalTransitions(); }}>
+            <Popover open={transPopoverOpen} onOpenChange={(open) => { setTransPopoverOpen(open); if (open) captureOriginalTransitions(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -780,11 +783,14 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                 </div>
                 {/* Footer: Apply / Restore */}
                 <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] gap-1 border-dashed" onClick={restoreOriginalTransitions} disabled={originalTransitions === null}>
-                    <RotateCcw className="h-3 w-3" /> Restaurar Original
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 border-dashed" onClick={() => { restoreOriginalTransitions(); }}>
+                    <RotateCcw className="h-3 w-3" /> Restaurar
                   </Button>
-                  <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={applyAndConfirmTransitions}>
+                  <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={() => { applyAndConfirmTransitions(); setTransPopoverOpen(false); }}>
                     <Check className="h-3 w-3" /> Aplicar
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setTransPopoverOpen(false)}>
+                    <X className="h-3 w-3" /> Fechar
                   </Button>
                 </div>
               </PopoverContent>
@@ -795,7 +801,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* === AUDIO EFFECTS POPOVER (for audio clips) === */}
           {isAudio ? (
-            <Popover onOpenChange={(open) => { if (open) captureOriginalAudioState(); }}>
+            <Popover open={audioPopoverOpen} onOpenChange={(open) => { setAudioPopoverOpen(open); if (open) captureOriginalAudioState(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasAudioFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Headphones className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -1092,33 +1098,22 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     )}
                   </div>
                 </ScrollArea>
-                {/* Footer: Apply / Restore */}
                 <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-7 text-[10px] gap-1 border-dashed"
-                    onClick={restoreOriginalAudio}
-                    disabled={!originalAudioState}
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    Restaurar Original
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 border-dashed" onClick={() => { restoreOriginalAudio(); }}>
+                    <RotateCcw className="h-3 w-3" /> Restaurar
                   </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1 h-7 text-[10px] gap-1"
-                    onClick={applyAndConfirmAudio}
-                  >
-                    <Check className="h-3 w-3" />
-                    Aplicar
+                  <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={() => { applyAndConfirmAudio(); setAudioPopoverOpen(false); }}>
+                    <Check className="h-3 w-3" /> Aplicar
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setAudioPopoverOpen(false)}>
+                    <X className="h-3 w-3" /> Fechar
                   </Button>
                 </div>
               </PopoverContent>
             </Popover>
           ) : (
             /* === VISUAL FILTERS POPOVER (for visual clips) === */
-            <Popover onOpenChange={(open) => { if (open) captureOriginalFilters(); }}>
+            <Popover open={filterPopoverOpen} onOpenChange={(open) => { setFilterPopoverOpen(open); if (open) captureOriginalFilters(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -1235,13 +1230,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
               </ScrollArea>
-              {/* Footer: Apply / Restore */}
               <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
-                <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] gap-1 border-dashed" onClick={restoreOriginalFilters} disabled={originalFilters === null}>
-                  <RotateCcw className="h-3 w-3" /> Restaurar Original
+                <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 border-dashed" onClick={() => { restoreOriginalFilters(); }}>
+                  <RotateCcw className="h-3 w-3" /> Restaurar
                 </Button>
-                <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={applyAndConfirmFilters}>
+                <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={() => { applyAndConfirmFilters(); setFilterPopoverOpen(false); }}>
                   <Check className="h-3 w-3" /> Aplicar
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setFilterPopoverOpen(false)}>
+                  <X className="h-3 w-3" /> Fechar
                 </Button>
               </div>
             </PopoverContent>
