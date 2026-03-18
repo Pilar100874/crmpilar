@@ -776,6 +776,12 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                          <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
                           {m.label}
                           {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
+                          {m.bridgeSupport === 'start-only' && (
+                            <span className="flex items-center gap-0.5 text-amber-500 text-[9px] font-medium ml-1" title="Este modelo não suporta imagem final (end frame)">
+                              <AlertTriangle className="h-2.5 w-2.5" />
+                              só início
+                            </span>
+                          )}
                           {m.disabled && (
                             <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
                               <Lock className="h-2.5 w-2.5" />
