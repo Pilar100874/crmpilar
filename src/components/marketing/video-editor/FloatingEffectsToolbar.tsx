@@ -884,8 +884,8 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     <p className="text-xs font-semibold flex items-center gap-1.5">
                       <Headphones className="h-3.5 w-3.5 text-primary" /> Efeitos de Áudio Profissional
                     </p>
-                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={resetAudioFilters} disabled={!hasAudioFilters}>
-                      <RotateCcw className="h-3 w-3" /> Resetar
+                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={clearAllTransitionsToOriginal} disabled={!hasTransitions}>
+                      <RotateCcw className="h-3 w-3" /> Original
                     </Button>
                   </div>
                   {/* Tab switcher */}
