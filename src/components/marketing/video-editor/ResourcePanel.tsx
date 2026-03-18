@@ -76,6 +76,48 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
   const [editingName, setEditingName] = useState('');
   const [effectCategoryFilter, setEffectCategoryFilter] = useState<string | null>(null);
   const [previewEffect, setPreviewEffect] = useState<TransitionType | null>(null);
+  const [savingToGalleryId, setSavingToGalleryId] = useState<string | null>(null);
+
+  const handleSaveTransitionToGallery = useCallback(async (media: ImportedMedia) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+    setSavingToGalleryId(media.id);
+    try {
+      // Check if URL is already in storage
+      const isStorageUrl = media.src.includes('supabase.co/storage');
+      let publicUrl = media.src;
+      let storagePath = '';
+
+      if (!isStorageUrl) {
+        const resp = await fetch(media.src);
+        const blob = await resp.blob();
+        const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+        const fileName = `transition_ai_${Date.now()}.${ext}`;
+        storagePath = `${estabId}/${fileName}`;
+        const { error: uploadError } = await supabase.storage.from('marketing-videos').upload(storagePath, blob, { contentType: blob.type, upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('marketing-videos').getPublicUrl(storagePath);
+        publicUrl = urlData.publicUrl;
+      } else {
+        const match = media.src.match(/marketing-videos\/(.+)$/);
+        storagePath = match?.[1] || '';
+      }
+
+      await supabase.from('media_gallery').insert({
+        estabelecimento_id: estabId,
+        tipo: 'video',
+        nome: media.name || `Transição AI ${new Date().toLocaleDateString('pt-BR')}`,
+        public_url: publicUrl,
+        storage_path: storagePath ? `${storagePath}` : undefined,
+        duracao_segundos: media.duration || null,
+      });
+      toast.success('Transição salva na galeria!');
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || 'Tente novamente'));
+    } finally {
+      setSavingToGalleryId(null);
+    }
+  }, []);
 
   // Sync timeline clips into resource panel so every clip on a track appears in its group
   useEffect(() => {
