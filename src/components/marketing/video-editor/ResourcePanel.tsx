@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useImperativeHandle, forwardRef, useEffect, KeyboardEvent, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useGalleryFolders } from '@/hooks/useGalleryFolders';
 import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Button } from '@/components/ui/button';
