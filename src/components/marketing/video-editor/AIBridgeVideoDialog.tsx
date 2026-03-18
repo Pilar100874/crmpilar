@@ -138,8 +138,27 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('google/veo-3.1');
-  const [duration, setDuration] = useState(4);
+   const [model, setModel] = useState('google/veo-3.1');
+
+   const getDurationOptionsForModel = (m: string): number[] => {
+     if (m.startsWith('kling/')) return [5, 10];
+     if (m.startsWith('runway/')) return [5, 10];
+     if (m.startsWith('openai/sora')) return [4, 8, 12];
+     if (m.startsWith('google/')) return [4, 5, 6, 7, 8];
+     if (m.startsWith('luma/')) return [4, 5];
+     return [2, 3, 4, 5, 6, 8, 10];
+   };
+   const durationOptions = getDurationOptionsForModel(model);
+   const [duration, setDuration] = useState(() => getDurationOptionsForModel('google/veo-3.1')[0]);
+
+   // Auto-adjust duration when model changes
+   const handleModelChange = (newModel: string) => {
+     setModel(newModel);
+     const opts = getDurationOptionsForModel(newModel);
+     if (!opts.includes(duration)) {
+       setDuration(opts[0]);
+     }
+   };
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
