@@ -250,6 +250,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
    };
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
