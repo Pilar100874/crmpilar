@@ -368,8 +368,13 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const originalTransitionsRef = useRef<TimelineClip['transitions'] | null>(null);
   const originalFiltersRef = useRef<VideoFilter[] | null>(null);
 
+  const appliedAudioRef = useRef(false);
+  const appliedTransitionsRef = useRef(false);
+  const appliedFiltersRef = useRef(false);
+
   // === Audio capture/restore/apply ===
   const captureOriginalAudioState = useCallback(() => {
+    appliedAudioRef.current = false;
     originalAudioRef.current = {
       audioFilters: selectedClip.audioFilters ? JSON.parse(JSON.stringify(selectedClip.audioFilters)) : [],
       volumeEnvelope: selectedClip.volumeEnvelope ? JSON.parse(JSON.stringify(selectedClip.volumeEnvelope)) : undefined,
@@ -382,19 +387,31 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     const orig = originalAudioRef.current;
     if (!orig) return;
     onUpdateClip(selectedClip.id, {
-      audioFilters: orig.audioFilters || [],
-      volumeEnvelope: orig.volumeEnvelope,
+      audioFilters: JSON.parse(JSON.stringify(orig.audioFilters || [])),
+      volumeEnvelope: orig.volumeEnvelope ? JSON.parse(JSON.stringify(orig.volumeEnvelope)) : undefined,
       playbackRate: orig.playbackRate,
       volume: orig.volume,
     });
   }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmAudio = useCallback(() => {
+    appliedAudioRef.current = true;
     originalAudioRef.current = null;
   }, []);
 
+  const handleAudioPopoverChange = useCallback((open: boolean) => {
+    if (open) {
+      captureOriginalAudioState();
+    } else if (!appliedAudioRef.current && originalAudioRef.current) {
+      restoreOriginalAudio();
+      originalAudioRef.current = null;
+    }
+    setAudioPopoverOpen(open);
+  }, [captureOriginalAudioState, restoreOriginalAudio]);
+
   // === Transitions capture/restore/apply ===
   const captureOriginalTransitions = useCallback(() => {
+    appliedTransitionsRef.current = false;
     originalTransitionsRef.current = selectedClip.transitions ? JSON.parse(JSON.stringify(selectedClip.transitions)) : {};
   }, [selectedClip.transitions]);
 
@@ -405,11 +422,23 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmTransitions = useCallback(() => {
+    appliedTransitionsRef.current = true;
     originalTransitionsRef.current = null;
   }, []);
 
+  const handleTransPopoverChange = useCallback((open: boolean) => {
+    if (open) {
+      captureOriginalTransitions();
+    } else if (!appliedTransitionsRef.current && originalTransitionsRef.current !== null) {
+      restoreOriginalTransitions();
+      originalTransitionsRef.current = null;
+    }
+    setTransPopoverOpen(open);
+  }, [captureOriginalTransitions, restoreOriginalTransitions]);
+
   // === Filters capture/restore/apply ===
   const captureOriginalFilters = useCallback(() => {
+    appliedFiltersRef.current = false;
     originalFiltersRef.current = selectedClip.filters ? JSON.parse(JSON.stringify(selectedClip.filters)) : [];
   }, [selectedClip.filters]);
 
@@ -420,8 +449,19 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   }, [selectedClip.id, onUpdateClip]);
 
   const applyAndConfirmFilters = useCallback(() => {
+    appliedFiltersRef.current = true;
     originalFiltersRef.current = null;
   }, []);
+
+  const handleFilterPopoverChange = useCallback((open: boolean) => {
+    if (open) {
+      captureOriginalFilters();
+    } else if (!appliedFiltersRef.current && originalFiltersRef.current !== null) {
+      restoreOriginalFilters();
+      originalFiltersRef.current = null;
+    }
+    setFilterPopoverOpen(open);
+  }, [captureOriginalFilters, restoreOriginalFilters]);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const isAudio = selectedClip.type === 'audio';
