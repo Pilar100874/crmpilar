@@ -469,7 +469,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
     if (clip.type === 'image' || clip.type === 'canvas') {
       const img = await loadImage(clip.src || '', clip.name);
-      drawContain(ctx, img, img.width, img.height);
+      drawWithTransforms(ctx, img, img.width, img.height, clip);
       return canvas.toDataURL('image/jpeg', 0.92);
     }
 
