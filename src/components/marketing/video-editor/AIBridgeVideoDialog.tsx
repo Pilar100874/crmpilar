@@ -352,15 +352,10 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Always fit the image to the full canvas first (contain mode)
-    const fitScale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
-    const w = sourceWidth * fitScale;
-    const h = sourceHeight * fitScale;
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    // Check if clip has visual transforms (rotation, flip, skew) — NOT position/size
-    const hasVisualTransform = clip && (
+    // Check if clip has any custom positioning/transforms
+    const hasCustomLayout = clip && (
+      clip.x !== undefined || clip.y !== undefined ||
+      clip.w !== undefined || clip.h !== undefined ||
       (clip.rotation && clip.rotation !== 0) ||
       (clip.scaleX !== undefined && clip.scaleX !== 1) ||
       (clip.scaleY !== undefined && clip.scaleY !== 1) ||
@@ -368,7 +363,12 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       (clip.skewY && clip.skewY !== 0)
     );
 
-    if (hasVisualTransform && clip) {
+    if (hasCustomLayout && clip) {
+      // x, y, w, h are percentages (0-100) of the composition
+      const drawX = (clip.x ?? 0) / 100 * canvas.width;
+      const drawY = (clip.y ?? 0) / 100 * canvas.height;
+      const drawW = (clip.w ?? 100) / 100 * canvas.width;
+      const drawH = (clip.h ?? 100) / 100 * canvas.height;
       const rotation = (clip.rotation || 0) * Math.PI / 180;
       const sx = clip.scaleX ?? 1;
       const sy = clip.scaleY ?? 1;
@@ -376,13 +376,21 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
       const skewYRad = (clip.skewY || 0) * Math.PI / 180;
 
       ctx.save();
+      const cx = drawX + drawW / 2;
+      const cy = drawY + drawH / 2;
       ctx.translate(cx, cy);
       ctx.rotate(rotation);
       ctx.scale(sx, sy);
-      ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
-      ctx.drawImage(source, -w / 2, -h / 2, w, h);
+      if (skewXRad || skewYRad) {
+        ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+      }
+      ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
       ctx.restore();
     } else {
+      // Default: fit to canvas (contain)
+      const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
+      const w = sourceWidth * scale;
+      const h = sourceHeight * scale;
       ctx.drawImage(source, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
     }
   }, []);
