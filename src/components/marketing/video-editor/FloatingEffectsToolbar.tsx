@@ -1148,7 +1148,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={() => { applyAndConfirmAudio(); setAudioPopoverOpen(false); }}>
                     <Check className="h-3 w-3" /> Aplicar
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setAudioPopoverOpen(false)}>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => { restoreOriginalAudio(); setAudioPopoverOpen(false); appliedAudioRef.current = true; }}>
                     <X className="h-3 w-3" /> Fechar
                   </Button>
                 </div>
