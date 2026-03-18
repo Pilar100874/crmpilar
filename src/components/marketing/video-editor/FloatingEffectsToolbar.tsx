@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Wand2, Zap, Eye, X, ArrowRightToLine, ArrowLeftFromLine, Clock,
-  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge
+  RotateCcw, Plus, Play, Pause, RefreshCw, Music, Headphones, Volume2, ChevronDown, ChevronRight, Gauge, Check
 } from 'lucide-react';
 import { TimelineClip, EFFECT_PRESETS, TRANSITION_PRESETS, VideoFilter, TransitionType, ClipTransition, FilterType, AudioFilter, AudioFilterType, AUDIO_FILTER_DEFS, AUDIO_PRESETS, VolumeEnvelopePoint } from './types';
 import TransitionPreviewThumb from './TransitionPreviewThumb';
