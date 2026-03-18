@@ -78,7 +78,7 @@ const isModelConfigured = (modelValue: string, configuredProviders: string[]): b
   if (!requiredProvider) return true;
   return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
-...
+
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
