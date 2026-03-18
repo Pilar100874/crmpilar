@@ -1128,21 +1128,41 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
               <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
-                {isGenerating ? 'Cancelar Geração' : 'Cancelar'}
+                {effectiveGenerating ? 'Cancelar Geração' : 'Cancelar'}
               </Button>
               <Button
                 size="sm"
                 onClick={handleGenerate}
-                disabled={isGenerating || extracting || !frameA || !frameB || !prompt.trim()}
+                disabled={effectiveGenerating || extracting || !frameA || !frameB || !prompt.trim()}
                 className="gap-1.5"
               >
-                {isGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
+                {effectiveGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
               </Button>
             </div>
 
-            {isGenerating && (
-              <div className="text-center py-2">
-                <p className="text-xs text-muted-foreground animate-pulse">⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.</p>
+            {effectiveGenerating && (
+              <div className="space-y-2 mt-2">
+                <div className="space-y-1">
+                  <Progress value={effectiveProgress} className="h-2" />
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-muted-foreground">
+                      {Math.round(effectiveProgress)}% concluído
+                    </span>
+                    {activeTask && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {Math.round((Date.now() - activeTask.startedAt) / 1000)}s
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center animate-pulse">
+                  ⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.
+                </p>
+                {onStartBackgroundGeneration && (
+                  <p className="text-[10px] text-center text-primary/70">
+                    💡 Clique em "Minimizar" para continuar editando enquanto o vídeo é gerado em segundo plano.
+                  </p>
+                )}
               </div>
             )}
           </>
