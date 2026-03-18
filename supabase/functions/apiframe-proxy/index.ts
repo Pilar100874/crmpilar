@@ -158,9 +158,20 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("[apiframe-proxy] Error:", err);
+    const msg = err instanceof Error ? err.message : "Erro desconhecido";
+    const msgLower = msg.toLowerCase();
+    let status = 500;
+    let friendlyMsg = msg;
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("credits") || msgLower.includes("insufficient")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes no Apiframe. Recarregue em app.apiframe.ai";
+    } else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("quota")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições atingido. Aguarde e tente novamente.";
+    }
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: friendlyMsg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
