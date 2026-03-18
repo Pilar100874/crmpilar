@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock, ChevronDown, ChevronRight } from 'lucide-react';
+import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
@@ -296,7 +296,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [editText, setEditText] = useState('');
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newText, setNewText] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ cinematic: true, ugc: true });
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
 
   useEffect(() => {
     if (open) setSuggestions(loadCustomPrompts());
@@ -804,15 +804,28 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
 
             {/* Prompt Suggestions */}
             <div className="mt-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+              <div className="flex items-center justify-between mb-1.5 gap-2">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1 shrink-0">
                   <Sparkles className="h-3 w-3" />
-                  Sugestões de Transição (clique para selecionar)
+                  Sugestões
                 </label>
+                <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                  <SelectTrigger className="h-7 text-[11px] w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs">Todos os grupos</SelectItem>
+                    {TRANSITION_PROMPT_GROUPS.map(g => (
+                      <SelectItem key={g.id} value={g.id} className="text-xs">
+                        {g.icon} {g.label} ({g.prompts.length})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[10px] gap-1 px-2"
+                  className="h-6 text-[10px] gap-1 px-2 shrink-0"
                   onClick={() => { setIsAddingNew(true); setNewText(''); }}
                   disabled={isGenerating}
                 >
@@ -841,7 +854,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     </div>
                   )}
 
-                  {/* Custom prompts (user-added) */}
+                  {/* Custom prompts (user-added) — always visible */}
                   {suggestions.filter(s => !DEFAULT_TRANSITION_PROMPTS.find(d => d.id === s.id)).map((s) => (
                     <div key={s.id}>
                       {editingId === s.id ? (
@@ -862,49 +875,44 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                     </div>
                   ))}
 
-                  {/* Grouped prompt suggestions */}
-                  {TRANSITION_PROMPT_GROUPS.map((group) => {
-                    const isExpanded = expandedGroups[group.id] !== false;
-                    const groupPrompts = group.prompts.map(gp => suggestions.find(s => s.id === gp.id) || gp);
-                    return (
-                      <div key={group.id} className="mb-0.5">
-                        <button
-                          className="w-full flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-accent/40 transition-colors text-left"
-                          onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !isExpanded }))}
-                        >
-                          {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
-                          <span className="text-[10px]">{group.icon}</span>
-                          <span className="text-[11px] font-semibold text-foreground/90">{group.label}</span>
-                          <span className="text-[9px] text-muted-foreground ml-auto">{group.prompts.length}</span>
-                        </button>
-                        {isExpanded && (
-                          <div className="ml-2 pl-2 border-l border-border/40">
-                            {groupPrompts.map((s) => (
-                              <div key={s.id}>
-                                {editingId === s.id ? (
-                                  <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
-                                    <Input value={editText} onChange={e => setEditText(e.target.value)} className="h-7 text-[11px] flex-1" autoFocus
-                                      onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }} />
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}><Check className="h-3 w-3 text-primary" /></Button>
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}><X className="h-3 w-3 text-destructive" /></Button>
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
-                                    onClick={() => handleSelectSuggestion(s.text)}
-                                  >
-                                    <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
-                                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}><Pencil className="h-2.5 w-2.5 text-muted-foreground" /></Button>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {/* Filtered group prompts */}
+                  {TRANSITION_PROMPT_GROUPS
+                    .filter(group => selectedGroupId === 'all' || group.id === selectedGroupId)
+                    .map((group) => {
+                      const groupPrompts = group.prompts.map(gp => suggestions.find(s => s.id === gp.id) || gp);
+                      return (
+                        <React.Fragment key={group.id}>
+                          {selectedGroupId === 'all' && (
+                            <div className="flex items-center gap-1.5 px-1.5 py-1 mt-1">
+                              <span className="text-[10px]">{group.icon}</span>
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</span>
+                              <div className="flex-1 border-t border-border/40" />
+                            </div>
+                          )}
+                          {groupPrompts.map((s) => (
+                            <div key={s.id}>
+                              {editingId === s.id ? (
+                                <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
+                                  <Input value={editText} onChange={e => setEditText(e.target.value)} className="h-7 text-[11px] flex-1" autoFocus
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }} />
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}><Check className="h-3 w-3 text-primary" /></Button>
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}><X className="h-3 w-3 text-destructive" /></Button>
+                                </div>
+                              ) : (
+                                <div
+                                  className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
+                                  onClick={() => handleSelectSuggestion(s.text)}
+                                >
+                                  <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
+                                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}><Pencil className="h-2.5 w-2.5 text-muted-foreground" /></Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                 </div>
               </ScrollArea>
             </div>
