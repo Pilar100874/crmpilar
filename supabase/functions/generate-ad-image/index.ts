@@ -57,14 +57,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI Gateway error:", response.status, errorText);
+      const errLower = (errorText || '').toLowerCase();
       
-      if (response.status === 429) {
+      if (response.status === 429 || errLower.includes('rate limit') || errLower.includes('too many') || errLower.includes('quota')) {
         return new Response(
-          JSON.stringify({ error: "Rate limit excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response.status === 402 || errLower.includes('billing') || errLower.includes('payment') || 
+          errLower.includes('insufficient') || errLower.includes('credits') || errLower.includes('exclusively available')) {
         return new Response(
           JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
