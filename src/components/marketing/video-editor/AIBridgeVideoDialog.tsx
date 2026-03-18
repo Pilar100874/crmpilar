@@ -833,7 +833,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -841,7 +841,17 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 className="gap-1.5"
               >
                 <X className="h-3.5 w-3.5" />
-                Descartar e Tentar Novamente
+                Descartar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveToGallery}
+                disabled={isSavingToGallery || videoLoading || videoError}
+                className="gap-1.5"
+              >
+                {isSavingToGallery ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                Salvar na Galeria
               </Button>
               <Button
                 variant="outline"
