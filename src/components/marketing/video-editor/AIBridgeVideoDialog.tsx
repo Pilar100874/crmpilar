@@ -137,6 +137,8 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 }) => {
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [generatedDuration, setGeneratedDuration] = useState<number>(0);
   const [prompt, setPrompt] = useState('');
    const [model, setModel] = useState('google/veo-3.1');
 
@@ -553,9 +555,9 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (result?.error) throw new Error(result.error);
       if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
 
-      toast.success('Vídeo de transição gerado com sucesso!');
-      onVideoGenerated(result.videoUrl, duration);
-      onClose();
+      toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+      setGeneratedVideoUrl(result.videoUrl);
+      setGeneratedDuration(duration);
     } catch (err: any) {
       const msg = err?.message || 'Erro desconhecido';
       if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
@@ -564,7 +566,19 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     } finally {
       setIsGenerating(false);
     }
-  }, [duration, frameA, frameB, model, onClose, onVideoGenerated, prompt]);
+  }, [duration, frameA, frameB, model, prompt]);
+
+  const handleInsert = useCallback(() => {
+    if (generatedVideoUrl && generatedDuration > 0) {
+      onVideoGenerated(generatedVideoUrl, generatedDuration);
+      onClose();
+    }
+  }, [generatedVideoUrl, generatedDuration, onVideoGenerated, onClose]);
+
+  const handleDiscardPreview = useCallback(() => {
+    setGeneratedVideoUrl(null);
+    setGeneratedDuration(0);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
@@ -574,178 +588,231 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
           Gerar Vídeo de Transição AI
         </DialogTitle>
 
-        {/* Frames preview */}
-        <div className="flex items-center gap-3 mt-2">
-          <div className="flex-1 text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Último frame — {clipA.name}</p>
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
-              {extracting ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : frameA ? <img src={frameA} alt="Frame A" className="w-full h-full object-contain" /> : <ImageIcon className="h-6 w-6 text-muted-foreground" />}
+        {/* Generated Video Preview */}
+        {generatedVideoUrl && (
+          <div className="mt-2 space-y-3">
+            <div className="rounded-lg border-2 border-primary/50 bg-muted/30 overflow-hidden">
+              <div className="p-2 bg-primary/10 flex items-center gap-2">
+                <Film className="h-4 w-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">Prévia do Vídeo de Transição</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">{generatedDuration}s</span>
+              </div>
+              <div className="aspect-video bg-black flex items-center justify-center">
+                <video
+                  src={generatedVideoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDiscardPreview}
+                className="gap-1.5"
+              >
+                <X className="h-3.5 w-3.5" />
+                Descartar e Tentar Novamente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleInsert}
+                className="gap-1.5"
+                variant="success"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Inserir na Timeline
+              </Button>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <ArrowRight className="h-5 w-5 text-primary" />
-            <Film className="h-4 w-4 text-muted-foreground" />
-            <ArrowRight className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 text-center">
-            <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Primeiro frame — {clipB.name}</p>
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
-              {extracting ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : frameB ? <img src={frameB} alt="Frame B" className="w-full h-full object-contain" /> : <ImageIcon className="h-6 w-6 text-muted-foreground" />}
-            </div>
-          </div>
-        </div>
+        )}
 
-        {/* Prompt Suggestions */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              Sugestões de Transição (clique para selecionar)
-            </label>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px] gap-1 px-2"
-              onClick={() => { setIsAddingNew(true); setNewText(''); }}
-              disabled={isGenerating}
-            >
-              <Plus className="h-3 w-3" /> Nova
-            </Button>
-          </div>
-
-          <ScrollArea className="h-[140px] rounded-lg border border-border/50 bg-muted/30 p-1.5">
-            <div className="grid grid-cols-1 gap-1">
-              {isAddingNew && (
-                <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
-                  <Input
-                    value={newText}
-                    onChange={e => setNewText(e.target.value)}
-                    placeholder="Digite sua descrição de transição personalizada..."
-                    className="h-7 text-[11px] flex-1"
-                    autoFocus
-                    onKeyDown={e => { if (e.key === 'Enter') handleAddNew(); if (e.key === 'Escape') setIsAddingNew(false); }}
-                  />
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleAddNew} disabled={!newText.trim()}>
-                    <Check className="h-3 w-3 text-primary" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setIsAddingNew(false)}>
-                    <X className="h-3 w-3 text-destructive" />
-                  </Button>
+        {/* Frames preview — hide when showing generated video */}
+        {!generatedVideoUrl && (
+          <>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex-1 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Último frame — {clipA.name}</p>
+                <div className="aspect-video bg-muted rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
+                  {extracting ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : frameA ? <img src={frameA} alt="Frame A" className="w-full h-full object-contain" /> : <ImageIcon className="h-6 w-6 text-muted-foreground" />}
                 </div>
-              )}
+              </div>
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <ArrowRight className="h-5 w-5 text-primary" />
+                <Film className="h-4 w-4 text-muted-foreground" />
+                <ArrowRight className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Primeiro frame — {clipB.name}</p>
+                <div className="aspect-video bg-muted rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
+                  {extracting ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : frameB ? <img src={frameB} alt="Frame B" className="w-full h-full object-contain" /> : <ImageIcon className="h-6 w-6 text-muted-foreground" />}
+                </div>
+              </div>
+            </div>
 
-              {suggestions.map((s) => (
-                <div key={s.id}>
-                  {editingId === s.id ? (
+            {/* Prompt Suggestions */}
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Sugestões de Transição (clique para selecionar)
+                </label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] gap-1 px-2"
+                  onClick={() => { setIsAddingNew(true); setNewText(''); }}
+                  disabled={isGenerating}
+                >
+                  <Plus className="h-3 w-3" /> Nova
+                </Button>
+              </div>
+
+              <ScrollArea className="h-[140px] rounded-lg border border-border/50 bg-muted/30 p-1.5">
+                <div className="grid grid-cols-1 gap-1">
+                  {isAddingNew && (
                     <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
                       <Input
-                        value={editText}
-                        onChange={e => setEditText(e.target.value)}
+                        value={newText}
+                        onChange={e => setNewText(e.target.value)}
+                        placeholder="Digite sua descrição de transição personalizada..."
                         className="h-7 text-[11px] flex-1"
                         autoFocus
-                        onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddNew(); if (e.key === 'Escape') setIsAddingNew(false); }}
                       />
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleAddNew} disabled={!newText.trim()}>
                         <Check className="h-3 w-3 text-primary" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setIsAddingNew(false)}>
                         <X className="h-3 w-3 text-destructive" />
                       </Button>
                     </div>
-                  ) : (
-                    <div
-                      className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
-                      onClick={() => handleSelectSuggestion(s.text)}
-                    >
-                      <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}
-                      >
-                        <Pencil className="h-2.5 w-2.5 text-muted-foreground" />
-                      </Button>
-                    </div>
                   )}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
 
-        {/* Manual prompt */}
-        <div className="mt-2">
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">
-            Ou escreva sua própria descrição
-          </label>
-          <Textarea
-            placeholder="Ex: A câmera faz um zoom out suave revelando a paisagem ao redor..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={2}
-            className="text-sm resize-none"
-            disabled={isGenerating}
-          />
-        </div>
-
-        {/* Controls */}
-        <div className="flex gap-3 mt-2">
-          <div className="flex-1">
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
-            <Select value={model} onValueChange={handleModelChange} disabled={isGenerating}>
-              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {filteredModels.map(m => (
-                  <SelectItem
-                    key={m.value}
-                    value={m.value}
-                    className="text-xs"
-                    disabled={m.disabled}
-                  >
-                     <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
-                      {m.label}
-                      {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
-                      {m.disabled && (
-                        <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
-                          <Lock className="h-2.5 w-2.5" />
-                          sem créditos
-                        </span>
+                  {suggestions.map((s) => (
+                    <div key={s.id}>
+                      {editingId === s.id ? (
+                        <div className="flex items-start gap-1.5 p-1.5 rounded-md bg-primary/10 border border-primary/30">
+                          <Input
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            className="h-7 text-[11px] flex-1"
+                            autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditingId(null); }}
+                          />
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
+                            <Check className="h-3 w-3 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
+                            <X className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div
+                          className={`group flex items-start gap-1.5 p-1.5 rounded-md cursor-pointer transition-colors hover:bg-accent/50 ${prompt === s.text ? 'bg-primary/15 border border-primary/40' : 'border border-transparent'}`}
+                          onClick={() => handleSelectSuggestion(s.text)}
+                        >
+                          <span className="text-[11px] leading-snug flex-1 text-foreground/80">{s.text}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); handleStartEdit(s.id, s.text); }}
+                          >
+                            <Pencil className="h-2.5 w-2.5 text-muted-foreground" />
+                          </Button>
+                        </div>
                       )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="w-28">
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração (s)</label>
-             <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
-              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {durationOptions.map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isGenerating}>Cancelar</Button>
-          <Button
-            size="sm"
-            onClick={handleGenerate}
-            disabled={isGenerating || extracting || !frameA || !frameB || !prompt.trim()}
-            className="gap-1.5"
-          >
-            {isGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
-          </Button>
-        </div>
+            {/* Manual prompt */}
+            <div className="mt-2">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Ou escreva sua própria descrição
+              </label>
+              <Textarea
+                placeholder="Ex: A câmera faz um zoom out suave revelando a paisagem ao redor..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={2}
+                className="text-sm resize-none"
+                disabled={isGenerating}
+              />
+            </div>
 
-        {isGenerating && (
-          <div className="text-center py-2">
-            <p className="text-xs text-muted-foreground animate-pulse">⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.</p>
-          </div>
+            {/* Controls */}
+            <div className="flex gap-3 mt-2">
+              <div className="flex-1">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
+                <Select value={model} onValueChange={handleModelChange} disabled={isGenerating}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {filteredModels.map(m => (
+                      <SelectItem
+                        key={m.value}
+                        value={m.value}
+                        className="text-xs"
+                        disabled={m.disabled}
+                      >
+                         <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
+                          {m.label}
+                          {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
+                          {m.disabled && (
+                            <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
+                              <Lock className="h-2.5 w-2.5" />
+                              sem créditos
+                            </span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-28">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração (s)</label>
+                 <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
+                  <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {durationOptions.map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+              <Button variant="outline" size="sm" onClick={onClose} disabled={isGenerating}>Cancelar</Button>
+              <Button
+                size="sm"
+                onClick={handleGenerate}
+                disabled={isGenerating || extracting || !frameA || !frameB || !prompt.trim()}
+                className="gap-1.5"
+              >
+                {isGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
+              </Button>
+            </div>
+
+            {isGenerating && (
+              <div className="text-center py-2">
+                <p className="text-xs text-muted-foreground animate-pulse">⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.</p>
+              </div>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
