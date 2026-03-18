@@ -1117,6 +1117,9 @@ const VideoTimelineEditor: React.FC = () => {
           <Button size="icon" variant={state.snapEnabled ? 'default' : 'ghost'} className="h-8 w-8" onClick={() => timeline.updateState({ snapEnabled: !state.snapEnabled })} title="Snap">
             <Magnet className="h-3.5 w-3.5" />
           </Button>
+          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSnapTogether} disabled={state.selectedClipIds.length < 2} title="Grudar clipes selecionados (remover gaps)">
+            <Link2 className="h-3.5 w-3.5" />
+          </Button>
           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleOpenBridgeVideo} disabled={state.selectedClipIds.length !== 2} title="Gerar Vídeo de Transição AI entre 2 clipes">
             <Wand2 className="h-3.5 w-3.5" />
           </Button>
