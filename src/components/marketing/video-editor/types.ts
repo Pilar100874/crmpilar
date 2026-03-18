@@ -32,6 +32,15 @@ export interface TimelineClip {
   skewX?: number;
   skewY?: number;
   effectType?: TransitionType;
+  // Audio envelope & speed
+  volumeEnvelope?: VolumeEnvelopePoint[];
+  playbackRate?: number; // 0.25 - 4.0 (1 = normal)
+}
+
+// Volume automation point (position as % of clip duration, volume 0-1)
+export interface VolumeEnvelopePoint {
+  time: number;  // 0-1 (percentage of clip duration)
+  value: number; // 0-1 (volume level)
 }
 
 // ========== Audio Filter System ==========
