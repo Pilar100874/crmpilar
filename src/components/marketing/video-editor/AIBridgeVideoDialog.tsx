@@ -1155,7 +1155,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 disabled={effectiveGenerating || extracting || !frameA || !frameB || !prompt.trim() || (hasActiveGeneration && !effectiveGenerating)}
                 className="gap-1.5"
               >
-                {effectiveGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
+                {effectiveGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : (hasActiveGeneration && !effectiveGenerating) ? <>Aguarde a geração atual...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
               </Button>
             </div>
 
