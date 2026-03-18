@@ -684,7 +684,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         <div className="flex gap-3 mt-2">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
-            <Select value={model} onValueChange={(v) => setModel(v)} disabled={isGenerating}>
+            <Select value={model} onValueChange={handleModelChange} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {filteredModels.map(m => (
