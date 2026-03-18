@@ -144,6 +144,13 @@ Deno.serve(async (req) => {
 
     if (!resp.ok) {
       const t = await resp.text();
+      // Detect HTML error pages (404 etc)
+      if (t.trimStart().startsWith("<!DOCTYPE") || t.trimStart().startsWith("<html")) {
+        return new Response(JSON.stringify({ error: `Endpoint "${action}" não disponível no Apiframe (${resp.status}). Este modelo pode não estar mais ativo.` }), {
+          status: resp.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: mapErrorMessage(resp.status, t) }), {
         status: resp.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
