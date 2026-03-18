@@ -15,24 +15,268 @@ export interface TimelineClip {
   volume?: number;
   opacity?: number;
   filters?: VideoFilter[];
+  audioFilters?: AudioFilter[];
   transition?: ClipTransition;
   transitions?: ClipTransitions;
   locked?: boolean;
-  lockedEdge?: 'start' | 'end' | 'both' | null; // Locks edges to preserve AI transitions
+  lockedEdge?: 'start' | 'end' | 'both' | null;
   muted?: boolean;
   canvasJson?: string;
   x?: number;
   y?: number;
   w?: number;
   h?: number;
-  rotation?: number;      // degrees (0-360)
-  scaleX?: number;        // 1 = normal, -1 = flip horizontal
-  scaleY?: number;        // 1 = normal, -1 = flip vertical
-  skewX?: number;         // degrees of horizontal skew
-  skewY?: number;         // degrees of vertical skew
-  // For effect track clips: the visual overlay effect type
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  skewX?: number;
+  skewY?: number;
   effectType?: TransitionType;
 }
+
+// ========== Audio Filter System ==========
+
+export type AudioFilterType =
+  // EQ
+  | 'eq-bass' | 'eq-low-mid' | 'eq-mid' | 'eq-high-mid' | 'eq-treble' | 'eq-presence' | 'eq-brilliance'
+  // Dynamics
+  | 'compressor' | 'limiter' | 'noise-gate' | 'expander' | 'de-esser'
+  // Spatial
+  | 'reverb' | 'delay' | 'echo' | 'chorus' | 'flanger' | 'phaser' | 'stereo-widener' | 'pan'
+  // Pitch & Time
+  | 'pitch-shift' | 'time-stretch' | 'harmonizer'
+  // Enhancement
+  | 'normalize' | 'de-noise' | 'de-hum' | 'vocal-enhance' | 'bass-boost' | 'treble-boost' | 'exciter' | 'warmth'
+  // Creative
+  | 'distortion' | 'bitcrusher' | 'vinyl-crackle' | 'radio-effect' | 'telephone' | 'underwater' | 'megaphone' | 'robot-voice'
+  // Fade
+  | 'fade-in' | 'fade-out' | 'crossfade-audio'
+  // Ducking
+  | 'ducking' | 'sidechain';
+
+export interface AudioFilter {
+  id: string;
+  type: AudioFilterType;
+  label: string;
+  value: number; // 0-100
+  enabled: boolean;
+  params?: Record<string, number>; // extra parameters per filter
+}
+
+export interface AudioFilterDef {
+  type: AudioFilterType;
+  label: string;
+  icon: string;
+  description: string;
+  defaultValue: number;
+  category: string;
+  params?: { key: string; label: string; min: number; max: number; step: number; defaultValue: number }[];
+}
+
+export const AUDIO_FILTER_DEFS: AudioFilterDef[] = [
+  // === EQ (Equalizador) ===
+  { type: 'eq-bass', label: 'Graves (60Hz)', icon: '🔊', description: 'Reforço/corte de frequências graves', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-low-mid', label: 'Médio-Grave (250Hz)', icon: '🔉', description: 'Corpo e calor do áudio', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-mid', label: 'Médios (1kHz)', icon: '🔈', description: 'Presença vocal e instrumentos', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-high-mid', label: 'Médio-Agudo (4kHz)', icon: '📢', description: 'Definição e articulação', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-treble', label: 'Agudos (8kHz)', icon: '🔔', description: 'Brilho e clareza', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-presence', label: 'Presença (12kHz)', icon: '✨', description: 'Abertura e ar', defaultValue: 50, category: 'Equalizador' },
+  { type: 'eq-brilliance', label: 'Brilho (16kHz)', icon: '💎', description: 'Ultra-agudos e shimmer', defaultValue: 50, category: 'Equalizador' },
+  // === Dinâmica ===
+  { type: 'compressor', label: 'Compressor', icon: '📊', description: 'Reduz diferença entre volumes alto e baixo', defaultValue: 40, category: 'Dinâmica',
+    params: [
+      { key: 'threshold', label: 'Threshold (dB)', min: -60, max: 0, step: 1, defaultValue: -20 },
+      { key: 'ratio', label: 'Ratio', min: 1, max: 20, step: 0.5, defaultValue: 4 },
+      { key: 'attack', label: 'Attack (ms)', min: 0, max: 200, step: 1, defaultValue: 10 },
+      { key: 'release', label: 'Release (ms)', min: 10, max: 1000, step: 10, defaultValue: 100 },
+      { key: 'knee', label: 'Knee (dB)', min: 0, max: 40, step: 1, defaultValue: 6 },
+    ] },
+  { type: 'limiter', label: 'Limiter', icon: '🛑', description: 'Impede picos acima do teto definido', defaultValue: 50, category: 'Dinâmica',
+    params: [
+      { key: 'ceiling', label: 'Ceiling (dB)', min: -12, max: 0, step: 0.5, defaultValue: -1 },
+      { key: 'release', label: 'Release (ms)', min: 1, max: 500, step: 1, defaultValue: 50 },
+    ] },
+  { type: 'noise-gate', label: 'Noise Gate', icon: '🚪', description: 'Silencia áudio abaixo do limiar', defaultValue: 30, category: 'Dinâmica',
+    params: [
+      { key: 'threshold', label: 'Threshold (dB)', min: -80, max: 0, step: 1, defaultValue: -40 },
+      { key: 'attack', label: 'Attack (ms)', min: 0, max: 50, step: 1, defaultValue: 1 },
+      { key: 'release', label: 'Release (ms)', min: 10, max: 500, step: 5, defaultValue: 50 },
+      { key: 'hold', label: 'Hold (ms)', min: 0, max: 500, step: 5, defaultValue: 50 },
+    ] },
+  { type: 'expander', label: 'Expander', icon: '📈', description: 'Aumenta alcance dinâmico suavemente', defaultValue: 30, category: 'Dinâmica' },
+  { type: 'de-esser', label: 'De-Esser', icon: '🐍', description: 'Remove sibilâncias (SSS) de voz', defaultValue: 40, category: 'Dinâmica',
+    params: [
+      { key: 'frequency', label: 'Frequência (Hz)', min: 4000, max: 10000, step: 100, defaultValue: 6000 },
+      { key: 'reduction', label: 'Redução (dB)', min: 0, max: 20, step: 1, defaultValue: 6 },
+    ] },
+  // === Espacial ===
+  { type: 'reverb', label: 'Reverb', icon: '🏛️', description: 'Simula ambiente (sala, hall, catedral)', defaultValue: 30, category: 'Espacial',
+    params: [
+      { key: 'roomSize', label: 'Tamanho', min: 0, max: 100, step: 1, defaultValue: 50 },
+      { key: 'damping', label: 'Amortecimento', min: 0, max: 100, step: 1, defaultValue: 50 },
+      { key: 'wetDry', label: 'Wet/Dry', min: 0, max: 100, step: 1, defaultValue: 30 },
+      { key: 'preDelay', label: 'Pre-Delay (ms)', min: 0, max: 200, step: 5, defaultValue: 20 },
+    ] },
+  { type: 'delay', label: 'Delay', icon: '⏱️', description: 'Repetições ritmadas do áudio', defaultValue: 25, category: 'Espacial',
+    params: [
+      { key: 'time', label: 'Tempo (ms)', min: 50, max: 2000, step: 10, defaultValue: 300 },
+      { key: 'feedback', label: 'Feedback', min: 0, max: 95, step: 1, defaultValue: 40 },
+      { key: 'wetDry', label: 'Wet/Dry', min: 0, max: 100, step: 1, defaultValue: 25 },
+    ] },
+  { type: 'echo', label: 'Echo', icon: '🗣️', description: 'Eco natural com decaimento', defaultValue: 20, category: 'Espacial' },
+  { type: 'chorus', label: 'Chorus', icon: '🎵', description: 'Duplicação sutil para espessura', defaultValue: 30, category: 'Espacial',
+    params: [
+      { key: 'rate', label: 'Rate (Hz)', min: 0, max: 10, step: 0.1, defaultValue: 1.5 },
+      { key: 'depth', label: 'Depth', min: 0, max: 100, step: 1, defaultValue: 50 },
+      { key: 'wetDry', label: 'Wet/Dry', min: 0, max: 100, step: 1, defaultValue: 50 },
+    ] },
+  { type: 'flanger', label: 'Flanger', icon: '🌀', description: 'Efeito de varredura metálica', defaultValue: 30, category: 'Espacial' },
+  { type: 'phaser', label: 'Phaser', icon: '🔀', description: 'Modulação de fase estilo sintetizador', defaultValue: 30, category: 'Espacial' },
+  { type: 'stereo-widener', label: 'Stereo Widener', icon: '↔️', description: 'Expande imagem estéreo', defaultValue: 50, category: 'Espacial' },
+  { type: 'pan', label: 'Pan (L/R)', icon: '🔄', description: 'Posição no campo estéreo', defaultValue: 50, category: 'Espacial' },
+  // === Pitch & Tempo ===
+  { type: 'pitch-shift', label: 'Pitch Shift', icon: '🎹', description: 'Altera tom sem mudar velocidade', defaultValue: 50, category: 'Pitch & Tempo',
+    params: [
+      { key: 'semitones', label: 'Semitons', min: -24, max: 24, step: 1, defaultValue: 0 },
+      { key: 'cents', label: 'Cents', min: -50, max: 50, step: 1, defaultValue: 0 },
+    ] },
+  { type: 'time-stretch', label: 'Time Stretch', icon: '⏩', description: 'Altera velocidade sem mudar tom', defaultValue: 50, category: 'Pitch & Tempo',
+    params: [
+      { key: 'speed', label: 'Velocidade (%)', min: 25, max: 400, step: 5, defaultValue: 100 },
+    ] },
+  { type: 'harmonizer', label: 'Harmonizer', icon: '🎶', description: 'Adiciona harmonias automáticas', defaultValue: 30, category: 'Pitch & Tempo' },
+  // === Enhancement ===
+  { type: 'normalize', label: 'Normalizar', icon: '📏', description: 'Ajusta volume ao nível ideal', defaultValue: 80, category: 'Enhancement' },
+  { type: 'de-noise', label: 'Remoção de Ruído', icon: '🔇', description: 'Remove ruído de fundo (AI)', defaultValue: 60, category: 'Enhancement' },
+  { type: 'de-hum', label: 'Remover Hum (60Hz)', icon: '⚡', description: 'Remove zumbido de rede elétrica', defaultValue: 70, category: 'Enhancement' },
+  { type: 'vocal-enhance', label: 'Realce Vocal', icon: '🎤', description: 'Melhora clareza e presença da voz', defaultValue: 60, category: 'Enhancement' },
+  { type: 'bass-boost', label: 'Bass Boost', icon: '💥', description: 'Reforço de graves profundos', defaultValue: 40, category: 'Enhancement' },
+  { type: 'treble-boost', label: 'Treble Boost', icon: '🔔', description: 'Reforço de agudos cristalinos', defaultValue: 40, category: 'Enhancement' },
+  { type: 'exciter', label: 'Exciter', icon: '⚡', description: 'Adiciona harmônicos para brilho', defaultValue: 35, category: 'Enhancement' },
+  { type: 'warmth', label: 'Warmth', icon: '🔥', description: 'Saturação analógica sutil (tape)', defaultValue: 30, category: 'Enhancement' },
+  // === Criativo ===
+  { type: 'distortion', label: 'Distorção', icon: '🎸', description: 'Overdrive/saturação pesada', defaultValue: 20, category: 'Criativo' },
+  { type: 'bitcrusher', label: 'Bitcrusher', icon: '👾', description: 'Redução de bits (lo-fi digital)', defaultValue: 25, category: 'Criativo' },
+  { type: 'vinyl-crackle', label: 'Vinil Crackle', icon: '📀', description: 'Chiado de disco de vinil', defaultValue: 30, category: 'Criativo' },
+  { type: 'radio-effect', label: 'Rádio AM', icon: '📻', description: 'Simula áudio de rádio antigo', defaultValue: 50, category: 'Criativo' },
+  { type: 'telephone', label: 'Telefone', icon: '📞', description: 'Voz de ligação telefônica', defaultValue: 50, category: 'Criativo' },
+  { type: 'underwater', label: 'Subaquático', icon: '🌊', description: 'Áudio abafado como debaixo d\'água', defaultValue: 50, category: 'Criativo' },
+  { type: 'megaphone', label: 'Megafone', icon: '📣', description: 'Voz amplificada com distorção', defaultValue: 50, category: 'Criativo' },
+  { type: 'robot-voice', label: 'Voz Robótica', icon: '🤖', description: 'Efeito vocoder/robô', defaultValue: 50, category: 'Criativo' },
+  // === Fades ===
+  { type: 'fade-in', label: 'Fade In', icon: '📈', description: 'Volume sobe gradualmente', defaultValue: 50, category: 'Fades',
+    params: [{ key: 'duration', label: 'Duração (s)', min: 0.1, max: 10, step: 0.1, defaultValue: 1 }] },
+  { type: 'fade-out', label: 'Fade Out', icon: '📉', description: 'Volume diminui gradualmente', defaultValue: 50, category: 'Fades',
+    params: [{ key: 'duration', label: 'Duração (s)', min: 0.1, max: 10, step: 0.1, defaultValue: 2 }] },
+  { type: 'crossfade-audio', label: 'Crossfade', icon: '🔄', description: 'Transição suave entre áudios', defaultValue: 50, category: 'Fades' },
+  // === Ducking ===
+  { type: 'ducking', label: 'Ducking', icon: '🦆', description: 'Abaixa música quando há voz', defaultValue: 60, category: 'Ducking',
+    params: [
+      { key: 'reduction', label: 'Redução (dB)', min: -30, max: 0, step: 1, defaultValue: -12 },
+      { key: 'attack', label: 'Attack (ms)', min: 1, max: 200, step: 1, defaultValue: 20 },
+      { key: 'release', label: 'Release (ms)', min: 50, max: 2000, step: 10, defaultValue: 500 },
+    ] },
+  { type: 'sidechain', label: 'Sidechain', icon: '🔗', description: 'Compressão rítmica (pumping)', defaultValue: 50, category: 'Ducking' },
+];
+
+export interface AudioPreset {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  category: string;
+  filters: Omit<AudioFilter, 'id'>[];
+}
+
+export const AUDIO_PRESETS: AudioPreset[] = [
+  // Podcast
+  { id: 'podcast-voice', name: 'Podcast Voz', icon: '🎙️', description: 'Voz clara e profissional para podcast', category: 'Podcast',
+    filters: [
+      { type: 'noise-gate', label: 'Noise Gate', value: 35, enabled: true },
+      { type: 'de-noise', label: 'Remoção de Ruído', value: 60, enabled: true },
+      { type: 'compressor', label: 'Compressor', value: 50, enabled: true },
+      { type: 'eq-bass', label: 'Graves', value: 40, enabled: true },
+      { type: 'eq-mid', label: 'Médios', value: 60, enabled: true },
+      { type: 'eq-presence', label: 'Presença', value: 65, enabled: true },
+      { type: 'limiter', label: 'Limiter', value: 50, enabled: true },
+    ] },
+  { id: 'podcast-music', name: 'Podcast BG', icon: '🎵', description: 'Música de fundo para podcast', category: 'Podcast',
+    filters: [
+      { type: 'eq-treble', label: 'Agudos', value: 40, enabled: true },
+      { type: 'ducking', label: 'Ducking', value: 60, enabled: true },
+    ] },
+  // Música
+  { id: 'master-loud', name: 'Master Loud', icon: '🔊', description: 'Mastering alto e impactante', category: 'Música',
+    filters: [
+      { type: 'compressor', label: 'Compressor', value: 60, enabled: true },
+      { type: 'exciter', label: 'Exciter', value: 40, enabled: true },
+      { type: 'stereo-widener', label: 'Stereo Width', value: 65, enabled: true },
+      { type: 'limiter', label: 'Limiter', value: 70, enabled: true },
+    ] },
+  { id: 'warm-analog', name: 'Analógico Quente', icon: '🔥', description: 'Saturação tape vintage', category: 'Música',
+    filters: [
+      { type: 'warmth', label: 'Warmth', value: 55, enabled: true },
+      { type: 'eq-low-mid', label: 'Médio-Grave', value: 58, enabled: true },
+      { type: 'compressor', label: 'Compressor', value: 35, enabled: true },
+    ] },
+  { id: 'lofi-chill', name: 'Lo-Fi Chill', icon: '☕', description: 'Estética lo-fi hip hop', category: 'Música',
+    filters: [
+      { type: 'vinyl-crackle', label: 'Vinil', value: 40, enabled: true },
+      { type: 'bitcrusher', label: 'Bitcrusher', value: 20, enabled: true },
+      { type: 'eq-treble', label: 'Agudos', value: 35, enabled: true },
+      { type: 'warmth', label: 'Warmth', value: 50, enabled: true },
+      { type: 'reverb', label: 'Reverb', value: 35, enabled: true },
+    ] },
+  // Voz
+  { id: 'vocal-clarity', name: 'Voz Clara', icon: '🎤', description: 'Realce vocal para narração', category: 'Voz',
+    filters: [
+      { type: 'de-noise', label: 'De-noise', value: 50, enabled: true },
+      { type: 'vocal-enhance', label: 'Realce Vocal', value: 65, enabled: true },
+      { type: 'de-esser', label: 'De-Esser', value: 40, enabled: true },
+      { type: 'compressor', label: 'Compressor', value: 45, enabled: true },
+    ] },
+  { id: 'voice-radio', name: 'Voz de Rádio', icon: '📻', description: 'Presença e impacto de locutor FM', category: 'Voz',
+    filters: [
+      { type: 'compressor', label: 'Compressor', value: 65, enabled: true },
+      { type: 'eq-bass', label: 'Graves', value: 60, enabled: true },
+      { type: 'eq-presence', label: 'Presença', value: 70, enabled: true },
+      { type: 'exciter', label: 'Exciter', value: 45, enabled: true },
+      { type: 'limiter', label: 'Limiter', value: 55, enabled: true },
+    ] },
+  { id: 'voice-asmr', name: 'ASMR', icon: '🤫', description: 'Voz sussurrada próxima', category: 'Voz',
+    filters: [
+      { type: 'noise-gate', label: 'Noise Gate', value: 25, enabled: true },
+      { type: 'bass-boost', label: 'Bass Boost', value: 55, enabled: true },
+      { type: 'eq-presence', label: 'Presença', value: 65, enabled: true },
+      { type: 'reverb', label: 'Reverb', value: 15, enabled: true },
+    ] },
+  // Efeitos
+  { id: 'telephone-effect', name: 'Efeito Telefone', icon: '📞', description: 'Simula ligação telefônica', category: 'Efeitos',
+    filters: [
+      { type: 'telephone', label: 'Telefone', value: 50, enabled: true },
+    ] },
+  { id: 'underwater-effect', name: 'Subaquático', icon: '🌊', description: 'Áudio debaixo d\'água', category: 'Efeitos',
+    filters: [
+      { type: 'underwater', label: 'Subaquático', value: 50, enabled: true },
+    ] },
+  { id: 'robot-effect', name: 'Robô', icon: '🤖', description: 'Voz robótica/vocoder', category: 'Efeitos',
+    filters: [
+      { type: 'robot-voice', label: 'Voz Robótica', value: 50, enabled: true },
+    ] },
+  { id: 'cinematic-boom', name: 'Cinematic Boom', icon: '💥', description: 'Impacto cinematográfico profundo', category: 'Efeitos',
+    filters: [
+      { type: 'bass-boost', label: 'Bass Boost', value: 80, enabled: true },
+      { type: 'reverb', label: 'Reverb', value: 60, enabled: true },
+      { type: 'compressor', label: 'Compressor', value: 55, enabled: true },
+    ] },
+  { id: 'space-ambient', name: 'Espacial', icon: '🚀', description: 'Ambiente espacial etéreo', category: 'Efeitos',
+    filters: [
+      { type: 'reverb', label: 'Reverb', value: 80, enabled: true },
+      { type: 'delay', label: 'Delay', value: 40, enabled: true },
+      { type: 'chorus', label: 'Chorus', value: 50, enabled: true },
+      { type: 'stereo-widener', label: 'Stereo Width', value: 80, enabled: true },
+    ] },
+];
 
 export interface VideoFilter {
   id: string;
