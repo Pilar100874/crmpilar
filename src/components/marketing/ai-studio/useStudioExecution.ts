@@ -98,9 +98,9 @@ export function useStudioExecution() {
         // Extract specific API error patterns
         if (rawError.includes('401') || rawError.includes('Incorrect API key') || rawError.includes('Unauthorized')) {
           friendlyMsg = '🔑 Chave de API inválida ou expirada. Verifique sua chave em Configurações → APIs Pagas.';
-        } else if (rawError.includes('402') || rawError.includes('Payment') || rawError.includes('insufficient')) {
+        } else if (rawError.includes('402') || rawError.includes('Payment') || rawError.includes('insufficient') || rawError.includes('billing') || rawError.includes('quota') || rawError.includes('exclusively available') || rawError.includes('Credits exhausted')) {
           friendlyMsg = '💳 Créditos insuficientes no provedor. Adicione saldo na sua conta do provedor.';
-        } else if (rawError.includes('429') || rawError.includes('Rate limit')) {
+        } else if (rawError.includes('429') || rawError.includes('Rate limit') || rawError.includes('too many')) {
           friendlyMsg = '⏳ Limite de requisições excedido. Aguarde alguns segundos e tente novamente.';
         } else if (rawError.includes('403') || rawError.includes('Forbidden') || rawError.includes('access')) {
           friendlyMsg = '🚫 Sem permissão para este recurso. Verifique se sua conta tem acesso a este modelo/serviço.';

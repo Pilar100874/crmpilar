@@ -805,10 +805,12 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
     } catch (err: any) {
       console.error('Failed to generate reference image:', err);
       const msg = err?.message || 'Tente novamente.';
-      if (msg.includes('429') || msg.includes('quota')) {
+      if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit')) {
         toast({ title: 'Limite de requisições', description: 'Aguarde alguns segundos e tente novamente.', variant: 'destructive' });
+      } else if (msg.includes('402') || msg.includes('billing') || msg.includes('insufficient') || msg.includes('Credits') || msg.includes('exclusively available')) {
+        toast({ title: 'Créditos insuficientes', description: 'Adicione saldo na sua conta do provedor de IA.', variant: 'destructive' });
       } else {
-        toast({ title: 'Erro ao gerar imagem', description: msg, variant: 'destructive' });
+        toast({ title: 'Erro ao gerar imagem', description: msg.substring(0, 150), variant: 'destructive' });
       }
     } finally {
       setIsGenerating(false);

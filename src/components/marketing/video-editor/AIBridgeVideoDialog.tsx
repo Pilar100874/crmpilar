@@ -622,10 +622,10 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       onVideoGenerated(exactVideoUrl, duration);
       onClose();
     } catch (err: any) {
-      const msg = err.message || 'Erro desconhecido';
-      if (msg.includes('429') || msg.includes('quota')) toast.error('Limite de requisições atingido.');
-      else if (msg.includes('402') || msg.includes('billing')) toast.error('Créditos insuficientes.');
-      else toast.error('Erro ao gerar vídeo: ' + msg);
+      const msg = err?.message || 'Erro desconhecido';
+      if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
+      else if (msg.includes('402') || msg.includes('billing') || msg.includes('insufficient') || msg.includes('Credits') || msg.includes('exclusively available')) toast.error('Créditos insuficientes. Adicione saldo no provedor.');
+      else toast.error('Erro ao gerar vídeo: ' + msg.substring(0, 120));
     } finally {
       setIsGenerating(false);
     }
