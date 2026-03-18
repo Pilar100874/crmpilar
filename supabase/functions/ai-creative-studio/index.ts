@@ -789,10 +789,6 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     "luma": "luma-imagine",
     "google-veo": "google-veo",
     "sora-2": "sora-2",
-    "pika": "pika",
-    "hailuo-minimax": "hailuo-minimax",
-    "wan-video": "wan-video",
-    "vidu": "vidu",
   };
 
   const action = ACTION_MAP[subModel];
