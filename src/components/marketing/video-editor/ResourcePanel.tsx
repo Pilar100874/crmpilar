@@ -467,6 +467,18 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
                   <Palette className="h-3 w-3 text-purple-400" />
                 </Button>
               )}
+              {media.resourceType === 'transition' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  onClick={(e) => { e.stopPropagation(); handleSaveTransitionToGallery(media); }}
+                  disabled={savingToGalleryId === media.id}
+                  title="Salvar na galeria"
+                >
+                  {savingToGalleryId === media.id ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <Save className="h-3 w-3 text-primary" />}
+                </Button>
+              )}
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleAddToTimeline(media)} title="Adicionar à timeline">
                 <Plus className="h-3 w-3 text-primary" />
               </Button>
