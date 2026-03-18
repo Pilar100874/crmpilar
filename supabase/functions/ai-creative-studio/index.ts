@@ -793,7 +793,7 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
 
   const action = ACTION_MAP[subModel];
   if (!action) {
-    return { error: `Modelo Apiframe "${subModel}" não possui mapeamento de ação configurado.` };
+    return { error: `Modelo "${subModel}" não está disponível no Apiframe. Modelos suportados: Midjourney Video, Runway, Kling 2.6/2.5, Luma, Google Veo, Sora 2.` };
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
