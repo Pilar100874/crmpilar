@@ -696,7 +696,8 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         if (pollResult?.error) throw new Error(pollResult.error);
 
         if (pollResult?.done && pollResult?.videoUrl) {
-          toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+          setVideoLoading(true);
+          setVideoError(false);
           setGeneratedVideoUrl(pollResult.videoUrl);
           setGeneratedDuration(duration);
           return;
