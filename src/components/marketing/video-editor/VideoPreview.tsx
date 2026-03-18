@@ -618,15 +618,16 @@ const VideoPreview: React.FC<Props> = ({
 
         <div className="absolute inset-0 pointer-events-none z-30 border-2 border-primary/40 rounded-md" />
 
-        {activeVisuals.length > 0 ? (
-          activeVisuals.map((clip, layerIdx) => {
+        {stagedVisuals.length > 0 ? (
+          stagedVisuals.map((clip, layerIdx) => {
             const cx = clip.x ?? 0;
             const cy = clip.y ?? 0;
             const cw = clip.w ?? 100;
             const ch = clip.h ?? 100;
             const isSelected = selectedClipIds.includes(clip.id);
+            const isActiveVisual = activeVisuals.some(activeClip => activeClip.id === clip.id);
             const zIndex = 10 + layerIdx;
-            const transitionStyle = getClipTransitionStyle(clip);
+            const transitionStyle = isActiveVisual ? getClipTransitionStyle(clip) : {};
 
             return (
               <div
@@ -635,7 +636,7 @@ const VideoPreview: React.FC<Props> = ({
                 style={{
                   left: `${cx}%`, top: `${cy}%`, width: `${cw}%`, height: `${ch}%`,
                   filter: buildFilter(clip),
-                  opacity: clip.opacity ?? 1,
+                  opacity: isActiveVisual ? (clip.opacity ?? 1) : 0,
                   outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
                   outlineOffset: '-1px', zIndex, transition: 'none',
                   transform: [
@@ -647,7 +648,6 @@ const VideoPreview: React.FC<Props> = ({
                     transitionStyle.transform || '',
                   ].filter(Boolean).join(' '),
                   ...transitionStyle,
-                  // Override transform with our combined one
                   ...((() => {
                     const combinedTransform = [
                       `rotate(${clip.rotation ?? 0}deg)`,
@@ -659,14 +659,14 @@ const VideoPreview: React.FC<Props> = ({
                     ].filter(Boolean).join(' ');
                     return { transform: combinedTransform };
                   })()),
-                  ...(transitionStyle.opacity !== undefined ? { opacity: (clip.opacity ?? 1) * (transitionStyle.opacity as number) } : {}),
+                  ...(transitionStyle.opacity !== undefined ? { opacity: ((isActiveVisual ? (clip.opacity ?? 1) : 0) * (transitionStyle.opacity as number)) } : {}),
                   ...(transitionStyle.filter ? { filter: [buildFilter(clip), transitionStyle.filter].filter(f => f && f !== 'none').join(' ') || 'none' } : {}),
                 }}
-                onPointerDown={(e) => handlePointerDown(e, clip.id, 'move')}
+                onPointerDown={(e) => isActiveVisual && handlePointerDown(e, clip.id, 'move')}
               >
                 {clip.src ? (
                   clip.type === 'video' ? (
-                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-contain pointer-events-none" muted={clip.muted} playsInline preload="metadata" />
+                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-contain pointer-events-none" muted={clip.muted} playsInline preload="auto" />
                   ) : (
                     <img src={clip.src} className="w-full h-full object-contain pointer-events-none" alt="" draggable={false} />
                   )
