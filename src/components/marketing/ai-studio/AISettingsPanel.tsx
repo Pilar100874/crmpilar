@@ -797,52 +797,6 @@ const UnifiedProviderPanel: React.FC<UnifiedProviderPanelProps> = ({ providerId,
     <div className="space-y-5">
       <Separator className="bg-border" />
 
-      {/* Activation Toggle */}
-      <div className={`rounded-xl border-2 p-5 space-y-3 transition-colors ${isActive ? 'border-primary bg-primary/5' : 'border-border bg-card'}`} style={{ boxShadow: 'var(--shadow-sm)' }}>
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isActive ? 'bg-primary/20' : 'bg-muted'}`}>
-              <Power className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-            </div>
-            {isActive ? 'API Unificada Ativa' : 'Ativar API Unificada'}
-          </h4>
-          <Button
-            size="sm"
-            onClick={onToggle}
-            disabled={!apiKey && !isActive}
-            variant={isActive ? 'destructive' : 'default'}
-            className="gap-1.5 text-xs"
-          >
-            <Power className="h-3 w-3" />
-            {isActive ? 'Desativar' : 'Ativar'}
-          </Button>
-        </div>
-
-        {isActive && (
-          <p className="text-xs text-primary font-medium">
-            ✅ {provider.name} está ativa. Modelos de outras APIs unificadas estão ocultos no Studio.
-          </p>
-        )}
-
-        {!isActive && otherProvider && (
-          <div className="rounded-lg bg-warning/10 border border-warning/20 p-3">
-            <p className="text-xs text-warning">
-              ⚠️ <strong>{otherProvider.name}</strong> está ativa. Desative-a primeiro para usar {provider.name}. Apenas 1 API unificada pode ficar ativa por vez.
-            </p>
-          </div>
-        )}
-
-        {!isActive && !otherProvider && apiKey && (
-          <p className="text-[11px] text-muted-foreground">
-            Ao ativar, os modelos desta API aparecerão no Studio e os modelos de outras APIs unificadas serão ocultados.
-          </p>
-        )}
-
-        {!apiKey && (
-          <p className="text-[11px] text-muted-foreground">Configure a API Key acima antes de ativar.</p>
-        )}
-      </div>
-
       {/* Apiframe Balance (only for apiframe) */}
       {providerId === 'apiframe' && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
