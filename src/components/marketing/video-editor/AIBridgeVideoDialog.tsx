@@ -738,6 +738,13 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     }
   }, [generatedVideoUrl, generatedDuration, onVideoGenerated, onClose]);
 
+  const handleCancelGeneration = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    onClose();
+  }, [onClose]);
+
   const handleDiscardPreview = useCallback(() => {
     setGeneratedVideoUrl(null);
     setGeneratedDuration(0);
@@ -746,7 +753,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && !isGenerating && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { if (isGenerating && abortRef.current) abortRef.current.abort(); onClose(); } }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
           <Wand2 className="h-4 w-4 text-primary" />
