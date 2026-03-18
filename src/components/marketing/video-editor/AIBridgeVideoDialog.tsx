@@ -586,7 +586,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.92);
-  }, [drawContain, loadImage, seekVideoPrecisely]);
+  }, [drawWithTransforms, loadImage, seekVideoPrecisely]);
 
 
 
