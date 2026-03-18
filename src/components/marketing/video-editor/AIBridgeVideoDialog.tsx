@@ -545,7 +545,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
         try {
           const bitmap = await createImageBitmap(video);
-          drawContain(ctx, bitmap, bitmap.width, bitmap.height);
+          drawWithTransforms(ctx, bitmap, bitmap.width, bitmap.height, clip);
           bitmap.close();
           captured = true;
           break;
