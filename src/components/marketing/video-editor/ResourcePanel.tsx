@@ -320,23 +320,23 @@ const ResourcePanel = forwardRef<ResourcePanelHandle, Props>(({ onAddClip, onAdd
     }
   }, [onAddClip, tracks]);
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; resType: ResourceType; media: ImportedMedia; matchingClipIds: string[] } | null>(null);
+
   const handleRemove = useCallback((id: string, resType: ResourceType, media: ImportedMedia) => {
-    // Find clips in the timeline that use this resource's src
     const matchingClipIds = clips.filter(c => c.src && media.src && c.src === media.src).map(c => c.id);
-    const hasClips = matchingClipIds.length > 0;
+    setDeleteConfirm({ id, resType, media, matchingClipIds });
+  }, [clips]);
 
-    const msg = hasClips
-      ? `Remover "${media.name}"? Isso também removerá ${matchingClipIds.length} clipe(s) inserido(s) na timeline.`
-      : `Remover "${media.name}" dos recursos?`;
-
-    if (!window.confirm(msg)) return;
-
+  const confirmDelete = useCallback(() => {
+    if (!deleteConfirm) return;
+    const { id, resType, matchingClipIds } = deleteConfirm;
     setItems(prev => ({ ...prev, [resType]: prev[resType].filter(v => v.id !== id) }));
-    if (hasClips && onDeleteClips) {
+    if (matchingClipIds.length > 0 && onDeleteClips) {
       onDeleteClips(matchingClipIds);
       toast.success(`${matchingClipIds.length} clipe(s) removido(s) da timeline`);
     }
-  }, [clips, onDeleteClips]);
+    setDeleteConfirm(null);
+  }, [deleteConfirm, onDeleteClips]);
 
   const startRename = useCallback((media: ImportedMedia) => {
     setEditingId(media.id);
