@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { X, Settings2, Key, Lock, ExternalLink, Save, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, TestTube, Play, Pause, Mic, DollarSign, Sparkles, Power, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { UNIFIED_PROVIDERS, getActiveUnifiedProvider, setActiveUnifiedProvider } from './unifiedProvidersConfig';
+import { UNIFIED_PROVIDERS } from './unifiedProvidersConfig';
 
 // ── Paid providers that need API keys ──────────────────────────────────────
 
