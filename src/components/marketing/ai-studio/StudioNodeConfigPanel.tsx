@@ -110,12 +110,8 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
   { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
-  { value: 'apiframe/pika', label: '⚡ AF: Pika', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe' },
-  { value: 'apiframe/hailuo-minimax', label: '⚡ AF: Hailuo MiniMax', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
-  { value: 'apiframe/wan-video', label: '⚡ AF: Wan Video', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
-  { value: 'apiframe/vidu', label: '⚡ AF: Vidu', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
-  { value: 'apiframe/pixverse', label: '⚡ AF: Pixverse', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe' },
-  { value: 'apiframe/seedance', label: '⚡ AF: Seedance', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe, ByteDance' },
+  // Apiframe video models below are not yet available on Apiframe API
+  // { value: 'apiframe/pika', ... }, { value: 'apiframe/hailuo-minimax', ... }, etc.
   // AIML API video models
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25' },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28' },
