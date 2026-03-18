@@ -771,12 +771,6 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                          <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
                           {m.label}
                           {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
-                          {m.bridgeSupport === 'start-only' && (
-                            <span className="flex items-center gap-0.5 text-amber-500 text-[9px] font-medium ml-1" title="Este modelo não suporta imagem final (end frame)">
-                              <AlertTriangle className="h-2.5 w-2.5" />
-                              só início
-                            </span>
-                          )}
                           {m.disabled && (
                             <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
                               <Lock className="h-2.5 w-2.5" />
@@ -799,16 +793,6 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 </Select>
               </div>
             </div>
-
-            {/* Bridge support warning */}
-            {ALL_VIDEO_MODELS.find(m => m.value === model)?.bridgeSupport === 'start-only' && (
-              <div className="mt-2 flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                  <strong>Atenção:</strong> Este modelo não suporta imagem final (end frame). O vídeo será gerado a partir da primeira imagem, mas pode não terminar exatamente na segunda. Para transições mais precisas, use modelos com suporte completo como <strong>Kling</strong>, <strong>Luma</strong>, <strong>Gen-3</strong> ou <strong>Google Veo</strong>.
-                </p>
-              </div>
-            )}
 
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
