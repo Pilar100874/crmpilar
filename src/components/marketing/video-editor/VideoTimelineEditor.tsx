@@ -731,6 +731,50 @@ const VideoTimelineEditor: React.FC = () => {
     const clipDuration = media?.duration || (type === 'text' ? 3 : type === 'audio' ? 10 : 5);
     const clipType = media?.canvasJson ? 'canvas' as const : type;
 
+    // For images/canvas, load actual dimensions to preserve aspect ratio
+    if ((clipType === 'image' || clipType === 'canvas') && media?.src) {
+      const img = new Image();
+      img.onload = () => {
+        // Parse resolution to get canvas dimensions
+        const [resW, resH] = (videoConfig.resolution || '1920x1080').split('x').map(Number);
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const canvasAspect = resW / resH;
+        let w = 100, h = 100;
+        if (imgAspect > canvasAspect) {
+          // Image is wider — fit to width
+          w = 100;
+          h = (canvasAspect / imgAspect) * 100;
+        } else {
+          // Image is taller — fit to height
+          h = 100;
+          w = (imgAspect / canvasAspect) * 100;
+        }
+        const x = (100 - w) / 2;
+        const y = (100 - h) / 2;
+
+        timeline.addClip({
+          trackId, type: clipType,
+          name: media?.name || `Imagem ${clips.length + 1}`,
+          startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
+          color, volume: 1, opacity: 1, filters: [],
+          src: media?.src, canvasJson: media?.canvasJson,
+          x, y, w, h,
+        });
+      };
+      img.onerror = () => {
+        timeline.addClip({
+          trackId, type: clipType,
+          name: media?.name || `Imagem ${clips.length + 1}`,
+          startTime, duration: clipDuration, trimStart: 0, trimEnd: 0,
+          color, volume: 1, opacity: 1, filters: [],
+          src: media?.src, canvasJson: media?.canvasJson,
+          x: 0, y: 0, w: 100, h: 100,
+        });
+      };
+      img.src = media.src;
+      return;
+    }
+
     timeline.addClip({
       trackId,
       type: clipType,
@@ -747,7 +791,7 @@ const VideoTimelineEditor: React.FC = () => {
       canvasJson: media?.canvasJson,
       x: 0, y: 0, w: 100, h: 100,
     });
-  }, [timeline]);
+  }, [timeline, videoConfig.resolution]);
 
   const handleAddEffectClip = useCallback((trackId: string, startTime: number, effectType: TransitionType, label: string) => {
     timeline.addClip({
