@@ -1774,6 +1774,7 @@ const VideoTimelineEditor: React.FC = () => {
               if (id) setActiveBridgeTaskId(id);
             });
           }}
+          hasActiveGeneration={bridgeGen.tasks.some(t => t.status === 'generating')}
         />
       )}
       {/* Minimized background generation indicators */}
