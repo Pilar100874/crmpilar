@@ -140,7 +140,40 @@ export type TransitionType =
   | 'tumble'
   | 'drop'
   | 'fly-in'
-  | 'fly-out';
+  | 'fly-out'
+  // Cinematográfico
+  | 'cinematic-fade'
+  | 'dolly-zoom'
+  | 'lens-flare'
+  | 'anamorphic-wipe'
+  | 'rack-focus'
+  | 'letterbox-reveal'
+  | 'speed-ramp'
+  | 'film-grain-fade'
+  | 'smoke-reveal'
+  | 'prism-shift'
+  // UGC / Social
+  | 'snap-cut'
+  | 'phone-swipe-up'
+  | 'phone-swipe-left'
+  | 'tiktok-zoom'
+  | 'vlog-jump'
+  | 'selfie-flip'
+  | 'story-slide'
+  | 'boomerang'
+  | 'hand-block'
+  | 'quick-pan'
+  // Marcas Famosas
+  | 'nike-swoosh'
+  | 'apple-fade'
+  | 'netflix-punch'
+  | 'adidas-stripe'
+  | 'coca-wave'
+  | 'samsung-fold'
+  | 'google-morph'
+  | 'disney-sparkle'
+  | 'supreme-drop'
+  | 'luxury-curtain';
 
 export interface TimelineTrack {
   id: string;
@@ -260,6 +293,39 @@ export const TRANSITION_PRESETS: { type: TransitionType; label: string; icon: st
   { type: 'drop', label: 'Drop', icon: '⬇️', description: 'Cai com gravidade e bounce' },
   { type: 'fly-in', label: 'Fly In', icon: '✈️', description: 'Voa de longe com perspectiva' },
   { type: 'fly-out', label: 'Fly Out', icon: '🚀', description: 'Voa para longe com perspectiva' },
+  // Cinematográfico
+  { type: 'cinematic-fade', label: 'Cine Fade', icon: '🎬', description: 'Fade lento com vinheta e leve desfoque — estilo trailer' },
+  { type: 'dolly-zoom', label: 'Dolly Zoom', icon: '📹', description: 'Efeito Vertigo (zoom + escala inversa) — Hitchcock/Spielberg' },
+  { type: 'lens-flare', label: 'Lens Flare', icon: '☀️', description: 'Transição com reflexo de lente — estilo J.J. Abrams' },
+  { type: 'anamorphic-wipe', label: 'Anamorphic', icon: '🎞️', description: 'Wipe com distorção anamórfica — cinema widescreen' },
+  { type: 'rack-focus', label: 'Rack Focus', icon: '🔭', description: 'Desfoque e refoco dramático — padrão cinematográfico' },
+  { type: 'letterbox-reveal', label: 'Letterbox', icon: '📽️', description: 'Barras cinemáticas abrindo — intro de filme' },
+  { type: 'speed-ramp', label: 'Speed Ramp', icon: '⚡', description: 'Desaceleração dramática + zoom — estilo Guy Ritchie' },
+  { type: 'film-grain-fade', label: 'Grain Fade', icon: '📷', description: 'Fade com grão de filme — estilo película 35mm' },
+  { type: 'smoke-reveal', label: 'Smoke Reveal', icon: '💨', description: 'Revelação com efeito fumaça — trailers de ação' },
+  { type: 'prism-shift', label: 'Prism', icon: '🌈', description: 'Aberração cromática + prisma — indie cinematográfico' },
+  // UGC / Social
+  { type: 'snap-cut', label: 'Snap Cut', icon: '✂️', description: 'Corte seco e rápido — estilo YouTube/TikTok' },
+  { type: 'phone-swipe-up', label: 'Swipe ↑', icon: '📱', description: 'Swipe para cima estilo Stories/Reels' },
+  { type: 'phone-swipe-left', label: 'Swipe ←', icon: '📲', description: 'Swipe lateral estilo carrossel' },
+  { type: 'tiktok-zoom', label: 'TikTok Zoom', icon: '🔥', description: 'Zoom rápido com shake — viral TikTok' },
+  { type: 'vlog-jump', label: 'Jump Cut', icon: '🎥', description: 'Jump cut clássico de vlog — Casey Neistat style' },
+  { type: 'selfie-flip', label: 'Selfie Flip', icon: '🤳', description: 'Flip de câmera frontal — estilo influencer' },
+  { type: 'story-slide', label: 'Story Slide', icon: '📖', description: 'Slide suave entre stories — Instagram/Snapchat' },
+  { type: 'boomerang', label: 'Boomerang', icon: '🪃', description: 'Efeito vai-e-volta — Instagram Boomerang' },
+  { type: 'hand-block', label: 'Hand Block', icon: '✋', description: 'Simulação de mão cobrindo câmera — transição viral' },
+  { type: 'quick-pan', label: 'Quick Pan', icon: '💫', description: 'Pan rápido lateral — estilo travel vlog' },
+  // Marcas Famosas
+  { type: 'nike-swoosh', label: 'Swoosh Cut', icon: '✓', description: 'Corte diagonal dinâmico — inspirado Nike "Just Do It"' },
+  { type: 'apple-fade', label: 'Apple Fade', icon: '🍎', description: 'Fade ultra-suave com preto — Apple keynote style' },
+  { type: 'netflix-punch', label: 'Netflix Punch', icon: '🅽', description: 'Zoom agressivo com flash — estilo Netflix trailer' },
+  { type: 'adidas-stripe', label: 'Stripe Wipe', icon: '▰', description: 'Wipe em 3 faixas diagonais — inspirado Adidas' },
+  { type: 'coca-wave', label: 'Wave Reveal', icon: '🌊', description: 'Revelação com onda fluida — estilo Coca-Cola' },
+  { type: 'samsung-fold', label: 'Fold', icon: '📱', description: 'Dobra 3D central — inspirado Samsung Fold' },
+  { type: 'google-morph', label: 'Color Morph', icon: '🔵', description: 'Morph com cores vibrantes — estilo Google/Material' },
+  { type: 'disney-sparkle', label: 'Sparkle', icon: '✨', description: 'Brilho mágico com fade — Disney/Pixar style' },
+  { type: 'supreme-drop', label: 'Drop In', icon: '🔴', description: 'Queda com impacto bold — streetwear/Supreme' },
+  { type: 'luxury-curtain', label: 'Luxury Curtain', icon: '🎭', description: 'Cortina dourada elegante — Louis Vuitton/Chanel' },
 ];
 
 export const EFFECT_PRESETS: EffectPreset[] = [

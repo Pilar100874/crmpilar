@@ -18,6 +18,9 @@ interface Props {
 }
 
 const TRANSITION_CATEGORIES = [
+  { id: 'cinematic', label: '🎬 Cinematográfico', icon: '🎬', types: ['cinematic-fade', 'dolly-zoom', 'lens-flare', 'anamorphic-wipe', 'rack-focus', 'letterbox-reveal', 'speed-ramp', 'film-grain-fade', 'smoke-reveal', 'prism-shift'] as TransitionType[] },
+  { id: 'ugc', label: '📱 UGC / Social', icon: '📱', types: ['snap-cut', 'phone-swipe-up', 'phone-swipe-left', 'tiktok-zoom', 'vlog-jump', 'selfie-flip', 'story-slide', 'boomerang', 'hand-block', 'quick-pan'] as TransitionType[] },
+  { id: 'brands', label: '🏆 Marcas Famosas', icon: '🏆', types: ['nike-swoosh', 'apple-fade', 'netflix-punch', 'adidas-stripe', 'coca-wave', 'samsung-fold', 'google-morph', 'disney-sparkle', 'supreme-drop', 'luxury-curtain'] as TransitionType[] },
   { id: 'basic', label: 'Básicas', icon: '✨', types: ['fade', 'dissolve', 'crossfade', 'fade-blur', 'luma-fade'] as TransitionType[] },
   { id: 'movement', label: 'Movimento', icon: '🔀', types: ['slide-left', 'slide-right', 'slide-up', 'slide-down', 'roll-left', 'roll-right', 'whip-pan'] as TransitionType[] },
   { id: 'push-cover', label: 'Push/Cover', icon: '📑', types: ['push-left', 'push-right', 'push-up', 'push-down', 'cover-left', 'cover-right', 'reveal-left', 'reveal-right'] as TransitionType[] },

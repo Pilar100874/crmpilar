@@ -108,6 +108,39 @@ function getTransitionStyle(
     case 'ripple': return { transform: `scale(${1 + Math.sin(p * Math.PI * 4) * (1 - p) * 0.1})`, opacity: p, filter: `blur(${(1 - p) * 4}px)` };
     case 'mosaic': return { filter: `blur(${(1 - p) * 10}px)`, opacity: p, transform: `scale(${1 + (1 - p) * 0.05})` };
     case 'spin-out': return { transform: `rotate(${(1 - p) * 720}deg) scale(${p})`, opacity: p };
+    // Cinematográfico
+    case 'cinematic-fade': return { opacity: p * p, filter: `blur(${(1 - p) * 3}px) brightness(${0.6 + p * 0.4})` };
+    case 'dolly-zoom': return { transform: `scale(${1 + (1 - p) * 0.5})`, opacity: p, filter: `blur(${(1 - p) * 2}px)` };
+    case 'lens-flare': return { opacity: p, filter: `brightness(${1 + (1 - p) * 4}) saturate(${1 + (1 - p) * 3})` };
+    case 'anamorphic-wipe': return { clipPath: `inset(0 ${(1 - p) * 50}%)`, transform: `scaleX(${0.8 + p * 0.2})` };
+    case 'rack-focus': return { filter: `blur(${Math.sin((1 - p) * Math.PI) * 8}px)`, opacity: 0.5 + p * 0.5 };
+    case 'letterbox-reveal': return { clipPath: `inset(${(1 - p) * 35}% 0)`, opacity: p };
+    case 'speed-ramp': { const sp = p < 0.3 ? p / 0.3 * 0.3 : 0.3 + (p - 0.3) / 0.7 * 0.7; return { transform: `scale(${1 + (1 - sp) * 0.3})`, filter: `blur(${(1 - sp) * 4}px)`, opacity: sp }; }
+    case 'film-grain-fade': return { opacity: p, filter: `contrast(${1 + (1 - p) * 0.4}) brightness(${0.7 + p * 0.3})` };
+    case 'smoke-reveal': return { clipPath: `circle(${p * 85}% at 50% 50%)`, filter: `blur(${(1 - p) * 5}px)`, opacity: p };
+    case 'prism-shift': { const off = (1 - p) * 5; return { transform: `translateX(${off}px)`, filter: `hue-rotate(${(1 - p) * 80}deg) blur(${(1 - p) * 2}px)`, opacity: p }; }
+    // UGC / Social
+    case 'snap-cut': return { opacity: p > 0.08 ? 1 : 0, transform: `scale(${p > 0.08 ? 1 : 0.95})` };
+    case 'phone-swipe-up': return { transform: `translateY(${(1 - p) * 110}%)`, opacity: Math.min(1, p * 4) };
+    case 'phone-swipe-left': return { transform: `translateX(${(1 - p) * 110}%) rotate(${(1 - p) * -3}deg)`, opacity: Math.min(1, p * 4) };
+    case 'tiktok-zoom': { const tz = p < 0.4 ? p / 0.4 : 1; return { transform: `scale(${0.4 + tz * 0.6})`, filter: `blur(${(1 - tz) * 3}px)`, opacity: tz }; }
+    case 'vlog-jump': return { opacity: p > 0.04 ? 1 : 0, transform: `scale(${p > 0.04 ? 1 + (1 - p) * 0.04 : 0.9})` };
+    case 'selfie-flip': return { transform: `perspective(800px) rotateY(${(1 - p) * 180}deg)`, opacity: p > 0.5 ? 1 : p * 2 };
+    case 'story-slide': return { transform: `translateX(${(1 - p) * 100}%)`, opacity: p };
+    case 'boomerang': { const bp = p < 0.5 ? p * 2 : 2 - p * 2; return { transform: `scale(${0.7 + bp * 0.3})`, opacity: 0.4 + bp * 0.6 }; }
+    case 'hand-block': return { opacity: p < 0.3 ? 0 : (p - 0.3) / 0.7, filter: p < 0.3 ? 'brightness(0.1)' : '' };
+    case 'quick-pan': return { transform: `translateX(${(1 - p) * 120}%)`, filter: `blur(${(1 - p) * 6}px)`, opacity: Math.min(1, p * 3) };
+    // Marcas Famosas
+    case 'nike-swoosh': return { clipPath: `polygon(0 0, ${p * 100}% 0, ${Math.max(0, p * 100 - 25)}% 100%, 0 100%)` };
+    case 'apple-fade': return { opacity: p * p * p };
+    case 'netflix-punch': return { transform: `scale(${0.2 + p * 0.8})`, opacity: p, filter: `brightness(${1 + (1 - p) * 2})` };
+    case 'adidas-stripe': return { clipPath: `inset(0 ${(1 - p) * 100}% 0 0)`, transform: `skewX(${(1 - p) * -10}deg)` };
+    case 'coca-wave': { const w = Math.sin(p * Math.PI * 2) * (1 - p) * 15; return { transform: `translateY(${w}px) scale(${0.85 + p * 0.15})`, opacity: p }; }
+    case 'samsung-fold': return { transform: `perspective(800px) rotateY(${(1 - p) * 70}deg)`, opacity: p };
+    case 'google-morph': return { transform: `scale(${0.5 + p * 0.5}) rotate(${(1 - p) * 20}deg)`, filter: `hue-rotate(${(1 - p) * 150}deg) saturate(${1 + (1 - p) * 3})`, opacity: p };
+    case 'disney-sparkle': return { transform: `scale(${0.4 + p * 0.6})`, opacity: p, filter: `brightness(${1 + (1 - p) * 2}) saturate(${1 + (1 - p) * 1.5})` };
+    case 'supreme-drop': return { transform: `translateY(${(1 - p) * -80}%)`, opacity: p < 0.7 ? p / 0.7 : 1 };
+    case 'luxury-curtain': return { clipPath: `inset(0 ${(1 - p) * 50}%)`, filter: `brightness(${0.6 + p * 0.4}) sepia(${(1 - p) * 40}%)` };
     default: return {};
   }
 }

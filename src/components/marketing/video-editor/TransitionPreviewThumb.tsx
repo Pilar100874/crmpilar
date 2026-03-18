@@ -89,6 +89,39 @@ const TransitionPreviewThumb: React.FC<Props> = ({ type, isExit = false, isActiv
       filter = `hue-rotate(${(1 - p) * 90}deg)`; break;
     }
     case 'pixelate': filter = `blur(${(1 - p) * 5}px)`; opacity = p; break;
+    // Cinematográfico
+    case 'cinematic-fade': opacity = p * p; filter = `blur(${(1 - p) * 2}px) brightness(${0.7 + p * 0.3})`; break;
+    case 'dolly-zoom': transform = `scale(${1 + (1 - p) * 0.4}) perspective(${s * 2}px) translateZ(${(1 - p) * -10}px)`; opacity = p; break;
+    case 'lens-flare': opacity = p; filter = `brightness(${1 + (1 - p) * 3}) saturate(${1 + (1 - p) * 2})`; break;
+    case 'anamorphic-wipe': clipPath = `inset(0 ${(1 - p) * 50}%)`; transform = `scaleX(${0.85 + p * 0.15})`; break;
+    case 'rack-focus': filter = `blur(${Math.sin((1 - p) * Math.PI) * 5}px)`; opacity = 0.6 + p * 0.4; break;
+    case 'letterbox-reveal': clipPath = `inset(${(1 - p) * 40}% 0)`; opacity = p; break;
+    case 'speed-ramp': { const sp = p < 0.3 ? p / 0.3 * 0.3 : 0.3 + (p - 0.3) / 0.7 * 0.7; transform = `scale(${1 + (1 - sp) * 0.2})`; filter = `blur(${(1 - sp) * 3}px)`; opacity = sp; break; }
+    case 'film-grain-fade': opacity = p; filter = `contrast(${1 + (1 - p) * 0.3}) brightness(${0.8 + p * 0.2})`; break;
+    case 'smoke-reveal': clipPath = `circle(${p * 80}% at 50% 50%)`; filter = `blur(${(1 - p) * 3}px)`; opacity = p; break;
+    case 'prism-shift': { const off = (1 - p) * 3; transform = `translateX(${off}px)`; filter = `hue-rotate(${(1 - p) * 60}deg) blur(${(1 - p) * 1.5}px)`; opacity = p; break; }
+    // UGC / Social
+    case 'snap-cut': opacity = p > 0.1 ? 1 : 0; transform = `scale(${p > 0.1 ? 1 : 0.95})`; break;
+    case 'phone-swipe-up': transform = `translateY(${(1 - p) * s}px)`; opacity = Math.min(1, p * 3); break;
+    case 'phone-swipe-left': transform = `translateX(${(1 - p) * s}px) rotate(${(1 - p) * -3}deg)`; opacity = Math.min(1, p * 3); break;
+    case 'tiktok-zoom': { const tz = p < 0.4 ? p / 0.4 : 1; transform = `scale(${0.5 + tz * 0.5})`; filter = `blur(${(1 - tz) * 2}px)`; opacity = tz; break; }
+    case 'vlog-jump': opacity = p > 0.05 ? 1 : 0; transform = `scale(${p > 0.05 ? 1 + (1 - p) * 0.03 : 0.9})`; break;
+    case 'selfie-flip': transform = `perspective(${s}px) rotateY(${(1 - p) * 180}deg)`; opacity = p > 0.5 ? 1 : p * 2; break;
+    case 'story-slide': transform = `translateX(${(1 - p) * s * 0.6}px)`; opacity = p; break;
+    case 'boomerang': { const bp = p < 0.5 ? p * 2 : 2 - p * 2; transform = `scale(${0.8 + bp * 0.2})`; opacity = 0.5 + bp * 0.5; break; }
+    case 'hand-block': { opacity = p < 0.3 ? 0 : (p - 0.3) / 0.7; filter = p < 0.3 ? 'brightness(0.2)' : ''; break; }
+    case 'quick-pan': transform = `translateX(${(1 - p) * s * 0.8}px)`; filter = `blur(${(1 - p) * 4}px)`; opacity = Math.min(1, p * 2); break;
+    // Marcas Famosas
+    case 'nike-swoosh': clipPath = `polygon(0 0, ${p * 100}% 0, ${p * 100 - 20}% 100%, 0 100%)`; break;
+    case 'apple-fade': opacity = p * p * p; break;
+    case 'netflix-punch': transform = `scale(${0.3 + p * 0.7})`; opacity = p; filter = `brightness(${1 + (1 - p) * 1.5})`; break;
+    case 'adidas-stripe': clipPath = `polygon(0 0, ${p * 33}% 0, ${p * 33}% 100%, 0 100%, ${p * 34}% 0, ${p * 66}% 0, ${p * 66}% 100%, ${p * 34}% 100%, ${p * 67}% 0, ${p * 100}% 0, ${p * 100}% 100%, ${p * 67}% 100%)`; break;
+    case 'coca-wave': { const wave = Math.sin(p * Math.PI * 2) * (1 - p) * 10; transform = `translateY(${wave}px) scale(${0.9 + p * 0.1})`; opacity = p; break; }
+    case 'samsung-fold': transform = `perspective(${s * 2}px) rotateY(${(1 - p) * 60}deg)`; opacity = p; break;
+    case 'google-morph': transform = `scale(${0.6 + p * 0.4}) rotate(${(1 - p) * 15}deg)`; filter = `hue-rotate(${(1 - p) * 120}deg) saturate(${1 + (1 - p) * 2})`; opacity = p; break;
+    case 'disney-sparkle': transform = `scale(${0.5 + p * 0.5})`; opacity = p; filter = `brightness(${1 + (1 - p) * 1.5}) saturate(${1 + (1 - p)})`; break;
+    case 'supreme-drop': transform = `translateY(${(1 - p) * -s * 0.5}px)`; opacity = p < 0.8 ? p / 0.8 : 1; break;
+    case 'luxury-curtain': clipPath = `inset(0 ${(1 - p) * 50}%)`; filter = `brightness(${0.7 + p * 0.3}) sepia(${(1 - p) * 30}%)`; break;
     default: break;
   }
 
