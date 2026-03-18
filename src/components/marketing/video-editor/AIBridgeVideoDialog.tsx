@@ -576,8 +576,11 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsGenerating(true);
     try {
+      const signal = controller.signal;
       const uploadFrame = async (dataUrl: string, label: string): Promise<string> => {
         const resp = await fetch(dataUrl);
         const blob = await resp.blob();
