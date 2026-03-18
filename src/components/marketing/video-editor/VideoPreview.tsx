@@ -548,7 +548,7 @@ const VideoPreview: React.FC<Props> = ({
     <div className="w-full h-full flex items-center justify-center"
       onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
     >
-      <div className="relative rounded-md overflow-hidden" style={{ width: CANVAS_W, height: CANVAS_H }}>
+      <div ref={containerRef} className="relative rounded-md overflow-hidden" style={{ width: CANVAS_W, height: CANVAS_H }}>
         <div className="absolute inset-0 bg-black" />
 
         <div className="absolute inset-0 pointer-events-none z-30">
