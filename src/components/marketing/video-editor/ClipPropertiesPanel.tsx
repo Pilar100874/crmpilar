@@ -90,6 +90,11 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
           </div>
         )}
 
+        {/* Audio Waveform Editor - envelope + speed */}
+        {clip.type === 'audio' && (
+          <AudioWaveformEditor clip={clip} onUpdateClip={onUpdateClip} />
+        )}
+
         {/* Opacity */}
         <div>
           <Label className="text-xs">Opacidade ({Math.round((clip.opacity ?? 1) * 100)}%)</Label>
