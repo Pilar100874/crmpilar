@@ -1021,6 +1021,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                           </p>
                         )}
                       </div>
+                    )}
                   </div>
                 </ScrollArea>
               </PopoverContent>
