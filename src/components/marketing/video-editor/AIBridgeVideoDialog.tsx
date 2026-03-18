@@ -692,10 +692,10 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
           </div>
           <div className="w-28">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração (s)</label>
-            <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
+             <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {[2, 3, 4, 5, 6, 8, 10].map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
+                {durationOptions.map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
