@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { TimelineClip, EFFECT_TRACK_PRESETS } from './types';
-import { Settings2, FlipHorizontal, FlipVertical, RotateCcw, Maximize, Move } from 'lucide-react';
+import { Settings2, FlipHorizontal, FlipVertical, RotateCcw, Maximize, Move, Undo2 } from 'lucide-react';
 
 interface Props {
   clip?: TimelineClip;
@@ -172,25 +172,47 @@ const ClipPropertiesPanel: React.FC<Props> = ({ clip, onUpdateClip }) => {
                 />
               </div>
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-col gap-1.5 mt-2">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs gap-1.5"
+                  onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
+                >
+                  <Move className="h-3 w-3" />
+                  Resetar posição
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1 text-xs gap-1.5"
+                  onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100, rotation: 0, skewX: 0, skewY: 0, scaleX: 1, scaleY: 1 })}
+                  title="Preencher todo o quadro do vídeo"
+                >
+                  <Maximize className="h-3 w-3" />
+                  Preencher quadro
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-xs gap-1.5"
-                onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100 })}
+                className="w-full text-xs gap-1.5 border-dashed text-muted-foreground hover:text-foreground"
+                onClick={() => onUpdateClip(clip.id, {
+                  x: undefined,
+                  y: undefined,
+                  w: undefined,
+                  h: undefined,
+                  rotation: undefined,
+                  scaleX: undefined,
+                  scaleY: undefined,
+                  skewX: undefined,
+                  skewY: undefined,
+                })}
+                title="Restaurar o objeto ao estado original sem transformações"
               >
-                <Move className="h-3 w-3" />
-                Resetar posição
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                className="flex-1 text-xs gap-1.5"
-                onClick={() => onUpdateClip(clip.id, { x: 0, y: 0, w: 100, h: 100, rotation: 0, skewX: 0, skewY: 0, scaleX: 1, scaleY: 1 })}
-                title="Preencher todo o quadro do vídeo"
-              >
-                <Maximize className="h-3 w-3" />
-                Preencher quadro
+                <Undo2 className="h-3 w-3" />
+                Restaurar original
               </Button>
             </div>
           </div>
