@@ -43,8 +43,8 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$', bridgeSupport: 'full' },
   // Apiframe — Runway Gen-3: NÃO suporta end_image_url (Apiframe ignora esse campo para Runway)
   // Removido da lista de bridge — usar runway/gen3-alpha-turbo (nativo) que suporta lastFrame
-  // Apiframe — Kling: suporta end_image
-  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
+  // Apiframe — Kling 2.6: NÃO suporta end frame (docs confirmam: só aceita image_url como primeiro frame)
+  // Removido do bridge — usar Kling 2.5 Turbo Pro que aceita start_image + end_image
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$', bridgeSupport: 'full' },
   // Apiframe — Luma: suporta end_image_url
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
