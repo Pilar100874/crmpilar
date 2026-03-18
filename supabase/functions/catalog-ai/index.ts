@@ -248,10 +248,20 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
 
   } catch (error) {
     console.error("catalog-ai error:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    }), {
-      status: 500,
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    const msgLower = msg.toLowerCase();
+    let status = 500;
+    let friendlyMsg = msg;
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("payment") || 
+        msgLower.includes("insufficient") || msgLower.includes("credits") || msgLower.includes("exclusively available")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes. Adicione créditos ao workspace.";
+    } else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("too many") || msgLower.includes("quota")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições excedido. Tente novamente.";
+    }
+    return new Response(JSON.stringify({ error: friendlyMsg }), {
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

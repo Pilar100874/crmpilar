@@ -104,9 +104,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error generating ad image:", error);
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    const msgLower = msg.toLowerCase();
+    let status = 500;
+    let friendlyMsg = msg;
+    if (msgLower.includes("402") || msgLower.includes("billing") || msgLower.includes("payment") || 
+        msgLower.includes("insufficient") || msgLower.includes("credits") || msgLower.includes("exclusively available")) {
+      status = 402;
+      friendlyMsg = "Créditos insuficientes. Adicione créditos ao workspace.";
+    } else if (msgLower.includes("429") || msgLower.includes("rate limit") || msgLower.includes("too many") || msgLower.includes("quota")) {
+      status = 429;
+      friendlyMsg = "Limite de requisições excedido. Tente novamente.";
+    }
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: friendlyMsg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
