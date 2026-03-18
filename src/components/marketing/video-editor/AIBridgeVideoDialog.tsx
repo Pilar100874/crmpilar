@@ -525,9 +525,8 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       if (result?.error) throw new Error(result.error);
       if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
 
-      const exactVideoUrl = await enforceExactBridgeFrames(result.videoUrl, frameA, frameB, duration, estabId);
-      toast.success('Vídeo de transição gerado com os frames inicial e final exatos!');
-      onVideoGenerated(exactVideoUrl, duration);
+      toast.success('Vídeo de transição gerado com sucesso!');
+      onVideoGenerated(result.videoUrl, duration);
       onClose();
     } catch (err: any) {
       const msg = err?.message || 'Erro desconhecido';
