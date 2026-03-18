@@ -832,7 +832,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={() => { applyAndConfirmTransitions(); setTransPopoverOpen(false); }}>
                     <Check className="h-3 w-3" /> Aplicar
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setTransPopoverOpen(false)}>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => { restoreOriginalTransitions(); setTransPopoverOpen(false); appliedTransitionsRef.current = true; }}>
                     <X className="h-3 w-3" /> Fechar
                   </Button>
                 </div>
