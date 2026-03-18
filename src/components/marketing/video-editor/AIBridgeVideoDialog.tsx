@@ -137,6 +137,8 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 }) => {
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [generatedDuration, setGeneratedDuration] = useState<number>(0);
   const [prompt, setPrompt] = useState('');
    const [model, setModel] = useState('google/veo-3.1');
 
