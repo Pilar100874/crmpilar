@@ -747,17 +747,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   </div>
                   {/* Tab switcher */}
                   <div className="flex mt-2 rounded-lg border overflow-hidden">
-                    {(['presets', 'filters', 'active'] as const).map(tab => (
+                    {(['presets', 'filters', 'active', 'wave', 'speed'] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setAudioTab(tab)}
-                        className={`flex-1 py-1.5 text-[10px] font-medium transition-colors ${
+                        className={`flex-1 py-1.5 text-[9px] font-medium transition-colors border-r last:border-r-0 ${
                           audioTab === tab ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50'
-                        } ${tab !== 'active' ? 'border-r' : ''}`}
+                        }`}
                       >
-                        {tab === 'presets' ? '🎛️ Presets' : tab === 'filters' ? '🔧 Filtros' : `🎚️ Ativos (${selectedClip.audioFilters?.length || 0})`}
+                        {tab === 'presets' ? '🎛️ Presets' : tab === 'filters' ? '🔧 Filtros' : tab === 'active' ? `🎚️ (${selectedClip.audioFilters?.length || 0})` : tab === 'wave' ? '🎵 Onda' : '⚡ Vel.'}
                       </button>
                     ))}
+                  </div>
                   </div>
                 </div>
 
