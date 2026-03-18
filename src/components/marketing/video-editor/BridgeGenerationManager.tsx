@@ -56,7 +56,7 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className={`rounded-xl border shadow-lg backdrop-blur-sm p-3 min-w-[280px] ${
               task.status === 'done'
-                ? 'bg-success/10 border-success/40 animate-pulse'
+                ? 'bg-success/10 border-success/40'
                 : task.status === 'error'
                 ? 'bg-destructive/10 border-destructive/40'
                 : 'bg-background/95 border-border'
@@ -82,11 +82,11 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0"
+                  className={`h-6 w-6 p-0 ${task.status === 'done' ? 'animate-pulse' : ''}`}
                   onClick={() => onMaximize(task.id)}
                   title="Maximizar"
                 >
-                  <Maximize2 className="h-3 w-3" />
+                  <Maximize2 className={`h-3 w-3 ${task.status === 'done' ? 'text-success animate-bounce' : ''}`} />
                 </Button>
                 <Button
                   variant="ghost"
@@ -158,10 +158,10 @@ export function useBridgeGenerations() {
     clipBName: string;
     minimized?: boolean;
   }): Promise<string> => {
-    // Limit to 2 simultaneous generations
+    // Limit to 1 simultaneous generation
     const activeCount = tasksRef.current.filter(t => t.status === 'generating').length;
-    if (activeCount >= 2) {
-      toast.error('Máximo de 2 gerações simultâneas. Aguarde uma finalizar ou cancele uma existente.');
+    if (activeCount >= 1) {
+      toast.error('Aguarde a geração atual finalizar antes de iniciar outra.');
       return '';
     }
 
