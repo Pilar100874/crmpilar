@@ -1767,8 +1767,9 @@ const VideoTimelineEditor: React.FC = () => {
           onVideoGenerated={handleBridgeVideoGenerated}
           activeTask={activeBridgeTask}
           onStartBackgroundGeneration={(params) => {
-            const taskId = bridgeGen.startGeneration(params);
-            taskId.then(id => setActiveBridgeTaskId(id));
+            bridgeGen.startGeneration(params).then(id => {
+              if (id) setActiveBridgeTaskId(id);
+            });
           }}
         />
       )}
