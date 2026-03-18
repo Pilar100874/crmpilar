@@ -176,9 +176,29 @@ const CanvasWorkspace = ({ selectedSize, platformPreset }: CanvasWorkspaceProps)
           setSelectedObject(active);
         };
 
+        const handleTextDoubleClick = (evt: any) => {
+          const target = evt?.target as any;
+          if (!target) return;
+          if (target.type === 'textbox' || target.type === 'text' || target.type === 'i-text') {
+            canvas.setActiveObject(target);
+            canvas.renderAll();
+            requestAnimationFrame(() => {
+              try {
+                target.enterEditing?.();
+                target.selectAll?.();
+                const hiddenTextarea = target.hiddenTextarea as HTMLTextAreaElement | undefined;
+                hiddenTextarea?.focus?.();
+              } catch {
+                // noop
+              }
+            });
+          }
+        };
+
         canvas.on('selection:created', handleSelection);
         canvas.on('selection:updated', handleSelection);
         canvas.on('selection:cleared', () => setSelectedObject(null));
+        canvas.on('mouse:dblclick', handleTextDoubleClick);
 
         // Histórico
         const saveState = () => {
