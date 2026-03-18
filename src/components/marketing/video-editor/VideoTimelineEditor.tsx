@@ -88,6 +88,9 @@ const VideoTimelineEditor: React.FC = () => {
   const [bridgeDialogOpen, setBridgeDialogOpen] = useState(false);
   const [bridgeClipA, setBridgeClipA] = useState<TimelineClip | null>(null);
   const [bridgeClipB, setBridgeClipB] = useState<TimelineClip | null>(null);
+  const bridgeGen = useBridgeGenerations();
+  const [activeBridgeTaskId, setActiveBridgeTaskId] = useState<string | null>(null);
+  const activeBridgeTask = bridgeGen.tasks.find(t => t.id === activeBridgeTaskId) || null;
   const containerRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
