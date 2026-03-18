@@ -349,12 +349,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const [transitionPhase, setTransitionPhase] = useState<'entrance' | 'exit'>('entrance');
   const [selectedTransCat, setSelectedTransCat] = useState(TRANSITION_CATEGORIES[0].id);
   const [selectedFilterCat, setSelectedFilterCat] = useState<string>('cor');
+  const [selectedAudioCat, setSelectedAudioCat] = useState<string>('Equalizador');
+  const [selectedAudioPresetCat, setSelectedAudioPresetCat] = useState<string>('Podcast');
+  const [audioTab, setAudioTab] = useState<'presets' | 'filters' | 'active'>('presets');
+  const [expandedAudioParams, setExpandedAudioParams] = useState<Record<string, boolean>>({});
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
+  const isAudio = selectedClip.type === 'audio';
   const entranceTransition = selectedClip.transitions?.entrance;
   const exitTransition = selectedClip.transitions?.exit;
   const hasTransitions = (entranceTransition && entranceTransition.type !== 'none') || (exitTransition && exitTransition.type !== 'none');
   const hasFilters = (selectedClip.filters?.length ?? 0) > 0;
+  const hasAudioFilters = (selectedClip.audioFilters?.length ?? 0) > 0;
 
   const setTransition = (phase: 'entrance' | 'exit', type: TransitionType) => {
     const current = selectedClip.transitions || {};
@@ -419,8 +425,57 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { filters: [] });
   };
 
+  // === Audio filter handlers ===
+  const addAudioFilter = (type: AudioFilterType) => {
+    const def = AUDIO_FILTER_DEFS.find(f => f.type === type);
+    if (!def) return;
+    const existing = selectedClip.audioFilters || [];
+    if (existing.some(f => f.type === type)) return;
+    const params: Record<string, number> = {};
+    def.params?.forEach(p => { params[p.key] = p.defaultValue; });
+    onUpdateClip(selectedClip.id, {
+      audioFilters: [...existing, { id: `af_${Date.now()}`, type, label: def.label, value: def.defaultValue, enabled: true, params: Object.keys(params).length > 0 ? params : undefined }],
+    });
+  };
+
+  const updateAudioFilter = (filterId: string, updates: Partial<AudioFilter>) => {
+    onUpdateClip(selectedClip.id, {
+      audioFilters: (selectedClip.audioFilters || []).map((f) => f.id === filterId ? { ...f, ...updates } : f),
+    });
+  };
+
+  const updateAudioFilterParam = (filterId: string, paramKey: string, paramValue: number) => {
+    const existing = selectedClip.audioFilters || [];
+    onUpdateClip(selectedClip.id, {
+      audioFilters: existing.map(f => f.id === filterId ? { ...f, params: { ...(f.params || {}), [paramKey]: paramValue } } : f),
+    });
+  };
+
+  const removeAudioFilter = (filterId: string) => {
+    onUpdateClip(selectedClip.id, { audioFilters: (selectedClip.audioFilters || []).filter((f) => f.id !== filterId) });
+  };
+
+  const resetAudioFilters = () => {
+    onUpdateClip(selectedClip.id, { audioFilters: [] });
+  };
+
+  const applyAudioPreset = (presetId: string) => {
+    const preset = AUDIO_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    const audioFilters: AudioFilter[] = preset.filters.map((f, i) => {
+      const def = AUDIO_FILTER_DEFS.find(d => d.type === f.type);
+      const params: Record<string, number> = {};
+      def?.params?.forEach(p => { params[p.key] = p.defaultValue; });
+      return { ...f, id: `af_${Date.now()}_${i}`, params: Object.keys(params).length > 0 ? params : undefined };
+    });
+    onUpdateClip(selectedClip.id, { audioFilters });
+  };
+
   const clipIcon = selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊';
   const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
+
+  const AUDIO_CATEGORIES = [...new Set(AUDIO_FILTER_DEFS.map(f => f.category))];
+  const AUDIO_PRESET_CATEGORIES = [...new Set(AUDIO_PRESETS.map(p => p.category))];
 
   return (
     <div className="fixed bottom-10 sm:bottom-12 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
@@ -434,7 +489,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             <span className="text-[8px] sm:text-[9px] text-muted-foreground hidden sm:inline">{selectedClip.duration.toFixed(1)}s</span>
           </div>
 
-          {/* Transitions Popover */}
+          {/* Transitions Popover - only for visual clips */}
           {isVisual && (
             <Popover>
               <PopoverTrigger asChild>
@@ -551,8 +606,198 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           <div className="h-4 sm:h-5 w-px bg-border/40" />
 
-          {/* Filters Popover */}
-          <Popover>
+          {/* === AUDIO EFFECTS POPOVER (for audio clips) === */}
+          {isAudio ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={hasAudioFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
+                  <Headphones className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+                  <span className="text-[10px] sm:text-xs">Efeitos de Áudio</span>
+                  {hasAudioFilters && <span className="text-[8px] sm:text-[9px] bg-primary-foreground/20 px-1 sm:px-1.5 rounded-full">{selectedClip.audioFilters?.length}</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[calc(100vw-1rem)] sm:w-[480px] p-0" side="top" align="center">
+                {/* Header */}
+                <div className="p-3 border-b bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold flex items-center gap-1.5">
+                      <Headphones className="h-3.5 w-3.5 text-primary" /> Efeitos de Áudio Profissional
+                    </p>
+                    <Button size="sm" variant="ghost" className="text-[9px] h-6 gap-1" onClick={resetAudioFilters} disabled={!hasAudioFilters}>
+                      <RotateCcw className="h-3 w-3" /> Resetar
+                    </Button>
+                  </div>
+                  {/* Tab switcher */}
+                  <div className="flex mt-2 rounded-lg border overflow-hidden">
+                    {(['presets', 'filters', 'active'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setAudioTab(tab)}
+                        className={`flex-1 py-1.5 text-[10px] font-medium transition-colors ${
+                          audioTab === tab ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50'
+                        } ${tab !== 'active' ? 'border-r' : ''}`}
+                      >
+                        {tab === 'presets' ? '🎛️ Presets' : tab === 'filters' ? '🔧 Filtros' : `🎚️ Ativos (${selectedClip.audioFilters?.length || 0})`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <ScrollArea className="max-h-[55vh]">
+                  <div className="p-2 space-y-2">
+                    {/* PRESETS TAB */}
+                    {audioTab === 'presets' && (
+                      <>
+                        <Select value={selectedAudioPresetCat} onValueChange={setSelectedAudioPresetCat}>
+                          <SelectTrigger className="h-7 text-[10px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {AUDIO_PRESET_CATEGORIES.map(cat => (
+                              <SelectItem key={cat} value={cat} className="text-[11px]">{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                          {AUDIO_PRESETS.filter(p => p.category === selectedAudioPresetCat).map(preset => (
+                            <button
+                              key={preset.id}
+                              onClick={() => applyAudioPreset(preset.id)}
+                              className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
+                              title={preset.description}
+                            >
+                              <span className="text-xl leading-none">{preset.icon}</span>
+                              <span className="text-[9px] font-semibold leading-tight">{preset.name}</span>
+                              <span className="text-[7px] text-muted-foreground leading-tight line-clamp-2">{preset.description}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* FILTERS TAB */}
+                    {audioTab === 'filters' && (
+                      <>
+                        <Select value={selectedAudioCat} onValueChange={setSelectedAudioCat}>
+                          <SelectTrigger className="h-7 text-[10px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {AUDIO_CATEGORIES.map(cat => (
+                              <SelectItem key={cat} value={cat} className="text-[11px]">
+                                {cat} ({AUDIO_FILTER_DEFS.filter(f => f.category === cat).length})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                          {AUDIO_FILTER_DEFS.filter(f => f.category === selectedAudioCat).map(def => {
+                            const alreadyAdded = selectedClip.audioFilters?.some(af => af.type === def.type);
+                            return (
+                              <button
+                                key={def.type}
+                                onClick={() => { addAudioFilter(def.type); setAudioTab('active'); }}
+                                disabled={alreadyAdded}
+                                className={`flex flex-col items-center gap-0.5 p-2 rounded-lg border transition-all text-center ${
+                                  alreadyAdded ? 'opacity-40 cursor-not-allowed border-primary/30 bg-primary/5' : 'border-border/50 hover:border-primary/50 hover:bg-primary/5 cursor-pointer'
+                                }`}
+                                title={def.description}
+                              >
+                                <span className="text-lg leading-none">{def.icon}</span>
+                                <span className="text-[8px] font-semibold leading-tight">{def.label}</span>
+                                <span className="text-[7px] text-muted-foreground leading-tight line-clamp-1">{def.description}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* ACTIVE TAB */}
+                    {audioTab === 'active' && (
+                      <>
+                        {!hasAudioFilters ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Headphones className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                            <p className="text-xs">Nenhum efeito aplicado</p>
+                            <p className="text-[10px]">Use as abas Presets ou Filtros para adicionar</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {selectedClip.audioFilters!.map(filter => {
+                              const def = AUDIO_FILTER_DEFS.find(d => d.type === filter.type);
+                              const isExpanded = expandedAudioParams[filter.id] || false;
+                              const hasParams = def?.params && def.params.length > 0;
+                              return (
+                                <div key={filter.id} className="border rounded-lg p-2 space-y-1.5 bg-background/60">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-sm">{def?.icon || '🔧'}</span>
+                                      <div>
+                                        <span className="text-[10px] font-semibold block leading-tight">{filter.label}</span>
+                                        <span className="text-[8px] text-muted-foreground">{def?.category}</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {hasParams && (
+                                        <button
+                                          onClick={() => setExpandedAudioParams(prev => ({ ...prev, [filter.id]: !prev[filter.id] }))}
+                                          className="text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                          {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                        </button>
+                                      )}
+                                      <span className="text-[8px] text-muted-foreground tabular-nums w-7 text-right">{filter.value}%</span>
+                                      <Switch checked={filter.enabled} onCheckedChange={(v) => updateAudioFilter(filter.id, { enabled: v })} />
+                                      <button onClick={() => removeAudioFilter(filter.id)} className="text-destructive hover:text-destructive/80 transition-colors">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {/* Main intensity slider */}
+                                  <div className="flex items-center gap-2">
+                                    <Volume2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <Slider
+                                      value={[filter.value]}
+                                      onValueChange={([v]) => updateAudioFilter(filter.id, { value: v })}
+                                      min={0} max={100} step={1}
+                                      disabled={!filter.enabled}
+                                    />
+                                  </div>
+                                  {/* Advanced params */}
+                                  {isExpanded && hasParams && (
+                                    <div className="pl-2 border-l-2 border-primary/20 space-y-1.5 mt-1">
+                                      {def!.params!.map(param => (
+                                        <div key={param.key} className="flex items-center gap-2">
+                                          <span className="text-[8px] text-muted-foreground w-20 shrink-0 truncate">{param.label}</span>
+                                          <Slider
+                                            value={[filter.params?.[param.key] ?? param.defaultValue]}
+                                            onValueChange={([v]) => updateAudioFilterParam(filter.id, param.key, v)}
+                                            min={param.min} max={param.max} step={param.step}
+                                            disabled={!filter.enabled}
+                                            className="flex-1"
+                                          />
+                                          <span className="text-[8px] text-muted-foreground tabular-nums w-8 text-right">
+                                            {(filter.params?.[param.key] ?? param.defaultValue).toFixed(param.step < 1 ? 1 : 0)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            /* === VISUAL FILTERS POPOVER (for visual clips) === */
+            <Popover>
               <PopoverTrigger asChild>
                 <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -671,7 +916,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
               </ScrollArea>
             </PopoverContent>
           </Popover>
-
+          )}
 
           <div className="h-4 sm:h-5 w-px bg-border/40" />
 
