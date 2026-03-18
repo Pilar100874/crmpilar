@@ -775,11 +775,25 @@ async function generateVideoReplicate(apiKey: string, params: any): Promise<Vide
 }
 
 // --- Apiframe unified provider ---
-async function generateVideoApiframe(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
+function extractApiframeVideoUrl(payload: any): string | null {
+  return payload?.video_urls?.[0]
+    || payload?.video_url
+    || payload?.result_url
+    || payload?.output
+    || payload?.result?.video_urls?.[0]
+    || payload?.result?.video_url
+    || payload?.result?.result_url
+    || payload?.data?.video_urls?.[0]
+    || payload?.data?.video_url
+    || payload?.generation?.assets?.video
+    || payload?.assets?.video
+    || null;
+}
+
+async function startVideoApiframe(estabelecimentoId: string, params: any): Promise<{ taskId?: string; videoUrl?: string; error?: string }> {
   const model = (params.model as string) || "";
   const subModel = model.replace("apiframe/", "");
 
-  // Map sub-model to apiframe action
   const ACTION_MAP: Record<string, string> = {
     "midjourney-video": "midjourney-video",
     "runway-gen4": "runway-imagine",
@@ -800,43 +814,29 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     return { error: "Configuração do servidor incompleta (SUPABASE_URL/SERVICE_ROLE_KEY)." };
   }
 
-  // Build apiframe params — field names vary per provider
   const afParams: Record<string, any> = {};
-
   const startImageUrl = params.imageUrls?.[0] || null;
   const endImageUrl = params.imageUrls?.[1] || null;
   const isBridge = params.bridgeMode === true;
 
-  // --- Bridge-mode prompt cleanup ---
-  // Apiframe models receive start/end frames as separate parameters,
-  // so the prompt should be SHORT and only describe the desired transition motion.
-  // The verbose "IMAGE-TO-VIDEO TRANSITION..." wrapper confuses the model.
   let cleanPrompt = params.prompt || "";
   if (isBridge) {
-    // Extract just the user's transition direction from the verbose wrapper
     const dirMatch = cleanPrompt.match(/TRANSITION DIRECTION:\s*([\s\S]*?)(?:\n\nCRITICAL:|$)/);
-    if (dirMatch?.[1]?.trim()) {
-      cleanPrompt = dirMatch[1].trim();
-    }
-    // Keep the user's original transition prompt as-is — don't dilute with generic text
+    if (dirMatch?.[1]?.trim()) cleanPrompt = dirMatch[1].trim();
     console.log(`[apiframe-video] Bridge mode: cleaned prompt to "${cleanPrompt.substring(0, 120)}..."`);
   }
   afParams.prompt = cleanPrompt;
 
   if (subModel === "kling-2.5") {
-    // Kling 2.5 Turbo Pro uses start_image / end_image
     if (startImageUrl) afParams.start_image = startImageUrl;
     if (endImageUrl && isBridge) afParams.end_image = endImageUrl;
   } else if (subModel === "kling-2.6") {
-    // Kling 2.6 via Apiframe expects image_url (start) + image_tail (end)
     if (startImageUrl) afParams.image_url = startImageUrl;
     if (endImageUrl && isBridge) afParams.image_tail = endImageUrl;
   } else if (subModel === "luma") {
-    // Luma uses image_url / end_image_url — NO generation_type field
     if (startImageUrl) afParams.image_url = startImageUrl;
     if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
   } else if (subModel === "runway") {
-    // Runway Gen-3 via Apiframe — MUST specify model=gen3a_turbo to avoid Gen-4 default
     afParams.model = "gen3a_turbo";
     if (startImageUrl) {
       afParams.image_url = startImageUrl;
@@ -846,7 +846,6 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     }
     if (endImageUrl && isBridge) afParams.end_image_url = endImageUrl;
   } else {
-    // Other Runway sub-models
     if (startImageUrl) {
       afParams.image_url = startImageUrl;
       afParams.generation_type = "image2video";
@@ -857,24 +856,15 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   }
 
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
-   // AUTO-NORMALIZE duration for apiframe sub-models
-   const afRawDur = Number(params.duration) || 5;
-   if (subModel.includes("kling")) {
-     // Kling via Apiframe accepts only 5 or 10
-     afParams.duration = afRawDur <= 7 ? 5 : 10;
-   } else if (subModel.includes("runway")) {
-     // Runway via Apiframe accepts only 5 or 10
-     afParams.duration = afRawDur <= 7 ? 5 : 10;
-   } else if (subModel.includes("luma")) {
-     // Luma via Apiframe accepts 5 or 10
-     afParams.duration = afRawDur <= 7 ? 5 : 10;
-   } else {
-     afParams.duration = afRawDur;
-   }
+  const afRawDur = Number(params.duration) || 5;
+  if (subModel.includes("kling") || subModel.includes("runway") || subModel.includes("luma")) {
+    afParams.duration = afRawDur <= 7 ? 5 : 10;
+  } else {
+    afParams.duration = afRawDur;
+  }
 
   console.log(`[apiframe-video] Calling action="${action}" for model="${model}", bridge=${isBridge}, hasStart=${!!startImageUrl}, hasEnd=${!!endImageUrl}`);
 
-  // Call apiframe-proxy edge function
   const proxyUrl = `${supabaseUrl}/functions/v1/apiframe-proxy`;
   const startResp = await fetch(proxyUrl, {
     method: "POST",
@@ -885,92 +875,97 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     body: JSON.stringify({ action, estabelecimentoId, params: afParams }),
   });
 
-  const startData = await startResp.json();
-  if (!startResp.ok || startData.error) {
-    return { error: startData.error || `Erro ao iniciar geração via Apiframe (${startResp.status})` };
+  const startData = await startResp.json().catch(() => ({}));
+  if (!startResp.ok || startData?.error) {
+    return { error: startData?.error || `Erro ao iniciar geração via Apiframe (${startResp.status})` };
   }
 
-  const taskId = startData.task_id;
-  if (!taskId) {
-    // Some endpoints return the result directly
-    const directUrl = startData.video_urls?.[0] || startData.video_url || startData.result_url || startData.output;
-    if (directUrl) {
-      const videoResp = await fetch(directUrl);
-      const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
-      const storedUrl = await uploadVideoToStorage(videoBytes);
-      return { videoUrl: storedUrl || directUrl, provider: "apiframe" };
-    }
-    return { error: "Apiframe não retornou task_id nem video_url." };
+  const taskId = startData?.task_id;
+  if (taskId) {
+    console.log(`[apiframe-video] Task started: ${taskId}`);
+    return { taskId };
   }
 
-  console.log(`[apiframe-video] Task started: ${taskId}. Polling...`);
+  const directUrl = extractApiframeVideoUrl(startData);
+  if (directUrl) {
+    const videoResp = await fetch(directUrl);
+    const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+    const storedUrl = await uploadVideoToStorage(videoBytes);
+    return { videoUrl: storedUrl || directUrl };
+  }
 
-  const extractApiframeVideoUrl = (payload: any): string | null => {
-    return payload?.video_urls?.[0]
-      || payload?.video_url
-      || payload?.result_url
-      || payload?.output
-      || payload?.result?.video_urls?.[0]
-      || payload?.result?.video_url
-      || payload?.result?.result_url
-      || payload?.data?.video_urls?.[0]
-      || payload?.data?.video_url
-      || payload?.generation?.assets?.video
-      || payload?.assets?.video
-      || null;
-  };
+  return { error: "Apiframe não retornou task_id nem video_url." };
+}
 
-  // Poll for completion
+async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string }> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) {
+    return { done: true, error: "Configuração do servidor incompleta (SUPABASE_URL/SERVICE_ROLE_KEY)." };
+  }
+
+  const proxyUrl = `${supabaseUrl}/functions/v1/apiframe-proxy`;
+  const pollResp = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: taskId } }),
+  });
+  const pollData = await pollResp.json().catch(() => ({}));
+
+  if (!pollResp.ok || pollData?.error) {
+    return { done: true, error: pollData?.error || `Falha ao consultar tarefa no Apiframe (${pollResp.status}).` };
+  }
+
+  const url = extractApiframeVideoUrl(pollData);
+  if (url) {
+    const videoResp = await fetch(url);
+    const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+    const storedUrl = await uploadVideoToStorage(videoBytes);
+    return { done: true, videoUrl: storedUrl || url };
+  }
+
+  const status = String(
+    pollData?.status
+    || pollData?.state
+    || pollData?.result?.status
+    || pollData?.data?.status
+    || ""
+  ).toLowerCase();
+
+  if (["finished", "completed", "complete", "succeeded", "success"].includes(status)) {
+    return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
+  }
+
+  const failureReason = pollData?.failure_reason
+    || pollData?.error
+    || pollData?.errors?.[0]?.msg
+    || pollData?.result?.failure_reason
+    || pollData?.data?.failure_reason;
+
+  if (["failed", "error", "cancelled", "canceled"].includes(status) || failureReason) {
+    return { done: true, error: failureReason || "Geração falhou no Apiframe." };
+  }
+
+  return { done: false };
+}
+
+async function generateVideoApiframe(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
+  const started = await startVideoApiframe(estabelecimentoId, params);
+  if (started.error) return { error: started.error };
+  if (started.videoUrl) return { videoUrl: started.videoUrl, provider: "apiframe" };
+  if (!started.taskId) return { error: "Apiframe não retornou task_id." };
+
   const videoUrl = await pollUntilDone<string>(async () => {
-    const pollResp = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: taskId } }),
-    });
-    const pollData = await pollResp.json().catch(() => ({}));
-
-    if (!pollResp.ok || pollData?.error) {
-      return { done: true, error: pollData?.error || `Falha ao consultar tarefa no Apiframe (${pollResp.status}).` };
-    }
-
-    const url = extractApiframeVideoUrl(pollData);
-    if (url) {
-      return { done: true, result: url };
-    }
-
-    const status = String(
-      pollData?.status
-      || pollData?.state
-      || pollData?.result?.status
-      || pollData?.data?.status
-      || ""
-    ).toLowerCase();
-
-    if (["finished", "completed", "complete", "succeeded", "success"].includes(status)) {
-      return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
-    }
-
-    const failureReason = pollData?.failure_reason
-      || pollData?.error
-      || pollData?.errors?.[0]?.msg
-      || pollData?.result?.failure_reason
-      || pollData?.data?.failure_reason;
-
-    if (["failed", "error", "cancelled", "canceled"].includes(status) || failureReason) {
-      return { done: true, error: failureReason || "Geração falhou no Apiframe." };
-    }
-
+    const poll = await fetchVideoApiframe(estabelecimentoId, started.taskId!);
+    if (poll.error) return { done: true, error: poll.error };
+    if (poll.done && poll.videoUrl) return { done: true, result: poll.videoUrl };
     return { done: false };
   }, 5000, 120);
 
-  // Download and store
-  const videoResp = await fetch(videoUrl);
-  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
-  const storedUrl = await uploadVideoToStorage(videoBytes);
-  return { videoUrl: storedUrl || videoUrl, provider: "apiframe" };
+  return { videoUrl, provider: "apiframe" };
 }
 
 // --- Generic handler for unsupported providers ---
@@ -1611,6 +1606,20 @@ Deno.serve(async (req) => {
         console.log(`[generate_video] Starting video generation: model=${params.model}`);
         const videoResult = await handleVideoGeneration(params);
         return new Response(JSON.stringify({ result: videoResult }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "start_apiframe_video": {
+        const started = await startVideoApiframe(params.estabelecimentoId, params);
+        return new Response(JSON.stringify({ result: started }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "fetch_apiframe_video": {
+        const result = await fetchVideoApiframe(params.estabelecimentoId, params.taskId);
+        return new Response(JSON.stringify({ result }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
