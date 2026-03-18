@@ -767,11 +767,65 @@ const VideoTimelineEditor: React.FC = () => {
       });
     };
 
-    // For images/canvas, load actual dimensions to preserve aspect ratio
+    // For images/canvas, load actual dimensions — crop transparent PNGs to visible content
     if ((clipType === 'image' || clipType === 'canvas') && media?.src) {
       const img = new Image();
-      img.onload = () => addWithFit(img.naturalWidth, img.naturalHeight);
+      img.onload = () => {
+        // Try to crop transparent areas for PNGs
+        try {
+          const offscreen = document.createElement('canvas');
+          offscreen.width = img.naturalWidth;
+          offscreen.height = img.naturalHeight;
+          const ctx = offscreen.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, offscreen.width, offscreen.height);
+            const { data, width, height } = imageData;
+            let minX = width, minY = height, maxX = 0, maxY = 0;
+            let hasTransparency = false;
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
+                const alpha = data[(y * width + x) * 4 + 3];
+                if (alpha > 10) {
+                  if (x < minX) minX = x;
+                  if (x > maxX) maxX = x;
+                  if (y < minY) minY = y;
+                  if (y > maxY) maxY = y;
+                } else {
+                  hasTransparency = true;
+                }
+              }
+            }
+            // Only crop if image actually has transparent areas and valid bounds
+            if (hasTransparency && maxX > minX && maxY > minY && (maxX - minX < width * 0.98 || maxY - minY < height * 0.98)) {
+              const pad = 2;
+              minX = Math.max(0, minX - pad);
+              minY = Math.max(0, minY - pad);
+              maxX = Math.min(width, maxX + pad + 1);
+              maxY = Math.min(height, maxY + pad + 1);
+              const cropW = maxX - minX;
+              const cropH = maxY - minY;
+              const cropCanvas = document.createElement('canvas');
+              cropCanvas.width = cropW;
+              cropCanvas.height = cropH;
+              const cropCtx = cropCanvas.getContext('2d');
+              if (cropCtx) {
+                cropCtx.drawImage(img, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+                const croppedSrc = cropCanvas.toDataURL('image/png');
+                // Replace the media src with cropped version
+                if (media) media.src = croppedSrc;
+                addWithFit(cropW, cropH);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          // CORS or other error — fallback to original dimensions
+        }
+        addWithFit(img.naturalWidth, img.naturalHeight);
+      };
       img.onerror = () => addDefault();
+      img.crossOrigin = 'anonymous';
       img.src = media.src;
       return;
     }
