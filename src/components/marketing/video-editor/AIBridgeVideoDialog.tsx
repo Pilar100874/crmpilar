@@ -522,42 +522,106 @@ TRANSITION DIRECTION: ${prompt.trim()}
 
 CRITICAL: The generated video must begin looking identical to Image 1 and gradually transform/transition to look identical to Image 2 by the end. This is a bridge/transition between two scenes.`;
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+      const requestParams = {
+        model,
+        prompt: fullPrompt,
+        imageUrls: [frameAUrl, frameBUrl],
+        imageRoles: ['STARTING FRAME', 'ENDING FRAME'],
+        aspectRatio: '16:9',
+        duration,
+        estabelecimentoId: estabId,
+        withAudio: false,
+        withMusic: false,
+        bridgeMode: true,
+      };
+
+      const isApiframeModel = model.startsWith('apiframe/');
+      if (!isApiframeModel) {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: 'generate_video', params: requestParams }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+          throw new Error(errData.error || `Erro ${response.status}`);
+        }
+
+        const data = await response.json();
+        const result = data.result;
+        if (result?.error) throw new Error(result.error);
+        if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
+
+        toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+        setGeneratedVideoUrl(result.videoUrl);
+        setGeneratedDuration(duration);
+        return;
+      }
+
+      const startResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({
-          action: 'generate_video',
-          params: {
-            model,
-            prompt: fullPrompt,
-            imageUrls: [frameAUrl, frameBUrl],
-            imageRoles: ['STARTING FRAME', 'ENDING FRAME'],
-            aspectRatio: '16:9',
-            duration,
-            estabelecimentoId: estabId,
-            withAudio: false,
-            withMusic: false,
-            bridgeMode: true,
-          },
-        }),
+        body: JSON.stringify({ action: 'start_apiframe_video', params: requestParams }),
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-        throw new Error(errData.error || `Erro ${response.status}`);
+      if (!startResp.ok) {
+        const errData = await startResp.json().catch(() => ({ error: `HTTP ${startResp.status}` }));
+        throw new Error(errData.error || `Erro ${startResp.status}`);
       }
 
-      const data = await response.json();
-      const result = data.result;
-      if (result?.error) throw new Error(result.error);
-      if (!result?.videoUrl) throw new Error('Nenhuma URL de vídeo retornada');
+      const startData = await startResp.json();
+      const started = startData.result;
+      if (started?.error) throw new Error(started.error);
 
-      toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
-      setGeneratedVideoUrl(result.videoUrl);
-      setGeneratedDuration(duration);
+      if (started?.videoUrl) {
+        toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+        setGeneratedVideoUrl(started.videoUrl);
+        setGeneratedDuration(duration);
+        return;
+      }
+
+      if (!started?.taskId) throw new Error('Nenhuma tarefa de vídeo foi iniciada');
+
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        const pollResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: 'fetch_apiframe_video',
+            params: { estabelecimentoId: estabId, taskId: started.taskId },
+          }),
+        });
+
+        if (!pollResp.ok) {
+          const errData = await pollResp.json().catch(() => ({ error: `HTTP ${pollResp.status}` }));
+          throw new Error(errData.error || `Erro ${pollResp.status}`);
+        }
+
+        const pollData = await pollResp.json();
+        const pollResult = pollData.result;
+        if (pollResult?.error) throw new Error(pollResult.error);
+
+        if (pollResult?.done && pollResult?.videoUrl) {
+          toast.success('Vídeo de transição gerado! Confira o resultado abaixo.');
+          setGeneratedVideoUrl(pollResult.videoUrl);
+          setGeneratedDuration(duration);
+          return;
+        }
+      }
+
+      throw new Error('Timeout: a geração demorou mais de 10 minutos. Tente novamente.');
     } catch (err: any) {
       const msg = err?.message || 'Erro desconhecido';
       if (msg.includes('429') || msg.includes('quota') || msg.includes('Rate limit') || msg.includes('too many')) toast.error('Limite de requisições atingido. Aguarde e tente novamente.');
