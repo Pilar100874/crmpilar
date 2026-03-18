@@ -362,18 +362,18 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     playbackRate?: number;
     volume?: number;
   } | null>(null);
+  const [originalTransitions, setOriginalTransitions] = useState<TimelineClip['transitions'] | null>(null);
+  const [originalFilters, setOriginalFilters] = useState<VideoFilter[] | null>(null);
 
-  // Capture original state when popover opens
+  // === Audio capture/restore/apply ===
   const captureOriginalAudioState = useCallback(() => {
-    if (originalAudioState === null) {
-      setOriginalAudioState({
-        audioFilters: selectedClip.audioFilters ? [...selectedClip.audioFilters] : undefined,
-        volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
-        playbackRate: selectedClip.playbackRate,
-        volume: selectedClip.volume,
-      });
-    }
-  }, [selectedClip, originalAudioState]);
+    setOriginalAudioState({
+      audioFilters: selectedClip.audioFilters ? JSON.parse(JSON.stringify(selectedClip.audioFilters)) : undefined,
+      volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
+      playbackRate: selectedClip.playbackRate,
+      volume: selectedClip.volume,
+    });
+  }, [selectedClip]);
 
   const restoreOriginalAudio = useCallback(() => {
     if (!originalAudioState) return;
@@ -387,6 +387,34 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
   const applyAndConfirmAudio = useCallback(() => {
     setOriginalAudioState(null);
+  }, []);
+
+  // === Transitions capture/restore/apply ===
+  const captureOriginalTransitions = useCallback(() => {
+    setOriginalTransitions(selectedClip.transitions ? JSON.parse(JSON.stringify(selectedClip.transitions)) : {});
+  }, [selectedClip.transitions]);
+
+  const restoreOriginalTransitions = useCallback(() => {
+    if (originalTransitions === null) return;
+    onUpdateClip(selectedClip.id, { transitions: originalTransitions });
+  }, [originalTransitions, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmTransitions = useCallback(() => {
+    setOriginalTransitions(null);
+  }, []);
+
+  // === Filters capture/restore/apply ===
+  const captureOriginalFilters = useCallback(() => {
+    setOriginalFilters(selectedClip.filters ? JSON.parse(JSON.stringify(selectedClip.filters)) : []);
+  }, [selectedClip.filters]);
+
+  const restoreOriginalFilters = useCallback(() => {
+    if (originalFilters === null) return;
+    onUpdateClip(selectedClip.id, { filters: originalFilters });
+  }, [originalFilters, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmFilters = useCallback(() => {
+    setOriginalFilters(null);
   }, []);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
@@ -641,7 +669,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* Transitions Popover - only for visual clips */}
           {isVisual && (
-            <Popover>
+            <Popover onOpenChange={(open) => { if (open) captureOriginalTransitions(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -749,6 +777,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                       );
                     })}
                   </div>
+                </div>
+                {/* Footer: Apply / Restore */}
+                <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] gap-1 border-dashed" onClick={restoreOriginalTransitions} disabled={originalTransitions === null}>
+                    <RotateCcw className="h-3 w-3" /> Restaurar Original
+                  </Button>
+                  <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={applyAndConfirmTransitions}>
+                    <Check className="h-3 w-3" /> Aplicar
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -1081,7 +1118,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
             </Popover>
           ) : (
             /* === VISUAL FILTERS POPOVER (for visual clips) === */
-            <Popover>
+            <Popover onOpenChange={(open) => { if (open) captureOriginalFilters(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Wand2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
@@ -1198,6 +1235,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                   )}
                 </div>
               </ScrollArea>
+              {/* Footer: Apply / Restore */}
+              <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
+                <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] gap-1 border-dashed" onClick={restoreOriginalFilters} disabled={originalFilters === null}>
+                  <RotateCcw className="h-3 w-3" /> Restaurar Original
+                </Button>
+                <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={applyAndConfirmFilters}>
+                  <Check className="h-3 w-3" /> Aplicar
+                </Button>
+              </div>
             </PopoverContent>
           </Popover>
           )}
