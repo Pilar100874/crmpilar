@@ -112,8 +112,6 @@ Deno.serve(async (req) => {
       "kling-2.5-turbo": "/kling-imagine",
       "luma-imagine": "/luma-imagine",
       "luma-extend": "/luma-extend",
-      "google-veo": "/google-veo-imagine",
-      "sora-2": "/sora-imagine",
       // Music
       "suno-imagine": "/suno-imagine",
       "suno-extend": "/suno-extend",

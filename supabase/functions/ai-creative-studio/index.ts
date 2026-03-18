@@ -787,8 +787,6 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     "kling-2.6": "kling-2.6",
     "kling-2.5": "kling-2.5-turbo",
     "luma": "luma-imagine",
-    "google-veo": "google-veo",
-    "sora-2": "sora-2",
   };
 
   const action = ACTION_MAP[subModel];
