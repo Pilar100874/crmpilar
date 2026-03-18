@@ -192,6 +192,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
+  const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -203,7 +204,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const [studioDefaults, setStudioDefaults] = useState<StudioDefaults>(DEFAULT_STUDIO_DEFAULTS);
-  const [activeUnified, setActiveUnified] = useState<string | null>(null);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -219,9 +219,11 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
       if (data) {
         const keys: Record<string, string> = {};
         const sts: Record<string, 'none' | 'pending' | 'valid' | 'invalid'> = {};
+        const actives: Record<string, boolean> = {};
         data.forEach((row) => {
           keys[row.provider] = row.api_key || '';
           sts[row.provider] = (row.validation_status as any) || 'none';
+          actives[row.provider] = row.is_active !== false;
           if (row.provider === 'elevenlabs' && row.base_url) {
             try {
               const extra = JSON.parse(row.base_url);
@@ -231,6 +233,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
         });
         setApiKeys(keys);
         setStatuses(sts);
+        setActiveStates(actives);
       }
     } catch (err) {
       console.error('Error loading API keys:', err);
@@ -243,23 +246,53 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
     if (open) {
       loadKeys();
       setStudioDefaults(getStudioDefaults(estabelecimentoId));
-      setActiveUnified(getActiveUnifiedProvider(estabelecimentoId));
     }
   }, [open, loadKeys, estabelecimentoId]);
 
-  const handleToggleUnified = (providerId: string) => {
-    if (activeUnified === providerId) {
-      setActiveUnifiedProvider(estabelecimentoId, null);
-      setActiveUnified(null);
-      toast.info('API unificada desativada. Modelos individuais serão exibidos.');
-    } else {
-      if (!apiKeys[providerId]) {
-        toast.error('Configure a API Key antes de ativar.');
-        return;
+  const handleToggleActive = async (providerId: string) => {
+    const newState = !activeStates[providerId];
+    
+    // Optimistic update
+    setActiveStates(prev => ({ ...prev, [providerId]: newState }));
+
+    try {
+      const { data: existing } = await supabase
+        .from('ai_api_keys')
+        .select('id')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('provider', providerId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('ai_api_keys')
+          .update({ is_active: newState })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        // Create record with active state but no key yet
+        const provider = PAID_PROVIDERS.find(p => p.id === providerId);
+        const { error } = await supabase
+          .from('ai_api_keys')
+          .insert([{
+            estabelecimento_id: estabelecimentoId,
+            provider: providerId,
+            provider_display_name: provider?.name || providerId,
+            is_active: newState,
+            validation_status: 'none',
+          }] as any);
+        if (error) throw error;
       }
-      setActiveUnifiedProvider(estabelecimentoId, providerId);
-      setActiveUnified(providerId);
-      toast.success(`${UNIFIED_PROVIDERS.find(u => u.id === providerId)?.name} ativada! Modelos das outras APIs unificadas foram ocultados.`);
+
+      toast.success(newState
+        ? `${PAID_PROVIDERS.find(p => p.id === providerId)?.name || providerId} ativado!`
+        : `${PAID_PROVIDERS.find(p => p.id === providerId)?.name || providerId} desativado.`
+      );
+    } catch (err) {
+      console.error(err);
+      // Rollback
+      setActiveStates(prev => ({ ...prev, [providerId]: !newState }));
+      toast.error('Erro ao alterar status');
     }
   };
 
