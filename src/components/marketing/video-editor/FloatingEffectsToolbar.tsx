@@ -1073,7 +1073,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     className="flex-1 h-7 text-[10px] gap-1"
                     onClick={applyAndConfirmAudio}
                   >
-                    <Play className="h-3 w-3" />
+                    <Check className="h-3 w-3" />
                     Aplicar
                   </Button>
                 </div>
