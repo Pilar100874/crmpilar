@@ -177,10 +177,15 @@ export const StepCover: React.FC<StepCoverProps> = ({
       }
     } catch (error: any) {
       console.error('[StepCover] Error generating image:', error);
+      const msg = error?.message || '';
       if (error.name === 'AbortError') {
         toast.error('Timeout: a geração demorou muito. Tente novamente.', { id: 'ai-image' });
+      } else if (msg.includes('402') || msg.includes('billing') || msg.includes('insufficient') || msg.includes('credits') || msg.includes('Créditos') || msg.includes('exclusively available')) {
+        toast.error('💳 Créditos insuficientes. Adicione saldo no provedor.', { id: 'ai-image' });
+      } else if (msg.includes('429') || msg.includes('Rate limit') || msg.includes('too many') || msg.includes('Limite')) {
+        toast.error('⏳ Limite de requisições excedido. Aguarde e tente novamente.', { id: 'ai-image' });
       } else {
-        toast.error(error.message || 'Erro ao gerar imagem', { id: 'ai-image' });
+        toast.error(msg.substring(0, 150) || 'Erro ao gerar imagem', { id: 'ai-image' });
       }
     } finally {
       setGeneratingImage(false);
