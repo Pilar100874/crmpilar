@@ -57,9 +57,17 @@ const TextPanel = () => {
     });
 
     fabricCanvas.add(text);
-    // NÃO seleciona automaticamente
-    fabricCanvas.discardActiveObject();
+    fabricCanvas.setActiveObject(text);
     fabricCanvas.renderAll();
+    requestAnimationFrame(() => {
+      try {
+        (text as any).enterEditing?.();
+        (text as any).selectAll?.();
+        ((text as any).hiddenTextarea as HTMLTextAreaElement | undefined)?.focus?.();
+      } catch {
+        // noop
+      }
+    });
     toast.success("Texto adicionado!");
   };
 
