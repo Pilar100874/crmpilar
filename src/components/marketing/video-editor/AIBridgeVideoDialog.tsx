@@ -138,8 +138,27 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('google/veo-3.1');
-  const [duration, setDuration] = useState(4);
+   const [model, setModel] = useState('google/veo-3.1');
+
+   const getDurationOptionsForModel = (m: string): number[] => {
+     if (m.startsWith('kling/')) return [5, 10];
+     if (m.startsWith('runway/')) return [5, 10];
+     if (m.startsWith('openai/sora')) return [4, 8, 12];
+     if (m.startsWith('google/')) return [4, 5, 6, 7, 8];
+     if (m.startsWith('luma/')) return [4, 5];
+     return [2, 3, 4, 5, 6, 8, 10];
+   };
+   const durationOptions = getDurationOptionsForModel(model);
+   const [duration, setDuration] = useState(() => getDurationOptionsForModel('google/veo-3.1')[0]);
+
+   // Auto-adjust duration when model changes
+   const handleModelChange = (newModel: string) => {
+     setModel(newModel);
+     const opts = getDurationOptionsForModel(newModel);
+     if (!opts.includes(duration)) {
+       setDuration(opts[0]);
+     }
+   };
   const [isGenerating, setIsGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
@@ -665,7 +684,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         <div className="flex gap-3 mt-2">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Modelo</label>
-            <Select value={model} onValueChange={(v) => setModel(v)} disabled={isGenerating}>
+            <Select value={model} onValueChange={handleModelChange} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {filteredModels.map(m => (
@@ -692,10 +711,10 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
           </div>
           <div className="w-28">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração (s)</label>
-            <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
+             <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))} disabled={isGenerating}>
               <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {[2, 3, 4, 5, 6, 8, 10].map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
+                {durationOptions.map(d => <SelectItem key={d} value={String(d)} className="text-xs">{d}s</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
