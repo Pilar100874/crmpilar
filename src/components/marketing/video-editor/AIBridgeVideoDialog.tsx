@@ -550,7 +550,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
           captured = true;
           break;
         } catch {
-          drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+          drawWithTransforms(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height, clip);
           captured = true;
           break;
         }
