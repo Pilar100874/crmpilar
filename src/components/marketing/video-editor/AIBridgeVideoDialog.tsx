@@ -59,114 +59,65 @@ const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
   'luma/dream-machine-1.5': 'luma', 'stability/stable-video': 'stability',
 };
 
+const normalizeProvider = (provider: string): string => {
+  const compact = provider.toLowerCase().trim().replace(/[\s._-]/g, '');
+  if (compact === 'apiframe' || compact === 'apiframeai') return 'apiframe';
+  if (compact === 'aimlapi' || compact === 'aiml') return 'aimlapi';
+  if (compact === 'polloai' || compact === 'pollo') return 'polloai';
+  return compact;
+};
+
 const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
-  const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
+  const normalizedProviders = configuredProviders.map(normalizeProvider);
+  const unifiedPrefix = UNIFIED_PREFIXES.find((p) => modelValue.startsWith(p));
   if (unifiedPrefix) {
-    const providerName = unifiedPrefix.replace('/', '');
-    return configuredProviders.some(cp => cp.toLowerCase() === providerName);
+    const providerName = normalizeProvider(unifiedPrefix.replace('/', ''));
+    return normalizedProviders.includes(providerName);
   }
   const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
   if (!requiredProvider) return true;
-  return configuredProviders.some(cp => cp.toLowerCase() === requiredProvider);
+  return normalizedProviders.includes(normalizeProvider(requiredProvider));
 };
-
-const DEFAULT_TRANSITION_PROMPTS = [
-  { id: '1', text: 'Zoom out suave revelando a paisagem ao redor, transição cinematográfica para a próxima cena' },
-  { id: '2', text: 'Câmera gira 360° ao redor do objeto principal e dissolve para a próxima imagem' },
-  { id: '3', text: 'Efeito de partículas douradas se formam e se dissolvem revelando a nova cena' },
-  { id: '4', text: 'Fade suave com raios de luz passando pela câmera durante a transição' },
-  { id: '5', text: 'Movimento de câmera dolly para frente atravessando a cena até chegar na próxima' },
-  { id: '6', text: 'Efeito de ondas distorcendo a imagem como reflexo na água, revelando nova cena' },
-  { id: '7', text: 'Transição com desfoque de movimento rápido (motion blur) horizontal entre cenas' },
-  { id: '8', text: 'Câmera faz um tilt up dramático para o céu e desce revelando o novo cenário' },
-  { id: '9', text: 'Pétalas de flores voam pela tela cobrindo a imagem e revelando a próxima' },
-  { id: '10', text: 'Efeito de espelho se quebrando, fragmentos revelam gradualmente a nova cena' },
-  { id: '11', text: 'Fumaça cinematográfica preenche a tela e se dissipa mostrando o novo ambiente' },
-  { id: '12', text: 'Câmera orbita lentamente enquanto a cena se transforma suavemente' },
-  { id: '13', text: 'Flash de luz branca estilo fotográfico que revela a próxima composição' },
-  { id: '14', text: 'Transição com efeito de tinta se espalhando em aquarela pela tela' },
-  { id: '15', text: 'Zoom extremo no detalhe de um objeto que se transforma na próxima cena' },
-  { id: '16', text: 'Efeito de portal luminoso se abrindo no centro da tela com a nova cena dentro' },
-  { id: '17', text: 'Câmera atravessa uma cortina de luz, revelando o novo cenário do outro lado' },
-  { id: '18', text: 'Transição com efeito glitch digital rápido entre as duas cenas' },
-  { id: '19', text: 'Folhas de outono caem cobrindo a tela e são sopradas revelando nova imagem' },
-  { id: '20', text: 'Efeito de câmera lenta com bokeh luminoso transitando entre cenas' },
-  { id: '21', text: 'Pan horizontal cinematográfico com desfoque gaussiano na transição' },
-  { id: '22', text: 'Cristais de gelo se formam sobre a imagem e derretem revelando a próxima' },
-  { id: '23', text: 'Efeito de dupla exposição mesclando as duas cenas de forma artística' },
-  { id: '24', text: 'Câmera faz movimento crane ascendente saindo da cena atual para a próxima' },
-  { id: '25', text: 'Transição com efeito de página virando como um livro elegante' },
-  { id: '26', text: 'Ondas de energia luminosa expandem do centro transformando a cena' },
-  { id: '27', text: 'Efeito de areia se espalhando pelo vento, cobrindo e revelando cenas' },
-  { id: '28', text: 'Câmera faz whip pan ultra rápido girando e parando na nova cena' },
-  { id: '29', text: 'Bolhas de sabão flutuam pela tela refletindo a nova cena dentro delas' },
-  { id: '30', text: 'Transição com efeito de pinceladas de tinta revelando progressivamente a nova imagem' },
-];
-
-const STORAGE_KEY = 'bridge-transition-prompts';
-
-function loadCustomPrompts(): typeof DEFAULT_TRANSITION_PROMPTS {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Merge: defaults + custom, custom overrides by id
-      const map = new Map(DEFAULT_TRANSITION_PROMPTS.map(p => [p.id, p]));
-      parsed.forEach((p: any) => map.set(p.id, p));
-      return Array.from(map.values());
-    }
-  } catch {}
-  return [...DEFAULT_TRANSITION_PROMPTS];
-}
-
-function saveCustomPrompts(prompts: typeof DEFAULT_TRANSITION_PROMPTS) {
-  // Only save non-default or modified
-  const defaultMap = new Map(DEFAULT_TRANSITION_PROMPTS.map(p => [p.id, p.text]));
-  const toSave = prompts.filter(p => !defaultMap.has(p.id) || defaultMap.get(p.id) !== p.text);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-}
-
-const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
-  open, onClose, clipA, clipB, onVideoGenerated
-}) => {
-  const [frameA, setFrameA] = useState<string | null>(null);
-  const [frameB, setFrameB] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState('');
-  const [model, setModel] = useState('google/veo-3.1');
-  const [duration, setDuration] = useState(4);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [extracting, setExtracting] = useState(false);
+...
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
-  
 
-  // Load configured providers
+  // Load configured providers (with fallback to auth-based estabelecimento lookup)
   useEffect(() => {
-    if (!estabelecimentoId) return;
+    let mounted = true;
+
     (async () => {
+      let estabId = estabelecimentoId;
+
+      if (!estabId) {
+        const { data: rpcEstab } = await supabase.rpc('get_auth_user_estabelecimento_id');
+        if (typeof rpcEstab === 'string') estabId = rpcEstab;
+      }
+
+      if (!estabId) {
+        if (mounted) setConfiguredProviders([]);
+        return;
+      }
+
       const { data } = await supabase
         .from('ai_api_keys')
         .select('provider')
-        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('estabelecimento_id', estabId)
         .eq('is_active', true);
-      if (data) setConfiguredProviders(data.map(d => d.provider));
+
+      if (mounted && data) {
+        setConfiguredProviders(data.map((d) => normalizeProvider(d.provider)));
+      }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, [estabelecimentoId]);
 
   const filteredModels = useMemo(() => {
-    return ALL_VIDEO_MODELS
-      .filter(m => {
-        // For unified provider models (e.g. apiframe/), show if that provider's key is configured
-        const unifiedPrefix = UNIFIED_PREFIXES.find(p => m.value.startsWith(p));
-        if (unifiedPrefix) {
-          const providerName = unifiedPrefix.replace('/', '');
-          return configuredProviders.some(cp => cp.toLowerCase() === providerName);
-        }
-        // Non-unified models always show
-        return true;
-      })
-      .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
+    return ALL_VIDEO_MODELS.map((m) => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
   }, [configuredProviders]);
 
   // Prompt suggestions state
