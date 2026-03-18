@@ -217,13 +217,21 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
       });
 
       if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+        const errorText = await response.text().catch(() => '');
+        const errLower = errorText.toLowerCase();
+        if (response.status === 429 || errLower.includes('rate limit') || errLower.includes('quota')) {
+          return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente." }), {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        throw new Error("Failed to generate suggestions");
+        if (response.status === 402 || errLower.includes('billing') || errLower.includes('credits') || errLower.includes('exclusively available')) {
+          return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw new Error("Falha ao gerar sugestões");
       }
 
       const data = await response.json();
