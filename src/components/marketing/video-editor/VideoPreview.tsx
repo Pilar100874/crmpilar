@@ -678,9 +678,9 @@ const VideoPreview: React.FC<Props> = ({
               >
                 {clip.src ? (
                   clip.type === 'video' ? (
-                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-contain pointer-events-none" muted={clip.muted} playsInline preload="auto" />
+                    <video ref={(el) => { videoRefs.current[clip.id] = el; }} src={clip.src} className="w-full h-full object-fill pointer-events-none" muted={clip.muted} playsInline preload="auto" />
                   ) : (
-                    <img src={clip.src} className="w-full h-full object-contain pointer-events-none" alt="" draggable={false} />
+                    <img src={clip.src} className="w-full h-full object-fill pointer-events-none" alt="" draggable={false} />
                   )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${clip.color}40, ${clip.color}20)` }}>
