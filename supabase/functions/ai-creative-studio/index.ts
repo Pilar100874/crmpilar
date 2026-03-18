@@ -1201,6 +1201,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     case "pika":
     case "minimax":
     case "bytedance":
+    case "aimlapi":
+    case "polloai":
       return generateVideoUnsupported(model);
     default:
       return generateVideoUnsupported(model);
