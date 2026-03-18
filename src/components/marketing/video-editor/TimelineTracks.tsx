@@ -165,19 +165,36 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
   const renderWaveform = useCallback((clip: TimelineClip, width: number, trackColor: string) => {
     if (clip.type === 'audio') {
       const barCount = Math.min(Math.floor(width / 3), 80);
+      const envelope = clip.volumeEnvelope && clip.volumeEnvelope.length >= 2 ? clip.volumeEnvelope : null;
+      const getEnvVal = (t: number) => {
+        if (!envelope) return clip.volume ?? 1;
+        for (let p = 0; p < envelope.length - 1; p++) {
+          if (t >= envelope[p].time && t <= envelope[p + 1].time) {
+            const segLen = envelope[p + 1].time - envelope[p].time;
+            const frac = segLen > 0 ? (t - envelope[p].time) / segLen : 0;
+            return envelope[p].value + (envelope[p + 1].value - envelope[p].value) * frac;
+          }
+        }
+        return envelope[envelope.length - 1].value;
+      };
       return (
         <div className="flex items-end gap-px h-full w-full py-1">
-          {Array.from({ length: barCount }).map((_, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-sm"
-              style={{
-                backgroundColor: `${clip.color || trackColor}60`,
-                height: `${20 + Math.sin(i * 0.7 + clip.startTime) * 30 + Math.sin(i * 1.5) * 20}%`,
-                minWidth: 1,
-              }}
-            />
-          ))}
+          {Array.from({ length: barCount }).map((_, i) => {
+            const t = i / barCount;
+            const envVal = getEnvVal(t);
+            const baseH = 20 + Math.sin(i * 0.7 + clip.startTime) * 30 + Math.sin(i * 1.5) * 20;
+            return (
+              <div
+                key={i}
+                className="flex-1 rounded-sm"
+                style={{
+                  backgroundColor: `${clip.color || trackColor}60`,
+                  height: `${baseH * envVal}%`,
+                  minWidth: 1,
+                }}
+              />
+            );
+          })}
         </div>
       );
     }
