@@ -669,15 +669,40 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                         />
                       )}
 
-                      {/* Unified API toggle & info */}
+                      {/* Provider activation toggle */}
+                      <div className={`rounded-xl border-2 p-5 space-y-3 transition-colors ${activeStates[selectedProviderData.id] !== false ? 'border-primary bg-primary/5' : 'border-border bg-card'}`} style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${activeStates[selectedProviderData.id] !== false ? 'bg-primary/20' : 'bg-muted'}`}>
+                              <Power className={`h-3.5 w-3.5 ${activeStates[selectedProviderData.id] !== false ? 'text-primary' : 'text-muted-foreground'}`} />
+                            </div>
+                            {activeStates[selectedProviderData.id] !== false ? 'Provedor Ativo' : 'Provedor Desativado'}
+                          </h4>
+                          <Switch
+                            checked={activeStates[selectedProviderData.id] !== false}
+                            onCheckedChange={() => handleToggleActive(selectedProviderData.id)}
+                            disabled={!apiKeys[selectedProviderData.id]}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {activeStates[selectedProviderData.id] !== false
+                            ? '✅ Modelos deste provedor estão habilitados no Studio e Editor de Vídeo.'
+                            : 'Desativado. Os modelos deste provedor não aparecerão nas listas de seleção.'}
+                        </p>
+                        {!apiKeys[selectedProviderData.id] && (
+                          <p className="text-[11px] text-muted-foreground">Configure a API Key acima antes de ativar.</p>
+                        )}
+                      </div>
+
+                      {/* Unified API extra info (available models, credits table) */}
                       {isUnifiedProvider(selectedProviderData.id) && (
                         <UnifiedProviderPanel
                           providerId={selectedProviderData.id}
                           apiKey={apiKeys[selectedProviderData.id] || ''}
                           estabelecimentoId={estabelecimentoId}
-                          isActive={activeUnified === selectedProviderData.id}
-                          otherActiveId={activeUnified && activeUnified !== selectedProviderData.id ? activeUnified : null}
-                          onToggle={() => handleToggleUnified(selectedProviderData.id)}
+                          isActive={activeStates[selectedProviderData.id] !== false}
+                          otherActiveId={null}
+                          onToggle={() => handleToggleActive(selectedProviderData.id)}
                         />
                       )}
                     </div>
