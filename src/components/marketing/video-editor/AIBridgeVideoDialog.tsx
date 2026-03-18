@@ -341,19 +341,59 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     extract();
   }, [open, clipA, clipB]);
 
-  const drawContain = useCallback((
+  const drawWithTransforms = useCallback((
     ctx: CanvasRenderingContext2D,
     source: CanvasImageSource,
     sourceWidth: number,
     sourceHeight: number,
+    clip?: TimelineClip,
   ) => {
     const { canvas } = ctx;
-    const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
-    const w = sourceWidth * scale;
-    const h = sourceHeight * scale;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(source, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+
+    // If clip has custom position/size/rotation, apply transforms
+    const hasCustomTransform = clip && (
+      clip.x !== undefined || clip.y !== undefined ||
+      clip.w !== undefined || clip.h !== undefined ||
+      (clip.rotation && clip.rotation !== 0) ||
+      (clip.scaleX !== undefined && clip.scaleX !== 1) ||
+      (clip.scaleY !== undefined && clip.scaleY !== 1) ||
+      (clip.skewX && clip.skewX !== 0) ||
+      (clip.skewY && clip.skewY !== 0)
+    );
+
+    if (hasCustomTransform && clip) {
+      // Use clip's transform properties relative to a 1280x720 composition
+      const compW = canvas.width;
+      const compH = canvas.height;
+      const drawW = clip.w ?? compW;
+      const drawH = clip.h ?? compH;
+      const drawX = clip.x ?? ((compW - drawW) / 2);
+      const drawY = clip.y ?? ((compH - drawH) / 2);
+      const rotation = (clip.rotation || 0) * Math.PI / 180;
+      const sx = clip.scaleX ?? 1;
+      const sy = clip.scaleY ?? 1;
+      const skewXRad = (clip.skewX || 0) * Math.PI / 180;
+      const skewYRad = (clip.skewY || 0) * Math.PI / 180;
+
+      ctx.save();
+      // Translate to center of clip area, apply transforms, then draw centered
+      const cx = drawX + drawW / 2;
+      const cy = drawY + drawH / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate(rotation);
+      ctx.scale(sx, sy);
+      ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+      ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
+    } else {
+      // Default: fit to canvas (contain)
+      const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
+      const w = sourceWidth * scale;
+      const h = sourceHeight * scale;
+      ctx.drawImage(source, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+    }
   }, []);
 
   const loadImage = useCallback(async (src: string, name: string) => {
@@ -429,7 +469,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
     if (clip.type === 'image' || clip.type === 'canvas') {
       const img = await loadImage(clip.src || '', clip.name);
-      drawContain(ctx, img, img.width, img.height);
+      drawWithTransforms(ctx, img, img.width, img.height, clip);
       return canvas.toDataURL('image/jpeg', 0.92);
     }
 
@@ -505,12 +545,12 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
         try {
           const bitmap = await createImageBitmap(video);
-          drawContain(ctx, bitmap, bitmap.width, bitmap.height);
+          drawWithTransforms(ctx, bitmap, bitmap.width, bitmap.height, clip);
           bitmap.close();
           captured = true;
           break;
         } catch {
-          drawContain(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height);
+          drawWithTransforms(ctx, video, video.videoWidth || canvas.width, video.videoHeight || canvas.height, clip);
           captured = true;
           break;
         }
@@ -546,7 +586,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.92);
-  }, [drawContain, loadImage, seekVideoPrecisely]);
+  }, [drawWithTransforms, loadImage, seekVideoPrecisely]);
 
 
 
