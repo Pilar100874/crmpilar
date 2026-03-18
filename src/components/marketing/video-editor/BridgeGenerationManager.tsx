@@ -129,6 +129,8 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
 // Hook to manage background generations
 export function useBridgeGenerations() {
   const [tasks, setTasks] = useState<BridgeGenerationTask[]>([]);
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
   const abortControllers = useRef<Map<string, AbortController>>(new Map());
   const progressIntervals = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
