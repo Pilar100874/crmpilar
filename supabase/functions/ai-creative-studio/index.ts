@@ -807,7 +807,7 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   if (params.prompt) afParams.prompt = params.prompt;
   if (params.imageUrls?.[0]) afParams.image_url = params.imageUrls[0];
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
-  if (params.duration) afParams.seconds = params.duration;
+  if (params.duration) afParams.duration = params.duration;
 
   console.log(`[apiframe-video] Calling action="${action}" for model="${model}"`);
 
