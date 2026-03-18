@@ -356,6 +356,38 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [originalAudioState, setOriginalAudioState] = useState<{
+    audioFilters?: AudioFilter[];
+    volumeEnvelope?: VolumeEnvelopePoint[];
+    playbackRate?: number;
+    volume?: number;
+  } | null>(null);
+
+  // Capture original state when popover opens
+  const captureOriginalAudioState = useCallback(() => {
+    if (originalAudioState === null) {
+      setOriginalAudioState({
+        audioFilters: selectedClip.audioFilters ? [...selectedClip.audioFilters] : undefined,
+        volumeEnvelope: selectedClip.volumeEnvelope ? [...selectedClip.volumeEnvelope] : undefined,
+        playbackRate: selectedClip.playbackRate,
+        volume: selectedClip.volume,
+      });
+    }
+  }, [selectedClip, originalAudioState]);
+
+  const restoreOriginalAudio = useCallback(() => {
+    if (!originalAudioState) return;
+    onUpdateClip(selectedClip.id, {
+      audioFilters: originalAudioState.audioFilters || [],
+      volumeEnvelope: originalAudioState.volumeEnvelope,
+      playbackRate: originalAudioState.playbackRate,
+      volume: originalAudioState.volume,
+    });
+  }, [originalAudioState, selectedClip.id, onUpdateClip]);
+
+  const applyAndConfirmAudio = useCallback(() => {
+    setOriginalAudioState(null);
+  }, []);
 
   const isVisual = ['video', 'image', 'canvas'].includes(selectedClip.type);
   const isAudio = selectedClip.type === 'audio';
