@@ -56,7 +56,7 @@ export const BridgeGenerationManager: React.FC<BridgeGenerationManagerProps> = (
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className={`rounded-xl border shadow-lg backdrop-blur-sm p-3 min-w-[280px] ${
               task.status === 'done'
-                ? 'bg-success/10 border-success/40 animate-pulse'
+                ? 'bg-success/10 border-success/40'
                 : task.status === 'error'
                 ? 'bg-destructive/10 border-destructive/40'
                 : 'bg-background/95 border-border'
