@@ -1568,6 +1568,34 @@ const VideoTimelineEditor: React.FC = () => {
                 <div className="flex justify-between"><span>Volume</span><span className="font-medium text-foreground">{Math.round(clipDetailDialog.volume * 100)}%</span></div>
               )}
             </div>
+
+            {/* Locked Edge unlock */}
+            {clipDetailDialog.lockedEdge && (
+              <div className="mx-4 mb-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium flex items-center gap-1">
+                      🔒 {clipDetailDialog.lockedEdge === 'both' ? 'Bordas travadas' : `Borda ${clipDetailDialog.lockedEdge === 'start' ? 'inicial' : 'final'} travada`}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">
+                      Travada para preservar continuidade com transição AI
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] gap-1"
+                    onClick={() => {
+                      timeline.updateClip(clipDetailDialog.id, { lockedEdge: null });
+                      setClipDetailDialog({ ...clipDetailDialog, lockedEdge: null });
+                      toast.success('Bordas desbloqueadas');
+                    }}
+                  >
+                    🔓 Destravar
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="border-t px-4 py-3 flex justify-between">
               <Button size="sm" variant="destructive" className="h-8 text-xs" onClick={() => {
                 timeline.deleteClips([clipDetailDialog.id]);

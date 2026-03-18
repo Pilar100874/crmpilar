@@ -25,6 +25,9 @@ export interface TimelineClip {
   y?: number;
   w?: number;
   h?: number;
+  rotation?: number;      // degrees (0-360)
+  scaleX?: number;        // 1 = normal, -1 = flip horizontal
+  scaleY?: number;        // 1 = normal, -1 = flip vertical
   // For effect track clips: the visual overlay effect type
   effectType?: TransitionType;
 }
