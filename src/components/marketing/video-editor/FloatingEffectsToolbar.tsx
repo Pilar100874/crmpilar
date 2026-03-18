@@ -474,11 +474,121 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
     onUpdateClip(selectedClip.id, { audioFilters });
   };
 
-  const clipIcon = selectedClip.type === 'video' ? '🎬' : selectedClip.type === 'image' ? '🖼️' : selectedClip.type === 'canvas' ? '🎨' : '🔊';
-  const activeTransition = transitionPhase === 'entrance' ? entranceTransition : exitTransition;
+  // === Volume envelope helpers ===
+  const ENVELOPE_PRESETS = [
+    { id: 'linear', label: 'Linear', icon: '📏', points: [{ time: 0, value: 1 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-in', label: 'Fade In', icon: '📈', points: [{ time: 0, value: 0 }, { time: 0.3, value: 1 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-out', label: 'Fade Out', icon: '📉', points: [{ time: 0, value: 1 }, { time: 0.7, value: 1 }, { time: 1, value: 0 }] as VolumeEnvelopePoint[] },
+    { id: 'fade-in-out', label: 'Fade In/Out', icon: '🔔', points: [{ time: 0, value: 0 }, { time: 0.15, value: 1 }, { time: 0.85, value: 1 }, { time: 1, value: 0 }] as VolumeEnvelopePoint[] },
+    { id: 'crescendo', label: 'Crescendo', icon: '📐', points: [{ time: 0, value: 0.2 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'decrescendo', label: 'Decresc.', icon: '📐', points: [{ time: 0, value: 1 }, { time: 1, value: 0.2 }] as VolumeEnvelopePoint[] },
+    { id: 'duck', label: 'Ducking', icon: '🦆', points: [{ time: 0, value: 1 }, { time: 0.1, value: 0.3 }, { time: 0.9, value: 0.3 }, { time: 1, value: 1 }] as VolumeEnvelopePoint[] },
+    { id: 'swell', label: 'Swell', icon: '🌊', points: [{ time: 0, value: 0.3 }, { time: 0.5, value: 1 }, { time: 1, value: 0.3 }] as VolumeEnvelopePoint[] },
+    { id: 'pulse', label: 'Pulso', icon: '💓', points: [
+      { time: 0, value: 0.5 }, { time: 0.125, value: 1 }, { time: 0.25, value: 0.5 },
+      { time: 0.375, value: 1 }, { time: 0.5, value: 0.5 }, { time: 0.625, value: 1 },
+      { time: 0.75, value: 0.5 }, { time: 0.875, value: 1 }, { time: 1, value: 0.5 },
+    ] as VolumeEnvelopePoint[] },
+    { id: 'staircase', label: 'Escada', icon: '🪜', points: [
+      { time: 0, value: 0.2 }, { time: 0.25, value: 0.2 }, { time: 0.25, value: 0.4 },
+      { time: 0.5, value: 0.4 }, { time: 0.5, value: 0.7 }, { time: 0.75, value: 0.7 },
+      { time: 0.75, value: 1 }, { time: 1, value: 1 },
+    ] as VolumeEnvelopePoint[] },
+  ];
 
-  const AUDIO_CATEGORIES = [...new Set(AUDIO_FILTER_DEFS.map(f => f.category))];
-  const AUDIO_PRESET_CATEGORIES = [...new Set(AUDIO_PRESETS.map(p => p.category))];
+  const SVG_W = 400, SVG_H = 110, SVG_PAD_X = 10, SVG_PAD_Y = 12;
+  const GRAPH_W = SVG_W - SVG_PAD_X * 2, GRAPH_H = SVG_H - SVG_PAD_Y * 2;
+  const toSvgX = (t: number) => SVG_PAD_X + t * GRAPH_W;
+  const toSvgY = (v: number) => SVG_PAD_Y + (1 - v) * GRAPH_H;
+  const fromSvgX = (sx: number) => Math.max(0, Math.min(1, (sx - SVG_PAD_X) / GRAPH_W));
+  const fromSvgY = (sy: number) => Math.max(0, Math.min(1, 1 - (sy - SVG_PAD_Y) / GRAPH_H));
+
+  const envelope = useMemo(() => {
+    return selectedClip.volumeEnvelope && selectedClip.volumeEnvelope.length >= 2
+      ? selectedClip.volumeEnvelope
+      : [{ time: 0, value: selectedClip.volume ?? 1 }, { time: 1, value: selectedClip.volume ?? 1 }];
+  }, [selectedClip.volumeEnvelope, selectedClip.volume]);
+
+  const waveformBars = useMemo(() => {
+    const count = 60;
+    return Array.from({ length: count }, (_, i) => {
+      const t = i / count;
+      let envVal = 1;
+      for (let p = 0; p < envelope.length - 1; p++) {
+        if (t >= envelope[p].time && t <= envelope[p + 1].time) {
+          const segLen = envelope[p + 1].time - envelope[p].time;
+          const frac = segLen > 0 ? (t - envelope[p].time) / segLen : 0;
+          envVal = envelope[p].value + (envelope[p + 1].value - envelope[p].value) * frac;
+          break;
+        }
+      }
+      const baseHeight = 0.3 + Math.abs(Math.sin(i * 0.7 + selectedClip.startTime) * 0.35 + Math.sin(i * 1.5) * 0.25);
+      return baseHeight * envVal;
+    });
+  }, [envelope, selectedClip.startTime]);
+
+  const envelopePath = envelope.map((p, i) => `${i === 0 ? 'M' : 'L'} ${toSvgX(p.time)} ${toSvgY(p.value)}`).join(' ');
+  const fillPath = `${envelopePath} L ${toSvgX(1)} ${toSvgY(0)} L ${toSvgX(0)} ${toSvgY(0)} Z`;
+
+  const handleEnvMouseDown = useCallback((idx: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingIdx(idx);
+  }, []);
+
+  useEffect(() => {
+    if (draggingIdx === null) return;
+    const handleMove = (e: MouseEvent) => {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const scaleX = SVG_W / rect.width;
+      const scaleY = SVG_H / rect.height;
+      const sx = (e.clientX - rect.left) * scaleX;
+      const sy = (e.clientY - rect.top) * scaleY;
+      const newPoints = [...envelope];
+      const isFirst = draggingIdx === 0;
+      const isLast = draggingIdx === newPoints.length - 1;
+      const newTime = isFirst ? 0 : isLast ? 1 : fromSvgX(sx);
+      const newValue = fromSvgY(sy);
+      let clampedTime = newTime;
+      if (!isFirst && !isLast) {
+        clampedTime = Math.max(newPoints[draggingIdx - 1].time + 0.01, Math.min(newPoints[draggingIdx + 1].time - 0.01, newTime));
+      }
+      newPoints[draggingIdx] = { time: clampedTime, value: Math.round(newValue * 100) / 100 };
+      onUpdateClip(selectedClip.id, { volumeEnvelope: newPoints });
+    };
+    const handleUp = () => setDraggingIdx(null);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+  }, [draggingIdx, envelope, selectedClip.id, onUpdateClip]);
+
+  const addEnvPoint = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (draggingIdx !== null) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const sx = (e.clientX - rect.left) * (SVG_W / rect.width);
+    const sy = (e.clientY - rect.top) * (SVG_H / rect.height);
+    const t = fromSvgX(sx);
+    const v = fromSvgY(sy);
+    if (envelope.some(p => Math.abs(p.time - t) < 0.02)) return;
+    const newPoints = [...envelope, { time: t, value: Math.round(v * 100) / 100 }].sort((a, b) => a.time - b.time);
+    onUpdateClip(selectedClip.id, { volumeEnvelope: newPoints });
+  }, [envelope, selectedClip.id, onUpdateClip, draggingIdx]);
+
+  const removeEnvPoint = useCallback((idx: number) => {
+    if (idx === 0 || idx === envelope.length - 1) return;
+    onUpdateClip(selectedClip.id, { volumeEnvelope: envelope.filter((_, i) => i !== idx) });
+  }, [envelope, selectedClip.id, onUpdateClip]);
+
+  const playbackRate = selectedClip.playbackRate ?? 1;
+  const SPEED_PRESETS = [
+    { value: 0.25, label: '0.25x' }, { value: 0.5, label: '0.5x' }, { value: 0.75, label: '0.75x' },
+    { value: 1, label: '1x' }, { value: 1.25, label: '1.25x' }, { value: 1.5, label: '1.5x' },
+    { value: 2, label: '2x' }, { value: 3, label: '3x' }, { value: 4, label: '4x' },
+  ];
 
   return (
     <div className="fixed bottom-10 sm:bottom-12 left-1/2 -translate-x-1/2 z-[9999] w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[95vw] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200">
