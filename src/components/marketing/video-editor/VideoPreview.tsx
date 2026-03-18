@@ -620,11 +620,57 @@ const VideoPreview: React.FC<Props> = ({
                 )}
 
                 {isSelected && (
-                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')}>
-                    <svg viewBox="0 0 16 16" className="w-full h-full text-primary-foreground p-0.5">
-                      <path d="M14 2v12H2" fill="none" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                  </div>
+                  <>
+                    {/* Resize handle - bottom right */}
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-tl-md cursor-se-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')}>
+                      <svg viewBox="0 0 16 16" className="w-full h-full text-primary-foreground p-0.5">
+                        <path d="M14 2v12H2" fill="none" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </div>
+
+                    {/* Rotation handle - top center */}
+                    <div
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 w-5 h-5 bg-primary rounded-full cursor-grab z-20 flex items-center justify-center shadow-lg border-2 border-primary-foreground"
+                      onPointerDown={(e) => handlePointerDown(e, clip.id, 'rotate')}
+                      title={`Rotação: ${clip.rotation ?? 0}°`}
+                    >
+                      <svg viewBox="0 0 16 16" className="w-3 h-3 text-primary-foreground">
+                        <path d="M8 2a6 6 0 0 1 5.2 3l-1.5.9A4.5 4.5 0 0 0 3.5 8H6L3 12l-3-4h2.5A6 6 0 0 1 8 2z" fill="currentColor" />
+                      </svg>
+                    </div>
+                    {/* Line from rotation handle to element */}
+                    <div className="absolute -top-6 left-1/2 w-px h-6 bg-primary z-10" />
+
+                    {/* Quick action buttons - top right */}
+                    <div className="absolute -top-1 -right-7 flex flex-col gap-0.5 z-20">
+                      <button
+                        className="w-5 h-5 bg-background/90 border border-border rounded flex items-center justify-center hover:bg-accent transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onUpdateClip?.(clip.id, { scaleX: (clip.scaleX ?? 1) * -1 }); }}
+                        title="Inverter H"
+                      >
+                        <span className="text-[8px]">↔</span>
+                      </button>
+                      <button
+                        className="w-5 h-5 bg-background/90 border border-border rounded flex items-center justify-center hover:bg-accent transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onUpdateClip?.(clip.id, { scaleY: (clip.scaleY ?? 1) * -1 }); }}
+                        title="Inverter V"
+                      >
+                        <span className="text-[8px]">↕</span>
+                      </button>
+                      <button
+                        className="w-5 h-5 bg-primary border border-primary rounded flex items-center justify-center hover:bg-primary/80 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onUpdateClip?.(clip.id, { x: 0, y: 0, w: 100, h: 100, rotation: 0, skewX: 0, skewY: 0, scaleX: 1, scaleY: 1 }); }}
+                        title="Preencher quadro"
+                      >
+                        <span className="text-[8px] text-primary-foreground">⛶</span>
+                      </button>
+                    </div>
+
+                    {/* Corner resize handles */}
+                    <div className="absolute top-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-nw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-ne-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
+                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 bg-primary border border-primary-foreground rounded-sm cursor-sw-resize z-20" onPointerDown={(e) => handlePointerDown(e, clip.id, 'resize')} />
+                  </>
                 )}
               </div>
             );
