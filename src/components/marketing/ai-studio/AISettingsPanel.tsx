@@ -384,11 +384,13 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
   const statusBadge = (providerId: string) => {
     const key = apiKeys[providerId];
     const status = statuses[providerId];
-    // For unified providers, show active/inactive toggle status
-    if (isUnifiedProvider(providerId) && activeUnified === providerId) {
-      return <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0"><Zap className="h-2.5 w-2.5 mr-0.5" />Em Uso</Badge>;
+    const isActive = activeStates[providerId] !== false;
+    if (key && status === 'valid' && isActive) {
+      return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
     }
-    if (status === 'valid') return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
+    if (key && !isActive) {
+      return <Badge className="bg-muted text-muted-foreground border-border text-[9px] px-1.5 py-0"><Power className="h-2.5 w-2.5 mr-0.5" />Desativado</Badge>;
+    }
     if (key) return <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
     return <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
   };
