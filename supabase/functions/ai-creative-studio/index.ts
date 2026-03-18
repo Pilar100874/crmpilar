@@ -774,9 +774,110 @@ async function generateVideoReplicate(apiKey: string, params: any): Promise<Vide
   return { videoUrl: storedUrl || videoUrl };
 }
 
+// --- Apiframe unified provider ---
+async function generateVideoApiframe(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
+  const model = (params.model as string) || "";
+  const subModel = model.replace("apiframe/", "");
+
+  // Map sub-model to apiframe action
+  const ACTION_MAP: Record<string, string> = {
+    "midjourney-video": "midjourney-video",
+    "runway-gen4": "runway-imagine",
+    "runway": "runway-imagine",
+    "kling-2.6": "kling-2.6",
+    "kling-2.5": "kling-2.5-turbo",
+    "luma": "luma-imagine",
+    "google-veo": "google-veo",
+    "sora-2": "sora-2",
+    "pika": "pika",
+    "hailuo-minimax": "hailuo-minimax",
+    "wan-video": "wan-video",
+    "vidu": "vidu",
+  };
+
+  const action = ACTION_MAP[subModel];
+  if (!action) {
+    return { error: `Modelo Apiframe "${subModel}" não possui mapeamento de ação configurado.` };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) {
+    return { error: "Configuração do servidor incompleta (SUPABASE_URL/SERVICE_ROLE_KEY)." };
+  }
+
+  // Build apiframe params
+  const afParams: Record<string, any> = {};
+  if (params.prompt) afParams.prompt = params.prompt;
+  if (params.imageUrls?.[0]) afParams.image_url = params.imageUrls[0];
+  if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
+  if (params.duration) afParams.seconds = params.duration;
+
+  console.log(`[apiframe-video] Calling action="${action}" for model="${model}"`);
+
+  // Call apiframe-proxy edge function
+  const proxyUrl = `${supabaseUrl}/functions/v1/apiframe-proxy`;
+  const startResp = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ action, estabelecimentoId, params: afParams }),
+  });
+
+  const startData = await startResp.json();
+  if (!startResp.ok || startData.error) {
+    return { error: startData.error || `Erro ao iniciar geração via Apiframe (${startResp.status})` };
+  }
+
+  const taskId = startData.task_id;
+  if (!taskId) {
+    // Some endpoints return the result directly
+    if (startData.video_url) {
+      const videoResp = await fetch(startData.video_url);
+      const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+      const storedUrl = await uploadVideoToStorage(videoBytes);
+      return { videoUrl: storedUrl || startData.video_url, provider: "apiframe" };
+    }
+    return { error: "Apiframe não retornou task_id nem video_url." };
+  }
+
+  console.log(`[apiframe-video] Task started: ${taskId}. Polling...`);
+
+  // Poll for completion
+  const videoUrl = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: taskId } }),
+    });
+    const pollData = await pollResp.json();
+
+    if (pollData.status === "finished" || pollData.status === "completed" || pollData.status === "succeeded") {
+      const url = pollData.video_url || pollData.result_url || pollData.output;
+      if (url) return { done: true, result: url };
+      return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
+    }
+    if (pollData.status === "failed" || pollData.status === "error") {
+      return { done: true, error: pollData.error || "Geração falhou no Apiframe." };
+    }
+    return { done: false };
+  }, 5000, 120);
+
+  // Download and store
+  const videoResp = await fetch(videoUrl);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+  return { videoUrl: storedUrl || videoUrl, provider: "apiframe" };
+}
+
 // --- Generic handler for unsupported providers ---
 async function generateVideoUnsupported(model: string): Promise<VideoGenerationResult> {
-  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma, Stability ou Replicate.` };
+  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma, Stability, Replicate ou Apiframe.` };
 }
 
 // Pre-generate a "hero frame" compositing product/influencer into the scene
@@ -978,6 +1079,11 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     }
   }
 
+  // Apiframe handles its own key via the proxy edge function
+  if (provider === "apiframe") {
+    return generateVideoApiframe(estabelecimentoId, params);
+  }
+
   const apiKey = await fetchApiKey(estabelecimentoId, provider);
   if (!apiKey) {
     throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
@@ -1036,6 +1142,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     case "luma": return generateVideoLuma(apiKey, params);
     case "stability": return generateVideoStability(apiKey, params);
     case "replicate": return generateVideoReplicate(apiKey, params);
+    case "apiframe": return generateVideoApiframe(estabelecimentoId, params);
     case "pika":
     case "minimax":
     case "bytedance":
