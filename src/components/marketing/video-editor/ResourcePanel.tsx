@@ -32,6 +32,7 @@ export interface ResourcePanelHandle {
 interface Props {
   onAddClip: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
   onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
+  onDeleteClips?: (ids: string[]) => void;
   tracks: TimelineTrack[];
   clips: TimelineClip[];
   onOpenCanvas: () => void;
