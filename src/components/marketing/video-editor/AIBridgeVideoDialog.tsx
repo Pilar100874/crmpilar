@@ -9,7 +9,7 @@ import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sp
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
-import { getActiveUnifiedProvider, shouldHideModel } from '../ai-studio/unifiedProvidersConfig';
+
 
 interface AIBridgeVideoDialogProps {
   open: boolean;
@@ -139,7 +139,7 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
-  const activeUnified = getActiveUnifiedProvider(estabelecimentoId);
+  
 
   // Load configured providers
   useEffect(() => {
@@ -156,9 +156,18 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
 
   const filteredModels = useMemo(() => {
     return ALL_VIDEO_MODELS
-      .filter(m => !shouldHideModel(m.value, activeUnified))
+      .filter(m => {
+        // For unified provider models (e.g. apiframe/), show if that provider's key is configured
+        const unifiedPrefix = UNIFIED_PREFIXES.find(p => m.value.startsWith(p));
+        if (unifiedPrefix) {
+          const providerName = unifiedPrefix.replace('/', '');
+          return configuredProviders.some(cp => cp.toLowerCase() === providerName);
+        }
+        // Non-unified models always show
+        return true;
+      })
       .map(m => ({ ...m, disabled: !isModelConfigured(m.value, configuredProviders) }));
-  }, [configuredProviders, activeUnified]);
+  }, [configuredProviders]);
 
   // Prompt suggestions state
   const [suggestions, setSuggestions] = useState(loadCustomPrompts);
