@@ -778,6 +778,15 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                     })}
                   </div>
                 </div>
+                {/* Footer: Apply / Restore */}
+                <div className="p-2 border-t bg-muted/20 flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] gap-1 border-dashed" onClick={restoreOriginalTransitions} disabled={originalTransitions === null}>
+                    <RotateCcw className="h-3 w-3" /> Restaurar Original
+                  </Button>
+                  <Button variant="default" size="sm" className="flex-1 h-7 text-[10px] gap-1" onClick={applyAndConfirmTransitions}>
+                    <Check className="h-3 w-3" /> Aplicar
+                  </Button>
+                </div>
               </PopoverContent>
             </Popover>
           )}
