@@ -458,23 +458,33 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose, embedded = false }) =
                             <span>{icon}</span> {label}
                           </p>
                           {providers.map((provider) => (
-                            <button
-                              key={provider.id}
-                              onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
-                              className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
-                                selectedSection === 'providers' && selectedProvider === provider.id
-                                  ? 'bg-accent border-primary/30 shadow-sm'
-                                  : 'bg-card border-border hover:bg-accent/50 hover:border-border'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-base">{provider.icon}</span>
-                                  <span className="text-sm font-medium text-foreground">{provider.name}</span>
+                            <div key={provider.id} className={`flex items-center rounded-lg border transition-all mb-1 ${
+                              selectedSection === 'providers' && selectedProvider === provider.id
+                                ? 'bg-accent border-primary/30 shadow-sm'
+                                : 'bg-card border-border hover:bg-accent/50 hover:border-border'
+                            }`}>
+                              <button
+                                onClick={() => { setSelectedSection('providers'); setSelectedProvider(provider.id); }}
+                                className="flex-1 text-left p-2.5"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-base">{provider.icon}</span>
+                                    <span className="text-sm font-medium text-foreground">{provider.name}</span>
+                                  </div>
+                                  {statusBadge(provider.id)}
                                 </div>
-                                {statusBadge(provider.id)}
-                              </div>
-                            </button>
+                              </button>
+                              {apiKeys[provider.id] && (
+                                <div className="pr-2.5" onClick={(e) => e.stopPropagation()}>
+                                  <Switch
+                                    checked={activeStates[provider.id] !== false}
+                                    onCheckedChange={() => handleToggleActive(provider.id)}
+                                    className="scale-75"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       );
