@@ -1752,14 +1752,17 @@ const VideoTimelineEditor: React.FC = () => {
           open={bridgeDialogOpen}
           onClose={() => {
             setBridgeDialogOpen(false);
-            // Only clear clips if no active task is generating
-            if (!activeBridgeTask || activeBridgeTask.status !== 'generating') {
+            // Find any generating task (active or any) and minimize it
+            const generatingTask = activeBridgeTaskId
+              ? bridgeGen.tasks.find(t => t.id === activeBridgeTaskId && t.status === 'generating')
+              : bridgeGen.tasks.find(t => t.status === 'generating' && !t.minimized);
+            
+            if (generatingTask) {
+              bridgeGen.minimizeTask(generatingTask.id);
+            } else {
+              // No active generation, clear clips
               setBridgeClipA(null);
               setBridgeClipB(null);
-            }
-            // If there's an active generating task, minimize it
-            if (activeBridgeTaskId && activeBridgeTask?.status === 'generating') {
-              bridgeGen.minimizeTask(activeBridgeTaskId);
             }
           }}
           clipA={bridgeClipA}
