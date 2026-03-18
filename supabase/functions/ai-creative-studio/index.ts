@@ -828,9 +828,9 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     if (startImageUrl) afParams.start_image = startImageUrl;
     if (endImageUrl && isBridge) afParams.end_image = endImageUrl;
   } else if (subModel === "kling-2.6") {
-    // Kling 2.6 uses image_url (start) + end_image (end for bridge)
+    // Kling 2.6 via Apiframe expects image_url (start) + image_tail (end)
     if (startImageUrl) afParams.image_url = startImageUrl;
-    if (endImageUrl && isBridge) afParams.end_image = endImageUrl;
+    if (endImageUrl && isBridge) afParams.image_tail = endImageUrl;
   } else if (subModel === "luma") {
     // Luma uses image_url / end_image_url — NO generation_type field
     if (startImageUrl) afParams.image_url = startImageUrl;
