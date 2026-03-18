@@ -759,7 +759,6 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
                       </button>
                     ))}
                   </div>
-                  </div>
                 </div>
 
                 <ScrollArea className="max-h-[55vh]">
