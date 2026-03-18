@@ -855,18 +855,6 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
         <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
           <Wand2 className="h-4 w-4 text-primary" />
           Gerar Vídeo de Transição AI
-          {effectiveGenerating && onStartBackgroundGeneration && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 gap-1 ml-auto text-[10px]"
-              onClick={handleMinimize}
-              title="Minimizar e continuar em segundo plano"
-            >
-              <Minimize2 className="h-3 w-3" />
-              Minimizar
-            </Button>
-          )}
         </DialogTitle>
 
         {/* Generated Video Preview */}
@@ -1148,6 +1136,18 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
               <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
                 {effectiveGenerating ? 'Cancelar Geração' : 'Cancelar'}
               </Button>
+              {effectiveGenerating && onStartBackgroundGeneration && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMinimize}
+                  className="gap-1.5"
+                  title="Minimizar e continuar em segundo plano"
+                >
+                  <Minimize2 className="h-3.5 w-3.5" />
+                  Minimizar
+                </Button>
+              )}
               <Button
                 size="sm"
                 onClick={handleGenerate}
