@@ -5,10 +5,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock, Save } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock, Save, Minimize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
+import { BridgeGenerationTask } from './BridgeGenerationManager';
 
 
 interface AIBridgeVideoDialogProps {
@@ -17,6 +19,17 @@ interface AIBridgeVideoDialogProps {
   clipA: TimelineClip;
   clipB: TimelineClip;
   onVideoGenerated: (videoUrl: string, duration: number) => void;
+  onStartBackgroundGeneration?: (params: {
+    frameA: string;
+    frameB: string;
+    prompt: string;
+    model: string;
+    duration: number;
+    clipAName: string;
+    clipBName: string;
+    minimized: boolean;
+  }) => void;
+  activeTask?: BridgeGenerationTask | null;
 }
 
 interface VideoModelInfo {
@@ -209,7 +222,7 @@ function saveCustomPrompts(prompts: typeof DEFAULT_TRANSITION_PROMPTS) {
 }
 
 const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
-  open, onClose, clipA, clipB, onVideoGenerated
+  open, onClose, clipA, clipB, onVideoGenerated, onStartBackgroundGeneration, activeTask
 }) => {
   const [frameA, setFrameA] = useState<string | null>(null);
   const [frameB, setFrameB] = useState<string | null>(null);
@@ -576,6 +589,22 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
 
+    // Use background generation manager if available
+    if (onStartBackgroundGeneration) {
+      onStartBackgroundGeneration({
+        frameA,
+        frameB,
+        prompt: prompt.trim(),
+        model,
+        duration,
+        clipAName: clipA.name,
+        clipBName: clipB.name,
+        minimized: false,
+      });
+      return;
+    }
+
+    // Legacy fallback (without background manager)
     const controller = new AbortController();
     abortRef.current = controller;
     setIsGenerating(true);
@@ -729,7 +758,7 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
       abortRef.current = null;
       setIsGenerating(false);
     }
-  }, [duration, frameA, frameB, model, prompt]);
+  }, [duration, frameA, frameB, model, prompt, onStartBackgroundGeneration, clipA, clipB]);
 
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
 
@@ -784,12 +813,42 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
     setVideoError(false);
   }, []);
 
+  // Derive generating state from activeTask or local state
+  const effectiveGenerating = isGenerating || (activeTask?.status === 'generating');
+  const effectiveProgress = activeTask?.progress ?? 0;
+
+  // If activeTask completed with video, show it
+  useEffect(() => {
+    if (activeTask?.status === 'done' && activeTask.videoUrl && !generatedVideoUrl) {
+      setVideoLoading(true);
+      setVideoError(false);
+      setGeneratedVideoUrl(activeTask.videoUrl);
+      setGeneratedDuration(activeTask.duration);
+    }
+  }, [activeTask?.status, activeTask?.videoUrl, activeTask?.duration, generatedVideoUrl]);
+
+  const handleMinimize = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { if (isGenerating && abortRef.current) abortRef.current.abort(); onClose(); } }}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
           <Wand2 className="h-4 w-4 text-primary" />
           Gerar Vídeo de Transição AI
+          {effectiveGenerating && onStartBackgroundGeneration && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 gap-1 ml-auto text-[10px]"
+              onClick={handleMinimize}
+              title="Minimizar e continuar em segundo plano"
+            >
+              <Minimize2 className="h-3 w-3" />
+              Minimizar
+            </Button>
+          )}
         </DialogTitle>
 
         {/* Generated Video Preview */}
@@ -1069,21 +1128,41 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
               <Button variant="outline" size="sm" onClick={handleCancelGeneration}>
-                {isGenerating ? 'Cancelar Geração' : 'Cancelar'}
+                {effectiveGenerating ? 'Cancelar Geração' : 'Cancelar'}
               </Button>
               <Button
                 size="sm"
                 onClick={handleGenerate}
-                disabled={isGenerating || extracting || !frameA || !frameB || !prompt.trim()}
+                disabled={effectiveGenerating || extracting || !frameA || !frameB || !prompt.trim()}
                 className="gap-1.5"
               >
-                {isGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
+                {effectiveGenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Gerando...</> : <><Wand2 className="h-3.5 w-3.5" />Gerar Vídeo de Transição</>}
               </Button>
             </div>
 
-            {isGenerating && (
-              <div className="text-center py-2">
-                <p className="text-xs text-muted-foreground animate-pulse">⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.</p>
+            {effectiveGenerating && (
+              <div className="space-y-2 mt-2">
+                <div className="space-y-1">
+                  <Progress value={effectiveProgress} className="h-2" />
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-muted-foreground">
+                      {Math.round(effectiveProgress)}% concluído
+                    </span>
+                    {activeTask && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {Math.round((Date.now() - activeTask.startedAt) / 1000)}s
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center animate-pulse">
+                  ⏳ Gerando vídeo de transição AI... Isso pode levar de 30s a 5min dependendo do modelo.
+                </p>
+                {onStartBackgroundGeneration && (
+                  <p className="text-[10px] text-center text-primary/70">
+                    💡 Clique em "Minimizar" para continuar editando enquanto o vídeo é gerado em segundo plano.
+                  </p>
+                )}
               </div>
             )}
           </>

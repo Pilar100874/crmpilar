@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import AIBridgeVideoDialog from './AIBridgeVideoDialog';
+import { BridgeGenerationManager, useBridgeGenerations } from './BridgeGenerationManager';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -87,6 +88,9 @@ const VideoTimelineEditor: React.FC = () => {
   const [bridgeDialogOpen, setBridgeDialogOpen] = useState(false);
   const [bridgeClipA, setBridgeClipA] = useState<TimelineClip | null>(null);
   const [bridgeClipB, setBridgeClipB] = useState<TimelineClip | null>(null);
+  const bridgeGen = useBridgeGenerations();
+  const [activeBridgeTaskId, setActiveBridgeTaskId] = useState<string | null>(null);
+  const activeBridgeTask = bridgeGen.tasks.find(t => t.id === activeBridgeTaskId) || null;
   const containerRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = useRef<HTMLDivElement>(null);
   const [scrollState, setScrollState] = useState({ scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 });
@@ -1746,12 +1750,78 @@ const VideoTimelineEditor: React.FC = () => {
       {bridgeDialogOpen && bridgeClipA && bridgeClipB && (
         <AIBridgeVideoDialog
           open={bridgeDialogOpen}
-          onClose={() => { setBridgeDialogOpen(false); setBridgeClipA(null); setBridgeClipB(null); }}
+          onClose={() => {
+            setBridgeDialogOpen(false);
+            // Only clear clips if no active task is generating
+            if (!activeBridgeTask || activeBridgeTask.status !== 'generating') {
+              setBridgeClipA(null);
+              setBridgeClipB(null);
+            }
+            // If there's an active generating task, minimize it
+            if (activeBridgeTaskId && activeBridgeTask?.status === 'generating') {
+              bridgeGen.minimizeTask(activeBridgeTaskId);
+            }
+          }}
           clipA={bridgeClipA}
           clipB={bridgeClipB}
           onVideoGenerated={handleBridgeVideoGenerated}
+          activeTask={activeBridgeTask}
+          onStartBackgroundGeneration={(params) => {
+            const taskId = bridgeGen.startGeneration(params);
+            taskId.then(id => setActiveBridgeTaskId(id));
+          }}
         />
       )}
+      {/* Minimized background generation indicators */}
+      <BridgeGenerationManager
+        tasks={bridgeGen.tasks}
+        onMaximize={(taskId) => {
+          bridgeGen.maximizeTask(taskId);
+          const task = bridgeGen.tasks.find(t => t.id === taskId);
+          if (task) {
+            setActiveBridgeTaskId(taskId);
+            setBridgeDialogOpen(true);
+          }
+        }}
+        onDismiss={(taskId) => {
+          bridgeGen.dismissTask(taskId);
+          if (activeBridgeTaskId === taskId) setActiveBridgeTaskId(null);
+        }}
+        onInsert={(taskId) => {
+          const task = bridgeGen.tasks.find(t => t.id === taskId);
+          if (task?.videoUrl && bridgeClipA && bridgeClipB) {
+            handleBridgeVideoGenerated(task.videoUrl, task.duration);
+            bridgeGen.dismissTask(taskId);
+            setActiveBridgeTaskId(null);
+          } else if (task?.videoUrl) {
+            // If clips aren't available, just add to timeline at end
+            const videoTrack = state.tracks.find(t => t.type === 'video');
+            if (videoTrack) {
+              const transitionName = `🎬 Transição AI ${state.clips.filter(c => c.name?.includes('Transição AI')).length + 1}`;
+              timeline.addClip({
+                trackId: videoTrack.id,
+                type: 'video',
+                name: transitionName,
+                startTime: state.duration,
+                duration: task.duration,
+                trimStart: 0,
+                trimEnd: 0,
+                color: TRACK_COLORS.video,
+                volume: 1,
+                opacity: 1,
+                filters: [],
+                src: task.videoUrl,
+                locked: false,
+                lockedEdge: 'both' as any,
+              });
+              resourcePanelRef.current?.addTransitionItem(transitionName, task.videoUrl, task.duration);
+              bridgeGen.dismissTask(taskId);
+              setActiveBridgeTaskId(null);
+              toast.success('Transição inserida na timeline!');
+            }
+          }
+        }}
+      />
     </div>
   );
 };
