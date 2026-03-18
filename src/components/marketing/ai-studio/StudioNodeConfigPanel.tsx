@@ -108,8 +108,7 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
-  { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
-  { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
+  // Google Veo e Sora 2 removidos - endpoints não disponíveis no Apiframe ainda
   // Apiframe video models below are not yet available on Apiframe API
   // { value: 'apiframe/pika', ... }, { value: 'apiframe/hailuo-minimax', ... }, etc.
   // AIML API video models

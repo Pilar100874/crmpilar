@@ -112,8 +112,6 @@ Deno.serve(async (req) => {
       "kling-2.5-turbo": "/kling-imagine",
       "luma-imagine": "/luma-imagine",
       "luma-extend": "/luma-extend",
-      "google-veo": "/veo-imagine",
-      "sora-2": "/sora-imagine",
       // Music
       "suno-imagine": "/suno-imagine",
       "suno-extend": "/suno-extend",
@@ -146,6 +144,13 @@ Deno.serve(async (req) => {
 
     if (!resp.ok) {
       const t = await resp.text();
+      // Detect HTML error pages (404 etc)
+      if (t.trimStart().startsWith("<!DOCTYPE") || t.trimStart().startsWith("<html")) {
+        return new Response(JSON.stringify({ error: `Endpoint "${action}" não disponível no Apiframe (${resp.status}). Este modelo pode não estar mais ativo.` }), {
+          status: resp.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: mapErrorMessage(resp.status, t) }), {
         status: resp.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

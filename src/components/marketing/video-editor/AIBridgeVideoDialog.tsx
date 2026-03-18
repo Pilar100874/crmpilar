@@ -47,7 +47,7 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$' },
   { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$' },
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$' },
-  { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'apiframe', cost: '$$$' },
+  
   // AIML API (I2V)
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'aimlapi', cost: '$$' },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'aimlapi', cost: '$$' },
