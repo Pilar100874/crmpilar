@@ -52,12 +52,6 @@ const ALL_VIDEO_MODELS: VideoModelInfo[] = [
   { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$' },
   { value: 'apiframe/google-veo', label: '⚡ AF: Google Veo', provider: 'apiframe', cost: '$$$' },
   { value: 'apiframe/sora-2', label: '⚡ AF: Sora 2', provider: 'apiframe', cost: '$$$' },
-  { value: 'apiframe/pika', label: '⚡ AF: Pika', provider: 'apiframe', cost: '$$' },
-  { value: 'apiframe/hailuo-minimax', label: '⚡ AF: Hailuo MiniMax', provider: 'apiframe', cost: '$' },
-  { value: 'apiframe/wan-video', label: '⚡ AF: Wan Video', provider: 'apiframe', cost: '$' },
-  { value: 'apiframe/vidu', label: '⚡ AF: Vidu', provider: 'apiframe', cost: '$' },
-  { value: 'apiframe/pixverse', label: '⚡ AF: Pixverse', provider: 'apiframe', cost: '$' },
-  { value: 'apiframe/seedance', label: '⚡ AF: Seedance', provider: 'apiframe', cost: '$' },
   // AIML API
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'aimlapi', cost: '$$' },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'aimlapi', cost: '$$' },

@@ -114,10 +114,6 @@ Deno.serve(async (req) => {
       "luma-extend": "/luma-extend",
       "google-veo": "/veo-imagine",
       "sora-2": "/sora-imagine",
-      "pika": "/pika-imagine",
-      "hailuo-minimax": "/hailuo-minimax-imagine",
-      "wan-video": "/wan-imagine",
-      "vidu": "/vidu-imagine",
       // Music
       "suno-imagine": "/suno-imagine",
       "suno-extend": "/suno-extend",

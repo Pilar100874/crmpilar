@@ -789,15 +789,11 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     "luma": "luma-imagine",
     "google-veo": "google-veo",
     "sora-2": "sora-2",
-    "pika": "pika",
-    "hailuo-minimax": "hailuo-minimax",
-    "wan-video": "wan-video",
-    "vidu": "vidu",
   };
 
   const action = ACTION_MAP[subModel];
   if (!action) {
-    return { error: `Modelo Apiframe "${subModel}" não possui mapeamento de ação configurado.` };
+    return { error: `Modelo "${subModel}" não está disponível no Apiframe. Modelos suportados: Midjourney Video, Runway, Kling 2.6/2.5, Luma, Google Veo, Sora 2.` };
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -811,7 +807,7 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   if (params.prompt) afParams.prompt = params.prompt;
   if (params.imageUrls?.[0]) afParams.image_url = params.imageUrls[0];
   if (params.aspectRatio) afParams.aspect_ratio = params.aspectRatio;
-  if (params.duration) afParams.seconds = params.duration;
+  if (params.duration) afParams.duration = params.duration;
 
   console.log(`[apiframe-video] Calling action="${action}" for model="${model}"`);
 
@@ -858,7 +854,8 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
     const pollData = await pollResp.json();
 
     if (pollData.status === "finished" || pollData.status === "completed" || pollData.status === "succeeded") {
-      const url = pollData.video_url || pollData.result_url || pollData.output;
+      // Apiframe returns video_urls (array) or video_url (string)
+      const url = pollData.video_urls?.[0] || pollData.video_url || pollData.result_url || pollData.output;
       if (url) return { done: true, result: url };
       return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
     }
