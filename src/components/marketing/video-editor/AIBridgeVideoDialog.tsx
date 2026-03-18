@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock } from 'lucide-react';
+import { Loader2, Wand2, Film, ArrowRight, ImageIcon, Pencil, Plus, Check, X, Sparkles, Lock, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TimelineClip } from './types';
@@ -25,30 +25,35 @@ interface VideoModelInfo {
   provider: string;
   cost?: string;
   tip?: string;
+  bridgeSupport: 'full' | 'start-only';
 }
 
 const ALL_VIDEO_MODELS: VideoModelInfo[] = [
-  // Google Veo (I2V nativo)
-  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'google', cost: '$$$$' },
-  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'google', cost: '$$$' },
-  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'google', cost: '$$$' },
-  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'google', cost: '$$' },
-  // Runway (I2V nativo)
-  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'runway', cost: '$$$$' },
-  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'runway', cost: '$$' },
-  // Kling (I2V nativo)
-  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'kling', cost: '$$' },
-  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'kling', cost: '$' },
-  // Luma (I2V nativo)
-  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$' },
-  // Stability (I2V nativo)
-  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'stability', cost: '$' },
-  // Apiframe (I2V via proxy)
-  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'apiframe', cost: '$$$' },
-  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'apiframe', cost: '$$' },
-  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$' },
-  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$' },
-  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$' },
+  // Google Veo (I2V — uses side-by-side composite for bridge)
+  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'google', cost: '$$$$', bridgeSupport: 'full' },
+  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'google', cost: '$$$', bridgeSupport: 'full' },
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'google', cost: '$$$', bridgeSupport: 'full' },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'google', cost: '$$', bridgeSupport: 'full' },
+  // Runway Gen-4: NÃO suporta end frame (lastFrame)
+  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'runway', cost: '$$$$', bridgeSupport: 'start-only' },
+  // Runway Gen-3: suporta lastFrame
+  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'runway', cost: '$$', bridgeSupport: 'full' },
+  // Kling (suporta image_tail)
+  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'kling', cost: '$$', bridgeSupport: 'full' },
+  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'kling', cost: '$', bridgeSupport: 'full' },
+  // Luma (suporta frame0 + frame1)
+  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'luma', cost: '$$', bridgeSupport: 'full' },
+  // Stability: NÃO suporta end frame
+  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'stability', cost: '$', bridgeSupport: 'start-only' },
+  // Apiframe — Runway Gen-4: NÃO suporta end frame
+  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'apiframe', cost: '$$$', bridgeSupport: 'start-only' },
+  // Apiframe — Runway Gen-3: suporta end_image_url
+  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
+  // Apiframe — Kling: suporta end_image
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'apiframe', cost: '$', bridgeSupport: 'full' },
+  // Apiframe — Luma: suporta end_image_url
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'apiframe', cost: '$$', bridgeSupport: 'full' },
 ];
 
 const UNIFIED_PREFIXES = ['apiframe/'];
@@ -771,6 +776,12 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                          <span className={`flex items-center gap-1.5 ${m.disabled ? 'opacity-50' : ''}`}>
                           {m.label}
                           {m.cost && <span className="text-muted-foreground text-[9px]">{m.cost}</span>}
+                          {m.bridgeSupport === 'start-only' && (
+                            <span className="flex items-center gap-0.5 text-amber-500 text-[9px] font-medium ml-1" title="Este modelo não suporta imagem final (end frame)">
+                              <AlertTriangle className="h-2.5 w-2.5" />
+                              só início
+                            </span>
+                          )}
                           {m.disabled && (
                             <span className="flex items-center gap-0.5 text-destructive/70 text-[9px] font-medium ml-1">
                               <Lock className="h-2.5 w-2.5" />
@@ -793,6 +804,16 @@ CRITICAL: The generated video must begin looking identical to Image 1 and gradua
                 </Select>
               </div>
             </div>
+
+            {/* Bridge support warning */}
+            {ALL_VIDEO_MODELS.find(m => m.value === model)?.bridgeSupport === 'start-only' && (
+              <div className="mt-2 flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                  <strong>Atenção:</strong> Este modelo não suporta imagem final (end frame). O vídeo será gerado a partir da primeira imagem, mas pode não terminar exatamente na segunda. Para transições mais precisas, use modelos com suporte completo como <strong>Kling</strong>, <strong>Luma</strong>, <strong>Gen-3</strong> ou <strong>Google Veo</strong>.
+                </p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
