@@ -844,7 +844,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* === AUDIO EFFECTS POPOVER (for audio clips) === */}
           {isAudio ? (
-            <Popover open={audioPopoverOpen} onOpenChange={(open) => { setAudioPopoverOpen(open); if (open) captureOriginalAudioState(); }}>
+            <Popover open={audioPopoverOpen} onOpenChange={handleAudioPopoverChange}>
               <PopoverTrigger asChild>
                 <Button variant={hasAudioFilters ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Headphones className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
