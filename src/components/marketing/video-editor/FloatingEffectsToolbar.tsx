@@ -672,7 +672,7 @@ const FloatingEffectsToolbar: React.FC<Props> = ({
 
           {/* Transitions Popover - only for visual clips */}
           {isVisual && (
-            <Popover onOpenChange={(open) => { if (open) captureOriginalTransitions(); }}>
+            <Popover open={transPopoverOpen} onOpenChange={(open) => { setTransPopoverOpen(open); if (open) captureOriginalTransitions(); }}>
               <PopoverTrigger asChild>
                 <Button variant={hasTransitions ? 'default' : 'ghost'} size="sm" className="h-7 sm:h-8 px-2 sm:px-3 rounded-full gap-1 sm:gap-1.5">
                   <Zap className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
