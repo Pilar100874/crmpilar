@@ -775,6 +775,19 @@ const VideoPreview: React.FC<Props> = ({
         <div className="absolute top-2 left-2 bg-black/50 px-1.5 py-0.5 rounded text-white/50 text-[8px] font-mono z-40">
           {resW}×{resH}
         </div>
+
+        {/* Hidden preloaded video elements for seamless transitions */}
+        {preloadVideoClips.map(clip => (
+          <video
+            key={`preload_${clip.id}`}
+            ref={(el) => { videoRefs.current[clip.id] = el; }}
+            src={clip.src}
+            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+            muted
+            playsInline
+            preload="auto"
+          />
+        ))}
       </div>
     </div>
   );
