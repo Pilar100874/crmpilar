@@ -30,6 +30,7 @@ interface AIBridgeVideoDialogProps {
     minimized: boolean;
   }) => void;
   activeTask?: BridgeGenerationTask | null;
+  hasActiveGeneration?: boolean;
 }
 
 interface VideoModelInfo {
