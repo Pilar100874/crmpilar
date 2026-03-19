@@ -317,13 +317,21 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
           {/* Dependencies */}
           <div className="space-y-1">
-            <Label className="text-xs">Dependências (dados de quais agentes este agente precisa)</Label>
+            <Label className="text-xs font-semibold">Dependências de Execução</Label>
+            <p className="text-[10px] text-muted-foreground">Agentes que devem ser concluídos antes deste poder executar</p>
             <div className="flex flex-wrap gap-1">
-              {[...AGENT_ORDER, ...existingKeys.filter(k => !AGENT_ORDER.includes(k))].map(dep => (
-                <Badge key={dep} variant={dependencies.includes(dep) ? 'default' : 'outline'}
-                  className="text-xs cursor-pointer" onClick={() => toggleDep(dep)}
-                >{dep}</Badge>
-              ))}
+              {[...AGENT_ORDER, ...existingKeys.filter(k => !AGENT_ORDER.includes(k))].map(dep => {
+                const depInfo = AGENT_INFO[dep];
+                const depIcon = depInfo?.icon || '🤖';
+                const depName = depInfo?.name?.split(' ')[0] || dep;
+                return (
+                  <Badge key={dep} variant={dependencies.includes(dep) ? 'default' : 'outline'}
+                    className="text-xs cursor-pointer gap-1" onClick={() => toggleDep(dep)}
+                  >
+                    <span>{depIcon}</span> {depName}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         </div>
