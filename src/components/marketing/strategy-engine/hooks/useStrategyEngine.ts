@@ -235,7 +235,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       const lines: string[] = [];
       for (const item of value) {
         if (typeof item === 'string') {
-          lines.push(`• ${item.trim()}`);
+          lines.push(`- ${item.trim()}`);
         } else if (typeof item === 'object' && item !== null) {
           lines.push(...extractText(item, depth + 1));
         }
