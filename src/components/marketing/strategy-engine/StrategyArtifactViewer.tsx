@@ -7,9 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save } from 'lucide-react';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, Columns } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
+import { ArtifactHistory } from './ArtifactHistory';
+import { ArtifactABComparison } from './ArtifactABComparison';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
