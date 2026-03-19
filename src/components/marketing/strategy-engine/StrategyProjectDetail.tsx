@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useProjectDetail } from './hooks/useStrategyProjects';
 import { useStrategyEngine } from './hooks/useStrategyEngine';
 import { useCustomAgents } from './hooks/useCustomAgents';
-import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder } from './types';
+import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder, getMergedDependencies } from './types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
