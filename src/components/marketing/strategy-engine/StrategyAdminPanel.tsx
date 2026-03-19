@@ -397,7 +397,7 @@ export function StrategyAdminPanel() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Edite, ative/desative ou exclua agentes. Agentes personalizados são marcados com <Badge variant="secondary" className="text-[10px] mx-1">Personalizado</Badge>.
+            Edite, ative/desative ou exclua agentes. Todos os agentes seguem a mesma estrutura Agent Card.
           </p>
         </CardContent>
       </Card>
