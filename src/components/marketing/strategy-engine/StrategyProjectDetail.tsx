@@ -20,10 +20,10 @@ interface Props {
 export function StrategyProjectDetail({ projectId, onBack }: Props) {
   const { project, executions, artifacts, chatMessages, loading, refetch } = useProjectDetail(projectId);
   const {
-    executeAgent, runPipeline, sendChatMessage,
+    executeAgent, executeAllAgents, runPipeline, sendChatMessage,
     exportPDF, exportMarkdown, exportJSON,
     approveArtifact, rejectArtifact, reviseArtifact, updateArtifactContent,
-    runningAgent, isPipelineRunning, chatLoading
+    runningAgents, isPipelineRunning, chatLoading
   } = useStrategyEngine(projectId, refetch);
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -39,6 +39,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
 
   const completedAgents = executions.filter(e => e.status === 'completed').length;
   const totalAgents = AGENT_ORDER.length;
+  const hasAnyRunning = runningAgents.size > 0;
 
   return (
     <div className="space-y-4">
@@ -55,6 +56,11 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
           <Badge variant="outline" className="text-xs">
             {completedAgents}/{totalAgents} agentes
           </Badge>
+          {hasAnyRunning && (
+            <Badge className="text-xs animate-pulse">
+              {runningAgents.size} rodando
+            </Badge>
+          )}
           {artifacts.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -79,7 +85,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
           )}
           <Button
             onClick={runPipeline}
-            disabled={isPipelineRunning || !!runningAgent}
+            disabled={isPipelineRunning || hasAnyRunning}
             size="sm"
           >
             {isPipelineRunning ? (
@@ -87,7 +93,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             ) : (
               <Rocket className="h-4 w-4 mr-1" />
             )}
-            {isPipelineRunning ? 'Executando...' : 'Executar Pipeline'}
+            {isPipelineRunning ? 'Executando...' : 'Pipeline Sequencial'}
           </Button>
         </div>
       </div>
@@ -134,7 +140,8 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
           <StrategyTimeline
             executions={executions}
             onExecuteAgent={executeAgent}
-            runningAgent={runningAgent}
+            onExecuteAll={executeAllAgents}
+            runningAgents={runningAgents}
             isPipelineRunning={isPipelineRunning}
           />
         </TabsContent>
@@ -147,7 +154,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             onReject={rejectArtifact}
             onRevise={reviseArtifact}
             onUpdateContent={updateArtifactContent}
-            runningAgent={runningAgent}
+            runningAgents={runningAgents}
           />
         </TabsContent>
       </Tabs>

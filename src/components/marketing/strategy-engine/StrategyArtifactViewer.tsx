@@ -20,10 +20,10 @@ interface Props {
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
-  runningAgent?: string | null;
+  runningAgents?: Set<string>;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set() }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
   const [isEditing, setIsEditing] = useState(false);
@@ -205,9 +205,9 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                   <Button
                     size="sm" variant="outline"
                     onClick={() => onRevise?.(artifact.id, artifact.tipo)}
-                    disabled={runningAgent === artifact.tipo}
+                    disabled={runningAgents.has(artifact.tipo)}
                   >
-                    {runningAgent === artifact.tipo ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+                    {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
                     Revisar
                   </Button>
                 </div>
