@@ -38,12 +38,12 @@ export function ArtifactHistory({ projectId, artifactType }: Props) {
   }, [projectId, artifactType]);
 
   const fetchVersions = async () => {
-    const { data } = await supabase
-      .from('strategy_artifact_versions')
+    const { data } = await (supabase
+      .from('strategy_artifact_versions' as any)
       .select('*')
       .eq('project_id', projectId)
       .eq('tipo', artifactType)
-      .order('version', { ascending: false });
+      .order('version', { ascending: false }) as any);
     setVersions((data || []) as unknown as ArtifactVersion[]);
     setLoading(false);
   };

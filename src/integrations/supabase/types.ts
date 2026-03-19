@@ -10125,6 +10125,57 @@ export type Database = {
           },
         ]
       }
+      strategy_artifact_versions: {
+        Row: {
+          artifact_id: string
+          conteudo: Json
+          created_at: string
+          id: string
+          project_id: string
+          status: string
+          tipo: string
+          titulo: string
+          version: number
+        }
+        Insert: {
+          artifact_id: string
+          conteudo?: Json
+          created_at?: string
+          id?: string
+          project_id: string
+          status?: string
+          tipo: string
+          titulo: string
+          version?: number
+        }
+        Update: {
+          artifact_id?: string
+          conteudo?: Json
+          created_at?: string
+          id?: string
+          project_id?: string
+          status?: string
+          tipo?: string
+          titulo?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_artifact_versions_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_artifact_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_artifacts: {
         Row: {
           conteudo: Json
