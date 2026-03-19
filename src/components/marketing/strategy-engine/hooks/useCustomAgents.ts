@@ -25,7 +25,8 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   const fetchAgents = useCallback(async () => {
-    if (!estabelecimentoId) { setLoading(false); return; }
+    if (!estabelecimentoId) return;
+    setLoading(true);
     const { data, error } = await supabase
       .from('strategy_custom_agents')
       .select('*')
