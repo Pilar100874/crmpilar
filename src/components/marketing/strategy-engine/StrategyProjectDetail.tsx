@@ -34,7 +34,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
     exportPDF, exportMarkdown, exportJSON,
     approveArtifact, rejectArtifact, reviseArtifact, updateArtifactContent,
     runningAgents, isPipelineRunning, chatLoading
-  } = useStrategyEngine(projectId, refetch, mergedOrder);
+  } = useStrategyEngine(projectId, refetch, mergedOrder, mergedInfo);
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
