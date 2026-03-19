@@ -235,7 +235,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       const lines: string[] = [];
       for (const item of value) {
         if (typeof item === 'string') {
-          lines.push(`• ${item.trim()}`);
+          lines.push(`- ${item.trim()}`);
         } else if (typeof item === 'object' && item !== null) {
           lines.push(...extractText(item, depth + 1));
         }
@@ -254,7 +254,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
           lines.push(`${label}:`);
           for (const item of val) {
             if (typeof item === 'string') {
-              lines.push(`  • ${item.trim()}`);
+              lines.push(`  - ${item.trim()}`);
             } else if (typeof item === 'object' && item !== null) {
               const subLines = extractText(item, depth + 1);
               lines.push(...subLines.map(l => `  ${l}`));
@@ -288,6 +288,16 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return '';
   };
 
+  // Strip emojis and normalize for PDF (jsPDF default font has limited Unicode support)
+  const sanitizeForPDF = (str: string): string => {
+    // Remove emojis
+    let clean = str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]|[\u{2700}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]/gu, '');
+    // Replace common unicode chars that jsPDF can't render
+    clean = clean.replace(/[""]/g, '"').replace(/['']/g, "'").replace(/—/g, '-').replace(/–/g, '-').replace(/…/g, '...').replace(/•/g, '-');
+    return clean.trim();
+  };
+  const stripEmoji = sanitizeForPDF;
+
   const buildPDF = (arts: any[], mode: 'resumida' | 'completa', projectName: string) => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
@@ -298,11 +308,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     let y = 0;
 
     const addPageHeader = () => {
-      doc.setFillColor(30, 41, 59); // slate-800
+      doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, pageW, 40, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATÉGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
+      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
       doc.setTextColor(0, 0, 0);
       y = 50;
     };
@@ -318,28 +328,28 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     doc.setFillColor(30, 41, 59);
     doc.rect(0, 0, pageW, pageH, 'F');
 
-    // Accent bar
-    doc.setFillColor(99, 102, 241); // indigo-500
+    doc.setFillColor(99, 102, 241);
     doc.rect(marginL, 80, 60, 4, 'F');
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
-    doc.text('Estratégia de', marginL, 105);
+    doc.text('Estrategia de', marginL, 105);
     doc.setFontSize(32);
     doc.text('Marketing Digital', marginL, 120);
 
     doc.setFontSize(12);
     doc.setTextColor(200, 200, 220);
-    const projLines = doc.splitTextToSize(projectName, contentW);
+    const projLines = doc.splitTextToSize(stripEmoji(projectName), contentW);
     doc.text(projLines, marginL, 140);
 
     doc.setFontSize(10);
     doc.setTextColor(160, 160, 180);
-    doc.text(mode === 'resumida' ? 'Versão Resumida' : 'Versão Completa', marginL, 165);
-    doc.text(new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), marginL, 175);
+    doc.text(mode === 'resumida' ? 'Versao Resumida' : 'Versao Completa', marginL, 165);
+    const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    doc.text(dateStr, marginL, 175);
 
     doc.setFontSize(9);
-    doc.text(`${arts.length} seções • Gerado automaticamente`, marginL, pageH - 30);
+    doc.text(`${arts.length} secoes - Gerado automaticamente`, marginL, pageH - 30);
 
     // === TABLE OF CONTENTS ===
     doc.addPage();
@@ -355,11 +365,10 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
     for (let i = 0; i < arts.length; i++) {
       const info = agentInfo[arts[i].tipo];
-      const icon = info?.icon || '📋';
-      const title = arts[i].titulo || info?.name || arts[i].tipo;
+      const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
       doc.setFontSize(11);
       doc.setTextColor(60, 60, 60);
-      doc.text(`${icon}  ${i + 1}. ${title}`, marginL + 5, y);
+      doc.text(`${i + 1}. ${title}`, marginL + 5, y);
       y += 8;
     }
 
@@ -370,8 +379,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
-      const icon = info?.icon || '📋';
-      const title = art.titulo || info?.name || art.tipo;
+      const title = stripEmoji(art.titulo || info?.name || art.tipo);
 
       // Section header with colored accent
       const color = info?.color || '#6366F1';
@@ -383,7 +391,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       doc.setFontSize(16);
       doc.setTextColor(30, 41, 59);
-      doc.text(`${icon}  ${title}`, marginL + 10, y + 5);
+      doc.text(title, marginL + 10, y + 5);
       y += 20;
 
       // Separator
@@ -393,7 +401,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       if (mode === 'resumida') {
         // Summary mode: one short paragraph
-        const summary = extractSummary(art.conteudo);
+        const summary = sanitizeForPDF(extractSummary(art.conteudo));
         if (summary) {
           doc.setFontSize(10);
           doc.setTextColor(60, 60, 60);
@@ -411,7 +419,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
       } else {
         // Complete mode: full text extraction
-        const textLines = extractText(art.conteudo);
+        const textLines = extractText(art.conteudo).map(l => sanitizeForPDF(l));
         if (textLines.length === 0) {
           doc.setFontSize(10);
           doc.setTextColor(150, 150, 150);
@@ -419,8 +427,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
           y += 6;
         } else {
           for (const rawLine of textLines) {
-            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('•');
-            const isBullet = rawLine.trimStart().startsWith('•');
+            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('-');
+            const isBullet = rawLine.trimStart().startsWith('-');
             const indent = rawLine.startsWith('  ') ? 8 : 0;
 
             if (isHeading) {
