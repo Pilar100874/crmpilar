@@ -109,6 +109,7 @@ export function useProjectDetail(projectId: string | null) {
     setArtifacts((artRes.data || []) as unknown as StrategyArtifact[]);
     setChatMessages((chatRes.data || []) as unknown as ChatMessage[]);
     setLoading(false);
+    initialLoadDone.current = true;
   }, [projectId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
