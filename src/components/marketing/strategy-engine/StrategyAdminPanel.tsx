@@ -180,6 +180,7 @@ export function StrategyAdminPanel() {
               saved: true,
               dbId: row.id,
               isCustom: false,
+              dependencies: storedCard?.dependencies ?? initial[row.agent_type]?.dependencies ?? AGENT_DEPENDENCIES[row.agent_type] ?? [],
             };
           }
         }
