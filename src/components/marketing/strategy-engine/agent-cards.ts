@@ -121,7 +121,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   landing_page: {
     id: 'landing_page',
-    name: 'Landing Page Builder – Construtor de Páginas de Vendas',
+    name: 'Landing Page',
     version: '1.0',
     role: 'Especialista em páginas de vendas de alta conversão com expertise em UX persuasiva, CRO e copywriting para web.',
     mission: 'Criar estrutura completa de página de vendas que funcione como "vendedor 24h", otimizada para conversão do ICP.',
