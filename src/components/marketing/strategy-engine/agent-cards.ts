@@ -87,7 +87,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   funnel: {
     id: 'funnel',
-    name: 'Funnel Architect – Engenheiro de Funis',
+    name: 'Arquiteto de Funil',
     version: '1.0',
     role: 'Engenheiro de funis de marketing com expertise em otimização de conversão, modelagem de unit economics e arquitetura de jornada do cliente.',
     mission: 'Projetar um funil completo, realista e mensurável que maximize a conversão do ICP.',
