@@ -1,45 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { AGENT_INFO, AGENT_ORDER } from './types';
-import { Save, Loader2, RotateCcw } from 'lucide-react';
+import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
+import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
-const DEFAULT_PROMPTS: Record<string, string> = {
-  vox: 'Pesquisador sênior de VOC. Extraia dores (funcionais, emocionais, sociais), desejos concretos, objeções reais de compra, frases literais autênticas, padrões emocionais, linguagem do nicho, nível de consciência (Schwartz) e gatilhos de decisão. Mínimo 7 itens por campo. Nunca genérico.',
-  cipher: 'Analista de inteligência competitiva. Mapeie promessas dominantes (com frequência e eficácia), mecanismos dos concorrentes (proprietários ou commodity), ângulos de anúncio (com saturação), lacunas estratégicas acionáveis, tendências emergentes, pontos fracos exploráveis e benchmark de preços.',
-  positioning: 'Estrategista de posicionamento (Al Ries + April Dunford + Hormozi). Defina ICP granular, problema raiz (5 porquês), mecanismo único nomeado (derivado das lacunas do Cipher), big idea contraintuitiva, stack de oferta com valor 10x, garantia de inversão de risco e tom de marca.',
-  funnel: 'Engenheiro de funis com unit economics. Selecione tipo de funil (justificado pelo nível de consciência), fontes de tráfego com CPC estimado, etapas com taxas realistas (cold→LP 15-35%, LP→lead 20-40%), retargeting, KPIs e cronograma de implantação.',
-  vsl: 'Copywriter sênior de VSL (Jon Benson + Stefan Georgi). Estrutura PASCA completa: hook que retém 70%+, problema na linguagem do Vox, agitação com consequências, mecanismo com analogias, stack de oferta, garantia e CTA. Inclua loops abertos e instruções de gravação [pausa] [ênfase].',
-  landing_page: 'Especialista em CRO e UX persuasiva. Estruture: hero com headline magnética (da big idea), problema-espelho, solução-mecanismo em passos, prova social com resultados mensuráveis, stack de oferta visual, FAQ baseado em objeções reais do Vox, 3+ CTAs ao longo da página.',
-  creative: 'Diretor criativo de performance. Crie 5+ hooks variados (curiosidade, dor, resultado, contraintuitivo, UGC), 5+ conceitos criativos multi-formato, 4+ ângulos de campanha e 8+ ideias de anúncio prontas por plataforma e etapa de funil.',
-  email: 'Especialista em automação (Chaperon + Ben Settle). Crie 5 sequências: boas-vindas (indoctrination), nutrição (soap opera com ganchos), quebra de objeções, conversão (urgência progressiva) e pós-venda. Subject lines <50 chars, 1 CTA por email, linguagem real do cliente.',
-  reel: 'Roteirista de vídeos curtos de alta retenção. Crie 8+ scripts em 7 categorias (dor, contraintuitivo, tutorial, storytelling, trend, prova, objeção). Hook em 1.5s, instruções visuais detalhadas, hashtags estratégicas e calendário de publicação.',
-};
+interface EditableAgentCard {
+  id: string;
+  name: string;
+  version: string;
+  role: string;
+  mission: string;
+  capabilities: string[];
+  non_capabilities: string[];
+  inputs: string[];
+  context_dependencies: string[];
+  reasoning_protocol: string[];
+  output_schema: string; // stored as JSON string for editing
+  quality_standards: string[];
+  anti_patterns: string[];
+  error_handling: string;
+  handoff: string;
+}
 
 interface AgentConfig {
-  prompt: string;
+  card: EditableAgentCard;
   active: boolean;
   saved: boolean;
   dbId?: string;
+}
+
+function agentCardToEditable(card: AgentCard): EditableAgentCard {
+  return {
+    id: card.id,
+    name: card.name,
+    version: card.version,
+    role: card.role,
+    mission: card.mission,
+    capabilities: [...card.capabilities],
+    non_capabilities: [...card.non_capabilities],
+    inputs: [...card.inputs],
+    context_dependencies: [...card.context_dependencies],
+    reasoning_protocol: [...card.reasoning_protocol],
+    output_schema: JSON.stringify(card.output_schema, null, 2),
+    quality_standards: [...card.quality_standards],
+    anti_patterns: [...card.anti_patterns],
+    error_handling: card.error_handling,
+    handoff: card.handoff,
+  };
+}
+
+function editableToSystemPrompt(editable: EditableAgentCard): string {
+  let schema: Record<string, any>;
+  try {
+    schema = JSON.parse(editable.output_schema);
+  } catch {
+    schema = {};
+  }
+
+  const card: AgentCard = {
+    ...editable,
+    output_schema: schema,
+  };
+  return agentCardToSystemPrompt(card);
+}
+
+// ─── Editable List Component ────────────────────────────────────────────────
+function EditableList({
+  items,
+  onChange,
+  placeholder,
+  ordered = false,
+}: {
+  items: string[];
+  onChange: (items: string[]) => void;
+  placeholder?: string;
+  ordered?: boolean;
+}) {
+  const update = (index: number, value: string) => {
+    const next = [...items];
+    next[index] = value;
+    onChange(next);
+  };
+  const remove = (index: number) => onChange(items.filter((_, i) => i !== index));
+  const add = () => onChange([...items, '']);
+
+  return (
+    <div className="space-y-1">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-1">
+          {ordered && <span className="text-[10px] text-muted-foreground w-4 shrink-0">{i + 1}.</span>}
+          <Input
+            value={item}
+            onChange={e => update(i, e.target.value)}
+            className="text-xs h-7"
+            placeholder={placeholder}
+          />
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => remove(i)}>
+            <Trash2 className="h-3 w-3 text-destructive" />
+          </Button>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" className="h-6 text-[10px]" onClick={add}>
+        <Plus className="h-3 w-3 mr-1" /> Adicionar
+      </Button>
+    </div>
+  );
+}
+
+// ─── Section wrapper ────────────────────────────────────────────────────────
+function FieldSection({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-semibold uppercase tracking-wide">{label}</Label>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      {children}
+    </div>
+  );
 }
 
 export function StrategyAdminPanel() {
   const [configs, setConfigs] = useState<Record<string, AgentConfig>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
-  // Load configs from database
   useEffect(() => {
     const loadConfigs = async () => {
       const initial: Record<string, AgentConfig> = {};
       AGENT_ORDER.forEach(key => {
-        initial[key] = { prompt: DEFAULT_PROMPTS[key] || '', active: true, saved: true };
+        const card = AGENT_CARDS[key];
+        initial[key] = {
+          card: card ? agentCardToEditable(card) : agentCardToEditable({ id: key, name: key, version: '1.0', role: '', mission: '', capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [], reasoning_protocol: [], output_schema: {}, quality_standards: [], anti_patterns: [], error_handling: '', handoff: '' }),
+          active: true,
+          saved: true,
+        };
       });
 
       const { data } = await supabase
@@ -50,11 +156,13 @@ export function StrategyAdminPanel() {
       if (data) {
         for (const row of data as any[]) {
           if (initial[row.agent_type]) {
+            // If DB has a stored agent_card_json, restore it; otherwise keep default
+            const storedCard = (row as any).agent_card_json;
             initial[row.agent_type] = {
-              prompt: row.system_prompt || DEFAULT_PROMPTS[row.agent_type],
+              card: storedCard ? { ...initial[row.agent_type].card, ...storedCard } : initial[row.agent_type].card,
               active: row.is_active ?? true,
               saved: true,
-              dbId: row.id
+              dbId: row.id,
             };
           }
         }
@@ -66,30 +174,42 @@ export function StrategyAdminPanel() {
     loadConfigs();
   }, []);
 
+  const updateCard = useCallback((agentKey: string, field: keyof EditableAgentCard, value: any) => {
+    setConfigs(prev => ({
+      ...prev,
+      [agentKey]: {
+        ...prev[agentKey],
+        card: { ...prev[agentKey].card, [field]: value },
+        saved: false,
+      },
+    }));
+  }, []);
+
   const handleSave = async (agentKey: string) => {
     setSaving(agentKey);
     const config = configs[agentKey];
+    const systemPrompt = editableToSystemPrompt(config.card);
 
     try {
+      const payload: any = {
+        system_prompt: systemPrompt,
+        is_active: config.active,
+        agent_card_json: config.card,
+      };
+
       if (config.dbId) {
-        // Update existing
         await supabase
           .from('strategy_agent_configs')
-          .update({
-            system_prompt: config.prompt,
-            is_active: config.active
-          } as any)
+          .update(payload)
           .eq('id', config.dbId);
       } else {
-        // Insert new
         const info = AGENT_INFO[agentKey];
         const { data } = await supabase
           .from('strategy_agent_configs')
           .insert({
             agent_type: agentKey,
             agent_name: info?.name || agentKey,
-            system_prompt: config.prompt,
-            is_active: config.active
+            ...payload,
           } as any)
           .select()
           .single();
@@ -97,18 +217,41 @@ export function StrategyAdminPanel() {
         if (data) {
           setConfigs(prev => ({
             ...prev,
-            [agentKey]: { ...prev[agentKey], dbId: (data as any).id }
+            [agentKey]: { ...prev[agentKey], dbId: (data as any).id },
           }));
         }
       }
 
       setConfigs(prev => ({ ...prev, [agentKey]: { ...prev[agentKey], saved: true } }));
-      toast.success(`Configuração do ${AGENT_INFO[agentKey]?.name} salva`);
+      toast.success(`Agent Card "${config.card.name}" salvo com sucesso`);
     } catch (err: any) {
       toast.error(`Erro ao salvar: ${err.message}`);
     } finally {
       setSaving(null);
     }
+  };
+
+  const handleReset = (agentKey: string) => {
+    const card = AGENT_CARDS[agentKey];
+    if (!card) return;
+    setConfigs(prev => ({
+      ...prev,
+      [agentKey]: {
+        ...prev[agentKey],
+        card: agentCardToEditable(card),
+        active: true,
+        saved: false,
+      },
+    }));
+    toast.info('Agent Card restaurado ao padrão');
+  };
+
+  const copyPrompt = (agentKey: string) => {
+    const config = configs[agentKey];
+    if (!config) return;
+    const prompt = editableToSystemPrompt(config.card);
+    navigator.clipboard.writeText(prompt);
+    toast.success('System prompt copiado!');
   };
 
   if (loading) {
@@ -123,78 +266,185 @@ export function StrategyAdminPanel() {
     <div className="space-y-3">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Configuração dos Agentes</CardTitle>
+          <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Edite os prompts, ative/desative agentes e configure a lógica de execução. As alterações são salvas no banco.
+          <p className="text-sm text-muted-foreground">
+            Edite todos os campos de cada Agent Card. O system prompt é gerado automaticamente a partir dos campos.
           </p>
         </CardContent>
       </Card>
 
-      <ScrollArea className="h-[600px] pr-2">
-        <div className="space-y-3">
+      <ScrollArea className="h-[650px] pr-2">
+        <div className="space-y-2">
           {AGENT_ORDER.map((agentKey, index) => {
             const info = AGENT_INFO[agentKey];
-            const config = configs[agentKey] || { prompt: '', active: true, saved: true };
+            const config = configs[agentKey];
+            if (!config) return null;
+            const { card } = config;
+            const isExpanded = expandedAgent === agentKey;
 
             return (
-              <Card key={agentKey}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{info.icon}</span>
-                      <CardTitle className="text-sm">{info.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs">#{index + 1}</Badge>
-                      {config.dbId && <Badge variant="secondary" className="text-[10px]">Salvo</Badge>}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Ativo</span>
-                        <Switch
-                          checked={config.active}
-                          onCheckedChange={v => setConfigs(prev => ({
-                            ...prev,
-                            [agentKey]: { ...prev[agentKey], active: v, saved: false }
-                          }))}
-                        />
+              <Card key={agentKey} className={!config.saved ? 'ring-1 ring-primary/50' : ''}>
+                <Collapsible open={isExpanded} onOpenChange={() => setExpandedAgent(isExpanded ? null : agentKey)}>
+                  <CardHeader className="pb-2">
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between cursor-pointer group">
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          <span className="text-lg">{info.icon}</span>
+                          <CardTitle className="text-sm group-hover:underline">{card.name}</CardTitle>
+                          <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
+                          <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
+                          {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
+                        </div>
+                        <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                          <span className="text-xs text-muted-foreground">Ativo</span>
+                          <Switch
+                            checked={config.active}
+                            onCheckedChange={v => setConfigs(prev => ({
+                              ...prev,
+                              [agentKey]: { ...prev[agentKey], active: v, saved: false },
+                            }))}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-2">
-                  <Textarea
-                    value={config.prompt}
-                    onChange={e => setConfigs(prev => ({
-                      ...prev,
-                      [agentKey]: { ...prev[agentKey], prompt: e.target.value, saved: false }
-                    }))}
-                    rows={3}
-                    className="text-xs"
-                    placeholder="Instruções do agente..."
-                  />
-                  <div className="flex justify-between items-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setConfigs(prev => ({
-                        ...prev,
-                        [agentKey]: { ...prev[agentKey], prompt: DEFAULT_PROMPTS[agentKey], active: true, saved: false }
-                      }))}
-                    >
-                      <RotateCcw className="h-3 w-3 mr-1" />
-                      Resetar
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleSave(agentKey)}
-                      disabled={config.saved || saving === agentKey}
-                    >
-                      {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
-                      Salvar
-                    </Button>
-                  </div>
-                </CardContent>
+                    </CollapsibleTrigger>
+                    {!isExpanded && (
+                      <p className="text-[11px] text-muted-foreground mt-1 ml-9 line-clamp-1">{card.mission}</p>
+                    )}
+                  </CardHeader>
+
+                  <CollapsibleContent>
+                    <CardContent className="pt-0 space-y-4">
+                      <Tabs defaultValue="identity" className="w-full">
+                        <TabsList className="w-full grid grid-cols-5 h-8">
+                          <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
+                          <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
+                          <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
+                          <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
+                          <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+                        </TabsList>
+
+                        {/* ─── IDENTITY TAB ─── */}
+                        <TabsContent value="identity" className="space-y-3 mt-3">
+                          <div className="grid grid-cols-3 gap-2">
+                            <FieldSection label="ID">
+                              <Input value={card.id} onChange={e => updateCard(agentKey, 'id', e.target.value)} className="text-xs h-8" />
+                            </FieldSection>
+                            <FieldSection label="Name">
+                              <Input value={card.name} onChange={e => updateCard(agentKey, 'name', e.target.value)} className="text-xs h-8" />
+                            </FieldSection>
+                            <FieldSection label="Version">
+                              <Input value={card.version} onChange={e => updateCard(agentKey, 'version', e.target.value)} className="text-xs h-8" />
+                            </FieldSection>
+                          </div>
+
+                          <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+                            <Textarea value={card.role} onChange={e => updateCard(agentKey, 'role', e.target.value)} rows={2} className="text-xs" />
+                          </FieldSection>
+
+                          <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+                            <Textarea value={card.mission} onChange={e => updateCard(agentKey, 'mission', e.target.value)} rows={2} className="text-xs" />
+                          </FieldSection>
+
+                          <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
+                            <Input value={card.handoff} onChange={e => updateCard(agentKey, 'handoff', e.target.value)} className="text-xs h-8" />
+                          </FieldSection>
+                        </TabsContent>
+
+                        {/* ─── CONTRACTS TAB ─── */}
+                        <TabsContent value="contracts" className="space-y-3 mt-3">
+                          <FieldSection label="Capabilities" hint="Lista de tarefas que o agente é capaz de executar">
+                            <EditableList items={card.capabilities} onChange={v => updateCard(agentKey, 'capabilities', v)} placeholder="Capacidade..." />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Non-Capabilities" hint="Lista explícita do que o agente NÃO deve fazer">
+                            <EditableList items={card.non_capabilities} onChange={v => updateCard(agentKey, 'non_capabilities', v)} placeholder="Restrição..." />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Inputs" hint="Tipos de dados aceitos pelo agente">
+                            <EditableList items={card.inputs} onChange={v => updateCard(agentKey, 'inputs', v)} placeholder="Tipo de dado..." />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Context Dependencies" hint="Dados da memória estratégica necessários">
+                            <EditableList items={card.context_dependencies} onChange={v => updateCard(agentKey, 'context_dependencies', v)} placeholder="Dependência..." />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Output Schema" hint="JSON schema obrigatório para a saída do agente">
+                            <Textarea
+                              value={card.output_schema}
+                              onChange={e => updateCard(agentKey, 'output_schema', e.target.value)}
+                              rows={8}
+                              className="text-xs font-mono"
+                              placeholder='{ "campo": "tipo" }'
+                            />
+                          </FieldSection>
+                        </TabsContent>
+
+                        {/* ─── REASONING TAB ─── */}
+                        <TabsContent value="reasoning" className="space-y-3 mt-3">
+                          <FieldSection label="Reasoning Protocol" hint="Passos ordenados que o agente deve seguir ao executar">
+                            <EditableList items={card.reasoning_protocol} onChange={v => updateCard(agentKey, 'reasoning_protocol', v)} placeholder="Passo..." ordered />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Error Handling" hint="Como o agente reage quando dados são insuficientes">
+                            <Textarea value={card.error_handling} onChange={e => updateCard(agentKey, 'error_handling', e.target.value)} rows={2} className="text-xs" />
+                          </FieldSection>
+                        </TabsContent>
+
+                        {/* ─── QUALITY TAB ─── */}
+                        <TabsContent value="quality" className="space-y-3 mt-3">
+                          <FieldSection label="Quality Standards" hint="Critérios que definem se o output é aceitável">
+                            <EditableList items={card.quality_standards} onChange={v => updateCard(agentKey, 'quality_standards', v)} placeholder="Padrão de qualidade..." />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Anti-Patterns" hint="Comportamentos proibidos que devem ser evitados">
+                            <EditableList items={card.anti_patterns} onChange={v => updateCard(agentKey, 'anti_patterns', v)} placeholder="Anti-pattern..." />
+                          </FieldSection>
+                        </TabsContent>
+
+                        {/* ─── PROMPT PREVIEW TAB ─── */}
+                        <TabsContent value="prompt" className="space-y-3 mt-3">
+                          <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Somente leitura.">
+                            <Textarea
+                              value={editableToSystemPrompt(card)}
+                              readOnly
+                              rows={15}
+                              className="text-xs font-mono bg-muted/50"
+                            />
+                          </FieldSection>
+                          <Button variant="outline" size="sm" onClick={() => copyPrompt(agentKey)}>
+                            <Copy className="h-3 w-3 mr-1" /> Copiar Prompt
+                          </Button>
+                        </TabsContent>
+                      </Tabs>
+
+                      {/* ─── Actions ─── */}
+                      <div className="flex justify-between items-center pt-2 border-t">
+                        <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
+                          <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
+                        </Button>
+                        <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey}>
+                          {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+                          Salvar Agent Card
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
               </Card>
             );
           })}
