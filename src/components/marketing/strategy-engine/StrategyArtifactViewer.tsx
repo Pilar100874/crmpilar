@@ -22,6 +22,7 @@ interface Props {
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
   runningAgents?: Set<string>;
+  agentInfo?: AgentInfoMap;
 }
 
 export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set() }: Props) {
