@@ -45,6 +45,7 @@ interface AgentConfig {
   customAgentId?: string;
   icon?: string;
   color?: string;
+  dependencies: string[];
 }
 
 function agentCardToEditable(card: AgentCard): EditableAgentCard {
@@ -160,6 +161,7 @@ export function StrategyAdminPanel() {
           isCustom: false,
           icon: info?.icon || '🤖',
           color: info?.color,
+          dependencies: AGENT_DEPENDENCIES[key] ?? [],
         };
       });
 
@@ -178,6 +180,7 @@ export function StrategyAdminPanel() {
               saved: true,
               dbId: row.id,
               isCustom: false,
+              dependencies: storedCard?.dependencies ?? initial[row.agent_type]?.dependencies ?? AGENT_DEPENDENCIES[row.agent_type] ?? [],
             };
           }
         }
@@ -239,6 +242,7 @@ export function StrategyAdminPanel() {
             customAgentId: ca.id,
             icon: ca.icon,
             color: ca.color,
+            dependencies: ca.dependencies || [],
           };
         }
       }
@@ -270,14 +274,16 @@ export function StrategyAdminPanel() {
           description: config.card.mission,
           system_prompt: systemPrompt,
           ativo: config.active,
-          agent_card_json: config.card,
+          agent_card_json: { ...config.card, dependencies: config.dependencies },
+          dependencies: config.dependencies,
         } as any);
       } else {
         // Save built-in agent via strategy_agent_configs table
+        const cardWithDeps = { ...config.card, dependencies: config.dependencies };
         const payload: any = {
           system_prompt: systemPrompt,
           is_active: config.active,
-          agent_card_json: config.card,
+          agent_card_json: cardWithDeps,
         };
 
         if (config.dbId) {
@@ -328,6 +334,7 @@ export function StrategyAdminPanel() {
         card: agentCardToEditable(card),
         active: true,
         saved: false,
+        dependencies: AGENT_DEPENDENCIES[agentKey] ?? [],
       },
     }));
     toast.info('Agent Card restaurado ao padrão');
@@ -446,11 +453,11 @@ export function StrategyAdminPanel() {
                     {!isExpanded && (
                       <div className="ml-9 space-y-1">
                         <p className="text-[11px] text-muted-foreground line-clamp-1">{card.mission}</p>
-                        {(AGENT_DEPENDENCIES[agentKey] ?? []).length > 0 && (
+                        {(config.dependencies ?? []).length > 0 && (
                           <div className="flex items-center gap-1 flex-wrap">
                             <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                             <span className="text-[10px] text-muted-foreground">Depende de:</span>
-                            {(AGENT_DEPENDENCIES[agentKey] ?? []).map(dep => {
+                            {(config.dependencies ?? []).map(dep => {
                               const depInfo = AGENT_INFO[dep] || configs[dep]?.card;
                               const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                               const depName = depInfo?.name?.split(' ')[0] || dep;
@@ -508,27 +515,33 @@ export function StrategyAdminPanel() {
 
                           <Separator />
 
-                          <FieldSection label="Dependências de Execução" hint="Agentes que DEVEM ser concluídos antes deste poder executar">
+                          <FieldSection label="Dependências de Execução" hint="Clique para adicionar/remover. Agentes que DEVEM ser concluídos antes deste poder executar.">
                             <div className="flex flex-wrap gap-1">
                               {allAgentKeys.filter(k => k !== agentKey).map(dep => {
-                                const depDeps = AGENT_DEPENDENCIES[agentKey] ?? [];
-                                const isSelected = depDeps.includes(dep);
+                                const currentDeps = config.dependencies || [];
+                                const isSelected = currentDeps.includes(dep);
                                 const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                                 const depName = configs[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
                                 return (
                                   <Badge
                                     key={dep}
                                     variant={isSelected ? 'default' : 'outline'}
-                                    className="text-[10px] cursor-default gap-0.5"
+                                    className="text-[10px] cursor-pointer gap-0.5 hover:opacity-80 transition-opacity"
+                                    onClick={() => {
+                                      const newDeps = isSelected
+                                        ? currentDeps.filter((d: string) => d !== dep)
+                                        : [...currentDeps, dep];
+                                      setConfigs(prev => ({
+                                        ...prev,
+                                        [agentKey]: { ...prev[agentKey], dependencies: newDeps, saved: false },
+                                      }));
+                                    }}
                                   >
                                     {depIcon} {depName}
                                   </Badge>
                                 );
                               })}
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              As dependências dos agentes nativos são definidas automaticamente pelo sistema.
-                            </p>
                           </FieldSection>
                         </TabsContent>
 

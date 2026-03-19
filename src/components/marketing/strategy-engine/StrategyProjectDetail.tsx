@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useProjectDetail } from './hooks/useStrategyProjects';
 import { useStrategyEngine } from './hooks/useStrategyEngine';
 import { useCustomAgents } from './hooks/useCustomAgents';
-import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder } from './types';
+import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder, getMergedDependencies } from './types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +28,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
   // Merge hardcoded + custom agents
   const mergedInfo = useMemo(() => getMergedAgentInfo(customAgents), [customAgents]);
   const mergedOrder = useMemo(() => getMergedAgentOrder(customAgents), [customAgents]);
+  const mergedDeps = useMemo(() => getMergedDependencies(customAgents), [customAgents]);
 
   const {
     executeAgent, executeAllAgents, runPipeline, sendChatMessage,
@@ -161,6 +162,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             isPipelineRunning={isPipelineRunning}
             agentOrder={mergedOrder}
             agentInfo={mergedInfo}
+            dependencyMap={mergedDeps}
           />
         </TabsContent>
 

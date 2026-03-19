@@ -22,9 +22,10 @@ interface Props {
   isPipelineRunning: boolean;
   agentOrder: string[];
   agentInfo: Record<string, AgentInfo>;
+  dependencyMap?: Record<string, string[]>;
 }
 
-export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning, agentOrder, agentInfo }: Props) {
+export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning, agentOrder, agentInfo, dependencyMap }: Props) {
   const executionMap = new Map<string, AgentExecution>();
   executions.forEach(e => {
     const existing = executionMap.get(e.agent_type);
@@ -74,8 +75,9 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
             const isCompleted = execution?.status === 'completed';
             const isFailed = execution?.status === 'failed';
 
-            const deps = AGENT_DEPENDENCIES[agentKey] ?? [];
-            const unmetDeps = getUnmetDependencies(agentKey, completedAgents);
+            const resolvedDeps = dependencyMap || AGENT_DEPENDENCIES;
+            const deps = resolvedDeps[agentKey] ?? [];
+            const unmetDeps = getUnmetDependencies(agentKey, completedAgents, dependencyMap);
             const isBlocked = unmetDeps.length > 0;
 
             return (
