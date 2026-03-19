@@ -290,6 +290,11 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                   </Button>
                 </div>
               </TabsContent>
+              <TabsContent value="history" className="mt-0">
+                {selectedArtifact && (
+                  <ArtifactHistory projectId={projectId} artifactType={selectedArtifact.tipo} />
+                )}
+              </TabsContent>
             </ScrollArea>
           </Tabs>
 
