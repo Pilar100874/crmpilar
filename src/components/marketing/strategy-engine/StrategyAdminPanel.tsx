@@ -143,7 +143,7 @@ export function StrategyAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [estabId, setEstabId] = useState<string | undefined>(() => localStorage.getItem('estabelecimentoId') || undefined);
-  const { customAgents, createAgent, updateAgent: updateCustomAgent, deleteAgent: deleteCustomAgent, refetch: refetchCustomAgents } = useCustomAgents(estabId);
+  const { customAgents, loading: customLoading, createAgent, updateAgent: updateCustomAgent, deleteAgent: deleteCustomAgent, refetch: refetchCustomAgents } = useCustomAgents(estabId);
 
   // Resolve estabelecimento_id from auth if not in localStorage
   useEffect(() => {
