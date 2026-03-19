@@ -529,11 +529,39 @@ async function callAI(apiKey: string, systemPrompt: string, userPrompt: string):
 }
 
 function extractJSON(text: string): any {
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[1].trim());
+  // Try code block first
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch (_) { /* fall through */ }
   }
-  return JSON.parse(text.trim());
+
+  // Try to find outermost { ... }
+  const braceStart = text.indexOf('{');
+  const braceEnd = text.lastIndexOf('}');
+  if (braceStart !== -1 && braceEnd > braceStart) {
+    const candidate = text.substring(braceStart, braceEnd + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch (_) {
+      // Try fixing common issues: trailing commas, unescaped newlines in strings
+      try {
+        const cleaned = candidate
+          .replace(/,\s*([}\]])/g, '$1')           // trailing commas
+          .replace(/(['"])?([a-zA-Z_]\w*)\1\s*:/g, '"$2":') // unquoted keys
+          .replace(/:\s*'([^']*)'/g, ':"$1"');      // single-quoted values
+        return JSON.parse(cleaned);
+      } catch (_) { /* fall through */ }
+    }
+  }
+
+  // Last resort: try parsing the whole text
+  try {
+    return JSON.parse(text.trim());
+  } catch (e) {
+    throw new Error(`Não foi possível extrair JSON válido da resposta da IA. Erro: ${(e as Error).message}`);
+  }
 }
 
 /**
@@ -720,8 +748,22 @@ Deno.serve(async (req) => {
 
       try {
         const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory);
-        const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
-        const parsedResult = extractJSON(rawResult);
+        
+        // Retry up to 2 times if JSON extraction fails
+        let parsedResult: any;
+        let lastError: Error | null = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
+            parsedResult = extractJSON(rawResult);
+            lastError = null;
+            break;
+          } catch (e) {
+            lastError = e as Error;
+            console.warn(`Tentativa ${attempt + 1} falhou ao extrair JSON: ${(e as Error).message}`);
+          }
+        }
+        if (lastError) throw lastError;
         const duration = Date.now() - startTime;
 
         // Update execution
