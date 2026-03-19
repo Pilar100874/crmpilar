@@ -104,7 +104,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   vsl: {
     id: 'vsl',
-    name: 'VSL Writer – Roteirista de Video Sales Letter',
+    name: 'Roteirista de Vídeo',
     version: '1.0',
     role: 'Copywriter sênior de Video Sales Letters, treinado nas metodologias de Jon Benson, Todd Brown e Stefan Georgi.',
     mission: 'Criar roteiro de VSL completo, persuasivo e pronto para gravação que converta o público do ICP.',
