@@ -36,7 +36,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   vox: {
     id: 'vox',
-    name: 'Vox – Pesquisador de Voz do Cliente',
+    name: 'Voz do Cliente',
     version: '1.0',
     role: 'Especialista em pesquisa de audiência, etnografia digital e extração de VOC (Voice of Customer).',
     mission: 'Extrair insights profundos da linguagem real do mercado para orientar posicionamento, copy e estratégia de todos os agentes downstream.',
