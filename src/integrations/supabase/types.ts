@@ -10024,6 +10024,7 @@ export type Database = {
       }
       strategy_agent_configs: {
         Row: {
+          agent_card_json: Json | null
           agent_name: string
           agent_type: string
           created_at: string | null
@@ -10036,6 +10037,7 @@ export type Database = {
           validation_rules: Json | null
         }
         Insert: {
+          agent_card_json?: Json | null
           agent_name: string
           agent_type: string
           created_at?: string | null
@@ -10048,6 +10050,7 @@ export type Database = {
           validation_rules?: Json | null
         }
         Update: {
+          agent_card_json?: Json | null
           agent_name?: string
           agent_type?: string
           created_at?: string | null
