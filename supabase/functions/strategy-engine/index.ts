@@ -138,7 +138,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   funnel: {
-    name: 'Funnel Architect',
+    name: 'Arquiteto de Funil',
     type: 'specialist',
     systemPrompt: `Você é o FUNNEL ARCHITECT — engenheiro de funis de marketing com expertise em otimização de conversão e modelagem de unit economics.
 
