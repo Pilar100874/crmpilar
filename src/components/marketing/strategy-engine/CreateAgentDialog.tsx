@@ -98,7 +98,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [color, setColor] = useState('#8B5CF6');
   const [agentKey, setAgentKey] = useState('');
   const [description, setDescription] = useState('');
-  const [ordem, setOrdem] = useState(100);
+  const [ordem, setOrdem] = useState(AGENT_ORDER.length + existingKeys.length + 1);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
 
@@ -125,7 +125,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setDescription('');
     setIcon('🤖');
     setColor('#8B5CF6');
-    setOrdem(100);
+    setOrdem(AGENT_ORDER.length + existingKeys.length + 1);
     setDependencies([]);
     setAiDescription('');
   };

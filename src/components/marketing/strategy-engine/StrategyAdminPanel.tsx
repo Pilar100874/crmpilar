@@ -152,11 +152,14 @@ export function StrategyAdminPanel() {
       const initial: Record<string, AgentConfig> = {};
       AGENT_ORDER.forEach(key => {
         const card = AGENT_CARDS[key];
+        const info = AGENT_INFO[key];
         initial[key] = {
           card: card ? agentCardToEditable(card) : agentCardToEditable({ id: key, name: key, version: '1.0', role: '', mission: '', capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [], reasoning_protocol: [], output_schema: {}, quality_standards: [], anti_patterns: [], error_handling: '', handoff: '' }),
           active: true,
           saved: true,
           isCustom: false,
+          icon: info?.icon || '🤖',
+          color: info?.color,
         };
       });
 
