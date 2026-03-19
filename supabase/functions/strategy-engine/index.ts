@@ -1145,7 +1145,13 @@ REGRAS:
 
       // Execute agents sequentially, RE-READING memory from DB before each agent
       for (const exec of executions) {
-        const agent = AGENT_DEFINITIONS[exec.key];
+        const builtIn = AGENT_DEFINITIONS[exec.key];
+        const custom = (customAgentsList || []).find((a: any) => a.agent_key === exec.key);
+        const agent = builtIn || {
+          name: (custom as any)?.name || exec.key,
+          type: exec.key,
+          systemPrompt: (custom as any)?.system_prompt || '',
+        };
         const startTime = Date.now();
 
         // Mark as running
@@ -1159,9 +1165,9 @@ REGRAS:
           const { memory: latestMemory } = await getLatestMemory(supabase, projectId);
 
           // Log dependency status
-          const deps = AGENT_DEPENDENCIES[exec.key] || [];
-          const availableDeps = deps.filter(d => latestMemory[d]);
-          const missingDeps = deps.filter(d => !latestMemory[d]);
+          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : ((custom as any)?.dependencies || []);
+          const availableDeps = deps.filter((d: string) => latestMemory[d]);
+          const missingDeps = deps.filter((d: string) => !latestMemory[d]);
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
 
           // Build context-rich prompt with dependency injection
