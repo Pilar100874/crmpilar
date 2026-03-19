@@ -274,7 +274,8 @@ export function StrategyAdminPanel() {
           description: config.card.mission,
           system_prompt: systemPrompt,
           ativo: config.active,
-          agent_card_json: config.card,
+          agent_card_json: { ...config.card, dependencies: config.dependencies },
+          dependencies: config.dependencies,
         } as any);
       } else {
         // Save built-in agent via strategy_agent_configs table
