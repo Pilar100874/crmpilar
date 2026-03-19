@@ -9,12 +9,17 @@ interface Props {
   project: StrategyProject;
   executions: AgentExecution[];
   artifacts: StrategyArtifact[];
+  agentOrder?: string[];
+  agentInfo?: Record<string, { name: string; icon: string; color: string; description: string }>;
 }
 
-export function StrategyDashboard({ project, executions, artifacts }: Props) {
+export function StrategyDashboard({ project, executions, artifacts, agentOrder, agentInfo }: Props) {
+  const resolvedOrder = agentOrder || AGENT_ORDER;
+  const resolvedInfo = agentInfo || AGENT_INFO;
+
   const completedAgents = executions.filter(e => e.status === 'completed').length;
   const failedAgents = executions.filter(e => e.status === 'failed').length;
-  const totalAgents = AGENT_ORDER.length;
+  const totalAgents = resolvedOrder.length;
   const progress = Math.round((completedAgents / totalAgents) * 100);
 
   const totalDuration = executions.reduce((sum, e) => sum + (e.duration_ms || 0), 0);
@@ -103,8 +108,8 @@ export function StrategyDashboard({ project, executions, artifacts }: Props) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-            {AGENT_ORDER.map(agentKey => {
-              const info = AGENT_INFO[agentKey];
+            {resolvedOrder.map(agentKey => {
+              const info = resolvedInfo[agentKey] || { name: agentKey, icon: '🤖', color: '#888', description: '' };
               const exec = executions.find(e => e.agent_type === agentKey);
               const isCompleted = exec?.status === 'completed';
               const isFailed = exec?.status === 'failed';
@@ -148,7 +153,7 @@ export function StrategyDashboard({ project, executions, artifacts }: Props) {
             <div className="flex flex-wrap gap-1.5">
               {Object.keys(project.strategic_memory).map(key => (
                 <Badge key={key} variant="secondary" className="text-xs">
-                  {AGENT_INFO[key]?.icon} {AGENT_INFO[key]?.name || key}
+                  {resolvedInfo[key]?.icon || '📄'} {resolvedInfo[key]?.name || key}
                 </Badge>
               ))}
             </div>
