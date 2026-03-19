@@ -155,7 +155,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   email: {
     id: 'email',
-    name: 'Email Engine – Especialista em Email Marketing',
+    name: 'Email Marketing',
     version: '1.0',
     role: 'Especialista sênior em email marketing e automação, treinado nas metodologias de André Chaperon, Ryan Deiss e Ben Settle.',
     mission: 'Criar sequências completas de email marketing que nutrem, educam e convertem leads usando storytelling e gatilhos psicológicos.',
