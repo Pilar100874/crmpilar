@@ -257,6 +257,10 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                 <Pencil className="h-3 w-3 mr-1" />
                 Editar
               </TabsTrigger>
+              <TabsTrigger value="history" className="text-xs">
+                <History className="h-3 w-3 mr-1" />
+                Histórico
+              </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="max-h-[60vh] mt-3">
