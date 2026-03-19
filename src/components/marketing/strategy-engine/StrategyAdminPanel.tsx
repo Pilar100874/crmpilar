@@ -323,7 +323,10 @@ export function StrategyAdminPanel() {
                           <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
                           <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
                           <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-                          <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+                          <TabsTrigger value="prompt" className="text-[10px] gap-1">
+                            Prompt
+                            {!config.saved && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+                          </TabsTrigger>
                         </TabsList>
 
                         {/* ─── IDENTITY TAB ─── */}
