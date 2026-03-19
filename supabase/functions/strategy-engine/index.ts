@@ -244,7 +244,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, projectId, agentType, message, content } = await req.json();
+    const body = await req.json();
+    const { action, projectId, agentType, message, content, variationIndex, artifactId, validatorType, artifactContent } = body;
 
     // ACTION: Execute single agent
     if (action === 'execute_agent') {
