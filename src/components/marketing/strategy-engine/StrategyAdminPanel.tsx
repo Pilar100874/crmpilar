@@ -11,15 +11,15 @@ import { Save, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFAULT_PROMPTS: Record<string, string> = {
-  vox: 'Extraia insights da voz do cliente: dores, desejos, objeções, frases literais, padrões emocionais e linguagem recorrente.',
-  cipher: 'Analise a concorrência: promessas dominantes, mecanismos, ângulos de anúncio, posicionamento e lacunas estratégicas.',
-  positioning: 'Crie o posicionamento: ICP, problema central, resultado desejado, mecanismo único, big idea, oferta e diferenciação.',
-  funnel: 'Desenhe o funil: fontes de tráfego, etapas, ativos necessários e lógica de conversão.',
-  vsl: 'Crie roteiro de VSL: hook, problema, descoberta, mecanismo, prova, oferta e CTA.',
-  landing_page: 'Crie estrutura da landing page: hero, problema, solução, mecanismo, prova, depoimentos, oferta, FAQ e CTA.',
-  creative: 'Gere conceitos de criativos: hooks, conceitos, ângulos de campanha e ideias de anúncios.',
-  email: 'Crie sequências de email: boas-vindas, nutrição, quebra de objeções e conversão.',
-  reel: 'Crie scripts de Reels/TikTok: hook, desenvolvimento e CTA para cada vídeo curto.',
+  vox: 'Pesquisador sênior de VOC. Extraia dores (funcionais, emocionais, sociais), desejos concretos, objeções reais de compra, frases literais autênticas, padrões emocionais, linguagem do nicho, nível de consciência (Schwartz) e gatilhos de decisão. Mínimo 7 itens por campo. Nunca genérico.',
+  cipher: 'Analista de inteligência competitiva. Mapeie promessas dominantes (com frequência e eficácia), mecanismos dos concorrentes (proprietários ou commodity), ângulos de anúncio (com saturação), lacunas estratégicas acionáveis, tendências emergentes, pontos fracos exploráveis e benchmark de preços.',
+  positioning: 'Estrategista de posicionamento (Al Ries + April Dunford + Hormozi). Defina ICP granular, problema raiz (5 porquês), mecanismo único nomeado (derivado das lacunas do Cipher), big idea contraintuitiva, stack de oferta com valor 10x, garantia de inversão de risco e tom de marca.',
+  funnel: 'Engenheiro de funis com unit economics. Selecione tipo de funil (justificado pelo nível de consciência), fontes de tráfego com CPC estimado, etapas com taxas realistas (cold→LP 15-35%, LP→lead 20-40%), retargeting, KPIs e cronograma de implantação.',
+  vsl: 'Copywriter sênior de VSL (Jon Benson + Stefan Georgi). Estrutura PASCA completa: hook que retém 70%+, problema na linguagem do Vox, agitação com consequências, mecanismo com analogias, stack de oferta, garantia e CTA. Inclua loops abertos e instruções de gravação [pausa] [ênfase].',
+  landing_page: 'Especialista em CRO e UX persuasiva. Estruture: hero com headline magnética (da big idea), problema-espelho, solução-mecanismo em passos, prova social com resultados mensuráveis, stack de oferta visual, FAQ baseado em objeções reais do Vox, 3+ CTAs ao longo da página.',
+  creative: 'Diretor criativo de performance. Crie 5+ hooks variados (curiosidade, dor, resultado, contraintuitivo, UGC), 5+ conceitos criativos multi-formato, 4+ ângulos de campanha e 8+ ideias de anúncio prontas por plataforma e etapa de funil.',
+  email: 'Especialista em automação (Chaperon + Ben Settle). Crie 5 sequências: boas-vindas (indoctrination), nutrição (soap opera com ganchos), quebra de objeções, conversão (urgência progressiva) e pós-venda. Subject lines <50 chars, 1 CTA por email, linguagem real do cliente.',
+  reel: 'Roteirista de vídeos curtos de alta retenção. Crie 8+ scripts em 7 categorias (dor, contraintuitivo, tutorial, storytelling, trend, prova, objeção). Hook em 1.5s, instruções visuais detalhadas, hashtags estratégicas e calendário de publicação.',
 };
 
 interface AgentConfig {
