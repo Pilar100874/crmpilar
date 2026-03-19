@@ -84,6 +84,8 @@ const MarketingHub: React.FC = () => {
 
   const renderTabContent = (tabId: string) => {
     switch (tabId) {
+      case 'strategy-engine':
+        return <StrategyEngine />;
       case 'ai-studio':
         return <AICreativeStudio />;
       case 'video-editor':
