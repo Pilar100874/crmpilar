@@ -367,7 +367,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   reel: {
-    name: 'Reel Writer',
+    name: 'Roteirista de Reels',
     type: 'specialist',
     systemPrompt: `Você é o REEL WRITER — roteirista especializado em conteúdo vertical de alta retenção para Instagram Reels, TikTok e YouTube Shorts, com expertise em storytelling rápido e viralização orgânica.
 

@@ -172,7 +172,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   reel: {
     id: 'reel',
-    name: 'Reel Writer – Roteirista de Vídeos Curtos',
+    name: 'Roteirista de Reels',
     version: '1.0',
     role: 'Roteirista especializado em conteúdo vertical de alta retenção para Instagram Reels, TikTok e YouTube Shorts.',
     mission: 'Criar scripts completos para vídeos curtos que gerem alcance orgânico, construam autoridade e conduzam ao funil de vendas.',
