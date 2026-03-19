@@ -82,8 +82,11 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => exportPDF(projectId)}>
-                  📄 Exportar PDF
+                <DropdownMenuItem onClick={() => exportPDF(projectId, 'resumida')}>
+                  📋 PDF Resumido (Executivo)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportPDF(projectId, 'completa')}>
+                  📄 PDF Completo (Detalhado)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportMarkdown(projectId)}>
                   📝 Exportar Markdown
