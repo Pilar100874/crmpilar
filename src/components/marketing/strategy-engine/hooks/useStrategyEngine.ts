@@ -222,53 +222,73 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     }
   };
 
-  // Helper: extract readable text from any JSON value
-  const extractText = (value: any, depth = 0): string[] => {
+  // Structured line types for professional PDF rendering
+  type PdfLine = { type: 'heading'; text: string } | { type: 'subheading'; text: string } | { type: 'body'; text: string } | { type: 'bullet'; text: string; level: number } | { type: 'keyvalue'; label: string; value: string } | { type: 'spacer' };
+
+  const extractStructured = (value: any, depth = 0): PdfLine[] => {
     if (value === null || value === undefined) return [];
     if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (!trimmed) return [];
-      return [trimmed];
+      const t = value.trim();
+      return t ? [{ type: 'body', text: t }] : [];
     }
-    if (typeof value === 'number' || typeof value === 'boolean') return [String(value)];
+    if (typeof value === 'number' || typeof value === 'boolean') return [{ type: 'body', text: String(value) }];
+
     if (Array.isArray(value)) {
-      const lines: string[] = [];
+      const lines: PdfLine[] = [];
       for (const item of value) {
-        if (typeof item === 'string') {
-          lines.push(`- ${item.trim()}`);
+        if (typeof item === 'string' && item.trim()) {
+          lines.push({ type: 'bullet', text: item.trim(), level: depth });
         } else if (typeof item === 'object' && item !== null) {
-          lines.push(...extractText(item, depth + 1));
+          lines.push(...extractStructured(item, depth + 1));
         }
       }
       return lines;
     }
+
     if (typeof value === 'object') {
-      const lines: string[] = [];
+      const lines: PdfLine[] = [];
       for (const [key, val] of Object.entries(value)) {
         const label = key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
         if (typeof val === 'string' && val.trim()) {
-          lines.push(`${label}: ${val.trim()}`);
+          // Short values as key-value, long values as heading + body
+          if (val.length > 120) {
+            lines.push({ type: depth === 0 ? 'heading' : 'subheading', text: label });
+            lines.push({ type: 'body', text: val.trim() });
+            lines.push({ type: 'spacer' });
+          } else {
+            lines.push({ type: 'keyvalue', label, value: val.trim() });
+          }
         } else if (typeof val === 'number' || typeof val === 'boolean') {
-          lines.push(`${label}: ${val}`);
+          lines.push({ type: 'keyvalue', label, value: String(val) });
         } else if (Array.isArray(val)) {
-          lines.push(`${label}:`);
+          lines.push({ type: depth === 0 ? 'heading' : 'subheading', text: label });
           for (const item of val) {
-            if (typeof item === 'string') {
-              lines.push(`  - ${item.trim()}`);
+            if (typeof item === 'string' && item.trim()) {
+              lines.push({ type: 'bullet', text: item.trim(), level: depth });
             } else if (typeof item === 'object' && item !== null) {
-              const subLines = extractText(item, depth + 1);
-              lines.push(...subLines.map(l => `  ${l}`));
+              lines.push(...extractStructured(item, depth + 1));
             }
           }
+          lines.push({ type: 'spacer' });
         } else if (typeof val === 'object' && val !== null) {
-          lines.push(`${label}:`);
-          const subLines = extractText(val, depth + 1);
-          lines.push(...subLines.map(l => `  ${l}`));
+          lines.push({ type: depth === 0 ? 'heading' : 'subheading', text: label });
+          lines.push(...extractStructured(val, depth + 1));
+          lines.push({ type: 'spacer' });
         }
       }
       return lines;
     }
     return [];
+  };
+
+  // Legacy helper for summary extraction
+  const extractText = (value: any): string[] => {
+    return extractStructured(value).filter(l => l.type !== 'spacer').map(l => {
+      if (l.type === 'keyvalue') return `${l.label}: ${l.value}`;
+      if (l.type === 'bullet') return `- ${l.text}`;
+      return l.text;
+    });
   };
 
   // Helper: extract a one-paragraph summary from content
