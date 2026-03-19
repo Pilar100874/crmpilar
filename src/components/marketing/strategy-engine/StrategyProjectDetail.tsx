@@ -162,6 +162,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             isPipelineRunning={isPipelineRunning}
             agentOrder={mergedOrder}
             agentInfo={mergedInfo}
+            dependencyMap={mergedDeps}
           />
         </TabsContent>
 
