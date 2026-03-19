@@ -401,7 +401,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       if (mode === 'resumida') {
         // Summary mode: one short paragraph
-        const summary = extractSummary(art.conteudo);
+        const summary = sanitizeForPDF(extractSummary(art.conteudo));
         if (summary) {
           doc.setFontSize(10);
           doc.setTextColor(60, 60, 60);
