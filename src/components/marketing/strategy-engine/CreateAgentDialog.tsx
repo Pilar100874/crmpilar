@@ -1,16 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Loader2, Trash2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Loader2, Trash2, Copy } from 'lucide-react';
 import { AGENT_ORDER } from './types';
+import { agentCardToSystemPrompt, AgentCard } from './agent-cards';
 import { toast } from 'sonner';
 
 const ICON_OPTIONS = ['🤖', '🧠', '📊', '🎯', '💡', '🔬', '📈', '🛠️', '🎨', '📝', '🔍', '⚡', '🌟', '🏆', '📦', '🗂️', '💬', '🎪'];
 const COLOR_OPTIONS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#06B6D4', '#84CC16', '#A855F7'];
+
+interface EditableAgentCard {
+  id: string;
+  name: string;
+  version: string;
+  role: string;
+  mission: string;
+  capabilities: string[];
+  non_capabilities: string[];
+  inputs: string[];
+  context_dependencies: string[];
+  reasoning_protocol: string[];
+  output_schema: string;
+  quality_standards: string[];
+  anti_patterns: string[];
+  error_handling: string;
+  handoff: string;
+}
+
+function editableToSystemPrompt(editable: EditableAgentCard): string {
+  let schema: Record<string, any>;
+  try { schema = JSON.parse(editable.output_schema); } catch { schema = {}; }
+  const card: AgentCard = { ...editable, output_schema: schema };
+  return agentCardToSystemPrompt(card);
+}
+
+// ─── Editable List ──────────────────────────────────────────────────────────
+function EditableList({ items, onChange, placeholder, ordered = false }: {
+  items: string[]; onChange: (items: string[]) => void; placeholder?: string; ordered?: boolean;
+}) {
+  const update = (i: number, v: string) => { const n = [...items]; n[i] = v; onChange(n); };
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  const add = () => onChange([...items, '']);
+
+  return (
+    <div className="space-y-1">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-1">
+          {ordered && <span className="text-[10px] text-muted-foreground w-4 shrink-0">{i + 1}.</span>}
+          <Input value={item} onChange={e => update(i, e.target.value)} className="text-xs h-7" placeholder={placeholder} />
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => remove(i)}>
+            <Trash2 className="h-3 w-3 text-destructive" />
+          </Button>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" className="h-6 text-[10px]" onClick={add}>
+        <Plus className="h-3 w-3 mr-1" /> Adicionar
+      </Button>
+    </div>
+  );
+}
+
+function FieldSection({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-semibold uppercase tracking-wide">{label}</Label>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+const defaultCard: EditableAgentCard = {
+  id: '', name: '', version: '1.0', role: '', mission: '',
+  capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [],
+  reasoning_protocol: [], output_schema: '{}', quality_standards: [], anti_patterns: [],
+  error_handling: '', handoff: '',
+};
 
 interface Props {
   onCreate: (agent: any) => Promise<any>;
@@ -20,51 +91,69 @@ interface Props {
 export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    agent_key: '',
-    name: '',
-    icon: '🤖',
-    color: '#8B5CF6',
-    description: '',
-    system_prompt: '',
-    dependencies: [] as string[],
-    output_schema: '{}',
-    ordem: 100,
-  });
+  const [icon, setIcon] = useState('🤖');
+  const [color, setColor] = useState('#8B5CF6');
+  const [agentKey, setAgentKey] = useState('');
+  const [description, setDescription] = useState('');
+  const [ordem, setOrdem] = useState(100);
+  const [dependencies, setDependencies] = useState<string[]>([]);
+  const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
+
+  const updateCard = useCallback((field: keyof EditableAgentCard, value: any) => {
+    setCard(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const toggleDep = (dep: string) => {
+    setDependencies(prev =>
+      prev.includes(dep) ? prev.filter(d => d !== dep) : [...prev, dep]
+    );
+  };
+
+  const generatedPrompt = editableToSystemPrompt(card);
+
+  const copyPrompt = () => {
+    navigator.clipboard.writeText(generatedPrompt);
+    toast.success('System prompt copiado!');
+  };
+
+  const resetForm = () => {
+    setCard({ ...defaultCard });
+    setAgentKey('');
+    setDescription('');
+    setIcon('🤖');
+    setColor('#8B5CF6');
+    setOrdem(100);
+    setDependencies([]);
+  };
 
   const handleSubmit = async () => {
-    if (!form.agent_key.trim()) { toast.error('Informe uma chave para o agente'); return; }
-    if (!form.name.trim()) { toast.error('Informe o nome do agente'); return; }
-    if (existingKeys.includes(form.agent_key)) { toast.error('Já existe um agente com essa chave'); return; }
-    if (!/^[a-z_]+$/.test(form.agent_key)) { toast.error('A chave deve conter apenas letras minúsculas e _'); return; }
+    if (!agentKey.trim()) { toast.error('Informe uma chave para o agente'); return; }
+    if (!card.name.trim()) { toast.error('Informe o nome do agente'); return; }
+    if (existingKeys.includes(agentKey)) { toast.error('Já existe um agente com essa chave'); return; }
+    if (!/^[a-z_]+$/.test(agentKey)) { toast.error('A chave deve conter apenas letras minúsculas e _'); return; }
 
     setSaving(true);
     let schema = {};
-    try { schema = JSON.parse(form.output_schema); } catch { /* use empty */ }
+    try { schema = JSON.parse(card.output_schema); } catch { /* empty */ }
 
     const result = await onCreate({
-      ...form,
+      agent_key: agentKey,
+      name: card.name,
+      icon,
+      color,
+      description,
+      system_prompt: generatedPrompt,
+      dependencies,
       output_schema: schema,
+      ordem,
+      agent_card_json: card,
     });
 
     setSaving(false);
     if (result) {
       setOpen(false);
-      setForm({
-        agent_key: '', name: '', icon: '🤖', color: '#8B5CF6',
-        description: '', system_prompt: '', dependencies: [],
-        output_schema: '{}', ordem: 100,
-      });
+      resetForm();
     }
-  };
-
-  const toggleDep = (dep: string) => {
-    setForm(prev => ({
-      ...prev,
-      dependencies: prev.dependencies.includes(dep)
-        ? prev.dependencies.filter(d => d !== dep)
-        : [...prev.dependencies, dep],
-    }));
   };
 
   return (
@@ -75,87 +164,58 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
           Novo Agente
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="text-xl">{form.icon}</span>
+            <span className="text-xl">{icon}</span>
             Criar Novo Agente
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Identity */}
-          <div className="grid grid-cols-2 gap-3">
+        {/* ─── Meta fields ─── */}
+        <div className="space-y-3 mb-2">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Chave (ID único)</Label>
               <Input
-                value={form.agent_key}
-                onChange={e => setForm(prev => ({ ...prev, agent_key: e.target.value.toLowerCase().replace(/[^a-z_]/g, '') }))}
+                value={agentKey}
+                onChange={e => setAgentKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))}
                 placeholder="meu_agente"
                 className="text-sm h-9"
               />
               <p className="text-[10px] text-muted-foreground">Apenas letras minúsculas e _</p>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Nome do Agente</Label>
-              <Input
-                value={form.name}
-                onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Meu Agente Personalizado"
-                className="text-sm h-9"
-              />
+              <Label className="text-xs">Descrição Curta</Label>
+              <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="O que este agente faz..." className="text-sm h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Ordem na Timeline</Label>
+              <Input type="number" value={ordem} onChange={e => setOrdem(parseInt(e.target.value) || 100)} className="text-sm h-9" />
             </div>
           </div>
 
-          {/* Icon & Color */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Ícone</Label>
               <div className="flex flex-wrap gap-1">
-                {ICON_OPTIONS.map(icon => (
-                  <button
-                    key={icon}
-                    onClick={() => setForm(prev => ({ ...prev, icon }))}
-                    className={`text-lg p-1 rounded cursor-pointer hover:bg-muted ${form.icon === icon ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
-                  >
-                    {icon}
-                  </button>
+                {ICON_OPTIONS.map(ic => (
+                  <button key={ic} onClick={() => setIcon(ic)}
+                    className={`text-lg p-1 rounded cursor-pointer hover:bg-muted ${icon === ic ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+                  >{ic}</button>
                 ))}
               </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Cor</Label>
               <div className="flex flex-wrap gap-1">
-                {COLOR_OPTIONS.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => setForm(prev => ({ ...prev, color }))}
-                    className={`w-6 h-6 rounded-full cursor-pointer ${form.color === color ? 'ring-2 ring-primary ring-offset-2' : ''}`}
-                    style={{ backgroundColor: color }}
+                {COLOR_OPTIONS.map(c => (
+                  <button key={c} onClick={() => setColor(c)}
+                    className={`w-6 h-6 rounded-full cursor-pointer ${color === c ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                    style={{ backgroundColor: c }}
                   />
                 ))}
               </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Descrição Curta</Label>
-              <Input
-                value={form.description}
-                onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="O que este agente faz..."
-                className="text-sm h-9"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Ordem na Timeline</Label>
-              <Input
-                type="number"
-                value={form.ordem}
-                onChange={e => setForm(prev => ({ ...prev, ordem: parseInt(e.target.value) || 100 }))}
-                className="text-sm h-9"
-              />
             </div>
           </div>
 
@@ -164,53 +224,128 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
             <Label className="text-xs">Dependências (dados de quais agentes este agente precisa)</Label>
             <div className="flex flex-wrap gap-1">
               {[...AGENT_ORDER, ...existingKeys.filter(k => !AGENT_ORDER.includes(k))].map(dep => (
-                <Badge
-                  key={dep}
-                  variant={form.dependencies.includes(dep) ? 'default' : 'outline'}
-                  className="text-xs cursor-pointer"
-                  onClick={() => toggleDep(dep)}
-                >
-                  {dep}
-                </Badge>
+                <Badge key={dep} variant={dependencies.includes(dep) ? 'default' : 'outline'}
+                  className="text-xs cursor-pointer" onClick={() => toggleDep(dep)}
+                >{dep}</Badge>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* System Prompt */}
-          <div className="space-y-1">
-            <Label className="text-xs">System Prompt</Label>
-            <p className="text-[10px] text-muted-foreground">
-              Instruções detalhadas para a IA. O agente receberá a descrição do negócio e os dados dos agentes dependentes automaticamente.
-            </p>
-            <Textarea
-              value={form.system_prompt}
-              onChange={e => setForm(prev => ({ ...prev, system_prompt: e.target.value }))}
-              rows={10}
-              className="text-xs font-mono"
-              placeholder={`Você é o [Nome do Agente], especialista em [área].\n\nSua missão é [objetivo].\n\nVocê DEVE retornar um JSON com a seguinte estrutura:\n{\n  "campo1": "...",\n  "campo2": [...]\n}`}
-            />
-          </div>
+        <Separator />
 
-          {/* Output Schema */}
-          <div className="space-y-1">
-            <Label className="text-xs">Output Schema (JSON)</Label>
-            <Textarea
-              value={form.output_schema}
-              onChange={e => setForm(prev => ({ ...prev, output_schema: e.target.value }))}
-              rows={4}
-              className="text-xs font-mono"
-              placeholder='{ "campo": "tipo de valor esperado" }'
-            />
-          </div>
+        {/* ─── Tabbed Agent Card editing ─── */}
+        <Tabs defaultValue="identity" className="w-full mt-2">
+          <TabsList className="w-full grid grid-cols-5 h-8">
+            <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
+            <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
+            <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
+            <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
+            <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+          </TabsList>
 
-          {/* Submit */}
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button size="sm" onClick={handleSubmit} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-              Criar Agente
+          {/* ─── IDENTITY TAB ─── */}
+          <TabsContent value="identity" className="space-y-3 mt-3">
+            <div className="grid grid-cols-3 gap-2">
+              <FieldSection label="ID">
+                <Input value={card.id} onChange={e => updateCard('id', e.target.value)} className="text-xs h-8" placeholder="agent_id" />
+              </FieldSection>
+              <FieldSection label="Name">
+                <Input value={card.name} onChange={e => updateCard('name', e.target.value)} className="text-xs h-8" placeholder="Nome do Agente" />
+              </FieldSection>
+              <FieldSection label="Version">
+                <Input value={card.version} onChange={e => updateCard('version', e.target.value)} className="text-xs h-8" />
+              </FieldSection>
+            </div>
+
+            <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+              <Textarea value={card.role} onChange={e => updateCard('role', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Especialista em análise de mercado..." />
+            </FieldSection>
+
+            <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+              <Textarea value={card.mission} onChange={e => updateCard('mission', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Gerar relatório detalhado de..." />
+            </FieldSection>
+
+            <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
+              <Input value={card.handoff} onChange={e => updateCard('handoff', e.target.value)} className="text-xs h-8" placeholder="Ex: qa_validator" />
+            </FieldSection>
+          </TabsContent>
+
+          {/* ─── CONTRACTS TAB ─── */}
+          <TabsContent value="contracts" className="space-y-3 mt-3">
+            <FieldSection label="Capabilities" hint="Lista de tarefas que o agente é capaz de executar">
+              <EditableList items={card.capabilities} onChange={v => updateCard('capabilities', v)} placeholder="Capacidade..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Non-Capabilities" hint="Lista explícita do que o agente NÃO deve fazer">
+              <EditableList items={card.non_capabilities} onChange={v => updateCard('non_capabilities', v)} placeholder="Restrição..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Inputs" hint="Tipos de dados aceitos pelo agente">
+              <EditableList items={card.inputs} onChange={v => updateCard('inputs', v)} placeholder="Tipo de dado..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Context Dependencies" hint="Dados da memória estratégica necessários">
+              <EditableList items={card.context_dependencies} onChange={v => updateCard('context_dependencies', v)} placeholder="Dependência..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Output Schema" hint="JSON schema obrigatório para a saída do agente">
+              <Textarea value={card.output_schema} onChange={e => updateCard('output_schema', e.target.value)} rows={8} className="text-xs font-mono" placeholder='{ "campo": "tipo" }' />
+            </FieldSection>
+          </TabsContent>
+
+          {/* ─── REASONING TAB ─── */}
+          <TabsContent value="reasoning" className="space-y-3 mt-3">
+            <FieldSection label="Reasoning Protocol" hint="Passos ordenados que o agente deve seguir ao executar">
+              <EditableList items={card.reasoning_protocol} onChange={v => updateCard('reasoning_protocol', v)} placeholder="Passo..." ordered />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Error Handling" hint="Como o agente reage quando dados são insuficientes">
+              <Textarea value={card.error_handling} onChange={e => updateCard('error_handling', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Se dados insuficientes, retornar campo 'warnings' com..." />
+            </FieldSection>
+          </TabsContent>
+
+          {/* ─── QUALITY TAB ─── */}
+          <TabsContent value="quality" className="space-y-3 mt-3">
+            <FieldSection label="Quality Standards" hint="Critérios que definem se o output é aceitável">
+              <EditableList items={card.quality_standards} onChange={v => updateCard('quality_standards', v)} placeholder="Padrão de qualidade..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Anti-Patterns" hint="Comportamentos proibidos que devem ser evitados">
+              <EditableList items={card.anti_patterns} onChange={v => updateCard('anti_patterns', v)} placeholder="Anti-pattern..." />
+            </FieldSection>
+          </TabsContent>
+
+          {/* ─── PROMPT PREVIEW TAB ─── */}
+          <TabsContent value="prompt" className="space-y-3 mt-3">
+            <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+              <Textarea value={generatedPrompt} readOnly rows={15} className="text-xs font-mono bg-muted/50" />
+            </FieldSection>
+            <Button variant="outline" size="sm" onClick={copyPrompt}>
+              <Copy className="h-3 w-3 mr-1" /> Copiar Prompt
             </Button>
-          </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* ─── Actions ─── */}
+        <div className="flex justify-end gap-2 pt-2 border-t">
+          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button size="sm" onClick={handleSubmit} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+            Criar Agente
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

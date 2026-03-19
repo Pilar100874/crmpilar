@@ -10273,6 +10273,7 @@ export type Database = {
       }
       strategy_custom_agents: {
         Row: {
+          agent_card_json: Json | null
           agent_key: string
           ativo: boolean
           color: string
@@ -10289,6 +10290,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_card_json?: Json | null
           agent_key: string
           ativo?: boolean
           color?: string
@@ -10305,6 +10307,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_card_json?: Json | null
           agent_key?: string
           ativo?: boolean
           color?: string
