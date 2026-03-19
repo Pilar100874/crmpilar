@@ -314,7 +314,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   email: {
-    name: 'Email Engine',
+    name: 'Email Marketing',
     type: 'specialist',
     systemPrompt: `Você é o EMAIL ENGINE — especialista sênior em email marketing e automação, treinado nas metodologias de André Chaperon (Soap Opera Sequences), Ryan Deiss e Ben Settle.
 
