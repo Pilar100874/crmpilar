@@ -354,353 +354,297 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const marginL = 20;
-    const marginR = 20;
-    const contentW = pageW - marginL - marginR;
+    const mL = 22;
+    const mR = 22;
+    const cW = pageW - mL - mR;
     let y = 0;
 
-    const addPageHeader = () => {
+    // Font sizes per mode
+    const fs = mode === 'resumida'
+      ? { title: 11, sub: 9, label: 8.5, body: 8.5, bullet: 8.5, small: 7.5 }
+      : { title: 13, sub: 10.5, label: 10, body: 10, bullet: 9.5, small: 8 };
+    const lineH = mode === 'resumida' ? 4 : 5;
+
+    // Shared: render page header + footer
+    const renderPageChrome = () => {
+      // Top bar
       doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, pageW, 35, 'F');
+      doc.rect(0, 0, pageW, 28, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(7);
+      doc.setFontSize(6.5);
       doc.setFont('helvetica', 'normal');
-      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA', pageW - marginR, 12, { align: 'right' });
-      doc.text(sanitizeForPDF(projectName).substring(0, 50), marginL, 12);
-      // Page number footer
-      doc.setTextColor(160, 160, 170);
+      const label = mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA';
+      doc.text(label, pageW - mR, 11, { align: 'right' });
+      doc.text(sanitizeForPDF(projectName).substring(0, 55), mL, 11);
+      // Bottom: page number + line
+      doc.setDrawColor(200, 200, 210);
+      doc.line(mL, pageH - 16, pageW - mR, pageH - 16);
+      doc.setTextColor(140, 140, 155);
       doc.setFontSize(7);
-      const pageNum = doc.getNumberOfPages();
-      doc.text(`${pageNum}`, pageW / 2, pageH - 10, { align: 'center' });
+      doc.text(`Pagina ${doc.getNumberOfPages()}`, pageW / 2, pageH - 10, { align: 'center' });
       doc.setTextColor(0, 0, 0);
-      y = 45;
+      y = 36;
     };
 
-    const checkPage = (needed: number) => {
-      if (y + needed > pageH - 25) {
-        doc.addPage();
-        addPageHeader();
+    const newPage = () => { doc.addPage(); renderPageChrome(); };
+    const check = (n: number) => { if (y + n > pageH - 22) newPage(); };
+
+    // Shared render for structured lines
+    const renderLines = (lines: PdfLine[], agentColor: [number, number, number]) => {
+      const [cr, cg, cb] = agentColor;
+      for (const line of lines) {
+        switch (line.type) {
+          case 'heading': {
+            check(lineH * 3);
+            y += lineH;
+            doc.setFontSize(fs.sub);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 41, 59);
+            doc.text(line.text.toUpperCase(), mL + 2, y);
+            y += 1.5;
+            doc.setDrawColor(cr, cg, cb);
+            doc.setLineWidth(0.6);
+            const tw = Math.min(doc.getTextWidth(line.text.toUpperCase()), cW * 0.4);
+            doc.line(mL + 2, y, mL + 2 + tw, y);
+            doc.setLineWidth(0.2);
+            y += lineH;
+            doc.setFont('helvetica', 'normal');
+            break;
+          }
+          case 'subheading': {
+            check(lineH * 2);
+            y += lineH * 0.8;
+            doc.setFontSize(fs.sub);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(50, 55, 75);
+            doc.text(line.text, mL + 4, y);
+            y += lineH;
+            doc.setFont('helvetica', 'normal');
+            break;
+          }
+          case 'keyvalue': {
+            check(lineH + 2);
+            doc.setFontSize(fs.label);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(45, 50, 65);
+            const lbl = line.label + ':  ';
+            const lblW = doc.getTextWidth(lbl);
+            doc.text(lbl, mL + 6, y);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(65, 65, 80);
+            const valSpace = cW - lblW - 10;
+            if (valSpace > 50) {
+              const wrapped = doc.splitTextToSize(line.value, valSpace);
+              doc.text(wrapped[0], mL + 6 + lblW, y);
+              for (let w = 1; w < wrapped.length; w++) {
+                y += lineH;
+                check(lineH);
+                doc.text(wrapped[w], mL + 6 + lblW, y);
+              }
+            } else {
+              y += lineH;
+              const wrapped = doc.splitTextToSize(line.value, cW - 14);
+              for (const wl of wrapped) {
+                check(lineH);
+                doc.text(wl, mL + 10, y);
+                y += lineH;
+              }
+              y -= lineH; // compensate last increment
+            }
+            y += lineH;
+            break;
+          }
+          case 'bullet': {
+            check(lineH + 1);
+            const indent = 6 + (line.level * 6);
+            doc.setFontSize(fs.bullet);
+            doc.setTextColor(65, 65, 80);
+            doc.setFillColor(cr, cg, cb);
+            doc.circle(mL + indent + 1.2, y - 1, 0.9, 'F');
+            const bW = cW - indent - 8;
+            const wrapped = doc.splitTextToSize(line.text, bW);
+            for (const wl of wrapped) {
+              check(lineH);
+              doc.text(wl, mL + indent + 4.5, y);
+              y += lineH;
+            }
+            break;
+          }
+          case 'body': {
+            check(lineH + 1);
+            doc.setFontSize(fs.body);
+            doc.setTextColor(55, 55, 70);
+            doc.setFont('helvetica', 'normal');
+            const wrapped = doc.splitTextToSize(line.text, cW - 6);
+            for (const wl of wrapped) {
+              check(lineH);
+              doc.text(wl, mL + 3, y);
+              y += lineH;
+            }
+            y += 1;
+            break;
+          }
+          case 'spacer': {
+            y += lineH * 0.6;
+            break;
+          }
+        }
       }
     };
 
     // === COVER PAGE ===
     doc.setFillColor(30, 41, 59);
     doc.rect(0, 0, pageW, pageH, 'F');
-
+    // Accent line
     doc.setFillColor(99, 102, 241);
-    doc.rect(marginL, 80, 60, 4, 'F');
-
+    doc.rect(mL, 85, 50, 3, 'F');
+    // Title
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.text('Estrategia de', marginL, 105);
-    doc.setFontSize(32);
-    doc.text('Marketing Digital', marginL, 120);
-
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(26);
+    doc.text('Estrategia de', mL, 108);
+    doc.setFontSize(30);
+    doc.text('Marketing Digital', mL, 124);
+    doc.setFont('helvetica', 'normal');
+    // Project name
     doc.setFontSize(12);
-    doc.setTextColor(200, 200, 220);
-    const projLines = doc.splitTextToSize(stripEmoji(projectName), contentW);
-    doc.text(projLines, marginL, 140);
-
+    doc.setTextColor(190, 195, 215);
+    const pLines = doc.splitTextToSize(stripEmoji(projectName), cW);
+    doc.text(pLines, mL, 145);
+    // Metadata
     doc.setFontSize(10);
-    doc.setTextColor(160, 160, 180);
-    doc.text(mode === 'resumida' ? 'Versao Resumida' : 'Versao Completa', marginL, 165);
-    const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    doc.text(dateStr, marginL, 175);
+    doc.setTextColor(150, 155, 175);
+    doc.text(mode === 'resumida' ? 'Versao Resumida' : 'Versao Completa', mL, 170);
+    doc.text(new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }), mL, 180);
+    doc.setFontSize(8);
+    doc.setTextColor(120, 125, 145);
+    doc.text(`${arts.length} secoes geradas por IA`, mL, pageH - 25);
 
-    doc.setFontSize(9);
-    doc.text(`${arts.length} secoes - Gerado automaticamente`, marginL, pageH - 30);
-
+    // === TABLE OF CONTENTS (complete only) ===
     if (mode === 'completa') {
-      // === TABLE OF CONTENTS (only for complete version) ===
-      doc.addPage();
-      addPageHeader();
-      doc.setFontSize(20);
+      newPage();
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(30, 41, 59);
-      doc.text('Sumario', marginL, y);
-      y += 12;
-      doc.setDrawColor(200, 200, 200);
-      doc.line(marginL, y, pageW - marginR, y);
+      doc.text('Sumario', mL, y);
       y += 10;
+      doc.setDrawColor(99, 102, 241);
+      doc.setLineWidth(0.8);
+      doc.line(mL, y, mL + 30, y);
+      doc.setLineWidth(0.2);
+      y += 8;
+      doc.setFont('helvetica', 'normal');
       for (let i = 0; i < arts.length; i++) {
-        const info = agentInfo[arts[i].tipo];
-        const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
-        doc.setFontSize(11);
-        doc.setTextColor(60, 60, 60);
-        doc.text(`${i + 1}. ${title}`, marginL + 5, y);
-        y += 8;
+        const inf = agentInfo[arts[i].tipo];
+        const t = stripEmoji(arts[i].titulo || inf?.name || arts[i].tipo);
+        doc.setFontSize(10);
+        doc.setTextColor(55, 55, 70);
+        doc.text(`${i + 1}.  ${t}`, mL + 4, y);
+        // Dot leader
+        const tw = doc.getTextWidth(`${i + 1}.  ${t}`);
+        doc.setTextColor(180, 180, 190);
+        const dotsStart = mL + 4 + tw + 3;
+        const dotsEnd = pageW - mR - 15;
+        if (dotsEnd > dotsStart) {
+          const dots = '.'.repeat(Math.floor((dotsEnd - dotsStart) / 1.8));
+          doc.setFontSize(7);
+          doc.text(dots, dotsStart, y);
+        }
+        doc.setFontSize(10);
+        doc.setTextColor(99, 102, 241);
+        doc.text(`${i + 3}`, pageW - mR - 8, y, { align: 'right' }); // approx page
+        y += 7;
       }
     }
 
-    // === CONTENT PAGES ===
-    // For resumida: continuous flow, no page break per agent
-    // For completa: one page per agent
-    if (mode === 'resumida') {
-      doc.addPage();
-      addPageHeader();
-    }
+    // === CONTENT ===
+    if (mode === 'resumida') newPage();
 
     for (let i = 0; i < arts.length; i++) {
-      if (mode === 'completa') {
-        doc.addPage();
-        addPageHeader();
-      }
+      if (mode === 'completa') newPage();
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
       const title = stripEmoji(art.titulo || info?.name || art.tipo);
-
       const color = info?.color || '#6366F1';
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
+      const cr = parseInt(color.slice(1, 3), 16);
+      const cg = parseInt(color.slice(3, 5), 16);
+      const cb = parseInt(color.slice(5, 7), 16);
 
       if (mode === 'resumida') {
-        // Compact section header
-        checkPage(30);
-        doc.setFillColor(r, g, b);
-        doc.rect(marginL, y - 3, 3, 10, 'F');
-        doc.setFontSize(12);
+        // --- COMPACT SECTION ---
+        check(22);
+        // Color bar + number + title
+        doc.setFillColor(cr, cg, cb);
+        doc.rect(mL, y - 2, 3, 9, 'F');
+        doc.setFontSize(fs.title);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 41, 59);
-        doc.text(`${i + 1}. ${title}`, marginL + 8, y + 4);
+        doc.text(`${i + 1}. ${title}`, mL + 7, y + 4);
         doc.setFont('helvetica', 'normal');
         y += 12;
 
-        // Render condensed content
         const condensed = extractCondensedLines(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
           if (l.type === 'spacer') return l;
           return { ...l, text: sanitizeForPDF((l as any).text) };
-        });
+        }) as PdfLine[];
 
         if (condensed.length === 0) {
-          doc.setFontSize(8.5);
-          doc.setTextColor(150, 150, 150);
+          doc.setFontSize(fs.small);
+          doc.setTextColor(150, 150, 160);
           doc.setFont('helvetica', 'italic');
-          doc.text('Conteudo pendente', marginL + 8, y);
+          doc.text('Conteudo pendente', mL + 7, y);
           doc.setFont('helvetica', 'normal');
-          y += 5;
+          y += lineH;
         } else {
-          for (const line of condensed) {
-            switch (line.type) {
-              case 'subheading': {
-                checkPage(8);
-                doc.setFontSize(8.5);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(50, 55, 70);
-                doc.text(line.text + ':', marginL + 8, y);
-                doc.setFont('helvetica', 'normal');
-                y += 4;
-                break;
-              }
-              case 'keyvalue': {
-                checkPage(5);
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(60, 60, 75);
-                const lbl = line.label + ': ';
-                const lblW = doc.getTextWidth(lbl);
-                doc.text(lbl, marginL + 8, y);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(70, 70, 85);
-                const valW = contentW - lblW - 12;
-                const wrapped = doc.splitTextToSize(line.value, valW > 40 ? valW : contentW - 16);
-                if (valW > 40) {
-                  doc.text(wrapped[0], marginL + 8 + lblW, y);
-                  for (let wi = 1; wi < wrapped.length; wi++) {
-                    y += 3.5;
-                    checkPage(4);
-                    doc.text(wrapped[wi], marginL + 8 + lblW, y);
-                  }
-                } else {
-                  for (const wl of wrapped) {
-                    y += 3.5;
-                    checkPage(4);
-                    doc.text(wl, marginL + 12, y);
-                  }
-                }
-                y += 3.5;
-                break;
-              }
-              case 'bullet': {
-                checkPage(5);
-                doc.setFontSize(8);
-                doc.setTextColor(70, 70, 85);
-                doc.setFillColor(r, g, b);
-                doc.circle(marginL + 11, y - 1, 0.8, 'F');
-                const wrapped = doc.splitTextToSize(line.text, contentW - 20);
-                for (const wl of wrapped) {
-                  checkPage(4);
-                  doc.text(wl, marginL + 14, y);
-                  y += 3.5;
-                }
-                break;
-              }
-              case 'body': {
-                checkPage(5);
-                doc.setFontSize(8);
-                doc.setTextColor(60, 60, 75);
-                const wrapped = doc.splitTextToSize(line.text, contentW - 12);
-                for (const wl of wrapped) {
-                  checkPage(4);
-                  doc.text(wl, marginL + 8, y);
-                  y += 3.5;
-                }
-                break;
-              }
-              default: break;
-            }
-          }
+          renderLines(condensed, [cr, cg, cb]);
         }
 
-        // Thin separator between agents
-        y += 3;
-        doc.setDrawColor(220, 220, 225);
-        doc.line(marginL + 8, y, pageW - marginR, y);
-        y += 6;
+        // Separator
+        y += 2;
+        doc.setDrawColor(215, 218, 225);
+        doc.line(mL + 7, y, pageW - mR, y);
+        y += 5;
 
       } else {
-        // === COMPLETE MODE (existing logic) ===
-        doc.setFillColor(r, g, b);
-        doc.rect(marginL, y - 5, 4, 14, 'F');
-        doc.setFontSize(16);
-        doc.setTextColor(30, 41, 59);
-        doc.text(title, marginL + 10, y + 5);
-        y += 20;
-        doc.setDrawColor(230, 230, 230);
-        doc.line(marginL, y, pageW - marginR, y);
-        y += 10;
+        // --- FULL SECTION ---
+        // Section header bar
+        doc.setFillColor(cr, cg, cb);
+        doc.roundedRect(mL, y - 4, cW, 18, 2, 2, 'F');
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${i + 1}. ${title}`, mL + 8, y + 7);
+        doc.setFont('helvetica', 'normal');
+        y += 22;
 
+        // Description
         if (info?.description) {
           doc.setFontSize(9);
-          doc.setTextColor(120, 120, 140);
+          doc.setTextColor(110, 115, 135);
           doc.setFont('helvetica', 'italic');
-          doc.text(sanitizeForPDF(info.description), marginL + 10, y);
+          doc.text(sanitizeForPDF(info.description), mL + 2, y);
           doc.setFont('helvetica', 'normal');
-          y += 10;
+          y += 8;
         }
-        // Complete mode: structured professional rendering
-        const structuredLines = extractStructured(art.conteudo).map(l => {
+
+        const structured = extractStructured(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
           if (l.type === 'spacer') return l;
           return { ...l, text: sanitizeForPDF((l as any).text) };
-        });
+        }) as PdfLine[];
 
-        if (structuredLines.length === 0) {
+        if (structured.length === 0) {
           doc.setFontSize(10);
-          doc.setTextColor(150, 150, 150);
+          doc.setTextColor(150, 150, 160);
           doc.setFont('helvetica', 'italic');
-          doc.text('Conteudo pendente', marginL, y);
+          doc.text('Conteudo pendente', mL + 2, y);
           doc.setFont('helvetica', 'normal');
-          y += 6;
+          y += lineH;
         } else {
-          for (const line of structuredLines) {
-            switch (line.type) {
-              case 'heading': {
-                checkPage(14);
-                y += 6;
-                // Heading with subtle underline
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(30, 41, 59);
-                doc.text(line.text, marginL, y);
-                y += 2;
-                doc.setDrawColor(r, g, b);
-                doc.setLineWidth(0.5);
-                doc.line(marginL, y, marginL + Math.min(doc.getTextWidth(line.text), contentW), y);
-                doc.setLineWidth(0.2);
-                y += 5;
-                doc.setFont('helvetica', 'normal');
-                break;
-              }
-              case 'subheading': {
-                checkPage(12);
-                y += 4;
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(60, 70, 90);
-                doc.text(line.text, marginL + 4, y);
-                y += 5;
-                doc.setFont('helvetica', 'normal');
-                break;
-              }
-              case 'keyvalue': {
-                checkPage(7);
-                doc.setFontSize(9.5);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(50, 55, 70);
-                const labelW = doc.getTextWidth(line.label + ':  ');
-                doc.text(line.label + ':', marginL + 4, y);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(70, 70, 80);
-                const valMaxW = contentW - labelW - 8;
-                if (valMaxW > 30) {
-                  const wrapped = doc.splitTextToSize(line.value, valMaxW);
-                  doc.text(wrapped[0], marginL + 4 + labelW, y);
-                  for (let wi = 1; wi < wrapped.length; wi++) {
-                    y += 4.5;
-                    checkPage(5);
-                    doc.text(wrapped[wi], marginL + 4 + labelW, y);
-                  }
-                } else {
-                  y += 4.5;
-                  const wrapped = doc.splitTextToSize(line.value, contentW - 8);
-                  for (const wl of wrapped) {
-                    checkPage(5);
-                    doc.text(wl, marginL + 8, y);
-                    y += 4.5;
-                  }
-                }
-                y += 4;
-                break;
-              }
-              case 'bullet': {
-                checkPage(6);
-                const bulletIndent = 4 + (line.level * 8);
-                doc.setFontSize(9.5);
-                doc.setTextColor(70, 70, 80);
-                // Draw a small filled circle as bullet
-                doc.setFillColor(r, g, b);
-                doc.circle(marginL + bulletIndent + 1.5, y - 1.2, 1, 'F');
-                doc.setFont('helvetica', 'normal');
-                const bulletW = contentW - bulletIndent - 8;
-                const wrapped = doc.splitTextToSize(line.text, bulletW);
-                for (const wl of wrapped) {
-                  checkPage(5);
-                  doc.text(wl, marginL + bulletIndent + 5, y);
-                  y += 4.5;
-                }
-                break;
-              }
-              case 'body': {
-                checkPage(6);
-                doc.setFontSize(9.5);
-                doc.setTextColor(60, 60, 70);
-                doc.setFont('helvetica', 'normal');
-                const wrapped = doc.splitTextToSize(line.text, contentW - 4);
-                for (const wl of wrapped) {
-                  checkPage(5);
-                  doc.text(wl, marginL + 2, y);
-                  y += 4.5;
-                }
-                y += 2;
-                break;
-              }
-              case 'spacer': {
-                y += 3;
-                break;
-              }
-            }
-          }
+          renderLines(structured, [cr, cg, cb]);
         }
-      }
-
-      // Footer separator (complete mode only, resumida has its own)
-      if (mode === 'completa') {
-        y += 5;
-        checkPage(6);
-        doc.setDrawColor(230, 230, 230);
-        doc.line(marginL, y, pageW - marginR, y);
       }
     }
 
