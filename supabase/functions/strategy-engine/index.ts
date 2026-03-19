@@ -519,6 +519,17 @@ INSTRUÇÃO: Revise e melhore significativamente o resultado anterior. Seja mais
             .from('strategy_artifacts')
             .update({ conteudo: parsedResult, version: newVersion, status: 'completed', execution_id: execution!.id })
             .eq('id', currentArtifact.id);
+
+          // Save version history
+          await supabase.from('strategy_artifact_versions').insert({
+            project_id: projectId,
+            artifact_id: currentArtifact.id,
+            tipo: agentType,
+            titulo: currentArtifact.titulo,
+            conteudo: parsedResult,
+            version: newVersion,
+            status: 'completed'
+          });
         }
 
         return new Response(JSON.stringify({
