@@ -851,8 +851,17 @@ Deno.serve(async (req) => {
     // ACTION: Generate A/B variation
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'generate_variation') {
-      const agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) throw new Error(`Agente desconhecido: ${agentType}`);
+      let agent = AGENT_DEFINITIONS[agentType];
+      if (!agent) {
+        const { data: customAgent } = await supabase
+          .from('strategy_custom_agents')
+          .select('*')
+          .eq('agent_key', agentType)
+          .eq('ativo', true)
+          .single();
+        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
+        agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
+      }
 
       const { project, memory } = await getLatestMemory(supabase, projectId);
 
@@ -1038,25 +1047,41 @@ INSTRUÇÃO DE REVISÃO:
         content: message
       });
 
+      // Load custom agents for this project's estabelecimento
+      const { data: customAgentsList } = await supabase
+        .from('strategy_custom_agents')
+        .select('agent_key, name')
+        .eq('estabelecimento_id', project.estabelecimento_id)
+        .eq('ativo', true);
+
+      const allAgentKeys = [...AGENT_ORDER, ...(customAgentsList || []).map((a: any) => a.agent_key)];
+      const allAgentNames: Record<string, string> = {};
+      for (const key of AGENT_ORDER) {
+        allAgentNames[key] = AGENT_DEFINITIONS[key]?.name || key;
+      }
+      for (const ca of (customAgentsList || [])) {
+        allAgentNames[(ca as any).agent_key] = (ca as any).name;
+      }
+
       const memoryKeys = Object.keys(memory);
-      const completedAgents = AGENT_ORDER.filter(a => memory[a]);
-      const pendingAgents = AGENT_ORDER.filter(a => !memory[a]);
+      const completedAgents = allAgentKeys.filter(a => memory[a]);
+      const pendingAgents = allAgentKeys.filter(a => !memory[a]);
 
       const systemPrompt = `Você é o Orchestrator do Motor de Estratégia de Marketing.
-Você coordena 9 agentes especializados para criar estratégias completas de marketing.
+Você coordena ${allAgentKeys.length} agentes especializados para criar estratégias completas de marketing.
 
 PROJETO: ${project.nome}
 DESCRIÇÃO: ${project.descricao_negocio}
 
 STATUS DOS AGENTES:
-✅ Concluídos: ${completedAgents.length > 0 ? completedAgents.map(a => AGENT_DEFINITIONS[a]?.name).join(', ') : 'Nenhum'}
-⏳ Pendentes: ${pendingAgents.length > 0 ? pendingAgents.map(a => AGENT_DEFINITIONS[a]?.name).join(', ') : 'Nenhum'}
+✅ Concluídos: ${completedAgents.length > 0 ? completedAgents.map(a => allAgentNames[a] || a).join(', ') : 'Nenhum'}
+⏳ Pendentes: ${pendingAgents.length > 0 ? pendingAgents.map(a => allAgentNames[a] || a).join(', ') : 'Nenhum'}
 
 MEMÓRIA ESTRATÉGICA RESUMIDA:
 ${memoryKeys.length > 0 ? memoryKeys.map(k => {
   const content = memory[k];
   const summary = typeof content === 'object' ? Object.keys(content).join(', ') : String(content).substring(0, 100);
-  return `- ${k}: [${summary}]`;
+  return `- ${allAgentNames[k] || k}: [${summary}]`;
 }).join('\n') : '(vazia — nenhum agente executado ainda)'}
 
 REGRAS:
@@ -1087,17 +1112,29 @@ REGRAS:
 
       await supabase.from('strategy_projects').update({ status: 'processing' }).eq('id', projectId);
 
+      // Load custom agents for this project
+      const { data: customAgentsList } = await supabase
+        .from('strategy_custom_agents')
+        .select('*')
+        .eq('estabelecimento_id', project.estabelecimento_id)
+        .eq('ativo', true)
+        .order('ordem');
+
+      const fullAgentOrder = [...AGENT_ORDER, ...(customAgentsList || []).map((a: any) => a.agent_key)];
+
       // Create pending executions for all agents
       const executions = [];
-      for (const agentKey of AGENT_ORDER) {
-        const agent = AGENT_DEFINITIONS[agentKey];
-        const deps = AGENT_DEPENDENCIES[agentKey] || [];
+      for (const agentKey of fullAgentOrder) {
+        const builtIn = AGENT_DEFINITIONS[agentKey];
+        const custom = (customAgentsList || []).find((a: any) => a.agent_key === agentKey);
+        const agentName = builtIn?.name || (custom as any)?.name || agentKey;
+        const deps = builtIn ? (AGENT_DEPENDENCIES[agentKey] || []) : ((custom as any)?.dependencies || []);
         const { data: exec } = await supabase
           .from('strategy_agent_executions')
           .insert({
             project_id: projectId,
             agent_type: agentKey,
-            agent_name: agent.name,
+            agent_name: agentName,
             status: 'pending',
             input_data: { dependencies: deps }
           })
@@ -1108,7 +1145,13 @@ REGRAS:
 
       // Execute agents sequentially, RE-READING memory from DB before each agent
       for (const exec of executions) {
-        const agent = AGENT_DEFINITIONS[exec.key];
+        const builtIn = AGENT_DEFINITIONS[exec.key];
+        const custom = (customAgentsList || []).find((a: any) => a.agent_key === exec.key);
+        const agent = builtIn || {
+          name: (custom as any)?.name || exec.key,
+          type: exec.key,
+          systemPrompt: (custom as any)?.system_prompt || '',
+        };
         const startTime = Date.now();
 
         // Mark as running
@@ -1122,9 +1165,9 @@ REGRAS:
           const { memory: latestMemory } = await getLatestMemory(supabase, projectId);
 
           // Log dependency status
-          const deps = AGENT_DEPENDENCIES[exec.key] || [];
-          const availableDeps = deps.filter(d => latestMemory[d]);
-          const missingDeps = deps.filter(d => !latestMemory[d]);
+          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : ((custom as any)?.dependencies || []);
+          const availableDeps = deps.filter((d: string) => latestMemory[d]);
+          const missingDeps = deps.filter((d: string) => !latestMemory[d]);
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
 
           // Build context-rich prompt with dependency injection

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { AGENT_ORDER, AGENT_INFO } from '../types';
 import jsPDF from 'jspdf';
 
-export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER) {
+export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER, agentInfo: Record<string, { name: string; icon: string; color: string; description: string }> = AGENT_INFO) {
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
@@ -60,10 +60,10 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       });
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
-      toast.success(`${AGENT_INFO[agentType]?.name || agentType} concluído!`);
+      toast.success(`${agentInfo[agentType]?.name || agentType} concluído!`);
       onRefetch();
     } catch (err: any) {
-      toast.error(`Erro em ${AGENT_INFO[agentType]?.name || agentType}: ${err.message}`);
+      toast.error(`Erro em ${agentInfo[agentType]?.name || agentType}: ${err.message}`);
     } finally {
       removeRunning(agentType);
     }
@@ -84,7 +84,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
   const runPipeline = async () => {
     if (!projectId) return;
     setIsPipelineRunning(true);
-    toast.info('Pipeline iniciado! Executando 9 agentes especializados...');
+    toast.info(`Pipeline iniciado! Executando ${agentOrder.length} agentes especializados...`);
     try {
       const { data, error } = await supabase.functions.invoke('strategy-engine', {
         body: { action: 'run_pipeline', projectId }
