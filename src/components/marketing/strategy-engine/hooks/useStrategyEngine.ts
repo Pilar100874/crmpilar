@@ -360,11 +360,10 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
     for (let i = 0; i < arts.length; i++) {
       const info = agentInfo[arts[i].tipo];
-      const icon = info?.icon || '📋';
-      const title = arts[i].titulo || info?.name || arts[i].tipo;
+      const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
       doc.setFontSize(11);
       doc.setTextColor(60, 60, 60);
-      doc.text(`${icon}  ${i + 1}. ${title}`, marginL + 5, y);
+      doc.text(`${i + 1}. ${title}`, marginL + 5, y);
       y += 8;
     }
 
