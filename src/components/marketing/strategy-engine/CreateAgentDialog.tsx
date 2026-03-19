@@ -125,7 +125,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setDescription('');
     setIcon('🤖');
     setColor('#8B5CF6');
-    setOrdem(100);
+    setOrdem(AGENT_ORDER.length + existingKeys.length + 1);
     setDependencies([]);
     setAiDescription('');
   };
