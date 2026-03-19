@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AgentExecution } from '../types';
 import { toast } from 'sonner';
-import { AGENT_ORDER, AGENT_INFO } from '../types';
+import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from '../types';
 import jsPDF from 'jspdf';
 
 export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER, agentInfo: Record<string, { name: string; icon: string; color: string; description: string }> = AGENT_INFO) {
