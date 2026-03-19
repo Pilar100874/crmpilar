@@ -132,7 +132,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {artifacts.map(artifact => {
-          const info = AGENT_INFO[artifact.tipo];
+          const info = resolvedInfo[artifact.tipo];
           const validation = validationResults[artifact.id];
           const avgScore = validation
             ? Math.round((Object.values(validation) as any[]).reduce((sum: number, v: any) => sum + (v?.pontuacao || 0), 0) / Object.keys(validation).length)
