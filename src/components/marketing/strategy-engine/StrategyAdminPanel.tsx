@@ -323,7 +323,10 @@ export function StrategyAdminPanel() {
                           <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
                           <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
                           <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-                          <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+                          <TabsTrigger value="prompt" className="text-[10px] gap-1">
+                            Prompt
+                            {!config.saved && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+                          </TabsTrigger>
                         </TabsList>
 
                         {/* ─── IDENTITY TAB ─── */}
@@ -418,7 +421,12 @@ export function StrategyAdminPanel() {
 
                         {/* ─── PROMPT PREVIEW TAB ─── */}
                         <TabsContent value="prompt" className="space-y-3 mt-3">
-                          <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Somente leitura.">
+                          <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+                            {!config.saved && (
+                              <Badge className="text-[10px] bg-primary/15 text-primary border-primary/30 mb-1 animate-pulse">
+                                🔄 Prompt atualizado — salve para aplicar
+                              </Badge>
+                            )}
                             <Textarea
                               value={editableToSystemPrompt(card)}
                               readOnly
