@@ -226,7 +226,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   landing_page: {
-    name: 'Landing Page Builder',
+    name: 'Landing Page',
     type: 'specialist',
     systemPrompt: `Você é o LANDING PAGE BUILDER — especialista em páginas de vendas de alta conversão com expertise em UX persuasiva e CRO.
 
