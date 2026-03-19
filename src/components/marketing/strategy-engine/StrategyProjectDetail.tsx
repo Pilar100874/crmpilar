@@ -28,6 +28,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
   // Merge hardcoded + custom agents
   const mergedInfo = useMemo(() => getMergedAgentInfo(customAgents), [customAgents]);
   const mergedOrder = useMemo(() => getMergedAgentOrder(customAgents), [customAgents]);
+  const mergedDeps = useMemo(() => getMergedDependencies(customAgents), [customAgents]);
 
   const {
     executeAgent, executeAllAgents, runPipeline, sendChatMessage,
