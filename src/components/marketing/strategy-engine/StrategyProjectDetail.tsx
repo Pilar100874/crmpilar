@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useProjectDetail } from './hooks/useStrategyProjects';
 import { useStrategyEngine } from './hooks/useStrategyEngine';
-import { AGENT_INFO, AGENT_ORDER } from './types';
+import { useCustomAgents } from './hooks/useCustomAgents';
+import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder } from './types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,12 +20,22 @@ interface Props {
 
 export function StrategyProjectDetail({ projectId, onBack }: Props) {
   const { project, executions, artifacts, chatMessages, loading, refetch } = useProjectDetail(projectId);
+
+  // Get estabelecimento_id from project for custom agents
+  const estabId = project?.estabelecimento_id;
+  const { customAgents } = useCustomAgents(estabId);
+
+  // Merge hardcoded + custom agents
+  const mergedInfo = useMemo(() => getMergedAgentInfo(customAgents), [customAgents]);
+  const mergedOrder = useMemo(() => getMergedAgentOrder(customAgents), [customAgents]);
+
   const {
     executeAgent, executeAllAgents, runPipeline, sendChatMessage,
     exportPDF, exportMarkdown, exportJSON,
     approveArtifact, rejectArtifact, reviseArtifact, updateArtifactContent,
     runningAgents, isPipelineRunning, chatLoading
-  } = useStrategyEngine(projectId, refetch);
+  } = useStrategyEngine(projectId, refetch, mergedOrder);
+
   const [activeTab, setActiveTab] = useState('dashboard');
 
   if (loading) {
@@ -38,7 +49,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
   if (!project) return null;
 
   const completedAgents = executions.filter(e => e.status === 'completed').length;
-  const totalAgents = AGENT_ORDER.length;
+  const totalAgents = mergedOrder.length;
   const hasAnyRunning = runningAgents.size > 0;
 
   return (
@@ -143,6 +154,8 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             onExecuteAll={executeAllAgents}
             runningAgents={runningAgents}
             isPipelineRunning={isPipelineRunning}
+            agentOrder={mergedOrder}
+            agentInfo={mergedInfo}
           />
         </TabsContent>
 
