@@ -55,6 +55,7 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
         dependencies: agent.dependencies || [],
         output_schema: agent.output_schema || {},
         ordem: agent.ordem || 100,
+        agent_card_json: agent.agent_card_json || null,
       } as any)
       .select()
       .single();
