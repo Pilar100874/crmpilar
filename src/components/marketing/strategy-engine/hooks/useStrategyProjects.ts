@@ -8,7 +8,10 @@ export function useStrategyProjects(estabelecimentoId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   const fetchProjects = useCallback(async () => {
-    if (!estabelecimentoId) return;
+    if (!estabelecimentoId) {
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase
       .from('strategy_projects')
       .select('*')
@@ -24,20 +27,58 @@ export function useStrategyProjects(estabelecimentoId: string | undefined) {
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
-  const createProject = async (nome: string, descricao: string, userId: string) => {
+  const createProject = async (nome: string, descricao: string, _userId: string) => {
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não encontrado');
+      return null;
+    }
+
+    // Get auth user id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Você precisa estar logado para criar projetos');
+      return null;
+    }
+
+    // Get usuario record to use as user_id
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!usuario) {
+      toast.error('Perfil de usuário não encontrado');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('strategy_projects')
-      .insert({ nome, descricao_negocio: descricao, estabelecimento_id: estabelecimentoId!, user_id: userId })
+      .insert({
+        nome,
+        descricao_negocio: descricao,
+        estabelecimento_id: estabelecimentoId,
+        user_id: usuario.id
+      })
       .select()
       .single();
-    if (error) { toast.error('Erro ao criar projeto'); return null; }
+
+    if (error) {
+      console.error('Error creating project:', error);
+      toast.error('Erro ao criar projeto: ' + error.message);
+      return null;
+    }
     await fetchProjects();
     return data as unknown as StrategyProject;
   };
 
   const deleteProject = async (id: string) => {
-    await supabase.from('strategy_projects').delete().eq('id', id);
-    await fetchProjects();
+    const { error } = await supabase.from('strategy_projects').delete().eq('id', id);
+    if (error) {
+      toast.error('Erro ao excluir projeto');
+    } else {
+      await fetchProjects();
+    }
   };
 
   return { projects, loading, createProject, deleteProject, refetch: fetchProjects };
