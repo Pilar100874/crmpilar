@@ -20,10 +20,10 @@ interface Props {
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
-  runningAgent?: string | null;
+  runningAgents?: Set<string>;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set() }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
   const [isEditing, setIsEditing] = useState(false);
