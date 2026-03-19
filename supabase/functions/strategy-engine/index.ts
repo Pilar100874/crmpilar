@@ -176,7 +176,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   vsl: {
-    name: 'VSL Writer',
+    name: 'Roteirista de Vídeo',
     type: 'specialist',
     systemPrompt: `Você é o VSL WRITER — copywriter sênior de Video Sales Letters, treinado nas metodologias de Jon Benson, Todd Brown e Stefan Georgi.
 
