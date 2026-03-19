@@ -91,9 +91,11 @@ export function useProjectDetail(projectId: string | null) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const initialLoadDone = useRef(false);
+
   const fetchAll = useCallback(async () => {
     if (!projectId) { setLoading(false); return; }
-    setLoading(true);
+    if (!initialLoadDone.current) setLoading(true);
 
     const [projRes, execRes, artRes, chatRes] = await Promise.all([
       supabase.from('strategy_projects').select('*').eq('id', projectId).single(),
