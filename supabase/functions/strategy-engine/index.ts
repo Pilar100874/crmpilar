@@ -59,7 +59,7 @@ Retorne EXCLUSIVAMENTE um JSON válido (sem markdown, sem comentários):
 }`
   },
   cipher: {
-    name: 'Cipher Agent',
+    name: 'Inteligência Competitiva',
     type: 'specialist',
     systemPrompt: `Você é o CIPHER AGENT — analista de inteligência competitiva sênior com expertise em estratégia de mercado digital.
 
