@@ -1112,17 +1112,29 @@ REGRAS:
 
       await supabase.from('strategy_projects').update({ status: 'processing' }).eq('id', projectId);
 
+      // Load custom agents for this project
+      const { data: customAgentsList } = await supabase
+        .from('strategy_custom_agents')
+        .select('*')
+        .eq('estabelecimento_id', project.estabelecimento_id)
+        .eq('ativo', true)
+        .order('ordem');
+
+      const fullAgentOrder = [...AGENT_ORDER, ...(customAgentsList || []).map((a: any) => a.agent_key)];
+
       // Create pending executions for all agents
       const executions = [];
-      for (const agentKey of AGENT_ORDER) {
-        const agent = AGENT_DEFINITIONS[agentKey];
-        const deps = AGENT_DEPENDENCIES[agentKey] || [];
+      for (const agentKey of fullAgentOrder) {
+        const builtIn = AGENT_DEFINITIONS[agentKey];
+        const custom = (customAgentsList || []).find((a: any) => a.agent_key === agentKey);
+        const agentName = builtIn?.name || (custom as any)?.name || agentKey;
+        const deps = builtIn ? (AGENT_DEPENDENCIES[agentKey] || []) : ((custom as any)?.dependencies || []);
         const { data: exec } = await supabase
           .from('strategy_agent_executions')
           .insert({
             project_id: projectId,
             agent_type: agentKey,
-            agent_name: agent.name,
+            agent_name: agentName,
             status: 'pending',
             input_data: { dependencies: deps }
           })
