@@ -44,7 +44,7 @@ import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing'
 import { AICreativeStudio } from '@/components/marketing/ai-studio';
 import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
-
+  Brain,
 
 interface TabItem {
   id: string;
