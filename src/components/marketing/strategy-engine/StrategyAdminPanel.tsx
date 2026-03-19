@@ -512,27 +512,33 @@ export function StrategyAdminPanel() {
 
                           <Separator />
 
-                          <FieldSection label="Dependências de Execução" hint="Agentes que DEVEM ser concluídos antes deste poder executar">
+                          <FieldSection label="Dependências de Execução" hint="Clique para adicionar/remover. Agentes que DEVEM ser concluídos antes deste poder executar.">
                             <div className="flex flex-wrap gap-1">
                               {allAgentKeys.filter(k => k !== agentKey).map(dep => {
-                                const depDeps = AGENT_DEPENDENCIES[agentKey] ?? [];
-                                const isSelected = depDeps.includes(dep);
+                                const currentDeps = config.dependencies || [];
+                                const isSelected = currentDeps.includes(dep);
                                 const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                                 const depName = configs[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
                                 return (
                                   <Badge
                                     key={dep}
                                     variant={isSelected ? 'default' : 'outline'}
-                                    className="text-[10px] cursor-default gap-0.5"
+                                    className="text-[10px] cursor-pointer gap-0.5 hover:opacity-80 transition-opacity"
+                                    onClick={() => {
+                                      const newDeps = isSelected
+                                        ? currentDeps.filter((d: string) => d !== dep)
+                                        : [...currentDeps, dep];
+                                      setConfigs(prev => ({
+                                        ...prev,
+                                        [agentKey]: { ...prev[agentKey], dependencies: newDeps, saved: false },
+                                      }));
+                                    }}
                                   >
                                     {depIcon} {depName}
                                   </Badge>
                                 );
                               })}
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              As dependências dos agentes nativos são definidas automaticamente pelo sistema.
-                            </p>
                           </FieldSection>
                         </TabsContent>
 
