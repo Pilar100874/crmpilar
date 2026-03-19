@@ -142,6 +142,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
         <TabsContent value="artifacts" className="mt-3">
           <StrategyArtifactViewer
             artifacts={artifacts}
+            projectId={projectId}
             onApprove={approveArtifact}
             onReject={rejectArtifact}
             onRevise={reviseArtifact}

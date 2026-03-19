@@ -7,13 +7,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save } from 'lucide-react';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, Columns } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
+import { ArtifactHistory } from './ArtifactHistory';
+import { ArtifactABComparison } from './ArtifactABComparison';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   artifacts: StrategyArtifact[];
+  projectId: string;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
@@ -21,7 +24,7 @@ interface Props {
   runningAgent?: string | null;
 }
 
-export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'edit'>('formatted');
   const [validating, setValidating] = useState<string | null>(null);
@@ -177,6 +180,12 @@ export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevis
                     <Download className="h-3.5 w-3.5 mr-1" />
                     MD
                   </Button>
+                  <ArtifactABComparison
+                    projectId={projectId}
+                    artifactType={artifact.tipo}
+                    currentContent={artifact.conteudo}
+                    onSelectVariation={(content) => onUpdateContent?.(artifact.id, content)}
+                  />
                 </div>
 
                 {/* Approve / Reject / Revise */}
@@ -248,6 +257,10 @@ export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevis
                 <Pencil className="h-3 w-3 mr-1" />
                 Editar
               </TabsTrigger>
+              <TabsTrigger value="history" className="text-xs">
+                <History className="h-3 w-3 mr-1" />
+                Histórico
+              </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="max-h-[60vh] mt-3">
@@ -276,6 +289,11 @@ export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevis
                     Salvar (nova versão)
                   </Button>
                 </div>
+              </TabsContent>
+              <TabsContent value="history" className="mt-0">
+                {selectedArtifact && (
+                  <ArtifactHistory projectId={projectId} artifactType={selectedArtifact.tipo} />
+                )}
               </TabsContent>
             </ScrollArea>
           </Tabs>

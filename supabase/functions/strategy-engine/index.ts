@@ -244,7 +244,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, projectId, agentType, message, content } = await req.json();
+    const body = await req.json();
+    const { action, projectId, agentType, message, content, variationIndex, artifactId, validatorType, artifactContent } = body;
 
     // ACTION: Execute single agent
     if (action === 'execute_agent') {
@@ -307,7 +308,7 @@ Execute sua análise agora.`;
           .eq('id', projectId);
 
         // Create artifact
-        await supabase
+        const { data: newArtifact } = await supabase
           .from('strategy_artifacts')
           .insert({
             project_id: projectId,
@@ -316,7 +317,22 @@ Execute sua análise agora.`;
             titulo: agent.name,
             conteudo: parsedResult,
             status: 'completed'
+          })
+          .select()
+          .single();
+
+        // Save version history
+        if (newArtifact) {
+          await supabase.from('strategy_artifact_versions').insert({
+            project_id: projectId,
+            artifact_id: newArtifact.id,
+            tipo: agentType,
+            titulo: agent.name,
+            conteudo: parsedResult,
+            version: 1,
+            status: 'completed'
           });
+        }
 
         return new Response(JSON.stringify({
           success: true,
@@ -338,7 +354,6 @@ Execute sua análise agora.`;
 
     // ACTION: Validate artifact
     if (action === 'validate') {
-      const { validatorType, artifactContent } = await req.json();
       const validator = VALIDATOR_DEFINITIONS[validatorType];
       if (!validator) throw new Error(`Validador desconhecido: ${validatorType}`);
 
@@ -350,6 +365,89 @@ Execute sua análise agora.`;
       const result = extractJSON(rawResult);
 
       return new Response(JSON.stringify({ success: true, validation: result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ACTION: Generate A/B variation
+    if (action === 'generate_variation') {
+      const agent = AGENT_DEFINITIONS[agentType];
+      if (!agent) throw new Error(`Agente desconhecido: ${agentType}`);
+
+      const { data: project } = await supabase
+        .from('strategy_projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (!project) throw new Error('Projeto não encontrado');
+
+      const variationPrompt = `
+DESCRIÇÃO DO NEGÓCIO:
+${project.descricao_negocio}
+
+MEMÓRIA ESTRATÉGICA ATUAL:
+${JSON.stringify(project.strategic_memory, null, 2)}
+
+INSTRUÇÃO ESPECIAL: Crie uma VARIAÇÃO ALTERNATIVA (variação #${variationIndex || 1}) do resultado. 
+Use um ângulo completamente diferente, tom de voz diferente, ou abordagem criativa distinta.
+O resultado deve ser válido e de alta qualidade, mas DIFERENTE do padrão.
+Retorne APENAS o JSON válido no formato esperado.`;
+
+      const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, variationPrompt);
+      const parsedResult = extractJSON(rawResult);
+
+      return new Response(JSON.stringify({ success: true, result: parsedResult }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ACTION: Clone project
+    if (action === 'clone_project') {
+      const { sourceProjectId, newName } = body;
+      
+      const { data: source } = await supabase
+        .from('strategy_projects')
+        .select('*')
+        .eq('id', sourceProjectId)
+        .single();
+
+      if (!source) throw new Error('Projeto fonte não encontrado');
+
+      const { data: cloned } = await supabase
+        .from('strategy_projects')
+        .insert({
+          nome: newName || `${source.nome} (Cópia)`,
+          descricao_negocio: source.descricao_negocio,
+          estabelecimento_id: source.estabelecimento_id,
+          user_id: source.user_id,
+          strategic_memory: source.strategic_memory,
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (!cloned) throw new Error('Erro ao clonar projeto');
+
+      // Clone artifacts
+      const { data: artifacts } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', sourceProjectId);
+
+      if (artifacts && artifacts.length > 0) {
+        const clonedArtifacts = artifacts.map((a: any) => ({
+          project_id: cloned.id,
+          tipo: a.tipo,
+          titulo: a.titulo,
+          conteudo: a.conteudo,
+          version: 1,
+          status: 'completed'
+        }));
+        await supabase.from('strategy_artifacts').insert(clonedArtifacts);
+      }
+
+      return new Response(JSON.stringify({ success: true, project: cloned }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -421,6 +519,17 @@ INSTRUÇÃO: Revise e melhore significativamente o resultado anterior. Seja mais
             .from('strategy_artifacts')
             .update({ conteudo: parsedResult, version: newVersion, status: 'completed', execution_id: execution!.id })
             .eq('id', currentArtifact.id);
+
+          // Save version history
+          await supabase.from('strategy_artifact_versions').insert({
+            project_id: projectId,
+            artifact_id: currentArtifact.id,
+            tipo: agentType,
+            titulo: currentArtifact.titulo,
+            conteudo: parsedResult,
+            version: newVersion,
+            status: 'completed'
+          });
         }
 
         return new Response(JSON.stringify({
@@ -550,7 +659,7 @@ Execute sua análise agora.`;
             .update({ status: 'completed', output_data: parsedResult, duration_ms: duration })
             .eq('id', exec.id);
 
-          await supabase
+          const { data: pipeArtifact } = await supabase
             .from('strategy_artifacts')
             .insert({
               project_id: projectId,
@@ -559,7 +668,22 @@ Execute sua análise agora.`;
               titulo: agent.name,
               conteudo: parsedResult,
               status: 'completed'
+            })
+            .select()
+            .single();
+
+          // Save version history
+          if (pipeArtifact) {
+            await supabase.from('strategy_artifact_versions').insert({
+              project_id: projectId,
+              artifact_id: pipeArtifact.id,
+              tipo: exec.key,
+              titulo: agent.name,
+              conteudo: parsedResult,
+              version: 1,
+              status: 'completed'
             });
+          }
 
           // Update memory after each agent
           await supabase

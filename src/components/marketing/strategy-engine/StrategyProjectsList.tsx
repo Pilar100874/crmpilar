@@ -6,26 +6,29 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Trash2, Loader2, Rocket, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Plus, Trash2, Loader2, Rocket, Clock, CheckCircle2, AlertCircle, Copy, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { NicheTemplates } from './NicheTemplates';
 
 interface Props {
   onSelectProject: (id: string) => void;
 }
 
 export function StrategyProjectsList({ onSelectProject }: Props) {
-  // Use a placeholder - real estabelecimento_id would come from context
   const [estabId] = useState(() => {
     const stored = localStorage.getItem('estabelecimentoId');
     return stored || undefined;
   });
-  const { projects, loading, createProject, deleteProject } = useStrategyProjects(estabId);
+  const { projects, loading, createProject, deleteProject, refetch } = useStrategyProjects(estabId);
   const [showCreate, setShowCreate] = useState(false);
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [creating, setCreating] = useState(false);
+  const [cloning, setCloning] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
@@ -44,6 +47,29 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
     setCreating(false);
   };
 
+  const handleClone = async (projectId: string, projectName: string) => {
+    setCloning(projectId);
+    try {
+      const { data, error } = await supabase.functions.invoke('strategy-engine', {
+        body: { action: 'clone_project', sourceProjectId: projectId, newName: `${projectName} (Cópia)` }
+      });
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+      toast.success('Projeto clonado com sucesso!');
+      refetch();
+    } catch (err: any) {
+      toast.error(`Erro ao clonar: ${err.message}`);
+    } finally {
+      setCloning(null);
+    }
+  };
+
+  const handleTemplateSelect = (templateNome: string, templateDesc: string) => {
+    setNome(templateNome);
+    setDescricao(templateDesc);
+    setShowCreate(true);
+  };
+
   const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode }> = {
     draft: { label: 'Rascunho', variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
     processing: { label: 'Processando', variant: 'default', icon: <Loader2 className="h-3 w-3 animate-spin" /> },
@@ -53,7 +79,8 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <NicheTemplates onSelectTemplate={handleTemplateSelect} />
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogTrigger asChild>
             <Button>
@@ -79,7 +106,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                 <Textarea
                   value={descricao}
                   onChange={e => setDescricao(e.target.value)}
-                  placeholder="Descreva seu negócio, produto/serviço, público-alvo, e o que você quer alcançar. Quanto mais detalhes, melhor a estratégia gerada..."
+                  placeholder="Descreva seu negócio, produto/serviço, público-alvo, e o que você quer alcançar..."
                   rows={6}
                 />
               </div>
@@ -102,12 +129,15 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
             <Rocket className="h-12 w-12 text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum projeto criado</h3>
             <p className="text-muted-foreground text-sm max-w-md mb-4">
-              Descreva seu negócio e nossa IA criará uma estratégia completa de marketing com funil, copy, emails, criativos e muito mais.
+              Descreva seu negócio e nossa IA criará uma estratégia completa de marketing.
             </p>
-            <Button onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Criar Primeiro Projeto
-            </Button>
+            <div className="flex gap-2">
+              <NicheTemplates onSelectTemplate={handleTemplateSelect} />
+              <Button onClick={() => setShowCreate(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Criar Primeiro Projeto
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -123,14 +153,34 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-base line-clamp-1">{project.nome}</CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0"
-                      onClick={e => { e.stopPropagation(); deleteProject(project.id); }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                        <DropdownMenuItem
+                          onClick={() => handleClone(project.id, project.nome)}
+                          disabled={cloning === project.id}
+                        >
+                          {cloning === project.id ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
+                          Duplicar Projeto
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => deleteProject(project.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <CardDescription className="line-clamp-2 text-xs">
                     {project.descricao_negocio}
