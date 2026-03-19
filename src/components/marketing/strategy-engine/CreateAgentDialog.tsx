@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, Trash2, Copy } from 'lucide-react';
+import { Plus, Loader2, Trash2, Copy, Sparkles } from 'lucide-react';
 import { AGENT_ORDER } from './types';
 import { agentCardToSystemPrompt, AgentCard } from './agent-cards';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const ICON_OPTIONS = ['🤖', '🧠', '📊', '🎯', '💡', '🔬', '📈', '🛠️', '🎨', '📝', '🔍', '⚡', '🌟', '🏆', '📦', '🗂️', '💬', '🎪'];
@@ -91,6 +92,8 @@ interface Props {
 export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aiDescription, setAiDescription] = useState('');
   const [icon, setIcon] = useState('🤖');
   const [color, setColor] = useState('#8B5CF6');
   const [agentKey, setAgentKey] = useState('');
@@ -124,6 +127,58 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setColor('#8B5CF6');
     setOrdem(100);
     setDependencies([]);
+    setAiDescription('');
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!aiDescription.trim()) {
+      toast.error('Descreva o agente que deseja criar');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-agent-card', {
+        body: { description: aiDescription },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      // Fill all fields from AI response
+      setAgentKey(data.agent_key || '');
+      setDescription(data.description || '');
+      setIcon(data.icon || '🤖');
+      setColor(data.color || '#8B5CF6');
+
+      setCard({
+        id: data.agent_key || '',
+        name: data.name || '',
+        version: '1.0',
+        role: data.role || '',
+        mission: data.mission || '',
+        capabilities: data.capabilities || [],
+        non_capabilities: data.non_capabilities || [],
+        inputs: data.inputs || [],
+        context_dependencies: data.context_dependencies || [],
+        reasoning_protocol: data.reasoning_protocol || [],
+        output_schema: data.output_schema ? JSON.stringify(data.output_schema, null, 2) : '{}',
+        quality_standards: data.quality_standards || [],
+        anti_patterns: data.anti_patterns || [],
+        error_handling: data.error_handling || '',
+        handoff: data.handoff || '',
+      });
+
+      toast.success('✨ Agent Card gerado com IA! Revise e ajuste os campos antes de criar.');
+    } catch (err: any) {
+      console.error('AI generation error:', err);
+      toast.error(`Erro ao gerar: ${err.message || 'Erro desconhecido'}`);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -172,8 +227,49 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
           </DialogTitle>
         </DialogHeader>
 
+        {/* ─── AI Generation Section ─── */}
+        <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <Label className="text-sm font-semibold text-primary">Gerar com IA</Label>
+            <Badge variant="secondary" className="text-[10px]">Recomendado</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Descreva o agente que deseja criar e a IA preencherá automaticamente todos os campos do Agent Card.
+          </p>
+          <div className="flex gap-2">
+            <Textarea
+              value={aiDescription}
+              onChange={e => setAiDescription(e.target.value)}
+              placeholder="Ex: Um agente especialista em análise de concorrência que mapeia os principais competidores do negócio, analisa seus pontos fortes/fracos e sugere diferenciais estratégicos..."
+              rows={3}
+              className="text-sm flex-1"
+            />
+          </div>
+          <Button
+            onClick={handleGenerateWithAI}
+            disabled={generating || !aiDescription.trim()}
+            className="gap-2"
+            size="sm"
+          >
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando Agent Card...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Gerar Agent Card com IA
+              </>
+            )}
+          </Button>
+        </div>
+
+        <Separator />
+
         {/* ─── Meta fields ─── */}
-        <div className="space-y-3 mb-2">
+        <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Chave (ID único)</Label>
