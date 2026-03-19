@@ -19,7 +19,7 @@ export interface AgentCard {
 export const AGENT_CARDS: Record<string, AgentCard> = {
   orchestrator: {
     id: 'orchestrator',
-    name: 'Orchestrator – Coordenador Estratégico',
+    name: 'Coordenador Estratégico',
     version: '1.0',
     role: 'Coordenador central do motor de estratégia, responsável por orquestrar a sequência de agentes, resolver dependências e guiar o usuário.',
     mission: 'Garantir que todos os agentes executem na ordem correta, com contexto adequado, e que o resultado final seja uma estratégia de marketing coesa e integrada.',
