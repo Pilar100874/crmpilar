@@ -21,7 +21,7 @@ const AGENT_DEPENDENCIES: Record<string, string[]> = {
 // ─── AGENT DEFINITIONS (Professional-grade prompts) ────────────────────────────
 const AGENT_DEFINITIONS: Record<string, { name: string; type: string; systemPrompt: string }> = {
   vox: {
-    name: 'Vox Agent',
+    name: 'Voz do Cliente',
     type: 'specialist',
     systemPrompt: `Você é o VOX AGENT — pesquisador sênior de mercado especializado em etnografia digital e análise qualitativa da voz do cliente (VOC).
 
