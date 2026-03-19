@@ -1,10 +1,17 @@
 import React from 'react';
-import { AgentExecution, AGENT_INFO, AGENT_ORDER } from './types';
+import { AgentExecution } from './types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Loader2, CheckCircle2, XCircle, Clock, PlayCircle, Zap } from 'lucide-react';
+import { Play, Loader2, CheckCircle2, XCircle, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface AgentInfo {
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+}
 
 interface Props {
   executions: AgentExecution[];
@@ -12,9 +19,11 @@ interface Props {
   onExecuteAll: () => void;
   runningAgents: Set<string>;
   isPipelineRunning: boolean;
+  agentOrder: string[];
+  agentInfo: Record<string, AgentInfo>;
 }
 
-export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning }: Props) {
+export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning, agentOrder, agentInfo }: Props) {
   const executionMap = new Map<string, AgentExecution>();
   executions.forEach(e => {
     const existing = executionMap.get(e.agent_type);
@@ -24,41 +33,40 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
   });
 
   const hasAnyRunning = runningAgents.size > 0;
-  const allCompleted = AGENT_ORDER.every(k => executionMap.get(k)?.status === 'completed');
+  const allCompleted = agentOrder.every(k => executionMap.get(k)?.status === 'completed');
 
   return (
     <div className="space-y-3">
       {/* Execute All Button */}
-      <div className="flex items-center gap-2">
-        <Button
-          onClick={onExecuteAll}
-          disabled={isPipelineRunning}
-          size="sm"
-          className="w-full"
-          variant={allCompleted ? 'outline' : 'default'}
-        >
-          {hasAnyRunning ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Zap className="h-4 w-4 mr-2" />
-          )}
-          {hasAnyRunning
-            ? `Executando ${runningAgents.size} agente(s)...`
-            : allCompleted
-              ? 'Reexecutar Todos'
-              : 'Executar Todos Simultaneamente'
-          }
-        </Button>
-      </div>
+      <Button
+        onClick={onExecuteAll}
+        disabled={isPipelineRunning}
+        size="sm"
+        className="w-full"
+        variant={allCompleted ? 'outline' : 'default'}
+      >
+        {hasAnyRunning ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <Zap className="h-4 w-4 mr-2" />
+        )}
+        {hasAnyRunning
+          ? `Executando ${runningAgents.size} agente(s)...`
+          : allCompleted
+            ? 'Reexecutar Todos'
+            : `Executar Todos (${agentOrder.length}) Simultaneamente`
+        }
+      </Button>
 
       {/* Agent Cards */}
       <div className="space-y-2">
-        {AGENT_ORDER.map((agentKey, index) => {
-          const info = AGENT_INFO[agentKey];
+        {agentOrder.map((agentKey, index) => {
+          const info = agentInfo[agentKey] || { name: agentKey, icon: '🤖', color: '#888', description: '' };
           const execution = executionMap.get(agentKey);
           const isRunning = runningAgents.has(agentKey);
           const isCompleted = execution?.status === 'completed';
           const isFailed = execution?.status === 'failed';
+          const isCustom = !(agentKey in (agentInfo || {})) || index >= 9; // rough heuristic
 
           return (
             <Card
@@ -71,7 +79,6 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
               )}
             >
               <CardContent className="p-3 flex items-center gap-3">
-                {/* Step number */}
                 <div
                   className={cn(
                     'h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
@@ -87,7 +94,6 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
                    index + 1}
                 </div>
 
-                {/* Agent info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-base">{info.icon}</span>
@@ -97,6 +103,9 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
                         {(execution.duration_ms / 1000).toFixed(1)}s
                       </span>
                     )}
+                    {index >= 9 && (
+                      <Badge variant="secondary" className="text-[10px]">Custom</Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">{info.description}</p>
                   {isFailed && execution?.error_message && (
@@ -104,7 +113,6 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
                   )}
                 </div>
 
-                {/* Action */}
                 <Button
                   variant={isCompleted ? 'outline' : 'default'}
                   size="sm"
