@@ -279,7 +279,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   creative: {
-    name: 'Creative Strategist',
+    name: 'Criativos',
     type: 'specialist',
     systemPrompt: `Você é o CREATIVE STRATEGIST — diretor criativo sênior de performance marketing com expertise em Meta Ads, Google Ads, TikTok Ads e YouTube Ads.
 
