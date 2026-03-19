@@ -22,9 +22,10 @@ interface Props {
   isPipelineRunning: boolean;
   agentOrder: string[];
   agentInfo: Record<string, AgentInfo>;
+  dependencyMap?: Record<string, string[]>;
 }
 
-export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning, agentOrder, agentInfo }: Props) {
+export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, runningAgents, isPipelineRunning, agentOrder, agentInfo, dependencyMap }: Props) {
   const executionMap = new Map<string, AgentExecution>();
   executions.forEach(e => {
     const existing = executionMap.get(e.agent_type);
