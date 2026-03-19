@@ -95,7 +95,70 @@ function safeString(value: any): string {
   return String(value);
 }
 
-function EditableList({ items, fieldPath, update, editable, icon }: {
+// Smart renderer that handles strings, arrays, and nested objects automatically
+function SmartField({ value, basePath, update, editable }: {
+  value: any;
+  basePath: string[];
+  update: (path: string[], value: any) => void;
+  editable: boolean;
+}) {
+  if (value === null || value === undefined) return null;
+
+  // Primitive: render as editable text
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return <EditableText value={safeString(value)} path={basePath} update={update} editable={editable} multiline={editable} className="text-sm" />;
+  }
+
+  // Array: render as list
+  if (Array.isArray(value)) {
+    return (
+      <ul className="space-y-1.5 ml-1">
+        {value.map((item, i) => (
+          <li key={i} className="text-sm flex items-start gap-2">
+            <span className="text-muted-foreground shrink-0 mt-0.5">•</span>
+            <div className="flex-1">
+              {typeof item === 'object' && item !== null ? (
+                <SmartField value={item} basePath={[...basePath, String(i)]} update={update} editable={editable} />
+              ) : editable ? (
+                <Input
+                  value={safeString(item)}
+                  onChange={e => {
+                    const next = [...value];
+                    next[i] = e.target.value;
+                    update(basePath, next);
+                  }}
+                  className="text-sm h-auto py-1"
+                />
+              ) : (
+                <span>{safeString(item)}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  // Object: render each key/value pair
+  if (typeof value === 'object') {
+    return (
+      <div className="space-y-2 text-sm">
+        {Object.entries(value).map(([k, v]) => (
+          <div key={k}>
+            <p className="font-medium capitalize text-xs text-muted-foreground mb-0.5">{k.replace(/_/g, ' ')}</p>
+            <div className="ml-2">
+              <SmartField value={v} basePath={[...basePath, k]} update={update} editable={editable} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <span className="text-sm">{safeString(value)}</span>;
+}
+
+
   items: any[];
   fieldPath: string;
   update: (path: string[], value: any) => void;
