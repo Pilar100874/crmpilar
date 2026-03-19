@@ -288,10 +288,15 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return '';
   };
 
-  // Strip emojis for PDF (jsPDF font doesn't support them)
-  const stripEmoji = (str: string): string => {
-    return str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]/gu, '').trim();
+  // Strip emojis and normalize for PDF (jsPDF default font has limited Unicode support)
+  const sanitizeForPDF = (str: string): string => {
+    // Remove emojis
+    let clean = str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]|[\u{2700}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]/gu, '');
+    // Replace common unicode chars that jsPDF can't render
+    clean = clean.replace(/[""]/g, '"').replace(/['']/g, "'").replace(/—/g, '-').replace(/–/g, '-').replace(/…/g, '...').replace(/•/g, '-');
+    return clean.trim();
   };
+  const stripEmoji = sanitizeForPDF;
 
   const buildPDF = (arts: any[], mode: 'resumida' | 'completa', projectName: string) => {
     const doc = new jsPDF();
