@@ -281,3 +281,6 @@ verify_jwt = false
 
 [functions.apiframe-proxy]
 verify_jwt = false
+
+[functions.strategy-engine]
+verify_jwt = false
