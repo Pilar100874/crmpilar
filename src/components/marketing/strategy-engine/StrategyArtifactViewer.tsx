@@ -269,9 +269,9 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="formatted" className="mt-3">
-              <ScrollArea className="max-h-[55vh]">
-                <div className="pr-4 pb-4">
+            <TabsContent value="formatted" className="mt-3 flex-1 min-h-0">
+              <ScrollArea className="h-[55vh]">
+                <div className="pr-4 pb-6">
                   {selectedArtifact && <ArtifactRenderer tipo={selectedArtifact.tipo} conteudo={selectedArtifact.conteudo} />}
                 </div>
               </ScrollArea>
