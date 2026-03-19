@@ -17,6 +17,7 @@ export interface CustomAgent {
   ativo: boolean;
   created_at: string;
   updated_at: string;
+  agent_card_json?: any;
 }
 
 export function useCustomAgents(estabelecimentoId: string | undefined) {

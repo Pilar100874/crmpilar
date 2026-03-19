@@ -41,6 +41,10 @@ interface AgentConfig {
   active: boolean;
   saved: boolean;
   dbId?: string;
+  isCustom?: boolean;
+  customAgentId?: string;
+  icon?: string;
+  color?: string;
 }
 
 function agentCardToEditable(card: AgentCard): EditableAgentCard {
@@ -138,7 +142,10 @@ export function StrategyAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const estabId = localStorage.getItem('estabelecimentoId') || undefined;
-  const { customAgents, createAgent, deleteAgent: deleteCustomAgent } = useCustomAgents(estabId);
+  const { customAgents, createAgent, updateAgent: updateCustomAgent, deleteAgent: deleteCustomAgent, refetch: refetchCustomAgents } = useCustomAgents(estabId);
+
+  // Build unified agent list: built-in + custom
+  const allAgentKeys = [...AGENT_ORDER, ...customAgents.map(a => a.agent_key)];
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -149,6 +156,7 @@ export function StrategyAdminPanel() {
           card: card ? agentCardToEditable(card) : agentCardToEditable({ id: key, name: key, version: '1.0', role: '', mission: '', capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [], reasoning_protocol: [], output_schema: {}, quality_standards: [], anti_patterns: [], error_handling: '', handoff: '' }),
           active: true,
           saved: true,
+          isCustom: false,
         };
       });
 
@@ -160,13 +168,13 @@ export function StrategyAdminPanel() {
       if (data) {
         for (const row of data as any[]) {
           if (initial[row.agent_type]) {
-            // If DB has a stored agent_card_json, restore it; otherwise keep default
             const storedCard = (row as any).agent_card_json;
             initial[row.agent_type] = {
               card: storedCard ? { ...initial[row.agent_type].card, ...storedCard } : initial[row.agent_type].card,
               active: row.is_active ?? true,
               saved: true,
               dbId: row.id,
+              isCustom: false,
             };
           }
         }
@@ -177,6 +185,63 @@ export function StrategyAdminPanel() {
     };
     loadConfigs();
   }, []);
+
+  // Merge custom agents into configs whenever they change
+  useEffect(() => {
+    setConfigs(prev => {
+      const next = { ...prev };
+      for (const ca of customAgents) {
+        const storedCard = (ca as any).agent_card_json;
+        const cardData: EditableAgentCard = storedCard ? {
+          id: storedCard.id || ca.agent_key,
+          name: storedCard.name || ca.name,
+          version: storedCard.version || '1.0',
+          role: storedCard.role || '',
+          mission: storedCard.mission || ca.description || '',
+          capabilities: storedCard.capabilities || [],
+          non_capabilities: storedCard.non_capabilities || [],
+          inputs: storedCard.inputs || [],
+          context_dependencies: storedCard.context_dependencies || [],
+          reasoning_protocol: storedCard.reasoning_protocol || [],
+          output_schema: typeof storedCard.output_schema === 'string' ? storedCard.output_schema : JSON.stringify(storedCard.output_schema || ca.output_schema || {}, null, 2),
+          quality_standards: storedCard.quality_standards || [],
+          anti_patterns: storedCard.anti_patterns || [],
+          error_handling: storedCard.error_handling || '',
+          handoff: storedCard.handoff || '',
+        } : {
+          id: ca.agent_key,
+          name: ca.name,
+          version: '1.0',
+          role: '',
+          mission: ca.description || '',
+          capabilities: [],
+          non_capabilities: [],
+          inputs: [],
+          context_dependencies: [],
+          reasoning_protocol: [],
+          output_schema: JSON.stringify(ca.output_schema || {}, null, 2),
+          quality_standards: [],
+          anti_patterns: [],
+          error_handling: '',
+          handoff: '',
+        };
+
+        // Only set if not already modified by user in this session
+        if (!next[ca.agent_key] || next[ca.agent_key]?.saved !== false) {
+          next[ca.agent_key] = {
+            card: cardData,
+            active: ca.ativo,
+            saved: true,
+            isCustom: true,
+            customAgentId: ca.id,
+            icon: ca.icon,
+            color: ca.color,
+          };
+        }
+      }
+      return next;
+    });
+  }, [customAgents]);
 
   const updateCard = useCallback((agentKey: string, field: keyof EditableAgentCard, value: any) => {
     setConfigs(prev => ({
@@ -195,34 +260,46 @@ export function StrategyAdminPanel() {
     const systemPrompt = editableToSystemPrompt(config.card);
 
     try {
-      const payload: any = {
-        system_prompt: systemPrompt,
-        is_active: config.active,
-        agent_card_json: config.card,
-      };
-
-      if (config.dbId) {
-        await supabase
-          .from('strategy_agent_configs')
-          .update(payload)
-          .eq('id', config.dbId);
+      if (config.isCustom && config.customAgentId) {
+        // Save custom agent via strategy_custom_agents table
+        await updateCustomAgent(config.customAgentId, {
+          name: config.card.name,
+          description: config.card.mission,
+          system_prompt: systemPrompt,
+          ativo: config.active,
+          agent_card_json: config.card,
+        } as any);
       } else {
-        const info = AGENT_INFO[agentKey];
-        const { data } = await supabase
-          .from('strategy_agent_configs')
-          .insert({
-            agent_type: agentKey,
-            agent_name: info?.name || agentKey,
-            ...payload,
-          } as any)
-          .select()
-          .single();
+        // Save built-in agent via strategy_agent_configs table
+        const payload: any = {
+          system_prompt: systemPrompt,
+          is_active: config.active,
+          agent_card_json: config.card,
+        };
 
-        if (data) {
-          setConfigs(prev => ({
-            ...prev,
-            [agentKey]: { ...prev[agentKey], dbId: (data as any).id },
-          }));
+        if (config.dbId) {
+          await supabase
+            .from('strategy_agent_configs')
+            .update(payload)
+            .eq('id', config.dbId);
+        } else {
+          const info = AGENT_INFO[agentKey];
+          const { data } = await supabase
+            .from('strategy_agent_configs')
+            .insert({
+              agent_type: agentKey,
+              agent_name: info?.name || agentKey,
+              ...payload,
+            } as any)
+            .select()
+            .single();
+
+          if (data) {
+            setConfigs(prev => ({
+              ...prev,
+              [agentKey]: { ...prev[agentKey], dbId: (data as any).id },
+            }));
+          }
         }
       }
 
@@ -237,7 +314,10 @@ export function StrategyAdminPanel() {
 
   const handleReset = (agentKey: string) => {
     const card = AGENT_CARDS[agentKey];
-    if (!card) return;
+    if (!card) {
+      toast.info('Agentes personalizados não possuem configuração padrão');
+      return;
+    }
     setConfigs(prev => ({
       ...prev,
       [agentKey]: {
@@ -248,6 +328,23 @@ export function StrategyAdminPanel() {
       },
     }));
     toast.info('Agent Card restaurado ao padrão');
+  };
+
+  const handleDelete = async (agentKey: string) => {
+    const config = configs[agentKey];
+    if (!config.isCustom || !config.customAgentId) return;
+
+    const confirmed = window.confirm(`Tem certeza que deseja excluir o agente "${config.card.name}"?`);
+    if (!confirmed) return;
+
+    const success = await deleteCustomAgent(config.customAgentId);
+    if (success) {
+      setConfigs(prev => {
+        const next = { ...prev };
+        delete next[agentKey];
+        return next;
+      });
+    }
   };
 
   const copyPrompt = (agentKey: string) => {
@@ -273,54 +370,58 @@ export function StrategyAdminPanel() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
             <CreateAgentDialog
-              onCreate={createAgent}
-              existingKeys={[...AGENT_ORDER, ...customAgents.map(a => a.agent_key)]}
+              onCreate={async (agent) => {
+                const result = await createAgent(agent);
+                if (result) await refetchCustomAgents();
+                return result;
+              }}
+              existingKeys={allAgentKeys}
             />
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Edite os Agent Cards existentes ou crie novos agentes personalizados.
+            Edite, ative/desative ou exclua agentes. Agentes personalizados são marcados com <Badge variant="secondary" className="text-[10px] mx-1">Personalizado</Badge>.
           </p>
-          {customAgents.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {customAgents.map(a => (
-                <Badge key={a.id} variant="secondary" className="text-xs gap-1">
-                  {a.icon} {a.name}
-                  <button onClick={() => deleteCustomAgent(a.id)} className="ml-1 hover:text-destructive">
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
       <ScrollArea className="h-[650px] pr-2">
         <div className="space-y-2">
-          {AGENT_ORDER.map((agentKey, index) => {
-            const info = AGENT_INFO[agentKey];
+          {allAgentKeys.map((agentKey, index) => {
             const config = configs[agentKey];
             if (!config) return null;
             const { card } = config;
             const isExpanded = expandedAgent === agentKey;
+            const isCustom = config.isCustom;
+            const agentIcon = isCustom ? (config.icon || '🤖') : (AGENT_INFO[agentKey]?.icon || '🤖');
+            const agentColor = isCustom ? config.color : undefined;
 
             return (
-              <Card key={agentKey} className={!config.saved ? 'ring-1 ring-primary/50' : ''}>
+              <Card key={agentKey} className={`${!config.saved ? 'ring-1 ring-primary/50' : ''} ${!config.active ? 'opacity-60' : ''}`}>
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedAgent(isExpanded ? null : agentKey)}>
                   <CardHeader className="pb-2">
                     <CollapsibleTrigger asChild>
                       <div className="flex items-center justify-between cursor-pointer group">
                         <div className="flex items-center gap-2">
                           {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                          <span className="text-lg">{info.icon}</span>
-                          <CardTitle className="text-sm group-hover:underline">{card.name}</CardTitle>
+                          <span className="text-lg">{agentIcon}</span>
+                          <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
+                          {isCustom && (
+                            <Badge variant="secondary" className="text-[10px]" style={agentColor ? { borderColor: agentColor, color: agentColor } : undefined}>
+                              Personalizado
+                            </Badge>
+                          )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                          {isCustom && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          )}
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={config.active}
@@ -464,9 +565,18 @@ export function StrategyAdminPanel() {
 
                       {/* ─── Actions ─── */}
                       <div className="flex justify-between items-center pt-2 border-t">
-                        <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
-                          <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
-                        </Button>
+                        <div className="flex gap-2">
+                          {!isCustom && (
+                            <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
+                              <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
+                            </Button>
+                          )}
+                          {isCustom && (
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
+                              <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
+                            </Button>
+                          )}
+                        </div>
                         <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey}>
                           {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
                           Salvar Agent Card
