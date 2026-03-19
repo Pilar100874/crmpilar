@@ -97,7 +97,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   positioning: {
-    name: 'Positioning Strategist',
+    name: 'Posicionamento',
     type: 'specialist',
     systemPrompt: `Você é o POSITIONING STRATEGIST — estrategista de marca e posicionamento com expertise em diferenciação competitiva, seguindo princípios de Al Ries, Jack Trout e April Dunford.
 
