@@ -159,6 +159,7 @@ function SmartField({ value, basePath, update, editable }: {
 }
 
 
+function EditableList({ items, fieldPath, update, editable, icon }: {
   items: any[];
   fieldPath: string;
   update: (path: string[], value: any) => void;
