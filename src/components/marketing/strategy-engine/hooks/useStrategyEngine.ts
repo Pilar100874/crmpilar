@@ -288,6 +288,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return '';
   };
 
+  // Strip emojis for PDF (jsPDF font doesn't support them)
+  const stripEmoji = (str: string): string => {
+    return str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]/gu, '').trim();
+  };
+
   const buildPDF = (arts: any[], mode: 'resumida' | 'completa', projectName: string) => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
@@ -298,11 +303,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     let y = 0;
 
     const addPageHeader = () => {
-      doc.setFillColor(30, 41, 59); // slate-800
+      doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, pageW, 40, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATÉGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
+      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
       doc.setTextColor(0, 0, 0);
       y = 50;
     };
@@ -318,28 +323,28 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     doc.setFillColor(30, 41, 59);
     doc.rect(0, 0, pageW, pageH, 'F');
 
-    // Accent bar
-    doc.setFillColor(99, 102, 241); // indigo-500
+    doc.setFillColor(99, 102, 241);
     doc.rect(marginL, 80, 60, 4, 'F');
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
-    doc.text('Estratégia de', marginL, 105);
+    doc.text('Estrategia de', marginL, 105);
     doc.setFontSize(32);
     doc.text('Marketing Digital', marginL, 120);
 
     doc.setFontSize(12);
     doc.setTextColor(200, 200, 220);
-    const projLines = doc.splitTextToSize(projectName, contentW);
+    const projLines = doc.splitTextToSize(stripEmoji(projectName), contentW);
     doc.text(projLines, marginL, 140);
 
     doc.setFontSize(10);
     doc.setTextColor(160, 160, 180);
-    doc.text(mode === 'resumida' ? 'Versão Resumida' : 'Versão Completa', marginL, 165);
-    doc.text(new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), marginL, 175);
+    doc.text(mode === 'resumida' ? 'Versao Resumida' : 'Versao Completa', marginL, 165);
+    const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    doc.text(dateStr, marginL, 175);
 
     doc.setFontSize(9);
-    doc.text(`${arts.length} seções • Gerado automaticamente`, marginL, pageH - 30);
+    doc.text(`${arts.length} secoes - Gerado automaticamente`, marginL, pageH - 30);
 
     // === TABLE OF CONTENTS ===
     doc.addPage();
