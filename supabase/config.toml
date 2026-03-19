@@ -284,3 +284,6 @@ verify_jwt = false
 
 [functions.strategy-engine]
 verify_jwt = false
+
+[functions.generate-agent-card]
+verify_jwt = false
