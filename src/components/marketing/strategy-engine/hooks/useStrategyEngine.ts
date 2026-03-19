@@ -695,11 +695,13 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
       }
 
-      // Footer separator
-      y += 5;
-      checkPage(6);
-      doc.setDrawColor(230, 230, 230);
-      doc.line(marginL, y, pageW - marginR, y);
+      // Footer separator (complete mode only, resumida has its own)
+      if (mode === 'completa') {
+        y += 5;
+        checkPage(6);
+        doc.setDrawColor(230, 230, 230);
+        doc.line(marginL, y, pageW - marginR, y);
+      }
     }
 
     return doc;
