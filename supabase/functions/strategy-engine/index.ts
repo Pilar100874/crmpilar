@@ -713,8 +713,26 @@ Deno.serve(async (req) => {
     // ACTION: Execute single agent
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'execute_agent') {
-      const agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) throw new Error(`Agente desconhecido: ${agentType}`);
+      let agent = AGENT_DEFINITIONS[agentType];
+      let customDeps: string[] = [];
+      
+      // If not a built-in agent, try loading from custom agents table
+      if (!agent) {
+        const { data: customAgent } = await supabase
+          .from('strategy_custom_agents')
+          .select('*')
+          .eq('agent_key', agentType)
+          .eq('ativo', true)
+          .single();
+        
+        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
+        agent = {
+          name: (customAgent as any).name,
+          type: agentType,
+          systemPrompt: (customAgent as any).system_prompt,
+        };
+        customDeps = (customAgent as any).dependencies || [];
+      }
 
       // Always fetch latest memory from DB
       const { project, memory } = await getLatestMemory(supabase, projectId);
