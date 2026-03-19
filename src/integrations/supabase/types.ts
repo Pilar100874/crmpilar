@@ -10022,6 +10022,252 @@ export type Database = {
           },
         ]
       }
+      strategy_agent_configs: {
+        Row: {
+          agent_name: string
+          agent_type: string
+          created_at: string | null
+          estabelecimento_id: string
+          execution_order: number | null
+          id: string
+          is_active: boolean | null
+          system_prompt: string
+          updated_at: string | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          agent_name: string
+          agent_type: string
+          created_at?: string | null
+          estabelecimento_id: string
+          execution_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          system_prompt: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          agent_name?: string
+          agent_type?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          execution_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          system_prompt?: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_agent_configs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_agent_executions: {
+        Row: {
+          agent_name: string
+          agent_type: string
+          created_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          project_id: string
+          status: string
+          updated_at: string | null
+          validation_details: Json | null
+          validation_score: number | null
+        }
+        Insert: {
+          agent_name: string
+          agent_type: string
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          project_id: string
+          status?: string
+          updated_at?: string | null
+          validation_details?: Json | null
+          validation_score?: number | null
+        }
+        Update: {
+          agent_name?: string
+          agent_type?: string
+          created_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+          validation_details?: Json | null
+          validation_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_agent_executions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_artifacts: {
+        Row: {
+          conteudo: Json
+          created_at: string | null
+          execution_id: string | null
+          id: string
+          project_id: string
+          status: string | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          conteudo?: Json
+          created_at?: string | null
+          execution_id?: string | null
+          id?: string
+          project_id: string
+          status?: string | null
+          tipo: string
+          titulo: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          conteudo?: Json
+          created_at?: string | null
+          execution_id?: string | null
+          id?: string
+          project_id?: string
+          status?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_artifacts_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_agent_executions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_artifacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_chat_messages: {
+        Row: {
+          agent_type: string | null
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          project_id: string
+          role: string
+        }
+        Insert: {
+          agent_type?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id: string
+          role?: string
+        }
+        Update: {
+          agent_type?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_chat_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "strategy_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategy_projects: {
+        Row: {
+          created_at: string | null
+          descricao_negocio: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          status: string
+          strategic_memory: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          descricao_negocio: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          status?: string
+          strategic_memory?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          descricao_negocio?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          status?: string
+          strategic_memory?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_projects_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       studio_gallery_images: {
         Row: {
           categoria: string
