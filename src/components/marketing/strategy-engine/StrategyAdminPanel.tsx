@@ -450,11 +450,11 @@ export function StrategyAdminPanel() {
                     {!isExpanded && (
                       <div className="ml-9 space-y-1">
                         <p className="text-[11px] text-muted-foreground line-clamp-1">{card.mission}</p>
-                        {(AGENT_DEPENDENCIES[agentKey] ?? []).length > 0 && (
+                        {(config.dependencies ?? []).length > 0 && (
                           <div className="flex items-center gap-1 flex-wrap">
                             <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                             <span className="text-[10px] text-muted-foreground">Depende de:</span>
-                            {(AGENT_DEPENDENCIES[agentKey] ?? []).map(dep => {
+                            {(config.dependencies ?? []).map(dep => {
                               const depInfo = AGENT_INFO[dep] || configs[dep]?.card;
                               const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                               const depName = depInfo?.name?.split(' ')[0] || dep;
