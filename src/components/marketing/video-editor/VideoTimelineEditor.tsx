@@ -312,13 +312,16 @@ const VideoTimelineEditor: React.FC = () => {
           audio.crossOrigin = 'anonymous';
           audio.preload = 'auto';
 
-          await new Promise<void>((resolve, reject) => {
-            audio.onloadedmetadata = () => resolve();
-            audio.onerror = () => reject(new Error(`Falha ao carregar áudio: ${clip.name}`));
-            audio.load();
-          });
-
-          audioElements[clip.id] = audio;
+          try {
+            await new Promise<void>((resolve, reject) => {
+              audio.onloadedmetadata = () => resolve();
+              audio.onerror = () => reject(new Error(`Falha ao carregar áudio: ${clip.name}`));
+              audio.load();
+            });
+            audioElements[clip.id] = audio;
+          } catch (audioErr) {
+            console.warn(`[Export] Áudio ignorado (falha ao carregar): ${clip.name}`, audioErr);
+          }
         }
       }
 
