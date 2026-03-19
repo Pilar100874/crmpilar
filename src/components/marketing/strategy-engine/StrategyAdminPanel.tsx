@@ -573,16 +573,14 @@ export function StrategyAdminPanel() {
                       {/* ─── Actions ─── */}
                       <div className="flex justify-between items-center pt-2 border-t">
                         <div className="flex gap-2">
-                          {!isCustom && (
+                          {AGENT_CARDS[agentKey] && (
                             <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
                               <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
                             </Button>
                           )}
-                          {isCustom && (
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
-                              <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
+                            <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
+                          </Button>
                         </div>
                         <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey}>
                           {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}

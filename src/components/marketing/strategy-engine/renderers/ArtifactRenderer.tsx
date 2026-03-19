@@ -40,7 +40,7 @@ export function ArtifactRenderer({ tipo, conteudo, editable = false, onChange }:
     case 'creative': return <CreativeRenderer {...props} />;
     case 'email': return <EmailRenderer {...props} />;
     case 'reel': return <ReelRenderer {...props} />;
-    default: return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(conteudo, null, 2)}</pre>;
+    default: return <GenericRenderer {...props} />;
   }
 }
 
