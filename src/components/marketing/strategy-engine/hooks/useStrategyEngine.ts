@@ -222,7 +222,239 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     }
   };
 
-  const exportPDF = async (pid: string) => {
+  // Helper: extract readable text from any JSON value
+  const extractText = (value: any, depth = 0): string[] => {
+    if (value === null || value === undefined) return [];
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      return [trimmed];
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') return [String(value)];
+    if (Array.isArray(value)) {
+      const lines: string[] = [];
+      for (const item of value) {
+        if (typeof item === 'string') {
+          lines.push(`• ${item.trim()}`);
+        } else if (typeof item === 'object' && item !== null) {
+          lines.push(...extractText(item, depth + 1));
+        }
+      }
+      return lines;
+    }
+    if (typeof value === 'object') {
+      const lines: string[] = [];
+      for (const [key, val] of Object.entries(value)) {
+        const label = key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (typeof val === 'string' && val.trim()) {
+          lines.push(`${label}: ${val.trim()}`);
+        } else if (typeof val === 'number' || typeof val === 'boolean') {
+          lines.push(`${label}: ${val}`);
+        } else if (Array.isArray(val)) {
+          lines.push(`${label}:`);
+          for (const item of val) {
+            if (typeof item === 'string') {
+              lines.push(`  • ${item.trim()}`);
+            } else if (typeof item === 'object' && item !== null) {
+              const subLines = extractText(item, depth + 1);
+              lines.push(...subLines.map(l => `  ${l}`));
+            }
+          }
+        } else if (typeof val === 'object' && val !== null) {
+          lines.push(`${label}:`);
+          const subLines = extractText(val, depth + 1);
+          lines.push(...subLines.map(l => `  ${l}`));
+        }
+      }
+      return lines;
+    }
+    return [];
+  };
+
+  // Helper: extract a one-paragraph summary from content
+  const extractSummary = (conteudo: any): string => {
+    if (typeof conteudo === 'string') return conteudo.substring(0, 300);
+    if (typeof conteudo === 'object' && conteudo !== null) {
+      // Try common summary fields
+      for (const key of ['resumo', 'summary', 'descricao', 'description', 'overview', 'objetivo', 'conclusao', 'headline', 'proposta_valor', 'posicionamento']) {
+        if (conteudo[key] && typeof conteudo[key] === 'string') {
+          return conteudo[key].substring(0, 400);
+        }
+      }
+      // Fallback: take first few string values
+      const texts = extractText(conteudo).filter(l => l.length > 10 && !l.startsWith('  '));
+      return texts.slice(0, 3).join(' | ').substring(0, 400);
+    }
+    return '';
+  };
+
+  const buildPDF = (arts: any[], mode: 'resumida' | 'completa', projectName: string) => {
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const marginL = 20;
+    const marginR = 20;
+    const contentW = pageW - marginL - marginR;
+    let y = 0;
+
+    const addPageHeader = () => {
+      doc.setFillColor(30, 41, 59); // slate-800
+      doc.rect(0, 0, pageW, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATÉGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
+      doc.setTextColor(0, 0, 0);
+      y = 50;
+    };
+
+    const checkPage = (needed: number) => {
+      if (y + needed > pageH - 25) {
+        doc.addPage();
+        addPageHeader();
+      }
+    };
+
+    // === COVER PAGE ===
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, pageW, pageH, 'F');
+
+    // Accent bar
+    doc.setFillColor(99, 102, 241); // indigo-500
+    doc.rect(marginL, 80, 60, 4, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.text('Estratégia de', marginL, 105);
+    doc.setFontSize(32);
+    doc.text('Marketing Digital', marginL, 120);
+
+    doc.setFontSize(12);
+    doc.setTextColor(200, 200, 220);
+    const projLines = doc.splitTextToSize(projectName, contentW);
+    doc.text(projLines, marginL, 140);
+
+    doc.setFontSize(10);
+    doc.setTextColor(160, 160, 180);
+    doc.text(mode === 'resumida' ? 'Versão Resumida' : 'Versão Completa', marginL, 165);
+    doc.text(new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), marginL, 175);
+
+    doc.setFontSize(9);
+    doc.text(`${arts.length} seções • Gerado automaticamente`, marginL, pageH - 30);
+
+    // === TABLE OF CONTENTS ===
+    doc.addPage();
+    addPageHeader();
+    doc.setFontSize(20);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Sumário', marginL, y);
+    y += 12;
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(marginL, y, pageW - marginR, y);
+    y += 10;
+
+    for (let i = 0; i < arts.length; i++) {
+      const info = agentInfo[arts[i].tipo];
+      const icon = info?.icon || '📋';
+      const title = arts[i].titulo || info?.name || arts[i].tipo;
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`${icon}  ${i + 1}. ${title}`, marginL + 5, y);
+      y += 8;
+    }
+
+    // === CONTENT PAGES ===
+    for (let i = 0; i < arts.length; i++) {
+      doc.addPage();
+      addPageHeader();
+
+      const art = arts[i];
+      const info = agentInfo[art.tipo];
+      const icon = info?.icon || '📋';
+      const title = art.titulo || info?.name || art.tipo;
+
+      // Section header with colored accent
+      const color = info?.color || '#6366F1';
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      doc.setFillColor(r, g, b);
+      doc.rect(marginL, y - 5, 4, 14, 'F');
+
+      doc.setFontSize(16);
+      doc.setTextColor(30, 41, 59);
+      doc.text(`${icon}  ${title}`, marginL + 10, y + 5);
+      y += 20;
+
+      // Separator
+      doc.setDrawColor(230, 230, 230);
+      doc.line(marginL, y, pageW - marginR, y);
+      y += 8;
+
+      if (mode === 'resumida') {
+        // Summary mode: one short paragraph
+        const summary = extractSummary(art.conteudo);
+        if (summary) {
+          doc.setFontSize(10);
+          doc.setTextColor(60, 60, 60);
+          const sLines = doc.splitTextToSize(summary, contentW);
+          for (const line of sLines) {
+            checkPage(6);
+            doc.text(line, marginL, y);
+            y += 5;
+          }
+        } else {
+          doc.setFontSize(10);
+          doc.setTextColor(150, 150, 150);
+          doc.text('Conteúdo pendente', marginL, y);
+          y += 6;
+        }
+      } else {
+        // Complete mode: full text extraction
+        const textLines = extractText(art.conteudo);
+        if (textLines.length === 0) {
+          doc.setFontSize(10);
+          doc.setTextColor(150, 150, 150);
+          doc.text('Conteúdo pendente', marginL, y);
+          y += 6;
+        } else {
+          for (const rawLine of textLines) {
+            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('•');
+            const isBullet = rawLine.trimStart().startsWith('•');
+            const indent = rawLine.startsWith('  ') ? 8 : 0;
+
+            if (isHeading) {
+              checkPage(12);
+              y += 4;
+              doc.setFontSize(11);
+              doc.setTextColor(30, 41, 59);
+              doc.text(rawLine, marginL + indent, y);
+              y += 6;
+            } else {
+              doc.setFontSize(9.5);
+              doc.setTextColor(isBullet ? 80 : 60, isBullet ? 80 : 60, isBullet ? 80 : 60);
+              const wrapped = doc.splitTextToSize(rawLine, contentW - indent - 5);
+              for (const wLine of wrapped) {
+                checkPage(5);
+                doc.text(wLine, marginL + indent, y);
+                y += 4.5;
+              }
+            }
+          }
+        }
+      }
+
+      // Footer separator
+      y += 5;
+      checkPage(6);
+      doc.setDrawColor(230, 230, 230);
+      doc.line(marginL, y, pageW - marginR, y);
+    }
+
+    return doc;
+  };
+
+  const exportPDF = async (pid: string, mode: 'resumida' | 'completa' = 'completa') => {
     try {
       const { data: arts } = await supabase
         .from('strategy_artifacts')
@@ -230,34 +462,22 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         .eq('project_id', pid)
         .order('created_at');
 
-      if (!arts?.length) { toast.error('Nenhum artefato'); return; }
+      if (!arts?.length) { toast.error('Nenhum artefato para exportar'); return; }
 
-      const doc = new jsPDF();
-      let y = 20;
-      doc.setFontSize(18);
-      doc.text('Estratégia de Marketing', 20, y);
-      y += 15;
+      // Get project name
+      const { data: proj } = await supabase
+        .from('strategy_projects')
+        .select('nome, descricao_negocio')
+        .eq('id', pid)
+        .single();
 
-      for (const art of arts) {
-        if (y > 260) { doc.addPage(); y = 20; }
-        doc.setFontSize(14);
-        doc.text(art.titulo, 20, y);
-        y += 8;
-        doc.setFontSize(9);
-        const content = JSON.stringify(art.conteudo, null, 2);
-        const lines = doc.splitTextToSize(content, 170);
-        for (const line of lines) {
-          if (y > 280) { doc.addPage(); y = 20; }
-          doc.text(line, 20, y);
-          y += 4;
-        }
-        y += 10;
-      }
-
-      doc.save('estrategia-marketing.pdf');
-      toast.success('PDF exportado!');
+      const projectName = proj?.nome || 'Projeto de Marketing';
+      const doc = buildPDF(arts, mode, projectName);
+      const suffix = mode === 'resumida' ? '-resumo' : '-completa';
+      doc.save(`estrategia-marketing${suffix}.pdf`);
+      toast.success(`PDF ${mode === 'resumida' ? 'resumido' : 'completo'} exportado!`);
     } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
+      toast.error(`Erro ao exportar PDF: ${err.message}`);
     }
   };
 
