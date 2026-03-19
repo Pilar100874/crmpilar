@@ -74,7 +74,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     toast.info('Executando todos os agentes simultaneamente...');
     
     // Launch all agents in parallel
-    const promises = AGENT_ORDER.map(agentType => executeAgent(agentType));
+    const promises = agentOrder.map(agentType => executeAgent(agentType));
     await Promise.allSettled(promises);
     
     toast.success('🎉 Todos os agentes finalizados!');
