@@ -205,9 +205,9 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                   <Button
                     size="sm" variant="outline"
                     onClick={() => onRevise?.(artifact.id, artifact.tipo)}
-                    disabled={runningAgent === artifact.tipo}
+                    disabled={runningAgents.has(artifact.tipo)}
                   >
-                    {runningAgent === artifact.tipo ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+                    {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
                     Revisar
                   </Button>
                 </div>
