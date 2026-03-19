@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { AGENT_INFO, AGENT_ORDER } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
+import { useCustomAgents } from './hooks/useCustomAgents';
+import { CreateAgentDialog } from './CreateAgentDialog';
 import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
