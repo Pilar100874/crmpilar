@@ -83,7 +83,7 @@ export function StrategyManual() {
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Análise competitiva do mercado</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Posicionamento estratégico diferenciado</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Arquitetura completa de funil de vendas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Roteiro de VSL (Video Sales Letter)</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Roteiro de vídeo de vendas</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Estrutura de landing page otimizada</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Criativos e copies para anúncios</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> Sequências de e-mail marketing</li>

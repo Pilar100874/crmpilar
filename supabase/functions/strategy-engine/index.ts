@@ -21,7 +21,7 @@ const AGENT_DEPENDENCIES: Record<string, string[]> = {
 // ─── AGENT DEFINITIONS (Professional-grade prompts) ────────────────────────────
 const AGENT_DEFINITIONS: Record<string, { name: string; type: string; systemPrompt: string }> = {
   vox: {
-    name: 'Vox Agent',
+    name: 'Voz do Cliente',
     type: 'specialist',
     systemPrompt: `Você é o VOX AGENT — pesquisador sênior de mercado especializado em etnografia digital e análise qualitativa da voz do cliente (VOC).
 
@@ -59,7 +59,7 @@ Retorne EXCLUSIVAMENTE um JSON válido (sem markdown, sem comentários):
 }`
   },
   cipher: {
-    name: 'Cipher Agent',
+    name: 'Inteligência Competitiva',
     type: 'specialist',
     systemPrompt: `Você é o CIPHER AGENT — analista de inteligência competitiva sênior com expertise em estratégia de mercado digital.
 
@@ -97,7 +97,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   positioning: {
-    name: 'Positioning Strategist',
+    name: 'Posicionamento',
     type: 'specialist',
     systemPrompt: `Você é o POSITIONING STRATEGIST — estrategista de marca e posicionamento com expertise em diferenciação competitiva, seguindo princípios de Al Ries, Jack Trout e April Dunford.
 
@@ -138,7 +138,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   funnel: {
-    name: 'Funnel Architect',
+    name: 'Arquiteto de Funil',
     type: 'specialist',
     systemPrompt: `Você é o FUNNEL ARCHITECT — engenheiro de funis de marketing com expertise em otimização de conversão e modelagem de unit economics.
 
@@ -176,7 +176,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   vsl: {
-    name: 'VSL Writer',
+    name: 'Roteirista de Vídeo',
     type: 'specialist',
     systemPrompt: `Você é o VSL WRITER — copywriter sênior de Video Sales Letters, treinado nas metodologias de Jon Benson, Todd Brown e Stefan Georgi.
 
@@ -226,7 +226,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   landing_page: {
-    name: 'Landing Page Builder',
+    name: 'Landing Page',
     type: 'specialist',
     systemPrompt: `Você é o LANDING PAGE BUILDER — especialista em páginas de vendas de alta conversão com expertise em UX persuasiva e CRO.
 
@@ -279,7 +279,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   creative: {
-    name: 'Creative Strategist',
+    name: 'Criativos',
     type: 'specialist',
     systemPrompt: `Você é o CREATIVE STRATEGIST — diretor criativo sênior de performance marketing com expertise em Meta Ads, Google Ads, TikTok Ads e YouTube Ads.
 
@@ -314,7 +314,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   email: {
-    name: 'Email Engine',
+    name: 'Email Marketing',
     type: 'specialist',
     systemPrompt: `Você é o EMAIL ENGINE — especialista sênior em email marketing e automação, treinado nas metodologias de André Chaperon (Soap Opera Sequences), Ryan Deiss e Ben Settle.
 
@@ -367,7 +367,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
 }`
   },
   reel: {
-    name: 'Reel Writer',
+    name: 'Roteirista de Reels',
     type: 'specialist',
     systemPrompt: `Você é o REEL WRITER — roteirista especializado em conteúdo vertical de alta retenção para Instagram Reels, TikTok e YouTube Shorts, com expertise em storytelling rápido e viralização orgânica.
 

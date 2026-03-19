@@ -19,7 +19,7 @@ export interface AgentCard {
 export const AGENT_CARDS: Record<string, AgentCard> = {
   orchestrator: {
     id: 'orchestrator',
-    name: 'Orchestrator – Coordenador Estratégico',
+    name: 'Coordenador Estratégico',
     version: '1.0',
     role: 'Coordenador central do motor de estratégia, responsável por orquestrar a sequência de agentes, resolver dependências e guiar o usuário.',
     mission: 'Garantir que todos os agentes executem na ordem correta, com contexto adequado, e que o resultado final seja uma estratégia de marketing coesa e integrada.',
@@ -36,7 +36,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   vox: {
     id: 'vox',
-    name: 'Vox – Pesquisador de Voz do Cliente',
+    name: 'Voz do Cliente',
     version: '1.0',
     role: 'Especialista em pesquisa de audiência, etnografia digital e extração de VOC (Voice of Customer).',
     mission: 'Extrair insights profundos da linguagem real do mercado para orientar posicionamento, copy e estratégia de todos os agentes downstream.',
@@ -53,7 +53,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   cipher: {
     id: 'cipher',
-    name: 'Cipher – Analista de Inteligência Competitiva',
+    name: 'Inteligência Competitiva',
     version: '1.0',
     role: 'Analista de inteligência competitiva sênior com expertise em estratégia de mercado digital e análise de concorrência.',
     mission: 'Realizar análise competitiva profunda, identificando padrões, vulnerabilidades e oportunidades inexploradas que possam ser convertidas em vantagem estratégica defensável.',
@@ -70,7 +70,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   positioning: {
     id: 'positioning',
-    name: 'Positioning Strategist – Estrategista de Posicionamento',
+    name: 'Posicionamento',
     version: '1.0',
     role: 'Estrategista de marca e posicionamento com expertise em diferenciação competitiva, seguindo princípios de Al Ries, Jack Trout, April Dunford e Alex Hormozi.',
     mission: 'Criar um posicionamento ÚNICO, DEFENSÁVEL e MEMORÁVEL que ocupe um espaço mental claro na mente do público-alvo.',
@@ -87,7 +87,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   funnel: {
     id: 'funnel',
-    name: 'Funnel Architect – Engenheiro de Funis',
+    name: 'Arquiteto de Funil',
     version: '1.0',
     role: 'Engenheiro de funis de marketing com expertise em otimização de conversão, modelagem de unit economics e arquitetura de jornada do cliente.',
     mission: 'Projetar um funil completo, realista e mensurável que maximize a conversão do ICP.',
@@ -104,7 +104,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   vsl: {
     id: 'vsl',
-    name: 'VSL Writer – Roteirista de Video Sales Letter',
+    name: 'Roteirista de Vídeo',
     version: '1.0',
     role: 'Copywriter sênior de Video Sales Letters, treinado nas metodologias de Jon Benson, Todd Brown e Stefan Georgi.',
     mission: 'Criar roteiro de VSL completo, persuasivo e pronto para gravação que converta o público do ICP.',
@@ -121,7 +121,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   landing_page: {
     id: 'landing_page',
-    name: 'Landing Page Builder – Construtor de Páginas de Vendas',
+    name: 'Landing Page',
     version: '1.0',
     role: 'Especialista em páginas de vendas de alta conversão com expertise em UX persuasiva, CRO e copywriting para web.',
     mission: 'Criar estrutura completa de página de vendas que funcione como "vendedor 24h", otimizada para conversão do ICP.',
@@ -138,7 +138,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   creative: {
     id: 'creative',
-    name: 'Creative Strategist – Diretor Criativo de Performance',
+    name: 'Criativos',
     version: '1.0',
     role: 'Diretor criativo sênior de performance marketing com expertise em Meta Ads, Google Ads, TikTok Ads e YouTube Ads.',
     mission: 'Criar arsenal completo de conceitos criativos para anúncios de alta performance, otimizados por plataforma e etapa do funil.',
@@ -155,7 +155,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   email: {
     id: 'email',
-    name: 'Email Engine – Especialista em Email Marketing',
+    name: 'Email Marketing',
     version: '1.0',
     role: 'Especialista sênior em email marketing e automação, treinado nas metodologias de André Chaperon, Ryan Deiss e Ben Settle.',
     mission: 'Criar sequências completas de email marketing que nutrem, educam e convertem leads usando storytelling e gatilhos psicológicos.',
@@ -172,7 +172,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   reel: {
     id: 'reel',
-    name: 'Reel Writer – Roteirista de Vídeos Curtos',
+    name: 'Roteirista de Reels',
     version: '1.0',
     role: 'Roteirista especializado em conteúdo vertical de alta retenção para Instagram Reels, TikTok e YouTube Shorts.',
     mission: 'Criar scripts completos para vídeos curtos que gerem alcance orgânico, construam autoridade e conduzam ao funil de vendas.',
