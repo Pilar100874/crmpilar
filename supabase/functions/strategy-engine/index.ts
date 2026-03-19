@@ -308,7 +308,7 @@ Execute sua análise agora.`;
           .eq('id', projectId);
 
         // Create artifact
-        await supabase
+        const { data: newArtifact } = await supabase
           .from('strategy_artifacts')
           .insert({
             project_id: projectId,
@@ -317,7 +317,22 @@ Execute sua análise agora.`;
             titulo: agent.name,
             conteudo: parsedResult,
             status: 'completed'
+          })
+          .select()
+          .single();
+
+        // Save version history
+        if (newArtifact) {
+          await supabase.from('strategy_artifact_versions').insert({
+            project_id: projectId,
+            artifact_id: newArtifact.id,
+            tipo: agentType,
+            titulo: agent.name,
+            conteudo: parsedResult,
+            version: 1,
+            status: 'completed'
           });
+        }
 
         return new Response(JSON.stringify({
           success: true,
