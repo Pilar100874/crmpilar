@@ -659,7 +659,7 @@ Execute sua análise agora.`;
             .update({ status: 'completed', output_data: parsedResult, duration_ms: duration })
             .eq('id', exec.id);
 
-          await supabase
+          const { data: pipeArtifact } = await supabase
             .from('strategy_artifacts')
             .insert({
               project_id: projectId,
@@ -668,7 +668,22 @@ Execute sua análise agora.`;
               titulo: agent.name,
               conteudo: parsedResult,
               status: 'completed'
+            })
+            .select()
+            .single();
+
+          // Save version history
+          if (pipeArtifact) {
+            await supabase.from('strategy_artifact_versions').insert({
+              project_id: projectId,
+              artifact_id: pipeArtifact.id,
+              tipo: exec.key,
+              titulo: agent.name,
+              conteudo: parsedResult,
+              version: 1,
+              status: 'completed'
             });
+          }
 
           // Update memory after each agent
           await supabase
