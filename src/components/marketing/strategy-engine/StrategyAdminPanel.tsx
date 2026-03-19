@@ -137,6 +137,8 @@ export function StrategyAdminPanel() {
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
+  const estabId = localStorage.getItem('estabelecimentoId') || undefined;
+  const { customAgents, createAgent, deleteAgent: deleteCustomAgent } = useCustomAgents(estabId);
 
   useEffect(() => {
     const loadConfigs = async () => {
