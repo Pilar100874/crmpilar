@@ -68,9 +68,8 @@ function EditableText({ value, path, update, editable, className = 'text-sm', mu
   if (!editable) return <span className={className}>{safe}</span>;
 
   if (multiline) {
-    return (
       <Textarea
-        value={value || ''}
+        value={safe}
         onChange={e => update(path, e.target.value)}
         className={`${className} min-h-[60px] resize-y`}
         rows={3}
