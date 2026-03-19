@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { StrategyProject, AgentExecution, StrategyArtifact, ChatMessage } from '../types';
 import { toast } from 'sonner';
@@ -91,9 +91,11 @@ export function useProjectDetail(projectId: string | null) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const initialLoadDone = useRef(false);
+
   const fetchAll = useCallback(async () => {
     if (!projectId) { setLoading(false); return; }
-    setLoading(true);
+    if (!initialLoadDone.current) setLoading(true);
 
     const [projRes, execRes, artRes, chatRes] = await Promise.all([
       supabase.from('strategy_projects').select('*').eq('id', projectId).single(),
@@ -107,6 +109,7 @@ export function useProjectDetail(projectId: string | null) {
     setArtifacts((artRes.data || []) as unknown as StrategyArtifact[]);
     setChatMessages((chatRes.data || []) as unknown as ChatMessage[]);
     setLoading(false);
+    initialLoadDone.current = true;
   }, [projectId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
