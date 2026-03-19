@@ -64,12 +64,13 @@ function EditableText({ value, path, update, editable, className = 'text-sm', mu
   className?: string;
   multiline?: boolean;
 }) {
-  if (!editable) return <span className={className}>{value || ''}</span>;
+  const safe = safeString(value);
+  if (!editable) return <span className={className}>{safe}</span>;
 
   if (multiline) {
     return (
       <Textarea
-        value={value || ''}
+        value={safe}
         onChange={e => update(path, e.target.value)}
         className={`${className} min-h-[60px] resize-y`}
         rows={3}
@@ -79,7 +80,7 @@ function EditableText({ value, path, update, editable, className = 'text-sm', mu
 
   return (
     <Input
-      value={value || ''}
+      value={safe}
       onChange={e => update(path, e.target.value)}
       className={`${className} h-auto py-1`}
     />
