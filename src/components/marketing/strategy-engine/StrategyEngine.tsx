@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { StrategyProjectsList } from './StrategyProjectsList';
 import { StrategyProjectDetail } from './StrategyProjectDetail';
 import { StrategyAdminPanel } from './StrategyAdminPanel';
+import { StrategyManual } from './StrategyManual';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutDashboard, FolderKanban, Shield } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Shield, BookOpen } from 'lucide-react';
 
 export function StrategyEngine() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'projects' | 'admin'>('projects');
+  const [activeSection, setActiveSection] = useState<'projects' | 'admin' | 'manual'>('projects');
 
   if (selectedProjectId) {
     return (
@@ -48,13 +49,23 @@ export function StrategyEngine() {
             <Shield className="h-4 w-4 mr-1" />
             Admin
           </Button>
+          <Button
+            variant={activeSection === 'manual' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveSection('manual')}
+          >
+            <BookOpen className="h-4 w-4 mr-1" />
+            Manual
+          </Button>
         </div>
       </div>
 
       {activeSection === 'projects' ? (
         <StrategyProjectsList onSelectProject={setSelectedProjectId} />
-      ) : (
+      ) : activeSection === 'admin' ? (
         <StrategyAdminPanel />
+      ) : (
+        <StrategyManual />
       )}
     </div>
   );
