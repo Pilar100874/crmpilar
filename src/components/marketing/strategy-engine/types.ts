@@ -62,3 +62,24 @@ export const AGENT_INFO: Record<string, { name: string; icon: string; color: str
 };
 
 export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel'];
+
+// Helper to merge hardcoded agents with custom agents
+export function getMergedAgentInfo(customAgents: Array<{ agent_key: string; name: string; icon: string; color: string; description: string }>): Record<string, { name: string; icon: string; color: string; description: string }> {
+  const merged = { ...AGENT_INFO };
+  for (const agent of customAgents) {
+    merged[agent.agent_key] = {
+      name: agent.name,
+      icon: agent.icon,
+      color: agent.color,
+      description: agent.description,
+    };
+  }
+  return merged;
+}
+
+export function getMergedAgentOrder(customAgents: Array<{ agent_key: string; ordem: number }>): string[] {
+  const customKeys = customAgents
+    .sort((a, b) => a.ordem - b.ordem)
+    .map(a => a.agent_key);
+  return [...AGENT_ORDER, ...customKeys];
+}
