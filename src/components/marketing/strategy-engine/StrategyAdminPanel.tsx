@@ -161,6 +161,7 @@ export function StrategyAdminPanel() {
           isCustom: false,
           icon: info?.icon || '🤖',
           color: info?.color,
+          dependencies: AGENT_DEPENDENCIES[key] ?? [],
         };
       });
 
