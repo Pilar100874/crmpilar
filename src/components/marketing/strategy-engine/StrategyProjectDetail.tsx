@@ -3,14 +3,13 @@ import { useProjectDetail } from './hooks/useStrategyProjects';
 import { useStrategyEngine } from './hooks/useStrategyEngine';
 import { AGENT_INFO, AGENT_ORDER } from './types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Play, Loader2, MessageSquare, FileText, Clock, CheckCircle2, XCircle, Rocket } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageSquare, FileText, Clock, Rocket, LayoutDashboard, Download } from 'lucide-react';
 import { StrategyChat } from './StrategyChat';
 import { StrategyTimeline } from './StrategyTimeline';
 import { StrategyArtifactViewer } from './StrategyArtifactViewer';
+import { StrategyDashboard } from './StrategyDashboard';
 
 interface Props {
   projectId: string;
@@ -19,8 +18,8 @@ interface Props {
 
 export function StrategyProjectDetail({ projectId, onBack }: Props) {
   const { project, executions, artifacts, chatMessages, loading, refetch } = useProjectDetail(projectId);
-  const { executeAgent, runPipeline, sendChatMessage, runningAgent, isPipelineRunning, chatLoading } = useStrategyEngine(projectId, refetch);
-  const [activeTab, setActiveTab] = useState('chat');
+  const { executeAgent, runPipeline, sendChatMessage, exportPDF, runningAgent, isPipelineRunning, chatLoading } = useStrategyEngine(projectId, refetch);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   if (loading) {
     return (
@@ -50,6 +49,12 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
           <Badge variant="outline" className="text-xs">
             {completedAgents}/{totalAgents} agentes
           </Badge>
+          {artifacts.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => exportPDF(projectId)}>
+              <Download className="h-4 w-4 mr-1" />
+              Exportar
+            </Button>
+          )}
           <Button
             onClick={runPipeline}
             disabled={isPipelineRunning || !!runningAgent}
@@ -60,17 +65,21 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             ) : (
               <Rocket className="h-4 w-4 mr-1" />
             )}
-            {isPipelineRunning ? 'Executando...' : 'Executar Pipeline Completo'}
+            {isPipelineRunning ? 'Executando...' : 'Executar Pipeline'}
           </Button>
         </div>
       </div>
 
       {/* Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="dashboard" className="flex items-center gap-1">
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="chat" className="flex items-center gap-1">
             <MessageSquare className="h-3.5 w-3.5" />
-            Chat Estratégico
+            Chat
           </TabsTrigger>
           <TabsTrigger value="timeline" className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
@@ -81,6 +90,14 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             Artefatos ({artifacts.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="mt-3">
+          <StrategyDashboard
+            project={project}
+            executions={executions}
+            artifacts={artifacts}
+          />
+        </TabsContent>
 
         <TabsContent value="chat" className="mt-3">
           <StrategyChat
