@@ -419,7 +419,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
       } else {
         // Complete mode: full text extraction
-        const textLines = extractText(art.conteudo);
+        const textLines = extractText(art.conteudo).map(l => sanitizeForPDF(l));
         if (textLines.length === 0) {
           doc.setFontSize(10);
           doc.setTextColor(150, 150, 150);
