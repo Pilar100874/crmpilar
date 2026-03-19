@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { AGENT_ORDER, AGENT_INFO } from '../types';
 import jsPDF from 'jspdf';
 
-export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER) {
+export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER, agentInfo: Record<string, { name: string; icon: string; color: string; description: string }> = AGENT_INFO) {
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
