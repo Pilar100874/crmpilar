@@ -1,0 +1,1 @@
+ALTER TABLE public.strategy_agent_configs ADD COLUMN IF NOT EXISTS agent_card_json jsonb DEFAULT null;
