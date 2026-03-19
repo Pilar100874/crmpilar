@@ -88,21 +88,21 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
     }
   };
 
-  const handleStartEdit = (artifact: StrategyArtifact) => {
-    setEditContent(JSON.stringify(artifact.conteudo, null, 2));
-    setViewMode('edit');
+  // Removed: handleStartEdit and handleSaveEdit replaced by inline editing
+
+  const handleInlineSave = (artifact: StrategyArtifact) => {
+    if (editedContent) {
+      onUpdateContent?.(artifact.id, editedContent);
+      setSelectedArtifact({ ...artifact, conteudo: editedContent });
+      setIsEditing(false);
+      setEditedContent(null);
+      toast.success('Artefato atualizado');
+    }
   };
 
-  const handleSaveEdit = (artifact: StrategyArtifact) => {
-    try {
-      const parsed = JSON.parse(editContent);
-      onUpdateContent?.(artifact.id, parsed);
-      setViewMode('formatted');
-      // Update local selected artifact
-      setSelectedArtifact({ ...artifact, conteudo: parsed });
-    } catch {
-      toast.error('JSON inválido');
-    }
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(null);
   };
 
   const getStatusBadge = (status: string) => {
