@@ -38,7 +38,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, runningAgent, isP
             className={cn(
               'transition-all',
               isRunning && 'border-primary/50 shadow-sm shadow-primary/10',
-              isCompleted && 'border-green-500/30',
+              isCompleted && 'border-primary/30',
               isFailed && 'border-destructive/30'
             )}
           >
