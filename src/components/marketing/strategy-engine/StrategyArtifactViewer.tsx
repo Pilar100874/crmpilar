@@ -243,7 +243,13 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs value={viewMode} onValueChange={v => setViewMode(v as any)}>
+          <Tabs value={viewMode} onValueChange={v => {
+            const mode = v as any;
+            if (mode === 'edit' && selectedArtifact) {
+              setEditContent(JSON.stringify(selectedArtifact.conteudo, null, 2));
+            }
+            setViewMode(mode);
+          }}>
             <TabsList className="w-fit">
               <TabsTrigger value="formatted" className="text-xs">
                 <LayoutList className="h-3 w-3 mr-1" />
@@ -253,7 +259,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                 <Code className="h-3 w-3 mr-1" />
                 JSON
               </TabsTrigger>
-              <TabsTrigger value="edit" className="text-xs" onClick={() => selectedArtifact && handleStartEdit(selectedArtifact)}>
+              <TabsTrigger value="edit" className="text-xs">
                 <Pencil className="h-3 w-3 mr-1" />
                 Editar
               </TabsTrigger>
