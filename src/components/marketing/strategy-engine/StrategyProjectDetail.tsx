@@ -135,6 +135,8 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             project={project}
             executions={executions}
             artifacts={artifacts}
+            agentOrder={mergedOrder}
+            agentInfo={mergedInfo}
           />
         </TabsContent>
 

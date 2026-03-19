@@ -66,7 +66,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
           const isRunning = runningAgents.has(agentKey);
           const isCompleted = execution?.status === 'completed';
           const isFailed = execution?.status === 'failed';
-          const isCustom = !(agentKey in (agentInfo || {})) || index >= 9; // rough heuristic
+          
 
           return (
             <Card
