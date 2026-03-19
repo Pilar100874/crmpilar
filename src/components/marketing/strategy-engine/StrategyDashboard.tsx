@@ -17,12 +17,22 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
   const resolvedOrder = agentOrder || AGENT_ORDER;
   const resolvedInfo = agentInfo || AGENT_INFO;
 
-  const completedAgents = executions.filter(e => e.status === 'completed').length;
-  const failedAgents = executions.filter(e => e.status === 'failed').length;
-  const totalAgents = resolvedOrder.length;
-  const progress = Math.round((completedAgents / totalAgents) * 100);
+  // Deduplicate: keep only the latest execution per agent_type
+  const latestExecMap = new Map<string, AgentExecution>();
+  for (const e of executions) {
+    const existing = latestExecMap.get(e.agent_type);
+    if (!existing || new Date(e.created_at) > new Date(existing.created_at)) {
+      latestExecMap.set(e.agent_type, e);
+    }
+  }
+  const uniqueExecutions = Array.from(latestExecMap.values());
 
-  const totalDuration = executions.reduce((sum, e) => sum + (e.duration_ms || 0), 0);
+  const completedAgents = uniqueExecutions.filter(e => e.status === 'completed').length;
+  const failedAgents = uniqueExecutions.filter(e => e.status === 'failed').length;
+  const totalAgents = resolvedOrder.length;
+  const progress = totalAgents > 0 ? Math.min(100, Math.round((completedAgents / totalAgents) * 100)) : 0;
+
+  const totalDuration = uniqueExecutions.reduce((sum, e) => sum + (e.duration_ms || 0), 0);
   const avgDuration = completedAgents > 0 ? Math.round(totalDuration / completedAgents / 1000) : 0;
 
   const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
