@@ -11,11 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { AGENT_INFO, AGENT_ORDER } from './types';
+import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
-import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy } from 'lucide-react';
+import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditableAgentCard {
@@ -444,7 +444,25 @@ export function StrategyAdminPanel() {
                       </div>
                     </CollapsibleTrigger>
                     {!isExpanded && (
-                      <p className="text-[11px] text-muted-foreground mt-1 ml-9 line-clamp-1">{card.mission}</p>
+                      <div className="ml-9 space-y-1">
+                        <p className="text-[11px] text-muted-foreground line-clamp-1">{card.mission}</p>
+                        {(AGENT_DEPENDENCIES[agentKey] ?? []).length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="text-[10px] text-muted-foreground">Depende de:</span>
+                            {(AGENT_DEPENDENCIES[agentKey] ?? []).map(dep => {
+                              const depInfo = AGENT_INFO[dep] || configs[dep]?.card;
+                              const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                              const depName = depInfo?.name?.split(' ')[0] || dep;
+                              return (
+                                <Badge key={dep} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
+                                  {depIcon} {depName}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </CardHeader>
 
@@ -486,6 +504,31 @@ export function StrategyAdminPanel() {
 
                           <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
                             <Input value={card.handoff} onChange={e => updateCard(agentKey, 'handoff', e.target.value)} className="text-xs h-8" />
+                          </FieldSection>
+
+                          <Separator />
+
+                          <FieldSection label="Dependências de Execução" hint="Agentes que DEVEM ser concluídos antes deste poder executar">
+                            <div className="flex flex-wrap gap-1">
+                              {allAgentKeys.filter(k => k !== agentKey).map(dep => {
+                                const depDeps = AGENT_DEPENDENCIES[agentKey] ?? [];
+                                const isSelected = depDeps.includes(dep);
+                                const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                                const depName = configs[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
+                                return (
+                                  <Badge
+                                    key={dep}
+                                    variant={isSelected ? 'default' : 'outline'}
+                                    className="text-[10px] cursor-default gap-0.5"
+                                  >
+                                    {depIcon} {depName}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              As dependências dos agentes nativos são definidas automaticamente pelo sistema.
+                            </p>
                           </FieldSection>
                         </TabsContent>
 
