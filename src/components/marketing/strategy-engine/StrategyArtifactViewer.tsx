@@ -26,10 +26,11 @@ interface Props {
 
 export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
-  const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'edit'>('formatted');
+  const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState<any>(null);
   const [validating, setValidating] = useState<string | null>(null);
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
-  const [editContent, setEditContent] = useState('');
 
   const exportJSON = (artifact: StrategyArtifact) => {
     const blob = new Blob([JSON.stringify(artifact.conteudo, null, 2)], { type: 'application/json' });
