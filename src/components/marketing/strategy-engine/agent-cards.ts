@@ -70,7 +70,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   positioning: {
     id: 'positioning',
-    name: 'Positioning Strategist – Estrategista de Posicionamento',
+    name: 'Posicionamento',
     version: '1.0',
     role: 'Estrategista de marca e posicionamento com expertise em diferenciação competitiva, seguindo princípios de Al Ries, Jack Trout, April Dunford e Alex Hormozi.',
     mission: 'Criar um posicionamento ÚNICO, DEFENSÁVEL e MEMORÁVEL que ocupe um espaço mental claro na mente do público-alvo.',
