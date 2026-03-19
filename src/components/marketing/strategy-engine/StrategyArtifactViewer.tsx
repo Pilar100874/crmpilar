@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, Columns } from 'lucide-react';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { ArtifactHistory } from './ArtifactHistory';
@@ -26,10 +25,11 @@ interface Props {
 
 export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
-  const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'edit'>('formatted');
+  const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState<any>(null);
   const [validating, setValidating] = useState<string | null>(null);
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
-  const [editContent, setEditContent] = useState('');
 
   const exportJSON = (artifact: StrategyArtifact) => {
     const blob = new Blob([JSON.stringify(artifact.conteudo, null, 2)], { type: 'application/json' });
@@ -87,21 +87,21 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
     }
   };
 
-  const handleStartEdit = (artifact: StrategyArtifact) => {
-    setEditContent(JSON.stringify(artifact.conteudo, null, 2));
-    setViewMode('edit');
+  // Removed: handleStartEdit and handleSaveEdit replaced by inline editing
+
+  const handleInlineSave = (artifact: StrategyArtifact) => {
+    if (editedContent) {
+      onUpdateContent?.(artifact.id, editedContent);
+      setSelectedArtifact({ ...artifact, conteudo: editedContent });
+      setIsEditing(false);
+      setEditedContent(null);
+      toast.success('Artefato atualizado');
+    }
   };
 
-  const handleSaveEdit = (artifact: StrategyArtifact) => {
-    try {
-      const parsed = JSON.parse(editContent);
-      onUpdateContent?.(artifact.id, parsed);
-      setViewMode('formatted');
-      // Update local selected artifact
-      setSelectedArtifact({ ...artifact, conteudo: parsed });
-    } catch {
-      toast.error('JSON inválido');
-    }
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -244,69 +244,76 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           </DialogHeader>
 
           <Tabs value={viewMode} onValueChange={v => {
-            const mode = v as any;
-            if (mode === 'edit' && selectedArtifact) {
-              setEditContent(JSON.stringify(selectedArtifact.conteudo, null, 2));
+            setViewMode(v as any);
+            if (v !== 'formatted') {
+              handleCancelEdit();
             }
-            setViewMode(mode);
           }}>
-            <TabsList className="w-fit">
-              <TabsTrigger value="formatted" className="text-xs">
-                <LayoutList className="h-3 w-3 mr-1" />
-                Formatado
-              </TabsTrigger>
-              <TabsTrigger value="json" className="text-xs">
-                <Code className="h-3 w-3 mr-1" />
-                JSON
-              </TabsTrigger>
-              <TabsTrigger value="edit" className="text-xs">
-                <Pencil className="h-3 w-3 mr-1" />
-                Editar
-              </TabsTrigger>
-              <TabsTrigger value="history" className="text-xs">
-                <History className="h-3 w-3 mr-1" />
-                Histórico
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between">
+              <TabsList className="w-fit">
+                <TabsTrigger value="formatted" className="text-xs">
+                  <LayoutList className="h-3 w-3 mr-1" />
+                  Formatado
+                </TabsTrigger>
+                <TabsTrigger value="json" className="text-xs">
+                  <Code className="h-3 w-3 mr-1" />
+                  JSON
+                </TabsTrigger>
+                <TabsTrigger value="history" className="text-xs">
+                  <History className="h-3 w-3 mr-1" />
+                  Histórico
+                </TabsTrigger>
+              </TabsList>
+
+              {viewMode === 'formatted' && selectedArtifact && (
+                <div className="flex items-center gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCancelEdit}>
+                        <X className="h-3 w-3 mr-1" /> Cancelar
+                      </Button>
+                      <Button size="sm" className="h-7 text-xs" onClick={() => handleInlineSave(selectedArtifact)}>
+                        <Save className="h-3 w-3 mr-1" /> Salvar
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
+                      setIsEditing(true);
+                      setEditedContent(JSON.parse(JSON.stringify(selectedArtifact.conteudo)));
+                    }}>
+                      <Pencil className="h-3 w-3 mr-1" /> Editar
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
 
             <TabsContent value="formatted" className="mt-3 flex-1 min-h-0">
               <ScrollArea className="h-[55vh]">
                 <div className="pr-4 pb-6">
-                  {selectedArtifact && <ArtifactRenderer tipo={selectedArtifact.tipo} conteudo={selectedArtifact.conteudo} />}
+                  {selectedArtifact && (
+                    <ArtifactRenderer
+                      tipo={selectedArtifact.tipo}
+                      conteudo={isEditing && editedContent ? editedContent : selectedArtifact.conteudo}
+                      editable={isEditing}
+                      onChange={newContent => setEditedContent(newContent)}
+                    />
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="json" className="mt-3">
-              <ScrollArea className="max-h-[55vh]">
+              <ScrollArea className="h-[55vh]">
                 <pre className="text-xs bg-muted p-4 rounded-lg whitespace-pre-wrap break-words pr-4">
-                  {JSON.stringify(selectedArtifact?.conteudo, null, 2)}
+                  {JSON.stringify(
+                    isEditing && editedContent ? editedContent : selectedArtifact?.conteudo,
+                    null, 2
+                  )}
                 </pre>
               </ScrollArea>
             </TabsContent>
-            <TabsContent value="edit" className="mt-3 space-y-3">
-              <ScrollArea className="max-h-[50vh]">
-                <div className="pr-4">
-                  <Textarea
-                    value={editContent}
-                    onChange={e => setEditContent(e.target.value)}
-                    rows={20}
-                    className="font-mono text-xs"
-                    placeholder="Edite o JSON do artefato..."
-                  />
-                </div>
-              </ScrollArea>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => setViewMode('formatted')}>
-                  Cancelar
-                </Button>
-                <Button size="sm" onClick={() => selectedArtifact && handleSaveEdit(selectedArtifact)}>
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                  Salvar (nova versão)
-                </Button>
-              </div>
-            </TabsContent>
             <TabsContent value="history" className="mt-3">
-              <ScrollArea className="max-h-[55vh]">
+              <ScrollArea className="h-[55vh]">
                 <div className="pr-4">
                   {selectedArtifact && (
                     <ArtifactHistory projectId={projectId} artifactType={selectedArtifact.tipo} />
