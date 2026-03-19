@@ -334,6 +334,7 @@ export function StrategyAdminPanel() {
         card: agentCardToEditable(card),
         active: true,
         saved: false,
+        dependencies: AGENT_DEPENDENCIES[agentKey] ?? [],
       },
     }));
     toast.info('Agent Card restaurado ao padrão');
