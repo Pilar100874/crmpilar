@@ -142,8 +142,27 @@ export function StrategyAdminPanel() {
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
-  const estabId = localStorage.getItem('estabelecimentoId') || undefined;
+  const [estabId, setEstabId] = useState<string | undefined>(() => localStorage.getItem('estabelecimentoId') || undefined);
   const { customAgents, createAgent, updateAgent: updateCustomAgent, deleteAgent: deleteCustomAgent, refetch: refetchCustomAgents } = useCustomAgents(estabId);
+
+  // Resolve estabelecimento_id from auth if not in localStorage
+  useEffect(() => {
+    if (estabId) return;
+    const resolve = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (data?.estabelecimento_id) {
+        setEstabId(data.estabelecimento_id);
+        localStorage.setItem('estabelecimentoId', data.estabelecimento_id);
+      }
+    };
+    resolve();
+  }, [estabId]);
 
   // Build unified agent list: built-in + custom
   const allAgentKeys = [...AGENT_ORDER, ...customAgents.map(a => a.agent_key)];
