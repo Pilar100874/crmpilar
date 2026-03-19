@@ -291,21 +291,53 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     });
   };
 
-  // Helper: extract a one-paragraph summary from content
-  const extractSummary = (conteudo: any): string => {
-    if (typeof conteudo === 'string') return conteudo.substring(0, 300);
-    if (typeof conteudo === 'object' && conteudo !== null) {
-      // Try common summary fields
-      for (const key of ['resumo', 'summary', 'descricao', 'description', 'overview', 'objetivo', 'conclusao', 'headline', 'proposta_valor', 'posicionamento']) {
-        if (conteudo[key] && typeof conteudo[key] === 'string') {
-          return conteudo[key].substring(0, 400);
+  // Extract a rich condensed summary: all key insights as key-value + top bullets
+  const extractCondensedLines = (conteudo: any): PdfLine[] => {
+    if (!conteudo || typeof conteudo !== 'object') {
+      if (typeof conteudo === 'string') return [{ type: 'body', text: conteudo.substring(0, 500) }];
+      return [];
+    }
+    const lines: PdfLine[] = [];
+    for (const [key, val] of Object.entries(conteudo)) {
+      const label = key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      if (typeof val === 'string' && val.trim()) {
+        // Truncate long values but keep meaningful content
+        lines.push({ type: 'keyvalue', label, value: val.trim().substring(0, 200) });
+      } else if (typeof val === 'number' || typeof val === 'boolean') {
+        lines.push({ type: 'keyvalue', label, value: String(val) });
+      } else if (Array.isArray(val)) {
+        const items = val.filter(v => typeof v === 'string' && v.trim()).slice(0, 4);
+        if (items.length > 0) {
+          lines.push({ type: 'subheading', text: label });
+          for (const item of items) {
+            lines.push({ type: 'bullet', text: (item as string).trim().substring(0, 150), level: 0 });
+          }
+          if (val.length > 4) lines.push({ type: 'body', text: `(+${val.length - 4} itens)` });
+        } else {
+          // Array of objects: extract key-values from first few
+          const objItems = val.filter(v => typeof v === 'object' && v !== null).slice(0, 3);
+          if (objItems.length > 0) {
+            lines.push({ type: 'subheading', text: label });
+            for (const obj of objItems) {
+              const firstEntries = Object.entries(obj).slice(0, 2);
+              const summary = firstEntries.map(([k, v]) => `${k.replace(/[_-]/g, ' ')}: ${String(v).substring(0, 80)}`).join(' | ');
+              lines.push({ type: 'bullet', text: summary, level: 0 });
+            }
+          }
+        }
+      } else if (typeof val === 'object' && val !== null) {
+        // Nested object: extract its key-values inline
+        const subEntries = Object.entries(val).filter(([, v]) => typeof v === 'string' || typeof v === 'number').slice(0, 4);
+        if (subEntries.length > 0) {
+          lines.push({ type: 'subheading', text: label });
+          for (const [sk, sv] of subEntries) {
+            const sl = sk.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            lines.push({ type: 'keyvalue', label: sl, value: String(sv).substring(0, 150) });
+          }
         }
       }
-      // Fallback: take first few string values
-      const texts = extractText(conteudo).filter(l => l.length > 10 && !l.startsWith('  '));
-      return texts.slice(0, 3).join(' | ').substring(0, 400);
     }
-    return '';
+    return lines;
   };
 
   // Strip emojis and normalize for PDF (jsPDF default font has limited Unicode support)
@@ -378,90 +410,175 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     doc.setFontSize(9);
     doc.text(`${arts.length} secoes - Gerado automaticamente`, marginL, pageH - 30);
 
-    // === TABLE OF CONTENTS ===
-    doc.addPage();
-    addPageHeader();
-    doc.setFontSize(20);
-    doc.setTextColor(30, 41, 59);
-    doc.text('Sumário', marginL, y);
-    y += 12;
-
-    doc.setDrawColor(200, 200, 200);
-    doc.line(marginL, y, pageW - marginR, y);
-    y += 10;
-
-    for (let i = 0; i < arts.length; i++) {
-      const info = agentInfo[arts[i].tipo];
-      const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
-      doc.setFontSize(11);
-      doc.setTextColor(60, 60, 60);
-      doc.text(`${i + 1}. ${title}`, marginL + 5, y);
-      y += 8;
+    if (mode === 'completa') {
+      // === TABLE OF CONTENTS (only for complete version) ===
+      doc.addPage();
+      addPageHeader();
+      doc.setFontSize(20);
+      doc.setTextColor(30, 41, 59);
+      doc.text('Sumario', marginL, y);
+      y += 12;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(marginL, y, pageW - marginR, y);
+      y += 10;
+      for (let i = 0; i < arts.length; i++) {
+        const info = agentInfo[arts[i].tipo];
+        const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`${i + 1}. ${title}`, marginL + 5, y);
+        y += 8;
+      }
     }
 
     // === CONTENT PAGES ===
-    for (let i = 0; i < arts.length; i++) {
+    // For resumida: continuous flow, no page break per agent
+    // For completa: one page per agent
+    if (mode === 'resumida') {
       doc.addPage();
       addPageHeader();
+    }
+
+    for (let i = 0; i < arts.length; i++) {
+      if (mode === 'completa') {
+        doc.addPage();
+        addPageHeader();
+      }
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
       const title = stripEmoji(art.titulo || info?.name || art.tipo);
 
-      // Section header with colored accent
       const color = info?.color || '#6366F1';
       const r = parseInt(color.slice(1, 3), 16);
       const g = parseInt(color.slice(3, 5), 16);
       const b = parseInt(color.slice(5, 7), 16);
-      doc.setFillColor(r, g, b);
-      doc.rect(marginL, y - 5, 4, 14, 'F');
-
-      doc.setFontSize(16);
-      doc.setTextColor(30, 41, 59);
-      doc.text(title, marginL + 10, y + 5);
-      y += 20;
-
-      // Separator
-      doc.setDrawColor(230, 230, 230);
-      doc.line(marginL, y, pageW - marginR, y);
-      y += 10;
-
-      // Agent description subtitle
-      if (info?.description) {
-        doc.setFontSize(9);
-        doc.setTextColor(120, 120, 140);
-        doc.setFont('helvetica', 'italic');
-        doc.text(sanitizeForPDF(info.description), marginL + 10, y);
-        doc.setFont('helvetica', 'normal');
-        y += 10;
-      }
 
       if (mode === 'resumida') {
-        const summary = sanitizeForPDF(extractSummary(art.conteudo));
-        if (summary) {
-          // Summary box with light background
-          doc.setFillColor(248, 249, 250);
-          const sLines = doc.splitTextToSize(summary, contentW - 16);
-          const boxH = sLines.length * 5 + 12;
-          checkPage(boxH);
-          doc.roundedRect(marginL, y - 2, contentW, boxH, 2, 2, 'F');
-          doc.setFontSize(10);
-          doc.setTextColor(50, 50, 60);
-          y += 6;
-          for (const line of sLines) {
-            doc.text(line, marginL + 8, y);
-            y += 5;
-          }
-          y += 4;
-        } else {
-          doc.setFontSize(10);
+        // Compact section header
+        checkPage(30);
+        doc.setFillColor(r, g, b);
+        doc.rect(marginL, y - 3, 3, 10, 'F');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(`${i + 1}. ${title}`, marginL + 8, y + 4);
+        doc.setFont('helvetica', 'normal');
+        y += 12;
+
+        // Render condensed content
+        const condensed = extractCondensedLines(art.conteudo).map(l => {
+          if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
+          if (l.type === 'spacer') return l;
+          return { ...l, text: sanitizeForPDF((l as any).text) };
+        });
+
+        if (condensed.length === 0) {
+          doc.setFontSize(8.5);
           doc.setTextColor(150, 150, 150);
           doc.setFont('helvetica', 'italic');
-          doc.text('Conteudo pendente', marginL, y);
+          doc.text('Conteudo pendente', marginL + 8, y);
           doc.setFont('helvetica', 'normal');
-          y += 6;
+          y += 5;
+        } else {
+          for (const line of condensed) {
+            switch (line.type) {
+              case 'subheading': {
+                checkPage(8);
+                doc.setFontSize(8.5);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(50, 55, 70);
+                doc.text(line.text + ':', marginL + 8, y);
+                doc.setFont('helvetica', 'normal');
+                y += 4;
+                break;
+              }
+              case 'keyvalue': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(60, 60, 75);
+                const lbl = line.label + ': ';
+                const lblW = doc.getTextWidth(lbl);
+                doc.text(lbl, marginL + 8, y);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(70, 70, 85);
+                const valW = contentW - lblW - 12;
+                const wrapped = doc.splitTextToSize(line.value, valW > 40 ? valW : contentW - 16);
+                if (valW > 40) {
+                  doc.text(wrapped[0], marginL + 8 + lblW, y);
+                  for (let wi = 1; wi < wrapped.length; wi++) {
+                    y += 3.5;
+                    checkPage(4);
+                    doc.text(wrapped[wi], marginL + 8 + lblW, y);
+                  }
+                } else {
+                  for (const wl of wrapped) {
+                    y += 3.5;
+                    checkPage(4);
+                    doc.text(wl, marginL + 12, y);
+                  }
+                }
+                y += 3.5;
+                break;
+              }
+              case 'bullet': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setTextColor(70, 70, 85);
+                doc.setFillColor(r, g, b);
+                doc.circle(marginL + 11, y - 1, 0.8, 'F');
+                const wrapped = doc.splitTextToSize(line.text, contentW - 20);
+                for (const wl of wrapped) {
+                  checkPage(4);
+                  doc.text(wl, marginL + 14, y);
+                  y += 3.5;
+                }
+                break;
+              }
+              case 'body': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setTextColor(60, 60, 75);
+                const wrapped = doc.splitTextToSize(line.text, contentW - 12);
+                for (const wl of wrapped) {
+                  checkPage(4);
+                  doc.text(wl, marginL + 8, y);
+                  y += 3.5;
+                }
+                break;
+              }
+              default: break;
+            }
+          }
         }
+
+        // Thin separator between agents
+        y += 3;
+        doc.setDrawColor(220, 220, 225);
+        doc.line(marginL + 8, y, pageW - marginR, y);
+        y += 6;
+
       } else {
+        // === COMPLETE MODE (existing logic) ===
+        doc.setFillColor(r, g, b);
+        doc.rect(marginL, y - 5, 4, 14, 'F');
+        doc.setFontSize(16);
+        doc.setTextColor(30, 41, 59);
+        doc.text(title, marginL + 10, y + 5);
+        y += 20;
+        doc.setDrawColor(230, 230, 230);
+        doc.line(marginL, y, pageW - marginR, y);
+        y += 10;
+
+        if (info?.description) {
+          doc.setFontSize(9);
+          doc.setTextColor(120, 120, 140);
+          doc.setFont('helvetica', 'italic');
+          doc.text(sanitizeForPDF(info.description), marginL + 10, y);
+          doc.setFont('helvetica', 'normal');
+          y += 10;
+        }
         // Complete mode: structured professional rendering
         const structuredLines = extractStructured(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
@@ -578,11 +695,13 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
       }
 
-      // Footer separator
-      y += 5;
-      checkPage(6);
-      doc.setDrawColor(230, 230, 230);
-      doc.line(marginL, y, pageW - marginR, y);
+      // Footer separator (complete mode only, resumida has its own)
+      if (mode === 'completa') {
+        y += 5;
+        checkPage(6);
+        doc.setDrawColor(230, 230, 230);
+        doc.line(marginL, y, pageW - marginR, y);
+      }
     }
 
     return doc;
