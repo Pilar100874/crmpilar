@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Loader2, Trash2, Copy, Sparkles } from 'lucide-react';
-import { AGENT_ORDER } from './types';
+import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from './types';
 import { agentCardToSystemPrompt, AgentCard } from './agent-cards';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
