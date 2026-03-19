@@ -47,7 +47,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, runningAgent, isP
               <div
                 className={cn(
                   'h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0',
-                  isCompleted ? 'bg-green-500/10 text-green-500' :
+                  isCompleted ? 'bg-primary/10 text-primary' :
                   isFailed ? 'bg-destructive/10 text-destructive' :
                   isRunning ? 'bg-primary/10 text-primary' :
                   'bg-muted text-muted-foreground'
