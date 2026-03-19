@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   artifacts: StrategyArtifact[];
+  projectId: string;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
@@ -23,7 +24,7 @@ interface Props {
   runningAgent?: string | null;
 }
 
-export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'edit'>('formatted');
   const [validating, setValidating] = useState<string | null>(null);
