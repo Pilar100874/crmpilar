@@ -60,10 +60,10 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       });
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
-      toast.success(`${AGENT_INFO[agentType]?.name || agentType} concluído!`);
+      toast.success(`${agentInfo[agentType]?.name || agentType} concluído!`);
       onRefetch();
     } catch (err: any) {
-      toast.error(`Erro em ${AGENT_INFO[agentType]?.name || agentType}: ${err.message}`);
+      toast.error(`Erro em ${agentInfo[agentType]?.name || agentType}: ${err.message}`);
     } finally {
       removeRunning(agentType);
     }
