@@ -329,12 +329,19 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
     const addPageHeader = () => {
       doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, pageW, 40, 'F');
+      doc.rect(0, 0, pageW, 35, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
-      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA', pageW - marginR, 15, { align: 'right' });
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.text(mode === 'resumida' ? 'RESUMO EXECUTIVO' : 'ESTRATEGIA COMPLETA', pageW - marginR, 12, { align: 'right' });
+      doc.text(sanitizeForPDF(projectName).substring(0, 50), marginL, 12);
+      // Page number footer
+      doc.setTextColor(160, 160, 170);
+      doc.setFontSize(7);
+      const pageNum = doc.getNumberOfPages();
+      doc.text(`${pageNum}`, pageW / 2, pageH - 10, { align: 'center' });
       doc.setTextColor(0, 0, 0);
-      y = 50;
+      y = 45;
     };
 
     const checkPage = (needed: number) => {
