@@ -279,10 +279,11 @@ export function StrategyAdminPanel() {
         } as any);
       } else {
         // Save built-in agent via strategy_agent_configs table
+        const cardWithDeps = { ...config.card, dependencies: config.dependencies };
         const payload: any = {
           system_prompt: systemPrompt,
           is_active: config.active,
-          agent_card_json: config.card,
+          agent_card_json: cardWithDeps,
         };
 
         if (config.dbId) {
