@@ -180,6 +180,12 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                     <Download className="h-3.5 w-3.5 mr-1" />
                     MD
                   </Button>
+                  <ArtifactABComparison
+                    projectId={projectId}
+                    artifactType={artifact.tipo}
+                    currentContent={artifact.conteudo}
+                    onSelectVariation={(content) => onUpdateContent?.(artifact.id, content)}
+                  />
                 </div>
 
                 {/* Approve / Reject / Revise */}
