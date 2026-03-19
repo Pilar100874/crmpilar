@@ -71,11 +71,36 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
   const executeAllAgents = async () => {
     if (!projectId) return;
-    toast.info('Executando todos os agentes simultaneamente...');
+    toast.info('Executando agentes em ordem de dependência...');
     
-    // Launch all agents in parallel
-    const promises = agentOrder.map(agentType => executeAgent(agentType));
-    await Promise.allSettled(promises);
+    // Execute in dependency waves: agents with no deps first, then their dependents, etc.
+    const completed = new Set<string>();
+    const remaining = [...agentOrder];
+    
+    while (remaining.length > 0) {
+      // Find agents whose dependencies are all completed
+      const ready = remaining.filter(a => {
+        const deps = (AGENT_DEPENDENCIES as Record<string, string[]>)[a] ?? [];
+        return deps.every(d => completed.has(d));
+      });
+      
+      if (ready.length === 0) {
+        // No agent can run — break to avoid infinite loop
+        toast.error('Dependências cíclicas detectadas — alguns agentes não puderam rodar.');
+        break;
+      }
+      
+      // Execute this wave in parallel
+      const promises = ready.map(agentType => executeAgent(agentType));
+      const results = await Promise.allSettled(promises);
+      
+      // Mark completed agents and remove from remaining
+      ready.forEach((a, i) => {
+        // Consider it completed regardless — the agent itself tracks failure
+        completed.add(a);
+      });
+      remaining.splice(0, remaining.length, ...remaining.filter(a => !ready.includes(a)));
+    }
     
     toast.success('🎉 Todos os agentes finalizados!');
     onRefetch();
