@@ -6,7 +6,7 @@ import { AGENT_ORDER, AGENT_INFO } from '../types';
 import jsPDF from 'jspdf';
 
 export function useStrategyEngine(projectId: string | null, onRefetch: () => void) {
-  const [runningAgent, setRunningAgent] = useState<string | null>(null);
+  const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -29,9 +29,31 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return () => stopPolling();
   }, [stopPolling]);
 
+  // Start/stop polling based on running agents
+  useEffect(() => {
+    if (runningAgents.size > 0 || isPipelineRunning) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  }, [runningAgents.size, isPipelineRunning, startPolling, stopPolling]);
+
+  const addRunning = (agent: string) => {
+    setRunningAgents(prev => new Set([...prev, agent]));
+  };
+
+  const removeRunning = (agent: string) => {
+    setRunningAgents(prev => {
+      const next = new Set(prev);
+      next.delete(agent);
+      return next;
+    });
+  };
+
   const executeAgent = async (agentType: string) => {
     if (!projectId) return;
-    setRunningAgent(agentType);
+    if (runningAgents.has(agentType)) return; // Already running
+    addRunning(agentType);
     try {
       const { data, error } = await supabase.functions.invoke('strategy-engine', {
         body: { action: 'execute_agent', projectId, agentType }
@@ -41,16 +63,27 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       toast.success(`${AGENT_INFO[agentType]?.name || agentType} concluído!`);
       onRefetch();
     } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
+      toast.error(`Erro em ${AGENT_INFO[agentType]?.name || agentType}: ${err.message}`);
     } finally {
-      setRunningAgent(null);
+      removeRunning(agentType);
     }
+  };
+
+  const executeAllAgents = async () => {
+    if (!projectId) return;
+    toast.info('Executando todos os agentes simultaneamente...');
+    
+    // Launch all agents in parallel
+    const promises = AGENT_ORDER.map(agentType => executeAgent(agentType));
+    await Promise.allSettled(promises);
+    
+    toast.success('🎉 Todos os agentes finalizados!');
+    onRefetch();
   };
 
   const runPipeline = async () => {
     if (!projectId) return;
     setIsPipelineRunning(true);
-    startPolling();
     toast.info('Pipeline iniciado! Executando 9 agentes especializados...');
     try {
       const { data, error } = await supabase.functions.invoke('strategy-engine', {
@@ -64,7 +97,6 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       toast.error(`Erro no pipeline: ${err.message}`);
     } finally {
       setIsPipelineRunning(false);
-      stopPolling();
       onRefetch();
     }
   };
@@ -108,236 +140,187 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
   };
 
   const approveArtifact = async (artifactId: string) => {
-    const { error } = await supabase
-      .from('strategy_artifacts')
-      .update({ status: 'approved' } as any)
-      .eq('id', artifactId);
-    if (error) {
-      toast.error('Erro ao aprovar artefato');
-    } else {
-      toast.success('Artefato aprovado ✅');
+    try {
+      await supabase
+        .from('strategy_artifacts')
+        .update({ status: 'approved' } as any)
+        .eq('id', artifactId);
+      toast.success('Artefato aprovado!');
       onRefetch();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
   };
 
   const rejectArtifact = async (artifactId: string) => {
-    const { error } = await supabase
-      .from('strategy_artifacts')
-      .update({ status: 'rejected' } as any)
-      .eq('id', artifactId);
-    if (error) {
-      toast.error('Erro ao rejeitar artefato');
-    } else {
+    try {
+      await supabase
+        .from('strategy_artifacts')
+        .update({ status: 'rejected' } as any)
+        .eq('id', artifactId);
       toast.warning('Artefato rejeitado');
       onRefetch();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
   };
 
   const reviseArtifact = async (artifactId: string, agentType: string) => {
     if (!projectId) return;
-    setRunningAgent(agentType);
+    addRunning(agentType);
     toast.info(`Revisando ${AGENT_INFO[agentType]?.name}...`);
     try {
       const { data, error } = await supabase.functions.invoke('strategy-engine', {
-        body: { action: 'revise_agent', projectId, agentType, artifactId }
+        body: { action: 'revise', projectId, agentType, artifactId }
       });
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
-      toast.success(`${AGENT_INFO[agentType]?.name} revisado (v${data.new_version})!`);
+      toast.success(`${AGENT_INFO[agentType]?.name} revisado!`);
       onRefetch();
     } catch (err: any) {
       toast.error(`Erro na revisão: ${err.message}`);
     } finally {
-      setRunningAgent(null);
+      removeRunning(agentType);
     }
   };
 
-  const updateArtifactContent = async (artifactId: string, newContent: any) => {
-    // Create new version by incrementing
-    const { data: current } = await supabase
-      .from('strategy_artifacts')
-      .select('version, tipo, titulo, project_id, execution_id')
-      .eq('id', artifactId)
-      .single();
+  const updateArtifactContent = async (artifactId: string, content: any) => {
+    try {
+      await supabase
+        .from('strategy_artifacts')
+        .update({ conteudo: content } as any)
+        .eq('id', artifactId);
 
-    if (!current) { toast.error('Artefato não encontrado'); return; }
+      // Also update strategic memory
+      const { data: artifact } = await supabase
+        .from('strategy_artifacts')
+        .select('tipo, project_id')
+        .eq('id', artifactId)
+        .single();
 
-    const { error } = await supabase
-      .from('strategy_artifacts')
-      .update({ conteudo: newContent, version: ((current as any).version || 1) + 1 } as any)
-      .eq('id', artifactId);
+      if (artifact) {
+        const { data: project } = await supabase
+          .from('strategy_projects')
+          .select('strategic_memory')
+          .eq('id', artifact.project_id)
+          .single();
 
-    if (error) {
-      toast.error('Erro ao salvar edição');
-    } else {
-      toast.success('Artefato atualizado!');
+        if (project) {
+          const memory = (project.strategic_memory as Record<string, any>) || {};
+          memory[artifact.tipo] = content;
+          await supabase
+            .from('strategy_projects')
+            .update({ strategic_memory: memory } as any)
+            .eq('id', artifact.project_id);
+        }
+      }
+
+      toast.success('Conteúdo atualizado');
       onRefetch();
+    } catch (err: any) {
+      toast.error(`Erro ao atualizar: ${err.message}`);
     }
   };
 
   const exportPDF = async (pid: string) => {
-    const { data: artifacts } = await supabase
-      .from('strategy_artifacts')
-      .select('*')
-      .eq('project_id', pid)
-      .order('created_at');
+    try {
+      const { data: arts } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', pid)
+        .order('created_at');
 
-    const { data: project } = await supabase
-      .from('strategy_projects')
-      .select('*')
-      .eq('id', pid)
-      .single();
+      if (!arts?.length) { toast.error('Nenhum artefato'); return; }
 
-    if (!artifacts || !project) {
-      toast.error('Nenhum dado para exportar');
-      return;
-    }
+      const doc = new jsPDF();
+      let y = 20;
+      doc.setFontSize(18);
+      doc.text('Estratégia de Marketing', 20, y);
+      y += 15;
 
-    const proj = project as any;
-    const doc = new jsPDF();
-    let y = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-
-    const addPage = () => { doc.addPage(); y = 20; };
-    const checkPage = (needed: number) => { if (y + needed > 275) addPage(); };
-
-    // Title page
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Estratégia de Marketing', pageWidth / 2, 60, { align: 'center' });
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'normal');
-    doc.text(proj.nome, pageWidth / 2, 75, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    const descLines = doc.splitTextToSize(proj.descricao_negocio || '', maxWidth);
-    doc.text(descLines, pageWidth / 2, 90, { align: 'center' });
-    doc.setTextColor(0);
-    doc.setFontSize(9);
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, 110, { align: 'center' });
-
-    // Content pages
-    for (const artifact of artifacts as any[]) {
-      addPage();
-      const info = AGENT_INFO[artifact.tipo];
-
-      // Section header
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${info?.icon || '📄'} ${artifact.titulo}`, margin, y);
-      y += 10;
-
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100);
-      doc.text(`Versão ${artifact.version} • Status: ${artifact.status}`, margin, y);
-      doc.setTextColor(0);
-      y += 8;
-
-      // Render content
-      doc.setFontSize(10);
-      const content = artifact.conteudo;
-      const contentStr = typeof content === 'string' ? content : flattenJSON(content);
-      const lines = doc.splitTextToSize(contentStr, maxWidth);
-
-      for (const line of lines) {
-        checkPage(6);
-        doc.text(line, margin, y);
-        y += 5;
+      for (const art of arts) {
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(14);
+        doc.text(art.titulo, 20, y);
+        y += 8;
+        doc.setFontSize(9);
+        const content = JSON.stringify(art.conteudo, null, 2);
+        const lines = doc.splitTextToSize(content, 170);
+        for (const line of lines) {
+          if (y > 280) { doc.addPage(); y = 20; }
+          doc.text(line, 20, y);
+          y += 4;
+        }
+        y += 10;
       }
-    }
 
-    doc.save(`estrategia_${proj.nome.replace(/\s+/g, '_')}.pdf`);
-    toast.success('PDF exportado com sucesso!');
+      doc.save('estrategia-marketing.pdf');
+      toast.success('PDF exportado!');
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    }
   };
 
   const exportMarkdown = async (pid: string) => {
-    const { data: artifacts } = await supabase
-      .from('strategy_artifacts')
-      .select('*')
-      .eq('project_id', pid)
-      .order('created_at');
+    try {
+      const { data: arts } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', pid)
+        .order('created_at');
 
-    const { data: project } = await supabase
-      .from('strategy_projects')
-      .select('*')
-      .eq('id', pid)
-      .single();
+      if (!arts?.length) { toast.error('Nenhum artefato'); return; }
 
-    if (!artifacts || !project) {
-      toast.error('Nenhum dado para exportar');
-      return;
+      let md = '# Estratégia de Marketing\n\n';
+      for (const art of arts) {
+        md += `## ${art.titulo}\n\n`;
+        md += '```json\n' + JSON.stringify(art.conteudo, null, 2) + '\n```\n\n';
+      }
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'estrategia-marketing.md';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Markdown exportado!');
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
-
-    const proj = project as any;
-    let md = `# Estratégia de Marketing — ${proj.nome}\n\n`;
-    md += `**Descrição:** ${proj.descricao_negocio}\n\n`;
-    md += `**Status:** ${proj.status}\n\n---\n\n`;
-
-    for (const artifact of artifacts as any[]) {
-      const info = AGENT_INFO[artifact.tipo];
-      md += `## ${info?.icon || '📄'} ${artifact.titulo}\n\n`;
-      md += jsonToMarkdown(artifact.conteudo);
-      md += `\n---\n\n`;
-    }
-
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `estrategia_${proj.nome.replace(/\s+/g, '_')}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Markdown exportado!');
   };
 
   const exportJSON = async (pid: string) => {
-    const { data: artifacts } = await supabase
-      .from('strategy_artifacts')
-      .select('*')
-      .eq('project_id', pid)
-      .order('created_at');
+    try {
+      const { data: arts } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', pid)
+        .order('created_at');
 
-    const { data: project } = await supabase
-      .from('strategy_projects')
-      .select('*')
-      .eq('id', pid)
-      .single();
+      if (!arts?.length) { toast.error('Nenhum artefato'); return; }
 
-    if (!artifacts || !project) {
-      toast.error('Nenhum dado para exportar');
-      return;
+      const exportData = arts.reduce((acc: any, art: any) => {
+        acc[art.tipo] = art.conteudo;
+        return acc;
+      }, {});
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'estrategia-marketing.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('JSON exportado!');
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
-
-    const proj = project as any;
-    const exportData = {
-      projeto: proj.nome,
-      descricao: proj.descricao_negocio,
-      status: proj.status,
-      gerado_em: new Date().toISOString(),
-      artefatos: (artifacts as any[]).map(a => ({
-        tipo: a.tipo,
-        titulo: a.titulo,
-        versao: a.version,
-        status: a.status,
-        conteudo: a.conteudo
-      }))
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `estrategia_${proj.nome.replace(/\s+/g, '_')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('JSON exportado!');
   };
 
   return {
     executeAgent,
+    executeAllAgents,
     runPipeline,
     sendChatMessage,
     validateArtifact,
@@ -348,57 +331,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     exportPDF,
     exportMarkdown,
     exportJSON,
-    runningAgent,
+    runningAgents,
     isPipelineRunning,
     chatLoading
   };
-}
-
-function flattenJSON(data: any, prefix = ''): string {
-  let result = '';
-  if (typeof data === 'string') return data;
-  if (Array.isArray(data)) {
-    data.forEach((item, i) => {
-      if (typeof item === 'object') {
-        result += flattenJSON(item, `${prefix}  `);
-      } else {
-        result += `${prefix}• ${item}\n`;
-      }
-    });
-  } else if (typeof data === 'object' && data !== null) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        result += `\n${prefix}${key.toUpperCase()}:\n`;
-        result += flattenJSON(value, `${prefix}  `);
-      } else {
-        result += `${prefix}${key}: ${value}\n`;
-      }
-    });
-  }
-  return result;
-}
-
-function jsonToMarkdown(data: any, indent = ''): string {
-  let md = '';
-  if (typeof data === 'string') return data + '\n\n';
-  if (Array.isArray(data)) {
-    data.forEach((item) => {
-      if (typeof item === 'object') {
-        md += jsonToMarkdown(item, indent);
-      } else {
-        md += `${indent}- ${item}\n`;
-      }
-    });
-    md += '\n';
-  } else if (typeof data === 'object' && data !== null) {
-    Object.entries(data).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        md += `${indent}### ${key}\n\n`;
-        md += jsonToMarkdown(value, indent);
-      } else {
-        md += `${indent}**${key}:** ${value}\n\n`;
-      }
-    });
-  }
-  return md;
 }
