@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { AGENT_ORDER, AGENT_INFO } from '../types';
 import jsPDF from 'jspdf';
 
-export function useStrategyEngine(projectId: string | null, onRefetch: () => void) {
+export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER) {
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
@@ -74,7 +74,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     toast.info('Executando todos os agentes simultaneamente...');
     
     // Launch all agents in parallel
-    const promises = AGENT_ORDER.map(agentType => executeAgent(agentType));
+    const promises = agentOrder.map(agentType => executeAgent(agentType));
     await Promise.allSettled(promises);
     
     toast.success('🎉 Todos os agentes finalizados!');

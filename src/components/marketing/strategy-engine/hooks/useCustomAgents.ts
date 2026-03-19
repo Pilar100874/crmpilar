@@ -1,0 +1,101 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export interface CustomAgent {
+  id: string;
+  estabelecimento_id: string;
+  agent_key: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  system_prompt: string;
+  dependencies: string[];
+  output_schema: Record<string, any>;
+  ordem: number;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export function useCustomAgents(estabelecimentoId: string | undefined) {
+  const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAgents = useCallback(async () => {
+    if (!estabelecimentoId) { setLoading(false); return; }
+    const { data, error } = await supabase
+      .from('strategy_custom_agents')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('ativo', true)
+      .order('ordem');
+
+    if (!error && data) {
+      setCustomAgents(data as unknown as CustomAgent[]);
+    }
+    setLoading(false);
+  }, [estabelecimentoId]);
+
+  useEffect(() => { fetchAgents(); }, [fetchAgents]);
+
+  const createAgent = async (agent: Partial<CustomAgent>) => {
+    if (!estabelecimentoId) return null;
+    const { data, error } = await supabase
+      .from('strategy_custom_agents')
+      .insert({
+        estabelecimento_id: estabelecimentoId,
+        agent_key: agent.agent_key!,
+        name: agent.name!,
+        icon: agent.icon || '🤖',
+        color: agent.color || '#8B5CF6',
+        description: agent.description || '',
+        system_prompt: agent.system_prompt || '',
+        dependencies: agent.dependencies || [],
+        output_schema: agent.output_schema || {},
+        ordem: agent.ordem || 100,
+      } as any)
+      .select()
+      .single();
+
+    if (error) {
+      toast.error(`Erro ao criar agente: ${error.message}`);
+      return null;
+    }
+    toast.success(`Agente "${agent.name}" criado!`);
+    await fetchAgents();
+    return data as unknown as CustomAgent;
+  };
+
+  const updateAgent = async (id: string, updates: Partial<CustomAgent>) => {
+    const { error } = await supabase
+      .from('strategy_custom_agents')
+      .update(updates as any)
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erro ao atualizar: ${error.message}`);
+      return false;
+    }
+    await fetchAgents();
+    return true;
+  };
+
+  const deleteAgent = async (id: string) => {
+    const { error } = await supabase
+      .from('strategy_custom_agents')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erro ao excluir: ${error.message}`);
+      return false;
+    }
+    toast.success('Agente excluído');
+    await fetchAgents();
+    return true;
+  };
+
+  return { customAgents, loading, createAgent, updateAgent, deleteAgent, refetch: fetchAgents };
+}
