@@ -63,6 +63,31 @@ export const AGENT_INFO: Record<string, { name: string; icon: string; color: str
 
 export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel'];
 
+// Dependency map: each agent lists agents that MUST be completed before it can run
+export const AGENT_DEPENDENCIES: Record<string, string[]> = {
+  vox: [],
+  cipher: [],
+  positioning: ['vox', 'cipher'],
+  funnel: ['positioning'],
+  vsl: ['funnel'],
+  landing_page: ['funnel'],
+  creative: ['funnel'],
+  email: ['funnel'],
+  reel: ['funnel'],
+};
+
+/**
+ * Returns unmet dependencies for a given agent based on completed executions.
+ */
+export function getUnmetDependencies(
+  agentKey: string,
+  completedAgents: Set<string>,
+  customDeps?: Record<string, string[]>
+): string[] {
+  const deps = customDeps?.[agentKey] ?? AGENT_DEPENDENCIES[agentKey] ?? [];
+  return deps.filter(dep => !completedAgents.has(dep));
+}
+
 // Helper to merge hardcoded agents with custom agents
 export function getMergedAgentInfo(customAgents: Array<{ agent_key: string; name: string; icon: string; color: string; description: string }>): Record<string, { name: string; icon: string; color: string; description: string }> {
   const merged = { ...AGENT_INFO };
