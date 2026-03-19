@@ -409,9 +409,7 @@ export function StrategyAdminPanel() {
             if (!config) return null;
             const { card } = config;
             const isExpanded = expandedAgent === agentKey;
-            const isCustom = config.isCustom;
-            const agentIcon = isCustom ? (config.icon || '🤖') : (AGENT_INFO[agentKey]?.icon || '🤖');
-            const agentColor = isCustom ? config.color : undefined;
+            const agentIcon = config.icon || AGENT_INFO[agentKey]?.icon || '🤖';
 
             return (
               <Card key={agentKey} className={`${!config.saved ? 'ring-1 ring-primary/50' : ''} ${!config.active ? 'opacity-60' : ''}`}>
@@ -425,19 +423,12 @@ export function StrategyAdminPanel() {
                           <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
-                          {isCustom && (
-                            <Badge variant="secondary" className="text-[10px]" style={agentColor ? { borderColor: agentColor, color: agentColor } : undefined}>
-                              Personalizado
-                            </Badge>
-                          )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                          {isCustom && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={config.active}
