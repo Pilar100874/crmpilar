@@ -48,9 +48,9 @@ function StepCard({ number, title, description, tips }: {
 
 function InfoBox({ type, children }: { type: 'tip' | 'warning' | 'info'; children: React.ReactNode }) {
   const styles = {
-    tip: { bg: 'bg-emerald-500/10 border-emerald-500/30', icon: <Lightbulb className="h-4 w-4 text-emerald-500" />, label: 'Dica' },
-    warning: { bg: 'bg-amber-500/10 border-amber-500/30', icon: <AlertTriangle className="h-4 w-4 text-amber-500" />, label: 'Atenção' },
-    info: { bg: 'bg-blue-500/10 border-blue-500/30', icon: <Zap className="h-4 w-4 text-blue-500" />, label: 'Info' },
+    tip: { bg: 'bg-primary/10 border-primary/30', icon: <Lightbulb className="h-4 w-4 text-primary" />, label: 'Dica' },
+    warning: { bg: 'bg-destructive/10 border-destructive/30', icon: <AlertTriangle className="h-4 w-4 text-destructive" />, label: 'Atenção' },
+    info: { bg: 'bg-accent border-accent', icon: <Zap className="h-4 w-4 text-accent-foreground" />, label: 'Info' },
   };
   const s = styles[type];
   return (
