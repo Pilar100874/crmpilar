@@ -22,26 +22,102 @@ const DEFAULT_PROMPTS: Record<string, string> = {
   reel: 'Crie scripts de Reels/TikTok: hook, desenvolvimento e CTA para cada vídeo curto.',
 };
 
-export function StrategyAdminPanel() {
-  const [configs, setConfigs] = useState<Record<string, { prompt: string; active: boolean; saved: boolean }>>({});
-  const [saving, setSaving] = useState<string | null>(null);
+interface AgentConfig {
+  prompt: string;
+  active: boolean;
+  saved: boolean;
+  dbId?: string;
+}
 
+export function StrategyAdminPanel() {
+  const [configs, setConfigs] = useState<Record<string, AgentConfig>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load configs from database
   useEffect(() => {
-    const initial: Record<string, { prompt: string; active: boolean; saved: boolean }> = {};
-    AGENT_ORDER.forEach(key => {
-      initial[key] = { prompt: DEFAULT_PROMPTS[key] || '', active: true, saved: true };
-    });
-    setConfigs(initial);
+    const loadConfigs = async () => {
+      const initial: Record<string, AgentConfig> = {};
+      AGENT_ORDER.forEach(key => {
+        initial[key] = { prompt: DEFAULT_PROMPTS[key] || '', active: true, saved: true };
+      });
+
+      const { data } = await supabase
+        .from('strategy_agent_configs')
+        .select('*')
+        .order('created_at');
+
+      if (data) {
+        for (const row of data as any[]) {
+          if (initial[row.agent_type]) {
+            initial[row.agent_type] = {
+              prompt: row.system_prompt || DEFAULT_PROMPTS[row.agent_type],
+              active: row.is_active ?? true,
+              saved: true,
+              dbId: row.id
+            };
+          }
+        }
+      }
+
+      setConfigs(initial);
+      setLoading(false);
+    };
+    loadConfigs();
   }, []);
 
   const handleSave = async (agentKey: string) => {
     setSaving(agentKey);
-    // In a real implementation, save to strategy_agent_configs table
-    await new Promise(r => setTimeout(r, 500));
-    setConfigs(prev => ({ ...prev, [agentKey]: { ...prev[agentKey], saved: true } }));
-    toast.success(`Configuração do ${AGENT_INFO[agentKey]?.name} salva`);
-    setSaving(null);
+    const config = configs[agentKey];
+
+    try {
+      if (config.dbId) {
+        // Update existing
+        await supabase
+          .from('strategy_agent_configs')
+          .update({
+            system_prompt: config.prompt,
+            is_active: config.active
+          } as any)
+          .eq('id', config.dbId);
+      } else {
+        // Insert new
+        const info = AGENT_INFO[agentKey];
+        const { data } = await supabase
+          .from('strategy_agent_configs')
+          .insert({
+            agent_type: agentKey,
+            agent_name: info?.name || agentKey,
+            system_prompt: config.prompt,
+            is_active: config.active
+          } as any)
+          .select()
+          .single();
+
+        if (data) {
+          setConfigs(prev => ({
+            ...prev,
+            [agentKey]: { ...prev[agentKey], dbId: (data as any).id }
+          }));
+        }
+      }
+
+      setConfigs(prev => ({ ...prev, [agentKey]: { ...prev[agentKey], saved: true } }));
+      toast.success(`Configuração do ${AGENT_INFO[agentKey]?.name} salva`);
+    } catch (err: any) {
+      toast.error(`Erro ao salvar: ${err.message}`);
+    } finally {
+      setSaving(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -51,7 +127,7 @@ export function StrategyAdminPanel() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Edite os prompts, ative/desative agentes e configure a lógica de execução.
+            Edite os prompts, ative/desative agentes e configure a lógica de execução. As alterações são salvas no banco.
           </p>
         </CardContent>
       </Card>
@@ -70,6 +146,7 @@ export function StrategyAdminPanel() {
                       <span className="text-lg">{info.icon}</span>
                       <CardTitle className="text-sm">{info.name}</CardTitle>
                       <Badge variant="outline" className="text-xs">#{index + 1}</Badge>
+                      {config.dbId && <Badge variant="secondary" className="text-[10px]">Salvo</Badge>}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
@@ -102,7 +179,7 @@ export function StrategyAdminPanel() {
                       size="sm"
                       onClick={() => setConfigs(prev => ({
                         ...prev,
-                        [agentKey]: { prompt: DEFAULT_PROMPTS[agentKey], active: true, saved: false }
+                        [agentKey]: { ...prev[agentKey], prompt: DEFAULT_PROMPTS[agentKey], active: true, saved: false }
                       }))}
                     >
                       <RotateCcw className="h-3 w-3 mr-1" />

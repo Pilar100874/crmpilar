@@ -6,31 +6,37 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   artifacts: StrategyArtifact[];
-  onValidate?: (artifactId: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  onRevise?: (id: string, agentType: string) => void;
+  onUpdateContent?: (id: string, content: any) => void;
+  runningAgent?: string | null;
 }
 
-export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
+export function StrategyArtifactViewer({ artifacts, onApprove, onReject, onRevise, onUpdateContent, runningAgent }: Props) {
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
-  const [viewMode, setViewMode] = useState<'formatted' | 'json'>('formatted');
+  const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'edit'>('formatted');
   const [validating, setValidating] = useState<string | null>(null);
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
+  const [editContent, setEditContent] = useState('');
 
   const exportJSON = (artifact: StrategyArtifact) => {
     const blob = new Blob([JSON.stringify(artifact.conteudo, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${artifact.tipo}_${artifact.titulo.replace(/\s+/g, '_')}.json`;
+    a.download = `${artifact.tipo}_v${artifact.version}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Exportado como JSON');
+    toast.success('JSON exportado');
   };
 
   const exportMarkdown = (artifact: StrategyArtifact) => {
@@ -39,10 +45,10 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${artifact.tipo}_${artifact.titulo.replace(/\s+/g, '_')}.md`;
+    a.download = `${artifact.tipo}_v${artifact.version}.md`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Exportado como Markdown');
+    toast.success('Markdown exportado');
   };
 
   const handleValidate = async (artifact: StrategyArtifact) => {
@@ -61,11 +67,45 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
       }
 
       setValidationResults(prev => ({ ...prev, [artifact.id]: results }));
-      toast.success('Validação concluída!');
+
+      // Check if auto-revision needed
+      const avgScore = Math.round(
+        (Object.values(results) as any[]).reduce((sum: number, v: any) => sum + (v?.pontuacao || 0), 0) / Object.keys(results).length
+      );
+      if (avgScore < 60) {
+        toast.warning(`Score ${avgScore}% - Revisão automática recomendada`);
+      } else {
+        toast.success(`Validação concluída! Score: ${avgScore}%`);
+      }
     } catch (err: any) {
       toast.error(`Erro na validação: ${err.message}`);
     } finally {
       setValidating(null);
+    }
+  };
+
+  const handleStartEdit = (artifact: StrategyArtifact) => {
+    setEditContent(JSON.stringify(artifact.conteudo, null, 2));
+    setViewMode('edit');
+  };
+
+  const handleSaveEdit = (artifact: StrategyArtifact) => {
+    try {
+      const parsed = JSON.parse(editContent);
+      onUpdateContent?.(artifact.id, parsed);
+      setViewMode('formatted');
+      // Update local selected artifact
+      setSelectedArtifact({ ...artifact, conteudo: parsed });
+    } catch {
+      toast.error('JSON inválido');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved': return <Badge className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Aprovado</Badge>;
+      case 'rejected': return <Badge className="text-xs bg-red-500/10 text-red-600 border-red-500/20">Rejeitado</Badge>;
+      default: return <Badge variant="outline" className="text-xs">Pendente</Badge>;
     }
   };
 
@@ -93,7 +133,7 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
             : null;
 
           return (
-            <Card key={artifact.id} className="hover:border-primary/30 transition-colors">
+            <Card key={artifact.id} className={`hover:border-primary/30 transition-colors ${artifact.status === 'approved' ? 'border-green-500/30' : artifact.status === 'rejected' ? 'border-red-500/30' : ''}`}>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -110,37 +150,62 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-xs">v{artifact.version}</Badge>
+                    {getStatusBadge(artifact.status)}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0 flex items-center gap-1.5 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => setSelectedArtifact(artifact)}>
-                  <Eye className="h-3.5 w-3.5 mr-1" />
-                  Ver
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleValidate(artifact)}
-                  disabled={validating === artifact.id}
-                >
-                  {validating === artifact.id ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1" />}
-                  Validar
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => exportJSON(artifact)}>
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  JSON
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => exportMarkdown(artifact)}>
-                  <Download className="h-3.5 w-3.5 mr-1" />
-                  MD
-                </Button>
-              </CardContent>
+              <CardContent className="pt-0 space-y-2">
+                {/* Action buttons */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedArtifact(artifact); setViewMode('formatted'); }}>
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    Ver
+                  </Button>
+                  <Button
+                    variant="ghost" size="sm"
+                    onClick={() => handleValidate(artifact)}
+                    disabled={validating === artifact.id}
+                  >
+                    {validating === artifact.id ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1" />}
+                    Validar
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => exportJSON(artifact)}>
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    JSON
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => exportMarkdown(artifact)}>
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    MD
+                  </Button>
+                </div>
 
-              {/* Validation Results Inline */}
-              {validation && (
-                <CardContent className="pt-0 pb-3">
-                  <div className="grid grid-cols-5 gap-1">
+                {/* Approve / Reject / Revise */}
+                <div className="flex items-center gap-1.5 border-t pt-2">
+                  {artifact.status !== 'approved' && (
+                    <Button size="sm" variant="outline" className="text-green-600 border-green-500/30 hover:bg-green-500/10" onClick={() => onApprove?.(artifact.id)}>
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                      Aprovar
+                    </Button>
+                  )}
+                  {artifact.status !== 'rejected' && (
+                    <Button size="sm" variant="outline" className="text-red-600 border-red-500/30 hover:bg-red-500/10" onClick={() => onReject?.(artifact.id)}>
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Rejeitar
+                    </Button>
+                  )}
+                  <Button
+                    size="sm" variant="outline"
+                    onClick={() => onRevise?.(artifact.id, artifact.tipo)}
+                    disabled={runningAgent === artifact.tipo}
+                  >
+                    {runningAgent === artifact.tipo ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+                    Revisar
+                  </Button>
+                </div>
+
+                {/* Validation scores inline */}
+                {validation && (
+                  <div className="grid grid-cols-5 gap-1 border-t pt-2">
                     {Object.entries(validation).map(([key, val]: [string, any]) => (
                       <div key={key} className="text-center">
                         <div className={`text-xs font-bold ${val?.pontuacao >= 80 ? 'text-primary' : val?.pontuacao >= 60 ? 'text-muted-foreground' : 'text-destructive'}`}>
@@ -150,8 +215,8 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              )}
+                )}
+              </CardContent>
             </Card>
           );
         })}
@@ -165,6 +230,7 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
               <span>{AGENT_INFO[selectedArtifact?.tipo || '']?.icon}</span>
               {selectedArtifact?.titulo}
               <Badge variant="outline" className="text-xs ml-2">v{selectedArtifact?.version}</Badge>
+              {selectedArtifact && getStatusBadge(selectedArtifact.status)}
             </DialogTitle>
           </DialogHeader>
 
@@ -178,6 +244,10 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
                 <Code className="h-3 w-3 mr-1" />
                 JSON
               </TabsTrigger>
+              <TabsTrigger value="edit" className="text-xs" onClick={() => selectedArtifact && handleStartEdit(selectedArtifact)}>
+                <Pencil className="h-3 w-3 mr-1" />
+                Editar
+              </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="max-h-[60vh] mt-3">
@@ -188,6 +258,24 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
                 <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto whitespace-pre-wrap">
                   {JSON.stringify(selectedArtifact?.conteudo, null, 2)}
                 </pre>
+              </TabsContent>
+              <TabsContent value="edit" className="mt-0 space-y-3">
+                <Textarea
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  rows={20}
+                  className="font-mono text-xs"
+                  placeholder="Edite o JSON do artefato..."
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setViewMode('formatted')}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={() => selectedArtifact && handleSaveEdit(selectedArtifact)}>
+                    <Save className="h-3.5 w-3.5 mr-1" />
+                    Salvar (nova versão)
+                  </Button>
+                </div>
               </TabsContent>
             </ScrollArea>
           </Tabs>

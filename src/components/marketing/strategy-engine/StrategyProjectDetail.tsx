@@ -5,7 +5,8 @@ import { AGENT_INFO, AGENT_ORDER } from './types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, MessageSquare, FileText, Clock, Rocket, LayoutDashboard, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, Loader2, MessageSquare, FileText, Clock, Rocket, LayoutDashboard, Download, ChevronDown } from 'lucide-react';
 import { StrategyChat } from './StrategyChat';
 import { StrategyTimeline } from './StrategyTimeline';
 import { StrategyArtifactViewer } from './StrategyArtifactViewer';
@@ -18,7 +19,12 @@ interface Props {
 
 export function StrategyProjectDetail({ projectId, onBack }: Props) {
   const { project, executions, artifacts, chatMessages, loading, refetch } = useProjectDetail(projectId);
-  const { executeAgent, runPipeline, sendChatMessage, exportPDF, runningAgent, isPipelineRunning, chatLoading } = useStrategyEngine(projectId, refetch);
+  const {
+    executeAgent, runPipeline, sendChatMessage,
+    exportPDF, exportMarkdown, exportJSON,
+    approveArtifact, rejectArtifact, reviseArtifact, updateArtifactContent,
+    runningAgent, isPipelineRunning, chatLoading
+  } = useStrategyEngine(projectId, refetch);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   if (loading) {
@@ -50,10 +56,26 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             {completedAgents}/{totalAgents} agentes
           </Badge>
           {artifacts.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => exportPDF(projectId)}>
-              <Download className="h-4 w-4 mr-1" />
-              Exportar
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-1" />
+                  Exportar
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => exportPDF(projectId)}>
+                  📄 Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportMarkdown(projectId)}>
+                  📝 Exportar Markdown
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportJSON(projectId)}>
+                  🔧 Exportar JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <Button
             onClick={runPipeline}
@@ -118,7 +140,14 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
         </TabsContent>
 
         <TabsContent value="artifacts" className="mt-3">
-          <StrategyArtifactViewer artifacts={artifacts} />
+          <StrategyArtifactViewer
+            artifacts={artifacts}
+            onApprove={approveArtifact}
+            onReject={rejectArtifact}
+            onRevise={reviseArtifact}
+            onUpdateContent={updateArtifactContent}
+            runningAgent={runningAgent}
+          />
         </TabsContent>
       </Tabs>
     </div>
