@@ -254,7 +254,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
           lines.push(`${label}:`);
           for (const item of val) {
             if (typeof item === 'string') {
-              lines.push(`  • ${item.trim()}`);
+              lines.push(`  - ${item.trim()}`);
             } else if (typeof item === 'object' && item !== null) {
               const subLines = extractText(item, depth + 1);
               lines.push(...subLines.map(l => `  ${l}`));
