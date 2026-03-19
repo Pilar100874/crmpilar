@@ -266,16 +266,34 @@ export function StrategyAdminPanel() {
     );
   }
 
-  return (
+   return (
     <div className="space-y-3">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
+            <CreateAgentDialog
+              onCreate={createAgent}
+              existingKeys={[...AGENT_ORDER, ...customAgents.map(a => a.agent_key)]}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Edite todos os campos de cada Agent Card. O system prompt é gerado automaticamente a partir dos campos.
+            Edite os Agent Cards existentes ou crie novos agentes personalizados.
           </p>
+          {customAgents.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {customAgents.map(a => (
+                <Badge key={a.id} variant="secondary" className="text-xs gap-1">
+                  {a.icon} {a.name}
+                  <button onClick={() => deleteCustomAgent(a.id)} className="ml-1 hover:text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
