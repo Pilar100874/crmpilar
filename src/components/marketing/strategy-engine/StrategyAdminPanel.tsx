@@ -332,18 +332,34 @@ export function StrategyAdminPanel() {
 
   const handleDelete = async (agentKey: string) => {
     const config = configs[agentKey];
-    if (!config.isCustom || !config.customAgentId) return;
-
     const confirmed = window.confirm(`Tem certeza que deseja excluir o agente "${config.card.name}"?`);
     if (!confirmed) return;
 
-    const success = await deleteCustomAgent(config.customAgentId);
-    if (success) {
+    if (config.isCustom && config.customAgentId) {
+      const success = await deleteCustomAgent(config.customAgentId);
+      if (success) {
+        setConfigs(prev => {
+          const next = { ...prev };
+          delete next[agentKey];
+          return next;
+        });
+      }
+    } else if (config.dbId) {
+      // Delete built-in agent config from DB (deactivate)
+      const { error } = await supabase
+        .from('strategy_agent_configs')
+        .delete()
+        .eq('id', config.dbId);
+      if (error) {
+        toast.error(`Erro ao excluir: ${error.message}`);
+        return;
+      }
       setConfigs(prev => {
         const next = { ...prev };
         delete next[agentKey];
         return next;
       });
+      toast.success(`Agente "${config.card.name}" excluído`);
     }
   };
 
@@ -381,7 +397,7 @@ export function StrategyAdminPanel() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Edite, ative/desative ou exclua agentes. Agentes personalizados são marcados com <Badge variant="secondary" className="text-[10px] mx-1">Personalizado</Badge>.
+            Edite, ative/desative ou exclua agentes. Todos os agentes seguem a mesma estrutura Agent Card.
           </p>
         </CardContent>
       </Card>
@@ -393,9 +409,7 @@ export function StrategyAdminPanel() {
             if (!config) return null;
             const { card } = config;
             const isExpanded = expandedAgent === agentKey;
-            const isCustom = config.isCustom;
-            const agentIcon = isCustom ? (config.icon || '🤖') : (AGENT_INFO[agentKey]?.icon || '🤖');
-            const agentColor = isCustom ? config.color : undefined;
+            const agentIcon = config.icon || AGENT_INFO[agentKey]?.icon || '🤖';
 
             return (
               <Card key={agentKey} className={`${!config.saved ? 'ring-1 ring-primary/50' : ''} ${!config.active ? 'opacity-60' : ''}`}>
@@ -409,19 +423,12 @@ export function StrategyAdminPanel() {
                           <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
-                          {isCustom && (
-                            <Badge variant="secondary" className="text-[10px]" style={agentColor ? { borderColor: agentColor, color: agentColor } : undefined}>
-                              Personalizado
-                            </Badge>
-                          )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                          {isCustom && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={config.active}
@@ -566,16 +573,14 @@ export function StrategyAdminPanel() {
                       {/* ─── Actions ─── */}
                       <div className="flex justify-between items-center pt-2 border-t">
                         <div className="flex gap-2">
-                          {!isCustom && (
+                          {AGENT_CARDS[agentKey] && (
                             <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
                               <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
                             </Button>
                           )}
-                          {isCustom && (
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
-                              <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
+                            <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
+                          </Button>
                         </div>
                         <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey}>
                           {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}

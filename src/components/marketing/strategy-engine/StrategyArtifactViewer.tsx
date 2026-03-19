@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StrategyArtifact, AGENT_INFO } from './types';
+type AgentInfoMap = Record<string, { name: string; icon: string; color: string; description: string }>;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,9 +22,11 @@ interface Props {
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
   runningAgents?: Set<string>;
+  agentInfo?: AgentInfoMap;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set() }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set(), agentInfo }: Props) {
+  const resolvedInfo = agentInfo || AGENT_INFO;
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
   const [isEditing, setIsEditing] = useState(false);
@@ -129,7 +132,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {artifacts.map(artifact => {
-          const info = AGENT_INFO[artifact.tipo];
+          const info = resolvedInfo[artifact.tipo];
           const validation = validationResults[artifact.id];
           const avgScore = validation
             ? Math.round((Object.values(validation) as any[]).reduce((sum: number, v: any) => sum + (v?.pontuacao || 0), 0) / Object.keys(validation).length)
@@ -236,7 +239,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
         <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>{AGENT_INFO[selectedArtifact?.tipo || '']?.icon}</span>
+              <span>{resolvedInfo[selectedArtifact?.tipo || '']?.icon || '📄'}</span>
               {selectedArtifact?.titulo}
               <Badge variant="outline" className="text-xs ml-2">v{selectedArtifact?.version}</Badge>
               {selectedArtifact && getStatusBadge(selectedArtifact.status)}

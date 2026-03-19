@@ -168,6 +168,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             onRevise={reviseArtifact}
             onUpdateContent={updateArtifactContent}
             runningAgents={runningAgents}
+            agentInfo={mergedInfo}
           />
         </TabsContent>
       </Tabs>
