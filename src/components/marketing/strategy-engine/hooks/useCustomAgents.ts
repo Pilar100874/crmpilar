@@ -40,7 +40,7 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
 
-  const createAgent = async (agent: Partial<CustomAgent>) => {
+  const createAgent = async (agent: Partial<CustomAgent> & { agent_card_json?: any }) => {
     if (!estabelecimentoId) return null;
     const { data, error } = await supabase
       .from('strategy_custom_agents')
