@@ -410,90 +410,175 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     doc.setFontSize(9);
     doc.text(`${arts.length} secoes - Gerado automaticamente`, marginL, pageH - 30);
 
-    // === TABLE OF CONTENTS ===
-    doc.addPage();
-    addPageHeader();
-    doc.setFontSize(20);
-    doc.setTextColor(30, 41, 59);
-    doc.text('Sumário', marginL, y);
-    y += 12;
-
-    doc.setDrawColor(200, 200, 200);
-    doc.line(marginL, y, pageW - marginR, y);
-    y += 10;
-
-    for (let i = 0; i < arts.length; i++) {
-      const info = agentInfo[arts[i].tipo];
-      const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
-      doc.setFontSize(11);
-      doc.setTextColor(60, 60, 60);
-      doc.text(`${i + 1}. ${title}`, marginL + 5, y);
-      y += 8;
+    if (mode === 'completa') {
+      // === TABLE OF CONTENTS (only for complete version) ===
+      doc.addPage();
+      addPageHeader();
+      doc.setFontSize(20);
+      doc.setTextColor(30, 41, 59);
+      doc.text('Sumario', marginL, y);
+      y += 12;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(marginL, y, pageW - marginR, y);
+      y += 10;
+      for (let i = 0; i < arts.length; i++) {
+        const info = agentInfo[arts[i].tipo];
+        const title = stripEmoji(arts[i].titulo || info?.name || arts[i].tipo);
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`${i + 1}. ${title}`, marginL + 5, y);
+        y += 8;
+      }
     }
 
     // === CONTENT PAGES ===
-    for (let i = 0; i < arts.length; i++) {
+    // For resumida: continuous flow, no page break per agent
+    // For completa: one page per agent
+    if (mode === 'resumida') {
       doc.addPage();
       addPageHeader();
+    }
+
+    for (let i = 0; i < arts.length; i++) {
+      if (mode === 'completa') {
+        doc.addPage();
+        addPageHeader();
+      }
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
       const title = stripEmoji(art.titulo || info?.name || art.tipo);
 
-      // Section header with colored accent
       const color = info?.color || '#6366F1';
       const r = parseInt(color.slice(1, 3), 16);
       const g = parseInt(color.slice(3, 5), 16);
       const b = parseInt(color.slice(5, 7), 16);
-      doc.setFillColor(r, g, b);
-      doc.rect(marginL, y - 5, 4, 14, 'F');
-
-      doc.setFontSize(16);
-      doc.setTextColor(30, 41, 59);
-      doc.text(title, marginL + 10, y + 5);
-      y += 20;
-
-      // Separator
-      doc.setDrawColor(230, 230, 230);
-      doc.line(marginL, y, pageW - marginR, y);
-      y += 10;
-
-      // Agent description subtitle
-      if (info?.description) {
-        doc.setFontSize(9);
-        doc.setTextColor(120, 120, 140);
-        doc.setFont('helvetica', 'italic');
-        doc.text(sanitizeForPDF(info.description), marginL + 10, y);
-        doc.setFont('helvetica', 'normal');
-        y += 10;
-      }
 
       if (mode === 'resumida') {
-        const summary = sanitizeForPDF(extractSummary(art.conteudo));
-        if (summary) {
-          // Summary box with light background
-          doc.setFillColor(248, 249, 250);
-          const sLines = doc.splitTextToSize(summary, contentW - 16);
-          const boxH = sLines.length * 5 + 12;
-          checkPage(boxH);
-          doc.roundedRect(marginL, y - 2, contentW, boxH, 2, 2, 'F');
-          doc.setFontSize(10);
-          doc.setTextColor(50, 50, 60);
-          y += 6;
-          for (const line of sLines) {
-            doc.text(line, marginL + 8, y);
-            y += 5;
-          }
-          y += 4;
-        } else {
-          doc.setFontSize(10);
+        // Compact section header
+        checkPage(30);
+        doc.setFillColor(r, g, b);
+        doc.rect(marginL, y - 3, 3, 10, 'F');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(`${i + 1}. ${title}`, marginL + 8, y + 4);
+        doc.setFont('helvetica', 'normal');
+        y += 12;
+
+        // Render condensed content
+        const condensed = extractCondensedLines(art.conteudo).map(l => {
+          if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
+          if (l.type === 'spacer') return l;
+          return { ...l, text: sanitizeForPDF((l as any).text) };
+        });
+
+        if (condensed.length === 0) {
+          doc.setFontSize(8.5);
           doc.setTextColor(150, 150, 150);
           doc.setFont('helvetica', 'italic');
-          doc.text('Conteudo pendente', marginL, y);
+          doc.text('Conteudo pendente', marginL + 8, y);
           doc.setFont('helvetica', 'normal');
-          y += 6;
+          y += 5;
+        } else {
+          for (const line of condensed) {
+            switch (line.type) {
+              case 'subheading': {
+                checkPage(8);
+                doc.setFontSize(8.5);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(50, 55, 70);
+                doc.text(line.text + ':', marginL + 8, y);
+                doc.setFont('helvetica', 'normal');
+                y += 4;
+                break;
+              }
+              case 'keyvalue': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(60, 60, 75);
+                const lbl = line.label + ': ';
+                const lblW = doc.getTextWidth(lbl);
+                doc.text(lbl, marginL + 8, y);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(70, 70, 85);
+                const valW = contentW - lblW - 12;
+                const wrapped = doc.splitTextToSize(line.value, valW > 40 ? valW : contentW - 16);
+                if (valW > 40) {
+                  doc.text(wrapped[0], marginL + 8 + lblW, y);
+                  for (let wi = 1; wi < wrapped.length; wi++) {
+                    y += 3.5;
+                    checkPage(4);
+                    doc.text(wrapped[wi], marginL + 8 + lblW, y);
+                  }
+                } else {
+                  for (const wl of wrapped) {
+                    y += 3.5;
+                    checkPage(4);
+                    doc.text(wl, marginL + 12, y);
+                  }
+                }
+                y += 3.5;
+                break;
+              }
+              case 'bullet': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setTextColor(70, 70, 85);
+                doc.setFillColor(r, g, b);
+                doc.circle(marginL + 11, y - 1, 0.8, 'F');
+                const wrapped = doc.splitTextToSize(line.text, contentW - 20);
+                for (const wl of wrapped) {
+                  checkPage(4);
+                  doc.text(wl, marginL + 14, y);
+                  y += 3.5;
+                }
+                break;
+              }
+              case 'body': {
+                checkPage(5);
+                doc.setFontSize(8);
+                doc.setTextColor(60, 60, 75);
+                const wrapped = doc.splitTextToSize(line.text, contentW - 12);
+                for (const wl of wrapped) {
+                  checkPage(4);
+                  doc.text(wl, marginL + 8, y);
+                  y += 3.5;
+                }
+                break;
+              }
+              default: break;
+            }
+          }
         }
+
+        // Thin separator between agents
+        y += 3;
+        doc.setDrawColor(220, 220, 225);
+        doc.line(marginL + 8, y, pageW - marginR, y);
+        y += 6;
+
       } else {
+        // === COMPLETE MODE (existing logic) ===
+        doc.setFillColor(r, g, b);
+        doc.rect(marginL, y - 5, 4, 14, 'F');
+        doc.setFontSize(16);
+        doc.setTextColor(30, 41, 59);
+        doc.text(title, marginL + 10, y + 5);
+        y += 20;
+        doc.setDrawColor(230, 230, 230);
+        doc.line(marginL, y, pageW - marginR, y);
+        y += 10;
+
+        if (info?.description) {
+          doc.setFontSize(9);
+          doc.setTextColor(120, 120, 140);
+          doc.setFont('helvetica', 'italic');
+          doc.text(sanitizeForPDF(info.description), marginL + 10, y);
+          doc.setFont('helvetica', 'normal');
+          y += 10;
+        }
         // Complete mode: structured professional rendering
         const structuredLines = extractStructured(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
