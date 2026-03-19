@@ -928,8 +928,17 @@ O resultado deve ser válido e de alta qualidade, mas CLARAMENTE DIFERENTE do pa
     // ACTION: Revise agent (re-execute with feedback)
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'revise_agent') {
-      const agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) throw new Error(`Agente desconhecido: ${agentType}`);
+      let agent = AGENT_DEFINITIONS[agentType];
+      if (!agent) {
+        const { data: customAgent } = await supabase
+          .from('strategy_custom_agents')
+          .select('*')
+          .eq('agent_key', agentType)
+          .eq('ativo', true)
+          .single();
+        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
+        agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
+      }
 
       // Always re-read latest memory
       const { project, memory } = await getLatestMemory(supabase, projectId);
