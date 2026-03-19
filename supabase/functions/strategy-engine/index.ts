@@ -738,7 +738,7 @@ Deno.serve(async (req) => {
       const { project, memory } = await getLatestMemory(supabase, projectId);
 
       // Check dependencies
-      const deps = AGENT_DEPENDENCIES[agentType] || [];
+      const deps = customDeps.length > 0 ? customDeps : (AGENT_DEPENDENCIES[agentType] || []);
       const missingDeps = deps.filter(d => !memory[d]);
       if (missingDeps.length > 0) {
         console.log(`⚠️ Agent ${agentType} missing dependencies: ${missingDeps.join(', ')} — executing anyway with available context`);
