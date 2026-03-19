@@ -75,8 +75,9 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
             const isCompleted = execution?.status === 'completed';
             const isFailed = execution?.status === 'failed';
 
-            const deps = AGENT_DEPENDENCIES[agentKey] ?? [];
-            const unmetDeps = getUnmetDependencies(agentKey, completedAgents);
+            const resolvedDeps = dependencyMap || AGENT_DEPENDENCIES;
+            const deps = resolvedDeps[agentKey] ?? [];
+            const unmetDeps = getUnmetDependencies(agentKey, completedAgents, dependencyMap);
             const isBlocked = unmetDeps.length > 0;
 
             return (
