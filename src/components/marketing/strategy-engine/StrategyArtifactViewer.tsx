@@ -269,43 +269,51 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 min-h-0 mt-3">
-              <ScrollArea className="h-full max-h-[60vh]">
-                <div className="pr-4">
-                  <TabsContent value="formatted" className="mt-0">
-                    {selectedArtifact && <ArtifactRenderer tipo={selectedArtifact.tipo} conteudo={selectedArtifact.conteudo} />}
-                  </TabsContent>
-                  <TabsContent value="json" className="mt-0">
-                    <pre className="text-xs bg-muted p-4 rounded-lg whitespace-pre-wrap break-words">
-                      {JSON.stringify(selectedArtifact?.conteudo, null, 2)}
-                    </pre>
-                  </TabsContent>
-                  <TabsContent value="edit" className="mt-0 space-y-3">
-                    <Textarea
-                      value={editContent}
-                      onChange={e => setEditContent(e.target.value)}
-                      rows={20}
-                      className="font-mono text-xs"
-                      placeholder="Edite o JSON do artefato..."
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setViewMode('formatted')}>
-                        Cancelar
-                      </Button>
-                      <Button size="sm" onClick={() => selectedArtifact && handleSaveEdit(selectedArtifact)}>
-                        <Save className="h-3.5 w-3.5 mr-1" />
-                        Salvar (nova versão)
-                      </Button>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="history" className="mt-0">
-                    {selectedArtifact && (
-                      <ArtifactHistory projectId={projectId} artifactType={selectedArtifact.tipo} />
-                    )}
-                  </TabsContent>
+            <TabsContent value="formatted" className="mt-3">
+              <ScrollArea className="max-h-[55vh]">
+                <div className="pr-4 pb-4">
+                  {selectedArtifact && <ArtifactRenderer tipo={selectedArtifact.tipo} conteudo={selectedArtifact.conteudo} />}
                 </div>
               </ScrollArea>
-            </div>
+            </TabsContent>
+            <TabsContent value="json" className="mt-3">
+              <ScrollArea className="max-h-[55vh]">
+                <pre className="text-xs bg-muted p-4 rounded-lg whitespace-pre-wrap break-words pr-4">
+                  {JSON.stringify(selectedArtifact?.conteudo, null, 2)}
+                </pre>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="edit" className="mt-3 space-y-3">
+              <ScrollArea className="max-h-[50vh]">
+                <div className="pr-4">
+                  <Textarea
+                    value={editContent}
+                    onChange={e => setEditContent(e.target.value)}
+                    rows={20}
+                    className="font-mono text-xs"
+                    placeholder="Edite o JSON do artefato..."
+                  />
+                </div>
+              </ScrollArea>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setViewMode('formatted')}>
+                  Cancelar
+                </Button>
+                <Button size="sm" onClick={() => selectedArtifact && handleSaveEdit(selectedArtifact)}>
+                  <Save className="h-3.5 w-3.5 mr-1" />
+                  Salvar (nova versão)
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="history" className="mt-3">
+              <ScrollArea className="max-h-[55vh]">
+                <div className="pr-4">
+                  {selectedArtifact && (
+                    <ArtifactHistory projectId={projectId} artifactType={selectedArtifact.tipo} />
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
           </Tabs>
 
           {/* Validation in dialog */}
