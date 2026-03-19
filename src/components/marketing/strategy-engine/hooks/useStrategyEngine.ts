@@ -417,55 +417,154 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       // Separator
       doc.setDrawColor(230, 230, 230);
       doc.line(marginL, y, pageW - marginR, y);
-      y += 8;
+      y += 10;
+
+      // Agent description subtitle
+      if (info?.description) {
+        doc.setFontSize(9);
+        doc.setTextColor(120, 120, 140);
+        doc.setFont('helvetica', 'italic');
+        doc.text(sanitizeForPDF(info.description), marginL + 10, y);
+        doc.setFont('helvetica', 'normal');
+        y += 10;
+      }
 
       if (mode === 'resumida') {
-        // Summary mode: one short paragraph
         const summary = sanitizeForPDF(extractSummary(art.conteudo));
         if (summary) {
+          // Summary box with light background
+          doc.setFillColor(248, 249, 250);
+          const sLines = doc.splitTextToSize(summary, contentW - 16);
+          const boxH = sLines.length * 5 + 12;
+          checkPage(boxH);
+          doc.roundedRect(marginL, y - 2, contentW, boxH, 2, 2, 'F');
           doc.setFontSize(10);
-          doc.setTextColor(60, 60, 60);
-          const sLines = doc.splitTextToSize(summary, contentW);
+          doc.setTextColor(50, 50, 60);
+          y += 6;
           for (const line of sLines) {
-            checkPage(6);
-            doc.text(line, marginL, y);
+            doc.text(line, marginL + 8, y);
             y += 5;
           }
+          y += 4;
         } else {
           doc.setFontSize(10);
           doc.setTextColor(150, 150, 150);
-          doc.text('Conteúdo pendente', marginL, y);
+          doc.setFont('helvetica', 'italic');
+          doc.text('Conteudo pendente', marginL, y);
+          doc.setFont('helvetica', 'normal');
           y += 6;
         }
       } else {
-        // Complete mode: full text extraction
-        const textLines = extractText(art.conteudo).map(l => sanitizeForPDF(l));
-        if (textLines.length === 0) {
+        // Complete mode: structured professional rendering
+        const structuredLines = extractStructured(art.conteudo).map(l => {
+          if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
+          if (l.type === 'spacer') return l;
+          return { ...l, text: sanitizeForPDF((l as any).text) };
+        });
+
+        if (structuredLines.length === 0) {
           doc.setFontSize(10);
           doc.setTextColor(150, 150, 150);
-          doc.text('Conteúdo pendente', marginL, y);
+          doc.setFont('helvetica', 'italic');
+          doc.text('Conteudo pendente', marginL, y);
+          doc.setFont('helvetica', 'normal');
           y += 6;
         } else {
-          for (const rawLine of textLines) {
-            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('-');
-            const isBullet = rawLine.trimStart().startsWith('-');
-            const indent = rawLine.startsWith('  ') ? 8 : 0;
-
-            if (isHeading) {
-              checkPage(12);
-              y += 4;
-              doc.setFontSize(11);
-              doc.setTextColor(30, 41, 59);
-              doc.text(rawLine, marginL + indent, y);
-              y += 6;
-            } else {
-              doc.setFontSize(9.5);
-              doc.setTextColor(isBullet ? 80 : 60, isBullet ? 80 : 60, isBullet ? 80 : 60);
-              const wrapped = doc.splitTextToSize(rawLine, contentW - indent - 5);
-              for (const wLine of wrapped) {
-                checkPage(5);
-                doc.text(wLine, marginL + indent, y);
-                y += 4.5;
+          for (const line of structuredLines) {
+            switch (line.type) {
+              case 'heading': {
+                checkPage(14);
+                y += 6;
+                // Heading with subtle underline
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 41, 59);
+                doc.text(line.text, marginL, y);
+                y += 2;
+                doc.setDrawColor(r, g, b);
+                doc.setLineWidth(0.5);
+                doc.line(marginL, y, marginL + Math.min(doc.getTextWidth(line.text), contentW), y);
+                doc.setLineWidth(0.2);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                break;
+              }
+              case 'subheading': {
+                checkPage(12);
+                y += 4;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(60, 70, 90);
+                doc.text(line.text, marginL + 4, y);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                break;
+              }
+              case 'keyvalue': {
+                checkPage(7);
+                doc.setFontSize(9.5);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(50, 55, 70);
+                const labelW = doc.getTextWidth(line.label + ':  ');
+                doc.text(line.label + ':', marginL + 4, y);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(70, 70, 80);
+                const valMaxW = contentW - labelW - 8;
+                if (valMaxW > 30) {
+                  const wrapped = doc.splitTextToSize(line.value, valMaxW);
+                  doc.text(wrapped[0], marginL + 4 + labelW, y);
+                  for (let wi = 1; wi < wrapped.length; wi++) {
+                    y += 4.5;
+                    checkPage(5);
+                    doc.text(wrapped[wi], marginL + 4 + labelW, y);
+                  }
+                } else {
+                  y += 4.5;
+                  const wrapped = doc.splitTextToSize(line.value, contentW - 8);
+                  for (const wl of wrapped) {
+                    checkPage(5);
+                    doc.text(wl, marginL + 8, y);
+                    y += 4.5;
+                  }
+                }
+                y += 4;
+                break;
+              }
+              case 'bullet': {
+                checkPage(6);
+                const bulletIndent = 4 + (line.level * 8);
+                doc.setFontSize(9.5);
+                doc.setTextColor(70, 70, 80);
+                // Draw a small filled circle as bullet
+                doc.setFillColor(r, g, b);
+                doc.circle(marginL + bulletIndent + 1.5, y - 1.2, 1, 'F');
+                doc.setFont('helvetica', 'normal');
+                const bulletW = contentW - bulletIndent - 8;
+                const wrapped = doc.splitTextToSize(line.text, bulletW);
+                for (const wl of wrapped) {
+                  checkPage(5);
+                  doc.text(wl, marginL + bulletIndent + 5, y);
+                  y += 4.5;
+                }
+                break;
+              }
+              case 'body': {
+                checkPage(6);
+                doc.setFontSize(9.5);
+                doc.setTextColor(60, 60, 70);
+                doc.setFont('helvetica', 'normal');
+                const wrapped = doc.splitTextToSize(line.text, contentW - 4);
+                for (const wl of wrapped) {
+                  checkPage(5);
+                  doc.text(wl, marginL + 2, y);
+                  y += 4.5;
+                }
+                y += 2;
+                break;
+              }
+              case 'spacer': {
+                y += 3;
+                break;
               }
             }
           }
