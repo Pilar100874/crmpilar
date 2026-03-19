@@ -86,8 +86,16 @@ function EditableText({ value, path, update, editable, className = 'text-sm', mu
   );
 }
 
+function safeString(value: any): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
 function EditableList({ items, fieldPath, update, editable, icon }: {
-  items: string[];
+  items: any[];
   fieldPath: string;
   update: (path: string[], value: any) => void;
   editable: boolean;
@@ -109,25 +117,51 @@ function EditableList({ items, fieldPath, update, editable, icon }: {
 
   return (
     <ul className="space-y-1.5">
-      {items.map((item, i) => (
-        <li key={i} className="text-sm flex items-start gap-2">
-          <span className="text-muted-foreground shrink-0 mt-1">{icon || '•'}</span>
-          {editable ? (
-            <div className="flex-1 flex items-center gap-1">
-              <Input
-                value={item}
-                onChange={e => updateItem(i, e.target.value)}
-                className="text-sm h-auto py-1 flex-1"
-              />
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeItem(i)}>
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
-            </div>
-          ) : (
-            <span>{item}</span>
-          )}
-        </li>
-      ))}
+      {items.map((item, i) => {
+        const isObject = typeof item === 'object' && item !== null;
+        const displayValue = isObject
+          ? Object.entries(item).map(([k, v]) => `${k}: ${safeString(v)}`).join(' | ')
+          : safeString(item);
+
+        return (
+          <li key={i} className="text-sm flex items-start gap-2">
+            <span className="text-muted-foreground shrink-0 mt-1">{icon || '•'}</span>
+            {editable ? (
+              <div className="flex-1 flex items-center gap-1">
+                {isObject ? (
+                  <div className="flex-1 space-y-1">
+                    {Object.entries(item).map(([k, v]) => (
+                      <div key={k} className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground capitalize shrink-0 w-24">{k.replace(/_/g, ' ')}:</span>
+                        <Input
+                          value={safeString(v)}
+                          onChange={e => {
+                            const next = [...items];
+                            next[i] = { ...item, [k]: e.target.value };
+                            update([fieldPath], next);
+                          }}
+                          className="text-sm h-auto py-1 flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <Input
+                    value={displayValue}
+                    onChange={e => updateItem(i, e.target.value)}
+                    className="text-sm h-auto py-1 flex-1"
+                  />
+                )}
+                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeItem(i)}>
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </Button>
+              </div>
+            ) : (
+              <span>{displayValue}</span>
+            )}
+          </li>
+        );
+      })}
       {editable && (
         <Button variant="outline" size="sm" className="h-6 text-[10px] ml-6" onClick={addItem}>
           <Plus className="h-3 w-3 mr-1" /> Adicionar
