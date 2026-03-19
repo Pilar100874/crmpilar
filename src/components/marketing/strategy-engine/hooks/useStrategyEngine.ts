@@ -374,8 +374,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
-      const icon = info?.icon || '📋';
-      const title = art.titulo || info?.name || art.tipo;
+      const title = stripEmoji(art.titulo || info?.name || art.tipo);
 
       // Section header with colored accent
       const color = info?.color || '#6366F1';
@@ -387,7 +386,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       doc.setFontSize(16);
       doc.setTextColor(30, 41, 59);
-      doc.text(`${icon}  ${title}`, marginL + 10, y + 5);
+      doc.text(title, marginL + 10, y + 5);
       y += 20;
 
       // Separator
