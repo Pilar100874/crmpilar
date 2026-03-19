@@ -84,7 +84,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
   const runPipeline = async () => {
     if (!projectId) return;
     setIsPipelineRunning(true);
-    toast.info('Pipeline iniciado! Executando 9 agentes especializados...');
+    toast.info(`Pipeline iniciado! Executando ${agentOrder.length} agentes especializados...`);
     try {
       const { data, error } = await supabase.functions.invoke('strategy-engine', {
         body: { action: 'run_pipeline', projectId }
