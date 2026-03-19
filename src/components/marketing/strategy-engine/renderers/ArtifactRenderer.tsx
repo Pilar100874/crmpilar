@@ -649,3 +649,78 @@ function ReelRenderer({ data, editable, update }: RendererProps) {
     </div>
   );
 }
+
+// ─── Generic Renderer for custom agents ─────────────────────────────────
+function GenericRenderer({ data, editable, update }: RendererProps) {
+  if (!data || typeof data !== 'object') {
+    return <p className="text-sm">{String(data)}</p>;
+  }
+
+  const renderValue = (key: string, value: any, basePath: string[]): React.ReactNode => {
+    if (value === null || value === undefined) return null;
+
+    if (typeof value === 'string') {
+      return (
+        <div key={key} className="space-y-1">
+          <span className="text-xs font-semibold text-primary capitalize">{key.replace(/_/g, ' ')}</span>
+          <EditableText value={value} path={basePath} update={update} editable={editable} className="text-sm block" multiline={value.length > 80} />
+        </div>
+      );
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return (
+        <div key={key} className="space-y-1">
+          <span className="text-xs font-semibold text-primary capitalize">{key.replace(/_/g, ' ')}</span>
+          <span className="text-sm block">{String(value)}</span>
+        </div>
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return (
+        <div key={key} className="space-y-1">
+          <span className="text-xs font-semibold text-primary capitalize">{key.replace(/_/g, ' ')}</span>
+          <div className="space-y-1 ml-2">
+            {value.map((item, i) => {
+              if (typeof item === 'object' && item !== null) {
+                return (
+                  <Card key={i} className="p-2">
+                    <div className="space-y-2">
+                      {Object.entries(item).map(([k, v]) => renderValue(k, v, [...basePath, String(i), k]))}
+                    </div>
+                  </Card>
+                );
+              }
+              return (
+                <div key={i} className="flex items-start gap-2">
+                  <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5">{i + 1}</Badge>
+                  <EditableText value={String(item)} path={[...basePath, String(i)]} update={update} editable={editable} className="text-sm" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    if (typeof value === 'object') {
+      return (
+        <div key={key} className="space-y-2">
+          <SectionTitle>{key.replace(/_/g, ' ')}</SectionTitle>
+          <div className="space-y-2 ml-2 border-l-2 border-muted pl-3">
+            {Object.entries(value).map(([k, v]) => renderValue(k, v, [...basePath, k]))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(data).map(([key, value]) => renderValue(key, value, [key]))}
+    </div>
+  );
+}
