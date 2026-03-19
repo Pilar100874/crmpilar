@@ -217,65 +217,49 @@ function PositioningRenderer({ data, editable, update }: RendererProps) {
         <>
           <SectionTitle>👤 ICP - Perfil Ideal de Cliente</SectionTitle>
           <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-sm">
-            {typeof data.icp === 'object' ? Object.entries(data.icp).map(([k, v]) => (
-              <div key={k} className="flex items-center gap-2">
+            {typeof data.icp === 'object' && !Array.isArray(data.icp) ? Object.entries(data.icp).map(([k, v]) => (
+              <div key={k} className="flex items-start gap-2">
                 <span className="font-medium capitalize shrink-0">{k.replace(/_/g, ' ')}:</span>
                 {editable ? (
-                  <Input value={String(v)} onChange={e => update(['icp', k], e.target.value)} className="text-sm h-auto py-1" />
+                  <Input value={safeString(v)} onChange={e => update(['icp', k], e.target.value)} className="text-sm h-auto py-1" />
                 ) : (
-                  <span>{String(v)}</span>
+                  <span>{safeString(v)}</span>
                 )}
               </div>
             )) : editable ? (
-              <Input value={String(data.icp)} onChange={e => update(['icp'], e.target.value)} className="text-sm h-auto py-1" />
+              <Input value={safeString(data.icp)} onChange={e => update(['icp'], e.target.value)} className="text-sm h-auto py-1" />
             ) : (
-              <p>{String(data.icp)}</p>
+              <p>{safeString(data.icp)}</p>
             )}
           </div>
         </>
       )}
       <SectionTitle>🎯 Problema Central</SectionTitle>
       <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-        <EditableText value={data.problema_central} path={['problema_central']} update={update} editable={editable} multiline={editable} />
+        <SmartField value={data.problema_central} basePath={['problema_central']} update={update} editable={editable} />
       </div>
       <SectionTitle>🌟 Resultado Desejado</SectionTitle>
       <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-        <EditableText value={data.resultado_desejado} path={['resultado_desejado']} update={update} editable={editable} multiline={editable} />
+        <SmartField value={data.resultado_desejado} basePath={['resultado_desejado']} update={update} editable={editable} />
       </div>
       <SectionTitle>⚡ Mecanismo Único</SectionTitle>
-      <EditableText value={data.mecanismo_unico} path={['mecanismo_unico']} update={update} editable={editable} className="text-sm font-medium" />
+      <div className="bg-muted/50 rounded-lg p-3">
+        <SmartField value={data.mecanismo_unico} basePath={['mecanismo_unico']} update={update} editable={editable} />
+      </div>
       <SectionTitle>💡 Big Idea</SectionTitle>
       <div className="bg-accent/50 rounded-lg p-3">
-        <EditableText value={data.big_idea} path={['big_idea']} update={update} editable={editable} className="text-sm font-semibold" />
+        <SmartField value={data.big_idea} basePath={['big_idea']} update={update} editable={editable} />
       </div>
       {data.estrutura_oferta && (
         <>
           <SectionTitle>📦 Estrutura da Oferta</SectionTitle>
           <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium shrink-0">Principal:</span>
-              <EditableText value={data.estrutura_oferta.principal} path={['estrutura_oferta', 'principal']} update={update} editable={editable} />
-            </div>
-            {data.estrutura_oferta.bonus && (
-              <div>
-                <span className="font-medium">Bônus:</span>
-                <EditableList items={data.estrutura_oferta.bonus} fieldPath="estrutura_oferta" update={(p, v) => {
-                  // Special nested path
-                  const next = JSON.parse(JSON.stringify(data));
-                  next.estrutura_oferta.bonus = v;
-                  update(['estrutura_oferta'], next.estrutura_oferta);
-                }} editable={editable} icon="🎁" />
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="font-medium shrink-0">Garantia:</span>
-              <EditableText value={data.estrutura_oferta.garantia} path={['estrutura_oferta', 'garantia']} update={update} editable={editable} />
-            </div>
+            <SmartField value={data.estrutura_oferta} basePath={['estrutura_oferta']} update={update} editable={editable} />
           </div>
         </>
       )}
       <SectionTitle>🏅 Diferenciação</SectionTitle>
-      <EditableText value={data.diferenciacao} path={['diferenciacao']} update={update} editable={editable} multiline={editable} />
+      <SmartField value={data.diferenciacao} basePath={['diferenciacao']} update={update} editable={editable} />
     </div>
   );
 }
