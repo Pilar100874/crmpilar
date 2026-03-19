@@ -138,7 +138,7 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
   },
   creative: {
     id: 'creative',
-    name: 'Creative Strategist – Diretor Criativo de Performance',
+    name: 'Criativos',
     version: '1.0',
     role: 'Diretor criativo sênior de performance marketing com expertise em Meta Ads, Google Ads, TikTok Ads e YouTube Ads.',
     mission: 'Criar arsenal completo de conceitos criativos para anúncios de alta performance, otimizados por plataforma e etapa do funil.',
