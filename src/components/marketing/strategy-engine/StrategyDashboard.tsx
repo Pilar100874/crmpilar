@@ -120,7 +120,7 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
           <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
             {resolvedOrder.map(agentKey => {
               const info = resolvedInfo[agentKey] || { name: agentKey, icon: '🤖', color: '#888', description: '' };
-              const exec = executions.find(e => e.agent_type === agentKey);
+              const exec = latestExecMap.get(agentKey);
               const isCompleted = exec?.status === 'completed';
               const isFailed = exec?.status === 'failed';
               const isRunning = exec?.status === 'running';
