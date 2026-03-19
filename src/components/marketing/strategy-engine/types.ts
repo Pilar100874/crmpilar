@@ -108,3 +108,14 @@ export function getMergedAgentOrder(customAgents: Array<{ agent_key: string; ord
     .map(a => a.agent_key);
   return [...AGENT_ORDER, ...customKeys];
 }
+
+/**
+ * Build a merged dependency map combining native + custom agent deps.
+ */
+export function getMergedDependencies(customAgents: Array<{ agent_key: string; dependencies: string[] }>): Record<string, string[]> {
+  const merged: Record<string, string[]> = { ...AGENT_DEPENDENCIES };
+  for (const agent of customAgents) {
+    merged[agent.agent_key] = agent.dependencies || [];
+  }
+  return merged;
+}

@@ -45,6 +45,7 @@ interface AgentConfig {
   customAgentId?: string;
   icon?: string;
   color?: string;
+  dependencies: string[];
 }
 
 function agentCardToEditable(card: AgentCard): EditableAgentCard {
