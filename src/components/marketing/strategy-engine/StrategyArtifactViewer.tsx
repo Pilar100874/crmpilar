@@ -233,7 +233,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedArtifact} onOpenChange={() => setSelectedArtifact(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh]">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>{AGENT_INFO[selectedArtifact?.tipo || '']?.icon}</span>
