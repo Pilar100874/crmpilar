@@ -89,7 +89,7 @@ export function StrategyArtifactViewer({ artifacts, onValidate }: Props) {
           const info = AGENT_INFO[artifact.tipo];
           const validation = validationResults[artifact.id];
           const avgScore = validation
-            ? Math.round(Object.values(validation).reduce((sum: number, v: any) => sum + (v?.pontuacao || 0), 0) / Object.keys(validation).length)
+            ? Math.round((Object.values(validation) as any[]).reduce((sum: number, v: any) => sum + (v?.pontuacao || 0), 0) / Object.keys(validation).length)
             : null;
 
           return (
