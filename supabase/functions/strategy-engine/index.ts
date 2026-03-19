@@ -354,6 +354,87 @@ Execute sua análise agora.`;
       });
     }
 
+    // ACTION: Revise agent (re-execute with improvements)
+    if (action === 'revise_agent') {
+      const agent = AGENT_DEFINITIONS[agentType];
+      if (!agent) throw new Error(`Agente desconhecido: ${agentType}`);
+
+      const { data: project } = await supabase
+        .from('strategy_projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (!project) throw new Error('Projeto não encontrado');
+
+      const { data: currentArtifact } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('tipo', agentType)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: execution } = await supabase
+        .from('strategy_agent_executions')
+        .insert({
+          project_id: projectId,
+          agent_type: agentType,
+          agent_name: agent.name + ' (Revisão)',
+          status: 'running',
+          input_data: { memory: project.strategic_memory, revision: true }
+        })
+        .select()
+        .single();
+
+      const startTime = Date.now();
+
+      try {
+        const revisionPrompt = `
+DESCRIÇÃO DO NEGÓCIO:
+${project.descricao_negocio}
+
+MEMÓRIA ESTRATÉGICA ATUAL:
+${JSON.stringify(project.strategic_memory, null, 2)}
+
+RESULTADO ANTERIOR (que precisa ser melhorado):
+${JSON.stringify(currentArtifact?.conteudo || {}, null, 2)}
+
+INSTRUÇÃO: Revise e melhore significativamente o resultado anterior. Seja mais específico, detalhado e criativo. Corrija pontos fracos. Retorne o resultado completo no mesmo formato JSON.`;
+
+        const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, revisionPrompt);
+        const parsedResult = extractJSON(rawResult);
+        const duration = Date.now() - startTime;
+
+        await supabase
+          .from('strategy_agent_executions')
+          .update({ status: 'completed', output_data: parsedResult, duration_ms: duration })
+          .eq('id', execution!.id);
+
+        const updatedMemory = { ...((project.strategic_memory as any) || {}), [agentType]: parsedResult };
+        await supabase.from('strategy_projects').update({ strategic_memory: updatedMemory }).eq('id', projectId);
+
+        const newVersion = ((currentArtifact as any)?.version || 1) + 1;
+        if (currentArtifact) {
+          await supabase
+            .from('strategy_artifacts')
+            .update({ conteudo: parsedResult, version: newVersion, status: 'completed', execution_id: execution!.id })
+            .eq('id', currentArtifact.id);
+        }
+
+        return new Response(JSON.stringify({
+          success: true, new_version: newVersion, result: parsedResult, duration_ms: duration
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (error: any) {
+        await supabase
+          .from('strategy_agent_executions')
+          .update({ status: 'failed', error_message: error.message, duration_ms: Date.now() - startTime })
+          .eq('id', execution!.id);
+        throw error;
+      }
+    }
+
     // ACTION: Chat with orchestrator
     if (action === 'chat') {
       const { data: project } = await supabase
