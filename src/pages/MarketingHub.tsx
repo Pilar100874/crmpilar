@@ -9,7 +9,6 @@ import {
   LucideIcon,
   Wand2,
   FolderOpen,
-  
   Workflow,
   Key,
   Link2,
@@ -19,7 +18,7 @@ import {
   Send,
   Sparkles,
   Clapperboard,
-  
+  Brain,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,7 +43,7 @@ import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing'
 import { AICreativeStudio } from '@/components/marketing/ai-studio';
 import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
-  Brain,
+import { StrategyEngine } from '@/components/marketing/strategy-engine';
 
 interface TabItem {
   id: string;
