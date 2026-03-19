@@ -242,6 +242,7 @@ export function StrategyAdminPanel() {
             customAgentId: ca.id,
             icon: ca.icon,
             color: ca.color,
+            dependencies: ca.dependencies || [],
           };
         }
       }
