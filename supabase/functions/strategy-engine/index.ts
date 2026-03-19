@@ -748,8 +748,22 @@ Deno.serve(async (req) => {
 
       try {
         const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory);
-        const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
-        const parsedResult = extractJSON(rawResult);
+        
+        // Retry up to 2 times if JSON extraction fails
+        let parsedResult: any;
+        let lastError: Error | null = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
+            parsedResult = extractJSON(rawResult);
+            lastError = null;
+            break;
+          } catch (e) {
+            lastError = e as Error;
+            console.warn(`Tentativa ${attempt + 1} falhou ao extrair JSON: ${(e as Error).message}`);
+          }
+        }
+        if (lastError) throw lastError;
         const duration = Date.now() - startTime;
 
         // Update execution
