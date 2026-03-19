@@ -1047,25 +1047,41 @@ INSTRUÇÃO DE REVISÃO:
         content: message
       });
 
+      // Load custom agents for this project's estabelecimento
+      const { data: customAgentsList } = await supabase
+        .from('strategy_custom_agents')
+        .select('agent_key, name')
+        .eq('estabelecimento_id', project.estabelecimento_id)
+        .eq('ativo', true);
+
+      const allAgentKeys = [...AGENT_ORDER, ...(customAgentsList || []).map((a: any) => a.agent_key)];
+      const allAgentNames: Record<string, string> = {};
+      for (const key of AGENT_ORDER) {
+        allAgentNames[key] = AGENT_DEFINITIONS[key]?.name || key;
+      }
+      for (const ca of (customAgentsList || [])) {
+        allAgentNames[(ca as any).agent_key] = (ca as any).name;
+      }
+
       const memoryKeys = Object.keys(memory);
-      const completedAgents = AGENT_ORDER.filter(a => memory[a]);
-      const pendingAgents = AGENT_ORDER.filter(a => !memory[a]);
+      const completedAgents = allAgentKeys.filter(a => memory[a]);
+      const pendingAgents = allAgentKeys.filter(a => !memory[a]);
 
       const systemPrompt = `Você é o Orchestrator do Motor de Estratégia de Marketing.
-Você coordena 9 agentes especializados para criar estratégias completas de marketing.
+Você coordena ${allAgentKeys.length} agentes especializados para criar estratégias completas de marketing.
 
 PROJETO: ${project.nome}
 DESCRIÇÃO: ${project.descricao_negocio}
 
 STATUS DOS AGENTES:
-✅ Concluídos: ${completedAgents.length > 0 ? completedAgents.map(a => AGENT_DEFINITIONS[a]?.name).join(', ') : 'Nenhum'}
-⏳ Pendentes: ${pendingAgents.length > 0 ? pendingAgents.map(a => AGENT_DEFINITIONS[a]?.name).join(', ') : 'Nenhum'}
+✅ Concluídos: ${completedAgents.length > 0 ? completedAgents.map(a => allAgentNames[a] || a).join(', ') : 'Nenhum'}
+⏳ Pendentes: ${pendingAgents.length > 0 ? pendingAgents.map(a => allAgentNames[a] || a).join(', ') : 'Nenhum'}
 
 MEMÓRIA ESTRATÉGICA RESUMIDA:
 ${memoryKeys.length > 0 ? memoryKeys.map(k => {
   const content = memory[k];
   const summary = typeof content === 'object' ? Object.keys(content).join(', ') : String(content).substring(0, 100);
-  return `- ${k}: [${summary}]`;
+  return `- ${allAgentNames[k] || k}: [${summary}]`;
 }).join('\n') : '(vazia — nenhum agente executado ainda)'}
 
 REGRAS:
