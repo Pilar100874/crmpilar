@@ -10271,6 +10271,65 @@ export type Database = {
           },
         ]
       }
+      strategy_custom_agents: {
+        Row: {
+          agent_key: string
+          ativo: boolean
+          color: string
+          created_at: string
+          dependencies: string[]
+          description: string
+          estabelecimento_id: string
+          icon: string
+          id: string
+          name: string
+          ordem: number
+          output_schema: Json | null
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          agent_key: string
+          ativo?: boolean
+          color?: string
+          created_at?: string
+          dependencies?: string[]
+          description?: string
+          estabelecimento_id: string
+          icon?: string
+          id?: string
+          name: string
+          ordem?: number
+          output_schema?: Json | null
+          system_prompt?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          ativo?: boolean
+          color?: string
+          created_at?: string
+          dependencies?: string[]
+          description?: string
+          estabelecimento_id?: string
+          icon?: string
+          id?: string
+          name?: string
+          ordem?: number
+          output_schema?: Json | null
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_custom_agents_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_projects: {
         Row: {
           created_at: string | null
