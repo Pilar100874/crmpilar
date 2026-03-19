@@ -332,18 +332,34 @@ export function StrategyAdminPanel() {
 
   const handleDelete = async (agentKey: string) => {
     const config = configs[agentKey];
-    if (!config.isCustom || !config.customAgentId) return;
-
     const confirmed = window.confirm(`Tem certeza que deseja excluir o agente "${config.card.name}"?`);
     if (!confirmed) return;
 
-    const success = await deleteCustomAgent(config.customAgentId);
-    if (success) {
+    if (config.isCustom && config.customAgentId) {
+      const success = await deleteCustomAgent(config.customAgentId);
+      if (success) {
+        setConfigs(prev => {
+          const next = { ...prev };
+          delete next[agentKey];
+          return next;
+        });
+      }
+    } else if (config.dbId) {
+      // Delete built-in agent config from DB (deactivate)
+      const { error } = await supabase
+        .from('strategy_agent_configs')
+        .delete()
+        .eq('id', config.dbId);
+      if (error) {
+        toast.error(`Erro ao excluir: ${error.message}`);
+        return;
+      }
       setConfigs(prev => {
         const next = { ...prev };
         delete next[agentKey];
         return next;
       });
+      toast.success(`Agente "${config.card.name}" excluído`);
     }
   };
 
