@@ -427,8 +427,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
           y += 6;
         } else {
           for (const rawLine of textLines) {
-            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('•');
-            const isBullet = rawLine.trimStart().startsWith('•');
+            const isHeading = rawLine.endsWith(':') && !rawLine.startsWith('  ') && !rawLine.startsWith('-');
+            const isBullet = rawLine.trimStart().startsWith('-');
             const indent = rawLine.startsWith('  ') ? 8 : 0;
 
             if (isHeading) {
