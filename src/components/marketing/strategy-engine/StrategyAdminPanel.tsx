@@ -15,6 +15,7 @@ import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -359,36 +360,44 @@ export function StrategyAdminPanel() {
     toast.info('Agent Card restaurado ao padrão');
   };
 
-  const handleDelete = async (agentKey: string) => {
-    const config = configs[agentKey];
-    const confirmed = window.confirm(`Tem certeza que deseja excluir o agente "${config.card.name}"?`);
-    if (!confirmed) return;
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-    if (config.isCustom && config.customAgentId) {
-      const success = await deleteCustomAgent(config.customAgentId);
-      if (success) {
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const agentKey = deleteTarget;
+    const config = configs[agentKey];
+    setDeleteLoading(true);
+
+    try {
+      if (config.isCustom && config.customAgentId) {
+        const success = await deleteCustomAgent(config.customAgentId);
+        if (success) {
+          setConfigs(prev => {
+            const next = { ...prev };
+            delete next[agentKey];
+            return next;
+          });
+        }
+      } else if (config.dbId) {
+        const { error } = await supabase
+          .from('strategy_agent_configs')
+          .delete()
+          .eq('id', config.dbId);
+        if (error) {
+          toast.error(`Erro ao excluir: ${error.message}`);
+          return;
+        }
         setConfigs(prev => {
           const next = { ...prev };
           delete next[agentKey];
           return next;
         });
+        toast.success(`Agente "${config.card.name}" excluído`);
       }
-    } else if (config.dbId) {
-      // Delete built-in agent config from DB (deactivate)
-      const { error } = await supabase
-        .from('strategy_agent_configs')
-        .delete()
-        .eq('id', config.dbId);
-      if (error) {
-        toast.error(`Erro ao excluir: ${error.message}`);
-        return;
-      }
-      setConfigs(prev => {
-        const next = { ...prev };
-        delete next[agentKey];
-        return next;
-      });
-      toast.success(`Agente "${config.card.name}" excluído`);
+    } finally {
+      setDeleteLoading(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -455,7 +464,7 @@ export function StrategyAdminPanel() {
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                           <span className="text-xs text-muted-foreground">Ativo</span>
@@ -656,7 +665,7 @@ export function StrategyAdminPanel() {
                               <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
                           </Button>
                         </div>
@@ -673,6 +682,14 @@ export function StrategyAdminPanel() {
           })}
         </div>
       </ScrollArea>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={handleDeleteConfirm}
+        itemName={deleteTarget ? configs[deleteTarget]?.card?.name : undefined}
+        isLoading={deleteLoading}
+      />
     </div>
   );
 }

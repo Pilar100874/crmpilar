@@ -571,9 +571,10 @@ function extractJSON(text: string): any {
 function buildAgentPrompt(
   agentType: string,
   businessDescription: string,
-  memory: Record<string, any>
+  memory: Record<string, any>,
+  customDeps?: string[]
 ): string {
-  const deps = AGENT_DEPENDENCIES[agentType] || [];
+  const deps = customDeps || AGENT_DEPENDENCIES[agentType] || [];
   
   let prompt = `═══════════════════════════════════════════════════
 DESCRIÇÃO DO NEGÓCIO:
@@ -627,7 +628,9 @@ MEMÓRIA ESTRATÉGICA COMPARTILHADA
 
   prompt += `═══════════════════════════════════════════════════
 INSTRUÇÃO FINAL: Execute sua análise agora.
-- Use os DADOS OBRIGATÓRIOS acima como base para suas decisões
+- LEIA TODA A MEMÓRIA ESTRATÉGICA acima antes de começar
+- Use os DADOS OBRIGATÓRIOS como base para suas decisões
+- Garanta consistência e alinhamento com os artefatos dos outros agentes
 - Seja específico ao nicho descrito — nunca genérico
 - Retorne APENAS JSON válido, sem explicações
 ═══════════════════════════════════════════════════`;
@@ -765,7 +768,7 @@ Deno.serve(async (req) => {
       const startTime = Date.now();
 
       try {
-        const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory);
+        const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory, deps);
         
         // Retry up to 2 times if JSON extraction fails
         let parsedResult: any;
@@ -863,16 +866,19 @@ Deno.serve(async (req) => {
         agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
       }
 
+      const { variationStyle } = body;
       const { project, memory } = await getLatestMemory(supabase, projectId);
 
+      const styleInstruction = variationStyle || 'Use um ângulo criativo completamente diferente.';
       const variationPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory) + `
 
 INSTRUÇÃO ESPECIAL DE VARIAÇÃO (#${variationIndex || 1}):
-Crie uma VARIAÇÃO ALTERNATIVA completamente diferente. Use:
-- Um ângulo criativo distinto
-- Tom de voz diferente (mais formal, mais casual, mais provocativo, etc.)
-- Abordagem ou estrutura diferente
-O resultado deve ser válido e de alta qualidade, mas CLARAMENTE DIFERENTE do padrão.`;
+Crie uma VARIAÇÃO ALTERNATIVA completamente diferente da versão original.
+ESTILO OBRIGATÓRIO: ${styleInstruction}
+- A estrutura e campos JSON devem ser os mesmos, mas o CONTEÚDO deve ser radicalmente diferente
+- Use vocabulário, tom, exemplos e abordagem completamente distintos
+- NÃO repita frases, termos ou ideias da versão padrão
+- O resultado deve ser válido e de alta qualidade, mas IMPOSSÍVEL de confundir com o original`;
 
       const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, variationPrompt);
       const parsedResult = extractJSON(rawResult);
@@ -1171,7 +1177,7 @@ REGRAS:
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
 
           // Build context-rich prompt with dependency injection
-          const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory);
+          const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory, deps);
 
           const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
           const parsedResult = extractJSON(rawResult);

@@ -28,14 +28,19 @@ export function ArtifactABComparison({ projectId, artifactType, currentContent, 
     setVariations([]);
     try {
       const results: any[] = [];
-      // Generate 2 alternative variations
+      // Generate 2 alternative variations with different styles
+      const styles = [
+        'Use um tom mais EMOCIONAL, provocativo e direto. Foque em storytelling e linguagem coloquial.',
+        'Use um tom mais TÉCNICO, analítico e sofisticado. Foque em dados, frameworks e terminologia especializada.'
+      ];
       for (let i = 0; i < 2; i++) {
         const { data, error } = await supabase.functions.invoke('strategy-engine', {
           body: {
             action: 'generate_variation',
             projectId,
             agentType: artifactType,
-            variationIndex: i + 1
+            variationIndex: i + 1,
+            variationStyle: styles[i]
           }
         });
         if (error) throw error;

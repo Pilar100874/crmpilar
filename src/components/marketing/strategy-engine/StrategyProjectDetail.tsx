@@ -25,10 +25,13 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
   const estabId = project?.estabelecimento_id;
   const { customAgents } = useCustomAgents(estabId);
 
-  // Merge hardcoded + custom agents
-  const mergedInfo = useMemo(() => getMergedAgentInfo(customAgents), [customAgents]);
-  const mergedOrder = useMemo(() => getMergedAgentOrder(customAgents), [customAgents]);
-  const mergedDeps = useMemo(() => getMergedDependencies(customAgents), [customAgents]);
+  // Only include active custom agents
+  const activeCustomAgents = useMemo(() => customAgents.filter(a => a.ativo), [customAgents]);
+
+  // Merge hardcoded + active custom agents
+  const mergedInfo = useMemo(() => getMergedAgentInfo(activeCustomAgents), [activeCustomAgents]);
+  const mergedOrder = useMemo(() => getMergedAgentOrder(activeCustomAgents), [activeCustomAgents]);
+  const mergedDeps = useMemo(() => getMergedDependencies(activeCustomAgents), [activeCustomAgents]);
 
   const {
     executeAgent, executeAllAgents, runPipeline, sendChatMessage,
@@ -108,7 +111,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             ) : (
               <Rocket className="h-4 w-4 mr-1" />
             )}
-            {isPipelineRunning ? 'Executando...' : 'Pipeline Sequencial'}
+            {isPipelineRunning ? 'Executando...' : 'Rodar Todos'}
           </Button>
         </div>
       </div>

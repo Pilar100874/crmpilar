@@ -17,7 +17,7 @@ interface AgentInfo {
 interface Props {
   executions: AgentExecution[];
   onExecuteAgent: (agentType: string) => void;
-  onExecuteAll: () => void;
+  onExecuteAll: (dependencyMap?: Record<string, string[]>) => void;
   runningAgents: Set<string>;
   isPipelineRunning: boolean;
   agentOrder: string[];
@@ -47,7 +47,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
       <div className="space-y-3">
         {/* Execute All Button */}
         <Button
-          onClick={onExecuteAll}
+          onClick={() => onExecuteAll(dependencyMap)}
           disabled={isPipelineRunning}
           size="sm"
           className="w-full"
