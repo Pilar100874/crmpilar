@@ -682,6 +682,14 @@ export function StrategyAdminPanel() {
           })}
         </div>
       </ScrollArea>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={handleDeleteConfirm}
+        itemName={deleteTarget ? configs[deleteTarget]?.card?.name : undefined}
+        isLoading={deleteLoading}
+      />
     </div>
   );
 }

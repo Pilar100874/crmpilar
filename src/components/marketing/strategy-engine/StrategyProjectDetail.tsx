@@ -111,7 +111,7 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             ) : (
               <Rocket className="h-4 w-4 mr-1" />
             )}
-            {isPipelineRunning ? 'Executando...' : 'Pipeline Sequencial'}
+            {isPipelineRunning ? 'Executando...' : 'Rodar Todos'}
           </Button>
         </div>
       </div>
