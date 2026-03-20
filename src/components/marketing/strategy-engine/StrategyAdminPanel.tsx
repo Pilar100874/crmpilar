@@ -464,7 +464,7 @@ export function StrategyAdminPanel() {
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(agentKey)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                           <span className="text-xs text-muted-foreground">Ativo</span>
