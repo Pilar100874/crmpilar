@@ -628,7 +628,9 @@ MEMÓRIA ESTRATÉGICA COMPARTILHADA
 
   prompt += `═══════════════════════════════════════════════════
 INSTRUÇÃO FINAL: Execute sua análise agora.
-- Use os DADOS OBRIGATÓRIOS acima como base para suas decisões
+- LEIA TODA A MEMÓRIA ESTRATÉGICA acima antes de começar
+- Use os DADOS OBRIGATÓRIOS como base para suas decisões
+- Garanta consistência e alinhamento com os artefatos dos outros agentes
 - Seja específico ao nicho descrito — nunca genérico
 - Retorne APENAS JSON válido, sem explicações
 ═══════════════════════════════════════════════════`;
