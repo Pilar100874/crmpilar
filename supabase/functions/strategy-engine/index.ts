@@ -571,9 +571,10 @@ function extractJSON(text: string): any {
 function buildAgentPrompt(
   agentType: string,
   businessDescription: string,
-  memory: Record<string, any>
+  memory: Record<string, any>,
+  customDeps?: string[]
 ): string {
-  const deps = AGENT_DEPENDENCIES[agentType] || [];
+  const deps = customDeps || AGENT_DEPENDENCIES[agentType] || [];
   
   let prompt = `═══════════════════════════════════════════════════
 DESCRIÇÃO DO NEGÓCIO:
