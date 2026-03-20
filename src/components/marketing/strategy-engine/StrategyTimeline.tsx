@@ -47,7 +47,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
       <div className="space-y-3">
         {/* Execute All Button */}
         <Button
-          onClick={onExecuteAll}
+          onClick={() => onExecuteAll(dependencyMap)}
           disabled={isPipelineRunning}
           size="sm"
           className="w-full"

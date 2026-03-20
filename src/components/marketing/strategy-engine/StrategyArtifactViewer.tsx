@@ -187,7 +187,13 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                     projectId={projectId}
                     artifactType={artifact.tipo}
                     currentContent={artifact.conteudo}
-                    onSelectVariation={(content) => onUpdateContent?.(artifact.id, content)}
+                    onSelectVariation={(content) => {
+                      onUpdateContent?.(artifact.id, content);
+                      // Also update local selectedArtifact if it's the same one
+                      if (selectedArtifact?.id === artifact.id) {
+                        setSelectedArtifact({ ...artifact, conteudo: content });
+                      }
+                    }}
                   />
                 </div>
 
