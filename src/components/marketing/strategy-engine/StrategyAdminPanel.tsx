@@ -15,6 +15,7 @@ import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
