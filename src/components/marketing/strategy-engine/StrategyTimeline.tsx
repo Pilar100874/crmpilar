@@ -17,7 +17,7 @@ interface AgentInfo {
 interface Props {
   executions: AgentExecution[];
   onExecuteAgent: (agentType: string) => void;
-  onExecuteAll: () => void;
+  onExecuteAll: (dependencyMap?: Record<string, string[]>) => void;
   runningAgents: Set<string>;
   isPipelineRunning: boolean;
   agentOrder: string[];
