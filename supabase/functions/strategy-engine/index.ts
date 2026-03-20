@@ -768,7 +768,7 @@ Deno.serve(async (req) => {
       const startTime = Date.now();
 
       try {
-        const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory);
+        const userPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory, deps);
         
         // Retry up to 2 times if JSON extraction fails
         let parsedResult: any;
