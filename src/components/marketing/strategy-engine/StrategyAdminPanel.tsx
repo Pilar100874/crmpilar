@@ -360,36 +360,44 @@ export function StrategyAdminPanel() {
     toast.info('Agent Card restaurado ao padrão');
   };
 
-  const handleDelete = async (agentKey: string) => {
-    const config = configs[agentKey];
-    const confirmed = window.confirm(`Tem certeza que deseja excluir o agente "${config.card.name}"?`);
-    if (!confirmed) return;
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-    if (config.isCustom && config.customAgentId) {
-      const success = await deleteCustomAgent(config.customAgentId);
-      if (success) {
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const agentKey = deleteTarget;
+    const config = configs[agentKey];
+    setDeleteLoading(true);
+
+    try {
+      if (config.isCustom && config.customAgentId) {
+        const success = await deleteCustomAgent(config.customAgentId);
+        if (success) {
+          setConfigs(prev => {
+            const next = { ...prev };
+            delete next[agentKey];
+            return next;
+          });
+        }
+      } else if (config.dbId) {
+        const { error } = await supabase
+          .from('strategy_agent_configs')
+          .delete()
+          .eq('id', config.dbId);
+        if (error) {
+          toast.error(`Erro ao excluir: ${error.message}`);
+          return;
+        }
         setConfigs(prev => {
           const next = { ...prev };
           delete next[agentKey];
           return next;
         });
+        toast.success(`Agente "${config.card.name}" excluído`);
       }
-    } else if (config.dbId) {
-      // Delete built-in agent config from DB (deactivate)
-      const { error } = await supabase
-        .from('strategy_agent_configs')
-        .delete()
-        .eq('id', config.dbId);
-      if (error) {
-        toast.error(`Erro ao excluir: ${error.message}`);
-        return;
-      }
-      setConfigs(prev => {
-        const next = { ...prev };
-        delete next[agentKey];
-        return next;
-      });
-      toast.success(`Agente "${config.card.name}" excluído`);
+    } finally {
+      setDeleteLoading(false);
+      setDeleteTarget(null);
     }
   };
 
