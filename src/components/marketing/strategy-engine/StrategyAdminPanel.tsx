@@ -665,7 +665,7 @@ export function StrategyAdminPanel() {
                               <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(agentKey)}>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
                           </Button>
                         </div>
