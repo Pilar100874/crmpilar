@@ -863,16 +863,19 @@ Deno.serve(async (req) => {
         agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
       }
 
+      const { variationStyle } = body;
       const { project, memory } = await getLatestMemory(supabase, projectId);
 
+      const styleInstruction = variationStyle || 'Use um ângulo criativo completamente diferente.';
       const variationPrompt = buildAgentPrompt(agentType, project.descricao_negocio, memory) + `
 
 INSTRUÇÃO ESPECIAL DE VARIAÇÃO (#${variationIndex || 1}):
-Crie uma VARIAÇÃO ALTERNATIVA completamente diferente. Use:
-- Um ângulo criativo distinto
-- Tom de voz diferente (mais formal, mais casual, mais provocativo, etc.)
-- Abordagem ou estrutura diferente
-O resultado deve ser válido e de alta qualidade, mas CLARAMENTE DIFERENTE do padrão.`;
+Crie uma VARIAÇÃO ALTERNATIVA completamente diferente da versão original.
+ESTILO OBRIGATÓRIO: ${styleInstruction}
+- A estrutura e campos JSON devem ser os mesmos, mas o CONTEÚDO deve ser radicalmente diferente
+- Use vocabulário, tom, exemplos e abordagem completamente distintos
+- NÃO repita frases, termos ou ideias da versão padrão
+- O resultado deve ser válido e de alta qualidade, mas IMPOSSÍVEL de confundir com o original`;
 
       const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, variationPrompt);
       const parsedResult = extractJSON(rawResult);
