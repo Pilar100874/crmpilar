@@ -1177,7 +1177,7 @@ REGRAS:
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
 
           // Build context-rich prompt with dependency injection
-          const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory);
+          const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory, deps);
 
           const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
           const parsedResult = extractJSON(rawResult);
