@@ -562,11 +562,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       doc.setFont('helvetica', 'normal');
       for (let i = 0; i < arts.length; i++) {
         const inf = agentInfo[arts[i].tipo];
-        const t = stripEmoji(arts[i].titulo || inf?.name || arts[i].tipo);
+        // Always use agent name, not artifact titulo
+        const t = stripEmoji(inf?.name || arts[i].tipo);
         doc.setFontSize(10);
         doc.setTextColor(55, 55, 70);
         doc.text(`${i + 1}.  ${t}`, mL + 4, y);
-        // Dot leader
         const tw = doc.getTextWidth(`${i + 1}.  ${t}`);
         doc.setTextColor(180, 180, 190);
         const dotsStart = mL + 4 + tw + 3;
@@ -578,7 +578,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
         doc.setFontSize(10);
         doc.setTextColor(99, 102, 241);
-        doc.text(`${i + 3}`, pageW - mR - 8, y, { align: 'right' }); // approx page
+        doc.text(`${i + 3}`, pageW - mR - 8, y, { align: 'right' });
         y += 7;
       }
     }
