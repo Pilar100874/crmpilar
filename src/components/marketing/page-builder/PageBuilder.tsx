@@ -2548,6 +2548,16 @@ const PageBuilderEditor: React.FC<{
     toast.success(`Template "${template.name}" aplicado!`);
   };
 
+  const applyFullTemplate = (ft: FullTemplate) => {
+    const timestamped = ft.sections.map(s => ({ ...s, id: `${s.id}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}` })) as PageSection[];
+    setSections(timestamped);
+    setConfig(c => ({ ...c, ...ft.config }));
+    if (!currentPageId) { setPageName(ft.name); setPageSlug(generateSlug(ft.name)); }
+    setSelectedSectionId(timestamped[0]?.id || null);
+    setShowTemplateDialog(false);
+    toast.success(`Template "${ft.name}" aplicado com tema completo!`);
+  };
+
   const savePage = async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
