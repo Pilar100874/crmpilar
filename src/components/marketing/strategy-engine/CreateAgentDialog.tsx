@@ -356,87 +356,83 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
               <FieldSection label="ID">
                 <Input value={card.id} onChange={e => updateCard('id', e.target.value)} className="text-xs h-8" placeholder="agent_id" />
               </FieldSection>
-              <FieldSection label="Name">
+              <FieldSection label="Nome">
                 <Input value={card.name} onChange={e => updateCard('name', e.target.value)} className="text-xs h-8" placeholder="Nome do Agente" />
               </FieldSection>
-              <FieldSection label="Version">
+              <FieldSection label="Versão">
                 <Input value={card.version} onChange={e => updateCard('version', e.target.value)} className="text-xs h-8" />
               </FieldSection>
             </div>
 
-            <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+            <FieldSection label="Papel" hint="Descrição clara do papel do agente no sistema">
               <Textarea value={card.role} onChange={e => updateCard('role', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Especialista em análise de mercado..." />
             </FieldSection>
 
-            <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+            <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
               <Textarea value={card.mission} onChange={e => updateCard('mission', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Gerar relatório detalhado de..." />
-            </FieldSection>
-
-            <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
-              <Input value={card.handoff} onChange={e => updateCard('handoff', e.target.value)} className="text-xs h-8" placeholder="Ex: qa_validator" />
             </FieldSection>
           </TabsContent>
 
           {/* ─── CONTRACTS TAB ─── */}
           <TabsContent value="contracts" className="space-y-3 mt-3">
-            <FieldSection label="Capabilities" hint="Lista de tarefas que o agente é capaz de executar">
+            <FieldSection label="Capacidades" hint="Lista de tarefas que o agente é capaz de executar">
               <EditableList items={card.capabilities} onChange={v => updateCard('capabilities', v)} placeholder="Capacidade..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Non-Capabilities" hint="Lista explícita do que o agente NÃO deve fazer">
+            <FieldSection label="Restrições" hint="Lista explícita do que o agente NÃO deve fazer">
               <EditableList items={card.non_capabilities} onChange={v => updateCard('non_capabilities', v)} placeholder="Restrição..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Inputs" hint="Tipos de dados aceitos pelo agente">
+            <FieldSection label="Entradas" hint="Tipos de dados aceitos pelo agente">
               <EditableList items={card.inputs} onChange={v => updateCard('inputs', v)} placeholder="Tipo de dado..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Context Dependencies" hint="Dados da memória estratégica necessários">
+            <FieldSection label="Dependências de Contexto" hint="Dados da memória estratégica necessários">
               <EditableList items={card.context_dependencies} onChange={v => updateCard('context_dependencies', v)} placeholder="Dependência..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Output Schema" hint="JSON schema obrigatório para a saída do agente">
+            <FieldSection label="Esquema de Saída" hint="JSON schema obrigatório para a saída do agente">
               <Textarea value={card.output_schema} onChange={e => updateCard('output_schema', e.target.value)} rows={8} className="text-xs font-mono" placeholder='{ "campo": "tipo" }' />
             </FieldSection>
           </TabsContent>
 
           {/* ─── REASONING TAB ─── */}
           <TabsContent value="reasoning" className="space-y-3 mt-3">
-            <FieldSection label="Reasoning Protocol" hint="Passos ordenados que o agente deve seguir ao executar">
+            <FieldSection label="Protocolo de Raciocínio" hint="Passos ordenados que o agente deve seguir ao executar">
               <EditableList items={card.reasoning_protocol} onChange={v => updateCard('reasoning_protocol', v)} placeholder="Passo..." ordered />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Error Handling" hint="Como o agente reage quando dados são insuficientes">
+            <FieldSection label="Tratamento de Erros" hint="Como o agente reage quando dados são insuficientes">
               <Textarea value={card.error_handling} onChange={e => updateCard('error_handling', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Se dados insuficientes, retornar campo 'warnings' com..." />
             </FieldSection>
           </TabsContent>
 
           {/* ─── QUALITY TAB ─── */}
           <TabsContent value="quality" className="space-y-3 mt-3">
-            <FieldSection label="Quality Standards" hint="Critérios que definem se o output é aceitável">
+            <FieldSection label="Padrões de Qualidade" hint="Critérios que definem se o output é aceitável">
               <EditableList items={card.quality_standards} onChange={v => updateCard('quality_standards', v)} placeholder="Padrão de qualidade..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Anti-Patterns" hint="Comportamentos proibidos que devem ser evitados">
-              <EditableList items={card.anti_patterns} onChange={v => updateCard('anti_patterns', v)} placeholder="Anti-pattern..." />
+            <FieldSection label="Anti-Padrões" hint="Comportamentos proibidos que devem ser evitados">
+              <EditableList items={card.anti_patterns} onChange={v => updateCard('anti_patterns', v)} placeholder="Anti-padrão..." />
             </FieldSection>
           </TabsContent>
 
           {/* ─── PROMPT PREVIEW TAB ─── */}
           <TabsContent value="prompt" className="space-y-3 mt-3">
-            <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+            <FieldSection label="Prompt do Sistema (Gerado)" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
               <Textarea value={generatedPrompt} readOnly rows={15} className="text-xs font-mono bg-muted/50" />
             </FieldSection>
             <Button variant="outline" size="sm" onClick={copyPrompt}>

@@ -217,17 +217,9 @@ Improve collaboration between squads and ensure all agents read the shared strat
 ═══════════════════════════════════════════════════════════════`;
 
 export function agentCardToSystemPrompt(card: AgentCard): string {
-  // Build destino consumo text from agent keys
-  const destinoText = card.destino_consumo && card.destino_consumo.length > 0
-    ? card.destino_consumo.map(key => {
-        const info = AGENT_CARDS[key];
-        return info ? info.name : key;
-      }).join(', ')
-    : card.handoff || 'Nenhum (agente final da cadeia)';
-
   return [
     `Você é o ${card.name} (v${card.version}).`,
-    `\nROLE:\n${card.role}`,
+    `\nPAPEL:\n${card.role}`,
     `\nMISSÃO:\n${card.mission}`,
     `\nCAPACIDADES:\n${card.capabilities.map(c => `• ${c}`).join('\n')}`,
     `\nRESTRIÇÕES (o que você NÃO deve fazer):\n${card.non_capabilities.map(c => `• ${c}`).join('\n')}`,
@@ -238,7 +230,6 @@ export function agentCardToSystemPrompt(card: AgentCard): string {
     `\nPADRÕES DE QUALIDADE:\n${card.quality_standards.map(q => `• ${q}`).join('\n')}`,
     `\nANTI-PADRÕES (comportamentos proibidos):\n${card.anti_patterns.map(a => `• ${a}`).join('\n')}`,
     `\nTRATAMENTO DE ERROS:\n${card.error_handling}`,
-    `\nDESTINO DE CONSUMO (agentes que utilizam este resultado):\n${destinoText}`,
     COLLABORATION_DIRECTIVE,
     `\nINSTRUÇÃO FINAL: Retorne EXCLUSIVAMENTE um JSON válido (sem markdown, sem comentários, sem explicações). Siga o esquema de saída rigorosamente.`
   ].join('\n');

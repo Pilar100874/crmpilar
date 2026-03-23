@@ -671,51 +671,21 @@ export function StrategyAdminPanel() {
                             <FieldSection label="ID">
                               <Input value={card.id} onChange={e => updateCard(agentKey, 'id', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
-                            <FieldSection label="Name">
+                            <FieldSection label="Nome">
                               <Input value={card.name} onChange={e => updateCard(agentKey, 'name', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
-                            <FieldSection label="Version">
+                            <FieldSection label="Versão">
                               <Input value={card.version} onChange={e => updateCard(agentKey, 'version', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
                           </div>
 
-                          <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+                          <FieldSection label="Papel" hint="Descrição clara do papel do agente no sistema">
                             <Textarea value={card.role} onChange={e => updateCard(agentKey, 'role', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
 
-                          <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+                          <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
                             <Textarea value={card.mission} onChange={e => updateCard(agentKey, 'mission', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
-
-                          <FieldSection label="Destino de Consumo" hint="Selecione os agentes que devem consumir o resultado deste agente">
-                            <div className="flex flex-wrap gap-1">
-                              {allAgentKeys.filter(k => k !== agentKey).map(dest => {
-                                const currentDest = card.destino_consumo || [];
-                                const isSelected = currentDest.includes(dest);
-                                const destIcon = configs[dest]?.icon || AGENT_INFO[dest]?.icon || '🤖';
-                                const destName = configs[dest]?.card?.name?.split(' ')[0] || AGENT_INFO[dest]?.name?.split(' ')[0] || dest;
-                                return (
-                                  <Badge
-                                    key={dest}
-                                    variant={isSelected ? 'default' : 'outline'}
-                                    className="text-[10px] cursor-pointer gap-0.5 hover:opacity-80 transition-opacity"
-                                    onClick={() => {
-                                      const newDest = isSelected
-                                        ? currentDest.filter((d: string) => d !== dest)
-                                        : [...currentDest, dest];
-                                      updateCard(agentKey, 'destino_consumo', newDest);
-                                      // Keep handoff in sync
-                                      updateCard(agentKey, 'handoff', newDest.join(', '));
-                                    }}
-                                  >
-                                    {destIcon} {destName}
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                          </FieldSection>
-
-                          <Separator />
 
                           {/* ─── Knowledge Base Config ─── */}
                           <FieldSection label="Base de Conhecimento" hint="Define se o agente usa dados internos (memória estratégica) ou uma base externa de arquivos">
@@ -792,31 +762,31 @@ export function StrategyAdminPanel() {
 
                         {/* ─── CONTRACTS TAB ─── */}
                         <TabsContent value="contracts" className="space-y-3 mt-3">
-                          <FieldSection label="Capabilities" hint="Lista de tarefas que o agente é capaz de executar">
+                          <FieldSection label="Capacidades" hint="Lista de tarefas que o agente é capaz de executar">
                             <EditableList items={card.capabilities} onChange={v => updateCard(agentKey, 'capabilities', v)} placeholder="Capacidade..." />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Non-Capabilities" hint="Lista explícita do que o agente NÃO deve fazer">
+                          <FieldSection label="Restrições" hint="Lista explícita do que o agente NÃO deve fazer">
                             <EditableList items={card.non_capabilities} onChange={v => updateCard(agentKey, 'non_capabilities', v)} placeholder="Restrição..." />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Inputs" hint="Tipos de dados aceitos pelo agente">
+                          <FieldSection label="Entradas" hint="Tipos de dados aceitos pelo agente">
                             <EditableList items={card.inputs} onChange={v => updateCard(agentKey, 'inputs', v)} placeholder="Tipo de dado..." />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Context Dependencies" hint="Dados da memória estratégica necessários">
+                          <FieldSection label="Dependências de Contexto" hint="Dados da memória estratégica necessários">
                             <EditableList items={card.context_dependencies} onChange={v => updateCard(agentKey, 'context_dependencies', v)} placeholder="Dependência..." />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Output Schema" hint="JSON schema obrigatório para a saída do agente">
+                          <FieldSection label="Esquema de Saída" hint="JSON schema obrigatório para a saída do agente">
                             <Textarea
                               value={card.output_schema}
                               onChange={e => updateCard(agentKey, 'output_schema', e.target.value)}
@@ -829,33 +799,33 @@ export function StrategyAdminPanel() {
 
                         {/* ─── REASONING TAB ─── */}
                         <TabsContent value="reasoning" className="space-y-3 mt-3">
-                          <FieldSection label="Reasoning Protocol" hint="Passos ordenados que o agente deve seguir ao executar">
+                          <FieldSection label="Protocolo de Raciocínio" hint="Passos ordenados que o agente deve seguir ao executar">
                             <EditableList items={card.reasoning_protocol} onChange={v => updateCard(agentKey, 'reasoning_protocol', v)} placeholder="Passo..." ordered />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Error Handling" hint="Como o agente reage quando dados são insuficientes">
+                          <FieldSection label="Tratamento de Erros" hint="Como o agente reage quando dados são insuficientes">
                             <Textarea value={card.error_handling} onChange={e => updateCard(agentKey, 'error_handling', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
                         </TabsContent>
 
                         {/* ─── QUALITY TAB ─── */}
                         <TabsContent value="quality" className="space-y-3 mt-3">
-                          <FieldSection label="Quality Standards" hint="Critérios que definem se o output é aceitável">
+                          <FieldSection label="Padrões de Qualidade" hint="Critérios que definem se o output é aceitável">
                             <EditableList items={card.quality_standards} onChange={v => updateCard(agentKey, 'quality_standards', v)} placeholder="Padrão de qualidade..." />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Anti-Patterns" hint="Comportamentos proibidos que devem ser evitados">
-                            <EditableList items={card.anti_patterns} onChange={v => updateCard(agentKey, 'anti_patterns', v)} placeholder="Anti-pattern..." />
+                          <FieldSection label="Anti-Padrões" hint="Comportamentos proibidos que devem ser evitados">
+                            <EditableList items={card.anti_patterns} onChange={v => updateCard(agentKey, 'anti_patterns', v)} placeholder="Anti-padrão..." />
                           </FieldSection>
                         </TabsContent>
 
                         {/* ─── PROMPT PREVIEW TAB ─── */}
                         <TabsContent value="prompt" className="space-y-3 mt-3">
-                          <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+                          <FieldSection label="Prompt do Sistema (Gerado)" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
                             {!config.saved && (
                               <Badge className="text-[10px] bg-primary/15 text-primary border-primary/30 mb-1 animate-pulse">
                                 🔄 Prompt atualizado — salve para aplicar
