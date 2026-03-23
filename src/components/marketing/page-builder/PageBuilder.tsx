@@ -1707,9 +1707,10 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 15. Footer ──
+    const businessName = project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
-      content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
+      content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
     });
 
     // ── Config & Save ──
