@@ -1525,6 +1525,137 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
       });
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ACTION: Generate ad image for product using AI
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (action === 'generate_page_media') {
+      const productName = body.productName || 'Produto';
+      const productDescription = body.productDescription || '';
+      const productImageUrl = body.productImageUrl || '';
+      const marketingContext = body.marketingContext || '';
+      const mediaType = body.mediaType || 'image'; // 'image' or 'video'
+
+      if (mediaType === 'video') {
+        // For video, generate a compelling prompt/storyboard
+        const videoPrompt = `Crie um roteiro curto e cinematográfico (máximo 15 segundos) para um vídeo promocional do produto "${productName}".
+Contexto de marketing: ${marketingContext}
+Descrição do produto: ${productDescription}
+
+Retorne EXCLUSIVAMENTE um JSON:
+{
+  "video_prompt": "Prompt detalhado para geração de vídeo em inglês, cinematográfico, focado no produto",
+  "storyboard": [
+    {"timestamp": "0-3s", "description": "Descrição da cena"},
+    {"timestamp": "3-8s", "description": "Descrição da cena"},
+    {"timestamp": "8-15s", "description": "Descrição da cena"}
+  ],
+  "headline_overlay": "Texto de destaque para sobrepor no vídeo (PT-BR)",
+  "cta_overlay": "Call-to-action para o final do vídeo (PT-BR)"
+}`;
+
+        const rawResult = await callAI(LOVABLE_API_KEY, 'Você é um diretor criativo de vídeos publicitários. Gere roteiros persuasivos e visualmente impactantes.', videoPrompt);
+        const videoData = extractJSON(rawResult);
+
+        return new Response(JSON.stringify({ success: true, mediaType: 'video', data: videoData }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Image generation
+      const imagePromptRequest = `Crie um prompt profissional para gerar uma imagem publicitária para o produto "${productName}".
+Descrição do produto: ${productDescription}
+Contexto de marketing: ${marketingContext}
+
+O prompt deve ser em inglês e descrever uma imagem publicitária premium com:
+- O produto como foco central
+- Iluminação profissional de estúdio
+- Composição limpa e atraente
+- Estilo de anúncio de alta conversão
+
+Retorne EXCLUSIVAMENTE um JSON:
+{
+  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária",
+  "alt_text": "Texto alternativo descritivo em português",
+  "suggested_headline": "Headline persuasiva para acompanhar a imagem (PT-BR)"
+}`;
+
+      const rawPromptResult = await callAI(LOVABLE_API_KEY, 'Você é um diretor de arte publicitária. Crie prompts visuais impactantes.', imagePromptRequest);
+      const promptData = extractJSON(rawPromptResult);
+
+      // Now generate the actual image using AI image generation
+      let generatedImageUrl = '';
+      try {
+        const messages: any[] = [];
+        
+        if (productImageUrl) {
+          // If product has an image, use it as reference for editing/composing
+          messages.push({
+            role: 'user',
+            content: [
+              { type: 'text', text: `Create a professional advertising image for this product. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. Marketing style.`}` },
+              { type: 'image_url', image_url: { url: productImageUrl } }
+            ]
+          });
+        } else {
+          messages.push({
+            role: 'user',
+            content: promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style.`
+          });
+        }
+
+        const imgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-3.1-flash-image-preview',
+            messages,
+            modalities: ['image', 'text'],
+          }),
+        });
+
+        if (imgResponse.ok) {
+          const imgData = await imgResponse.json();
+          const base64Image = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          
+          if (base64Image) {
+            // Upload to storage
+            const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+            const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+            const storageClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+            
+            const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+            const binaryData = Uint8Array.from(atob(base64Data), (c: string) => c.charCodeAt(0));
+            const filename = `page-builder/${Date.now()}-ad.png`;
+            
+            const { error: uploadError } = await storageClient.storage
+              .from('marketing-images')
+              .upload(filename, binaryData, { contentType: 'image/png', upsert: true });
+
+            if (!uploadError) {
+              const { data: urlData } = storageClient.storage
+                .from('marketing-images')
+                .getPublicUrl(filename);
+              generatedImageUrl = urlData.publicUrl;
+            }
+          }
+        }
+      } catch (imgError: any) {
+        console.error('Image generation error:', imgError.message);
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        mediaType: 'image',
+        data: promptData,
+        generatedImageUrl,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     throw new Error(`Ação desconhecida: ${action}`);
 
   } catch (error: any) {

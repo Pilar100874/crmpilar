@@ -969,8 +969,12 @@ const AutoGeneratePage: React.FC<{
   const [selectedCategory, setSelectedCategory] = useState<string>('startup');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [step, setStep] = useState<'select' | 'template' | 'generating' | 'done'>('select');
+  const [step, setStep] = useState<'select' | 'template' | 'product' | 'generating' | 'done'>('select');
   const [progress, setProgress] = useState<string[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [productSearch, setProductSearch] = useState('');
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -1182,12 +1186,41 @@ const AutoGeneratePage: React.FC<{
       content: { items: socialProofItems.slice(0, 4) }
     });
 
-    // ── 3. Image placeholder ──
-    addProgress('📸 Reservando espaço para imagem principal...');
+    // ── 3. Image — generate with AI if product selected ──
+    let mainImageUrl = '';
+    let mainImageAlt = 'Imagem do produto/serviço';
+    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+
+    if (selectedProd) {
+      addProgress(`📸 Gerando imagem publicitária do produto "${selectedProd.nome}" com IA...`);
+      try {
+        const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', {
+          body: {
+            action: 'generate_page_media',
+            mediaType: 'image',
+            productName: selectedProd.nome,
+            productDescription: selectedProd.descricao || '',
+            productImageUrl: selectedProd.foto_url || '',
+            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
+          }
+        });
+        if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
+          mainImageUrl = mediaResult.generatedImageUrl;
+          mainImageAlt = mediaResult.data?.alt_text || `Anúncio - ${selectedProd.nome}`;
+          addProgress('✅ Imagem publicitária gerada com sucesso!');
+        } else {
+          addProgress('⚠️ Não foi possível gerar imagem — usando placeholder...');
+        }
+      } catch {
+        addProgress('⚠️ Erro na geração de imagem — usando placeholder...');
+      }
+    } else {
+      addProgress('📸 Reservando espaço para imagem principal...');
+    }
     const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || creative?.estilo_visual || 'Imagem profissional do produto';
     sections.push({
       id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
-      content: { url: '', alt: 'Imagem do produto/serviço', caption: imgSuggestion, fit: 'cover', _media_suggestion: `🖼️ ${imgSuggestion}` }
+      content: { url: mainImageUrl, alt: mainImageAlt, caption: mainImageUrl ? (selectedProd?.nome || '') : imgSuggestion, fit: 'cover', _media_suggestion: mainImageUrl ? '' : `🖼️ ${imgSuggestion}` }
     });
 
     // ── 4. Features ──
@@ -1277,12 +1310,52 @@ const AutoGeneratePage: React.FC<{
       content: { body: aboutText, alignment: 'center', _alt_body: aboutAlts }
     });
 
-    // ── 7. Video placeholder ──
-    addProgress('🎬 Reservando espaço para vídeo...');
-    const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+    // ── 7. Video — generate storyboard with AI if product selected ──
+    let videoContent: Record<string, any> = { url: '', poster: '', autoplay: false };
+    if (selectedProd) {
+      addProgress(`🎬 Gerando roteiro de vídeo para "${selectedProd.nome}" com IA...`);
+      try {
+        const { data: videoResult, error: videoError } = await supabase.functions.invoke('strategy-engine', {
+          body: {
+            action: 'generate_page_media',
+            mediaType: 'video',
+            productName: selectedProd.nome,
+            productDescription: selectedProd.descricao || '',
+            productImageUrl: selectedProd.foto_url || '',
+            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
+          }
+        });
+        if (!videoError && videoResult?.success && videoResult?.data) {
+          const vd = videoResult.data;
+          videoContent = {
+            url: '',
+            poster: mainImageUrl || selectedProd.foto_url || '',
+            autoplay: false,
+            _video_prompt: vd.video_prompt || '',
+            _storyboard: vd.storyboard || [],
+            _headline_overlay: vd.headline_overlay || '',
+            _cta_overlay: vd.cta_overlay || '',
+            _media_suggestion: `🎬 Roteiro gerado pela IA: ${vd.headline_overlay || ''}. Use o AI Creative Studio para produzir o vídeo.`,
+          };
+          addProgress('✅ Roteiro de vídeo gerado com sucesso!');
+        } else {
+          const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+          videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+          addProgress('⚠️ Não foi possível gerar roteiro — usando sugestão...');
+        }
+      } catch {
+        const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || 'Grave um vídeo de apresentação.';
+        videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+        addProgress('⚠️ Erro na geração de roteiro — usando sugestão...');
+      }
+    } else {
+      addProgress('🎬 Reservando espaço para vídeo...');
+      const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+      videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+    }
     sections.push({
       id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
-      content: { url: '', poster: '', autoplay: false, _media_suggestion: `🎬 ${videoSuggestion}` }
+      content: videoContent
     });
 
     // ── 8. Testimonials ──
@@ -1538,8 +1611,11 @@ const AutoGeneratePage: React.FC<{
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
-            {step !== 'select' && step !== 'generating' && step !== 'done' && (
-              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 2</Badge>
+            {step === 'template' && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 3</Badge>
+            )}
+            {step === 'product' && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo 3 de 3</Badge>
             )}
           </DialogTitle>
         </DialogHeader>
@@ -1597,7 +1673,9 @@ const AutoGeneratePage: React.FC<{
             )}
 
             <Button 
-              onClick={() => setStep('template')} 
+              onClick={() => {
+                setStep('template');
+              }} 
               disabled={!selectedProject} 
               className="w-full gap-2"
             >
@@ -1719,11 +1797,149 @@ const AutoGeneratePage: React.FC<{
             })()}
 
             <Button
+              onClick={async () => {
+                // Fetch products for selection
+                setLoadingProducts(true);
+                const estabId = localStorage.getItem('estabelecimentoId');
+                if (estabId) {
+                  const { data } = await supabase
+                    .from('produtos')
+                    .select('id, nome, codigo, foto_url, descricao, preco_tabela, marca')
+                    .eq('estabelecimento_id', estabId)
+                    .eq('ativo', true)
+                    .order('nome')
+                    .limit(100);
+                  setProducts(data || []);
+                }
+                setLoadingProducts(false);
+                setStep('product');
+              }}
+              disabled={generating}
+              className="w-full gap-2"
+            >
+              <Package className="h-4 w-4" /> Próximo: Selecionar Produto
+            </Button>
+          </div>
+        ) : step === 'product' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                <strong>Passo 3:</strong> Selecione o produto (opcional) para gerar imagem e vídeo com IA.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('template')} className="text-xs gap-1">
+                ← Voltar
+              </Button>
+            </div>
+
+            {/* Search */}
+            <Input
+              placeholder="🔍 Buscar produto por nome ou código..."
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              className="text-sm"
+            />
+
+            {loadingProducts ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : (
+              <ScrollArea className="h-[300px] pr-2">
+                <div className="space-y-2">
+                  {/* Option: No product */}
+                  <button
+                    onClick={() => setSelectedProduct('')}
+                    className={cn(
+                      'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
+                      !selectedProduct
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-primary/40'
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">🚫</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Sem produto específico</p>
+                      <p className="text-[11px] text-muted-foreground">Gerar página apenas com dados da estratégia</p>
+                    </div>
+                    {!selectedProduct && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
+                  </button>
+
+                  {/* Products */}
+                  {products
+                    .filter(p => {
+                      if (!productSearch) return true;
+                      const search = productSearch.toLowerCase();
+                      return (p.nome || '').toLowerCase().includes(search) || (p.codigo || '').toLowerCase().includes(search);
+                    })
+                    .map(product => {
+                      const isSelected = selectedProduct === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => setSelectedProduct(product.id)}
+                          className={cn(
+                            'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          {product.foto_url ? (
+                            <img src={product.foto_url} alt={product.nome} className="w-12 h-12 rounded-lg object-cover border" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">📦</div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{product.nome}</p>
+                            <div className="flex items-center gap-2">
+                              {product.codigo && <span className="text-[10px] text-muted-foreground">#{product.codigo}</span>}
+                              {product.marca && <Badge variant="outline" className="text-[9px] h-4">{product.marca}</Badge>}
+                              {product.preco_tabela && (
+                                <span className="text-[10px] font-semibold text-primary">
+                                  R$ {Number(product.preco_tabela).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isSelected && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+
+                  {products.length === 0 && !loadingProducts && (
+                    <div className="text-center py-6">
+                      <Package className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Nenhum produto encontrado.</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Selected product info */}
+            {selectedProduct && (() => {
+              const prod = products.find(p => p.id === selectedProduct);
+              if (!prod) return null;
+              return (
+                <Card className="p-3 flex items-center gap-3 bg-primary/5 border-primary/30">
+                  {prod.foto_url ? (
+                    <img src={prod.foto_url} alt={prod.nome} className="w-10 h-10 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">📦</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate">{prod.nome}</p>
+                    <p className="text-[10px] text-muted-foreground">🖼️ Imagem + 🎬 Vídeo serão gerados com IA</p>
+                  </div>
+                  <ImagePlus className="h-4 w-4 text-primary" />
+                </Card>
+              );
+            })()}
+
+            <Button
               onClick={generatePage}
               disabled={generating}
               className="w-full gap-2"
             >
-              <Zap className="h-4 w-4" /> Gerar Página com Este Tema
+              <Zap className="h-4 w-4" /> {selectedProduct ? 'Gerar Página com Produto e IA' : 'Gerar Página com Este Tema'}
             </Button>
           </div>
         ) : (
