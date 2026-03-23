@@ -23,6 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { TEMPLATE_CATEGORIES, ALL_THEMES, getThemeById } from './pageTemplates';
+import { FULL_TEMPLATE_CATEGORIES, ALL_FULL_TEMPLATES, FullTemplate } from './fullTemplates';
+import { TemplateMiniPreview } from './TemplateMiniPreview';
 import { AgentTextBank } from './AgentTextBank';
 import {
   DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay,
