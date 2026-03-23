@@ -1600,14 +1600,14 @@ Retorne EXCLUSIVAMENTE um JSON:
           messages.push({
             role: 'user',
             content: [
-              { type: 'text', text: `Create a professional advertising image for this product. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. Marketing style.`}` },
+              { type: 'text', text: `Create a professional advertising image for this product. NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. Pure visual product photography only. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. No text or words in the image.`}` },
               { type: 'image_url', image_url: { url: productImageUrl } }
             ]
           });
         } else {
           messages.push({
             role: 'user',
-            content: promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style.`
+            content: `NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY in the image. Pure visual only. ${promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style. No text overlay.`}`
           });
         }
 
