@@ -2203,10 +2203,13 @@ const AutoGeneratePage: React.FC<{
       addProgress('✅ Página de vendas gerada com sucesso!');
       setStep('done');
       toast.success('Página de vendas completa gerada! 🎉');
-      setTimeout(() => {
-        onGenerated(saved as unknown as SavedPage);
-        onOpenChange(false);
-      }, 1500);
+      // Only auto-close if there was no video error
+      if (!videoError) {
+        setTimeout(() => {
+          onGenerated(saved as unknown as SavedPage);
+          onOpenChange(false);
+        }, 1500);
+      }
     }
     setGenerating(false);
   };
