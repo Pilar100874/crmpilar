@@ -1541,16 +1541,22 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
 Contexto de marketing: ${marketingContext}
 Descrição do produto: ${productDescription}
 
+REGRAS OBRIGATÓRIAS:
+- O vídeo NÃO deve conter NENHUM texto, legenda, título ou overlay de texto
+- O vídeo NÃO deve conter áudio, narração ou música
+- Foco 100% visual: apenas imagens cinematográficas do produto
+- Sem textos sobrepostos de nenhum tipo
+
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "video_prompt": "Prompt detalhado para geração de vídeo em inglês, cinematográfico, focado no produto",
+  "video_prompt": "Prompt detalhado para geração de vídeo em inglês, cinematográfico, focado no produto. NO TEXT OVERLAYS. NO AUDIO. NO CAPTIONS. NO TITLES. Pure visual cinematic product footage only.",
   "storyboard": [
-    {"timestamp": "0-3s", "description": "Descrição da cena"},
-    {"timestamp": "3-8s", "description": "Descrição da cena"},
-    {"timestamp": "8-15s", "description": "Descrição da cena"}
+    {"timestamp": "0-3s", "description": "Descrição da cena visual (sem texto)"},
+    {"timestamp": "3-8s", "description": "Descrição da cena visual (sem texto)"},
+    {"timestamp": "8-15s", "description": "Descrição da cena visual (sem texto)"}
   ],
-  "headline_overlay": "Texto de destaque para sobrepor no vídeo (PT-BR)",
-  "cta_overlay": "Call-to-action para o final do vídeo (PT-BR)"
+  "headline_overlay": "",
+  "cta_overlay": ""
 }`;
 
         const rawResult = await callAI(LOVABLE_API_KEY, 'Você é um diretor criativo de vídeos publicitários. Gere roteiros persuasivos e visualmente impactantes.', videoPrompt);
