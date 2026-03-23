@@ -129,6 +129,12 @@ const VideoTimelineEditor: React.FC = () => {
   const [renameValue, setRenameValue] = useState('');
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [lastSavedState, setLastSavedState] = useState<string>('');
+  const [roteiroDialogOpen, setRoteiroDialogOpen] = useState(false);
+  const [roteiroProjects, setRoteiroProjects] = useState<any[]>([]);
+  const [roteiroLoading, setRoteiroLoading] = useState(false);
+  const [selectedRoteiroProjectId, setSelectedRoteiroProjectId] = useState<string | null>(null);
+  const [roteiroArtifacts, setRoteiroArtifacts] = useState<any[]>([]);
+  const [loadingArtifacts, setLoadingArtifacts] = useState(false);
 
   const getCurrentStateHash = useCallback(() => {
     return JSON.stringify({ tracks: state.tracks, clips: state.clips, videoConfig });
