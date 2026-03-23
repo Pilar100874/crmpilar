@@ -490,7 +490,7 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
               if (texts.length === 0) return null;
               return (
                 <div key={agentKey} className="mb-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{agentKey}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{(AGENT_INFO_MAP as any)[agentKey]?.icon || '🔹'} {(AGENT_INFO_MAP as any)[agentKey]?.name || agentKey}</p>
                   {texts.slice(0, 12).map((t, i) => (
                     <button key={i} onClick={() => onSelect(t.text)} className="block w-full text-left text-xs p-2 rounded hover:bg-muted/50 transition-colors border-b border-border/30">
                       <span className="text-muted-foreground">{t.path}: </span>
