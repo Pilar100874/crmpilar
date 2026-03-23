@@ -891,7 +891,30 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
               <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
             </Card>
           ))}
-          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+              const headline = section.content._parentHeadline || '';
+              const FICTIONAL_TESTIMONIALS = [
+                { name: 'Carlos Mendes', role: 'Empresário', text: 'Implementamos há 3 meses e os resultados superaram todas as expectativas. O ROI foi visível já na primeira semana.', metrics: '+250% ROI' },
+                { name: 'Fernanda Oliveira', role: 'Gerente de Marketing', text: 'A facilidade de uso é impressionante. Minha equipe se adaptou em poucos dias e a produtividade disparou.', metrics: '+180% produtividade' },
+                { name: 'Ricardo Santos', role: 'Diretor Comercial', text: 'Nunca vi uma solução tão completa. Reduziu nosso tempo de operação pela metade e aumentou as vendas significativamente.', metrics: '+340% vendas' },
+                { name: 'Ana Beatriz Costa', role: 'CEO', text: 'O suporte é excepcional. Sempre que precisamos, a equipe estava pronta para nos ajudar. Melhor investimento do ano.', metrics: '5 estrelas' },
+                { name: 'Paulo Henrique Silva', role: 'Coordenador de TI', text: 'A integração foi suave e sem dores de cabeça. Em uma semana já estávamos operando 100%. Recomendo fortemente.', metrics: 'Integração em 7 dias' },
+                { name: 'Mariana Almeida', role: 'Empreendedora', text: 'Comecei sozinha e hoje tenho uma equipe. Essa ferramenta foi fundamental para escalar meu negócio de forma organizada.', metrics: 'De 1 para 12 funcionários' },
+                { name: 'Thiago Barbosa', role: 'Consultor Financeiro', text: 'Reduzi custos operacionais em 40% no primeiro trimestre. O retorno veio muito mais rápido do que imaginava.', metrics: '-40% custos' },
+                { name: 'Juliana Ferreira', role: 'Diretora de Operações', text: 'A automação dos processos nos liberou para focar no que realmente importa: nossos clientes. Transformador.', metrics: '+60% satisfação do cliente' },
+              ];
+              const existing = section.content.items || [];
+              const availableTestimonials = FICTIONAL_TESTIMONIALS.filter(t => !existing.some((e: any) => e.name === t.name));
+              const toAdd = availableTestimonials.slice(0, Math.max(4, 6 - existing.length));
+              if (toAdd.length > 0) {
+                updateContent('items', [...existing, ...toAdd]);
+              }
+            }}>
+              <Wand2 className="h-3 w-3" /> Gerar Fictícios
+            </Button>
+          </div>
         </div>
       );
       case 'social_proof': return (
