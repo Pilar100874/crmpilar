@@ -207,6 +207,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
       output_schema: schema,
       ordem,
       agent_card_json: card,
+      knowledge_base_type: knowledgeBaseType,
     });
 
     setSaving(false);
