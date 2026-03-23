@@ -1196,7 +1196,8 @@ const AutoGeneratePage: React.FC<{
     const primaryColor = creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
     const accentColor = creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
 
-    const pageName = `${project.nome} — Gerada`;
+    const uniqueSuffix = Date.now().toString(36);
+    const pageName = `${project.nome} — Gerada ${uniqueSuffix}`;
     const slug = generateSlug(pageName);
     const estabId = localStorage.getItem('estabelecimentoId');
 
