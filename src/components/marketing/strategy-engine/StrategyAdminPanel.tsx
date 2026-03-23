@@ -312,6 +312,8 @@ export function StrategyAdminPanel() {
           ativo: config.active,
           agent_card_json: { ...config.card, dependencies: config.dependencies },
           dependencies: config.dependencies,
+          knowledge_base_type: config.knowledgeBaseType,
+          knowledge_base_files: config.knowledgeBaseFiles,
         } as any);
       } else {
         // Save built-in agent via strategy_agent_configs table
