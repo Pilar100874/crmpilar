@@ -81,7 +81,7 @@ const SECTION_TEMPLATES: { type: PageSection['type']; label: string; icon: React
 ];
 
 const defaultContent: Record<PageSection['type'], Record<string, any>> = {
-  hero: { headline: 'Título Principal', subheadline: 'Subtítulo descritivo do seu negócio', cta_text: 'Começar Agora', cta_url: '#', background_image: '' },
+  hero: { headline: 'Título Principal', subheadline: 'Subtítulo descritivo do seu negócio', cta_text: 'Começar Agora', cta_url: '#', cta_type: 'url', whatsapp_number: '', background_image: '' },
   text: { body: 'Seu texto aqui...', alignment: 'left' },
   image: { url: '', alt: '', caption: '', fit: 'cover' },
   video: { url: '', poster: '', autoplay: false },
