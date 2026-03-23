@@ -147,8 +147,127 @@ function FieldSection({ label, children, hint }: { label: string; children: Reac
     </div>
   );
 }
+// ─── KB File Manager Component ──────────────────────────────────────────────
+const ACCEPTED_KB_FORMATS = '.pdf,.txt,.md,.csv,.json,.xlsx,.docx';
 
-export function StrategyAdminPanel() {
+function KBFileManager({
+  agentKey,
+  files,
+  onFilesChange,
+  estabId,
+}: {
+  agentKey: string;
+  files: KBFile[];
+  onFilesChange: (files: KBFile[]) => void;
+  estabId?: string;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0 || !estabId) return;
+
+    setUploading(true);
+    const newFiles: KBFile[] = [...files];
+
+    try {
+      for (const file of Array.from(selectedFiles)) {
+        const path = `${estabId}/${agentKey}/${Date.now()}_${file.name}`;
+        const { error } = await supabase.storage
+          .from('agent-knowledge-base')
+          .upload(path, file);
+
+        if (error) {
+          toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
+          continue;
+        }
+
+        newFiles.push({
+          name: file.name,
+          path,
+          size: file.size,
+          uploaded_at: new Date().toISOString(),
+        });
+      }
+      onFilesChange(newFiles);
+      toast.success(`${selectedFiles.length} arquivo(s) enviado(s)`);
+    } catch (err: any) {
+      toast.error(`Erro no upload: ${err.message}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemove = async (index: number) => {
+    const file = files[index];
+    await supabase.storage.from('agent-knowledge-base').remove([file.path]);
+    const next = files.filter((_, i) => i !== index);
+    onFilesChange(next);
+    toast.success(`"${file.name}" removido`);
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="space-y-2 rounded-md border border-dashed border-muted-foreground/30 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] text-muted-foreground font-medium">
+          📂 Arquivos da Base de Conhecimento
+        </p>
+        <span className="text-[9px] text-muted-foreground">
+          PDF, TXT, MD, CSV, JSON, XLSX, DOCX
+        </span>
+      </div>
+
+      {files.length > 0 && (
+        <div className="space-y-1">
+          {files.map((file, i) => (
+            <div key={i} className="flex items-center gap-2 bg-muted/50 rounded px-2 py-1">
+              <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+              <span className="text-[10px] flex-1 truncate">{file.name}</span>
+              <span className="text-[9px] text-muted-foreground shrink-0">{formatSize(file.size)}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 shrink-0"
+                onClick={() => handleRemove(i)}
+              >
+                <X className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_KB_FORMATS}
+        multiple
+        className="hidden"
+        onChange={handleUpload}
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-[10px] w-full"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
+        {uploading ? 'Enviando...' : 'Enviar Arquivos'}
+      </Button>
+    </div>
+  );
+}
+
+
   const [configs, setConfigs] = useState<Record<string, AgentConfig>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
