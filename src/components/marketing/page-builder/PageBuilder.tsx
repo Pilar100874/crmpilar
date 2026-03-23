@@ -1471,7 +1471,7 @@ const AutoGeneratePage: React.FC<{
       if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
     }
     if (socialProofItems.length === 0) {
-      socialProofItems.push({ number: '1000+', label: 'Clientes Atendidos' }, { number: '98%', label: 'Satisfação' }, { number: '24/7', label: 'Suporte' });
+      socialProofItems.push({ number: '[Preencher]', label: 'Clientes Atendidos' }, { number: '[Preencher]', label: 'Satisfação' }, { number: '[Preencher]', label: 'Anos no Mercado' });
     }
     sections.push({
       id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {},

@@ -1477,6 +1477,10 @@ REGRAS:
 Seu trabalho é analisar TODOS os dados de estratégia de marketing fornecidos e gerar textos persuasivos, chamativos e prontos para uso em uma landing page profissional.
 
 REGRAS CRÍTICAS:
+- NUNCA INVENTE informações que não existem nos dados fornecidos. NÃO crie selos, certificações, prêmios, parcerias, números de clientes ou qualquer dado fictício que não esteja explicitamente nos dados do cliente.
+- Se não houver dados reais de prova social (número de clientes, satisfação, etc), NÃO invente números. Use placeholders genéricos como "[Seu número aqui]" ou omita a seção.
+- NÃO crie nomes de selos, certificados ou programas fictícios (ex: "Selo de Verificação", "Programa de Excelência", "Certificado de Qualidade") a menos que existam nos dados.
+- Depoimentos/testimonials devem usar nomes genéricos marcados como exemplo (ex: "Maria S. — [Cliente Real]") para que o usuário saiba que precisa substituir.
 - Crie títulos CHAMATIVOS e PERSUASIVOS, NUNCA use o nome do dado/campo como título
 - Use gatilhos mentais: urgência, escassez, prova social, autoridade, reciprocidade
 - Foque em BENEFÍCIOS e TRANSFORMAÇÃO, não em características técnicas
@@ -1499,7 +1503,7 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
   "about_title": "Título envolvente para seção Sobre",
   "about_text": "Texto narrativo e envolvente sobre o negócio (2-3 parágrafos)",
   "testimonials_title": "Título chamativo para depoimentos",
-  "testimonials": [{"name": "Nome", "role": "Cargo/Empresa", "text": "Depoimento realista e persuasivo", "metrics": "Resultado concreto"}],
+  "testimonials": [{"name": "Nome Exemplo", "role": "[Substituir por cliente real]", "text": "Depoimento baseado nos benefícios reais do produto/serviço", "metrics": "Resultado esperado"}],
   "objections_title": "Título para quebra de objeções",
   "objections": [{"objection": "Objeção comum", "response": "Resposta persuasiva e empática"}],
   "guarantee_title": "Título da garantia",
@@ -1510,7 +1514,7 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
   "cta_final_headline": "Headline final de urgência/ação",
   "cta_final_description": "Texto final que gera urgência e ação imediata",
   "cta_final_button": "Texto do botão final (verbo de ação)",
-  "social_proof": [{"number": "Número impactante", "label": "Descrição curta"}],
+  "social_proof": [{"number": "Número REAL dos dados ou [Preencher]", "label": "Descrição curta"}],
   "image_suggestion": "Sugestão detalhada de imagem principal",
   "video_suggestion": "Sugestão de conteúdo para vídeo"
 }`;
