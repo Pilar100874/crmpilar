@@ -3097,12 +3097,12 @@ const PageBuilderEditor: React.FC<{
 
       {/* Template & Theme Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="bg-background sm:max-w-5xl max-h-[85vh] flex flex-col">
+        <DialogContent className="bg-background sm:max-w-6xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><LayoutTemplate className="h-5 w-5" /> Templates & Temas</DialogTitle>
           </DialogHeader>
           <div className="flex-1 flex flex-col min-h-0 mt-3 gap-3">
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none shrink-0">
                 {FULL_TEMPLATE_CATEGORIES.map(cat => (
                   <button key={cat.id}
                     onClick={() => setFullTemplateCategoryFilter(cat.id)}
@@ -3110,17 +3110,18 @@ const PageBuilderEditor: React.FC<{
                       fullTemplateCategoryFilter === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-transparent hover:bg-muted"
                     )}>
                     <span>{cat.icon}</span> {cat.name}
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-0.5">{cat.templates.length}</Badge>
                   </button>
                 ))}
               </div>
               <ScrollArea className="flex-1 min-h-0">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pr-2 pb-2">
                   {(FULL_TEMPLATE_CATEGORIES.find(c => c.id === fullTemplateCategoryFilter)?.templates || ALL_FULL_TEMPLATES.slice(0, 9)).map(ft => (
                     <button key={ft.id}
                       onClick={() => applyFullTemplate(ft)}
                       onMouseEnter={() => setHoveredTemplate(ft.id)}
                       onMouseLeave={() => setHoveredTemplate(null)}
-                      className="flex flex-col gap-2 rounded-xl border-2 border-transparent hover:border-primary transition-all text-left group overflow-hidden">
+                      className="flex flex-col gap-1.5 rounded-xl border-2 border-transparent hover:border-primary transition-all text-left group overflow-hidden">
                       <div className="w-full aspect-[3/4] overflow-hidden rounded-t-lg relative">
                         <TemplateMiniPreview
                           config={ft.config}
@@ -3129,20 +3130,20 @@ const PageBuilderEditor: React.FC<{
                         />
                         {hoveredTemplate === ft.id && (
                           <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] flex items-center justify-center">
-                            <span className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold shadow-lg">
+                            <span className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-[10px] font-semibold shadow-lg">
                               Aplicar Template
                             </span>
                           </div>
                         )}
                       </div>
-                      <div className="px-3 pb-3">
-                        <p className="text-sm font-semibold truncate">{ft.name}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{ft.description}</p>
-                        <div className="flex gap-1 flex-wrap mt-2">
-                          {ft.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="outline" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+                      <div className="px-2 pb-2">
+                        <p className="text-xs font-semibold truncate">{ft.name}</p>
+                        <p className="text-[9px] text-muted-foreground line-clamp-1 mt-0.5">{ft.description}</p>
+                        <div className="flex items-center gap-1 mt-1.5">
+                          {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => (
+                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-border" style={{ backgroundColor: c }} />
                           ))}
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ft.sections.length} seções</Badge>
+                          <Badge variant="secondary" className="text-[8px] px-1 py-0 ml-auto">{ft.sections.length} seções</Badge>
                         </div>
                       </div>
                     </button>
