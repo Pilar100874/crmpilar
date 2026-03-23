@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AgentExecution } from '../types';
 import { toast } from 'sonner';
 import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from '../types';
+import { AGENT_CARDS } from '../agent-cards';
 import jsPDF from 'jspdf';
 
 export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER, agentInfo: Record<string, { name: string; icon: string; color: string; description: string }> = AGENT_INFO) {
