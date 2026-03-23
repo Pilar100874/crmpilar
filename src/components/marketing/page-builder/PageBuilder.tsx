@@ -1146,28 +1146,18 @@ section{overflow-x:hidden}
       case 'video': {
         const hasVideo = c.url && c.url.length > 5;
         const hasPoster = c.poster && c.poster.length > 5;
-        const storyboard = c._storyboard || [];
         const headlineOverlay = c._headline_overlay || '';
         const ctaOverlay = c._cta_overlay || '';
         if (hasVideo) {
           html += `<section style="padding:40px 24px"><div class="container" style="max-width:900px"><video src="${c.url}" controls ${hasPoster ? `poster="${c.poster}"` : ''} style="width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1)"></video></div></section>\n`;
-        } else if (hasPoster || storyboard.length > 0) {
+        } else if (hasPoster) {
           html += `<section style="padding:40px 24px"><div class="container" style="max-width:900px">`;
-          if (hasPoster) {
-            html += `<div style="position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"><img src="${c.poster}" style="width:100%;aspect-ratio:16/9;object-fit:cover;filter:brightness(0.7)" />`;
-            html += `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px">`;
-            html += `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>`;
-            if (headlineOverlay) html += `<p style="font-size:1.3rem;font-weight:700;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)">${headlineOverlay}</p>`;
-            if (ctaOverlay) html += `<p style="font-size:1rem;opacity:.9;text-shadow:0 2px 4px rgba(0,0,0,.5)">${ctaOverlay}</p>`;
-            html += `</div></div>`;
-          }
-          if (storyboard.length > 0) {
-            html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px">`;
-            storyboard.forEach((scene: any) => {
-              html += `<div style="padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb"><p style="font-size:.75rem;font-weight:700;color:${cfg.accentColor};margin-bottom:4px">⏱ ${scene.timestamp || ''}</p><p style="font-size:.85rem;color:#374151">${scene.description || ''}</p></div>`;
-            });
-            html += `</div>`;
-          }
+          html += `<div style="position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"><img src="${c.poster}" style="width:100%;aspect-ratio:16/9;object-fit:cover;filter:brightness(0.7)" />`;
+          html += `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px">`;
+          html += `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>`;
+          if (headlineOverlay) html += `<p style="font-size:1.3rem;font-weight:700;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)">${headlineOverlay}</p>`;
+          if (ctaOverlay) html += `<p style="font-size:1rem;opacity:.9;text-shadow:0 2px 4px rgba(0,0,0,.5)">${ctaOverlay}</p>`;
+          html += `</div></div>`;
           html += `</div></section>\n`;
         }
         break;
@@ -1535,11 +1525,15 @@ const AutoGeneratePage: React.FC<{
       for (const source of featureSources) {
         for (const f of source) {
           const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
-          if (title && !allFeats.find(e => e.title === title)) {
+          const desc = typeof f === 'string' ? f : (f.description || f.descricao || f.texto || '');
+          // Skip items with empty title or description (e.g. storyboard scenes leaking in)
+          if (!title || title.trim().length < 3) continue;
+          if (!desc || desc.trim().length < 3) continue;
+          if (!allFeats.find(e => e.title === title)) {
             allFeats.push({
               icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6],
               title,
-              description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
+              description: desc,
             });
           }
         }
