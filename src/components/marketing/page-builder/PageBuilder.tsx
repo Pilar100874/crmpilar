@@ -621,8 +621,8 @@ const AlternativesPicker: React.FC<{
   currentValue: string;
   onSelect: (text: string) => void;
 }> = ({ field, alternatives, currentValue, onSelect }) => {
-  if (!alternatives || alternatives.length <= 1) return null;
   const [open, setOpen] = useState(false);
+  if (!alternatives || alternatives.length <= 1) return null;
   const currentIdx = alternatives.findIndex(a => a.text === currentValue);
 
   return (
