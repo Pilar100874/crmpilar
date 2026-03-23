@@ -277,6 +277,8 @@ export function StrategyAdminPanel() {
             icon: ca.icon,
             color: ca.color,
             dependencies: ca.dependencies || [],
+            knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
+            knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
           };
         }
       }
