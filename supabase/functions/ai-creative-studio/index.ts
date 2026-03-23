@@ -1219,7 +1219,14 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
 
   const apiKey = await fetchApiKey(estabelecimentoId, provider);
   if (!apiKey) {
-    throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
+    // Fallback: try apiframe if available
+    const afKey = await fetchApiKey(estabelecimentoId, "apiframe");
+    if (afKey) {
+      console.log(`[generate_video] Provider "${provider}" key not found. Falling back to apiframe.`);
+      params.model = "apiframe/kling-2.6";
+      return generateVideoApiframe(estabelecimentoId, params);
+    }
+    throw new Error(`Nenhum provedor de vídeo configurado. Configure uma chave de API em Configurações → APIs Pagas (Google, ApiFrame, OpenAI, Runway, etc.).`);
   }
 
   // Pre-generate hero frame only for providers that support image-to-video
