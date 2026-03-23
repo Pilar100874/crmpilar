@@ -8338,6 +8338,50 @@ export type Database = {
           },
         ]
       }
+      published_pages: {
+        Row: {
+          config: Json
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          publicado: boolean
+          sections: Json
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          publicado?: boolean
+          sections?: Json
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          publicado?: boolean
+          sections?: Json
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "published_pages_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qa_avaliacoes: {
         Row: {
           atendente_id: string
