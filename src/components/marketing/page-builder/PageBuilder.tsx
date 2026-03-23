@@ -179,7 +179,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-gallery', type: 'gallery', title: 'Projetos', visible: true, styles: {}, content: { images: [] } },
       { id: 't-feat', type: 'features', title: 'Serviços', visible: true, styles: {}, content: { items: [{ icon: '🎨', title: 'Design UI/UX', description: 'Interfaces intuitivas e bonitas' }, { icon: '💻', title: 'Desenvolvimento Web', description: 'Sites rápidos e responsivos' }, { icon: '📱', title: 'Apps Mobile', description: 'Aplicativos nativos e híbridos' }] } },
       { id: 't-cta', type: 'cta', title: 'Contato', visible: true, styles: {}, content: { headline: 'Vamos trabalhar juntos?', description: 'Estou disponível para novos projetos.', button_text: 'Enviar Mensagem', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '[Seu Nome]', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
