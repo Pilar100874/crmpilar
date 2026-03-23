@@ -1869,6 +1869,7 @@ const AutoGeneratePage: React.FC<{
             >
               <Zap className="h-4 w-4" /> {selectedProduct ? 'Gerar Página com Produto e IA' : 'Gerar Página com Este Tema'}
             </Button>
+          </div>
         ) : (
           <div className="space-y-3 py-4">
             <div className="space-y-2">
