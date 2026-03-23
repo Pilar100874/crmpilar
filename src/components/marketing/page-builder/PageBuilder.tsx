@@ -937,116 +937,175 @@ const AutoGeneratePage: React.FC<{
       if (!artMap.has(art.tipo)) artMap.set(art.tipo, art.conteudo);
     }
 
+    // Helper: collect text alternatives from multiple agents for a field
+    const collectAlternatives = (sources: { agent: string; icon: string; data: any; keys: string[] }[]): { agent: string; icon: string; text: string }[] => {
+      const alts: { agent: string; icon: string; text: string }[] = [];
+      for (const src of sources) {
+        if (!src.data) continue;
+        for (const key of src.keys) {
+          const val = src.data[key];
+          if (typeof val === 'string' && val.length > 5) {
+            if (!alts.find(a => a.text === val)) {
+              alts.push({ agent: src.agent, icon: src.icon, text: val });
+            }
+            break;
+          }
+        }
+      }
+      return alts;
+    };
+
     // Helper to get data from memory or artifact
     const getData = (key: string) => mem[key] || artMap.get(key) || null;
 
-    // ── 1. Hero Section from positioning/vox ──
-    addProgress('🎯 Construindo Hero com dados de posicionamento...');
     const pos = getData('positioning');
     const vox = getData('vox');
     const lp = getData('landing_page');
-    const heroHeadline = pos?.proposta_unica || pos?.headline || pos?.titulo || lp?.headline || lp?.hero_headline || project.descricao_negocio || 'Seu Negócio, Sua Solução';
-    const heroSub = pos?.descricao || pos?.subheadline || vox?.dores_principais?.[0] || lp?.subheadline || lp?.hero_subheadline || 'Descubra como podemos transformar sua experiência.';
-    const heroCta = lp?.cta_text || lp?.hero_cta || 'Saiba Mais';
+    const creative = getData('creative');
+    const influencer = getData('influencer_content');
+    const funnel = getData('funnel');
+    const vsl = getData('vsl');
+    const videoProd = getData('video_producer');
+    const seoData = getData('seo');
+    const emailData = getData('email');
+    const socialData = getData('social_media');
+    const reelData = getData('reel');
+    const cipherData = getData('cipher');
+
+    // ── 1. Hero Section ──
+    addProgress('🎯 Construindo Hero com alternativas de texto...');
+    const headlineAlts = collectAlternatives([
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['proposta_unica', 'headline', 'titulo', 'proposta_valor', 'slogan'] },
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['headline', 'hero_headline', 'titulo', 'h1'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['titulo_pagina', 'title', 'h1'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['headline', 'titulo_principal', 'gancho'] },
+      { agent: 'Email', icon: '📧', data: emailData, keys: ['assunto_principal', 'headline', 'titulo'] },
+      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'headline', 'slogan'] },
+    ]);
+    const subAlts = collectAlternatives([
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['descricao', 'subheadline', 'subtitulo', 'proposta_descricao'] },
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['subheadline', 'hero_subheadline', 'subtitulo', 'descricao'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['dor_principal', 'resumo', 'perfil_cliente'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['meta_description', 'descricao'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['subtitulo', 'descricao', 'conceito'] },
+    ]);
+    // Also extract from arrays
+    if (vox?.dores_principais && Array.isArray(vox.dores_principais) && vox.dores_principais.length > 0) {
+      subAlts.push({ agent: 'Voz do Cliente (Dor)', icon: '🎙️', text: vox.dores_principais[0] });
+    }
+    const ctaAlts = collectAlternatives([
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_text', 'hero_cta', 'botao_principal'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta', 'cta_text', 'chamada_acao'] },
+      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta', 'cta_text', 'chamada_acao'] },
+    ]);
+
     sections.push({
       id: `auto-hero-${Date.now()}`, type: 'hero', title: 'Hero Principal', visible: true, styles: {},
       content: {
-        headline: heroHeadline, subheadline: heroSub,
-        cta_text: heroCta, cta_url: '#contato',
+        headline: headlineAlts[0]?.text || project.descricao_negocio || 'Seu Negócio, Sua Solução',
+        subheadline: subAlts[0]?.text || 'Descubra como podemos transformar sua experiência.',
+        cta_text: ctaAlts[0]?.text || 'Saiba Mais',
+        cta_url: '#contato',
         background_image: '',
+        _alt_headline: headlineAlts,
+        _alt_subheadline: subAlts,
+        _alt_cta_text: ctaAlts,
         _media_suggestion: '🖼️ Insira uma imagem de fundo impactante que represente seu negócio. Sugestão: foto profissional do produto/serviço ou imagem lifestyle do público-alvo.',
       }
     });
 
-    // ── 2. Image section (product/brand) ──
+    // ── 2. Image placeholder ──
     addProgress('📸 Reservando espaço para imagem principal...');
-    const creative = getData('creative');
-    const influencer = getData('influencer_content');
-    const imgSuggestion = creative?.conceito_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
+    const imgSuggestion = creative?.conceito_visual || creative?.estilo_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
     sections.push({
       id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
       content: {
-        url: '', alt: 'Imagem do produto/serviço', 
+        url: '', alt: 'Imagem do produto/serviço',
         caption: imgSuggestion,
         fit: 'cover',
-        _media_suggestion: `🖼️ Sugestão baseada no agente Criativos: "${imgSuggestion}". Adicione uma foto profissional de alta qualidade.`,
+        _media_suggestion: `🖼️ Sugestão do agente Criativos: "${imgSuggestion}"`,
       }
     });
 
-    // ── 3. Features from funnel/landing_page ──
-    addProgress('⚡ Extraindo recursos e diferenciais...');
-    const funnel = getData('funnel');
+    // ── 3. Features ──
+    addProgress('⚡ Extraindo diferenciais de múltiplos agentes...');
     let featureItems: any[] = [];
-    const rawFeatures = extractArray(pos, 'diferenciais', 'features', 'beneficios')
-      || extractArray(lp, 'features', 'recursos', 'beneficios')
-      || extractArray(funnel, 'etapas', 'stages', 'features');
+    const featureSources = [
+      extractArray(pos, 'diferenciais', 'features', 'beneficios', 'pontos_fortes'),
+      extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
+      extractArray(funnel, 'etapas', 'stages', 'features'),
+      extractArray(creative, 'beneficios', 'features'),
+    ].filter(arr => arr.length > 0);
 
-    if (rawFeatures.length > 0) {
-      featureItems = rawFeatures.slice(0, 6).map((f: any, i: number) => ({
+    if (featureSources.length > 0) {
+      const allFeats = featureSources[0];
+      featureItems = allFeats.slice(0, 6).map((f: any, i: number) => ({
         icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][i % 6],
-        title: f.title || f.titulo || f.name || f.nome || `Recurso ${i + 1}`,
-        description: f.description || f.descricao || f.texto || '',
+        title: typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || `Recurso ${i + 1}`),
+        description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
       }));
     } else {
-      // Fallback: extract key points from positioning
-      const diffs = pos?.diferenciais || pos?.pontos_fortes || [];
-      if (Array.isArray(diffs) && diffs.length > 0) {
-        featureItems = diffs.slice(0, 6).map((d: any, i: number) => ({
-          icon: ['✨', '🎯', '💡', '⚡', '🔒', '📊'][i % 6],
-          title: typeof d === 'string' ? d.slice(0, 40) : (d.titulo || d.title || `Diferencial ${i + 1}`),
-          description: typeof d === 'string' ? d : (d.descricao || d.description || ''),
-        }));
-      } else {
-        featureItems = [
-          { icon: '🚀', title: 'Agilidade', description: 'Insira a descrição do diferencial' },
-          { icon: '🎯', title: 'Precisão', description: 'Insira a descrição do diferencial' },
-          { icon: '💡', title: 'Inovação', description: 'Insira a descrição do diferencial' },
-        ];
-      }
+      featureItems = [
+        { icon: '🚀', title: 'Agilidade', description: 'Descreva seu diferencial aqui' },
+        { icon: '🎯', title: 'Precisão', description: 'Descreva seu diferencial aqui' },
+        { icon: '💡', title: 'Inovação', description: 'Descreva seu diferencial aqui' },
+      ];
     }
     sections.push({
       id: `auto-feat-${Date.now()}`, type: 'features', title: 'Diferenciais', visible: true, styles: {},
       content: { items: featureItems }
     });
 
-    // ── 4. Video Section (VSL/Producer) ──
+    // ── 4. About text ──
+    addProgress('📝 Criando seção sobre o negócio...');
+    const aboutAlts = collectAlternatives([
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre'] },
+      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao'] },
+    ]);
+    if (aboutAlts.length === 0) {
+      aboutAlts.push({ agent: 'Projeto', icon: '📋', text: project.descricao_negocio || 'Conte a história do seu negócio aqui.' });
+    }
+    sections.push({
+      id: `auto-about-${Date.now()}`, type: 'text', title: 'Sobre Nós', visible: true, styles: {},
+      content: { body: aboutAlts[0]?.text, alignment: 'center', _alt_body: aboutAlts }
+    });
+
+    // ── 5. Video placeholder ──
     addProgress('🎬 Reservando espaço para vídeo...');
-    const vsl = getData('vsl');
-    const videoProd = getData('video_producer');
-    const videoSuggestion = vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Vídeo de apresentação do negócio';
+    const videoAlts = collectAlternatives([
+      { agent: 'Roteirista VSL', icon: '🎬', data: vsl, keys: ['titulo', 'gancho', 'headline', 'abertura'] },
+      { agent: 'Produtor de Vídeo', icon: '🎥', data: videoProd, keys: ['conceito', 'titulo', 'briefing'] },
+      { agent: 'Reels', icon: '📱', data: reelData, keys: ['titulo', 'gancho', 'hook'] },
+    ]);
     sections.push({
       id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
       content: {
         url: '', poster: '', autoplay: false,
-        _media_suggestion: `🎬 Sugestão baseada no agente VSL/Produtor: "${videoSuggestion}". Grave um vídeo de vendas seguindo o roteiro gerado.`,
+        _media_suggestion: videoAlts.length > 0
+          ? `🎬 Sugestão: "${videoAlts[0].text}" (${videoAlts[0].agent})`
+          : '🎬 Grave um vídeo de apresentação do seu negócio.',
       }
     });
 
-    // ── 5. Text block (about/story) ──
-    addProgress('📝 Criando seção sobre o negócio...');
-    const aboutText = pos?.historia || pos?.sobre || pos?.manifesto 
-      || vox?.perfil_cliente || project.descricao_negocio
-      || 'Conte a história do seu negócio aqui. Use o texto gerado pelo Motor de Estratégia para criar uma narrativa envolvente.';
+    // ── 6. Gallery ──
+    addProgress('🖼️ Reservando galeria...');
     sections.push({
-      id: `auto-about-${Date.now()}`, type: 'text', title: 'Sobre Nós', visible: true, styles: {},
-      content: { body: aboutText, alignment: 'center' }
-    });
-
-    // ── 6. Gallery (product images) ──
-    addProgress('🖼️ Reservando galeria de imagens...');
-    sections.push({
-      id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria de Produtos', visible: true, styles: {},
+      id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {},
       content: {
         images: [],
-        _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais dos seus produtos/serviços. Sugestão: fotos do produto em uso, detalhes do produto, ambiente de trabalho.',
+        _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais. Sugestão: produto em uso, detalhes, bastidores.',
       }
     });
 
     // ── 7. Testimonials ──
-    addProgress('💬 Montando seção de depoimentos...');
+    addProgress('💬 Montando depoimentos...');
     let testimonialItems: any[] = [];
-    const rawTest = extractArray(lp, 'testimonials', 'depoimentos')
-      || extractArray(vox, 'depoimentos', 'testimonials');
+    const rawTest = [
+      ...extractArray(lp, 'testimonials', 'depoimentos'),
+      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais'),
+    ];
     if (rawTest.length > 0) {
       testimonialItems = rawTest.slice(0, 4).map((t: any) => ({
         name: t.name || t.nome || 'Cliente',
@@ -1055,8 +1114,8 @@ const AutoGeneratePage: React.FC<{
       }));
     } else {
       testimonialItems = [
-        { name: 'Cliente Satisfeito', role: 'Empresa X', text: 'Insira um depoimento real aqui. Use os dados da Voz do Cliente para criar depoimentos autênticos.' },
-        { name: 'Outro Cliente', role: 'Empresa Y', text: 'Mais um depoimento do seu portfólio. Inclua métricas de resultados quando possível.' },
+        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui.' },
+        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado.' },
       ];
     }
     sections.push({
@@ -1064,24 +1123,23 @@ const AutoGeneratePage: React.FC<{
       content: { items: testimonialItems }
     });
 
-    // ── 8. Second Image (lifestyle/brand) ──
-    addProgress('🤳 Reservando espaço para imagem de marca...');
-    const influencerSuggestion = influencer?.tipo_conteudo || influencer?.estilo || creative?.estilo_visual || 'Foto lifestyle da marca/equipe';
+    // ── 8. Second Image ──
+    addProgress('🤳 Reservando imagem de marca...');
     sections.push({
       id: `auto-img2-${Date.now()}`, type: 'image', title: '🤳 Imagem de Marca', visible: true, styles: {},
       content: {
-        url: '', alt: 'Imagem de marca',
-        caption: '',
-        fit: 'cover',
-        _media_suggestion: `🤳 Sugestão baseada no agente Influencer: "${influencerSuggestion}". Use uma foto que transmita a identidade visual da marca.`,
+        url: '', alt: 'Imagem de marca', caption: '', fit: 'cover',
+        _media_suggestion: `🤳 Sugestão: foto lifestyle, equipe ou bastidores da marca.`,
       }
     });
 
     // ── 9. FAQ ──
-    addProgress('❓ Montando perguntas frequentes...');
+    addProgress('❓ Montando FAQ...');
     let faqItems: any[] = [];
-    const rawFaq = extractArray(lp, 'faq', 'perguntas_frequentes')
-      || extractArray(getData('seo'), 'faq', 'perguntas');
+    const rawFaq = [
+      ...extractArray(lp, 'faq', 'perguntas_frequentes'),
+      ...extractArray(seoData, 'faq', 'perguntas'),
+    ];
     if (rawFaq.length > 0) {
       faqItems = rawFaq.slice(0, 5).map((q: any) => ({
         question: q.question || q.pergunta || '',
@@ -1089,9 +1147,9 @@ const AutoGeneratePage: React.FC<{
       }));
     } else {
       faqItems = [
-        { question: 'Como funciona?', answer: 'Descreva como seu produto ou serviço funciona de forma clara e objetiva.' },
-        { question: 'Quais os diferenciais?', answer: 'Liste os principais motivos para o cliente escolher sua solução.' },
-        { question: 'Como entro em contato?', answer: 'Informe seus canais de atendimento e horário de funcionamento.' },
+        { question: 'Como funciona?', answer: 'Descreva como funciona.' },
+        { question: 'Quais os diferenciais?', answer: 'Liste seus diferenciais.' },
+        { question: 'Como entro em contato?', answer: 'Informe seus canais.' },
       ];
     }
     sections.push({
@@ -1101,12 +1159,30 @@ const AutoGeneratePage: React.FC<{
 
     // ── 10. CTA Final ──
     addProgress('🎯 Criando CTA final...');
-    const ctaHeadline = lp?.cta_final?.headline || lp?.cta_headline || 'Pronto para começar?';
-    const ctaDesc = lp?.cta_final?.description || lp?.cta_description || 'Não perca tempo. Entre em contato e descubra como podemos ajudar.';
-    const ctaBtn = lp?.cta_final?.button_text || lp?.cta_button || 'Fale Conosco';
+    const ctaHAlts = collectAlternatives([
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline', 'titulo_cta'] },
+      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_headline', 'assunto', 'titulo'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta_headline', 'titulo_final'] },
+    ]);
+    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para começar?' });
+    const ctaDAlts = collectAlternatives([
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_description', 'cta_final_description', 'descricao_cta'] },
+      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia'] },
+    ]);
+    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Entre em contato e descubra como podemos ajudar.' });
+
     sections.push({
       id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
-      content: { headline: ctaHeadline, description: ctaDesc, button_text: ctaBtn, button_url: '#contato' }
+      content: {
+        headline: ctaHAlts[0].text,
+        description: ctaDAlts[0].text,
+        button_text: ctaAlts[0]?.text || 'Fale Conosco',
+        button_url: '#contato',
+        _alt_headline: ctaHAlts,
+        _alt_description: ctaDAlts,
+        _alt_button_text: ctaAlts,
+      }
     });
 
     // ── 11. Footer ──
@@ -1115,35 +1191,23 @@ const AutoGeneratePage: React.FC<{
       content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
     });
 
-    // ── Config from SEO agent ──
-    addProgress('🔍 Aplicando configurações de SEO...');
-    const seoData = getData('seo');
-    const configHints: Partial<PageConfig> = {};
-    if (seoData?.titulo_pagina || seoData?.title) configHints.title = seoData.titulo_pagina || seoData.title;
-    else configHints.title = project.nome;
-    if (seoData?.meta_description || seoData?.descricao) configHints.description = seoData.meta_description || seoData.descricao;
-    else configHints.description = project.descricao_negocio;
+    // ── Config ──
+    addProgress('🔍 Aplicando configurações visuais e SEO...');
+    const primaryColor = creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
+    const accentColor = creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
 
-    // Extract colors from creative/positioning if available
-    if (creative?.cor_primaria || creative?.cores?.primaria) configHints.primaryColor = creative.cor_primaria || creative.cores?.primaria;
-    if (creative?.cor_destaque || creative?.cores?.destaque) configHints.accentColor = creative.cor_destaque || creative.cores?.destaque;
-
-    // ── Save to DB ──
-    addProgress('💾 Salvando página...');
-    const estabId = localStorage.getItem('estabelecimentoId');
     const pageName = `${project.nome} — Gerada`;
     const slug = generateSlug(pageName);
+    const estabId = localStorage.getItem('estabelecimentoId');
 
     const { data: saved, error } = await supabase.from('published_pages').insert({
-      nome: pageName,
-      slug,
+      nome: pageName, slug,
       sections: sections as any,
       config: {
-        title: configHints.title || project.nome,
-        description: configHints.description || '',
-        favicon: '', primaryColor: configHints.primaryColor || '#1e40af',
-        secondaryColor: '#3b82f6', accentColor: configHints.accentColor || '#f59e0b',
-        backgroundColor: '#ffffff', textColor: '#1f2937',
+        title: seoData?.titulo_pagina || seoData?.title || project.nome,
+        description: seoData?.meta_description || seoData?.descricao || project.descricao_negocio || '',
+        favicon: '', primaryColor, secondaryColor: '#1e293b',
+        accentColor, backgroundColor: '#ffffff', textColor: '#1f2937',
         fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
       } as any,
       estabelecimento_id: estabId,
