@@ -739,8 +739,8 @@ export function StrategyAdminPanel() {
                               {allAgentKeys.filter(k => k !== agentKey).map(dep => {
                                 const currentDeps = config.dependencies || [];
                                 const isSelected = currentDeps.includes(dep);
-                                const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
-                                const depName = configs[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
+                                const depIcon = configsWithCustom[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                                const depName = configsWithCustom[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
                                 return (
                                   <Badge
                                     key={dep}
