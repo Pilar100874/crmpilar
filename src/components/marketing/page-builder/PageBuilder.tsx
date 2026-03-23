@@ -1356,6 +1356,7 @@ const AutoGeneratePage: React.FC<{
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState<'select' | 'template' | 'product' | 'generating' | 'done'>('select');
+  const [videoError, setVideoError] = useState<string>('');
   const [progress, setProgress] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
