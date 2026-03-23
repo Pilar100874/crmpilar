@@ -1753,13 +1753,14 @@ const AutoGeneratePage: React.FC<{
 
     // ── Config & Save ──
     addProgress('🔍 Aplicando estilo do template e SEO...');
-    const theme = getThemeById(selectedTemplate);
-    const tplConfig = theme?.config || {};
+    const fullTpl = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
+    const tplConfig = fullTpl?.config || {};
     const primaryColor = tplConfig.primaryColor || creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
     const accentColor = tplConfig.accentColor || creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
     const bgColor = tplConfig.backgroundColor || '#ffffff';
     const txtColor = tplConfig.textColor || '#1f2937';
     const fontDisplay = tplConfig.fontDisplay || 'Inter';
+    const maxWidth = tplConfig.maxWidth || '1200px';
 
     // AI-generated page name or smart fallback
     const pageName = aiCopy?.page_name || `${project.nome} — Página de Vendas`;
