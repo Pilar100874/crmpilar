@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Target, 
   Palette, 
   Zap, 
@@ -19,6 +19,7 @@ import {
   Sparkles,
   Clapperboard,
   Brain,
+  Globe,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,6 +45,7 @@ import { AICreativeStudio } from '@/components/marketing/ai-studio';
 import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
 import { StrategyEngine } from '@/components/marketing/strategy-engine';
+import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
 
 interface TabItem {
   id: string;
@@ -62,6 +64,7 @@ const tabItems: TabItem[] = [
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
+  { id: 'page-builder', label: 'Page Builder', icon: Globe, description: 'Crie sites de página única com drag-and-drop' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
 
@@ -104,6 +107,8 @@ const MarketingHub: React.FC = () => {
         return <ResourceN8nGenerator />;
       case 'railway-env':
         return <RailwayVariables />;
+      case 'page-builder':
+        return <PageBuilder />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
