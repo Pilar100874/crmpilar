@@ -1060,6 +1060,7 @@ const AutoGeneratePage: React.FC<{
     const socialData = getData('social_media');
     const reelData = getData('reel');
     const cipherData = getData('cipher');
+    const paidMedia = getData('paid_media');
 
     // ── 1. Hero Section ──
     addProgress('🎯 Construindo Hero com alternativas de texto...');
