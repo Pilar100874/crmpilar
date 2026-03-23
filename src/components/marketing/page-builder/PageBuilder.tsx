@@ -1272,8 +1272,21 @@ section{overflow-x:hidden}
         html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px;text-align:center">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid ${cardBrd}"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px;color:${cfg.textColor}">${q.question||''}</h4><p style="color:${subtleText};line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'gallery':
         html += `<section style="padding:40px 24px"><div class="container"><div class="grid-3">${(c.images||[]).map((url:string)=>`<img src="${url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">`).join('')}</div></div></section>\n`; break;
-      case 'footer':
-        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${c.company||''}</p><p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+      case 'footer': {
+        const fn = cfg.empresaNome || c.company || '';
+        const fa = cfg.empresaEndereco || '';
+        const ft = cfg.empresaTelefone || '';
+        const fw = cfg.whatsappGlobal || '';
+        const fs = cfg.siteGlobal || '';
+        let footerInfo = '';
+        if (fa) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:6px">📍 ${fa}</p>`;
+        let contactParts: string[] = [];
+        if (ft) contactParts.push(`📞 ${ft}`);
+        if (fw) contactParts.push(`💬 ${fw}`);
+        if (fs) contactParts.push(`<a href="${fs}" target="_blank" rel="noopener noreferrer" style="color:${cfg.primaryColor};text-decoration:underline">🌐 ${fs}</a>`);
+        if (contactParts.length) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:8px">${contactParts.join(' &nbsp;|&nbsp; ')}</p>`;
+        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${fn}</p>${footerInfo}<p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+      }
       case 'spacer':
         html += `<div style="height:${c.height||60}px"></div>\n`; break;
       case 'custom_html':
