@@ -38,6 +38,13 @@ interface EditableAgentCard {
   handoff: string;
 }
 
+interface KBFile {
+  name: string;
+  path: string;
+  size: number;
+  uploaded_at: string;
+}
+
 interface AgentConfig {
   card: EditableAgentCard;
   active: boolean;
@@ -48,6 +55,8 @@ interface AgentConfig {
   icon?: string;
   color?: string;
   dependencies: string[];
+  knowledgeBaseType: 'internal' | 'external';
+  knowledgeBaseFiles: KBFile[];
 }
 
 function agentCardToEditable(card: AgentCard): EditableAgentCard {
