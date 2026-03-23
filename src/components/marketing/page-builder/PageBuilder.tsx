@@ -106,71 +106,135 @@ interface PageTemplate {
 
 const PAGE_TEMPLATES: PageTemplate[] = [
   {
-    id: 'landing-startup', name: 'Landing Startup', description: 'Página moderna para startups e SaaS',
+    id: 'landing-startup', name: 'Landing Startup', description: 'Hero + Features + Depoimentos + FAQ + CTA',
     icon: <Layout className="h-5 w-5" />, thumbnail: '🚀',
     config: { primaryColor: '#4f46e5', accentColor: '#06b6d4', fontDisplay: 'Inter' },
     sections: [
       { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Transforme sua ideia em realidade', subheadline: 'Plataforma completa para escalar seu negócio digital com inteligência e velocidade.', cta_text: 'Teste Grátis', cta_url: '#', background_image: '' } },
-      { id: 't-feat', type: 'features', title: 'Recursos', visible: true, styles: {}, content: { items: [{ icon: '⚡', title: 'Ultra Rápido', description: 'Performance otimizada para carregar em menos de 1 segundo.' }, { icon: '🔒', title: 'Seguro', description: 'Seus dados protegidos com criptografia de ponta a ponta.' }, { icon: '📊', title: 'Analytics', description: 'Dashboards em tempo real para acompanhar seus resultados.' }, { icon: '🤖', title: 'IA Integrada', description: 'Automações inteligentes que trabalham por você.' }, { icon: '🌐', title: 'Global', description: 'Infraestrutura distribuída em mais de 50 países.' }, { icon: '💬', title: 'Suporte 24/7', description: 'Time de especialistas disponível a qualquer momento.' }] } },
-      { id: 't-test', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Maria Silva', role: 'CEO, TechCorp', text: 'Aumentamos nossas vendas em 300% nos primeiros 3 meses.' }, { name: 'João Santos', role: 'Fundador, StartupX', text: 'A melhor decisão que tomamos para o nosso negócio.' }] } },
-      { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Como funciona o período de teste?', answer: 'Você tem 14 dias grátis com acesso a todas as funcionalidades, sem necessidade de cartão de crédito.' }, { question: 'Posso cancelar a qualquer momento?', answer: 'Sim, sem taxa de cancelamento ou fidelidade.' }, { question: 'Tem suporte em português?', answer: 'Sim! Nosso time de suporte é 100% brasileiro.' }] } },
-      { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Comece agora mesmo', description: 'Junte-se a mais de 10.000 empresas que já confiam em nós.', button_text: 'Criar Conta Grátis', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Startup', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` } },
+      { id: 't-feat', type: 'features', title: 'Recursos', visible: true, styles: {}, content: { items: [{ icon: '⚡', title: 'Ultra Rápido', description: 'Performance otimizada para carregar em menos de 1 segundo.' }, { icon: '🔒', title: 'Seguro', description: 'Dados protegidos com criptografia de ponta.' }, { icon: '📊', title: 'Analytics', description: 'Dashboards em tempo real.' }, { icon: '🤖', title: 'IA Integrada', description: 'Automações inteligentes.' }, { icon: '🌐', title: 'Global', description: 'Infra em 50+ países.' }, { icon: '💬', title: 'Suporte 24/7', description: 'Especialistas a qualquer momento.' }] } },
+      { id: 't-test', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Maria Silva', role: 'CEO, TechCorp', text: 'Aumentamos vendas em 300% nos primeiros 3 meses.' }, { name: 'João Santos', role: 'Fundador, StartupX', text: 'A melhor decisão para nosso negócio.' }] } },
+      { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Como funciona o período de teste?', answer: '14 dias grátis sem cartão de crédito.' }, { question: 'Posso cancelar a qualquer momento?', answer: 'Sim, sem taxa de cancelamento.' }] } },
+      { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Comece agora mesmo', description: 'Junte-se a mais de 10.000 empresas.', button_text: 'Criar Conta Grátis', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Startup', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
-    id: 'product-launch', name: 'Lançamento de Produto', description: 'Ideal para apresentar um novo produto ou serviço',
+    id: 'product-launch', name: 'Lançamento de Produto', description: 'Hero + Imagem + Features + Vídeo + CTA',
     icon: <Package className="h-5 w-5" />, thumbnail: '🎯',
     config: { primaryColor: '#dc2626', accentColor: '#f59e0b', fontDisplay: 'Inter' },
     sections: [
-      { id: 't-hero', type: 'hero', title: 'Hero Produto', visible: true, styles: {}, content: { headline: 'Apresentamos o Produto Revolucionário', subheadline: 'A solução que você estava esperando finalmente chegou. Descubra como podemos mudar seu dia a dia.', cta_text: 'Comprar Agora', cta_url: '#', background_image: '' } },
+      { id: 't-hero', type: 'hero', title: 'Hero Produto', visible: true, styles: {}, content: { headline: 'Apresentamos o Produto Revolucionário', subheadline: 'A solução que você estava esperando finalmente chegou.', cta_text: 'Comprar Agora', cta_url: '#', background_image: '' } },
       { id: 't-img', type: 'image', title: 'Foto do Produto', visible: true, styles: {}, content: { url: '', alt: 'Imagem do Produto', caption: 'Design premiado e tecnologia de ponta', fit: 'contain' } },
-      { id: 't-feat', type: 'features', title: 'Diferenciais', visible: true, styles: {}, content: { items: [{ icon: '✨', title: 'Design Premium', description: 'Acabamento sofisticado e materiais de alta qualidade.' }, { icon: '🔋', title: 'Bateria Durável', description: 'Até 48h de uso contínuo com uma única carga.' }, { icon: '🎨', title: '5 Cores', description: 'Disponível nas cores que combinam com seu estilo.' }] } },
+      { id: 't-feat', type: 'features', title: 'Diferenciais', visible: true, styles: {}, content: { items: [{ icon: '✨', title: 'Design Premium', description: 'Acabamento sofisticado.' }, { icon: '🔋', title: 'Bateria Durável', description: 'Até 48h de uso contínuo.' }, { icon: '🎨', title: '5 Cores', description: 'Combine com seu estilo.' }] } },
       { id: 't-vid', type: 'video', title: 'Vídeo Demonstração', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
-      { id: 't-test', type: 'testimonials', title: 'Avaliações', visible: true, styles: {}, content: { items: [{ name: 'Ana Costa', role: 'Influenciadora', text: 'Simplesmente incrível! Superou todas as minhas expectativas.' }, { name: 'Pedro Lima', role: 'Tech Reviewer', text: 'O melhor custo-benefício do mercado. Nota 10!' }] } },
-      { id: 't-cta', type: 'cta', title: 'Compre Agora', visible: true, styles: {}, content: { headline: 'Oferta de Lançamento', description: '30% de desconto exclusivo para os primeiros compradores!', button_text: 'Aproveitar Desconto', button_url: '#' } },
+      { id: 't-test', type: 'testimonials', title: 'Avaliações', visible: true, styles: {}, content: { items: [{ name: 'Ana Costa', role: 'Influenciadora', text: 'Superou todas as minhas expectativas.' }, { name: 'Pedro Lima', role: 'Tech Reviewer', text: 'Melhor custo-benefício do mercado!' }] } },
+      { id: 't-cta', type: 'cta', title: 'Compre Agora', visible: true, styles: {}, content: { headline: 'Oferta de Lançamento', description: '30% de desconto exclusivo!', button_text: 'Aproveitar Desconto', button_url: '#' } },
       { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Marca', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
-    id: 'portfolio', name: 'Portfólio Profissional', description: 'Apresente seus trabalhos e conquistas',
+    id: 'sales-page', name: 'Página de Vendas', description: 'Hero + Prova Social + Objeções + Garantia + Preço + CTA',
+    icon: <Zap className="h-5 w-5" />, thumbnail: '💰',
+    config: { primaryColor: '#059669', accentColor: '#f59e0b', fontDisplay: 'Inter', backgroundColor: '#f0fdf4', textColor: '#064e3b' },
+    sections: [
+      { id: 't-hero', type: 'hero', title: 'Hero de Vendas', visible: true, styles: {}, content: { headline: 'Descubra Como Triplicar Seus Resultados em 30 Dias', subheadline: 'O método comprovado por mais de 5.000 profissionais que transforma a forma como você trabalha.', cta_text: 'Quero Começar Agora', cta_url: '#', background_image: '' } },
+      { id: 't-sp', type: 'social_proof', title: 'Prova Social', visible: true, styles: {}, content: { items: [{ number: '5.000+', label: 'Clientes Ativos' }, { number: '97%', label: 'Satisfação' }, { number: '3x', label: 'Mais Resultados' }, { number: '24h', label: 'Suporte' }] } },
+      { id: 't-vid', type: 'video', title: 'Vídeo de Vendas', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
+      { id: 't-feat', type: 'features', title: 'O Que Você Recebe', visible: true, styles: {}, content: { items: [{ icon: '📚', title: 'Módulo Completo', description: 'Acesso vitalício a todo conteúdo.' }, { icon: '🎯', title: 'Exercícios Práticos', description: 'Aplique imediatamente no seu negócio.' }, { icon: '👥', title: 'Comunidade VIP', description: 'Grupo exclusivo de alunos.' }] } },
+      { id: 't-obj', type: 'objections', title: 'Objeções', visible: true, styles: {}, content: { title: 'Você Pode Estar Pensando...', items: [{ objection: 'É caro demais para mim', response: 'O investimento se paga em menos de 15 dias com os resultados que você vai alcançar.' }, { objection: 'Não tenho tempo', response: 'São apenas 15 minutos por dia. Menos que o tempo de um café.' }, { objection: 'Não sei se funciona pra mim', response: 'Temos alunos de todas as áreas com resultados comprovados.' }] } },
+      { id: 't-test', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Carlos M.', role: 'Empresário', text: 'Faturei R$ 50.000 a mais no primeiro mês aplicando o método.', metrics: '+R$ 50.000/mês' }, { name: 'Fernanda S.', role: 'Freelancer', text: 'Saí de 3 para 15 clientes em 60 dias.', metrics: '5x mais clientes' }] } },
+      { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia Incondicional de 30 Dias', description: 'Se em 30 dias você não estiver 100% satisfeito, devolvemos cada centavo. Sem perguntas.', duration: '30 dias de garantia' } },
+      { id: 't-price', type: 'pricing', title: 'Preços', visible: true, styles: {}, content: { title: 'Escolha Seu Plano', items: [{ name: 'Essencial', price: 'R$ 197', features: ['Acesso ao curso', 'Suporte por email', 'Certificado'], highlighted: false }, { name: 'Profissional', price: 'R$ 397', features: ['Tudo do Essencial', 'Mentoria em grupo', 'Comunidade VIP', 'Bônus exclusivos'], highlighted: true }, { name: 'Premium', price: 'R$ 997', features: ['Tudo do Profissional', 'Mentoria individual', 'Acesso vitalício', 'Consultoria 1:1'], highlighted: false }] } },
+      { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Não Perca Essa Oportunidade', description: 'Vagas limitadas. Garanta a sua agora!', button_text: 'Quero Garantir Minha Vaga', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Empresa', copyright: `© ${new Date().getFullYear()} — Todos os direitos reservados` } },
+    ]
+  },
+  {
+    id: 'course-webinar', name: 'Curso / Webinar', description: 'Hero + Passos + Conteúdo + Preços + Garantia',
+    icon: <Layout className="h-5 w-5" />, thumbnail: '🎓',
+    config: { primaryColor: '#7c3aed', accentColor: '#f59e0b', fontDisplay: 'Inter', backgroundColor: '#faf5ff', textColor: '#1e1b4b' },
+    sections: [
+      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Domine [Habilidade] em 7 Dias', subheadline: 'Webinar gratuito onde você vai aprender o passo a passo completo.', cta_text: 'Inscrever-se Grátis', cta_url: '#', background_image: '' } },
+      { id: 't-steps', type: 'process_steps', title: 'O Que Você Vai Aprender', visible: true, styles: {}, content: { title: 'Sua Jornada de Aprendizado', items: [{ step: '1', title: 'Fundamentos', description: 'Entenda os conceitos essenciais.' }, { step: '2', title: 'Prática Guiada', description: 'Exercícios passo a passo.' }, { step: '3', title: 'Projeto Real', description: 'Aplique em um caso real.' }, { step: '4', title: 'Certificação', description: 'Receba seu certificado.' }] } },
+      { id: 't-text', type: 'text', title: 'Para Quem É', visible: true, styles: {}, content: { body: '✅ Iniciantes que querem aprender do zero\n✅ Profissionais que buscam atualização\n✅ Empreendedores que querem aplicar no negócio\n✅ Qualquer pessoa que deseja resultados reais', alignment: 'left' } },
+      { id: 't-test', type: 'testimonials', title: 'Alunos', visible: true, styles: {}, content: { items: [{ name: 'Lucas R.', role: 'Aluno Turma 12', text: 'O melhor curso que já fiz. Conteúdo prático e direto ao ponto.', metrics: 'Nota 9.8/10' }, { name: 'Amanda T.', role: 'Aluna Turma 8', text: 'Consegui meu primeiro emprego na área 2 semanas após terminar.' }] } },
+      { id: 't-price', type: 'pricing', title: 'Investimento', visible: true, styles: {}, content: { title: 'Escolha Seu Acesso', items: [{ name: 'Básico', price: 'R$ 147', features: ['Acesso ao curso', '6 meses de acesso', 'Certificado'], highlighted: false }, { name: 'Completo', price: 'R$ 297', features: ['Acesso vitalício', 'Comunidade', 'Mentorias semanais', 'Material extra'], highlighted: true }] } },
+      { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia de 7 Dias', description: 'Teste sem risco. Se não gostar, devolvemos seu dinheiro.', duration: '7 dias' } },
+      { id: 't-faq', type: 'faq', title: 'Dúvidas', visible: true, styles: {}, content: { items: [{ question: 'Preciso de conhecimento prévio?', answer: 'Não! O curso foi feito para iniciantes.' }, { question: 'Por quanto tempo tenho acesso?', answer: 'Depende do plano escolhido. O Completo é vitalício.' }] } },
+      { id: 't-cta', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Comece Hoje Sua Transformação', description: 'Não adie mais seus sonhos.', button_text: 'Matricular-se Agora', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Escola', copyright: `© ${new Date().getFullYear()}` } },
+    ]
+  },
+  {
+    id: 'portfolio', name: 'Portfólio Profissional', description: 'Hero + Sobre + Galeria + Serviços + Contato',
     icon: <GalleryHorizontalEnd className="h-5 w-5" />, thumbnail: '🎨',
-    config: { primaryColor: '#1e293b', accentColor: '#8b5cf6', backgroundColor: '#0f172a', textColor: '#e2e8f0', fontDisplay: 'Inter' },
+    config: { primaryColor: '#1e293b', accentColor: '#8b5cf6', backgroundColor: '#0f172a', textColor: '#e2e8f0', fontDisplay: 'Playfair Display' },
     sections: [
       { id: 't-hero', type: 'hero', title: 'Apresentação', visible: true, styles: {}, content: { headline: 'Olá, eu sou [Seu Nome]', subheadline: 'Designer & Desenvolvedor criando experiências digitais memoráveis.', cta_text: 'Ver Projetos', cta_url: '#', background_image: '' } },
-      { id: 't-text', type: 'text', title: 'Sobre Mim', visible: true, styles: {}, content: { body: 'Com mais de 10 anos de experiência, trabalho com marcas que buscam se destacar no mercado digital. Minha abordagem combina criatividade, estratégia e tecnologia para entregar resultados excepcionais.', alignment: 'center' } },
+      { id: 't-text', type: 'text', title: 'Sobre Mim', visible: true, styles: {}, content: { body: 'Com mais de 10 anos de experiência, trabalho com marcas que buscam se destacar no mercado digital. Minha abordagem combina criatividade, estratégia e tecnologia.', alignment: 'center' } },
       { id: 't-gallery', type: 'gallery', title: 'Projetos', visible: true, styles: {}, content: { images: [] } },
       { id: 't-feat', type: 'features', title: 'Serviços', visible: true, styles: {}, content: { items: [{ icon: '🎨', title: 'Design UI/UX', description: 'Interfaces intuitivas e bonitas' }, { icon: '💻', title: 'Desenvolvimento Web', description: 'Sites rápidos e responsivos' }, { icon: '📱', title: 'Apps Mobile', description: 'Aplicativos nativos e híbridos' }] } },
-      { id: 't-cta', type: 'cta', title: 'Contato', visible: true, styles: {}, content: { headline: 'Vamos trabalhar juntos?', description: 'Estou disponível para novos projetos e colaborações.', button_text: 'Enviar Mensagem', button_url: '#' } },
+      { id: 't-cta', type: 'cta', title: 'Contato', visible: true, styles: {}, content: { headline: 'Vamos trabalhar juntos?', description: 'Estou disponível para novos projetos.', button_text: 'Enviar Mensagem', button_url: '#' } },
       { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '[Seu Nome]', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
-    id: 'restaurant', name: 'Restaurante / Food', description: 'Cardápio, reservas e apresentação do negócio',
+    id: 'restaurant', name: 'Restaurante / Food', description: 'Hero + História + Galeria + Features + CTA',
     icon: <Layout className="h-5 w-5" />, thumbnail: '🍽️',
     config: { primaryColor: '#92400e', accentColor: '#d97706', backgroundColor: '#fffbeb', textColor: '#451a03', fontDisplay: 'Georgia' },
     sections: [
-      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Sabor Autêntico', subheadline: 'Uma experiência gastronômica única com ingredientes frescos e receitas tradicionais.', cta_text: 'Reservar Mesa', cta_url: '#', background_image: '' } },
-      { id: 't-text', type: 'text', title: 'Nossa História', visible: true, styles: {}, content: { body: 'Fundado em 2010, nosso restaurante combina tradição e inovação para oferecer pratos que encantam todos os sentidos. Cada receita é preparada com carinho e ingredientes selecionados.', alignment: 'center' } },
+      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Sabor Autêntico', subheadline: 'Uma experiência gastronômica única com ingredientes frescos.', cta_text: 'Reservar Mesa', cta_url: '#', background_image: '' } },
+      { id: 't-text', type: 'text', title: 'Nossa História', visible: true, styles: {}, content: { body: 'Fundado em 2010, nosso restaurante combina tradição e inovação para oferecer pratos que encantam todos os sentidos.', alignment: 'center' } },
       { id: 't-gallery', type: 'gallery', title: 'Nossos Pratos', visible: true, styles: {}, content: { images: [] } },
-      { id: 't-feat', type: 'features', title: 'Por que nos escolher', visible: true, styles: {}, content: { items: [{ icon: '🌿', title: 'Ingredientes Frescos', description: 'Direto dos produtores locais' }, { icon: '👨‍🍳', title: 'Chef Premiado', description: 'Reconhecido internacionalmente' }, { icon: '🍷', title: 'Carta de Vinhos', description: 'Seleção exclusiva de rótulos' }] } },
-      { id: 't-test', type: 'testimonials', title: 'Avaliações', visible: true, styles: {}, content: { items: [{ name: 'Carla M.', role: 'Google Reviews ⭐⭐⭐⭐⭐', text: 'Melhor restaurante da cidade! Ambiente acolhedor e comida espetacular.' }] } },
-      { id: 't-cta', type: 'cta', title: 'Reserva', visible: true, styles: {}, content: { headline: 'Faça sua Reserva', description: 'Garanta sua mesa para uma experiência inesquecível.', button_text: 'Reservar Agora', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Restaurante Sabor', copyright: `© ${new Date().getFullYear()} — Rua Exemplo, 123` } },
+      { id: 't-feat', type: 'features', title: 'Por que nos escolher', visible: true, styles: {}, content: { items: [{ icon: '🌿', title: 'Ingredientes Frescos', description: 'Direto dos produtores locais' }, { icon: '👨‍🍳', title: 'Chef Premiado', description: 'Reconhecido internacionalmente' }, { icon: '🍷', title: 'Carta de Vinhos', description: 'Seleção exclusiva' }] } },
+      { id: 't-test', type: 'testimonials', title: 'Avaliações', visible: true, styles: {}, content: { items: [{ name: 'Carla M.', role: 'Google Reviews ⭐⭐⭐⭐⭐', text: 'Melhor restaurante da cidade!' }] } },
+      { id: 't-cta', type: 'cta', title: 'Reserva', visible: true, styles: {}, content: { headline: 'Faça sua Reserva', description: 'Garanta sua mesa.', button_text: 'Reservar Agora', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Restaurante Sabor', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
-    id: 'service-business', name: 'Prestação de Serviço', description: 'Ideal para consultoria, agências e profissionais',
+    id: 'service-business', name: 'Prestação de Serviço', description: 'Hero + Serviços + Metodologia + Depoimentos + FAQ',
     icon: <FileText className="h-5 w-5" />, thumbnail: '💼',
     config: { primaryColor: '#0369a1', accentColor: '#0ea5e9', fontDisplay: 'Inter' },
     sections: [
-      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Soluções que Geram Resultados', subheadline: 'Consultoria especializada para transformar desafios em oportunidades de crescimento.', cta_text: 'Agendar Consultoria', cta_url: '#', background_image: '' } },
-      { id: 't-feat', type: 'features', title: 'Nossos Serviços', visible: true, styles: {}, content: { items: [{ icon: '📈', title: 'Estratégia Digital', description: 'Planejamento e execução de campanhas de alto impacto.' }, { icon: '🎯', title: 'Performance', description: 'Otimização contínua para maximizar seu ROI.' }, { icon: '💡', title: 'Consultoria', description: 'Análise profunda do seu negócio com recomendações acionáveis.' }, { icon: '🤝', title: 'Mentoria', description: 'Acompanhamento personalizado para equipes e líderes.' }] } },
-      { id: 't-text', type: 'text', title: 'Metodologia', visible: true, styles: {}, content: { body: '1️⃣ Diagnóstico — Analisamos seu cenário atual e identificamos oportunidades.\n\n2️⃣ Estratégia — Definimos um plano de ação personalizado.\n\n3️⃣ Execução — Implementamos com agilidade e acompanhamento constante.\n\n4️⃣ Resultados — Mensuramos e otimizamos para escalar.', alignment: 'left' } },
-      { id: 't-test', type: 'testimonials', title: 'Clientes', visible: true, styles: {}, content: { items: [{ name: 'Roberto F.', role: 'Diretor, Empresa XYZ', text: 'Em 6 meses triplicamos nosso faturamento seguindo as estratégias recomendadas.' }, { name: 'Lucia A.', role: 'Fundadora, Startup ABC', text: 'A consultoria foi transformadora. Clareza total sobre onde investir.' }] } },
-      { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Quanto tempo leva para ver resultados?', answer: 'Os primeiros indicadores de melhoria aparecem entre 30-60 dias.' }, { question: 'Qual o investimento mínimo?', answer: 'Entre em contato para um orçamento personalizado.' }] } },
-      { id: 't-cta', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Pronto para crescer?', description: 'Agende uma sessão gratuita de diagnóstico.', button_text: 'Falar com Especialista', button_url: '#' } },
+      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Soluções que Geram Resultados', subheadline: 'Consultoria especializada para transformar desafios em oportunidades.', cta_text: 'Agendar Consultoria', cta_url: '#', background_image: '' } },
+      { id: 't-feat', type: 'features', title: 'Nossos Serviços', visible: true, styles: {}, content: { items: [{ icon: '📈', title: 'Estratégia Digital', description: 'Campanhas de alto impacto.' }, { icon: '🎯', title: 'Performance', description: 'Otimização contínua de ROI.' }, { icon: '💡', title: 'Consultoria', description: 'Análise profunda com recomendações.' }, { icon: '🤝', title: 'Mentoria', description: 'Acompanhamento personalizado.' }] } },
+      { id: 't-steps', type: 'process_steps', title: 'Como Trabalhamos', visible: true, styles: {}, content: { title: 'Nossa Metodologia', items: [{ step: '1', title: 'Diagnóstico', description: 'Analisamos seu cenário atual.' }, { step: '2', title: 'Estratégia', description: 'Plano de ação personalizado.' }, { step: '3', title: 'Execução', description: 'Implementação com agilidade.' }, { step: '4', title: 'Resultados', description: 'Mensuramos e otimizamos.' }] } },
+      { id: 't-test', type: 'testimonials', title: 'Clientes', visible: true, styles: {}, content: { items: [{ name: 'Roberto F.', role: 'Diretor, Empresa XYZ', text: 'Triplicamos nosso faturamento em 6 meses.' }, { name: 'Lucia A.', role: 'Fundadora, Startup ABC', text: 'A consultoria foi transformadora.' }] } },
+      { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Quanto tempo para resultados?', answer: 'Primeiros indicadores em 30-60 dias.' }, { question: 'Qual investimento mínimo?', answer: 'Entre em contato para orçamento personalizado.' }] } },
+      { id: 't-cta', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Pronto para crescer?', description: 'Agende uma sessão de diagnóstico.', button_text: 'Falar com Especialista', button_url: '#' } },
       { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Consultoria', copyright: `© ${new Date().getFullYear()}` } },
+    ]
+  },
+  {
+    id: 'event-launch', name: 'Evento / Lançamento', description: 'Hero + Prova Social + Passos + Vídeo + FAQ + CTA',
+    icon: <Zap className="h-5 w-5" />, thumbnail: '🎪',
+    config: { primaryColor: '#fbbf24', accentColor: '#f97316', backgroundColor: '#0a0a0a', textColor: '#fefce8', fontDisplay: 'Inter' },
+    sections: [
+      { id: 't-hero', type: 'hero', title: 'Hero Evento', visible: true, styles: {}, content: { headline: '[Nome do Evento] 2025', subheadline: 'O maior evento de [nicho] do Brasil. 3 dias de imersão total.', cta_text: 'Garantir Ingresso', cta_url: '#', background_image: '' } },
+      { id: 't-sp', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '3.000+', label: 'Participantes' }, { number: '50+', label: 'Palestrantes' }, { number: '3 dias', label: 'Imersão' }, { number: '98%', label: 'Aprovação' }] } },
+      { id: 't-vid', type: 'video', title: 'Aftermovie', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
+      { id: 't-steps', type: 'process_steps', title: 'Programação', visible: true, styles: {}, content: { title: 'O Que Vai Acontecer', items: [{ step: 'Dia 1', title: 'Fundamentos', description: 'Palestras e workshops introdutórios.' }, { step: 'Dia 2', title: 'Aprofundamento', description: 'Painéis e masterclasses.' }, { step: 'Dia 3', title: 'Networking', description: 'Conexões e festa de encerramento.' }] } },
+      { id: 't-feat', type: 'features', title: 'O Que Inclui', visible: true, styles: {}, content: { items: [{ icon: '🎤', title: 'Palestras', description: 'Conteúdo exclusivo.' }, { icon: '🍽️', title: 'Alimentação', description: 'Coffee break e almoço inclusos.' }, { icon: '📋', title: 'Material', description: 'Kit do participante.' }] } },
+      { id: 't-price', type: 'pricing', title: 'Ingressos', visible: true, styles: {}, content: { title: 'Escolha Seu Ingresso', items: [{ name: 'Standard', price: 'R$ 497', features: ['Acesso geral', 'Coffee break', 'Certificado'], highlighted: false }, { name: 'VIP', price: 'R$ 997', features: ['Área VIP', 'Almoço incluso', 'Meet & Greet', 'Gravações'], highlighted: true }] } },
+      { id: 't-faq', type: 'faq', title: 'Dúvidas', visible: true, styles: {}, content: { items: [{ question: 'Onde será o evento?', answer: 'Local será divulgado em breve.' }, { question: 'Tem estacionamento?', answer: 'Sim, estacionamento gratuito.' }] } },
+      { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Vagas Limitadas!', description: 'Os ingressos estão se esgotando.', button_text: 'Comprar Ingresso', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '[Nome do Evento]', copyright: `© ${new Date().getFullYear()}` } },
+    ]
+  },
+  {
+    id: 'clinic-health', name: 'Clínica / Saúde', description: 'Hero + Serviços + Equipe + Depoimentos + Contato',
+    icon: <Layout className="h-5 w-5" />, thumbnail: '🏥',
+    config: { primaryColor: '#0284c7', accentColor: '#38bdf8', backgroundColor: '#f0f9ff', textColor: '#0c4a6e', fontDisplay: 'Inter' },
+    sections: [
+      { id: 't-hero', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Cuidando da Sua Saúde com Excelência', subheadline: 'Profissionais qualificados e tecnologia de ponta para o seu bem-estar.', cta_text: 'Agendar Consulta', cta_url: '#', background_image: '' } },
+      { id: 't-feat', type: 'features', title: 'Especialidades', visible: true, styles: {}, content: { items: [{ icon: '🦷', title: 'Odontologia', description: 'Tratamentos completos.' }, { icon: '👁️', title: 'Oftalmologia', description: 'Exames e cirurgias.' }, { icon: '🩺', title: 'Clínica Geral', description: 'Check-up e prevenção.' }, { icon: '💪', title: 'Fisioterapia', description: 'Reabilitação e esportes.' }] } },
+      { id: 't-text', type: 'text', title: 'Nossa Clínica', visible: true, styles: {}, content: { body: 'Com mais de 15 anos de atuação, nossa clínica reúne os melhores profissionais da região. Infraestrutura moderna, equipamentos de última geração e atendimento humanizado.', alignment: 'center' } },
+      { id: 't-sp', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '15+', label: 'Anos de Experiência' }, { number: '50.000+', label: 'Pacientes Atendidos' }, { number: '20+', label: 'Especialistas' }, { number: '4.9⭐', label: 'Google Reviews' }] } },
+      { id: 't-test', type: 'testimonials', title: 'Pacientes', visible: true, styles: {}, content: { items: [{ name: 'Marcos A.', role: 'Paciente', text: 'Atendimento excelente e profissionais muito competentes.' }, { name: 'Juliana F.', role: 'Paciente', text: 'Ambiente acolhedor. Me senti em boas mãos.' }] } },
+      { id: 't-steps', type: 'process_steps', title: 'Como Agendar', visible: true, styles: {}, content: { title: 'Simples e Rápido', items: [{ step: '1', title: 'Escolha', description: 'Selecione a especialidade.' }, { step: '2', title: 'Agende', description: 'Escolha data e horário.' }, { step: '3', title: 'Consulte', description: 'Compareça à sua consulta.' }] } },
+      { id: 't-cta', type: 'cta', title: 'Agendar', visible: true, styles: {}, content: { headline: 'Agende Sua Consulta Hoje', description: 'Atendimento rápido e sem fila.', button_text: 'Agendar pelo WhatsApp', button_url: '#' } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Clínica Saúde & Vida', copyright: `© ${new Date().getFullYear()} — CRM XXXXX` } },
     ]
   },
   {
@@ -935,8 +999,8 @@ function generateSlug(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${Date.now()}`;
 }
 
-// ── Preview Iframe (standalone) ─────────────────────────────────────────────────
-const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
+// ── Shared HTML Generator ───────────────────────────────────────────────────────
+function generateFullHTML(sections: PageSection[], config: PageConfig): string {
   const cfg: PageConfig = {
     title: '', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
     accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
@@ -945,6 +1009,7 @@ const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sec
   const vs = sections.filter((s: PageSection) => s.visible);
 
   let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${cfg.title}</title><meta name="description" content="${cfg.description}">
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@400;600;700&family=${encodeURIComponent(cfg.fontBody)}:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1027,7 +1092,12 @@ a{text-decoration:none}
     }
   }
   html += '</body></html>';
-  return <iframe srcDoc={html} className="w-full h-full border-0" />;
+  return html;
+}
+
+// ── Preview Iframe (standalone) ─────────────────────────────────────────────────
+const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
+  return <iframe srcDoc={generateFullHTML(sections, config as PageConfig)} className="w-full h-full border-0" />;
 };
 
 // ── Auto Generate Page from Strategy ──────────────────────────────────────────
@@ -2451,18 +2521,7 @@ const PageBuilderEditor: React.FC<{
   };
 
   const generateHTML = useCallback(() => {
-    const vs = sections.filter(s => s.visible);
-    let html = `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${config.title}</title>\n<meta name="description" content="${config.description}">\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:${config.fontBody},sans-serif;color:${config.textColor};background:${config.backgroundColor}}.container{max-width:${config.maxWidth};margin:0 auto}</style>\n</head>\n<body>\n`;
-    vs.forEach(s => {
-      html += `<!-- ${s.title} -->\n`;
-      switch (s.type) {
-        case 'hero': html += `<section style="padding:80px 24px;text-align:center;${s.content.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${s.content.background_image}) center/cover` : `background:${config.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:3rem;font-weight:bold;margin-bottom:16px">${s.content.headline}</h1><p style="font-size:1.25rem;margin-bottom:32px;opacity:.9">${s.content.subheadline}</p><a href="${s.content.cta_url}" style="display:inline-block;padding:12px 32px;background:${config.accentColor};color:#fff;border-radius:8px;font-weight:600;text-decoration:none">${s.content.cta_text}</a></div></section>\n`; break;
-        case 'text': html += `<section style="padding:40px 24px"><div class="container" style="max-width:768px;text-align:${s.content.alignment}">${s.content.body}</div></section>\n`; break;
-        default: html += `<section style="padding:40px 24px"><div class="container"><!-- ${s.type} --></div></section>\n`;
-      }
-    });
-    html += `</body>\n</html>`;
-    return html;
+    return generateFullHTML(sections, config);
   }, [sections, config]);
 
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
