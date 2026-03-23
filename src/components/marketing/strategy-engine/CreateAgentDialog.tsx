@@ -32,6 +32,7 @@ interface EditableAgentCard {
   anti_patterns: string[];
   error_handling: string;
   handoff: string;
+  destino_consumo: string[];
 }
 
 function editableToSystemPrompt(editable: EditableAgentCard): string {

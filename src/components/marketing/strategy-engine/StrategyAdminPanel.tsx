@@ -91,6 +91,7 @@ function editableToSystemPrompt(editable: EditableAgentCard): string {
   const card: AgentCard = {
     ...editable,
     output_schema: schema,
+    destino_consumo: editable.destino_consumo || [],
   };
   return agentCardToSystemPrompt(card);
 }
