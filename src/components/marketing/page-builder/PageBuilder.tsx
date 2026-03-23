@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { TEMPLATE_CATEGORIES, ALL_THEMES, getThemeById } from './pageTemplates';
+import { AgentTextBank } from './AgentTextBank';
 import {
   DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay,
   useSensor, useSensors, PointerSensor, useDroppable, useDraggable
@@ -2598,7 +2599,7 @@ const PageBuilderEditor: React.FC<{
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
             </div>
           )}
-          {rightPanel === 'agent' && <SiteBuilderAgentViewer onImportSections={handleImportFromAgent} />}
+          {rightPanel === 'agent' && <AgentTextBank />}
         </ScrollArea>
       </div>
 
