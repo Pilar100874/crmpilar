@@ -1055,13 +1055,17 @@ const COLOR_PALETTES = [
 ];
 
 // ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
-function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
-  if (type === 'whatsapp' && whatsappNumber) {
-    const clean = whatsappNumber.replace(/\D/g, '');
-    const msg = encodeURIComponent(buttonText || 'Olá!');
-    return `https://wa.me/${clean}?text=${msg}`;
+function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string, globalConfig?: { whatsappGlobal?: string; siteGlobal?: string }): string {
+  if (type === 'whatsapp') {
+    const number = whatsappNumber || globalConfig?.whatsappGlobal || '';
+    if (number) {
+      const clean = number.replace(/\D/g, '');
+      const msg = encodeURIComponent(buttonText || 'Olá!');
+      return `https://wa.me/${clean}?text=${msg}`;
+    }
   }
-  return url || '#';
+  const finalUrl = url && url !== '#' ? url : (globalConfig?.siteGlobal || url || '#');
+  return finalUrl || '#';
 }
 
 // ── Preview Renderer ───────────────────────────────────────────────────────────
