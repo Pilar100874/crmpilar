@@ -18,6 +18,8 @@ export interface CustomAgent {
   created_at: string;
   updated_at: string;
   agent_card_json?: any;
+  knowledge_base_type?: string;
+  knowledge_base_files?: any;
 }
 
 export function useCustomAgents(estabelecimentoId: string | undefined) {
