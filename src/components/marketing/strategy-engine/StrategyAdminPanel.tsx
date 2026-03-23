@@ -825,7 +825,7 @@ export function StrategyAdminPanel() {
 
                         {/* ─── PROMPT PREVIEW TAB ─── */}
                         <TabsContent value="prompt" className="space-y-3 mt-3">
-                          <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+                          <FieldSection label="Prompt do Sistema (Gerado)" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
                             {!config.saved && (
                               <Badge className="text-[10px] bg-primary/15 text-primary border-primary/30 mb-1 animate-pulse">
                                 🔄 Prompt atualizado — salve para aplicar

@@ -432,7 +432,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
           {/* ─── PROMPT PREVIEW TAB ─── */}
           <TabsContent value="prompt" className="space-y-3 mt-3">
-            <FieldSection label="System Prompt Gerado" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
+            <FieldSection label="Prompt do Sistema (Gerado)" hint="Prompt gerado automaticamente a partir dos campos do Agent Card. Atualiza em tempo real.">
               <Textarea value={generatedPrompt} readOnly rows={15} className="text-xs font-mono bg-muted/50" />
             </FieldSection>
             <Button variant="outline" size="sm" onClick={copyPrompt}>
