@@ -1467,6 +1467,64 @@ REGRAS:
       });
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ACTION: Generate marketing page copy using AI
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (action === 'generate_page_copy') {
+      const contextSummary = body.contextSummary || '{}';
+
+      const systemPrompt = `Você é um copywriter de elite especializado em páginas de vendas de alta conversão.
+Seu trabalho é analisar TODOS os dados de estratégia de marketing fornecidos e gerar textos persuasivos, chamativos e prontos para uso em uma landing page profissional.
+
+REGRAS CRÍTICAS:
+- Crie títulos CHAMATIVOS e PERSUASIVOS, NUNCA use o nome do dado/campo como título
+- Use gatilhos mentais: urgência, escassez, prova social, autoridade, reciprocidade
+- Foque em BENEFÍCIOS e TRANSFORMAÇÃO, não em características técnicas
+- Todos os textos devem ser em Português-BR
+- Cada título deve fazer o visitante PARAR e QUERER LER MAIS
+- O tom deve ser profissional mas envolvente, nunca genérico
+
+Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
+{
+  "page_name": "Nome criativo e chamativo para a página (não use 'Landing Page' ou 'Página de Vendas')",
+  "seo_title": "Título SEO otimizado com até 60 caracteres",
+  "seo_description": "Meta description persuasiva com até 160 caracteres",
+  "hero_headline": "Headline principal impactante e persuasiva (máx 80 chars)",
+  "hero_subheadline": "Subheadline que complementa e gera curiosidade (máx 150 chars)",
+  "hero_cta": "Texto do botão CTA principal (máx 30 chars, use verbos de ação)",
+  "features_title": "Título chamativo para seção de diferenciais",
+  "features": [{"icon": "emoji", "title": "Título persuasivo do diferencial", "description": "Descrição focada em benefício"}],
+  "process_title": "Título chamativo para seção Como Funciona",
+  "process_steps": [{"step": "1", "title": "Nome da etapa", "description": "Descrição clara"}],
+  "about_title": "Título envolvente para seção Sobre",
+  "about_text": "Texto narrativo e envolvente sobre o negócio (2-3 parágrafos)",
+  "testimonials_title": "Título chamativo para depoimentos",
+  "testimonials": [{"name": "Nome", "role": "Cargo/Empresa", "text": "Depoimento realista e persuasivo", "metrics": "Resultado concreto"}],
+  "objections_title": "Título para quebra de objeções",
+  "objections": [{"objection": "Objeção comum", "response": "Resposta persuasiva e empática"}],
+  "guarantee_title": "Título da garantia",
+  "guarantee_description": "Descrição da garantia que elimina risco",
+  "guarantee_duration": "Período da garantia",
+  "pricing_title": "Título persuasivo para preços",
+  "faq": [{"question": "Pergunta frequente", "answer": "Resposta clara e completa"}],
+  "cta_final_headline": "Headline final de urgência/ação",
+  "cta_final_description": "Texto final que gera urgência e ação imediata",
+  "cta_final_button": "Texto do botão final (verbo de ação)",
+  "social_proof": [{"number": "Número impactante", "label": "Descrição curta"}],
+  "image_suggestion": "Sugestão detalhada de imagem principal",
+  "video_suggestion": "Sugestão de conteúdo para vídeo"
+}`;
+
+      const userPrompt = `Analise TODOS os dados abaixo do Motor de Estratégia e gere os textos de marketing para uma página de vendas de alta conversão:\n\n${contextSummary}`;
+
+      const rawResult = await callAI(LOVABLE_API_KEY, systemPrompt, userPrompt);
+      const copy = extractJSON(rawResult);
+
+      return new Response(JSON.stringify({ success: true, copy }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     throw new Error(`Ação desconhecida: ${action}`);
 
   } catch (error: any) {
