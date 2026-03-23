@@ -480,7 +480,7 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
           {agentKeys.length > 1 && (
             <div className="flex flex-wrap gap-1 mb-2">
               <Badge variant={activeAgent === 'all' ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent('all')}>Todos</Badge>
-              {agentKeys.map(k => <Badge key={k} variant={activeAgent === k ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent(k)}>{k}</Badge>)}
+              {agentKeys.map(k => <Badge key={k} variant={activeAgent === k ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent(k)}>{(AGENT_INFO_MAP as any)[k]?.icon || '🔹'} {(AGENT_INFO_MAP as any)[k]?.name || k}</Badge>)}
             </div>
           )}
           <ScrollArea className="h-[260px]">
