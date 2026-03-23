@@ -2731,18 +2731,72 @@ const PageBuilderEditor: React.FC<{
 
       {/* Template & Theme Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="bg-background sm:max-w-4xl max-h-[85vh] flex flex-col">
+        <DialogContent className="bg-background sm:max-w-5xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><LayoutTemplate className="h-5 w-5" /> Templates & Temas</DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="themes" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="themes" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Temas Visuais</TabsTrigger>
-              <TabsTrigger value="structure" className="gap-1.5"><Layout className="h-3.5 w-3.5" /> Estrutura</TabsTrigger>
+          <Tabs defaultValue="full" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="full" className="gap-1.5"><Package className="h-3.5 w-3.5" /> Templates Completos</TabsTrigger>
+              <TabsTrigger value="themes" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Só Tema Visual</TabsTrigger>
+              <TabsTrigger value="structure" className="gap-1.5"><Layout className="h-3.5 w-3.5" /> Só Estrutura</TabsTrigger>
             </TabsList>
+
+            {/* Full Templates Tab (ThemeForest-style) */}
+            <TabsContent value="full" className="flex-1 min-h-0 mt-3 flex flex-col gap-3">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {FULL_TEMPLATE_CATEGORIES.map(cat => (
+                  <button key={cat.id}
+                    onClick={() => setFullTemplateCategoryFilter(cat.id)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
+                      fullTemplateCategoryFilter === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-transparent hover:bg-muted"
+                    )}>
+                    <span>{cat.icon}</span> {cat.name}
+                  </button>
+                ))}
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-2">
+                  {(FULL_TEMPLATE_CATEGORIES.find(c => c.id === fullTemplateCategoryFilter)?.templates || ALL_FULL_TEMPLATES.slice(0, 9)).map(ft => (
+                    <button key={ft.id}
+                      onClick={() => applyFullTemplate(ft)}
+                      onMouseEnter={() => setHoveredTemplate(ft.id)}
+                      onMouseLeave={() => setHoveredTemplate(null)}
+                      className="flex flex-col gap-2 rounded-xl border-2 border-transparent hover:border-primary transition-all text-left group overflow-hidden">
+                      {/* Mini Preview */}
+                      <div className="w-full aspect-[3/4] overflow-hidden rounded-t-lg relative">
+                        <TemplateMiniPreview
+                          config={ft.config}
+                          sectionTypes={ft.sections.map(s => s.type)}
+                          className="w-full h-full"
+                        />
+                        {hoveredTemplate === ft.id && (
+                          <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] flex items-center justify-center">
+                            <span className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold shadow-lg">
+                              Aplicar Template
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="px-3 pb-3">
+                        <p className="text-sm font-semibold truncate">{ft.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{ft.description}</p>
+                        <div className="flex gap-1 flex-wrap mt-2">
+                          {ft.tags.slice(0, 3).map(tag => (
+                            <Badge key={tag} variant="outline" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+                          ))}
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ft.sections.length} seções</Badge>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
 
             {/* Themes Tab */}
             <TabsContent value="themes" className="flex-1 min-h-0 mt-3 flex flex-col gap-3">
+              <p className="text-xs text-muted-foreground">Aplica apenas cores, fontes e estilo visual — mantém suas seções atuais.</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {TEMPLATE_CATEGORIES.map(cat => (
                   <button key={cat.id}
@@ -2792,6 +2846,7 @@ const PageBuilderEditor: React.FC<{
 
             {/* Structure Tab */}
             <TabsContent value="structure" className="flex-1 min-h-0 mt-3">
+              <p className="text-xs text-muted-foreground mb-3">Aplica apenas a estrutura de seções — mantém seu tema visual atual.</p>
               <ScrollArea className="h-full">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-2">
                   {PAGE_TEMPLATES.map(tpl => (
