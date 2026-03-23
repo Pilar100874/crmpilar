@@ -725,6 +725,12 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
   return (
     <div className="space-y-3">
       <div><Label className="text-xs">Título da Seção</Label><Input value={section.title} onChange={e => onChange({ ...section, title: e.target.value })} /></div>
+      {section.content._media_suggestion && (
+        <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs text-amber-700 dark:text-amber-400 space-y-1">
+          <p className="font-semibold flex items-center gap-1">💡 Sugestão de mídia (IA)</p>
+          <p>{section.content._media_suggestion}</p>
+        </div>
+      )}
       <Separator />
       {renderFields()}
       <Dialog open={showMediaPicker} onOpenChange={setShowMediaPicker}>
