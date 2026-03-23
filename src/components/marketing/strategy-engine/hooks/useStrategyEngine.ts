@@ -315,48 +315,46 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     });
   };
 
-  // Extract a rich condensed summary: all key insights as key-value + top bullets
+  // Extract a rich condensed summary: all key insights as key-value + top bullets (NO truncation)
   const extractCondensedLines = (conteudo: any): PdfLine[] => {
     if (!conteudo || typeof conteudo !== 'object') {
-      if (typeof conteudo === 'string') return [{ type: 'body', text: conteudo.substring(0, 500) }];
+      if (typeof conteudo === 'string') return [{ type: 'body', text: conteudo }];
       return [];
     }
     const lines: PdfLine[] = [];
     for (const [key, val] of Object.entries(conteudo)) {
       const label = key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       if (typeof val === 'string' && val.trim()) {
-        // Truncate long values but keep meaningful content
-        lines.push({ type: 'keyvalue', label, value: val.trim().substring(0, 200) });
+        lines.push({ type: 'keyvalue', label, value: val.trim() });
       } else if (typeof val === 'number' || typeof val === 'boolean') {
         lines.push({ type: 'keyvalue', label, value: String(val) });
       } else if (Array.isArray(val)) {
-        const items = val.filter(v => typeof v === 'string' && v.trim()).slice(0, 4);
+        const items = val.filter(v => typeof v === 'string' && v.trim()).slice(0, 5);
         if (items.length > 0) {
           lines.push({ type: 'subheading', text: label });
           for (const item of items) {
-            lines.push({ type: 'bullet', text: (item as string).trim().substring(0, 150), level: 0 });
+            lines.push({ type: 'bullet', text: (item as string).trim(), level: 0 });
           }
-          if (val.length > 4) lines.push({ type: 'body', text: `(+${val.length - 4} itens)` });
+          if (val.length > 5) lines.push({ type: 'body', text: `(+${val.length - 5} itens)` });
         } else {
-          // Array of objects: extract key-values from first few
           const objItems = val.filter(v => typeof v === 'object' && v !== null).slice(0, 3);
           if (objItems.length > 0) {
             lines.push({ type: 'subheading', text: label });
             for (const obj of objItems) {
-              const firstEntries = Object.entries(obj).slice(0, 2);
-              const summary = firstEntries.map(([k, v]) => `${k.replace(/[_-]/g, ' ')}: ${String(v).substring(0, 80)}`).join(' | ');
+              const firstEntries = Object.entries(obj).slice(0, 3);
+              const summary = firstEntries.map(([k, v]) => `${k.replace(/[_-]/g, ' ')}: ${String(v)}`).join(' | ');
               lines.push({ type: 'bullet', text: summary, level: 0 });
             }
+            if (val.length > 3) lines.push({ type: 'body', text: `(+${val.length - 3} itens)` });
           }
         }
       } else if (typeof val === 'object' && val !== null) {
-        // Nested object: extract its key-values inline
-        const subEntries = Object.entries(val).filter(([, v]) => typeof v === 'string' || typeof v === 'number').slice(0, 4);
+        const subEntries = Object.entries(val).filter(([, v]) => typeof v === 'string' || typeof v === 'number');
         if (subEntries.length > 0) {
           lines.push({ type: 'subheading', text: label });
           for (const [sk, sv] of subEntries) {
             const sl = sk.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            lines.push({ type: 'keyvalue', label: sl, value: String(sv).substring(0, 150) });
+            lines.push({ type: 'keyvalue', label: sl, value: String(sv) });
           }
         }
       }
@@ -364,12 +362,30 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return lines;
   };
 
-  // Strip emojis and normalize for PDF (jsPDF default font has limited Unicode support)
+  // Strip emojis, normalize accents and unicode for PDF (jsPDF default font has limited Unicode support)
   const sanitizeForPDF = (str: string): string => {
     // Remove emojis
     let clean = str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]|[\u{2700}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]/gu, '');
     // Replace common unicode chars that jsPDF can't render
     clean = clean.replace(/[""]/g, '"').replace(/['']/g, "'").replace(/—/g, '-').replace(/–/g, '-').replace(/…/g, '...').replace(/•/g, '-');
+    // Normalize accented characters to ASCII for reliable jsPDF rendering
+    const accentMap: Record<string, string> = {
+      'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+      'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+      'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+      'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+      'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+      'ç': 'c', 'ñ': 'n',
+      'Á': 'A', 'À': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A',
+      'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+      'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+      'Ó': 'O', 'Ò': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O',
+      'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+      'Ç': 'C', 'Ñ': 'N',
+      '™': '(TM)', '®': '(R)', '©': '(C)',
+      '°': 'o', '²': '2', '³': '3',
+    };
+    clean = clean.replace(/[^\x00-\x7F]/g, ch => accentMap[ch] || '');
     return clean.trim();
   };
   const stripEmoji = sanitizeForPDF;
