@@ -141,6 +141,169 @@ export const FULL_TEMPLATE_CATEGORIES: FullTemplateCategory[] = [
           { id: 's6', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'MegaShop', copyright: `© ${yr}` } },
         ]
       },
+      {
+        id: 'ft-vendas-webinar', name: 'Webinar Funnel', category: 'vendas',
+        description: 'Página de captação para webinar com countdown e autoridade',
+        tags: ['webinar', 'launch', 'live', 'dark-blue'],
+        config: { primaryColor: '#1e3a5f', accentColor: '#22d3ee', backgroundColor: '#0a1628', textColor: '#e0f2fe', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'gradient', cardStyle: 'glass', borderRadius: '12px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: '🔴 AO VIVO — A Masterclass Que Vai Mudar Seu Negócio', subheadline: 'Terça, 20h. Vagas limitadas. Descubra como faturar R$ 50K/mês com vendas online sem aparecer.', cta_text: 'RESERVAR MINHA VAGA GRÁTIS', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Credibilidade', visible: true, styles: {}, content: { items: [{ number: '12.000+', label: 'Já assistiram' }, { number: '97%', label: 'Aprovação' }, { number: 'R$ 8M+', label: 'Gerados pelos alunos' }] } },
+          { id: 's3', type: 'features', title: 'O Que Você Vai Aprender', visible: true, styles: {}, content: { items: [{ icon: '🎯', title: 'O Funil de 3 Etapas', description: 'Método simplificado que funciona em qualquer nicho.' }, { icon: '💰', title: 'Precificação Magnética', description: 'Como cobrar caro e ainda assim vender mais.' }, { icon: '🤖', title: 'Automação Invisível', description: 'Venda no piloto automático enquanto dorme.' }, { icon: '📱', title: 'Só Com o Celular', description: 'Sem equipamento caro, sem complicação.' }] } },
+          { id: 's4', type: 'testimonials', title: 'Resultados', visible: true, styles: {}, content: { items: [{ name: 'Julia M.', role: 'Fisioterapeuta', text: 'Assisti a masterclass e em 30 dias fiz minha primeira venda online.', metrics: 'R$ 4.700 no 1º mês' }, { name: 'Carlos R.', role: 'Professor', text: 'Saí de zero e hoje tenho uma renda extra consistente.', metrics: 'R$ 12K/mês' }] } },
+          { id: 's5', type: 'objections', title: 'Dúvidas', visible: true, styles: {}, content: { title: 'Será que é pra mim?', items: [{ objection: 'Não tenho produto', response: 'Na masterclass ensino como criar do zero em 48h.' }, { objection: 'Não entendo de tecnologia', response: 'Tudo é feito com ferramentas simples e gratuitas.' }] } },
+          { id: 's6', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: '⏰ Vagas Se Esgotando', description: 'A transmissão é ao vivo e não ficará gravada.', button_text: 'QUERO PARTICIPAR →', button_url: '#' } },
+          { id: 's7', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Digital Academy', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-coach', name: 'Coach Transformação', category: 'vendas',
+        description: 'Página de coaching com visual acolhedor e depoimentos transformacionais',
+        tags: ['coaching', 'warm', 'transformation', 'purple'],
+        config: { primaryColor: '#7e22ce', accentColor: '#e879f9', backgroundColor: '#faf5ff', textColor: '#3b0764', fontDisplay: 'Playfair Display', fontBody: 'Inter', heroStyle: 'split', cardStyle: 'shadow', borderRadius: '20px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: { layout: 'split-left' }, content: { headline: 'Desbloqueie Seu Potencial Máximo', subheadline: 'Programa de coaching para profissionais que querem alcançar resultados extraordinários na vida e nos negócios.', cta_text: 'Aplicar para o Programa', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'text', title: 'Manifesto', visible: true, styles: {}, content: { body: '"Você não precisa de mais informação. Precisa de transformação."\n\nSou [Seu Nome], coach certificada com mais de 10 anos de experiência ajudando líderes e empreendedores a quebrarem seus próprios limites.', alignment: 'center' } },
+          { id: 's3', type: 'social_proof', title: 'Resultados', visible: true, styles: {}, content: { items: [{ number: '500+', label: 'Vidas Transformadas' }, { number: '10+', label: 'Anos de Experiência' }, { number: '4.9', label: 'Avaliação Média' }] } },
+          { id: 's4', type: 'process_steps', title: 'Jornada', visible: true, styles: {}, content: { title: 'Sua Jornada de Transformação', items: [{ step: '1', title: 'Autoconhecimento', description: 'Descubra seus padrões limitantes.' }, { step: '2', title: 'Estratégia', description: 'Crie um plano de ação personalizado.' }, { step: '3', title: 'Ação', description: 'Implemente com acompanhamento semanal.' }, { step: '4', title: 'Resultado', description: 'Celebre suas conquistas.' }] } },
+          { id: 's5', type: 'features', title: 'Incluso', visible: true, styles: {}, content: { items: [{ icon: '🧠', title: '12 Sessões Individuais', description: 'Encontros semanais de 1h.' }, { icon: '📋', title: 'Plano Personalizado', description: 'Criado especificamente para você.' }, { icon: '📱', title: 'Suporte via WhatsApp', description: 'Acesso direto entre sessões.' }, { icon: '📚', title: 'Material Exclusivo', description: 'Workbooks e exercícios práticos.' }] } },
+          { id: 's6', type: 'testimonials', title: 'Transformações', visible: true, styles: {}, content: { items: [{ name: 'Amanda S.', role: 'Empresária', text: 'Em 3 meses meu faturamento triplicou e minha qualidade de vida melhorou 100%.', metrics: '3x faturamento' }, { name: 'Roberto F.', role: 'Executivo', text: 'Encontrei clareza e propósito. Melhor investimento que já fiz.', metrics: 'Promoção em 60 dias' }] } },
+          { id: 's7', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '💜', title: 'Satisfação Garantida', description: 'Se após a primeira sessão você não sentir que é pra você, devolvemos 100% do investimento.', duration: 'Primeira sessão' } },
+          { id: 's8', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Sua Transformação Começa Aqui', description: 'Apenas 5 vagas por mês. Aplique agora.', button_text: 'QUERO ME TRANSFORMAR', button_url: '#' } },
+          { id: 's9', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Coaching Premium', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-fitness', name: 'Fitness Challenge', category: 'vendas',
+        description: 'Página de desafio fitness com visual energético e verde neon',
+        tags: ['fitness', 'challenge', 'neon', 'dark'],
+        config: { primaryColor: '#18181b', accentColor: '#22c55e', backgroundColor: '#09090b', textColor: '#fafafa', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'gradient', cardStyle: 'glass', borderRadius: '8px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: '💪 DESAFIO 21 DIAS — Transforme Seu Corpo', subheadline: 'O programa que já ajudou +8.000 pessoas a perderem até 7kg em 21 dias com treinos de apenas 30 minutos.', cta_text: 'ENTRAR NO DESAFIO →', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Prova', visible: true, styles: {}, content: { items: [{ number: '8.200+', label: 'Participantes' }, { number: '-7kg', label: 'Média de perda' }, { number: '21', label: 'Dias' }, { number: '30min', label: 'Por treino' }] } },
+          { id: 's3', type: 'video', title: 'Resultados', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
+          { id: 's4', type: 'features', title: 'O Que Inclui', visible: true, styles: {}, content: { items: [{ icon: '🏋️', title: 'Treinos Diários', description: '21 treinos progressivos de 30 minutos, sem academia.' }, { icon: '🥗', title: 'Cardápio Completo', description: 'Plano alimentar flexível e lista de compras.' }, { icon: '📊', title: 'Acompanhamento', description: 'Planilha de evolução e check-ins diários.' }, { icon: '👥', title: 'Grupo VIP', description: 'Comunidade de apoio e motivação.' }] } },
+          { id: 's5', type: 'process_steps', title: 'Método', visible: true, styles: {}, content: { title: 'O Método em 3 Fases', items: [{ step: 'Semana 1', title: 'Adaptação', description: 'Ajuste alimentar e treinos leves.' }, { step: 'Semana 2', title: 'Intensificação', description: 'Aumento gradual da intensidade.' }, { step: 'Semana 3', title: 'Resultados', description: 'Consolidação e antes/depois.' }] } },
+          { id: 's6', type: 'testimonials', title: 'Antes e Depois', visible: true, styles: {}, content: { items: [{ name: 'Larissa P.', role: 'Perdeu 6,5kg', text: 'Nunca pensei que em 21 dias eu veria tanta diferença no espelho!', metrics: '-6,5kg' }, { name: 'Diego M.', role: 'Perdeu 8kg', text: 'Treinos rápidos e eficientes. Fiz tudo em casa, sem desculpa.', metrics: '-8kg' }] } },
+          { id: 's7', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia de 7 Dias', description: 'Se não gostar, devolvemos seu dinheiro. Sem perguntas.', duration: '7 dias' } },
+          { id: 's8', type: 'pricing', title: 'Investimento', visible: true, styles: {}, content: { title: 'Escolha seu plano', items: [{ name: 'Desafio Solo', price: 'R$ 47', features: ['21 treinos', 'Cardápio', 'Planilha'], highlighted: false }, { name: 'Desafio VIP', price: 'R$ 97', features: ['Tudo do Solo', 'Grupo VIP', 'Consultoria nutricional', 'Bônus exclusivos'], highlighted: true }] } },
+          { id: 's9', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: '🔥 ÚLTIMAS VAGAS', description: 'O próximo desafio começa segunda!', button_text: 'QUERO PARTICIPAR AGORA', button_url: '#' } },
+          { id: 's10', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'FitChallenge', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-curso-premium', name: 'Curso Premium Gold', category: 'vendas',
+        description: 'Página sofisticada para cursos high-ticket com visual dourado',
+        tags: ['course', 'premium', 'gold', 'high-ticket'],
+        config: { primaryColor: '#78350f', accentColor: '#d97706', backgroundColor: '#1c1917', textColor: '#fef3c7', fontDisplay: 'Playfair Display', fontBody: 'Inter', heroStyle: 'gradient', cardStyle: 'glass', borderRadius: '12px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'A Formação Definitiva em Marketing Digital', subheadline: 'O programa completo que transforma iniciantes em profissionais de alto nível. 200+ horas de conteúdo premium.', cta_text: 'Conhecer a Formação', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Métricas', visible: true, styles: {}, content: { items: [{ number: '1.500+', label: 'Formados' }, { number: '200h+', label: 'De conteúdo' }, { number: '95%', label: 'Empregabilidade' }, { number: '4.9/5', label: 'Avaliação' }] } },
+          { id: 's3', type: 'video', title: 'Apresentação', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
+          { id: 's4', type: 'features', title: 'Módulos', visible: true, styles: { layout: 'icons-left' }, content: { items: [{ icon: '📊', title: 'Módulo 1 — Fundamentos', description: 'Marketing digital do zero com bases sólidas.' }, { icon: '🎯', title: 'Módulo 2 — Tráfego Pago', description: 'Meta Ads, Google Ads e TikTok Ads avançado.' }, { icon: '✍️', title: 'Módulo 3 — Copywriting', description: 'Textos que convertem e vendem.' }, { icon: '📈', title: 'Módulo 4 — Analytics', description: 'Dados, métricas e otimização.' }, { icon: '🤖', title: 'Módulo 5 — IA Aplicada', description: 'Inteligência artificial no marketing.' }, { icon: '🚀', title: 'Módulo 6 — Escala', description: 'De freelancer a agência.' }] } },
+          { id: 's5', type: 'testimonials', title: 'Alunos', visible: true, styles: {}, content: { items: [{ name: 'Thiago B.', role: 'Gestor de Tráfego', text: 'Saí da formação faturando R$ 15K/mês como gestor de tráfego.', metrics: 'R$ 15K/mês' }, { name: 'Priscila V.', role: 'Social Media', text: 'Consegui meus primeiros 10 clientes ainda durante o curso.', metrics: '10 clientes em 60 dias' }] } },
+          { id: 's6', type: 'objections', title: 'FAQ', visible: true, styles: {}, content: { title: 'Dúvidas Frequentes', items: [{ objection: 'Preciso de experiência?', response: 'Não. O programa começa do absoluto zero.' }, { objection: 'Quanto tempo leva?', response: 'Em 6 meses você já estará atuando profissionalmente.' }, { objection: 'Tem suporte?', response: 'Suporte diário + mentorias semanais ao vivo.' }] } },
+          { id: 's7', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🏅', title: 'Garantia Premium de 15 Dias', description: 'Teste por 15 dias. Se não for o melhor investimento da sua carreira, devolvemos tudo.', duration: '15 dias' } },
+          { id: 's8', type: 'pricing', title: 'Investimento', visible: true, styles: {}, content: { title: 'Investimento', items: [{ name: 'Formação Completa', price: 'R$ 2.497 ou 12x R$ 247', features: ['200h de conteúdo', 'Certificado', 'Comunidade', 'Mentorias', 'Templates', 'Acesso vitalício'], highlighted: true }] } },
+          { id: 's9', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: '🎓 Comece Sua Carreira em Marketing Digital', description: 'Turma com vagas limitadas.', button_text: 'GARANTIR MINHA VAGA', button_url: '#' } },
+          { id: 's10', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Digital Academy Pro', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-ebook', name: 'eBook Landing', category: 'vendas',
+        description: 'Página clean para venda de ebooks e materiais digitais',
+        tags: ['ebook', 'digital', 'minimal', 'teal'],
+        config: { primaryColor: '#0d9488', accentColor: '#2dd4bf', backgroundColor: '#f0fdfa', textColor: '#134e4a', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'split', cardStyle: 'bordered', borderRadius: '16px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: { layout: 'split-left' }, content: { headline: 'O Guia Completo de Finanças Pessoais', subheadline: 'Aprenda a organizar suas finanças, investir e construir patrimônio mesmo ganhando pouco. Já ajudou +20.000 leitores.', cta_text: 'Comprar por R$ 29,90', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '20.000+', label: 'Cópias vendidas' }, { number: '4.8/5', label: 'Na Amazon' }, { number: '180', label: 'Páginas' }] } },
+          { id: 's3', type: 'features', title: 'Capítulos', visible: true, styles: { layout: 'icons-left' }, content: { items: [{ icon: '📖', title: 'Mentalidade Financeira', description: 'Mude sua relação com o dinheiro.' }, { icon: '💳', title: 'Orçamento Inteligente', description: 'Método prático de controle financeiro.' }, { icon: '📈', title: 'Investimentos Simples', description: 'Do Tesouro Direto a ações.' }, { icon: '🏠', title: 'Patrimônio', description: 'Como construir riqueza a longo prazo.' }] } },
+          { id: 's4', type: 'testimonials', title: 'Leitores', visible: true, styles: {}, content: { items: [{ name: 'Ana L.', role: 'Professora', text: 'Finalmente consegui economizar e investir. Livro mudou minha vida financeira.' }, { name: 'Pedro H.', role: 'Estudante', text: 'Linguagem acessível e dicas práticas. Recomendo para todos.' }] } },
+          { id: 's5', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '✅', title: 'Garantia de 7 Dias', description: 'Leia o ebook. Se não gostar, devolvemos seu dinheiro.', duration: '7 dias' } },
+          { id: 's6', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Invista no Seu Futuro', description: 'Download imediato. PDF + ePub + Audiobook.', button_text: 'COMPRAR AGORA — R$ 29,90', button_url: '#' } },
+          { id: 's7', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Finanças Smart', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-saas-trial', name: 'SaaS Free Trial', category: 'vendas',
+        description: 'Página de conversão para trial de software com visual tech azul',
+        tags: ['saas', 'trial', 'tech', 'blue'],
+        config: { primaryColor: '#1d4ed8', accentColor: '#60a5fa', backgroundColor: '#eff6ff', textColor: '#1e3a8a', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'shadow', borderRadius: '12px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Gerencie Sua Equipe em Um Só Lugar', subheadline: 'Projetos, tarefas, comunicação e relatórios. Tudo integrado. Teste grátis por 14 dias.', cta_text: 'Começar Teste Grátis', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Métricas', visible: true, styles: {}, content: { items: [{ number: '5.000+', label: 'Equipes ativas' }, { number: '99.9%', label: 'Uptime' }, { number: '4.7/5', label: 'G2 Reviews' }, { number: '-40%', label: 'Tempo em reuniões' }] } },
+          { id: 's3', type: 'features', title: 'Funcionalidades', visible: true, styles: {}, content: { items: [{ icon: '📋', title: 'Gestão de Projetos', description: 'Kanban, timeline e lista.' }, { icon: '💬', title: 'Chat Integrado', description: 'Comunicação em tempo real.' }, { icon: '📊', title: 'Dashboards', description: 'Métricas que importam.' }, { icon: '🔗', title: 'Integrações', description: 'Slack, Google, Jira e mais.' }] } },
+          { id: 's4', type: 'process_steps', title: 'Como começar', visible: true, styles: {}, content: { title: 'Pronto em 5 Minutos', items: [{ step: '1', title: 'Cadastre-se', description: 'Sem cartão de crédito.' }, { step: '2', title: 'Convide', description: 'Adicione sua equipe.' }, { step: '3', title: 'Produza', description: 'Comece a gerenciar.' }] } },
+          { id: 's5', type: 'testimonials', title: 'Cases', visible: true, styles: {}, content: { items: [{ name: 'TechCorp', role: 'Scale-up', text: 'Produtividade da equipe aumentou 35% no primeiro mês.', metrics: '+35% produtividade' }] } },
+          { id: 's6', type: 'pricing', title: 'Planos', visible: true, styles: {}, content: { title: 'Preços Simples', items: [{ name: 'Free', price: 'R$ 0', features: ['5 membros', '3 projetos', 'Chat'], highlighted: false }, { name: 'Pro', price: 'R$ 29/mês', features: ['Ilimitado', 'Integrações', 'Dashboards', 'API'], highlighted: true }, { name: 'Enterprise', price: 'Sob consulta', features: ['SSO', 'SLA', 'Onboarding dedicado'], highlighted: false }] } },
+          { id: 's7', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Preciso de cartão para o trial?', answer: 'Não. 14 dias grátis sem compromisso.' }, { question: 'Posso migrar meus dados?', answer: 'Sim, importação automática do Trello, Asana e Jira.' }] } },
+          { id: 's8', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Experimente Sem Risco', description: '14 dias grátis. Cancele quando quiser.', button_text: 'CRIAR CONTA GRÁTIS', button_url: '#' } },
+          { id: 's9', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'TeamFlow', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-imobiliario', name: 'Imóvel Premium', category: 'vendas',
+        description: 'Página de vendas para imóveis e empreendimentos com visual elegante',
+        tags: ['real-estate', 'luxury', 'elegant', 'dark-green'],
+        config: { primaryColor: '#1a3c34', accentColor: '#d4af37', backgroundColor: '#0f1f1a', textColor: '#ecfdf5', fontDisplay: 'Playfair Display', fontBody: 'Inter', heroStyle: 'image-overlay', cardStyle: 'glass', borderRadius: '8px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Residencial Jardins — Viva o Extraordinário', subheadline: 'Apartamentos de 120 a 280m² em localização privilegiada. Acabamento premium e vista panorâmica.', cta_text: 'Agendar Visita', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '70%', label: 'Vendido' }, { number: '120-280m²', label: 'Metragem' }, { number: '3-4', label: 'Suítes' }, { number: '4', label: 'Vagas' }] } },
+          { id: 's3', type: 'gallery', title: 'Galeria', visible: true, styles: {}, content: { images: [] } },
+          { id: 's4', type: 'features', title: 'Diferenciais', visible: true, styles: {}, content: { items: [{ icon: '🏊', title: 'Piscina Aquecida', description: 'Área de lazer completa no rooftop.' }, { icon: '🌳', title: 'Jardim Vertical', description: '3.000m² de área verde integrada.' }, { icon: '🔒', title: 'Segurança 24h', description: 'Portaria blindada e monitoramento.' }, { icon: '🚗', title: 'Vagas Cobertas', description: '4 vagas por unidade com depósito.' }] } },
+          { id: 's5', type: 'process_steps', title: 'Processo', visible: true, styles: {}, content: { title: 'Como Adquirir', items: [{ step: '1', title: 'Agende', description: 'Visite o decorado.' }, { step: '2', title: 'Escolha', description: 'Selecione sua unidade.' }, { step: '3', title: 'Realize', description: 'Condições facilitadas.' }] } },
+          { id: 's6', type: 'testimonials', title: 'Moradores', visible: true, styles: {}, content: { items: [{ name: 'Família Martins', role: 'Moradores', text: 'A qualidade de vida que encontramos aqui não tem preço. O acabamento é impecável.' }] } },
+          { id: 's7', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Últimas Unidades Disponíveis', description: 'Condições exclusivas de lançamento.', button_text: 'FALAR COM CORRETOR', button_url: '#' } },
+          { id: 's8', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Construtora Excellence', copyright: `© ${yr} — CRECI XXXXX` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-assinatura', name: 'Box Assinatura', category: 'vendas',
+        description: 'Página para clube de assinatura com visual divertido e colorido',
+        tags: ['subscription', 'box', 'fun', 'colorful'],
+        config: { primaryColor: '#e11d48', accentColor: '#fbbf24', backgroundColor: '#fff1f2', textColor: '#881337', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'split', cardStyle: 'shadow', borderRadius: '20px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: { layout: 'split-left' }, content: { headline: '📦 Uma Caixa de Surpresas Todo Mês!', subheadline: 'Receba produtos exclusivos de beleza, skincare e bem-estar selecionados por especialistas. A partir de R$ 79,90/mês.', cta_text: 'Assinar Agora', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Comunidade', visible: true, styles: {}, content: { items: [{ number: '12.000+', label: 'Assinantes' }, { number: '6-8', label: 'Produtos/box' }, { number: 'R$ 250+', label: 'Valor real' }, { number: '4.8⭐', label: 'Avaliação' }] } },
+          { id: 's3', type: 'features', title: 'O Que Vem na Box', visible: true, styles: {}, content: { items: [{ icon: '💄', title: 'Full-size', description: 'Produtos em tamanho real, não amostras.' }, { icon: '🌟', title: 'Marcas Premium', description: 'MAC, Lancôme, Clinique e mais.' }, { icon: '🎁', title: 'Surpresa', description: 'Curadoria mensal temática.' }, { icon: '💝', title: 'Exclusivos', description: 'Itens que não estão nas lojas.' }] } },
+          { id: 's4', type: 'testimonials', title: 'Assinantes', visible: true, styles: {}, content: { items: [{ name: 'Camila R.', role: 'Assinante há 8 meses', text: 'É como Natal todo mês! Os produtos são incríveis e sempre de marcas top.' }, { name: 'Beatriz S.', role: 'Assinante há 1 ano', text: 'Já descobri meus novos favoritos graças à box. Super vale o investimento.' }] } },
+          { id: 's5', type: 'pricing', title: 'Planos', visible: true, styles: {}, content: { title: 'Escolha seu plano', items: [{ name: 'Mensal', price: 'R$ 99,90/mês', features: ['6-8 produtos', 'Curadoria premium', 'Frete grátis'], highlighted: false }, { name: 'Semestral', price: 'R$ 79,90/mês', features: ['Tudo do mensal', '20% de desconto', 'Brinde exclusivo'], highlighted: true }, { name: 'Anual', price: 'R$ 69,90/mês', features: ['Tudo do semestral', '30% de desconto', 'Box VIP no aniversário'], highlighted: false }] } },
+          { id: 's6', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Posso cancelar a qualquer momento?', answer: 'Sim, sem multa no plano mensal.' }, { question: 'Quando recebo minha box?', answer: 'Enviamos entre o dia 10-15 de cada mês.' }, { question: 'Para todo o Brasil?', answer: 'Sim, com frete grátis para todo o país.' }] } },
+          { id: 's7', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: '🎉 Primeira Box com 40% OFF', description: 'Use o código PRIMEIRA40 no checkout.', button_text: 'QUERO MINHA BOX', button_url: '#' } },
+          { id: 's8', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Beauty Box Brasil', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-evento-online', name: 'Evento Online', category: 'vendas',
+        description: 'Página para venda de ingressos de eventos online com visual cyber',
+        tags: ['event', 'online', 'cyber', 'neon-purple'],
+        config: { primaryColor: '#6d28d9', accentColor: '#a78bfa', backgroundColor: '#0c0a1d', textColor: '#e9d5ff', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'gradient', cardStyle: 'glass', borderRadius: '12px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: '🎤 SUMMIT DIGITAL 2025', subheadline: '3 dias de conteúdo intenso com os maiores nomes do marketing digital. 100% online.', cta_text: 'Garantir Ingresso', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '30+', label: 'Palestrantes' }, { number: '3 dias', label: 'De evento' }, { number: '50h+', label: 'De conteúdo' }, { number: '10.000', label: 'Vagas' }] } },
+          { id: 's3', type: 'features', title: 'Trilhas', visible: true, styles: {}, content: { items: [{ icon: '📈', title: 'Growth & Escala', description: 'Estratégias avançadas de crescimento.' }, { icon: '🎨', title: 'Branding & Design', description: 'Construção de marcas memoráveis.' }, { icon: '🤖', title: 'IA & Automação', description: 'O futuro da tecnologia no marketing.' }, { icon: '💰', title: 'Vendas & Conversão', description: 'Técnicas que multiplicam resultados.' }] } },
+          { id: 's4', type: 'process_steps', title: 'Agenda', visible: true, styles: {}, content: { title: 'Programação', items: [{ step: 'Dia 1', title: 'Estratégia', description: 'Keynotes e painéis sobre tendências.' }, { step: 'Dia 2', title: 'Prática', description: 'Workshops e implementação ao vivo.' }, { step: 'Dia 3', title: 'Networking', description: 'Rodadas de networking e encerramento.' }] } },
+          { id: 's5', type: 'testimonials', title: 'Edições Anteriores', visible: true, styles: {}, content: { items: [{ name: 'Participante 2024', role: 'Empreendedor', text: 'O melhor evento de marketing digital que já participei. Conteúdo prático e aplicável.' }, { name: 'Participante 2024', role: 'Agência', text: 'Networking incrível. Fechei 3 contratos durante o evento!' }] } },
+          { id: 's6', type: 'pricing', title: 'Ingressos', visible: true, styles: {}, content: { title: 'Ingressos', items: [{ name: 'Free Pass', price: 'R$ 0', features: ['Acesso ao Dia 1', 'Keynotes', 'Chat'], highlighted: false }, { name: 'Full Pass', price: 'R$ 197', features: ['3 dias completos', 'Workshops', 'Gravações', 'Certificado'], highlighted: true }, { name: 'VIP Pass', price: 'R$ 497', features: ['Tudo do Full', 'Mentoria exclusiva', 'Grupo VIP', 'Bônus'], highlighted: false }] } },
+          { id: 's7', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: '🚀 Lote Promocional — Últimos Dias', description: 'O preço sobe na próxima semana.', button_text: 'GARANTIR MEU INGRESSO', button_url: '#' } },
+          { id: 's8', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Summit Digital', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-vendas-plr', name: 'PLR/Afiliado', category: 'vendas',
+        description: 'Página de vendas minimalista para produtos digitais PLR e afiliados',
+        tags: ['plr', 'affiliate', 'minimal', 'orange'],
+        config: { primaryColor: '#ea580c', accentColor: '#fb923c', backgroundColor: '#fff7ed', textColor: '#7c2d12', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'bordered', borderRadius: '12px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Pare de Procrastinar. Comece Hoje.', subheadline: 'O kit completo com 50 templates, scripts e ferramentas para lançar seu negócio digital em 7 dias.', cta_text: 'Quero o Kit Completo', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'features', title: 'Incluso', visible: true, styles: {}, content: { items: [{ icon: '📄', title: '50 Templates de Copy', description: 'Emails, páginas, anúncios prontos.' }, { icon: '🎨', title: '30 Criativos Editáveis', description: 'Canva e Photoshop.' }, { icon: '📊', title: 'Planilhas de Gestão', description: 'Controle financeiro e de leads.' }, { icon: '📹', title: '10 Aulas em Vídeo', description: 'Passo a passo para implementar.' }] } },
+          { id: 's3', type: 'social_proof', title: 'Social', visible: true, styles: {}, content: { items: [{ number: '5.000+', label: 'Downloads' }, { number: '4.7/5', label: 'Avaliação' }, { number: '50+', label: 'Recursos' }] } },
+          { id: 's4', type: 'testimonials', title: 'Feedbacks', visible: true, styles: {}, content: { items: [{ name: 'Gustavo P.', role: 'Afiliado', text: 'Os templates me economizaram semanas de trabalho. Muito prático!' }, { name: 'Letícia M.', role: 'Iniciante', text: 'Consegui lançar meu primeiro produto em 5 dias usando o kit.' }] } },
+          { id: 's5', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🔒', title: 'Garantia de 7 Dias', description: 'Baixe tudo, teste e se não gostar, devolvemos 100%.', duration: '7 dias' } },
+          { id: 's6', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Por Apenas R$ 37', description: 'Acesso imediato. Download instantâneo.', button_text: 'COMPRAR AGORA — R$ 37', button_url: '#' } },
+          { id: 's7', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Digital Kit', copyright: `© ${yr}` } },
+        ]
+      },
     ]
   },
   {
