@@ -671,7 +671,7 @@ Retorne EXCLUSIVAMENTE um JSON: {"pontuacao": 0-100, "diagnostico": "análise de
   }
 };
 
-const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel'];
+const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media', 'site_builder', 'video_producer', 'influencer_content'];
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────────
 
