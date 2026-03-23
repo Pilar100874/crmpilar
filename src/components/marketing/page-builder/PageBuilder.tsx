@@ -1103,7 +1103,41 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 2. Image placeholder ──
+    // ── 2. Social Proof (Numbers) ──
+    addProgress('📊 Extraindo métricas e prova social...');
+    const socialProofItems: any[] = [];
+    // Extract numbers from multiple agents
+    const numSources = [pos, lp, funnel, cipherData, socialData, emailData];
+    const numKeys = ['clientes', 'usuarios', 'cases', 'resultados', 'metricas', 'numeros', 'stats', 'kpis', 'indicadores', 'social_proof', 'provas_numericas'];
+    for (const src of numSources) {
+      if (!src) continue;
+      for (const key of numKeys) {
+        const val = src[key];
+        if (Array.isArray(val)) {
+          val.slice(0, 4).forEach((item: any) => {
+            if (typeof item === 'object' && item) {
+              socialProofItems.push({ number: item.numero || item.number || item.valor || item.value || '?', label: item.label || item.nome || item.descricao || item.description || '' });
+            }
+          });
+        } else if (typeof val === 'string' && val.match(/\d/)) {
+          socialProofItems.push({ number: val.slice(0, 20), label: key });
+        }
+      }
+    }
+    // Also try to extract from vox satisfaction/market data
+    if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
+    if (vox?.satisfacao || vox?.nps) socialProofItems.push({ number: vox.satisfacao || vox.nps, label: 'Satisfação' });
+    if (pos?.market_share) socialProofItems.push({ number: pos.market_share, label: 'Market Share' });
+    
+    if (socialProofItems.length === 0) {
+      socialProofItems.push({ number: '1000+', label: 'Clientes Atendidos' }, { number: '98%', label: 'Satisfação' }, { number: '24/7', label: 'Suporte' });
+    }
+    sections.push({
+      id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {},
+      content: { items: socialProofItems.slice(0, 4) }
+    });
+
+    // ── 3. Image placeholder ──
     addProgress('📸 Reservando espaço para imagem principal...');
     const imgSuggestion = creative?.conceito_visual || creative?.estilo_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
     sections.push({
@@ -1116,7 +1150,7 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 3. Features ──
+    // ── 4. Features ──
     addProgress('⚡ Extraindo diferenciais de múltiplos agentes...');
     let featureItems: any[] = [];
     const featureSources = [
@@ -1124,16 +1158,28 @@ const AutoGeneratePage: React.FC<{
       extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
       extractArray(funnel, 'etapas', 'stages', 'features'),
       extractArray(creative, 'beneficios', 'features'),
+      extractArray(cipherData, 'diferenciais', 'vantagens_competitivas', 'pontos_fortes'),
+      extractArray(paidMedia, 'beneficios', 'argumentos', 'features'),
     ].filter(arr => arr.length > 0);
 
     if (featureSources.length > 0) {
-      const allFeats = featureSources[0];
-      featureItems = allFeats.slice(0, 6).map((f: any, i: number) => ({
-        icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][i % 6],
-        title: typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || `Recurso ${i + 1}`),
-        description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
-      }));
-    } else {
+      // Merge unique features from all sources
+      const allFeats: any[] = [];
+      for (const source of featureSources) {
+        for (const f of source) {
+          const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
+          if (title && !allFeats.find(e => e.title === title)) {
+            allFeats.push({
+              icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6],
+              title,
+              description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
+            });
+          }
+        }
+      }
+      featureItems = allFeats.slice(0, 6);
+    }
+    if (featureItems.length === 0) {
       featureItems = [
         { icon: '🚀', title: 'Agilidade', description: 'Descreva seu diferencial aqui' },
         { icon: '🎯', title: 'Precisão', description: 'Descreva seu diferencial aqui' },
@@ -1145,13 +1191,36 @@ const AutoGeneratePage: React.FC<{
       content: { items: featureItems }
     });
 
-    // ── 4. About text ──
+    // ── 5. Process Steps (Funnel / How it works) ──
+    addProgress('🔄 Montando etapas do processo...');
+    let processItems: any[] = [];
+    const rawSteps = [
+      ...extractArray(funnel, 'etapas', 'stages', 'passos', 'steps', 'jornada'),
+      ...extractArray(lp, 'steps', 'como_funciona', 'etapas', 'processo'),
+      ...extractArray(pos, 'jornada_cliente', 'processo', 'etapas'),
+    ];
+    if (rawSteps.length > 0) {
+      processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({
+        step: `${i + 1}`,
+        title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || s.name || s.nome || s.etapa || `Etapa ${i + 1}`),
+        description: typeof s === 'string' ? s : (s.description || s.descricao || s.texto || s.acao || ''),
+      }));
+    }
+    if (processItems.length >= 2) {
+      sections.push({
+        id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {},
+        content: { title: 'Como Funciona', items: processItems }
+      });
+    }
+
+    // ── 6. About text ──
     addProgress('📝 Criando seção sobre o negócio...');
     const aboutAlts = collectAlternatives([
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling'] },
-      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre'] },
-      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling', 'proposta_descricao', 'promessa'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto', 'persona_descricao'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre', 'descricao_empresa'] },
+      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao', 'manifesto'] },
+      { agent: 'Inteligência Competitiva', icon: '🔍', data: cipherData, keys: ['resumo', 'posicionamento', 'analise'] },
     ]);
     if (aboutAlts.length === 0) {
       aboutAlts.push({ agent: 'Projeto', icon: '📋', text: project.descricao_negocio || 'Conte a história do seu negócio aqui.' });
@@ -1161,7 +1230,7 @@ const AutoGeneratePage: React.FC<{
       content: { body: aboutAlts[0]?.text, alignment: 'center', _alt_body: aboutAlts }
     });
 
-    // ── 5. Video placeholder ──
+    // ── 7. Video placeholder ──
     addProgress('🎬 Reservando espaço para vídeo...');
     const videoAlts = collectAlternatives([
       { agent: 'Roteirista VSL', icon: '🎬', data: vsl, keys: ['titulo', 'gancho', 'headline', 'abertura'] },
@@ -1178,7 +1247,106 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 6. Gallery ──
+    // ── 8. Testimonials ──
+    addProgress('💬 Montando depoimentos...');
+    let testimonialItems: any[] = [];
+    const rawTest = [
+      ...extractArray(lp, 'testimonials', 'depoimentos', 'provas_sociais', 'cases'),
+      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais', 'cases_sucesso', 'resultados_clientes'),
+      ...extractArray(pos, 'depoimentos', 'cases', 'testimonials', 'provas'),
+      ...extractArray(funnel, 'depoimentos', 'cases', 'resultados'),
+      ...extractArray(emailData, 'depoimentos', 'testimonials'),
+      ...extractArray(creative, 'depoimentos', 'provas_sociais'),
+    ];
+    if (rawTest.length > 0) {
+      testimonialItems = rawTest.slice(0, 6).map((t: any) => ({
+        name: t.name || t.nome || t.cliente || 'Cliente',
+        role: t.role || t.cargo || t.empresa || t.segmento || '',
+        text: t.text || t.texto || t.depoimento || t.citacao || t.quote || '',
+        metrics: t.metrics || t.resultado || t.metrica || t.resultado_numerico || '',
+      }));
+    } else {
+      testimonialItems = [
+        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui. Dica: inclua números e resultados concretos.', metrics: '' },
+        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado para aumentar credibilidade.', metrics: '' },
+        { name: 'Terceiro Cliente', role: 'Empresa', text: 'Um terceiro depoimento. Quanto mais específico e detalhado, melhor.', metrics: '' },
+      ];
+    }
+    sections.push({
+      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
+      content: { items: testimonialItems }
+    });
+
+    // ── 9. Objections ──
+    addProgress('🚫 Extraindo objeções e respostas...');
+    let objectionItems: any[] = [];
+    const rawObj = [
+      ...extractArray(vox, 'objecoes', 'objections', 'barreiras', 'medos', 'duvidas'),
+      ...extractArray(pos, 'objecoes', 'barreiras', 'resistencias'),
+      ...extractArray(lp, 'objecoes', 'objections', 'quebra_objecoes'),
+      ...extractArray(funnel, 'objecoes', 'barreiras'),
+      ...extractArray(cipherData, 'objecoes', 'fraquezas_concorrentes', 'barreiras_mercado'),
+    ];
+    if (rawObj.length > 0) {
+      objectionItems = rawObj.slice(0, 5).map((o: any) => ({
+        objection: typeof o === 'string' ? o : (o.objecao || o.objection || o.barreira || o.duvida || o.pergunta || ''),
+        response: typeof o === 'string' ? 'Responda a essa objeção aqui.' : (o.resposta || o.response || o.solucao || o.contra_argumento || ''),
+      }));
+    }
+    if (objectionItems.length > 0) {
+      sections.push({
+        id: `auto-obj-${Date.now()}`, type: 'objections', title: '🚫 Quebrando Objeções', visible: true, styles: {},
+        content: { title: 'Ainda tem dúvidas?', items: objectionItems }
+      });
+    }
+
+    // ── 10. Guarantee ──
+    addProgress('🛡️ Montando seção de garantia...');
+    let guaranteeData = { title: 'Garantia Total', description: '', icon: '🛡️', duration: '' };
+    const rawGuarantee = pos?.garantia || lp?.garantia || lp?.guarantee || funnel?.garantia || vox?.garantia;
+    if (rawGuarantee) {
+      if (typeof rawGuarantee === 'string') {
+        guaranteeData.description = rawGuarantee;
+      } else {
+        guaranteeData.title = rawGuarantee.titulo || rawGuarantee.title || 'Garantia Total';
+        guaranteeData.description = rawGuarantee.descricao || rawGuarantee.description || rawGuarantee.texto || '';
+        guaranteeData.duration = rawGuarantee.duracao || rawGuarantee.prazo || rawGuarantee.dias || '';
+      }
+    }
+    if (!guaranteeData.description) {
+      guaranteeData.description = 'Se você não ficar 100% satisfeito, devolvemos seu dinheiro. Sem burocracia, sem perguntas.';
+      guaranteeData.duration = '30 dias';
+    }
+    sections.push({
+      id: `auto-guarantee-${Date.now()}`, type: 'guarantee', title: '🛡️ Garantia', visible: true, styles: {},
+      content: guaranteeData
+    });
+
+    // ── 11. Pricing ──
+    addProgress('💰 Montando preços...');
+    let pricingItems: any[] = [];
+    const rawPricing = [
+      ...extractArray(lp, 'planos', 'pricing', 'precos', 'tabela_precos'),
+      ...extractArray(funnel, 'planos', 'ofertas', 'precos'),
+      ...extractArray(pos, 'planos', 'precos', 'ofertas'),
+      ...extractArray(paidMedia, 'ofertas', 'planos'),
+    ];
+    if (rawPricing.length > 0) {
+      pricingItems = rawPricing.slice(0, 3).map((p: any, i: number) => ({
+        name: p.name || p.nome || p.plano || `Plano ${i + 1}`,
+        price: p.price || p.preco || p.valor || 'Consulte',
+        features: Array.isArray(p.features || p.recursos || p.beneficios) ? (p.features || p.recursos || p.beneficios) : [],
+        highlighted: i === 1,
+      }));
+    }
+    if (pricingItems.length > 0) {
+      sections.push({
+        id: `auto-pricing-${Date.now()}`, type: 'pricing', title: '💰 Planos e Preços', visible: true, styles: {},
+        content: { title: 'Escolha seu Plano', items: pricingItems }
+      });
+    }
+
+    // ── 12. Gallery ──
     addProgress('🖼️ Reservando galeria...');
     sections.push({
       id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {},
@@ -1188,49 +1356,17 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 7. Testimonials ──
-    addProgress('💬 Montando depoimentos...');
-    let testimonialItems: any[] = [];
-    const rawTest = [
-      ...extractArray(lp, 'testimonials', 'depoimentos'),
-      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais'),
-    ];
-    if (rawTest.length > 0) {
-      testimonialItems = rawTest.slice(0, 4).map((t: any) => ({
-        name: t.name || t.nome || 'Cliente',
-        role: t.role || t.cargo || '',
-        text: t.text || t.texto || t.depoimento || '',
-      }));
-    } else {
-      testimonialItems = [
-        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui.' },
-        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado.' },
-      ];
-    }
-    sections.push({
-      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
-      content: { items: testimonialItems }
-    });
-
-    // ── 8. Second Image ──
-    addProgress('🤳 Reservando imagem de marca...');
-    sections.push({
-      id: `auto-img2-${Date.now()}`, type: 'image', title: '🤳 Imagem de Marca', visible: true, styles: {},
-      content: {
-        url: '', alt: 'Imagem de marca', caption: '', fit: 'cover',
-        _media_suggestion: `🤳 Sugestão: foto lifestyle, equipe ou bastidores da marca.`,
-      }
-    });
-
-    // ── 9. FAQ ──
+    // ── 13. FAQ ──
     addProgress('❓ Montando FAQ...');
     let faqItems: any[] = [];
     const rawFaq = [
       ...extractArray(lp, 'faq', 'perguntas_frequentes'),
-      ...extractArray(seoData, 'faq', 'perguntas'),
+      ...extractArray(seoData, 'faq', 'perguntas', 'perguntas_frequentes'),
+      ...extractArray(vox, 'duvidas_frequentes', 'faq', 'perguntas'),
+      ...extractArray(pos, 'faq', 'perguntas'),
     ];
     if (rawFaq.length > 0) {
-      faqItems = rawFaq.slice(0, 5).map((q: any) => ({
+      faqItems = rawFaq.slice(0, 7).map((q: any) => ({
         question: q.question || q.pergunta || '',
         answer: q.answer || q.resposta || '',
       }));
@@ -1239,6 +1375,8 @@ const AutoGeneratePage: React.FC<{
         { question: 'Como funciona?', answer: 'Descreva como funciona.' },
         { question: 'Quais os diferenciais?', answer: 'Liste seus diferenciais.' },
         { question: 'Como entro em contato?', answer: 'Informe seus canais.' },
+        { question: 'Qual o prazo de entrega?', answer: 'Informe seus prazos.' },
+        { question: 'Tem garantia?', answer: 'Descreva sua garantia.' },
       ];
     }
     sections.push({
@@ -1246,20 +1384,22 @@ const AutoGeneratePage: React.FC<{
       content: { items: faqItems }
     });
 
-    // ── 10. CTA Final ──
+    // ── 14. CTA Final ──
     addProgress('🎯 Criando CTA final...');
     const ctaHAlts = collectAlternatives([
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline', 'titulo_cta'] },
       { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_headline', 'assunto', 'titulo'] },
       { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta_headline', 'titulo_final'] },
+      { agent: 'Funil', icon: '📊', data: funnel, keys: ['cta_final', 'headline_conversao', 'titulo_oferta'] },
     ]);
-    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para começar?' });
+    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para transformar seus resultados?' });
     const ctaDAlts = collectAlternatives([
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_description', 'cta_final_description', 'descricao_cta'] },
       { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia', 'promessa_final'] },
+      { agent: 'Funil', icon: '📊', data: funnel, keys: ['urgencia', 'escassez', 'oferta_final'] },
     ]);
-    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Entre em contato e descubra como podemos ajudar.' });
+    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Não perca mais tempo. Entre em contato agora e descubra como podemos ajudar.' });
 
     sections.push({
       id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
@@ -1274,7 +1414,7 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 11. Footer ──
+    // ── 15. Footer ──
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
       content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
@@ -1308,9 +1448,9 @@ const AutoGeneratePage: React.FC<{
       toast.error('Erro ao salvar: ' + error.message);
       setStep('select');
     } else {
-      addProgress('✅ Página gerada com sucesso!');
+      addProgress('✅ Página de vendas gerada com sucesso!');
       setStep('done');
-      toast.success('Página gerada automaticamente! 🎉');
+      toast.success('Página de vendas completa gerada! 🎉');
       setTimeout(() => {
         onGenerated(saved as unknown as SavedPage);
         onOpenChange(false);
