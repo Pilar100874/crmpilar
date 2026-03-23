@@ -103,16 +103,16 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             </DropdownMenu>
           )}
           <Button
-            onClick={runPipeline}
+            onClick={() => executeAllAgents(mergedDeps)}
             disabled={isPipelineRunning || hasAnyRunning}
             size="sm"
           >
-            {isPipelineRunning ? (
+            {hasAnyRunning ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
             ) : (
               <Rocket className="h-4 w-4 mr-1" />
             )}
-            {isPipelineRunning ? 'Executando...' : 'Rodar Todos'}
+            {hasAnyRunning ? 'Executando...' : 'Rodar Todos'}
           </Button>
         </div>
       </div>
