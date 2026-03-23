@@ -636,6 +636,36 @@ function generateSlug(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${Date.now()}`;
 }
 
+// ── Preview Iframe (standalone) ─────────────────────────────────────────────────
+const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
+  const cfg: PageConfig = {
+    title: '', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
+    accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
+    fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px', ...config,
+  };
+  const vs = sections.filter((s: PageSection) => s.visible);
+  let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:${cfg.fontBody},sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor}}.container{max-width:${cfg.maxWidth};margin:0 auto}img{max-width:100%}video{max-width:100%}</style></head><body>`;
+  vs.forEach(s => {
+    const c = s.content;
+    switch (s.type) {
+      case 'hero': html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:2.5rem;font-weight:bold;margin-bottom:16px">${c.headline||''}</h1><p style="font-size:1.15rem;margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" style="display:inline-block;padding:12px 32px;background:${cfg.accentColor};color:#fff;border-radius:8px;font-weight:600;text-decoration:none">${c.cta_text}</a>` : ''}</div></section>`; break;
+      case 'text': html += `<section style="padding:40px 24px"><div class="container" style="max-width:768px;text-align:${c.alignment||'left'};white-space:pre-wrap">${c.body||''}</div></section>`; break;
+      case 'image': html += `<section style="padding:32px 24px;text-align:center"><div class="container">${c.url ? `<img src="${c.url}" alt="${c.alt||''}" style="border-radius:8px;max-height:500px;object-fit:${c.fit||'cover'}">` : ''}</div></section>`; break;
+      case 'video': html += `<section style="padding:32px 24px"><div class="container">${c.url ? `<video src="${c.url}" controls style="width:100%;border-radius:8px"></video>` : ''}</div></section>`; break;
+      case 'features': html += `<section style="padding:48px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:24px;border:1px solid #e5e7eb;border-radius:12px"><span style="font-size:2rem;display:block;margin-bottom:12px">${f.icon||''}</span><h3 style="font-weight:600;margin-bottom:8px">${f.title||''}</h3><p style="font-size:.875rem;opacity:.7">${f.description||''}</p></div>`).join('')}</div></section>`; break;
+      case 'cta': html += `<section style="padding:64px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container"><h2 style="font-size:2rem;font-weight:bold;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.1rem;margin-bottom:24px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${c.button_url||'#'}" style="display:inline-block;padding:12px 32px;background:${cfg.accentColor};color:#fff;border-radius:8px;font-weight:600;text-decoration:none">${c.button_text}</a>` : ''}</div></section>`; break;
+      case 'testimonials': html += `<section style="padding:48px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">${(c.items||[]).map((t:any)=>`<div style="padding:24px;border:1px solid #e5e7eb;border-radius:12px;font-style:italic"><p style="margin-bottom:12px">"${t.text||''}"</p><p style="font-size:.875rem;font-weight:600;font-style:normal">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></section>`; break;
+      case 'faq': html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px">${(c.items||[]).map((q:any)=>`<div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px"><h4 style="font-weight:600;margin-bottom:8px">${q.question||''}</h4><p style="font-size:.875rem;opacity:.7">${q.answer||''}</p></div>`).join('')}</div></section>`; break;
+      case 'gallery': html += `<section style="padding:32px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">${(c.images||[]).map((url:string)=>`<img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px">`).join('')}</div></section>`; break;
+      case 'footer': html += `<footer style="padding:32px 24px;text-align:center;border-top:1px solid #e5e7eb;font-size:.875rem;opacity:.6"><p>${c.company||''}</p><p>${c.copyright||''}</p></footer>`; break;
+      case 'spacer': html += `<div style="height:${c.height||60}px"></div>`; break;
+      case 'custom_html': html += c.code || ''; break;
+    }
+  });
+  html += '</body></html>';
+  return <iframe srcDoc={html} className="w-full h-full border-0" />;
+};
+
 // ── Project Listing (Landing) ──────────────────────────────────────────────────
 const PageBuilderLanding: React.FC<{
   onOpen: (page: SavedPage) => void;
@@ -646,7 +676,7 @@ const PageBuilderLanding: React.FC<{
   const [dialogAction, setDialogAction] = useState<{ type: 'rename' | 'duplicate' | 'delete' | 'publish' | 'unpublish'; page: SavedPage } | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [processing, setProcessing] = useState(false);
-
+  const [previewPage, setPreviewPage] = useState<SavedPage | null>(null);
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { setLoading(false); return; }
@@ -811,9 +841,14 @@ const PageBuilderLanding: React.FC<{
                 </div>
                 <p className="text-[10px] text-muted-foreground">/p/{page.slug}</p>
                 <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
-                <Button variant="outline" size="sm" className="h-7 text-xs w-full mt-1" onClick={() => onOpen(page)}>
-                  Abrir Editor
-                </Button>
+                <div className="flex gap-1 mt-1">
+                  <Button variant="outline" size="sm" className="h-7 text-xs flex-1" onClick={() => onOpen(page)}>
+                    Abrir Editor
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setPreviewPage(page)}>
+                    <Eye className="h-3 w-3" /> Preview
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -839,6 +874,27 @@ const PageBuilderLanding: React.FC<{
               {dialogContent.confirmLabel}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewPage} onOpenChange={() => setPreviewPage(null)}>
+        <DialogContent className="bg-background max-w-[95vw] h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Preview — {previewPage?.nome}
+              {previewPage?.publicado && (
+                <Button variant="outline" size="sm" className="ml-auto h-7 gap-1 text-xs" onClick={() => window.open(`${window.location.origin}/p/${previewPage.slug}`, '_blank')}>
+                  <ExternalLink className="h-3 w-3" /> Abrir URL
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewPage && (
+            <div className="flex-1 overflow-hidden rounded border" style={{ height: 'calc(90vh - 80px)' }}>
+              <PreviewIframe sections={(previewPage.sections as any[]) || []} config={previewPage.config as any} />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
