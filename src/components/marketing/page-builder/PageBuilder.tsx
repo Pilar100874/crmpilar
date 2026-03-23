@@ -2470,6 +2470,8 @@ const PageBuilderEditor: React.FC<{
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [themeCategoryFilter, setThemeCategoryFilter] = useState(TEMPLATE_CATEGORIES[0]?.id || 'startup');
+  const [fullTemplateCategoryFilter, setFullTemplateCategoryFilter] = useState(FULL_TEMPLATE_CATEGORIES[0]?.id || 'landing');
+  const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
