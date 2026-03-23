@@ -646,7 +646,7 @@ const PageBuilderLanding: React.FC<{
   const [dialogAction, setDialogAction] = useState<{ type: 'rename' | 'duplicate' | 'delete' | 'publish' | 'unpublish'; page: SavedPage } | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [processing, setProcessing] = useState(false);
-
+  const [previewPage, setPreviewPage] = useState<SavedPage | null>(null);
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { setLoading(false); return; }
