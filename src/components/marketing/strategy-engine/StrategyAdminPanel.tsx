@@ -640,8 +640,8 @@ export function StrategyAdminPanel() {
                             <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                             <span className="text-[10px] text-muted-foreground">Depende de:</span>
                             {(config.dependencies ?? []).map(dep => {
-                              const depInfo = AGENT_INFO[dep] || configs[dep]?.card;
-                              const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                              const depInfo = AGENT_INFO[dep] || configsWithCustom[dep]?.card;
+                              const depIcon = configsWithCustom[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                               const depName = depInfo?.name?.split(' ')[0] || dep;
                               return (
                                 <Badge key={dep} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
