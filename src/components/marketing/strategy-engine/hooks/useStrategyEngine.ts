@@ -485,7 +485,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setTextColor(65, 65, 80);
             doc.setFillColor(cr, cg, cb);
             doc.circle(mL + indent + 1.2, y - 1, 0.9, 'F');
-            const bW = cW - indent - 8;
+            const bW = maxTextW - indent - 6;
             const wrapped = doc.splitTextToSize(line.text, bW);
             for (const wl of wrapped) {
               check(lineH);
@@ -499,7 +499,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setFontSize(fs.body);
             doc.setTextColor(55, 55, 70);
             doc.setFont('helvetica', 'normal');
-            const wrapped = doc.splitTextToSize(line.text, cW - 6);
+            const wrapped = doc.splitTextToSize(line.text, maxTextW - 4);
             for (const wl of wrapped) {
               check(lineH);
               doc.text(wl, mL + 3, y);
