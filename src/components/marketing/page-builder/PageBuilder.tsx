@@ -49,6 +49,7 @@ interface PageConfig {
   backgroundColor: string; textColor: string;
   fontDisplay: string; fontBody: string; maxWidth: string;
   whatsappGlobal?: string; siteGlobal?: string;
+  empresaNome?: string; empresaEndereco?: string; empresaTelefone?: string;
 }
 
 interface SavedPage {
@@ -1140,7 +1141,23 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
     case 'process_steps': return (<div className="py-12 px-6 max-w-4xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Como Funciona'}</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6"><div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{item.step}</div><h4 className="font-semibold text-lg mb-2">{item.title}</h4><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     case 'faq': return (<div className="py-12 px-6 max-w-3xl mx-auto space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="border rounded-lg p-4"><h4 className="font-semibold mb-2">{item.question}</h4><p className="text-sm text-muted-foreground">{item.answer}</p></div>))}</div>);
     case 'gallery': return (<div className="py-8 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-2 md:grid-cols-3 gap-3">{(c.images || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-full aspect-square object-cover rounded-lg" />)}</div></div>);
-    case 'footer': return (<div className="py-8 px-6 text-center border-t bg-muted/30"><p className="font-semibold mb-2">{c.company}</p><p className="text-xs text-muted-foreground">{c.copyright}</p></div>);
+    case 'footer': {
+      const fNome = config.empresaNome;
+      const fEnd = config.empresaEndereco;
+      const fTel = config.empresaTelefone;
+      const fWa = config.whatsappGlobal;
+      const fSite = config.siteGlobal;
+      return (<div className="py-8 px-6 text-center border-t bg-muted/30">
+        <p className="font-semibold mb-1">{c.company || fNome || 'Empresa'}</p>
+        {fEnd && <p className="text-xs text-muted-foreground mb-1">📍 {fEnd}</p>}
+        <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-muted-foreground mb-2">
+          {fTel && <span>📞 {fTel}</span>}
+          {fWa && <span>💬 {fWa}</span>}
+          {fSite && <a href={fSite} target="_blank" rel="noopener noreferrer" className="underline">🌐 {fSite}</a>}
+        </div>
+        <p className="text-[10px] text-muted-foreground">{c.copyright}</p>
+      </div>);
+    }
     case 'spacer': return <div style={{ height: `${c.height || 60}px` }} />;
     case 'custom_html': return <div className="py-4 px-6 max-w-4xl mx-auto" dangerouslySetInnerHTML={{ __html: c.code || '' }} />;
     default: return null;
@@ -1255,8 +1272,21 @@ section{overflow-x:hidden}
         html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px;text-align:center">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid ${cardBrd}"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px;color:${cfg.textColor}">${q.question||''}</h4><p style="color:${subtleText};line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'gallery':
         html += `<section style="padding:40px 24px"><div class="container"><div class="grid-3">${(c.images||[]).map((url:string)=>`<img src="${url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">`).join('')}</div></div></section>\n`; break;
-      case 'footer':
-        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${c.company||''}</p><p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+      case 'footer': {
+        const fn = cfg.empresaNome || c.company || '';
+        const fa = cfg.empresaEndereco || '';
+        const ft = cfg.empresaTelefone || '';
+        const fw = cfg.whatsappGlobal || '';
+        const fs = cfg.siteGlobal || '';
+        let footerInfo = '';
+        if (fa) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:6px">📍 ${fa}</p>`;
+        let contactParts: string[] = [];
+        if (ft) contactParts.push(`📞 ${ft}`);
+        if (fw) contactParts.push(`💬 ${fw}`);
+        if (fs) contactParts.push(`<a href="${fs}" target="_blank" rel="noopener noreferrer" style="color:${cfg.primaryColor};text-decoration:underline">🌐 ${fs}</a>`);
+        if (contactParts.length) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:8px">${contactParts.join(' &nbsp;|&nbsp; ')}</p>`;
+        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${fn}</p>${footerInfo}<p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+      }
       case 'spacer':
         html += `<div style="height:${c.height||60}px"></div>\n`; break;
       case 'custom_html':
@@ -3114,8 +3144,13 @@ const PageBuilderEditor: React.FC<{
                 </div>
               </div>
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">🏢 Dados da Empresa</p>
+              <p className="text-[10px] text-muted-foreground">Exibidos automaticamente no rodapé de todas as páginas.</p>
+              <div><Label className="text-[10px]">🏷️ Nome da Empresa</Label><Input value={config.empresaNome || ''} onChange={e => setConfig(c => ({ ...c, empresaNome: e.target.value }))} placeholder="Minha Empresa Ltda." className="text-xs" /></div>
+              <div><Label className="text-[10px]">📍 Endereço</Label><Input value={config.empresaEndereco || ''} onChange={e => setConfig(c => ({ ...c, empresaEndereco: e.target.value }))} placeholder="Rua Exemplo, 123 - Cidade/UF" className="text-xs" /></div>
+              <div><Label className="text-[10px]">📞 Telefone</Label><Input value={config.empresaTelefone || ''} onChange={e => setConfig(c => ({ ...c, empresaTelefone: e.target.value }))} placeholder="(11) 3000-0000" className="text-xs" /></div>
               <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">📱 Links Globais</p>
-              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links da página quando não houver valor específico.</p>
+              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links.</p>
               <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => setConfig(c => ({ ...c, whatsappGlobal: e.target.value }))} placeholder="5511999999999 (com DDI)" className="text-xs" /><p className="text-[9px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número</p></div>
               <div><Label className="text-[10px]">🌐 Site / URL Padrão</Label><Input value={config.siteGlobal || ''} onChange={e => setConfig(c => ({ ...c, siteGlobal: e.target.value }))} placeholder="https://seusite.com.br" className="text-xs" /></div>
             </div>
