@@ -267,18 +267,23 @@ const TimelineTracks: React.FC<Props> = ({ state, onSelectClip, onUpdateClip, on
     if (!raw) return;
     try {
       const media = JSON.parse(raw);
+
+      // Calculate drop time from mouse position
+      const rect = containerRef.current?.getBoundingClientRect();
+      const scrollLeft = containerRef.current?.scrollLeft || 0;
+      const x = e.clientX - (rect?.left || 0) + scrollLeft;
+      const dropTime = Math.max(0, x / state.zoom);
+
       // Handle effect drops
       if (media.type === 'effect' && track.type === 'effect' && onAddEffectClip && media.effectType) {
-        const rect = containerRef.current?.getBoundingClientRect();
-        const x = e.clientX - (rect?.left || 0) + (containerRef.current?.scrollLeft || 0);
-        onAddEffectClip(track.id, Math.max(0, x / state.zoom), media.effectType, media.name);
+        onAddEffectClip(track.id, dropTime, media.effectType, media.name);
         return;
       }
       if (!onAddClip) return;
       if (isCompatible(track.type, media.type)) {
-        onAddClip(media.type, media, track.id);
+        onAddClip(media.type, media, track.id, dropTime);
       } else if (media.type === 'video' && track.type === 'audio') {
-        onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id);
+        onAddClip('audio', { ...media, type: 'audio', name: `🔊 ${media.name}` }, track.id, dropTime);
       }
     } catch {}
   }, [onAddClip, onAddEffectClip, state.zoom]);
