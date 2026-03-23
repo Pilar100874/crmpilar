@@ -23,11 +23,13 @@ interface Props {
   onUpdateContent?: (id: string, content: any) => void;
   onExportSinglePDF?: (artifactType: string) => void;
   onFeedback?: (artifactId: string, feedback: 'positive' | 'negative') => void;
+  onDeleteArtifact?: (id: string) => void;
+  onRegenerateAgent?: (agentType: string) => void;
   runningAgents?: Set<string>;
   agentInfo?: AgentInfoMap;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, runningAgents = new Set(), agentInfo }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, onDeleteArtifact, onRegenerateAgent, runningAgents = new Set(), agentInfo }: Props) {
   const resolvedInfo = agentInfo || AGENT_INFO;
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
