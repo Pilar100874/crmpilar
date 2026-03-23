@@ -1,4 +1,4 @@
-import type { PageSection } from './PageBuilder';
+// Page template themes for auto-generation
 
 export interface PageTemplateTheme {
   id: string;
