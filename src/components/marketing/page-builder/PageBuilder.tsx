@@ -119,7 +119,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-test', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Maria Silva', role: 'CEO, TechCorp', text: 'Aumentamos vendas em 300% nos primeiros 3 meses.' }, { name: 'João Santos', role: 'Fundador, StartupX', text: 'A melhor decisão para nosso negócio.' }] } },
       { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Como funciona o período de teste?', answer: '14 dias grátis sem cartão de crédito.' }, { question: 'Posso cancelar a qualquer momento?', answer: 'Sim, sem taxa de cancelamento.' }] } },
       { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Comece agora mesmo', description: 'Junte-se a mais de 10.000 empresas.', button_text: 'Criar Conta Grátis', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Startup', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
