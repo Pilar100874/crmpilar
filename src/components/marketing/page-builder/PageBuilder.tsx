@@ -92,7 +92,7 @@ const defaultContent: Record<PageSection['type'], Record<string, any>> = {
   objections: { title: 'Tire Suas Dúvidas', items: [{ objection: 'É caro demais', response: 'Nosso produto se paga em menos de 30 dias.' }, { objection: 'Não sei se funciona', response: 'Temos centenas de cases de sucesso comprovados.' }] },
   pricing: { title: 'Planos e Preços', items: [{ name: 'Básico', price: 'R$ 97/mês', features: ['Recurso 1', 'Recurso 2'], highlighted: false }, { name: 'Profissional', price: 'R$ 197/mês', features: ['Tudo do Básico', 'Recurso 3', 'Recurso 4'], highlighted: true }] },
   process_steps: { title: 'Como Funciona', items: [{ step: '1', title: 'Cadastre-se', description: 'Crie sua conta em segundos' }, { step: '2', title: 'Configure', description: 'Personalize conforme suas necessidades' }, { step: '3', title: 'Resultados', description: 'Comece a ver resultados imediatos' }] },
-  cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', style: 'primary' },
+  cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', button_type: 'url', whatsapp_number: '', style: 'primary' },
   faq: { items: [{ question: 'Pergunta?', answer: 'Resposta.' }] },
   gallery: { images: [] },
   footer: { company: 'Sua Empresa', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
