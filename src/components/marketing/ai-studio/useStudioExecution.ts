@@ -800,10 +800,12 @@ export function useStudioExecution() {
         videoPrompt = `${videoPrompt}\n\n[IDIOMA] Todos os textos, legendas, narrações e elementos textuais no vídeo devem estar ${vidLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
         }
         
-        // === PAID VIDEO MODEL PATH ===
-        if (videoModel !== 'free/gif-animated') {
+        // === PAID / AUTO VIDEO MODEL PATH ===
+        // When model is free/gif-animated (default), try auto-detecting a paid provider first
+        const effectiveVideoModel = videoModel === 'free/gif-animated' ? 'auto' : videoModel;
+        {
           nodeResultStore.setResult(node.id, { 
-            text: `🎬 Gerando vídeo com ${videoModel.split('/').pop()}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
+            text: `🎬 Gerando vídeo${effectiveVideoModel === 'auto' ? ' (detectando provedor disponível)' : ` com ${effectiveVideoModel.split('/').pop()}`}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
           });
           
           try {
@@ -813,7 +815,7 @@ export function useStudioExecution() {
 
             const result = await callStudio('generate_video', {
               prompt: videoPrompt,
-              model: videoModel,
+              model: effectiveVideoModel,
               aspectRatio,
               resolution: config.resolution || '1080p',
               duration: config.duration || 5,
@@ -840,9 +842,9 @@ export function useStudioExecution() {
               return {
                 videoUrl: result.videoUrl,
                 ...(result.thumbnailUrl ? { imageUrl: result.thumbnailUrl } : {}),
-                ...(result.provider ? { _provider: result.provider } : { _provider: (videoModel || '').split('/')[0] }),
+                ...(result.provider ? { _provider: result.provider } : { _provider: (effectiveVideoModel || '').split('/')[0] }),
                 ...(result.providerVideoId ? { _providerVideoId: result.providerVideoId } : {}),
-                text: `🎬 Vídeo gerado com ${videoModel.split('/').pop()} para: "${videoPrompt.substring(0, 60)}"`,
+                text: `🎬 Vídeo gerado${result.provider ? ` com ${result.provider}` : ''} para: "${videoPrompt.substring(0, 60)}"`,
                 _isVideo: true,
               };
             } else {
@@ -851,23 +853,30 @@ export function useStudioExecution() {
           } catch (videoErr: any) {
             console.error('[Studio] Video generation failed:', videoErr);
             const msg = videoErr.message || '';
-            const modelLabel = (videoModel || 'desconhecido').split('/').pop();
-            if (msg.includes('hero_frame_failed') || msg.includes('compor a imagem de referência')) {
-              throw new Error(`🖼️ Não foi possível compor a cena com todos os elementos de referência (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.`);
+            const modelLabel = (effectiveVideoModel || 'desconhecido').split('/').pop();
+            
+            // If auto mode found no provider, fall through to free GIF path
+            if (effectiveVideoModel === 'auto' && (msg.includes('Nenhum provedor') || msg.includes('configurado'))) {
+              console.log('[Studio] No paid video provider available, falling back to free GIF animated path');
+              // Fall through to GIF path below
+            } else {
+              if (msg.includes('hero_frame_failed') || msg.includes('compor a imagem de referência')) {
+                throw new Error(`🖼️ Não foi possível compor a cena com todos os elementos de referência (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.`);
+              }
+              if (msg.includes('moderation') || msg.includes('blocked') || msg.includes('content policy') || msg.includes('safety')) {
+                throw new Error(`⚠️ O modelo ${modelLabel} bloqueou o conteúdo por política de segurança. Reformule a descrição com termos mais neutros.`);
+              }
+              if (msg.includes('rate limit') || msg.includes('429') || msg.includes('too many')) {
+                throw new Error(`⏳ O modelo ${modelLabel} está com muitas solicitações. Aguarde alguns segundos e tente novamente.`);
+              }
+              if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
+                throw new Error(`💳 Limite de uso do modelo ${modelLabel} atingido. Verifique seu plano ou créditos.`);
+              }
+              if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão') || msg.includes('excedeu o tempo limite')) {
+                throw new Error(`🌐 O servidor do modelo ${modelLabel} não respondeu a tempo. Isso é um problema temporário do provedor, tente novamente mais tarde.`);
+              }
+              throw new Error(`❌ O servidor do modelo ${modelLabel} retornou um erro. Isso não é um problema no seu prompt. Tente novamente em alguns instantes.`);
             }
-            if (msg.includes('moderation') || msg.includes('blocked') || msg.includes('content policy') || msg.includes('safety')) {
-              throw new Error(`⚠️ O modelo ${modelLabel} bloqueou o conteúdo por política de segurança. Reformule a descrição com termos mais neutros.`);
-            }
-            if (msg.includes('rate limit') || msg.includes('429') || msg.includes('too many')) {
-              throw new Error(`⏳ O modelo ${modelLabel} está com muitas solicitações. Aguarde alguns segundos e tente novamente.`);
-            }
-            if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
-              throw new Error(`💳 Limite de uso do modelo ${modelLabel} atingido. Verifique seu plano ou créditos.`);
-            }
-            if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || msg.includes('ECONNREFUSED') || msg.includes('Falha de conexão') || msg.includes('excedeu o tempo limite')) {
-              throw new Error(`🌐 O servidor do modelo ${modelLabel} não respondeu a tempo. Isso é um problema temporário do provedor, tente novamente mais tarde.`);
-            }
-            throw new Error(`❌ O servidor do modelo ${modelLabel} retornou um erro. Isso não é um problema no seu prompt. Tente novamente em alguns instantes.`);
           }
         }
         
