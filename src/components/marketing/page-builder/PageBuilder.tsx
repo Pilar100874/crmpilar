@@ -3038,7 +3038,25 @@ const PageBuilderEditor: React.FC<{
             <div className="space-y-4">
               <div><Label className="text-xs">Título do Site</Label><Input value={config.title} onChange={e => setConfig(c => ({ ...c, title: e.target.value }))} /></div>
               <div><Label className="text-xs">Descrição (SEO)</Label><Textarea value={config.description} onChange={e => setConfig(c => ({ ...c, description: e.target.value }))} rows={2} /></div>
-              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Cores</p>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">🎨 Paletas Prontas</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {COLOR_PALETTES.map(pal => (
+                  <button
+                    key={pal.name}
+                    title={pal.name}
+                    onClick={() => setConfig(c => ({ ...c, primaryColor: pal.primary, secondaryColor: pal.secondary, accentColor: pal.accent, backgroundColor: pal.bg, textColor: pal.text }))}
+                    className="flex flex-col items-center gap-1 p-1.5 rounded-lg border hover:border-primary transition-all group"
+                  >
+                    <div className="flex gap-0.5">
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.primary }} />
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.accent }} />
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.bg }} />
+                    </div>
+                    <span className="text-[8px] text-muted-foreground group-hover:text-foreground truncate w-full text-center">{pal.name}</span>
+                  </button>
+                ))}
+              </div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Cores Individuais</p>
               <div className="grid grid-cols-2 gap-2">
                 {([['primaryColor', 'Primária'], ['secondaryColor', 'Secundária'], ['accentColor', 'Destaque'], ['backgroundColor', 'Fundo'], ['textColor', 'Texto']] as const).map(([key, label]) => (
                   <div key={key}><Label className="text-[10px]">{label}</Label><div className="flex gap-1"><input type="color" value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="w-8 h-8 rounded border cursor-pointer" /><Input value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="text-xs h-8" /></div></div>
