@@ -2557,10 +2557,33 @@ const AutoGeneratePage: React.FC<{
               ))}
             </div>
             {step === 'done' && (
-              <div className="text-center pt-4">
-                <Badge variant="default" className="text-sm px-4 py-1.5 gap-1.5">
-                  <Sparkles className="h-4 w-4" /> Página pronta para edição!
-                </Badge>
+              <div className="space-y-3 pt-4">
+                {videoError ? (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-3 space-y-2">
+                    <p className="text-sm font-medium text-destructive flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" /> Erro na geração do vídeo
+                    </p>
+                    <p className="text-xs text-muted-foreground">{videoError}</p>
+                    <p className="text-xs text-muted-foreground">A página foi criada sem vídeo. Você pode adicionar um vídeo manualmente no editor.</p>
+                  </div>
+                ) : null}
+                <div className="text-center">
+                  <Badge variant="default" className="text-sm px-4 py-1.5 gap-1.5">
+                    <Sparkles className="h-4 w-4" /> Página pronta para edição!
+                  </Badge>
+                </div>
+                {videoError && (
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => {
+                      // Find the saved page reference — we stored it during generation
+                      // The page was already saved, just need to navigate to editor
+                      onOpenChange(false);
+                    }}
+                  >
+                    Continuar para o Editor →
+                  </Button>
+                )}
               </div>
             )}
           </div>
