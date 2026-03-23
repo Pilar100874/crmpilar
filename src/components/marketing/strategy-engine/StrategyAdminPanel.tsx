@@ -878,7 +878,7 @@ export function StrategyAdminPanel() {
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         onConfirm={handleDeleteConfirm}
-        itemName={deleteTarget ? configs[deleteTarget]?.card?.name : undefined}
+        itemName={deleteTarget ? configsWithCustom[deleteTarget]?.card?.name : undefined}
         isLoading={deleteLoading}
       />
     </div>
