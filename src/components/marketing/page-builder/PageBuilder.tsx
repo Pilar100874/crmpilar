@@ -969,8 +969,12 @@ const AutoGeneratePage: React.FC<{
   const [selectedCategory, setSelectedCategory] = useState<string>('startup');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [step, setStep] = useState<'select' | 'template' | 'generating' | 'done'>('select');
+  const [step, setStep] = useState<'select' | 'template' | 'product' | 'generating' | 'done'>('select');
   const [progress, setProgress] = useState<string[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [productSearch, setProductSearch] = useState('');
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
     if (!open) return;
