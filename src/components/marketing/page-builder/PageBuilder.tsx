@@ -48,6 +48,7 @@ interface PageConfig {
   primaryColor: string; secondaryColor: string; accentColor: string;
   backgroundColor: string; textColor: string;
   fontDisplay: string; fontBody: string; maxWidth: string;
+  whatsappGlobal?: string; siteGlobal?: string;
 }
 
 interface SavedPage {
@@ -890,7 +891,30 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
               <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
             </Card>
           ))}
-          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => {
+              const headline = section.content._parentHeadline || '';
+              const FICTIONAL_TESTIMONIALS = [
+                { name: 'Carlos Mendes', role: 'Empresário', text: 'Implementamos há 3 meses e os resultados superaram todas as expectativas. O ROI foi visível já na primeira semana.', metrics: '+250% ROI' },
+                { name: 'Fernanda Oliveira', role: 'Gerente de Marketing', text: 'A facilidade de uso é impressionante. Minha equipe se adaptou em poucos dias e a produtividade disparou.', metrics: '+180% produtividade' },
+                { name: 'Ricardo Santos', role: 'Diretor Comercial', text: 'Nunca vi uma solução tão completa. Reduziu nosso tempo de operação pela metade e aumentou as vendas significativamente.', metrics: '+340% vendas' },
+                { name: 'Ana Beatriz Costa', role: 'CEO', text: 'O suporte é excepcional. Sempre que precisamos, a equipe estava pronta para nos ajudar. Melhor investimento do ano.', metrics: '5 estrelas' },
+                { name: 'Paulo Henrique Silva', role: 'Coordenador de TI', text: 'A integração foi suave e sem dores de cabeça. Em uma semana já estávamos operando 100%. Recomendo fortemente.', metrics: 'Integração em 7 dias' },
+                { name: 'Mariana Almeida', role: 'Empreendedora', text: 'Comecei sozinha e hoje tenho uma equipe. Essa ferramenta foi fundamental para escalar meu negócio de forma organizada.', metrics: 'De 1 para 12 funcionários' },
+                { name: 'Thiago Barbosa', role: 'Consultor Financeiro', text: 'Reduzi custos operacionais em 40% no primeiro trimestre. O retorno veio muito mais rápido do que imaginava.', metrics: '-40% custos' },
+                { name: 'Juliana Ferreira', role: 'Diretora de Operações', text: 'A automação dos processos nos liberou para focar no que realmente importa: nossos clientes. Transformador.', metrics: '+60% satisfação do cliente' },
+              ];
+              const existing = section.content.items || [];
+              const availableTestimonials = FICTIONAL_TESTIMONIALS.filter(t => !existing.some((e: any) => e.name === t.name));
+              const toAdd = availableTestimonials.slice(0, Math.max(4, 6 - existing.length));
+              if (toAdd.length > 0) {
+                updateContent('items', [...existing, ...toAdd]);
+              }
+            }}>
+              <Wand2 className="h-3 w-3" /> Gerar Fictícios
+            </Button>
+          </div>
         </div>
       );
       case 'social_proof': return (
@@ -1054,13 +1078,17 @@ const COLOR_PALETTES = [
 ];
 
 // ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
-function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
-  if (type === 'whatsapp' && whatsappNumber) {
-    const clean = whatsappNumber.replace(/\D/g, '');
-    const msg = encodeURIComponent(buttonText || 'Olá!');
-    return `https://wa.me/${clean}?text=${msg}`;
+function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string, globalConfig?: { whatsappGlobal?: string; siteGlobal?: string }): string {
+  if (type === 'whatsapp') {
+    const number = whatsappNumber || globalConfig?.whatsappGlobal || '';
+    if (number) {
+      const clean = number.replace(/\D/g, '');
+      const msg = encodeURIComponent(buttonText || 'Olá!');
+      return `https://wa.me/${clean}?text=${msg}`;
+    }
   }
-  return url || '#';
+  const finalUrl = url && url !== '#' ? url : (globalConfig?.siteGlobal || url || '#');
+  return finalUrl || '#';
 }
 
 // ── Preview Renderer ───────────────────────────────────────────────────────────
@@ -1080,7 +1108,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
               <div className="flex-1 text-left">
                 <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
                 <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
-                {c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}
+                {c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, config)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}
               </div>
               <div className="flex-1 w-full">
                 {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl flex items-center justify-center text-sm" style={{ background: primaryText === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: primaryText === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}>Imagem do Hero</div>}
@@ -1089,7 +1117,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
           </div>
         );
       }
-      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: c.background_image ? '#fff' : primaryText }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}</div></div>);
+      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: c.background_image ? '#fff' : primaryText }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, config)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}</div></div>);
     }
     case 'text': return <div className="py-10 px-6 max-w-3xl mx-auto" style={{ textAlign: c.alignment as any }}><p className="text-base leading-relaxed whitespace-pre-wrap">{c.body}</p></div>;
     case 'image': return (<div className="py-8 px-6 max-w-4xl mx-auto text-center">{c.url ? <img src={c.url} alt={c.alt} className="w-full rounded-lg shadow-lg" style={{ objectFit: c.fit }} /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Image className="h-10 w-10 text-muted-foreground" /></div>}{c.caption && <p className="text-sm text-muted-foreground mt-2">{c.caption}</p>}</div>);
@@ -1103,7 +1131,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
       }
       return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     }
-    case 'cta': { const ctaPrimaryText = getContrastText(config.primaryColor); const ctaAccentText = getContrastTextForAccent(config.accentColor); const ctaHref = resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text); return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: ctaPrimaryText }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={ctaHref} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor, color: ctaAccentText }}>{c.button_type === 'whatsapp' ? '💬 ' : ''}{c.button_text}</a></div>); }
+    case 'cta': { const ctaPrimaryText = getContrastText(config.primaryColor); const ctaAccentText = getContrastTextForAccent(config.accentColor); const ctaHref = resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text, config); return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: ctaPrimaryText }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={ctaHref} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor, color: ctaAccentText }}>{c.button_type === 'whatsapp' ? '💬 ' : ''}{c.button_text}</a></div>); }
     case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto" style={{ backgroundColor: config.primaryColor, color: getContrastText(config.primaryColor) }}><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl italic" style={{ backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
     case 'social_proof': { const spText = getContrastText(config.primaryColor); return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: spText }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i} className="flex flex-col items-center justify-start"><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>); }
     case 'guarantee': return (<div className="py-12 px-6 max-w-3xl mx-auto text-center"><div className="p-8 rounded-2xl border-2 border-dashed" style={{ borderColor: config.accentColor }}><span className="text-5xl block mb-4">{c.icon || '🛡️'}</span><h3 className="text-2xl font-bold mb-3">{c.title}</h3><p className="text-base text-muted-foreground mb-2">{c.description}</p>{c.duration && <Badge variant="secondary" className="text-sm">{c.duration}</Badge>}</div></div>);
@@ -1178,9 +1206,9 @@ section{overflow-x:hidden}
         const heroLayout = s.styles?.layout || '';
         if (heroLayout === 'split-left' || heroLayout === 'split-right') {
           const isRight = heroLayout === 'split-right';
-          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px;text-align:center"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
+          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px;text-align:center"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
         } else {
-          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div></section>\n`;
+          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div></section>\n`;
         }
         break;
       }
@@ -1210,7 +1238,7 @@ section{overflow-x:hidden}
       case 'features':
         html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid ${cardBrd};background:${cardBg}"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px;color:${cfg.textColor}">${f.title||''}</h3><p style="color:${subtleText};font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'cta':
-        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}</div></section>\n`; break;
+        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}</div></section>\n`; break;
       case 'testimonials':
         html += `<section style="padding:64px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><div class="grid-2">${(c.items||[]).map((t:any)=>`<div style="padding:28px;border-radius:16px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);font-style:italic;text-align:center"><p style="margin-bottom:16px;font-size:1.05rem;line-height:1.7">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.95rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-weight:600;font-style:normal;font-size:.95rem">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'social_proof':
@@ -3086,6 +3114,10 @@ const PageBuilderEditor: React.FC<{
                 </div>
               </div>
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">📱 Links Globais</p>
+              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links da página quando não houver valor específico.</p>
+              <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => setConfig(c => ({ ...c, whatsappGlobal: e.target.value }))} placeholder="5511999999999 (com DDI)" className="text-xs" /><p className="text-[9px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número</p></div>
+              <div><Label className="text-[10px]">🌐 Site / URL Padrão</Label><Input value={config.siteGlobal || ''} onChange={e => setConfig(c => ({ ...c, siteGlobal: e.target.value }))} placeholder="https://seusite.com.br" className="text-xs" /></div>
             </div>
           )}
           {rightPanel === 'agent' && <AgentTextBank />}
