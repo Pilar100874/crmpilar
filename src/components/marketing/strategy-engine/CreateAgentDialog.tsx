@@ -187,10 +187,14 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   };
 
   const handleSubmit = async () => {
-    if (!agentKey.trim()) { toast.error('Informe uma chave para o agente'); return; }
     if (!card.name.trim()) { toast.error('Informe o nome do agente'); return; }
-    if (existingKeys.includes(agentKey)) { toast.error('Já existe um agente com essa chave'); return; }
-    if (!/^[a-z_]+$/.test(agentKey)) { toast.error('A chave deve conter apenas letras minúsculas e _'); return; }
+
+    // Auto-generate key from name
+    const generatedKey = agentKey.trim() || card.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    if (existingKeys.includes(generatedKey)) { toast.error('Já existe um agente com esse nome/chave. Escolha outro nome.'); return; }
+
+    // Auto-calculate ordem based on dependencies
+    const ordem = AGENT_ORDER.length + existingKeys.length + 1;
 
     setSaving(true);
     let schema = {};
