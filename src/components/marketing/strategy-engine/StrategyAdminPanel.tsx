@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
-import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
+import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt, ensureCollaborationDirective } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';

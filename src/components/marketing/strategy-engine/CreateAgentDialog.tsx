@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Loader2, Trash2, Copy, Sparkles, Database, Globe } from 'lucide-react';
 import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from './types';
-import { agentCardToSystemPrompt, AgentCard } from './agent-cards';
+import { agentCardToSystemPrompt, AgentCard, ensureCollaborationDirective } from './agent-cards';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 

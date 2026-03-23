@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ensureCollaborationDirective } from '../agent-cards';
 
 export interface CustomAgent {
   id: string;
