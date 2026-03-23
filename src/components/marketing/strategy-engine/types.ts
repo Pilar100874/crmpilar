@@ -77,6 +77,9 @@ export const AGENT_DEPENDENCIES: Record<string, string[]> = {
   creative: ['funnel'],
   email: ['funnel'],
   reel: ['funnel'],
+  seo: ['positioning'],
+  paid_media: ['creative', 'funnel'],
+  social_media: ['positioning', 'reel'],
 };
 
 /**
