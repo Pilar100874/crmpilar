@@ -47,22 +47,25 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
 
   const createAgent = async (agent: Partial<CustomAgent> & { agent_card_json?: any }) => {
     if (!estabelecimentoId) return null;
+
+    const payload = {
+      estabelecimento_id: estabelecimentoId,
+      agent_key: agent.agent_key!,
+      name: agent.name!,
+      icon: agent.icon || '🤖',
+      color: agent.color || '#8B5CF6',
+      description: agent.description || '',
+      system_prompt: ensureCollaborationDirective(agent.system_prompt || ''),
+      dependencies: agent.dependencies || [],
+      output_schema: agent.output_schema || {},
+      ordem: agent.ordem || 100,
+      agent_card_json: agent.agent_card_json || null,
+      knowledge_base_type: agent.knowledge_base_type || 'internal',
+    };
+
     const { data, error } = await supabase
       .from('strategy_custom_agents')
-      .insert({
-        estabelecimento_id: estabelecimentoId,
-        agent_key: agent.agent_key!,
-        name: agent.name!,
-        icon: agent.icon || '🤖',
-        color: agent.color || '#8B5CF6',
-        description: agent.description || '',
-        system_prompt: agent.system_prompt || '',
-        dependencies: agent.dependencies || [],
-        output_schema: agent.output_schema || {},
-        ordem: agent.ordem || 100,
-        agent_card_json: agent.agent_card_json || null,
-        knowledge_base_type: agent.knowledge_base_type || 'internal',
-      } as any)
+      .insert(payload as any)
       .select()
       .single();
 
