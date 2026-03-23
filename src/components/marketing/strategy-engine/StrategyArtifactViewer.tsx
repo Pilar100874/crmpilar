@@ -246,7 +246,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>{resolvedInfo[selectedArtifact?.tipo || '']?.icon || '📄'}</span>
-              {selectedArtifact?.titulo}
+              {resolvedInfo[selectedArtifact?.tipo || '']?.name || selectedArtifact?.titulo}
               <Badge variant="outline" className="text-xs ml-2">v{selectedArtifact?.version}</Badge>
               {selectedArtifact && getStatusBadge(selectedArtifact.status)}
             </DialogTitle>
