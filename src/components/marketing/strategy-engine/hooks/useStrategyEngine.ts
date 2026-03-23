@@ -896,6 +896,19 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     }
   };
 
+  const deleteArtifact = async (artifactId: string) => {
+    try {
+      await supabase
+        .from('strategy_artifacts')
+        .delete()
+        .eq('id', artifactId);
+      toast.success('Artefato excluído');
+      onRefetch();
+    } catch (err: any) {
+      toast.error(`Erro ao excluir: ${err.message}`);
+    }
+  };
+
   return {
     executeAgent,
     executeAllAgents,
@@ -911,6 +924,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     exportMarkdown,
     exportJSON,
     feedbackArtifact,
+    deleteArtifact,
     runningAgents,
     isPipelineRunning,
     chatLoading
