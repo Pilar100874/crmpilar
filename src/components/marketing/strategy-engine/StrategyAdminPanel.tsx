@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2 } from 'lucide-react';
+import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2, Upload, FileText, X, Database, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditableAgentCard {
