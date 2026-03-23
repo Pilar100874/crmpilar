@@ -821,7 +821,18 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
         <div className="space-y-3">
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="headline" /></div><Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} /></div>
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Descrição</Label><SB t="description" /></div><Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={2} /></div>
-          <div className="grid grid-cols-2 gap-2"><Input value={section.content.button_text} onChange={e => updateContent('button_text', e.target.value)} placeholder="Botão" /><Input value={section.content.button_url} onChange={e => updateContent('button_url', e.target.value)} placeholder="URL" /></div>
+          <div><Label className="text-xs">Texto do Botão</Label><Input value={section.content.button_text} onChange={e => updateContent('button_text', e.target.value)} placeholder="Botão" /></div>
+          <div><Label className="text-xs mb-1 block">Tipo do Botão</Label>
+            <select value={section.content.button_type || 'url'} onChange={e => updateContent('button_type', e.target.value)} className="w-full h-8 rounded-md border bg-background px-2 text-xs">
+              <option value="url">🔗 Link / URL</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+            </select>
+          </div>
+          {(section.content.button_type || 'url') === 'whatsapp' ? (
+            <div><Label className="text-xs">Número WhatsApp</Label><Input value={section.content.whatsapp_number || ''} onChange={e => updateContent('whatsapp_number', e.target.value)} placeholder="5511999999999 (com DDI)" /><p className="text-[10px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número (sem espaços)</p></div>
+          ) : (
+            <div><Label className="text-xs">URL do Botão</Label><Input value={section.content.button_url} onChange={e => updateContent('button_url', e.target.value)} placeholder="https://..." /></div>
+          )}
         </div>
       );
       case 'features': return (
