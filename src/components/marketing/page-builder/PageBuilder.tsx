@@ -1240,6 +1240,7 @@ const PageBuilderLanding: React.FC<{
   const [renameValue, setRenameValue] = useState('');
   const [processing, setProcessing] = useState(false);
   const [previewPage, setPreviewPage] = useState<SavedPage | null>(null);
+  const [showAutoGenerate, setShowAutoGenerate] = useState(false);
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { setLoading(false); return; }
