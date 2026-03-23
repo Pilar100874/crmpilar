@@ -2344,6 +2344,7 @@ const PageBuilderEditor: React.FC<{
   const [isPublished, setIsPublished] = useState(initialPage?.publicado || false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [themeCategoryFilter, setThemeCategoryFilter] = useState(TEMPLATE_CATEGORIES[0]?.id || 'startup');
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
