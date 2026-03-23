@@ -131,6 +131,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setOrdem(AGENT_ORDER.length + existingKeys.length + 1);
     setDependencies([]);
     setAiDescription('');
+    setKnowledgeBaseType('internal');
   };
 
   const handleGenerateWithAI = async () => {
