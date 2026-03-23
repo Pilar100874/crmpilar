@@ -1141,7 +1141,23 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
     case 'process_steps': return (<div className="py-12 px-6 max-w-4xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Como Funciona'}</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6"><div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{item.step}</div><h4 className="font-semibold text-lg mb-2">{item.title}</h4><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     case 'faq': return (<div className="py-12 px-6 max-w-3xl mx-auto space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="border rounded-lg p-4"><h4 className="font-semibold mb-2">{item.question}</h4><p className="text-sm text-muted-foreground">{item.answer}</p></div>))}</div>);
     case 'gallery': return (<div className="py-8 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-2 md:grid-cols-3 gap-3">{(c.images || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-full aspect-square object-cover rounded-lg" />)}</div></div>);
-    case 'footer': return (<div className="py-8 px-6 text-center border-t bg-muted/30"><p className="font-semibold mb-2">{c.company}</p><p className="text-xs text-muted-foreground">{c.copyright}</p></div>);
+    case 'footer': {
+      const fNome = config.empresaNome;
+      const fEnd = config.empresaEndereco;
+      const fTel = config.empresaTelefone;
+      const fWa = config.whatsappGlobal;
+      const fSite = config.siteGlobal;
+      return (<div className="py-8 px-6 text-center border-t bg-muted/30">
+        <p className="font-semibold mb-1">{c.company || fNome || 'Empresa'}</p>
+        {fEnd && <p className="text-xs text-muted-foreground mb-1">📍 {fEnd}</p>}
+        <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-muted-foreground mb-2">
+          {fTel && <span>📞 {fTel}</span>}
+          {fWa && <span>💬 {fWa}</span>}
+          {fSite && <a href={fSite} target="_blank" rel="noopener noreferrer" className="underline">🌐 {fSite}</a>}
+        </div>
+        <p className="text-[10px] text-muted-foreground">{c.copyright}</p>
+      </div>);
+    }
     case 'spacer': return <div style={{ height: `${c.height || 60}px` }} />;
     case 'custom_html': return <div className="py-4 px-6 max-w-4xl mx-auto" dangerouslySetInnerHTML={{ __html: c.code || '' }} />;
     default: return null;
