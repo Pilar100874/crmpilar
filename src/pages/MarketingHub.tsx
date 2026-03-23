@@ -107,6 +107,8 @@ const MarketingHub: React.FC = () => {
         return <ResourceN8nGenerator />;
       case 'railway-env':
         return <RailwayVariables />;
+      case 'page-builder':
+        return <PageBuilder />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
