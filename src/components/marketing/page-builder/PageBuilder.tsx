@@ -436,20 +436,78 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
 // ── Site Builder Agent Viewer ─────────────────────────────────────────────────
 const SiteBuilderAgentViewer: React.FC<{ onImportSections?: (sections: PageSection[], config?: Partial<PageConfig>) => void }> = ({ onImportSections }) => {
   const [result, setResult] = useState<any>(null);
+  const [htmlCompleto, setHtmlCompleto] = useState<string | null>(null);
+  const [artifactHtmlList, setArtifactHtmlList] = useState<{ id: string; html: string; projectName: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
+  const [showHtmlPreview, setShowHtmlPreview] = useState(false);
+  const [previewingHtml, setPreviewingHtml] = useState<string>('');
 
   useEffect(() => {
     (async () => {
       const estabId = localStorage.getItem('estabelecimentoId');
-      if (!estabId) return;
-      const { data } = await supabase.from('strategy_projects').select('strategic_memory').eq('estabelecimento_id', estabId).order('updated_at', { ascending: false }).limit(1).maybeSingle();
-      setResult(((data?.strategic_memory as Record<string, any>) || {}).site_builder || null);
+      if (!estabId) { setLoading(false); return; }
+
+      // Fetch from strategic memory
+      const { data } = await supabase.from('strategy_projects').select('id, nome, strategic_memory, updated_at').eq('estabelecimento_id', estabId).order('updated_at', { ascending: false }).limit(5);
+      const projects = data || [];
+
+      let memoryResult: any = null;
+      let foundHtml: string | null = null;
+      for (const p of projects) {
+        const mem = (p.strategic_memory as Record<string, any>) || {};
+        if (mem.site_builder) {
+          memoryResult = mem.site_builder;
+          if (typeof mem.site_builder.html_completo === 'string' && mem.site_builder.html_completo.length > 50) {
+            foundHtml = mem.site_builder.html_completo;
+          }
+          break;
+        }
+      }
+      setResult(memoryResult);
+      setHtmlCompleto(foundHtml);
+
+      // Fetch from artifacts (tipo = 'site_builder')
+      if (projects.length > 0) {
+        const projectIds = projects.map(p => p.id);
+        const { data: arts } = await supabase.from('strategy_artifacts').select('id, tipo, conteudo, created_at, project_id').in('project_id', projectIds).eq('tipo', 'site_builder').order('created_at', { ascending: false }).limit(10);
+        const htmlItems: typeof artifactHtmlList = [];
+        for (const art of (arts || [])) {
+          const c = art.conteudo as any;
+          if (!c) continue;
+          let html = '';
+          if (typeof c === 'string') html = c;
+          else if (typeof c.html_completo === 'string') html = c.html_completo;
+          else if (typeof c.html === 'string') html = c.html;
+          if (html.length > 50) {
+            const proj = projects.find(p => p.id === art.project_id);
+            htmlItems.push({ id: art.id, html, projectName: proj?.nome || 'Projeto', date: art.created_at });
+          }
+        }
+        setArtifactHtmlList(htmlItems);
+      }
+
       setLoading(false);
     })();
   }, []);
 
-  const handleImport = () => {
+  const handleImportHtml = (html: string) => {
+    if (!onImportSections) return;
+    setImporting(true);
+    const section: PageSection = {
+      id: `html-import-${Date.now()}`,
+      type: 'custom_html',
+      title: 'Site Builder (HTML Completo)',
+      visible: true,
+      styles: {},
+      content: { code: html },
+    };
+    onImportSections([section]);
+    toast.success('HTML completo importado como seção!');
+    setImporting(false);
+  };
+
+  const handleImportSections = () => {
     if (!result || !onImportSections) return;
     setImporting(true);
     try {
@@ -466,17 +524,91 @@ const SiteBuilderAgentViewer: React.FC<{ onImportSections?: (sections: PageSecti
     setImporting(false);
   };
 
+  const handlePreviewHtml = (html: string) => {
+    setPreviewingHtml(html);
+    setShowHtmlPreview(true);
+  };
+
   if (loading) return <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin" /></div>;
-  if (!result) return <p className="text-sm text-muted-foreground text-center py-6">O agente Site Builder ainda não foi executado.</p>;
+
+  const hasAnyContent = result || artifactHtmlList.length > 0;
+  if (!hasAnyContent) return <p className="text-sm text-muted-foreground text-center py-6">O agente Site Builder ainda não foi executado.</p>;
 
   return (
     <div className="space-y-3">
-      {onImportSections && (
-        <Button variant="default" size="sm" className="w-full gap-2" onClick={handleImport} disabled={importing}>
-          {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Importar Seções do Site Builder
-        </Button>
+      {/* Import full HTML from memory */}
+      {htmlCompleto && onImportSections && (
+        <div className="space-y-1.5 p-3 rounded-lg border border-primary/20 bg-primary/5">
+          <p className="text-xs font-semibold flex items-center gap-1.5"><Code className="h-3.5 w-3.5 text-primary" /> HTML Completo (Memória)</p>
+          <p className="text-[10px] text-muted-foreground">HTML gerado pelo Site Builder disponível para importação direta.</p>
+          <div className="flex gap-1.5">
+            <Button variant="default" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => handleImportHtml(htmlCompleto)} disabled={importing}>
+              {importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <FolderInput className="h-3 w-3" />} Importar HTML
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handlePreviewHtml(htmlCompleto)}>
+              <Eye className="h-3 w-3" /> Preview
+            </Button>
+          </div>
+        </div>
       )}
-      <ScrollArea className="h-[350px]"><pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap font-mono">{JSON.stringify(result, null, 2)}</pre></ScrollArea>
+
+      {/* Import from artifacts */}
+      {artifactHtmlList.length > 0 && onImportSections && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase">HTML dos Artefatos</p>
+          {artifactHtmlList.map(item => (
+            <div key={item.id} className="p-2.5 rounded-lg border bg-muted/30 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium truncate">{item.projectName}</p>
+                <span className="text-[10px] text-muted-foreground">{new Date(item.date).toLocaleDateString('pt-BR')}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{(item.html.length / 1024).toFixed(1)} KB de HTML</p>
+              <div className="flex gap-1.5">
+                <Button variant="default" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => handleImportHtml(item.html)} disabled={importing}>
+                  {importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <FolderInput className="h-3 w-3" />} Importar
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handlePreviewHtml(item.html)}>
+                  <Eye className="h-3 w-3" /> Preview
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => { navigator.clipboard.writeText(item.html); toast.success('HTML copiado!'); }}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Structured sections import */}
+      {result && onImportSections && (
+        <>
+          <Separator />
+          <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={handleImportSections} disabled={importing}>
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Importar Seções Estruturadas
+          </Button>
+        </>
+      )}
+
+      {result && (
+        <ScrollArea className="h-[200px]"><pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap font-mono">{JSON.stringify(result, null, 2)}</pre></ScrollArea>
+      )}
+
+      {/* HTML Preview Dialog */}
+      <Dialog open={showHtmlPreview} onOpenChange={setShowHtmlPreview}>
+        <DialogContent className="bg-background max-w-[95vw] h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Preview do HTML — Site Builder
+              <Button variant="outline" size="sm" className="ml-auto h-7 gap-1 text-xs" onClick={() => { navigator.clipboard.writeText(previewingHtml); toast.success('HTML copiado!'); }}>
+                <Copy className="h-3 w-3" /> Copiar HTML
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden rounded border" style={{ height: 'calc(90vh - 80px)' }}>
+            <iframe srcDoc={previewingHtml} className="w-full h-full border-0" sandbox="allow-scripts allow-same-origin" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
