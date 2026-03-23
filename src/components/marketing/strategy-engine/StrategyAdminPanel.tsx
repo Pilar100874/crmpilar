@@ -493,6 +493,8 @@ export function StrategyAdminPanel() {
         active: true,
         saved: false,
         dependencies: AGENT_DEPENDENCIES[agentKey] ?? [],
+        knowledgeBaseType: 'internal',
+        knowledgeBaseFiles: [],
       },
     }));
     toast.info('Agent Card restaurado ao padrão');
