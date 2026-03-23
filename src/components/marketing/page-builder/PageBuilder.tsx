@@ -782,10 +782,79 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
                 <Input value={item.role} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, role: e.target.value }; updateContent('items', items); }} placeholder="Cargo" />
               </div>
               <Textarea value={item.text} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, text: e.target.value }; updateContent('items', items); }} rows={2} placeholder="Depoimento" />
+              {item.metrics && <Input value={item.metrics} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, metrics: e.target.value }; updateContent('items', items); }} placeholder="Resultado/Métrica (ex: +300% vendas)" />}
               <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
             </Card>
           ))}
-          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'social_proof': return (
+        <div className="space-y-3">
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2">
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <Input value={item.number} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, number: e.target.value }; updateContent('items', items); }} placeholder="1000+" className="text-center font-bold" />
+                <Input value={item.label} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, label: e.target.value }; updateContent('items', items); }} placeholder="Clientes" />
+              </div>
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs mt-1" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { number: '100+', label: 'Novo Indicador' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'guarantee': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Ícone</Label><Input value={section.content.icon} onChange={e => updateContent('icon', e.target.value)} /></div>
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="title" /></div><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Descrição</Label><SB t="description" /></div><Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={3} /></div>
+          <div><Label className="text-xs">Duração</Label><Input value={section.content.duration} onChange={e => updateContent('duration', e.target.value)} placeholder="30 dias" /></div>
+        </div>
+      );
+      case 'objections': return (
+        <div className="space-y-3">
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título da Seção</Label><SB t="title" /></div><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2 space-y-1">
+              <Input value={item.objection} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, objection: e.target.value }; updateContent('items', items); }} placeholder="Objeção (ex: É caro)" />
+              <Textarea value={item.response} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, response: e.target.value }; updateContent('items', items); }} rows={2} placeholder="Resposta persuasiva" />
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { objection: 'Nova objeção', response: 'Resposta...' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'pricing': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Título</Label><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2 space-y-1">
+              <div className="grid grid-cols-2 gap-2">
+                <Input value={item.name} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, name: e.target.value }; updateContent('items', items); }} placeholder="Nome do plano" />
+                <Input value={item.price} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, price: e.target.value }; updateContent('items', items); }} placeholder="R$ 97/mês" />
+              </div>
+              <Textarea value={(item.features || []).join('\n')} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, features: e.target.value.split('\n') }; updateContent('items', items); }} rows={3} placeholder="Um recurso por linha" />
+              <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={item.highlighted} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, highlighted: e.target.checked }; updateContent('items', items); }} /> Destacar</label>
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Plano', price: 'R$ 0', features: ['Recurso'], highlighted: false }])}><Plus className="h-3 w-3 mr-1" /> Adicionar Plano</Button>
+        </div>
+      );
+      case 'process_steps': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Título</Label><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2">
+              <div className="grid grid-cols-[40px_1fr] gap-2">
+                <Input value={item.step} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, step: e.target.value }; updateContent('items', items); }} className="text-center font-bold" />
+                <Input value={item.title} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, title: e.target.value }; updateContent('items', items); }} placeholder="Título da etapa" />
+              </div>
+              <Textarea value={item.description} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, description: e.target.value }; updateContent('items', items); }} rows={1} className="mt-1" placeholder="Descrição" />
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs mt-1" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { step: `${(section.content.items || []).length + 1}`, title: 'Nova Etapa', description: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar Etapa</Button>
         </div>
       );
       case 'spacer': return (<div><Label className="text-xs">Altura (px)</Label><Input type="number" value={section.content.height} onChange={e => updateContent('height', e.target.value)} /></div>);
