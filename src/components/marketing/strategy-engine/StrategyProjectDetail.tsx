@@ -178,6 +178,8 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             onReject={rejectArtifact}
             onRevise={reviseArtifact}
             onUpdateContent={updateArtifactContent}
+            onExportSinglePDF={(type) => exportSinglePDF(projectId, type)}
+            onFeedback={feedbackArtifact}
             runningAgents={runningAgents}
             agentInfo={mergedInfo}
           />
