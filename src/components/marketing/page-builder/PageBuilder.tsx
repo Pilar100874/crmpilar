@@ -1085,7 +1085,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
               <div className="flex-1 text-left">
                 <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
                 <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
-                {c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}
+                {c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, config)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}
               </div>
               <div className="flex-1 w-full">
                 {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl flex items-center justify-center text-sm" style={{ background: primaryText === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: primaryText === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}>Imagem do Hero</div>}
