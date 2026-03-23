@@ -1562,9 +1562,122 @@ const AutoGeneratePage: React.FC<{
       content: { body: aboutText, alignment: 'center', _alt_body: aboutAlts }
     });
 
-    // ── 7. Video — generate storyboard with AI if product selected ──
+    // ── 7. Video — use storyboard from Produtor de Vídeo / Roteirista (max 8s), fallback to AI ──
     let videoContent: Record<string, any> = { url: '', poster: '', autoplay: false };
-    if (selectedProd) {
+    const MAX_VIDEO_DURATION = 8; // seconds
+
+    // Helper: parse duration string like "5s", "10 segundos", "3" → number
+    const parseDur = (d: string | number | undefined): number => {
+      if (typeof d === 'number') return d;
+      if (!d) return 2;
+      const m = String(d).match(/(\d+)/);
+      return m ? parseInt(m[1]) : 2;
+    };
+
+    // Try video_producer storyboard first
+    if (videoProd?.storyboard && Array.isArray(videoProd.storyboard) && videoProd.storyboard.length > 0) {
+      addProgress(`🎥 Usando storyboard do Produtor de Vídeo (${videoProd.storyboard.length} cenas)...`);
+      const scenes = videoProd.storyboard;
+      const rawDurations = scenes.map((s: any) => parseDur(s.duracao || s.duracao_estimada));
+      const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
+      const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
+      const adaptedScenes = scenes.map((s: any, i: number) => ({
+        cena: s.cena || `Cena ${i + 1}`,
+        duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
+        descricao_visual: s.descricao_visual || '',
+        naracao: s.naracao || '',
+        movimento_camera: s.movimento_camera || '',
+        enquadramento: s.enquadramento || '',
+        texto_overlay: s.texto_overlay || '',
+        transicao_entrada: s.transicao_entrada || '',
+        transicao_saida: s.transicao_saida || '',
+      }));
+      videoContent = {
+        url: '',
+        poster: mainImageUrl || (selectedProd?.foto_url) || '',
+        autoplay: false,
+        _storyboard: adaptedScenes,
+        _video_prompt: videoProd.conceito_criativo?.tema_visual || '',
+        _headline_overlay: adaptedScenes[0]?.texto_overlay || videoProd.conceito_criativo?.tom_emocional || '',
+        _cta_overlay: adaptedScenes[adaptedScenes.length - 1]?.texto_overlay || '',
+        _audio_direction: videoProd.audio || null,
+        _art_direction: videoProd.direcao_arte || null,
+        _formats: videoProd.formatos || null,
+        _media_suggestion: `🎬 Roteiro do Produtor de Vídeo adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas). Use o Editor de Vídeo ou AI Studio para produzir.`,
+      };
+      addProgress(`✅ Storyboard adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
+    }
+    // Try VSL script
+    else if (vsl && (vsl.hook || vsl.storyboard)) {
+      addProgress('🎬 Usando roteiro do Roteirista de Vídeo (VSL)...');
+      let vslScenes: any[] = [];
+      if (vsl.storyboard && Array.isArray(vsl.storyboard)) {
+        vslScenes = vsl.storyboard;
+      } else {
+        const sectionKeys = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'cta'];
+        vslScenes = sectionKeys
+          .filter(k => vsl[k]?.texto)
+          .map((k, i) => ({
+            cena: `${k.charAt(0).toUpperCase() + k.slice(1)}`,
+            duracao: vsl[k].duracao_estimada || '3s',
+            naracao: (vsl[k].texto || '').slice(0, 200),
+            descricao_visual: '',
+          }));
+      }
+      if (vslScenes.length > 0) {
+        const rawDurations = vslScenes.map((s: any) => parseDur(s.duracao || s.duracao_estimada));
+        const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
+        const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
+        const adaptedScenes = vslScenes.map((s: any, i: number) => ({
+          ...s,
+          duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
+        }));
+        videoContent = {
+          url: '',
+          poster: mainImageUrl || (selectedProd?.foto_url) || '',
+          autoplay: false,
+          _storyboard: adaptedScenes,
+          _video_prompt: vsl.hook?.texto?.slice(0, 100) || '',
+          _headline_overlay: vsl.hook?.texto?.slice(0, 60) || '',
+          _cta_overlay: vsl.cta?.acao_especifica || vsl.cta?.texto?.slice(0, 60) || '',
+          _media_suggestion: `🎬 Roteiro VSL adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas). Use o Editor de Vídeo ou AI Studio.`,
+        };
+        addProgress(`✅ VSL adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
+      }
+    }
+    // Try Reel script
+    else if (reelData?.roteiro || reelData?.script || reelData?.storyboard) {
+      addProgress('📱 Usando roteiro do Roteirista de Reels...');
+      let reelScenes: any[] = [];
+      if (Array.isArray(reelData.storyboard)) reelScenes = reelData.storyboard;
+      else if (Array.isArray(reelData.roteiro)) reelScenes = reelData.roteiro;
+      else if (Array.isArray(reelData.script)) reelScenes = reelData.script;
+      else if (Array.isArray(reelData.cenas)) reelScenes = reelData.cenas;
+
+      if (reelScenes.length > 0) {
+        const rawDurations = reelScenes.map((s: any) => parseDur(s.duracao || s.tempo || '2'));
+        const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
+        const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
+        const adaptedScenes = reelScenes.map((s: any, i: number) => ({
+          cena: s.cena || s.titulo || `Cena ${i + 1}`,
+          duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
+          naracao: s.naracao || s.texto || s.legenda || '',
+          descricao_visual: s.descricao_visual || s.descricao || '',
+        }));
+        videoContent = {
+          url: '',
+          poster: mainImageUrl || '',
+          autoplay: false,
+          _storyboard: adaptedScenes,
+          _video_prompt: reelData.conceito || reelData.tema || '',
+          _headline_overlay: adaptedScenes[0]?.naracao?.slice(0, 60) || '',
+          _media_suggestion: `📱 Roteiro de Reels adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas).`,
+        };
+        addProgress(`✅ Roteiro Reels adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
+      }
+    }
+    // Fallback: AI generation or placeholder
+    else if (selectedProd) {
       addProgress(`🎬 Gerando roteiro de vídeo para "${selectedProd.nome}" com IA...`);
       try {
         const { data: videoResult, error: videoError } = await supabase.functions.invoke('strategy-engine', {
@@ -1574,7 +1687,7 @@ const AutoGeneratePage: React.FC<{
             productName: selectedProd.nome,
             productDescription: selectedProd.descricao || '',
             productImageUrl: selectedProd.foto_url || '',
-            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
+            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}. DURAÇÃO MÁXIMA: ${MAX_VIDEO_DURATION} segundos.`,
           }
         });
         if (!videoError && videoResult?.success && videoResult?.data) {
@@ -1587,7 +1700,7 @@ const AutoGeneratePage: React.FC<{
             _storyboard: vd.storyboard || [],
             _headline_overlay: vd.headline_overlay || '',
             _cta_overlay: vd.cta_overlay || '',
-            _media_suggestion: `🎬 Roteiro gerado pela IA: ${vd.headline_overlay || ''}. Use o AI Creative Studio para produzir o vídeo.`,
+            _media_suggestion: `🎬 Roteiro gerado pela IA (${MAX_VIDEO_DURATION}s): ${vd.headline_overlay || ''}. Use o AI Creative Studio para produzir o vídeo.`,
           };
           addProgress('✅ Roteiro de vídeo gerado com sucesso!');
         } else {
