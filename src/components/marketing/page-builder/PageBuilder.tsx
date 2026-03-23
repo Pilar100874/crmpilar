@@ -1091,6 +1091,9 @@ section{overflow-x:hidden}
 }
 </style></head><body>`;
 
+  const primaryTextHTML = getContrastText(cfg.primaryColor);
+  const accentTextHTML = getContrastTextForAccent(cfg.accentColor);
+
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
