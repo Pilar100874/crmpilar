@@ -388,6 +388,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       ? { title: 11, sub: 9, label: 8.5, body: 8.5, bullet: 8.5, small: 7.5 }
       : { title: 13, sub: 10.5, label: 10, body: 10, bullet: 9.5, small: 8 };
     const lineH = mode === 'resumida' ? 4 : 5;
+    // Max content width for text wrapping to prevent cut-off
+    const maxTextW = cW - 8;
 
     // Shared: render page header + footer
     const renderPageChrome = () => {
