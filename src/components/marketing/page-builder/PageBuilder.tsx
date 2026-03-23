@@ -81,7 +81,7 @@ const SECTION_TEMPLATES: { type: PageSection['type']; label: string; icon: React
 ];
 
 const defaultContent: Record<PageSection['type'], Record<string, any>> = {
-  hero: { headline: 'Título Principal', subheadline: 'Subtítulo descritivo do seu negócio', cta_text: 'Começar Agora', cta_url: '#', background_image: '' },
+  hero: { headline: 'Título Principal', subheadline: 'Subtítulo descritivo do seu negócio', cta_text: 'Começar Agora', cta_url: '#', cta_type: 'url', whatsapp_number: '', background_image: '' },
   text: { body: 'Seu texto aqui...', alignment: 'left' },
   image: { url: '', alt: '', caption: '', fit: 'cover' },
   video: { url: '', poster: '', autoplay: false },
@@ -92,7 +92,7 @@ const defaultContent: Record<PageSection['type'], Record<string, any>> = {
   objections: { title: 'Tire Suas Dúvidas', items: [{ objection: 'É caro demais', response: 'Nosso produto se paga em menos de 30 dias.' }, { objection: 'Não sei se funciona', response: 'Temos centenas de cases de sucesso comprovados.' }] },
   pricing: { title: 'Planos e Preços', items: [{ name: 'Básico', price: 'R$ 97/mês', features: ['Recurso 1', 'Recurso 2'], highlighted: false }, { name: 'Profissional', price: 'R$ 197/mês', features: ['Tudo do Básico', 'Recurso 3', 'Recurso 4'], highlighted: true }] },
   process_steps: { title: 'Como Funciona', items: [{ step: '1', title: 'Cadastre-se', description: 'Crie sua conta em segundos' }, { step: '2', title: 'Configure', description: 'Personalize conforme suas necessidades' }, { step: '3', title: 'Resultados', description: 'Comece a ver resultados imediatos' }] },
-  cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', style: 'primary' },
+  cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', button_type: 'url', whatsapp_number: '', style: 'primary' },
   faq: { items: [{ question: 'Pergunta?', answer: 'Resposta.' }] },
   gallery: { images: [] },
   footer: { company: 'Sua Empresa', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
@@ -787,7 +787,18 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
         <div className="space-y-3">
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="headline" /></div><Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} /></div>
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Subtítulo</Label><SB t="subheadline" /></div><Textarea value={section.content.subheadline} onChange={e => updateContent('subheadline', e.target.value)} rows={2} /></div>
-          <div className="grid grid-cols-2 gap-2"><div><Label className="text-xs">Texto Botão</Label><Input value={section.content.cta_text} onChange={e => updateContent('cta_text', e.target.value)} /></div><div><Label className="text-xs">URL Botão</Label><Input value={section.content.cta_url} onChange={e => updateContent('cta_url', e.target.value)} /></div></div>
+          <div><Label className="text-xs mb-1 block">Tipo do Botão</Label>
+            <select value={section.content.cta_type || 'url'} onChange={e => updateContent('cta_type', e.target.value)} className="w-full h-8 rounded-md border bg-background px-2 text-xs">
+              <option value="url">🔗 Link / URL</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+            </select>
+          </div>
+          {(section.content.cta_type || 'url') === 'whatsapp' ? (
+            <div><Label className="text-xs">Número WhatsApp</Label><Input value={section.content.whatsapp_number || ''} onChange={e => updateContent('whatsapp_number', e.target.value)} placeholder="5511999999999 (com DDI)" /><p className="text-[10px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número (sem espaços)</p></div>
+          ) : (
+            <div><Label className="text-xs">URL do Botão</Label><Input value={section.content.cta_url} onChange={e => updateContent('cta_url', e.target.value)} placeholder="https://..." /></div>
+          )}
+          <div><Label className="text-xs">Texto do Botão</Label><Input value={section.content.cta_text} onChange={e => updateContent('cta_text', e.target.value)} /></div>
           <div><Label className="text-xs">Imagem de Fundo</Label><div className="flex gap-2 mt-1"><Input value={section.content.background_image} onChange={e => updateContent('background_image', e.target.value)} placeholder="URL" className="flex-1" /><Button variant="outline" size="sm" onClick={() => openMediaPicker('background_image')}><Image className="h-4 w-4" /></Button></div></div>
         </div>
       );
@@ -810,7 +821,18 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
         <div className="space-y-3">
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="headline" /></div><Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} /></div>
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Descrição</Label><SB t="description" /></div><Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={2} /></div>
-          <div className="grid grid-cols-2 gap-2"><Input value={section.content.button_text} onChange={e => updateContent('button_text', e.target.value)} placeholder="Botão" /><Input value={section.content.button_url} onChange={e => updateContent('button_url', e.target.value)} placeholder="URL" /></div>
+          <div><Label className="text-xs">Texto do Botão</Label><Input value={section.content.button_text} onChange={e => updateContent('button_text', e.target.value)} placeholder="Botão" /></div>
+          <div><Label className="text-xs mb-1 block">Tipo do Botão</Label>
+            <select value={section.content.button_type || 'url'} onChange={e => updateContent('button_type', e.target.value)} className="w-full h-8 rounded-md border bg-background px-2 text-xs">
+              <option value="url">🔗 Link / URL</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+            </select>
+          </div>
+          {(section.content.button_type || 'url') === 'whatsapp' ? (
+            <div><Label className="text-xs">Número WhatsApp</Label><Input value={section.content.whatsapp_number || ''} onChange={e => updateContent('whatsapp_number', e.target.value)} placeholder="5511999999999 (com DDI)" /><p className="text-[10px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número (sem espaços)</p></div>
+          ) : (
+            <div><Label className="text-xs">URL do Botão</Label><Input value={section.content.button_url} onChange={e => updateContent('button_url', e.target.value)} placeholder="https://..." /></div>
+          )}
         </div>
       );
       case 'features': return (
@@ -990,6 +1012,16 @@ function getContrastTextForAccent(hex: string): string {
   return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
 }
 
+// ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
+function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
+  if (type === 'whatsapp' && whatsappNumber) {
+    const clean = whatsappNumber.replace(/\D/g, '');
+    const msg = encodeURIComponent(buttonText || 'Olá!');
+    return `https://wa.me/${clean}?text=${msg}`;
+  }
+  return url || '#';
+}
+
 // ── Preview Renderer ───────────────────────────────────────────────────────────
 const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = ({ section, config }) => {
   if (!section.visible) return null;
@@ -1007,7 +1039,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
               <div className="flex-1 text-left">
                 <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
                 <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
-                {c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_text}</a>}
+                {c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}
               </div>
               <div className="flex-1 w-full">
                 {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl flex items-center justify-center text-sm" style={{ background: primaryText === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: primaryText === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}>Imagem do Hero</div>}
@@ -1016,7 +1048,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
           </div>
         );
       }
-      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: c.background_image ? '#fff' : primaryText }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_text}</a>}</div></div>);
+      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: c.background_image ? '#fff' : primaryText }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_type === 'whatsapp' ? '💬 ' : ''}{c.cta_text}</a>}</div></div>);
     }
     case 'text': return <div className="py-10 px-6 max-w-3xl mx-auto" style={{ textAlign: c.alignment as any }}><p className="text-base leading-relaxed whitespace-pre-wrap">{c.body}</p></div>;
     case 'image': return (<div className="py-8 px-6 max-w-4xl mx-auto text-center">{c.url ? <img src={c.url} alt={c.alt} className="w-full rounded-lg shadow-lg" style={{ objectFit: c.fit }} /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Image className="h-10 w-10 text-muted-foreground" /></div>}{c.caption && <p className="text-sm text-muted-foreground mt-2">{c.caption}</p>}</div>);
@@ -1030,7 +1062,7 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
       }
       return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     }
-    case 'cta': { const ctaPrimaryText = getContrastText(config.primaryColor); const ctaAccentText = getContrastTextForAccent(config.accentColor); return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: ctaPrimaryText }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor, color: ctaAccentText }}>{c.button_text}</a></div>); }
+    case 'cta': { const ctaPrimaryText = getContrastText(config.primaryColor); const ctaAccentText = getContrastTextForAccent(config.accentColor); const ctaHref = resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text); return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: ctaPrimaryText }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={ctaHref} target="_blank" rel="noopener noreferrer" className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor, color: ctaAccentText }}>{c.button_type === 'whatsapp' ? '💬 ' : ''}{c.button_text}</a></div>); }
     case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
     case 'social_proof': { const spText = getContrastText(config.primaryColor); return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: spText }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i} className="flex flex-col items-center justify-start"><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>); }
     case 'guarantee': return (<div className="py-12 px-6 max-w-3xl mx-auto text-center"><div className="p-8 rounded-2xl border-2 border-dashed" style={{ borderColor: config.accentColor }}><span className="text-5xl block mb-4">{c.icon || '🛡️'}</span><h3 className="text-2xl font-bold mb-3">{c.title}</h3><p className="text-base text-muted-foreground mb-2">{c.description}</p>{c.duration && <Badge variant="secondary" className="text-sm">{c.duration}</Badge>}</div></div>);
@@ -1101,9 +1133,9 @@ section{overflow-x:hidden}
         const heroLayout = s.styles?.layout || '';
         if (heroLayout === 'split-left' || heroLayout === 'split-right') {
           const isRight = heroLayout === 'split-right';
-          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
+          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
         } else {
-          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_text}</a>` : ''}</div></section>\n`;
+          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div></section>\n`;
         }
         break;
       }
@@ -1143,7 +1175,7 @@ section{overflow-x:hidden}
       case 'features':
         html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid #e5e7eb;background:#fff"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px">${f.title||''}</h3><p style="color:#6b7280;font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'cta':
-        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${c.button_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_text}</a>` : ''}</div></section>\n`; break;
+        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}</div></section>\n`; break;
       case 'testimonials':
         html += `<section style="padding:64px 24px;background:#f9fafb"><div class="container"><div class="grid-2">${(c.items||[]).map((t:any)=>`<div style="padding:28px;border-radius:16px;background:#fff;border:1px solid #e5e7eb;font-style:italic"><p style="margin-bottom:16px;font-size:1.05rem;line-height:1.7">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.95rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-weight:600;font-style:normal;font-size:.95rem">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'social_proof':
