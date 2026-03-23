@@ -1347,7 +1347,8 @@ const AutoGeneratePage: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onGenerated: (page: SavedPage) => void;
-}> = ({ open, onOpenChange, onGenerated }) => {
+  globalConfig?: GlobalPageConfig;
+}> = ({ open, onOpenChange, onGenerated, globalConfig: gCfg }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('ft-saas-clean');
@@ -1530,7 +1531,9 @@ const AutoGeneratePage: React.FC<{
         headline: heroHeadline,
         subheadline: heroSub,
         cta_text: heroCta,
-        cta_url: '#contato',
+        cta_type: gCfg?.whatsappGlobal ? 'whatsapp' : 'url',
+        cta_url: gCfg?.siteGlobal || '#contato',
+        whatsapp_number: gCfg?.whatsappGlobal || '',
         background_image: '',
         _alt_headline: headlineAlts,
         _alt_subheadline: subAlts,
@@ -2120,7 +2123,9 @@ const AutoGeneratePage: React.FC<{
         headline: ctaFinalHeadline,
         description: ctaFinalDesc,
         button_text: ctaFinalButton,
-        button_url: '#contato',
+        button_type: gCfg?.whatsappGlobal ? 'whatsapp' : 'url',
+        button_url: gCfg?.siteGlobal || '#contato',
+        whatsapp_number: gCfg?.whatsappGlobal || '',
         _alt_headline: ctaHAlts,
         _alt_description: ctaDAlts,
         _alt_button_text: ctaAlts,
@@ -2128,7 +2133,7 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 15. Footer ──
-    const businessName = project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
+    const businessName = gCfg?.empresaNome || project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
       content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
@@ -2163,6 +2168,13 @@ const AutoGeneratePage: React.FC<{
         favicon: '', primaryColor, secondaryColor: '#1e293b',
         accentColor, backgroundColor: bgColor, textColor: txtColor,
         fontDisplay, fontBody: fontDisplay, maxWidth,
+        ...(gCfg ? {
+          empresaNome: gCfg.empresaNome || '',
+          empresaEndereco: gCfg.empresaEndereco || '',
+          empresaTelefone: gCfg.empresaTelefone || '',
+          whatsappGlobal: gCfg.whatsappGlobal || '',
+          siteGlobal: gCfg.siteGlobal || '',
+        } : {}),
       } as any,
       estabelecimento_id: estabId,
       publicado: false,
@@ -2555,6 +2567,28 @@ const AGENT_INFO_MAP: Record<string, { name: string; icon: string }> = {
 };
 
 // ── Project Listing (Landing) ──────────────────────────────────────────────────
+const GLOBAL_CONFIG_KEY = 'pagebuilder_global_config';
+
+interface GlobalPageConfig {
+  empresaNome: string;
+  empresaEndereco: string;
+  empresaTelefone: string;
+  whatsappGlobal: string;
+  siteGlobal: string;
+}
+
+const loadGlobalConfig = (): GlobalPageConfig => {
+  try {
+    const raw = localStorage.getItem(GLOBAL_CONFIG_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { empresaNome: '', empresaEndereco: '', empresaTelefone: '', whatsappGlobal: '', siteGlobal: '' };
+};
+
+const saveGlobalConfig = (cfg: GlobalPageConfig) => {
+  localStorage.setItem(GLOBAL_CONFIG_KEY, JSON.stringify(cfg));
+};
+
 const PageBuilderLanding: React.FC<{
   onOpen: (page: SavedPage) => void;
   onCreateNew: () => void;
@@ -2566,6 +2600,17 @@ const PageBuilderLanding: React.FC<{
   const [processing, setProcessing] = useState(false);
   const [previewPage, setPreviewPage] = useState<SavedPage | null>(null);
   const [showAutoGenerate, setShowAutoGenerate] = useState(false);
+  const [globalConfig, setGlobalConfig] = useState<GlobalPageConfig>(loadGlobalConfig);
+  const [showGlobalConfig, setShowGlobalConfig] = useState(false);
+
+  const updateGlobalConfig = (updates: Partial<GlobalPageConfig>) => {
+    setGlobalConfig(prev => {
+      const next = { ...prev, ...updates };
+      saveGlobalConfig(next);
+      return next;
+    });
+  };
+
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { setLoading(false); return; }
@@ -2665,6 +2710,48 @@ const PageBuilderLanding: React.FC<{
           <Button onClick={onCreateNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Página</Button>
         </div>
       </div>
+
+      {/* Global Config */}
+      <Card className="overflow-hidden">
+        <button
+          onClick={() => setShowGlobalConfig(!showGlobalConfig)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Configurações Globais</span>
+            <span className="text-[10px] text-muted-foreground">(Empresa, WhatsApp, Site — usados em todas as páginas)</span>
+          </div>
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showGlobalConfig && "rotate-180")} />
+        </button>
+        {showGlobalConfig && (
+          <div className="px-4 pb-4 pt-1 border-t">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mt-2">
+              <div>
+                <Label className="text-[10px] text-muted-foreground">🏷️ Nome da Empresa</Label>
+                <Input value={globalConfig.empresaNome} onChange={e => updateGlobalConfig({ empresaNome: e.target.value })} placeholder="Minha Empresa Ltda." className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">📍 Endereço</Label>
+                <Input value={globalConfig.empresaEndereco} onChange={e => updateGlobalConfig({ empresaEndereco: e.target.value })} placeholder="Rua Exemplo, 123 - Cidade/UF" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">📞 Telefone</Label>
+                <Input value={globalConfig.empresaTelefone} onChange={e => updateGlobalConfig({ empresaTelefone: e.target.value })} placeholder="(11) 3000-0000" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">💬 WhatsApp</Label>
+                <Input value={globalConfig.whatsappGlobal} onChange={e => updateGlobalConfig({ whatsappGlobal: e.target.value })} placeholder="5511999999999" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">🌐 Site / URL</Label>
+                <Input value={globalConfig.siteGlobal} onChange={e => updateGlobalConfig({ siteGlobal: e.target.value })} placeholder="https://seusite.com.br" className="text-xs h-8 mt-0.5" />
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-2">Estes dados serão aplicados automaticamente no rodapé e nos botões/links ao gerar páginas automáticas.</p>
+          </div>
+        )}
+      </Card>
 
       {pages.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-16 text-center">
@@ -2805,6 +2892,7 @@ const PageBuilderLanding: React.FC<{
       <AutoGeneratePage
         open={showAutoGenerate}
         onOpenChange={setShowAutoGenerate}
+        globalConfig={globalConfig}
         onGenerated={(page) => {
           onOpen(page);
         }}
@@ -2820,11 +2908,18 @@ const PageBuilderEditor: React.FC<{
 }> = ({ initialPage, onBack }) => {
   const [sections, setSections] = useState<PageSection[]>((initialPage?.sections as any[]) || []);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [config, setConfig] = useState<PageConfig>({
-    title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
-    accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
-    fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
-    ...(initialPage?.config as any || {}),
+  const savedGlobal = loadGlobalConfig();
+  const [config, setConfig] = useState<PageConfig>(() => {
+    const base: PageConfig = {
+      title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
+      accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
+      fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
+      empresaNome: savedGlobal.empresaNome, empresaEndereco: savedGlobal.empresaEndereco,
+      empresaTelefone: savedGlobal.empresaTelefone, whatsappGlobal: savedGlobal.whatsappGlobal,
+      siteGlobal: savedGlobal.siteGlobal,
+      ...(initialPage?.config as any || {}),
+    };
+    return base;
   });
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFullscreen, setIsFullscreen] = useState(false);
