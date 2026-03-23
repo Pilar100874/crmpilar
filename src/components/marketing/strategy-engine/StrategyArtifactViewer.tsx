@@ -231,28 +231,34 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                   </div>
                 )}
 
-                {/* Approve / Reject / Revise */}
+                {/* Delete / Regenerate */}
                 <div className="flex items-center gap-1.5 border-t pt-2">
-                  {artifact.status !== 'approved' && (
-                    <Button size="sm" variant="outline" className="text-green-600 border-green-500/30 hover:bg-green-500/10" onClick={() => onApprove?.(artifact.id)}>
-                      <Check className="h-3.5 w-3.5 mr-1" />
-                      Aprovar
+                  {onDeleteArtifact && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                      onClick={() => {
+                        if (window.confirm('Tem certeza que deseja excluir este artefato?')) {
+                          onDeleteArtifact(artifact.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Excluir
                     </Button>
                   )}
-                  {artifact.status !== 'rejected' && (
-                    <Button size="sm" variant="outline" className="text-red-600 border-red-500/30 hover:bg-red-500/10" onClick={() => onReject?.(artifact.id)}>
-                      <X className="h-3.5 w-3.5 mr-1" />
-                      Rejeitar
+                  {onRegenerateAgent && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onRegenerateAgent(artifact.tipo)}
+                      disabled={runningAgents.has(artifact.tipo)}
+                    >
+                      {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1" />}
+                      Gerar Novamente
                     </Button>
                   )}
-                  <Button
-                    size="sm" variant="outline"
-                    onClick={() => onRevise?.(artifact.id, artifact.tipo)}
-                    disabled={runningAgents.has(artifact.tipo)}
-                  >
-                    {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
-                    Revisar
-                  </Button>
                 </div>
 
                 {/* Validation scores inline */}
