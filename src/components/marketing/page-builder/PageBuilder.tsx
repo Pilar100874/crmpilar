@@ -3095,9 +3095,11 @@ const PageBuilderEditor: React.FC<{
       </Dialog>
 
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="bg-background max-w-[95vw] h-[90vh]">
+        <DialogContent className="bg-background max-w-[95vw] h-[90vh] flex flex-col">
           <DialogHeader><DialogTitle>Preview</DialogTitle></DialogHeader>
-          <iframe srcDoc={generateHTML()} className="w-full flex-1 rounded border" style={{ height: 'calc(90vh - 80px)' }} />
+          <div className="flex-1 min-h-0">
+            <PreviewIframe sections={sections} config={config} />
+          </div>
         </DialogContent>
       </Dialog>
 
