@@ -204,6 +204,17 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
           })}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={() => {
+          if (deleteTarget) deleteProject(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        title="Excluir projeto"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 }
