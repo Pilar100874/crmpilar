@@ -1883,7 +1883,7 @@ const AutoGeneratePage: React.FC<{
           <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                <strong>Passo 2:</strong> Escolha a categoria e o tema visual.
+                <strong>Passo 2:</strong> Escolha o template completo (layout + estilo visual).
               </p>
               <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs gap-1">
                 ← Voltar
@@ -1892,15 +1892,14 @@ const AutoGeneratePage: React.FC<{
 
             {/* Category Tabs */}
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {TEMPLATE_CATEGORIES.map(cat => (
+              {FULL_TEMPLATE_CATEGORIES.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => {
                     setSelectedCategory(cat.id);
-                    // Auto-select first theme of category if current isn't in it
-                    const currentInCat = cat.themes.find(t => t.id === selectedTemplate);
-                    if (!currentInCat && cat.themes.length > 0) {
-                      setSelectedTemplate(cat.themes[0].id);
+                    const currentInCat = cat.templates.find(t => t.id === selectedTemplate);
+                    if (!currentInCat && cat.templates.length > 0) {
+                      setSelectedTemplate(cat.templates[0].id);
                     }
                   }}
                   className={cn(
@@ -1912,59 +1911,46 @@ const AutoGeneratePage: React.FC<{
                 >
                   <span>{cat.icon}</span>
                   <span>{cat.name}</span>
-                  <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-0.5">{cat.themes.length}</Badge>
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-0.5">{cat.templates.length}</Badge>
                 </button>
               ))}
             </div>
 
-            {/* Theme Grid */}
+            {/* Template Grid with Mini Previews */}
             <ScrollArea className="flex-1 min-h-0 pr-2">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.themes.map(theme => {
-                  const isSelected = selectedTemplate === theme.id;
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates.map(ft => {
+                  const isSelected = selectedTemplate === ft.id;
                   return (
                     <button
-                      key={theme.id}
-                      onClick={() => setSelectedTemplate(theme.id)}
+                      key={ft.id}
+                      onClick={() => setSelectedTemplate(ft.id)}
                       className={cn(
-                        'relative flex flex-col gap-2 rounded-xl border-2 transition-all text-left group overflow-hidden',
+                        'relative flex flex-col rounded-xl border-2 transition-all text-left group overflow-hidden',
                         isSelected
                           ? 'border-primary shadow-lg ring-2 ring-primary/20'
                           : 'border-border hover:border-primary/50 hover:shadow-md'
                       )}
                     >
-                      {/* Preview Gradient Header */}
-                      <div
-                        className="h-20 w-full relative"
-                        style={{ background: theme.preview_gradient }}
-                      >
-                        {/* Simulated page elements */}
-                        <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                          <div className="w-3/4 h-2 rounded-full bg-white/30 mb-1" />
-                          <div className="w-1/2 h-1.5 rounded-full bg-white/20" />
-                          <div className="flex gap-1 mt-2">
-                            <div className="w-8 h-3 rounded" style={{ backgroundColor: theme.config.accentColor || theme.config.primaryColor }} />
-                          </div>
-                        </div>
+                      {/* Mini Preview */}
+                      <div className="h-[140px] w-full overflow-hidden bg-muted/20 relative">
+                        <TemplateMiniPreview template={ft} />
                         {isSelected && (
-                          <div className="absolute top-1.5 right-1.5">
-                            <CheckCircle2 className="h-5 w-5 text-white drop-shadow-lg" />
+                          <div className="absolute top-1.5 right-1.5 z-10">
+                            <CheckCircle2 className="h-5 w-5 text-primary drop-shadow-lg" />
                           </div>
                         )}
-                        <div className="absolute top-1.5 left-1.5 text-lg drop-shadow-lg">{theme.thumbnail}</div>
                       </div>
 
                       {/* Info */}
-                      <div className="px-3 pb-3 space-y-1">
-                        <p className={cn('text-xs font-semibold', isSelected ? 'text-primary' : 'text-foreground')}>{theme.name}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{theme.description}</p>
+                      <div className="px-3 py-2.5 space-y-1">
+                        <p className={cn('text-xs font-semibold', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{ft.description}</p>
                         <div className="flex items-center gap-1 pt-0.5">
-                          {[theme.config.primaryColor, theme.config.accentColor, theme.config.backgroundColor].filter(Boolean).map((c, i) => (
-                            <div key={i} className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
+                          {[ft.config.primaryColor, ft.config.accentColor, ft.config.backgroundColor].filter(Boolean).map((c, i) => (
+                            <div key={i} className="w-3 h-3 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
                           ))}
-                          {theme.config.fontDisplay && (
-                            <span className="text-[9px] text-muted-foreground ml-1">{theme.config.fontDisplay}</span>
-                          )}
+                          <span className="text-[9px] text-muted-foreground ml-1">{ft.sections.length} seções</span>
                         </div>
                       </div>
                     </button>
@@ -1973,19 +1959,18 @@ const AutoGeneratePage: React.FC<{
               </div>
             </ScrollArea>
 
-            {/* Selected Theme Footer */}
+            {/* Selected Template Footer */}
             {(() => {
-              const currentTheme = getThemeById(selectedTemplate);
-              if (!currentTheme) return null;
+              const currentFt = getFullTemplateById(selectedTemplate);
+              if (!currentFt) return null;
               return (
-                <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: currentTheme.preview_gradient }}>
-                  <div className="text-2xl drop-shadow-lg">{currentTheme.thumbnail}</div>
+                <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white drop-shadow-sm">{currentTheme.name}</p>
-                    <p className="text-[10px] text-white/70">{currentTheme.description}</p>
+                    <p className="text-sm font-bold text-white drop-shadow-sm">{currentFt.name}</p>
+                    <p className="text-[10px] text-white/70">{currentFt.description}</p>
                   </div>
                   <div className="flex gap-1">
-                    {[currentTheme.config.primaryColor, currentTheme.config.accentColor].filter(Boolean).map((c, i) => (
+                    {[currentFt.config.primaryColor, currentFt.config.accentColor].filter(Boolean).map((c, i) => (
                       <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
                     ))}
                   </div>
