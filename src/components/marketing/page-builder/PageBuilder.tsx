@@ -1920,12 +1920,15 @@ const AutoGeneratePage: React.FC<{
         } else {
           const errText = await videoGenResponse.text().catch(() => '');
           console.warn('[AutoGen] Video generation failed:', videoGenResponse.status, errText);
-          // Check for specific errors
-          if (videoGenResponse.status === 402) {
-            addProgress('⚠️ Créditos insuficientes no provedor de IA para gerar vídeo. Usando storyboard.');
-          } else if (videoGenResponse.status === 401) {
-            addProgress('⚠️ Chave de API do provedor de vídeo não configurada. Configure em APIs Pagas para gerar vídeos automaticamente.');
-          } else {
+          try {
+            const errJson = JSON.parse(errText);
+            const errMsg = errJson?.error || '';
+            if (errMsg.includes('Nenhum provedor')) {
+              addProgress('⚠️ Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.');
+            } else {
+              addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
+            }
+          } catch {
             addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
           }
         }
