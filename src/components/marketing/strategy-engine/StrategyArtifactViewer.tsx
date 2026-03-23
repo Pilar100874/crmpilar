@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StrategyArtifact, AGENT_INFO } from './types';
 type AgentInfoMap = Record<string, { name: string; icon: string; color: string; description: string }>;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
