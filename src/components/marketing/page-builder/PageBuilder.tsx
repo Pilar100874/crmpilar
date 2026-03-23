@@ -2286,85 +2286,74 @@ const AutoGeneratePage: React.FC<{
               </Button>
             </div>
 
-            {/* Category Tabs */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {FULL_TEMPLATE_CATEGORIES.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    const currentInCat = cat.templates.find(t => t.id === selectedTemplate);
-                    if (!currentInCat && cat.templates.length > 0) {
-                      setSelectedTemplate(cat.templates[0].id);
-                    }
-                  }}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border',
-                    selectedCategory === cat.id
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
-                  <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-0.5">{cat.templates.length}</Badge>
-                </button>
-              ))}
+            {/* Category Dropdown */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Categoria</Label>
+              <Select value={selectedCategory} onValueChange={(val) => {
+                setSelectedCategory(val);
+                const cat = FULL_TEMPLATE_CATEGORIES.find(c => c.id === val);
+                if (cat && cat.templates.length > 0) {
+                  const currentInCat = cat.templates.find(t => t.id === selectedTemplate);
+                  if (!currentInCat) setSelectedTemplate(cat.templates[0].id);
+                }
+              }}>
+                <SelectTrigger className="w-full text-xs">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FULL_TEMPLATE_CATEGORIES.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id} className="text-xs">
+                      {cat.icon} {cat.name} ({cat.templates.length})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Template Grid with Mini Previews */}
-             <ScrollArea className="flex-1 min-h-0 pr-2" style={{ maxHeight: 'calc(100vh - 380px)' }}>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                {FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates.map(ft => {
-                  const isSelected = selectedTemplate === ft.id;
-                  return (
-                    <button
-                      key={ft.id}
-                      onClick={() => setSelectedTemplate(ft.id)}
-                      className={cn(
-                        'relative flex flex-col rounded-lg border-2 transition-all text-left group overflow-hidden',
-                        isSelected
-                          ? 'border-primary shadow-lg ring-2 ring-primary/20'
-                          : 'border-border hover:border-primary/50 hover:shadow-md'
-                      )}
-                    >
-                      <div className="h-[80px] w-full overflow-hidden bg-muted/20 relative">
-                        <TemplateMiniPreview config={ft.config} sectionTypes={ft.sections.map(s => s.type)} />
-                        {isSelected && (
-                          <div className="absolute top-1 right-1 z-10">
-                            <CheckCircle2 className="h-4 w-4 text-primary drop-shadow-lg" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="px-1.5 py-1 space-y-0">
-                        <p className={cn('text-[10px] font-semibold truncate', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
-                        <div className="flex items-center gap-0.5">
+            {/* Template Dropdown */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Template</Label>
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger className="w-full text-xs">
+                  <SelectValue placeholder="Selecione o template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates || []).map(ft => (
+                    <SelectItem key={ft.id} value={ft.id} className="text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-0.5">
                           {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => (
-                            <div key={i} className="w-2 h-2 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
+                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-border" style={{ backgroundColor: c }} />
                           ))}
-                          <span className="text-[7px] text-muted-foreground ml-auto">{ft.sections.length}s</span>
                         </div>
+                        <span>{ft.name}</span>
+                        <span className="text-muted-foreground">({ft.sections.length} seções)</span>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            {/* Selected Template Footer */}
+            {/* Selected Template Preview */}
             {(() => {
               const currentFt = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
               if (!currentFt) return null;
               return (
-                <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white drop-shadow-sm">{currentFt.name}</p>
-                    <p className="text-[10px] text-white/70">{currentFt.description}</p>
+                <div className="rounded-xl border overflow-hidden">
+                  <div className="h-[120px] w-full overflow-hidden bg-muted/20">
+                    <TemplateMiniPreview config={currentFt.config} sectionTypes={currentFt.sections.map(s => s.type)} />
                   </div>
-                  <div className="flex gap-1">
-                    {[currentFt.config.primaryColor, currentFt.config.accentColor].filter(Boolean).map((c, i) => (
-                      <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
-                    ))}
+                  <div className="flex items-center gap-3 p-3" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white drop-shadow-sm">{currentFt.name}</p>
+                      <p className="text-[10px] text-white/70">{currentFt.description}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      {[currentFt.config.primaryColor, currentFt.config.accentColor].filter(Boolean).map((c, i) => (
+                        <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
+                      ))}
+                    </div>
                   </div>
                 </div>
               );
