@@ -62,9 +62,12 @@ export const AGENT_INFO: Record<string, { name: string; icon: string; color: str
   seo: { name: 'SEO & Conteúdo', icon: '🔎', color: '#059669', description: 'Estratégia de SEO e conteúdo orgânico' },
   paid_media: { name: 'Mídia Paga', icon: '💰', color: '#DC2626', description: 'Estrutura de campanhas e tráfego pago' },
   social_media: { name: 'Social Media', icon: '📲', color: '#7C3AED', description: 'Calendário e estratégia de redes sociais' },
+  site_builder: { name: 'Site Builder', icon: '🌐', color: '#0EA5E9', description: 'Criação de site de página única completo' },
+  video_producer: { name: 'Produtor de Vídeo', icon: '🎥', color: '#A855F7', description: 'Direção criativa e storyboard de vídeos' },
+  influencer_content: { name: 'Influencer & Imagens', icon: '🤳', color: '#E11D48', description: 'Conteúdo visual e estratégia com influenciadores' },
 };
 
-export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media'];
+export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media', 'site_builder', 'video_producer', 'influencer_content'];
 
 // Dependency map: each agent lists agents that MUST be completed before it can run
 export const AGENT_DEPENDENCIES: Record<string, string[]> = {
