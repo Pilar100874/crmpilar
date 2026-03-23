@@ -803,6 +803,22 @@ ${kbContent}
 ═══════════════════════════════════════════════════════════════`;
       }
 
+      // Always inject collaboration directive
+      finalSystemPrompt += `
+
+═══════════════════════════════════════════════════════════════
+DIRETIVA DE COLABORAÇÃO OBRIGATÓRIA
+═══════════════════════════════════════════════════════════════
+ANTES de executar qualquer tarefa, você DEVE:
+1. Ler COMPLETAMENTE a memória estratégica compartilhada do projeto
+2. Utilizar os dados gerados por agentes anteriores como base para suas decisões
+3. Garantir coesão estratégica com os artefatos já produzidos
+4. Referenciar explicitamente insights de outros agentes quando relevante
+5. Nunca contradizer posicionamento, ICP ou mecanismo já definidos sem justificativa
+
+Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.
+═══════════════════════════════════════════════════════════════`;
+
       // Create execution record with dependency info
       const { data: execution } = await supabase
         .from('strategy_agent_executions')
