@@ -49,6 +49,7 @@ interface PageConfig {
   backgroundColor: string; textColor: string;
   fontDisplay: string; fontBody: string; maxWidth: string;
   whatsappGlobal?: string; siteGlobal?: string;
+  empresaNome?: string; empresaEndereco?: string; empresaTelefone?: string;
 }
 
 interface SavedPage {
