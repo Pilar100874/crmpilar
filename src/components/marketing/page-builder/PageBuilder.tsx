@@ -2579,8 +2579,7 @@ const AutoGeneratePage: React.FC<{
                   <Button
                     className="w-full gap-2"
                     onClick={() => {
-                      // Find the saved page reference — we stored it during generation
-                      // The page was already saved, just need to navigate to editor
+                      if (savedPageRef) onGenerated(savedPageRef);
                       onOpenChange(false);
                     }}
                   >
