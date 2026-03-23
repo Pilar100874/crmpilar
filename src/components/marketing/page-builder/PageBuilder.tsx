@@ -2599,7 +2599,7 @@ const PageBuilderEditor: React.FC<{
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
             </div>
           )}
-          {rightPanel === 'agent' && <SiteBuilderAgentViewer onImportSections={handleImportFromAgent} />}
+          {rightPanel === 'agent' && <AgentTextBank />}
         </ScrollArea>
       </div>
 
