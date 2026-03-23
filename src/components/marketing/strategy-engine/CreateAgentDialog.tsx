@@ -356,24 +356,20 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
               <FieldSection label="ID">
                 <Input value={card.id} onChange={e => updateCard('id', e.target.value)} className="text-xs h-8" placeholder="agent_id" />
               </FieldSection>
-              <FieldSection label="Name">
+              <FieldSection label="Nome">
                 <Input value={card.name} onChange={e => updateCard('name', e.target.value)} className="text-xs h-8" placeholder="Nome do Agente" />
               </FieldSection>
-              <FieldSection label="Version">
+              <FieldSection label="Versão">
                 <Input value={card.version} onChange={e => updateCard('version', e.target.value)} className="text-xs h-8" />
               </FieldSection>
             </div>
 
-            <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+            <FieldSection label="Papel" hint="Descrição clara do papel do agente no sistema">
               <Textarea value={card.role} onChange={e => updateCard('role', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Especialista em análise de mercado..." />
             </FieldSection>
 
-            <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+            <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
               <Textarea value={card.mission} onChange={e => updateCard('mission', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Gerar relatório detalhado de..." />
-            </FieldSection>
-
-            <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
-              <Input value={card.handoff} onChange={e => updateCard('handoff', e.target.value)} className="text-xs h-8" placeholder="Ex: qa_validator" />
             </FieldSection>
           </TabsContent>
 
