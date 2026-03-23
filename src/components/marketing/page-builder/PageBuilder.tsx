@@ -2729,8 +2729,16 @@ const PageBuilderEditor: React.FC<{
               </div>
               <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Tipografia</p>
               <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-[10px]">Display</Label><Input value={config.fontDisplay} onChange={e => setConfig(c => ({ ...c, fontDisplay: e.target.value }))} className="text-xs" /></div>
-                <div><Label className="text-[10px]">Body</Label><Input value={config.fontBody} onChange={e => setConfig(c => ({ ...c, fontBody: e.target.value }))} className="text-xs" /></div>
+                <div><Label className="text-[10px]">Display (Títulos)</Label>
+                  <select value={config.fontDisplay} onChange={e => setConfig(c => ({ ...c, fontDisplay: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontDisplay }}>
+                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Oswald', 'Playfair Display', 'Merriweather', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Georgia', 'Bebas Neue', 'Archivo', 'Barlow', 'Manrope', 'Lexend', 'Satoshi', 'Cabinet Grotesk'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                  </select>
+                </div>
+                <div><Label className="text-[10px]">Body (Textos)</Label>
+                  <select value={config.fontBody} onChange={e => setConfig(c => ({ ...c, fontBody: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontBody }}>
+                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Plus Jakarta Sans', 'Georgia', 'Barlow', 'Manrope', 'Lexend', 'Merriweather', 'Source Sans Pro', 'Noto Sans', 'IBM Plex Sans', 'Figtree'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                  </select>
+                </div>
               </div>
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
             </div>
