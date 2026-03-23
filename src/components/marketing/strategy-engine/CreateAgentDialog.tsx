@@ -171,6 +171,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
         anti_patterns: data.anti_patterns || [],
         error_handling: data.error_handling || '',
         handoff: data.handoff || '',
+        destino_consumo: data.destino_consumo || [],
       });
 
       toast.success('✨ Agent Card gerado com IA! Revise e ajuste os campos antes de criar.');

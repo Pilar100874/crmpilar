@@ -369,6 +369,7 @@ export function StrategyAdminPanel() {
           anti_patterns: storedCard.anti_patterns || [],
           error_handling: storedCard.error_handling || '',
           handoff: storedCard.handoff || '',
+          destino_consumo: storedCard.destino_consumo || [],
         } : {
           id: ca.agent_key,
           name: ca.name,
