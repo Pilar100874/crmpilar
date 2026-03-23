@@ -38,6 +38,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
   const [editedContent, setEditedContent] = useState<any>(null);
   const [validating, setValidating] = useState<string | null>(null);
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const exportJSON = (artifact: StrategyArtifact) => {
     const blob = new Blob([JSON.stringify(artifact.conteudo, null, 2)], { type: 'application/json' });
