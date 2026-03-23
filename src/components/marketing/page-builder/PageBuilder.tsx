@@ -97,7 +97,7 @@ const defaultContent: Record<PageSection['type'], Record<string, any>> = {
   cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', button_type: 'url', whatsapp_number: '', style: 'primary' },
   faq: { items: [{ question: 'Pergunta?', answer: 'Resposta.' }] },
   gallery: { images: [] },
-  footer: { company: 'Sua Empresa', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
+  footer: { company: '', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
   spacer: { height: '60' },
   custom_html: { code: '<div>Seu HTML aqui</div>' },
 };
