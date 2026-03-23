@@ -2555,6 +2555,28 @@ const AGENT_INFO_MAP: Record<string, { name: string; icon: string }> = {
 };
 
 // ── Project Listing (Landing) ──────────────────────────────────────────────────
+const GLOBAL_CONFIG_KEY = 'pagebuilder_global_config';
+
+interface GlobalPageConfig {
+  empresaNome: string;
+  empresaEndereco: string;
+  empresaTelefone: string;
+  whatsappGlobal: string;
+  siteGlobal: string;
+}
+
+const loadGlobalConfig = (): GlobalPageConfig => {
+  try {
+    const raw = localStorage.getItem(GLOBAL_CONFIG_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { empresaNome: '', empresaEndereco: '', empresaTelefone: '', whatsappGlobal: '', siteGlobal: '' };
+};
+
+const saveGlobalConfig = (cfg: GlobalPageConfig) => {
+  localStorage.setItem(GLOBAL_CONFIG_KEY, JSON.stringify(cfg));
+};
+
 const PageBuilderLanding: React.FC<{
   onOpen: (page: SavedPage) => void;
   onCreateNew: () => void;
@@ -2566,6 +2588,17 @@ const PageBuilderLanding: React.FC<{
   const [processing, setProcessing] = useState(false);
   const [previewPage, setPreviewPage] = useState<SavedPage | null>(null);
   const [showAutoGenerate, setShowAutoGenerate] = useState(false);
+  const [globalConfig, setGlobalConfig] = useState<GlobalPageConfig>(loadGlobalConfig);
+  const [showGlobalConfig, setShowGlobalConfig] = useState(false);
+
+  const updateGlobalConfig = (updates: Partial<GlobalPageConfig>) => {
+    setGlobalConfig(prev => {
+      const next = { ...prev, ...updates };
+      saveGlobalConfig(next);
+      return next;
+    });
+  };
+
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { setLoading(false); return; }
