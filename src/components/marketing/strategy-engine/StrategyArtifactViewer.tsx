@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History } from 'lucide-react';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, ThumbsUp, ThumbsDown, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { ArtifactHistory } from './ArtifactHistory';
@@ -21,11 +21,13 @@ interface Props {
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
+  onExportSinglePDF?: (artifactType: string) => void;
+  onFeedback?: (artifactId: string, feedback: 'positive' | 'negative') => void;
   runningAgents?: Set<string>;
   agentInfo?: AgentInfoMap;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set(), agentInfo }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, runningAgents = new Set(), agentInfo }: Props) {
   const resolvedInfo = agentInfo || AGENT_INFO;
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
@@ -183,19 +185,49 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                     <Download className="h-3.5 w-3.5 mr-1" />
                     MD
                   </Button>
+                  {onExportSinglePDF && (
+                    <Button variant="ghost" size="sm" onClick={() => onExportSinglePDF(artifact.tipo)}>
+                      <FileDown className="h-3.5 w-3.5 mr-1" />
+                      PDF
+                    </Button>
+                  )}
                   <ArtifactABComparison
                     projectId={projectId}
                     artifactType={artifact.tipo}
                     currentContent={artifact.conteudo}
                     onSelectVariation={(content) => {
                       onUpdateContent?.(artifact.id, content);
-                      // Also update local selectedArtifact if it's the same one
                       if (selectedArtifact?.id === artifact.id) {
                         setSelectedArtifact({ ...artifact, conteudo: content });
                       }
                     }}
                   />
                 </div>
+
+                {/* Feedback buttons */}
+                {onFeedback && (
+                  <div className="flex items-center gap-1.5 border-t pt-2">
+                    <span className="text-xs text-muted-foreground mr-1">Avaliar:</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-green-600 hover:bg-green-500/10"
+                      onClick={() => onFeedback(artifact.id, 'positive')}
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+                      Útil
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-600 hover:bg-red-500/10"
+                      onClick={() => onFeedback(artifact.id, 'negative')}
+                    >
+                      <ThumbsDown className="h-3.5 w-3.5 mr-1" />
+                      Melhorar
+                    </Button>
+                  </div>
+                )}
 
                 {/* Approve / Reject / Revise */}
                 <div className="flex items-center gap-1.5 border-t pt-2">

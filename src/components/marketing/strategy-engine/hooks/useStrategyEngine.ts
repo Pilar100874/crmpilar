@@ -854,6 +854,48 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     }
   };
 
+  const exportSinglePDF = async (pid: string, artifactType: string) => {
+    try {
+      const { data: arts } = await supabase
+        .from('strategy_artifacts')
+        .select('*')
+        .eq('project_id', pid)
+        .eq('tipo', artifactType)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (!arts?.length) { toast.error('Nenhum artefato encontrado'); return; }
+
+      const { data: proj } = await supabase
+        .from('strategy_projects')
+        .select('nome')
+        .eq('id', pid)
+        .single();
+
+      const projectName = proj?.nome || 'Projeto';
+      const doc = buildPDF(arts, 'completa', projectName);
+      const agentName = agentInfo[artifactType]?.name || artifactType;
+      doc.save(`${agentName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+      toast.success(`PDF de "${agentName}" exportado!`);
+    } catch (err: any) {
+      toast.error(`Erro ao exportar: ${err.message}`);
+    }
+  };
+
+  const feedbackArtifact = async (artifactId: string, feedback: 'positive' | 'negative') => {
+    try {
+      const metadata = { feedback, timestamp: new Date().toISOString() };
+      await supabase
+        .from('strategy_artifacts')
+        .update({ status: feedback === 'positive' ? 'approved' : 'needs_revision' } as any)
+        .eq('id', artifactId);
+      toast.success(feedback === 'positive' ? '👍 Feedback positivo registrado!' : '👎 Marcado para melhoria');
+      onRefetch();
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    }
+  };
+
   return {
     executeAgent,
     executeAllAgents,
@@ -865,8 +907,10 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     reviseArtifact,
     updateArtifactContent,
     exportPDF,
+    exportSinglePDF,
     exportMarkdown,
     exportJSON,
+    feedbackArtifact,
     runningAgents,
     isPipelineRunning,
     chatLoading

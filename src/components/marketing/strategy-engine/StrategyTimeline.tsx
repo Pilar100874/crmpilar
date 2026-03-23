@@ -119,7 +119,7 @@ export function StrategyTimeline({ executions, onExecuteAgent, onExecuteAll, run
                             {(execution.duration_ms / 1000).toFixed(1)}s
                           </span>
                         )}
-                        {index >= 9 && (
+                        {!Object.keys(AGENT_DEPENDENCIES).includes(agentKey) && (
                           <Badge variant="secondary" className="text-[10px]">Custom</Badge>
                         )}
                       </div>

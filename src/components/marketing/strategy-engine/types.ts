@@ -59,9 +59,12 @@ export const AGENT_INFO: Record<string, { name: string; icon: string; color: str
   creative: { name: 'Criativos', icon: '🎨', color: '#EC4899', description: 'Criativos de anúncios' },
   email: { name: 'Email Marketing', icon: '📧', color: '#14B8A6', description: 'Sequências de email' },
   reel: { name: 'Roteirista de Reels', icon: '📱', color: '#F97316', description: 'Scripts de vídeos curtos' },
+  seo: { name: 'SEO & Conteúdo', icon: '🔎', color: '#059669', description: 'Estratégia de SEO e conteúdo orgânico' },
+  paid_media: { name: 'Mídia Paga', icon: '💰', color: '#DC2626', description: 'Estrutura de campanhas e tráfego pago' },
+  social_media: { name: 'Social Media', icon: '📲', color: '#7C3AED', description: 'Calendário e estratégia de redes sociais' },
 };
 
-export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel'];
+export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media'];
 
 // Dependency map: each agent lists agents that MUST be completed before it can run
 export const AGENT_DEPENDENCIES: Record<string, string[]> = {
@@ -74,6 +77,9 @@ export const AGENT_DEPENDENCIES: Record<string, string[]> = {
   creative: ['funnel'],
   email: ['funnel'],
   reel: ['funnel'],
+  seo: ['positioning'],
+  paid_media: ['creative', 'funnel'],
+  social_media: ['positioning', 'reel'],
 };
 
 /**
