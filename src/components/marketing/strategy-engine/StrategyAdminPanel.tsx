@@ -36,6 +36,7 @@ interface EditableAgentCard {
   anti_patterns: string[];
   error_handling: string;
   handoff: string;
+  destino_consumo: string[];
 }
 
 interface KBFile {
@@ -76,6 +77,7 @@ function agentCardToEditable(card: AgentCard): EditableAgentCard {
     anti_patterns: [...card.anti_patterns],
     error_handling: card.error_handling,
     handoff: card.handoff,
+    destino_consumo: card.destino_consumo ? [...card.destino_consumo] : [],
   };
 }
 
@@ -90,6 +92,7 @@ function editableToSystemPrompt(editable: EditableAgentCard): string {
   const card: AgentCard = {
     ...editable,
     output_schema: schema,
+    destino_consumo: editable.destino_consumo || [],
   };
   return agentCardToSystemPrompt(card);
 }
@@ -303,7 +306,7 @@ export function StrategyAdminPanel() {
         const card = AGENT_CARDS[key];
         const info = AGENT_INFO[key];
         initial[key] = {
-          card: card ? agentCardToEditable(card) : agentCardToEditable({ id: key, name: key, version: '1.0', role: '', mission: '', capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [], reasoning_protocol: [], output_schema: {}, quality_standards: [], anti_patterns: [], error_handling: '', handoff: '' }),
+          card: card ? agentCardToEditable(card) : agentCardToEditable({ id: key, name: key, version: '1.0', role: '', mission: '', capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [], reasoning_protocol: [], output_schema: {}, quality_standards: [], anti_patterns: [], error_handling: '', handoff: '', destino_consumo: [] }),
           active: true,
           saved: true,
           isCustom: false,
@@ -366,6 +369,7 @@ export function StrategyAdminPanel() {
           anti_patterns: storedCard.anti_patterns || [],
           error_handling: storedCard.error_handling || '',
           handoff: storedCard.handoff || '',
+          destino_consumo: storedCard.destino_consumo || [],
         } : {
           id: ca.agent_key,
           name: ca.name,
@@ -382,6 +386,7 @@ export function StrategyAdminPanel() {
           anti_patterns: [],
           error_handling: '',
           handoff: '',
+          destino_consumo: [],
         };
 
         // Only set if not already modified by user in this session
@@ -682,8 +687,32 @@ export function StrategyAdminPanel() {
                             <Textarea value={card.mission} onChange={e => updateCard(agentKey, 'mission', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
 
-                          <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
-                            <Input value={card.handoff} onChange={e => updateCard(agentKey, 'handoff', e.target.value)} className="text-xs h-8" />
+                          <FieldSection label="Destino de Consumo" hint="Selecione os agentes que devem consumir o resultado deste agente">
+                            <div className="flex flex-wrap gap-1">
+                              {allAgentKeys.filter(k => k !== agentKey).map(dest => {
+                                const currentDest = card.destino_consumo || [];
+                                const isSelected = currentDest.includes(dest);
+                                const destIcon = configs[dest]?.icon || AGENT_INFO[dest]?.icon || '🤖';
+                                const destName = configs[dest]?.card?.name?.split(' ')[0] || AGENT_INFO[dest]?.name?.split(' ')[0] || dest;
+                                return (
+                                  <Badge
+                                    key={dest}
+                                    variant={isSelected ? 'default' : 'outline'}
+                                    className="text-[10px] cursor-pointer gap-0.5 hover:opacity-80 transition-opacity"
+                                    onClick={() => {
+                                      const newDest = isSelected
+                                        ? currentDest.filter((d: string) => d !== dest)
+                                        : [...currentDest, dest];
+                                      updateCard(agentKey, 'destino_consumo', newDest);
+                                      // Keep handoff in sync
+                                      updateCard(agentKey, 'handoff', newDest.join(', '));
+                                    }}
+                                  >
+                                    {destIcon} {destName}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
                           </FieldSection>
 
                           <Separator />

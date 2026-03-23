@@ -32,6 +32,7 @@ interface EditableAgentCard {
   anti_patterns: string[];
   error_handling: string;
   handoff: string;
+  destino_consumo: string[];
 }
 
 function editableToSystemPrompt(editable: EditableAgentCard): string {
@@ -81,7 +82,7 @@ const defaultCard: EditableAgentCard = {
   id: '', name: '', version: '1.0', role: '', mission: '',
   capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [],
   reasoning_protocol: [], output_schema: '{}', quality_standards: [], anti_patterns: [],
-  error_handling: '', handoff: '',
+  error_handling: '', handoff: '', destino_consumo: [],
 };
 
 interface Props {
@@ -170,6 +171,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
         anti_patterns: data.anti_patterns || [],
         error_handling: data.error_handling || '',
         handoff: data.handoff || '',
+        destino_consumo: data.destino_consumo || [],
       });
 
       toast.success('✨ Agent Card gerado com IA! Revise e ajuste os campos antes de criar.');
