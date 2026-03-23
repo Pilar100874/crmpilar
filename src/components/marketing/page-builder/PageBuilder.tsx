@@ -1915,9 +1915,12 @@ const AutoGeneratePage: React.FC<{
             videoContent.autoplay = true;
             addProgress('✅ Vídeo gerado com sucesso!');
           } else if (videoGenResult?.result?.error) {
-            addProgress(`⚠️ Não foi possível gerar o vídeo: ${videoGenResult.result.error.substring(0, 100)}`);
+            const errMsg = videoGenResult.result.error.substring(0, 200);
+            addProgress(`❌ Erro na geração do vídeo: ${errMsg}`);
+            setVideoError(errMsg);
           } else {
             addProgress('⚠️ Vídeo não gerado — usando storyboard como referência.');
+            setVideoError('O provedor de vídeo não retornou resultado. Verifique sua configuração de API.');
           }
         } else {
           const errText = await videoGenResponse.text().catch(() => '');
@@ -1926,17 +1929,25 @@ const AutoGeneratePage: React.FC<{
             const errJson = JSON.parse(errText);
             const errMsg = errJson?.error || '';
             if (errMsg.includes('Nenhum provedor')) {
-              addProgress('⚠️ Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.');
+              const msg = 'Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.';
+              addProgress(`❌ ${msg}`);
+              setVideoError(msg);
             } else {
-              addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
+              const msg = errMsg || `Erro HTTP ${videoGenResponse.status}`;
+              addProgress(`❌ Erro na geração de vídeo: ${msg}`);
+              setVideoError(msg);
             }
           } catch {
-            addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
+            const msg = `Erro HTTP ${videoGenResponse.status} na geração de vídeo.`;
+            addProgress(`❌ ${msg}`);
+            setVideoError(msg);
           }
         }
       } catch (videoErr: any) {
         console.warn('[AutoGen] Video generation error:', videoErr);
-        addProgress('⚠️ Timeout ou erro na geração de vídeo — usando storyboard como referência.');
+        const msg = videoErr?.message || 'Timeout ou erro na geração de vídeo.';
+        addProgress(`❌ ${msg}`);
+        setVideoError(msg);
       }
     }
 
