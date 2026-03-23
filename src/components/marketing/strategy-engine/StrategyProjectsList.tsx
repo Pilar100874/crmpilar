@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { useStrategyProjects } from './hooks/useStrategyProjects';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
