@@ -671,10 +671,7 @@ export function StrategyAdminPanel() {
 
                         {/* ─── IDENTITY TAB ─── */}
                         <TabsContent value="identity" className="space-y-3 mt-3">
-                          <div className="grid grid-cols-3 gap-2">
-                            <FieldSection label="ID">
-                              <Input value={card.id} onChange={e => updateCard(agentKey, 'id', e.target.value)} className="text-xs h-8" />
-                            </FieldSection>
+                          <div className="grid grid-cols-2 gap-2">
                             <FieldSection label="Nome">
                               <Input value={card.name} onChange={e => updateCard(agentKey, 'name', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
