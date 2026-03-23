@@ -1577,10 +1577,12 @@ O prompt deve ser em inglês e descrever uma imagem publicitária premium com:
 - Iluminação profissional de estúdio
 - Composição limpa e atraente
 - Estilo de anúncio de alta conversão
+- SEM NENHUM TEXTO, lettering, tipografia ou palavras na imagem
+- A imagem deve ser 100% visual, sem textos sobrepostos
 
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária",
+  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária. IMPORTANT: NO TEXT, NO LETTERS, NO WORDS, NO TYPOGRAPHY, NO CAPTIONS in the image. Pure visual product photography only.",
   "alt_text": "Texto alternativo descritivo em português",
   "suggested_headline": "Headline persuasiva para acompanhar a imagem (PT-BR)"
 }`;
