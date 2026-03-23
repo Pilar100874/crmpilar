@@ -32,7 +32,7 @@ import { CSS } from '@dnd-kit/utilities';
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PageSection {
   id: string;
-  type: 'hero' | 'text' | 'image' | 'video' | 'gallery' | 'cta' | 'features' | 'testimonials' | 'faq' | 'footer' | 'custom_html' | 'spacer';
+  type: 'hero' | 'text' | 'image' | 'video' | 'gallery' | 'cta' | 'features' | 'testimonials' | 'faq' | 'footer' | 'custom_html' | 'spacer' | 'social_proof' | 'guarantee' | 'objections' | 'pricing' | 'process_steps';
   title: string;
   content: Record<string, any>;
   visible: boolean;
