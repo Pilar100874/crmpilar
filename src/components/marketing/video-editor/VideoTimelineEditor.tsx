@@ -28,6 +28,8 @@ import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import AIBridgeVideoDialog from './AIBridgeVideoDialog';
 import { BridgeGenerationManager, useBridgeGenerations } from './BridgeGenerationManager';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { FileVideo, BookOpen } from 'lucide-react';
 
 interface MediaItem {
   type: 'video' | 'audio' | 'image';
@@ -127,6 +129,12 @@ const VideoTimelineEditor: React.FC = () => {
   const [renameValue, setRenameValue] = useState('');
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [lastSavedState, setLastSavedState] = useState<string>('');
+  const [roteiroDialogOpen, setRoteiroDialogOpen] = useState(false);
+  const [roteiroProjects, setRoteiroProjects] = useState<any[]>([]);
+  const [roteiroLoading, setRoteiroLoading] = useState(false);
+  const [selectedRoteiroProjectId, setSelectedRoteiroProjectId] = useState<string | null>(null);
+  const [roteiroArtifacts, setRoteiroArtifacts] = useState<any[]>([]);
+  const [loadingArtifacts, setLoadingArtifacts] = useState(false);
 
   const getCurrentStateHash = useCallback(() => {
     return JSON.stringify({ tracks: state.tracks, clips: state.clips, videoConfig });
@@ -1046,7 +1054,130 @@ const VideoTimelineEditor: React.FC = () => {
     loadProjects();
   }, [currentProjectId, saveProject, loadProjects]);
 
-  // Landing page
+  // ─── Roteiro / Storyboard import ─────────────────────────────
+  const openRoteiroDialog = useCallback(async () => {
+    setRoteiroDialogOpen(true);
+    setRoteiroLoading(true);
+    setSelectedRoteiroProjectId(null);
+    setRoteiroArtifacts([]);
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { setRoteiroLoading(false); return; }
+    const { data } = await supabase
+      .from('strategy_projects')
+      .select('id, nome, created_at')
+      .eq('estabelecimento_id', estabId)
+      .order('created_at', { ascending: false });
+    setRoteiroProjects(data || []);
+    setRoteiroLoading(false);
+  }, []);
+
+  const loadRoteiroArtifacts = useCallback(async (projectId: string) => {
+    setSelectedRoteiroProjectId(projectId);
+    setLoadingArtifacts(true);
+    const { data } = await supabase
+      .from('strategy_artifacts')
+      .select('*')
+      .eq('project_id', projectId)
+      .in('tipo', ['video_producer', 'vsl', 'reel'])
+      .order('created_at', { ascending: false });
+    // Deduplicate: keep latest per tipo
+    const latest = new Map<string, any>();
+    for (const art of (data || [])) {
+      if (!latest.has(art.tipo)) latest.set(art.tipo, art);
+    }
+    setRoteiroArtifacts(Array.from(latest.values()));
+    setLoadingArtifacts(false);
+  }, []);
+
+  const createProjectFromRoteiro = useCallback((artifact: any) => {
+    const content = artifact.conteudo as any;
+    if (!content) { toast.error('Artefato sem conteúdo'); return; }
+
+    const MAX_DURATION = 8; // max 8 seconds
+
+    // Try to extract storyboard scenes
+    let scenes: any[] = [];
+    if (content.storyboard && Array.isArray(content.storyboard)) {
+      scenes = content.storyboard;
+    } else if (content.hook) {
+      // VSL format: sections as scenes
+      const sections = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'bonus', 'garantia', 'escassez', 'cta'];
+      scenes = sections
+        .filter(s => content[s]?.texto)
+        .map((s, i) => ({
+          cena: `Cena ${i + 1} - ${s.charAt(0).toUpperCase() + s.slice(1)}`,
+          descricao_visual: content[s].texto?.slice(0, 200),
+          naracao: content[s].texto?.slice(0, 200),
+          duracao: content[s].duracao_estimada || '5s',
+        }));
+    }
+
+    if (scenes.length === 0) {
+      toast.error('Nenhuma cena encontrada no roteiro');
+      return;
+    }
+
+    // Parse durations & adapt to 8s max
+    const parseDuration = (d: string | number | undefined): number => {
+      if (typeof d === 'number') return d;
+      if (!d) return 2;
+      const match = String(d).match(/(\d+)/);
+      return match ? parseInt(match[1]) : 2;
+    };
+
+    const rawDurations = scenes.map(s => parseDuration(s.duracao || s.duracao_estimada));
+    const totalRaw = rawDurations.reduce((a, b) => a + b, 0);
+    const scale = totalRaw > MAX_DURATION ? MAX_DURATION / totalRaw : 1;
+    const adaptedDurations = rawDurations.map(d => Math.max(0.5, parseFloat((d * scale).toFixed(2))));
+
+    // Reset timeline
+    timeline.updateState({
+      tracks: [...DEFAULT_TRACKS],
+      clips: [],
+      duration: MAX_DURATION,
+      currentTime: 0,
+    });
+
+    // Create image placeholder clips for each scene on the image track
+    const imgTrack = DEFAULT_TRACKS.find(t => t.type === 'image');
+    if (!imgTrack) return;
+
+    let currentTime = 0;
+    scenes.forEach((scene, i) => {
+      const dur = adaptedDurations[i];
+      const sceneName = scene.cena || scene.titulo || `Cena ${i + 1}`;
+      const desc = scene.descricao_visual || scene.naracao || scene.texto_overlay || '';
+      timeline.addClip({
+        trackId: imgTrack.id,
+        type: 'image',
+        name: `📋 ${sceneName}`,
+        startTime: currentTime,
+        duration: dur,
+        trimStart: 0,
+        trimEnd: 0,
+        color: TRACK_COLORS.image,
+        volume: 1,
+        opacity: 1,
+        filters: [],
+        x: 0, y: 0, w: 100, h: 100,
+      });
+      currentTime += dur;
+    });
+
+    // Set project name
+    const projName = roteiroProjects.find(p => p.id === selectedRoteiroProjectId)?.nome || 'Roteiro';
+    setProjectName(`Vídeo - ${projName}`);
+    setCurrentProjectId(null);
+    setLastSavedState('');
+    setRoteiroDialogOpen(false);
+    setShowEditor(true);
+
+    // Build a summary toast
+    const sceneSummary = scenes.map((s, i) => `${i + 1}. ${s.cena || `Cena ${i + 1}`} (${adaptedDurations[i].toFixed(1)}s)`).join('\n');
+    toast.success(`Roteiro importado: ${scenes.length} cenas em ${MAX_DURATION}s`, { description: 'Substitua os placeholders por suas mídias.' });
+  }, [timeline, roteiroProjects, selectedRoteiroProjectId]);
+
+
   if (!showEditor) {
     return (
       <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
@@ -1081,6 +1212,14 @@ const VideoTimelineEditor: React.FC = () => {
               >
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Projeto
+              </Button>
+              <Button
+                variant="outline"
+                onClick={openRoteiroDialog}
+                className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm"
+              >
+                <BookOpen className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                Criar do Roteiro
               </Button>
             </div>
           </motion.div>
@@ -1173,6 +1312,97 @@ const VideoTimelineEditor: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Roteiro import dialog */}
+        <Dialog open={roteiroDialogOpen} onOpenChange={setRoteiroDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Criar Projeto do Roteiro
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Selecione um projeto estratégico e importe o storyboard do Produtor de Vídeo (máx. 8 segundos).
+            </p>
+
+            {roteiroLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : roteiroProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhum projeto estratégico encontrado. Execute o Motor de Estratégia primeiro.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">Selecione o projeto:</p>
+                <ScrollArea className="max-h-[200px]">
+                  <div className="space-y-1">
+                    {roteiroProjects.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => loadRoteiroArtifacts(p.id)}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                          selectedRoteiroProjectId === p.id
+                            ? 'bg-primary/10 border border-primary/30 text-foreground'
+                            : 'hover:bg-muted/50 text-muted-foreground'
+                        }`}
+                      >
+                        <span className="font-medium">{p.nome}</span>
+                        <span className="text-[10px] ml-2 text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                {loadingArtifacts && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+
+                {selectedRoteiroProjectId && !loadingArtifacts && roteiroArtifacts.length === 0 && (
+                  <p className="text-xs text-destructive text-center py-3">
+                    Nenhum roteiro encontrado. Execute o agente Produtor de Vídeo, Roteirista de Vídeo ou Roteirista de Reels primeiro.
+                  </p>
+                )}
+
+                {roteiroArtifacts.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Roteiros disponíveis:</p>
+                    {roteiroArtifacts.map((art) => {
+                      const content = art.conteudo as any;
+                      const sceneCount = content?.storyboard?.length || (content?.hook ? 'VSL' : '?');
+                      const agentLabels: Record<string, string> = {
+                        video_producer: '🎥 Produtor de Vídeo',
+                        vsl: '🎬 Roteirista de Vídeo',
+                        reel: '📱 Roteirista de Reels',
+                      };
+                      return (
+                        <button
+                          key={art.id}
+                          onClick={() => createProjectFromRoteiro(art)}
+                          className="w-full text-left px-3 py-2.5 rounded-md border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{agentLabels[art.tipo] || art.titulo}</span>
+                            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {typeof sceneCount === 'number' ? `${sceneCount} cenas` : sceneCount}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                            {content?.conceito_criativo?.tema_visual || content?.hook?.texto?.slice(0, 80) || art.titulo}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
