@@ -1600,7 +1600,7 @@ Retorne EXCLUSIVAMENTE um JSON:
           messages.push({
             role: 'user',
             content: [
-              { type: 'text', text: `Create a professional advertising image for this product. NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. Pure visual product photography only. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. No text or words in the image.`}` },
+              { type: 'text', text: `Place this EXACT product in a professional advertising scene. CRITICAL RULES: 1) DO NOT modify, redesign, or alter the product appearance, packaging, label, colors, shape, or branding in ANY way. The product must look IDENTICAL to the reference image. 2) Only change the BACKGROUND and ENVIRONMENT around the product (lighting, surface, props, atmosphere). 3) NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. 4) Keep the product as the hero/focal point with premium studio lighting. ${promptData?.image_prompt || `Professional product photography of "${productName}" with studio lighting and clean composition.`}` },
               { type: 'image_url', image_url: { url: productImageUrl } }
             ]
           });
