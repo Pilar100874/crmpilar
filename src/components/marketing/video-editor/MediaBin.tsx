@@ -316,7 +316,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                     <div className="w-12 h-9 rounded bg-muted shrink-0 overflow-hidden relative">
                       {media.type === 'video' ? (
                         <>
-                          <video src={media.src} className="w-full h-full object-cover" muted preload="metadata" />
+                          <VideoThumbnail src={media.src} thumbnail={media.thumbnail} />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <Play className="h-3 w-3 text-white drop-shadow" />
                           </div>
