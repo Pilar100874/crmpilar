@@ -1882,8 +1882,8 @@ const AutoGeneratePage: React.FC<{
           videoGenPrompt = `Create a short cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Theme: ${videoPromptBase}. Style: professional advertising, clean visuals. No text overlays.`;
         }
 
-        // Determine model - try google/veo first (supports image-to-video)
-        const videoModel = mainImageUrl ? 'google/veo-3.1' : 'google/veo-3.1';
+        // Use auto mode to let backend pick the best available provider
+        const videoModel = 'auto';
         
         const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
           method: 'POST',
@@ -1920,12 +1920,15 @@ const AutoGeneratePage: React.FC<{
         } else {
           const errText = await videoGenResponse.text().catch(() => '');
           console.warn('[AutoGen] Video generation failed:', videoGenResponse.status, errText);
-          // Check for specific errors
-          if (videoGenResponse.status === 402) {
-            addProgress('⚠️ Créditos insuficientes no provedor de IA para gerar vídeo. Usando storyboard.');
-          } else if (videoGenResponse.status === 401) {
-            addProgress('⚠️ Chave de API do provedor de vídeo não configurada. Configure em APIs Pagas para gerar vídeos automaticamente.');
-          } else {
+          try {
+            const errJson = JSON.parse(errText);
+            const errMsg = errJson?.error || '';
+            if (errMsg.includes('Nenhum provedor')) {
+              addProgress('⚠️ Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.');
+            } else {
+              addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
+            }
+          } catch {
             addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
           }
         }
