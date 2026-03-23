@@ -35,8 +35,9 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
 
   const {
     executeAgent, executeAllAgents, runPipeline, sendChatMessage,
-    exportPDF, exportMarkdown, exportJSON,
+    exportPDF, exportSinglePDF, exportMarkdown, exportJSON,
     approveArtifact, rejectArtifact, reviseArtifact, updateArtifactContent,
+    feedbackArtifact,
     runningAgents, isPipelineRunning, chatLoading
   } = useStrategyEngine(projectId, refetch, mergedOrder, mergedInfo);
 
