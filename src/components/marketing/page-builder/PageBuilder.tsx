@@ -993,24 +993,63 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
   );
 };
 
-// ── Contrast helper ────────────────────────────────────────────────────────────
-function getContrastText(hex: string): string {
+// ── Contrast helpers ────────────────────────────────────────────────────────────
+function hexToLuminance(hex: string): number {
   const c = hex.replace('#', '');
   const r = parseInt(c.substring(0, 2), 16) || 0;
   const g = parseInt(c.substring(2, 4), 16) || 0;
   const b = parseInt(c.substring(4, 6), 16) || 0;
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function getContrastText(hex: string): string {
+  return hexToLuminance(hex) > 0.55 ? '#1a1a1a' : '#ffffff';
 }
 
 function getContrastTextForAccent(hex: string): string {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.substring(0, 2), 16) || 0;
-  const g = parseInt(c.substring(2, 4), 16) || 0;
-  const b = parseInt(c.substring(4, 6), 16) || 0;
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  return hexToLuminance(hex) > 0.55 ? '#1a1a1a' : '#ffffff';
 }
+
+// Get a card background that contrasts with the page background
+function getCardBg(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#ffffff' : '#1e293b';
+}
+
+function getCardBorder(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#e5e7eb' : '#334155';
+}
+
+function getSubtleText(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#6b7280' : '#94a3b8';
+}
+
+function getSectionAltBg(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#f9fafb' : '#0f172a';
+}
+
+// ── Pre-defined Color Palettes ─────────────────────────────────────────────────
+const COLOR_PALETTES = [
+  { name: 'Índigo Pro', primary: '#4f46e5', accent: '#06b6d4', bg: '#ffffff', text: '#1e293b', secondary: '#6366f1' },
+  { name: 'Esmeralda', primary: '#059669', accent: '#fbbf24', bg: '#ffffff', text: '#064e3b', secondary: '#10b981' },
+  { name: 'Sunset', primary: '#ea580c', accent: '#facc15', bg: '#fffbeb', text: '#431407', secondary: '#f97316' },
+  { name: 'Dark Elegance', primary: '#6366f1', accent: '#f472b6', bg: '#0f172a', text: '#e2e8f0', secondary: '#818cf8' },
+  { name: 'Midnight Blue', primary: '#1e40af', accent: '#38bdf8', bg: '#0a1628', text: '#e0f2fe', secondary: '#3b82f6' },
+  { name: 'Ruby', primary: '#dc2626', accent: '#fbbf24', bg: '#ffffff', text: '#1c1917', secondary: '#ef4444' },
+  { name: 'Royal Purple', primary: '#7c3aed', accent: '#f59e0b', bg: '#faf5ff', text: '#1e1b4b', secondary: '#8b5cf6' },
+  { name: 'Forest', primary: '#166534', accent: '#a3e635', bg: '#f0fdf4', text: '#14532d', secondary: '#22c55e' },
+  { name: 'Ocean Dark', primary: '#0ea5e9', accent: '#f97316', bg: '#0c1222', text: '#e0f2fe', secondary: '#38bdf8' },
+  { name: 'Coral Clean', primary: '#f43f5e', accent: '#06b6d4', bg: '#fff1f2', text: '#1c1917', secondary: '#fb7185' },
+  { name: 'Carbon', primary: '#18181b', accent: '#22d3ee', bg: '#09090b', text: '#fafafa', secondary: '#3f3f46' },
+  { name: 'Warm Earth', primary: '#92400e', accent: '#d97706', bg: '#fffbeb', text: '#451a03', secondary: '#b45309' },
+  { name: 'Teal Minimal', primary: '#0d9488', accent: '#f59e0b', bg: '#ffffff', text: '#134e4a', secondary: '#14b8a6' },
+  { name: 'Neon Night', primary: '#8b5cf6', accent: '#22d3ee', bg: '#030712', text: '#f8fafc', secondary: '#a78bfa' },
+  { name: 'Slate Pro', primary: '#334155', accent: '#3b82f6', bg: '#f8fafc', text: '#0f172a', secondary: '#475569' },
+  { name: 'Rose Gold', primary: '#be185d', accent: '#fbbf24', bg: '#fff1f2', text: '#1c1917', secondary: '#ec4899' },
+];
 
 // ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
 function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
@@ -1125,7 +1164,11 @@ section{overflow-x:hidden}
 
   const primaryTextHTML = getContrastText(cfg.primaryColor);
   const accentTextHTML = getContrastTextForAccent(cfg.accentColor);
-
+  const pageBgText = getContrastText(cfg.backgroundColor);
+  const cardBg = getCardBg(cfg.backgroundColor);
+  const cardBrd = getCardBorder(cfg.backgroundColor);
+  const subtleText = getSubtleText(cfg.backgroundColor);
+  const altBg = getSectionAltBg(cfg.backgroundColor);
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
@@ -1163,7 +1206,7 @@ section{overflow-x:hidden}
         break;
       }
       case 'features':
-        html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid #e5e7eb;background:#fff"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px">${f.title||''}</h3><p style="color:#6b7280;font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid ${cardBrd};background:${cardBg}"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px;color:${cfg.textColor}">${f.title||''}</h3><p style="color:${subtleText};font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'cta':
         html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}</div></section>\n`; break;
       case 'testimonials':
@@ -1171,19 +1214,19 @@ section{overflow-x:hidden}
       case 'social_proof':
         html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><div class="grid-4" style="align-items:start;justify-items:center">${(c.items||[]).map((item:any)=>`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;width:100%;max-width:220px;margin:0 auto"><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px;text-align:center;width:100%">${item.number||''}</p><p style="font-size:.95rem;opacity:.8;text-align:center;width:100%;margin:0 auto">${item.label||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'guarantee':
-        html += `<section style="padding:64px 24px;text-align:center"><div class="container" style="max-width:640px"><div style="padding:48px;border:2px dashed ${cfg.accentColor};border-radius:20px"><span style="font-size:3.5rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.8rem;font-weight:700;margin-bottom:12px">${c.title||''}</h3><p style="font-size:1.05rem;color:#6b7280;margin-bottom:12px;line-height:1.7">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:6px 16px;background:#f3f4f6;border-radius:24px;font-size:.95rem;font-weight:500">${c.duration}</span>`:''}</div></div></section>\n`; break;
+        html += `<section style="padding:64px 24px;text-align:center"><div class="container" style="max-width:640px"><div style="padding:48px;border:2px dashed ${cfg.accentColor};border-radius:20px;background:${cardBg}"><span style="font-size:3.5rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.8rem;font-weight:700;margin-bottom:12px;color:${cfg.textColor}">${c.title||''}</h3><p style="font-size:1.05rem;color:${subtleText};margin-bottom:12px;line-height:1.7">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:6px 16px;background:${altBg};border-radius:24px;font-size:.95rem;font-weight:500;color:${cfg.textColor}">${c.duration}</span>`:''}</div></div></section>\n`; break;
       case 'objections':
-        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||''}</h3>${(c.items||[]).map((item:any)=>`<div style="padding:24px;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:16px;text-align:center"><p style="font-weight:600;color:#dc2626;margin-bottom:10px;font-size:1.05rem">❌ "${item.objection||''}"</p><p style="color:#374151;line-height:1.7">✅ ${item.response||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||''}</h3>${(c.items||[]).map((item:any)=>`<div style="padding:24px;border:1px solid ${cardBrd};border-radius:16px;margin-bottom:16px;text-align:center;background:${cardBg}"><p style="font-weight:600;color:#dc2626;margin-bottom:10px;font-size:1.05rem">❌ "${item.objection||''}"</p><p style="color:${cfg.textColor};line-height:1.7">✅ ${item.response||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'pricing':
-        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||'Planos'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="padding:36px;border:${item.highlighted?`2px solid ${cfg.primaryColor}`:'1px solid #e5e7eb'};border-radius:20px;text-align:center;${item.highlighted?'box-shadow:0 10px 40px rgba(0,0,0,.1);transform:scale(1.03)':''}"><h4 style="font-weight:600;font-size:1.3rem;margin-bottom:8px">${item.name||''}</h4><p style="font-size:2.2rem;font-weight:700;color:${cfg.primaryColor};margin-bottom:20px">${item.price||''}</p><ul style="list-style:none;text-align:center;font-size:.95rem">${(item.features||[]).map((f:string)=>`<li style="padding:6px 0;border-bottom:1px solid #f3f4f6">✅ ${f}</li>`).join('')}</ul></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||'Planos'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="padding:36px;border:${item.highlighted?`2px solid ${cfg.primaryColor}`:`1px solid ${cardBrd}`};border-radius:20px;text-align:center;background:${cardBg};${item.highlighted?'box-shadow:0 10px 40px rgba(0,0,0,.15);transform:scale(1.03)':''}"><h4 style="font-weight:600;font-size:1.3rem;margin-bottom:8px;color:${cfg.textColor}">${item.name||''}</h4><p style="font-size:2.2rem;font-weight:700;color:${cfg.primaryColor};margin-bottom:20px">${item.price||''}</p><ul style="list-style:none;text-align:center;font-size:.95rem;color:${cfg.textColor}">${(item.features||[]).map((f:string)=>`<li style="padding:6px 0;border-bottom:1px solid ${cardBrd}">✅ ${f}</li>`).join('')}</ul></div>`).join('')}</div></div></section>\n`; break;
       case 'process_steps':
-        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||'Como Funciona'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:28px"><div style="width:56px;height:56px;border-radius:50%;background:${cfg.accentColor};color:${accentTextHTML};display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin:0 auto 16px">${item.step||''}</div><h4 style="font-weight:600;font-size:1.15rem;margin-bottom:8px">${item.title||''}</h4><p style="color:#6b7280;line-height:1.6">${item.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||'Como Funciona'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:28px"><div style="width:56px;height:56px;border-radius:50%;background:${cfg.accentColor};color:${accentTextHTML};display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin:0 auto 16px">${item.step||''}</div><h4 style="font-weight:600;font-size:1.15rem;margin-bottom:8px;color:${cfg.textColor}">${item.title||''}</h4><p style="color:${subtleText};line-height:1.6">${item.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'faq':
-        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px;text-align:center">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid #e5e7eb"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">${q.question||''}</h4><p style="color:#6b7280;line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px;text-align:center">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid ${cardBrd}"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px;color:${cfg.textColor}">${q.question||''}</h4><p style="color:${subtleText};line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'gallery':
         html += `<section style="padding:40px 24px"><div class="container"><div class="grid-3">${(c.images||[]).map((url:string)=>`<img src="${url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">`).join('')}</div></div></section>\n`; break;
       case 'footer':
-        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid #e5e7eb;background:#f9fafb"><p style="font-weight:600;margin-bottom:8px">${c.company||''}</p><p style="color:#9ca3af;font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${c.company||''}</p><p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
       case 'spacer':
         html += `<div style="height:${c.height||60}px"></div>\n`; break;
       case 'custom_html':
@@ -2995,7 +3038,25 @@ const PageBuilderEditor: React.FC<{
             <div className="space-y-4">
               <div><Label className="text-xs">Título do Site</Label><Input value={config.title} onChange={e => setConfig(c => ({ ...c, title: e.target.value }))} /></div>
               <div><Label className="text-xs">Descrição (SEO)</Label><Textarea value={config.description} onChange={e => setConfig(c => ({ ...c, description: e.target.value }))} rows={2} /></div>
-              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Cores</p>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">🎨 Paletas Prontas</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {COLOR_PALETTES.map(pal => (
+                  <button
+                    key={pal.name}
+                    title={pal.name}
+                    onClick={() => setConfig(c => ({ ...c, primaryColor: pal.primary, secondaryColor: pal.secondary, accentColor: pal.accent, backgroundColor: pal.bg, textColor: pal.text }))}
+                    className="flex flex-col items-center gap-1 p-1.5 rounded-lg border hover:border-primary transition-all group"
+                  >
+                    <div className="flex gap-0.5">
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.primary }} />
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.accent }} />
+                      <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: pal.bg }} />
+                    </div>
+                    <span className="text-[8px] text-muted-foreground group-hover:text-foreground truncate w-full text-center">{pal.name}</span>
+                  </button>
+                ))}
+              </div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Cores Individuais</p>
               <div className="grid grid-cols-2 gap-2">
                 {([['primaryColor', 'Primária'], ['secondaryColor', 'Secundária'], ['accentColor', 'Destaque'], ['backgroundColor', 'Fundo'], ['textColor', 'Texto']] as const).map(([key, label]) => (
                   <div key={key}><Label className="text-[10px]">{label}</Label><div className="flex gap-1"><input type="color" value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="w-8 h-8 rounded border cursor-pointer" /><Input value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="text-xs h-8" /></div></div>
