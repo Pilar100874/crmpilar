@@ -319,7 +319,19 @@ const MediaPicker: React.FC<{ onSelect: (url: string) => void; type?: 'image' | 
         <button key={item.id} onClick={() => onSelect(item.public_url)}
           className="relative aspect-video rounded-md overflow-hidden border hover:ring-2 hover:ring-primary transition-all group">
           {type === 'video' ? (
-            <div className="flex items-center justify-center h-full bg-muted"><Video className="h-6 w-6 text-muted-foreground" /></div>
+            item.thumbnail_url ? (
+              <div className="relative w-full h-full">
+                <img src={item.thumbnail_url} alt={item.nome} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                    <Play className="h-4 w-4 text-foreground ml-0.5" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <video src={item.public_url} className="w-full h-full object-cover" muted preload="metadata"
+                onLoadedMetadata={(e) => { (e.target as HTMLVideoElement).currentTime = 1; }} />
+            )
           ) : (
             <img src={item.thumbnail_url || item.public_url} alt={item.nome} className="w-full h-full object-cover" />
           )}
