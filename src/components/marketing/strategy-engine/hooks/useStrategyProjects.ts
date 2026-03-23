@@ -106,7 +106,18 @@ export function useProjectDetail(projectId: string | null) {
 
     if (projRes.data) setProject(projRes.data as unknown as StrategyProject);
     setExecutions((execRes.data || []) as unknown as AgentExecution[]);
-    setArtifacts((artRes.data || []) as unknown as StrategyArtifact[]);
+    
+    // Deduplicate artifacts: keep only the latest per tipo
+    const allArts = (artRes.data || []) as unknown as StrategyArtifact[];
+    const latestByType = new Map<string, StrategyArtifact>();
+    for (const art of allArts) {
+      const existing = latestByType.get(art.tipo);
+      if (!existing || new Date(art.created_at) > new Date(existing.created_at)) {
+        latestByType.set(art.tipo, art);
+      }
+    }
+    setArtifacts(Array.from(latestByType.values()));
+    
     setChatMessages((chatRes.data || []) as unknown as ChatMessage[]);
     setLoading(false);
     initialLoadDone.current = true;
