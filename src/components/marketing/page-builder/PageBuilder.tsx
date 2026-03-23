@@ -787,7 +787,18 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
         <div className="space-y-3">
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="headline" /></div><Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} /></div>
           <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Subtítulo</Label><SB t="subheadline" /></div><Textarea value={section.content.subheadline} onChange={e => updateContent('subheadline', e.target.value)} rows={2} /></div>
-          <div className="grid grid-cols-2 gap-2"><div><Label className="text-xs">Texto Botão</Label><Input value={section.content.cta_text} onChange={e => updateContent('cta_text', e.target.value)} /></div><div><Label className="text-xs">URL Botão</Label><Input value={section.content.cta_url} onChange={e => updateContent('cta_url', e.target.value)} /></div></div>
+          <div><Label className="text-xs mb-1 block">Tipo do Botão</Label>
+            <select value={section.content.cta_type || 'url'} onChange={e => updateContent('cta_type', e.target.value)} className="w-full h-8 rounded-md border bg-background px-2 text-xs">
+              <option value="url">🔗 Link / URL</option>
+              <option value="whatsapp">💬 WhatsApp</option>
+            </select>
+          </div>
+          {(section.content.cta_type || 'url') === 'whatsapp' ? (
+            <div><Label className="text-xs">Número WhatsApp</Label><Input value={section.content.whatsapp_number || ''} onChange={e => updateContent('whatsapp_number', e.target.value)} placeholder="5511999999999 (com DDI)" /><p className="text-[10px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número (sem espaços)</p></div>
+          ) : (
+            <div><Label className="text-xs">URL do Botão</Label><Input value={section.content.cta_url} onChange={e => updateContent('cta_url', e.target.value)} placeholder="https://..." /></div>
+          )}
+          <div><Label className="text-xs">Texto do Botão</Label><Input value={section.content.cta_text} onChange={e => updateContent('cta_text', e.target.value)} /></div>
           <div><Label className="text-xs">Imagem de Fundo</Label><div className="flex gap-2 mt-1"><Input value={section.content.background_image} onChange={e => updateContent('background_image', e.target.value)} placeholder="URL" className="flex-1" /><Button variant="outline" size="sm" onClick={() => openMediaPicker('background_image')}><Image className="h-4 w-4" /></Button></div></div>
         </div>
       );
