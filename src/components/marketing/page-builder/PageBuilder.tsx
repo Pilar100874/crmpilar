@@ -2893,7 +2893,6 @@ const PageBuilderLanding: React.FC<{
           onOpen(page);
         }}
       />
-      />
     </div>
   );
 };
