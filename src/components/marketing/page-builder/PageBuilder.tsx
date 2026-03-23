@@ -2985,7 +2985,7 @@ const PageBuilderEditor: React.FC<{
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowTemplateDialog(true)}><LayoutTemplate className="h-3 w-3" /> Template</Button>
-            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setIsFullscreen(!isFullscreen)}>{isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />} {isFullscreen ? 'Sair' : 'Tela Cheia'}</Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsFullscreen(!isFullscreen)} title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}>{isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}</Button>
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
             <Button variant={isPublished ? 'secondary' : 'default'} size="sm" className="h-7 gap-1" onClick={togglePublish} disabled={publishing}>
