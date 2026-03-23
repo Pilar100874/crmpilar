@@ -2862,7 +2862,9 @@ const PageBuilderEditor: React.FC<{
     setConfig(c => ({ ...c, ...template.config }));
     if (!currentPageId) { setPageName(template.name); setPageSlug(generateSlug(template.name)); }
     setSelectedSectionId(timestamped[0]?.id || null);
+    setRightPanel('editor');
     setShowTemplateDialog(false);
+    setTimeout(() => previewRef.current?.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     toast.success(`Template "${template.name}" aplicado!`);
   };
 
@@ -2872,7 +2874,9 @@ const PageBuilderEditor: React.FC<{
     setConfig(c => ({ ...c, ...ft.config }));
     if (!currentPageId) { setPageName(ft.name); setPageSlug(generateSlug(ft.name)); }
     setSelectedSectionId(timestamped[0]?.id || null);
+    setRightPanel('editor');
     setShowTemplateDialog(false);
+    setTimeout(() => previewRef.current?.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     toast.success(`Template "${ft.name}" aplicado com tema completo!`);
   };
 
