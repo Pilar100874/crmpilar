@@ -2313,8 +2313,8 @@ const AutoGeneratePage: React.FC<{
             </div>
 
             {/* Template Grid with Mini Previews */}
-            <ScrollArea className="flex-1 min-h-0 pr-2">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+             <ScrollArea className="flex-1 min-h-0 pr-2" style={{ maxHeight: 'calc(100vh - 380px)' }}>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                 {FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates.map(ft => {
                   const isSelected = selectedTemplate === ft.id;
                   return (
@@ -2322,28 +2322,27 @@ const AutoGeneratePage: React.FC<{
                       key={ft.id}
                       onClick={() => setSelectedTemplate(ft.id)}
                       className={cn(
-                        'relative flex flex-col rounded-xl border-2 transition-all text-left group overflow-hidden',
+                        'relative flex flex-col rounded-lg border-2 transition-all text-left group overflow-hidden',
                         isSelected
                           ? 'border-primary shadow-lg ring-2 ring-primary/20'
                           : 'border-border hover:border-primary/50 hover:shadow-md'
                       )}
                     >
-                      <div className="h-[120px] w-full overflow-hidden bg-muted/20 relative">
+                      <div className="h-[80px] w-full overflow-hidden bg-muted/20 relative">
                         <TemplateMiniPreview config={ft.config} sectionTypes={ft.sections.map(s => s.type)} />
                         {isSelected && (
-                          <div className="absolute top-1.5 right-1.5 z-10">
-                            <CheckCircle2 className="h-5 w-5 text-primary drop-shadow-lg" />
+                          <div className="absolute top-1 right-1 z-10">
+                            <CheckCircle2 className="h-4 w-4 text-primary drop-shadow-lg" />
                           </div>
                         )}
                       </div>
-                      <div className="px-2 py-2 space-y-0.5">
-                        <p className={cn('text-xs font-semibold truncate', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
-                        <p className="text-[9px] text-muted-foreground line-clamp-1 leading-tight">{ft.description}</p>
-                        <div className="flex items-center gap-1 pt-0.5">
+                      <div className="px-1.5 py-1 space-y-0">
+                        <p className={cn('text-[10px] font-semibold truncate', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
+                        <div className="flex items-center gap-0.5">
                           {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => (
-                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
+                            <div key={i} className="w-2 h-2 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
                           ))}
-                          <span className="text-[8px] text-muted-foreground ml-auto">{ft.sections.length} seções</span>
+                          <span className="text-[7px] text-muted-foreground ml-auto">{ft.sections.length}s</span>
                         </div>
                       </div>
                     </button>
