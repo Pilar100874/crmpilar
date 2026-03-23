@@ -322,6 +322,8 @@ export function StrategyAdminPanel() {
           system_prompt: systemPrompt,
           is_active: config.active,
           agent_card_json: cardWithDeps,
+          knowledge_base_type: config.knowledgeBaseType,
+          knowledge_base_files: config.knowledgeBaseFiles,
         };
 
         if (config.dbId) {
