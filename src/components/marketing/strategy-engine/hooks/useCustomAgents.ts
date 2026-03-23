@@ -18,6 +18,8 @@ export interface CustomAgent {
   created_at: string;
   updated_at: string;
   agent_card_json?: any;
+  knowledge_base_type?: string;
+  knowledge_base_files?: any;
 }
 
 export function useCustomAgents(estabelecimentoId: string | undefined) {
@@ -58,6 +60,7 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
         output_schema: agent.output_schema || {},
         ordem: agent.ordem || 100,
         agent_card_json: agent.agent_card_json || null,
+        knowledge_base_type: agent.knowledge_base_type || 'internal',
       } as any)
       .select()
       .single();
