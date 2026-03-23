@@ -431,6 +431,31 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     const newPage = () => { doc.addPage(); renderPageChrome(); };
     const check = (n: number) => { if (y + n > pageH - 22) newPage(); };
 
+    // Justify a single line of text within a given width
+    const justifyLine = (text: string, x: number, maxW: number, fontSize: number) => {
+      doc.setFontSize(fontSize);
+      const textW = doc.getTextWidth(text);
+      if (textW <= 0 || maxW <= 0) { doc.text(text, x, y); return; }
+      // Only justify if text fills at least 70% of available width
+      if (textW < maxW * 0.7 || text.split(' ').length < 3) {
+        doc.text(text, x, y);
+        return;
+      }
+      const words = text.split(' ');
+      if (words.length <= 1) { doc.text(text, x, y); return; }
+      const totalWordsW = words.reduce((sum, w) => sum + doc.getTextWidth(w), 0);
+      const totalSpacing = maxW - totalWordsW;
+      const spacePerGap = totalSpacing / (words.length - 1);
+      let cx = x;
+      for (let i = 0; i < words.length; i++) {
+        doc.text(words[i], cx, y);
+        cx += doc.getTextWidth(words[i]) + spacePerGap;
+      }
+    };
+
+    // Fixed label column width for key-value alignment
+    const kvLabelCol = mode === 'resumida' ? 38 : 42;
+
     // Shared render for structured lines
     const renderLines = (lines: PdfLine[], agentColor: [number, number, number]) => {
       const [cr, cg, cb] = agentColor;
@@ -466,27 +491,33 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
           }
           case 'keyvalue': {
             check(lineH + 2);
+            // Render label with fixed-width column for alignment
             doc.setFontSize(fs.label);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(45, 50, 65);
-            const lbl = line.label + ':  ';
-            const lblW = doc.getTextWidth(lbl);
+            const lbl = line.label + ':';
+            // Compute dynamic label width but ensure minimum alignment
+            const actualLblW = doc.getTextWidth(lbl + '  ');
+            const useLblW = Math.max(actualLblW, kvLabelCol);
             doc.text(lbl, mL + 6, y);
+            // Value starts at fixed offset for alignment
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(65, 65, 80);
-            const valSpace = maxTextW - lblW - 6;
-            if (valSpace > 40) {
+            const valX = mL + 6 + useLblW;
+            const valSpace = pageW - mR - valX - 2;
+            if (valSpace > 30) {
               const wrapped = doc.splitTextToSize(line.value, valSpace);
               for (let w = 0; w < wrapped.length; w++) {
                 if (w > 0) { y += lineH; check(lineH); }
-                doc.text(wrapped[w], mL + 6 + lblW, y);
+                justifyLine(wrapped[w], valX, valSpace, fs.label);
               }
             } else {
+              // Fallback: value on next line, full width
               y += lineH;
-              const wrapped = doc.splitTextToSize(line.value, maxTextW - 10);
+              const wrapped = doc.splitTextToSize(line.value, maxTextW - 6);
               for (const wl of wrapped) {
                 check(lineH);
-                doc.text(wl, mL + 10, y);
+                justifyLine(wl, mL + 10, maxTextW - 10, fs.label);
                 y += lineH;
               }
               y -= lineH;
@@ -501,11 +532,12 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setTextColor(65, 65, 80);
             doc.setFillColor(cr, cg, cb);
             doc.circle(mL + indent + 1.2, y - 1, 0.9, 'F');
-            const bW = maxTextW - indent - 6;
+            const bX = mL + indent + 4.5;
+            const bW = pageW - mR - bX - 2;
             const wrapped = doc.splitTextToSize(line.text, bW);
-            for (const wl of wrapped) {
+            for (let wi = 0; wi < wrapped.length; wi++) {
               check(lineH);
-              doc.text(wl, mL + indent + 4.5, y);
+              justifyLine(wrapped[wi], bX, bW, fs.bullet);
               y += lineH;
             }
             break;
@@ -515,10 +547,17 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setFontSize(fs.body);
             doc.setTextColor(55, 55, 70);
             doc.setFont('helvetica', 'normal');
-            const wrapped = doc.splitTextToSize(line.text, maxTextW - 4);
-            for (const wl of wrapped) {
+            const bX = mL + 3;
+            const bW = pageW - mR - bX - 2;
+            const wrapped = doc.splitTextToSize(line.text, bW);
+            for (let wi = 0; wi < wrapped.length; wi++) {
               check(lineH);
-              doc.text(wl, mL + 3, y);
+              // Don't justify last line of a paragraph
+              if (wi < wrapped.length - 1) {
+                justifyLine(wrapped[wi], bX, bW, fs.body);
+              } else {
+                doc.text(wrapped[wi], bX, y);
+              }
               y += lineH;
             }
             y += 1;
