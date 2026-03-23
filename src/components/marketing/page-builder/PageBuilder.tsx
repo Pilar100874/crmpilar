@@ -2344,6 +2344,7 @@ const PageBuilderEditor: React.FC<{
   const [isPublished, setIsPublished] = useState(initialPage?.publicado || false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [themeCategoryFilter, setThemeCategoryFilter] = useState(TEMPLATE_CATEGORIES[0]?.id || 'startup');
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -2601,23 +2602,86 @@ const PageBuilderEditor: React.FC<{
         </ScrollArea>
       </div>
 
-      {/* Template Dialog */}
+      {/* Template & Theme Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="bg-background sm:max-w-2xl">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><LayoutTemplate className="h-5 w-5" /> Escolha um Template</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto">
-            {PAGE_TEMPLATES.map(tpl => (
-              <button key={tpl.id} onClick={() => applyTemplate(tpl)}
-                className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-transparent hover:border-primary hover:bg-primary/5 transition-all text-center group">
-                <div className="text-4xl">{tpl.thumbnail}</div>
-                <div>
-                  <p className="text-sm font-semibold">{tpl.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{tpl.description}</p>
+        <DialogContent className="bg-background sm:max-w-4xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><LayoutTemplate className="h-5 w-5" /> Templates & Temas</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="themes" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="themes" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Temas Visuais</TabsTrigger>
+              <TabsTrigger value="structure" className="gap-1.5"><Layout className="h-3.5 w-3.5" /> Estrutura</TabsTrigger>
+            </TabsList>
+
+            {/* Themes Tab */}
+            <TabsContent value="themes" className="flex-1 min-h-0 mt-3 flex flex-col gap-3">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {TEMPLATE_CATEGORIES.map(cat => (
+                  <button key={cat.id}
+                    onClick={() => setThemeCategoryFilter(cat.id)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
+                      themeCategoryFilter === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-transparent hover:bg-muted"
+                    )}>
+                    <span>{cat.icon}</span> {cat.name}
+                  </button>
+                ))}
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pr-2">
+                  {(TEMPLATE_CATEGORIES.find(c => c.id === themeCategoryFilter)?.themes || ALL_THEMES.slice(0, 12)).map(theme => (
+                    <button key={theme.id}
+                      onClick={() => {
+                        setConfig(c => ({ ...c, ...theme.config }));
+                        setShowTemplateDialog(false);
+                        toast.success(`Tema "${theme.name}" aplicado!`);
+                      }}
+                      className="flex flex-col gap-2 p-3 rounded-xl border-2 border-transparent hover:border-primary transition-all text-left group">
+                      <div className="w-full aspect-[4/3] rounded-lg overflow-hidden" style={{ background: theme.preview_gradient }}>
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3 gap-1.5">
+                          <span className="text-2xl">{theme.thumbnail}</span>
+                          <div className="flex gap-1">
+                            {[theme.config.primaryColor, theme.config.accentColor, theme.config.backgroundColor].filter(Boolean).map((color, i) => (
+                              <div key={i} className="w-4 h-4 rounded-full border border-white/30" style={{ backgroundColor: color }} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold truncate">{theme.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1">{theme.description}</p>
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {theme.tags.slice(0, 2).map(tag => (
+                          <Badge key={tag} variant="outline" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+                        ))}
+                        {theme.config.fontDisplay && <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{theme.config.fontDisplay}</Badge>}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <Badge variant="outline" className="text-[10px]">{tpl.sections.length} seções</Badge>
-              </button>
-            ))}
-          </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Structure Tab */}
+            <TabsContent value="structure" className="flex-1 min-h-0 mt-3">
+              <ScrollArea className="h-full">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-2">
+                  {PAGE_TEMPLATES.map(tpl => (
+                    <button key={tpl.id} onClick={() => applyTemplate(tpl)}
+                      className="flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-transparent hover:border-primary hover:bg-primary/5 transition-all text-center group">
+                      <div className="text-4xl">{tpl.thumbnail}</div>
+                      <div>
+                        <p className="text-sm font-semibold">{tpl.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{tpl.description}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">{tpl.sections.length} seções</Badge>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
