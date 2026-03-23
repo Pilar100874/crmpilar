@@ -32,7 +32,7 @@ interface Props {
   onSeek: (time: number) => void;
   onPause?: () => void;
   onDoubleClickClip?: (clip: TimelineClip) => void;
-  onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string) => void;
+  onAddClip?: (type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, trackId?: string, dropStartTime?: number) => void;
   onAddEffectClip?: (trackId: string, startTime: number, effectType: TransitionType, label: string) => void;
 }
 
