@@ -2782,7 +2782,15 @@ const PageBuilderEditor: React.FC<{
   };
 
   const updateSection = (updated: PageSection) => setSections(prev => prev.map(s => s.id === updated.id ? updated : s));
-  const deleteSection = (id: string) => { setSections(prev => prev.filter(s => s.id !== id)); if (selectedSectionId === id) setSelectedSectionId(sections[0]?.id || null); };
+  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
+  const deleteSection = (id: string) => { setSectionToDelete(id); };
+  const confirmDeleteSection = () => {
+    if (!sectionToDelete) return;
+    setSections(prev => prev.filter(s => s.id !== sectionToDelete));
+    if (selectedSectionId === sectionToDelete) setSelectedSectionId(sections[0]?.id || null);
+    setSectionToDelete(null);
+    toast.success('Seção removida!');
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setDragActiveId(null);
