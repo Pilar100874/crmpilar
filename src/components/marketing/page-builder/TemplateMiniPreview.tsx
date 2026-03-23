@@ -48,31 +48,30 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
       case 'hero':
         if (heroStyle === 'split-left' || heroStyle === 'split') {
           return (
-            <div key={i} style={{ background: primaryColor, padding: '8px 6px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <div key={i} style={{ background: primaryColor, padding: '16px 14px', display: 'flex', gap: '10px', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ height: 4, width: '70%', background: '#fff', borderRadius: 2, marginBottom: 2 }} />
-                <div style={{ height: 2, width: '50%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, marginBottom: 3 }} />
-                <div style={{ height: 4, width: '30%', background: accentColor, borderRadius: 2 }} />
+                <div style={{ height: 8, width: '70%', background: '#fff', borderRadius: 3, marginBottom: 5 }} />
+                <div style={{ height: 5, width: '50%', background: 'rgba(255,255,255,0.5)', borderRadius: 2, marginBottom: 8 }} />
+                <div style={{ height: 8, width: '30%', background: accentColor, borderRadius: 4 }} />
               </div>
-              <div style={{ width: '40%', aspectRatio: '4/3', background: 'rgba(255,255,255,0.15)', borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2 }} />
+              <div style={{ width: '40%', aspectRatio: '4/3', background: 'rgba(255,255,255,0.15)', borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4 }} />
             </div>
           );
         }
         if (heroStyle === 'image-overlay') {
           return (
-            <div key={i} style={{ background: `linear-gradient(135deg, ${primaryColor}, rgba(0,0,0,0.7))`, padding: '10px 6px', textAlign: 'center' as const }}>
-              <div style={{ height: 4, width: '60%', background: '#fff', borderRadius: 2, margin: '0 auto 2px' }} />
-              <div style={{ height: 2, width: '40%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, margin: '0 auto 3px' }} />
-              <div style={{ height: 4, width: '25%', background: accentColor, borderRadius: 2, margin: '0 auto' }} />
+            <div key={i} style={{ background: `linear-gradient(135deg, ${primaryColor}, rgba(0,0,0,0.7))`, padding: '20px 14px', textAlign: 'center' as const }}>
+              <div style={{ height: 8, width: '60%', background: '#fff', borderRadius: 3, margin: '0 auto 5px' }} />
+              <div style={{ height: 5, width: '40%', background: 'rgba(255,255,255,0.5)', borderRadius: 2, margin: '0 auto 8px' }} />
+              <div style={{ height: 8, width: '25%', background: accentColor, borderRadius: 4, margin: '0 auto' }} />
             </div>
           );
         }
-        // Default centered/gradient
         return (
-          <div key={i} style={{ background: primaryColor, padding: '10px 6px', textAlign: 'center' as const }}>
-            <div style={{ height: 4, width: '55%', background: '#fff', borderRadius: 2, margin: '0 auto 2px' }} />
-            <div style={{ height: 2, width: '35%', background: 'rgba(255,255,255,0.5)', borderRadius: 1, margin: '0 auto 3px' }} />
-            <div style={{ height: 4, width: '22%', background: accentColor, borderRadius: 2, margin: '0 auto' }} />
+          <div key={i} style={{ background: primaryColor, padding: '20px 14px', textAlign: 'center' as const }}>
+            <div style={{ height: 8, width: '55%', background: '#fff', borderRadius: 3, margin: '0 auto 5px' }} />
+            <div style={{ height: 5, width: '35%', background: 'rgba(255,255,255,0.5)', borderRadius: 2, margin: '0 auto 8px' }} />
+            <div style={{ height: 8, width: '22%', background: accentColor, borderRadius: 4, margin: '0 auto' }} />
           </div>
         );
       case 'features':
