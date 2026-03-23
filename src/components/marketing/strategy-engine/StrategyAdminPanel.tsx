@@ -671,19 +671,19 @@ export function StrategyAdminPanel() {
                             <FieldSection label="ID">
                               <Input value={card.id} onChange={e => updateCard(agentKey, 'id', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
-                            <FieldSection label="Name">
+                            <FieldSection label="Nome">
                               <Input value={card.name} onChange={e => updateCard(agentKey, 'name', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
-                            <FieldSection label="Version">
+                            <FieldSection label="Versão">
                               <Input value={card.version} onChange={e => updateCard(agentKey, 'version', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
                           </div>
 
-                          <FieldSection label="Role" hint="Descrição clara do papel do agente no sistema">
+                          <FieldSection label="Papel" hint="Descrição clara do papel do agente no sistema">
                             <Textarea value={card.role} onChange={e => updateCard(agentKey, 'role', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
 
-                          <FieldSection label="Mission" hint="Resultado estratégico que o agente deve produzir">
+                          <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
                             <Textarea value={card.mission} onChange={e => updateCard(agentKey, 'mission', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
 
