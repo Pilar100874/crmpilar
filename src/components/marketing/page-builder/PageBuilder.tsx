@@ -1934,7 +1934,7 @@ const AutoGeneratePage: React.FC<{
                     >
                       {/* Mini Preview */}
                       <div className="h-[140px] w-full overflow-hidden bg-muted/20 relative">
-                        <TemplateMiniPreview template={ft} />
+                        <TemplateMiniPreview config={ft.config} sectionTypes={ft.sections.map(s => s.type)} />
                         {isSelected && (
                           <div className="absolute top-1.5 right-1.5 z-10">
                             <CheckCircle2 className="h-5 w-5 text-primary drop-shadow-lg" />
