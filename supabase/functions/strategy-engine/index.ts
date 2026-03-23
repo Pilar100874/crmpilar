@@ -1120,17 +1120,8 @@ ${kbContent}
     // ACTION: Generate A/B variation
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'generate_variation') {
-      let agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) {
-        const { data: customAgent } = await supabase
-          .from('strategy_custom_agents')
-          .select('*')
-          .eq('agent_key', agentType)
-          .eq('ativo', true)
-          .single();
-        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
-        agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
-      }
+      const resolved = await resolveAgentDefinition(supabase, agentType);
+      const agent = resolved.agent;
 
       const { variationStyle } = body;
       const { project, memory } = await getLatestMemory(supabase, projectId);
