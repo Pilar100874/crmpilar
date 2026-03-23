@@ -311,7 +311,7 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
           <ScrollArea className="h-[280px]">
             {projectArtifacts.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum artefato encontrado. Execute agentes no Motor de Estratégia.</p>}
             {projectArtifacts.map(art => {
-              const texts = extractTexts(art.resultado as any);
+              const texts = extractTexts(art.conteudo as any);
               if (texts.length === 0) return null;
               return (
                 <div key={art.id} className="mb-3">
