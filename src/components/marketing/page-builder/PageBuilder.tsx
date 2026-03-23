@@ -1535,11 +1535,15 @@ const AutoGeneratePage: React.FC<{
       for (const source of featureSources) {
         for (const f of source) {
           const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
-          if (title && !allFeats.find(e => e.title === title)) {
+          const desc = typeof f === 'string' ? f : (f.description || f.descricao || f.texto || '');
+          // Skip items with empty title or description (e.g. storyboard scenes leaking in)
+          if (!title || title.trim().length < 3) continue;
+          if (!desc || desc.trim().length < 3) continue;
+          if (!allFeats.find(e => e.title === title)) {
             allFeats.push({
               icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6],
               title,
-              description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
+              description: desc,
             });
           }
         }
