@@ -1611,8 +1611,11 @@ const AutoGeneratePage: React.FC<{
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
-            {step !== 'select' && step !== 'generating' && step !== 'done' && (
-              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 2</Badge>
+            {step === 'template' && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 3</Badge>
+            )}
+            {step === 'product' && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo 3 de 3</Badge>
             )}
           </DialogTitle>
         </DialogHeader>
