@@ -1754,8 +1754,8 @@ const AutoGeneratePage: React.FC<{
             </div>
 
             {/* Theme Grid */}
-            <ScrollArea className="h-[340px] pr-2">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <ScrollArea className="flex-1 min-h-0 pr-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.themes.map(theme => {
                   const isSelected = selectedTemplate === theme.id;
                   return (
