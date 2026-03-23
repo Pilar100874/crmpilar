@@ -1532,10 +1532,13 @@ const AutoGeneratePage: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background sm:max-w-lg">
+      <DialogContent className="bg-background sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
+            {step !== 'select' && step !== 'generating' && step !== 'done' && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 2</Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -1550,7 +1553,7 @@ const AutoGeneratePage: React.FC<{
         ) : step === 'select' ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Selecione um projeto do Motor de Estratégia. Os dados de <strong>todos os agentes</strong> serão usados para montar a página automaticamente.
+              <strong>Passo 1:</strong> Selecione o projeto do Motor de Estratégia que será usado como base.
             </p>
 
             <div className="space-y-2">
@@ -1588,32 +1591,87 @@ const AutoGeneratePage: React.FC<{
                     })}
                   </div>
                 )}
-                <Separator />
-                <div className="text-[10px] text-muted-foreground space-y-1">
-                  <p className="font-semibold text-foreground">A página gerada incluirá:</p>
-                  <p>✅ Hero com dados de posicionamento</p>
-                  <p>✅ Hero com título, subtítulo e CTA</p>
-                  <p>✅ Prova social com números/métricas</p>
-                  <p>✅ Diferenciais e recursos</p>
-                  <p>✅ Etapas do processo (Como Funciona)</p>
-                  <p>✅ Depoimentos com métricas</p>
-                  <p>✅ Quebra de objeções</p>
-                  <p>✅ Seção de garantia</p>
-                  <p>✅ Planos e preços</p>
-                  <p>✅ FAQ completo</p>
-                  <p>✅ CTA final otimizado</p>
-                  <p>📸 Espaços para imagens/vídeo (com sugestões)</p>
-                  <p>🔍 Configurações de SEO aplicadas</p>
-                </div>
               </Card>
             )}
 
             <Button 
-              onClick={generatePage} 
-              disabled={!selectedProject || generating} 
+              onClick={() => setStep('template')} 
+              disabled={!selectedProject} 
               className="w-full gap-2"
             >
-              <Zap className="h-4 w-4" /> Gerar Página Automaticamente
+              Próximo: Escolher Estilo <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+            </Button>
+          </div>
+        ) : step === 'template' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                <strong>Passo 2:</strong> Escolha o estilo visual da sua página.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs gap-1">
+                ← Voltar
+              </Button>
+            </div>
+
+            <ScrollArea className="h-[400px] pr-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {PAGE_TEMPLATES.filter(t => t.id !== 'blank').map(tpl => {
+                  const isSelected = selectedTemplate === tpl.id;
+                  return (
+                    <button
+                      key={tpl.id}
+                      onClick={() => setSelectedTemplate(tpl.id)}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center group hover:shadow-md ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/20' 
+                          : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110 ${
+                        isSelected ? 'bg-primary/10' : 'bg-muted'
+                      }`}>
+                        {tpl.thumbnail}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${isSelected ? 'text-primary' : 'text-foreground'}`}>{tpl.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>
+                      </div>
+                      {tpl.config.primaryColor && (
+                        <div className="flex gap-1 mt-1">
+                          <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.primaryColor }} />
+                          {tpl.config.accentColor && (
+                            <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.accentColor }} />
+                          )}
+                          {tpl.config.backgroundColor && tpl.config.backgroundColor !== '#ffffff' && (
+                            <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.backgroundColor }} />
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <div className="text-lg">{PAGE_TEMPLATES.find(t => t.id === selectedTemplate)?.thumbnail}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate">{PAGE_TEMPLATES.find(t => t.id === selectedTemplate)?.name}</p>
+                <p className="text-[10px] text-muted-foreground">As cores e tipografia do template serão aplicadas à página gerada</p>
+              </div>
+            </div>
+
+            <Button 
+              onClick={generatePage} 
+              disabled={generating} 
+              className="w-full gap-2"
+            >
+              <Zap className="h-4 w-4" /> Gerar Página com Este Estilo
             </Button>
           </div>
         ) : (
