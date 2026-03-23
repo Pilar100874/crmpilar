@@ -2888,9 +2888,11 @@ const PageBuilderLanding: React.FC<{
       <AutoGeneratePage
         open={showAutoGenerate}
         onOpenChange={setShowAutoGenerate}
+        globalConfig={globalConfig}
         onGenerated={(page) => {
           onOpen(page);
         }}
+      />
       />
     </div>
   );
