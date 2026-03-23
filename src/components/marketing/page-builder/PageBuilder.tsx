@@ -2457,18 +2457,7 @@ const PageBuilderEditor: React.FC<{
   };
 
   const generateHTML = useCallback(() => {
-    const vs = sections.filter(s => s.visible);
-    let html = `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${config.title}</title>\n<meta name="description" content="${config.description}">\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:${config.fontBody},sans-serif;color:${config.textColor};background:${config.backgroundColor}}.container{max-width:${config.maxWidth};margin:0 auto}</style>\n</head>\n<body>\n`;
-    vs.forEach(s => {
-      html += `<!-- ${s.title} -->\n`;
-      switch (s.type) {
-        case 'hero': html += `<section style="padding:80px 24px;text-align:center;${s.content.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${s.content.background_image}) center/cover` : `background:${config.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:3rem;font-weight:bold;margin-bottom:16px">${s.content.headline}</h1><p style="font-size:1.25rem;margin-bottom:32px;opacity:.9">${s.content.subheadline}</p><a href="${s.content.cta_url}" style="display:inline-block;padding:12px 32px;background:${config.accentColor};color:#fff;border-radius:8px;font-weight:600;text-decoration:none">${s.content.cta_text}</a></div></section>\n`; break;
-        case 'text': html += `<section style="padding:40px 24px"><div class="container" style="max-width:768px;text-align:${s.content.alignment}">${s.content.body}</div></section>\n`; break;
-        default: html += `<section style="padding:40px 24px"><div class="container"><!-- ${s.type} --></div></section>\n`;
-      }
-    });
-    html += `</body>\n</html>`;
-    return html;
+    return generateFullHTML(sections, config);
   }, [sections, config]);
 
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
