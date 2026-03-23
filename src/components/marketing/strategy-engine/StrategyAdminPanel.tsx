@@ -192,6 +192,8 @@ export function StrategyAdminPanel() {
           icon: info?.icon || '🤖',
           color: info?.color,
           dependencies: AGENT_DEPENDENCIES[key] ?? [],
+          knowledgeBaseType: 'internal',
+          knowledgeBaseFiles: [],
         };
       });
 
