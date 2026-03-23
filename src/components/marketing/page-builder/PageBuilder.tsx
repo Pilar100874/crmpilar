@@ -5,7 +5,7 @@ import {
   Sparkles, FileText, Monitor, Smartphone, Tablet, Copy, Save, Loader2,
   Columns, Square, AlignLeft, Link, ExternalLink, Upload, FolderOpen,
   Wand2, LayoutTemplate, ImagePlus, Package, GalleryHorizontalEnd,
-  MoreVertical, Pencil, FolderInput, Zap, CheckCircle2, AlertTriangle, Maximize, Minimize
+  MoreVertical, Pencil, FolderInput, Zap, CheckCircle2, AlertTriangle, Maximize, Minimize, EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
