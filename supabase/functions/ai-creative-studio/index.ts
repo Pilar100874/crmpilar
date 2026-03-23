@@ -779,14 +779,21 @@ function extractApiframeVideoUrl(payload: any): string | null {
   return payload?.video_urls?.[0]
     || payload?.video_url
     || payload?.result_url
-    || payload?.output
+    || payload?.output_url
+    || (Array.isArray(payload?.output) ? payload.output[0] : payload?.output)
     || payload?.result?.video_urls?.[0]
     || payload?.result?.video_url
     || payload?.result?.result_url
+    || payload?.result?.output_url
+    || (Array.isArray(payload?.result?.output) ? payload.result.output[0] : payload?.result?.output)
     || payload?.data?.video_urls?.[0]
     || payload?.data?.video_url
+    || payload?.data?.result_url
+    || payload?.data?.output_url
+    || payload?.data?.url
     || payload?.generation?.assets?.video
     || payload?.assets?.video
+    || payload?.url
     || null;
 }
 
@@ -880,7 +887,7 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { error: startData?.error || `Erro ao iniciar geração via Apiframe (${startResp.status})` };
   }
 
-  const taskId = startData?.task_id;
+  const taskId = startData?.task_id || startData?.taskId || startData?.id || startData?.data?.task_id || startData?.data?.taskId || startData?.data?.id;
   if (taskId) {
     console.log(`[apiframe-video] Task started: ${taskId}`);
     return { taskId };
@@ -894,6 +901,7 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { videoUrl: storedUrl || directUrl };
   }
 
+  console.log(`[apiframe-video] Unexpected start payload: ${JSON.stringify(startData).substring(0, 600)}`);
   return { error: "Apiframe não retornou task_id nem video_url." };
 }
 
@@ -930,20 +938,27 @@ async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Pr
   const status = String(
     pollData?.status
     || pollData?.state
+    || pollData?.task_status
     || pollData?.result?.status
+    || pollData?.result?.state
     || pollData?.data?.status
+    || pollData?.data?.state
     || ""
   ).toLowerCase();
 
   if (["finished", "completed", "complete", "succeeded", "success"].includes(status)) {
+    console.log(`[apiframe-video] Completed without URL payload: ${JSON.stringify(pollData).substring(0, 600)}`);
     return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
   }
 
   const failureReason = pollData?.failure_reason
     || pollData?.error
+    || pollData?.message
     || pollData?.errors?.[0]?.msg
     || pollData?.result?.failure_reason
-    || pollData?.data?.failure_reason;
+    || pollData?.result?.error
+    || pollData?.data?.failure_reason
+    || pollData?.data?.error;
 
   if (["failed", "error", "cancelled", "canceled"].includes(status) || failureReason) {
     return { done: true, error: failureReason || "Geração falhou no Apiframe." };
