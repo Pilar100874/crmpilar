@@ -2205,16 +2205,18 @@ const AutoGeneratePage: React.FC<{
     }).select().single();
 
     if (error) {
-      toast.error('Erro ao salvar: ' + error.message);
-      setStep('select');
+      const msg = 'Erro ao salvar: ' + error.message;
+      generationError = generationError || msg;
+      addProgress(`❌ ${msg}`);
+      toast.error(msg);
+      setStep('done');
     } else {
       const savedPage = saved as unknown as SavedPage;
       setSavedPageRef(savedPage);
       addProgress('✅ Página de vendas gerada com sucesso!');
       setStep('done');
       toast.success('Página de vendas completa gerada! 🎉');
-      // Only auto-close if there was no video error
-      if (!videoError) {
+      if (!generationError) {
         setTimeout(() => {
           onGenerated(savedPage);
           onOpenChange(false);

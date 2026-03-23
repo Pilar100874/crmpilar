@@ -938,20 +938,27 @@ async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Pr
   const status = String(
     pollData?.status
     || pollData?.state
+    || pollData?.task_status
     || pollData?.result?.status
+    || pollData?.result?.state
     || pollData?.data?.status
+    || pollData?.data?.state
     || ""
   ).toLowerCase();
 
   if (["finished", "completed", "complete", "succeeded", "success"].includes(status)) {
+    console.log(`[apiframe-video] Completed without URL payload: ${JSON.stringify(pollData).substring(0, 600)}`);
     return { done: true, error: "Apiframe concluiu mas não retornou URL do vídeo." };
   }
 
   const failureReason = pollData?.failure_reason
     || pollData?.error
+    || pollData?.message
     || pollData?.errors?.[0]?.msg
     || pollData?.result?.failure_reason
-    || pollData?.data?.failure_reason;
+    || pollData?.result?.error
+    || pollData?.data?.failure_reason
+    || pollData?.data?.error;
 
   if (["failed", "error", "cancelled", "canceled"].includes(status) || failureReason) {
     return { done: true, error: failureReason || "Geração falhou no Apiframe." };
