@@ -592,7 +592,7 @@ export function StrategyAdminPanel() {
       <ScrollArea className="h-[650px] pr-2">
         <div className="space-y-2">
           {allAgentKeys.map((agentKey, index) => {
-            const config = configs[agentKey];
+            const config = configsWithCustom[agentKey];
             if (!config) return null;
             const { card } = config;
             const isExpanded = expandedAgent === agentKey;
