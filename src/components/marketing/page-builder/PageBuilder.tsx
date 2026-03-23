@@ -2546,14 +2546,19 @@ const AutoGeneratePage: React.FC<{
         ) : (
           <div className="space-y-3 py-4">
             <div className="space-y-2">
-              {progress.map((msg, i) => (
+              {progress.map((msg, i) => {
+                const isError = msg.startsWith('❌');
+                return (
                 <div key={i} className="flex items-center gap-2 text-sm animate-in fade-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}>
                   {step === 'done' || i < progress.length - 1 ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    isError ? <AlertTriangle className="h-4 w-4 text-destructive shrink-0" /> : <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                   ) : (
                     <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
                   )}
-                  <span className={i === progress.length - 1 && step !== 'done' ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                  <span className={cn(
+                    i === progress.length - 1 && step !== 'done' ? 'text-foreground font-medium' : 'text-muted-foreground',
+                    isError && 'text-destructive font-medium'
+                  )}>
                     {msg}
                   </span>
                 </div>
