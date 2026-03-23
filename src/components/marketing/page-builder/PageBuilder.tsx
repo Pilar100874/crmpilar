@@ -97,7 +97,7 @@ const defaultContent: Record<PageSection['type'], Record<string, any>> = {
   cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', button_type: 'url', whatsapp_number: '', style: 'primary' },
   faq: { items: [{ question: 'Pergunta?', answer: 'Resposta.' }] },
   gallery: { images: [] },
-  footer: { company: 'Sua Empresa', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
+  footer: { company: '', links: [{ label: 'Contato', url: '#' }], copyright: `© ${new Date().getFullYear()}` },
   spacer: { height: '60' },
   custom_html: { code: '<div>Seu HTML aqui</div>' },
 };
@@ -119,7 +119,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-test', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Maria Silva', role: 'CEO, TechCorp', text: 'Aumentamos vendas em 300% nos primeiros 3 meses.' }, { name: 'João Santos', role: 'Fundador, StartupX', text: 'A melhor decisão para nosso negócio.' }] } },
       { id: 't-faq', type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: [{ question: 'Como funciona o período de teste?', answer: '14 dias grátis sem cartão de crédito.' }, { question: 'Posso cancelar a qualquer momento?', answer: 'Sim, sem taxa de cancelamento.' }] } },
       { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Comece agora mesmo', description: 'Junte-se a mais de 10.000 empresas.', button_text: 'Criar Conta Grátis', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Startup', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
@@ -133,7 +133,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-vid', type: 'video', title: 'Vídeo Demonstração', visible: true, styles: {}, content: { url: '', poster: '', autoplay: false } },
       { id: 't-test', type: 'testimonials', title: 'Avaliações', visible: true, styles: {}, content: { items: [{ name: 'Ana Costa', role: 'Influenciadora', text: 'Superou todas as minhas expectativas.' }, { name: 'Pedro Lima', role: 'Tech Reviewer', text: 'Melhor custo-benefício do mercado!' }] } },
       { id: 't-cta', type: 'cta', title: 'Compre Agora', visible: true, styles: {}, content: { headline: 'Oferta de Lançamento', description: '30% de desconto exclusivo!', button_text: 'Aproveitar Desconto', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Marca', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
@@ -150,7 +150,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia Incondicional de 30 Dias', description: 'Se em 30 dias você não estiver 100% satisfeito, devolvemos cada centavo. Sem perguntas.', duration: '30 dias de garantia' } },
       { id: 't-price', type: 'pricing', title: 'Preços', visible: true, styles: {}, content: { title: 'Escolha Seu Plano', items: [{ name: 'Essencial', price: 'R$ 197', features: ['Acesso ao curso', 'Suporte por email', 'Certificado'], highlighted: false }, { name: 'Profissional', price: 'R$ 397', features: ['Tudo do Essencial', 'Mentoria em grupo', 'Comunidade VIP', 'Bônus exclusivos'], highlighted: true }, { name: 'Premium', price: 'R$ 997', features: ['Tudo do Profissional', 'Mentoria individual', 'Acesso vitalício', 'Consultoria 1:1'], highlighted: false }] } },
       { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Não Perca Essa Oportunidade', description: 'Vagas limitadas. Garanta a sua agora!', button_text: 'Quero Garantir Minha Vaga', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Empresa', copyright: `© ${new Date().getFullYear()} — Todos os direitos reservados` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()} — Todos os direitos reservados` } },
     ]
   },
   {
@@ -166,7 +166,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia de 7 Dias', description: 'Teste sem risco. Se não gostar, devolvemos seu dinheiro.', duration: '7 dias' } },
       { id: 't-faq', type: 'faq', title: 'Dúvidas', visible: true, styles: {}, content: { items: [{ question: 'Preciso de conhecimento prévio?', answer: 'Não! O curso foi feito para iniciantes.' }, { question: 'Por quanto tempo tenho acesso?', answer: 'Depende do plano escolhido. O Completo é vitalício.' }] } },
       { id: 't-cta', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Comece Hoje Sua Transformação', description: 'Não adie mais seus sonhos.', button_text: 'Matricular-se Agora', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Escola', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
@@ -179,7 +179,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-gallery', type: 'gallery', title: 'Projetos', visible: true, styles: {}, content: { images: [] } },
       { id: 't-feat', type: 'features', title: 'Serviços', visible: true, styles: {}, content: { items: [{ icon: '🎨', title: 'Design UI/UX', description: 'Interfaces intuitivas e bonitas' }, { icon: '💻', title: 'Desenvolvimento Web', description: 'Sites rápidos e responsivos' }, { icon: '📱', title: 'Apps Mobile', description: 'Aplicativos nativos e híbridos' }] } },
       { id: 't-cta', type: 'cta', title: 'Contato', visible: true, styles: {}, content: { headline: 'Vamos trabalhar juntos?', description: 'Estou disponível para novos projetos.', button_text: 'Enviar Mensagem', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '[Seu Nome]', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
@@ -2133,7 +2133,7 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 15. Footer ──
-    const businessName = gCfg?.empresaNome || project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
+    const businessName = gCfg?.empresaNome || '';
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
       content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
