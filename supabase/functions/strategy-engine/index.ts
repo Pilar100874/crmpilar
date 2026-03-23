@@ -1572,17 +1572,16 @@ Retorne EXCLUSIVAMENTE um JSON:
 Descrição do produto: ${productDescription}
 Contexto de marketing: ${marketingContext}
 
-O prompt deve ser em inglês e descrever uma imagem publicitária premium com:
-- O produto como foco central
+O prompt deve ser em inglês e descrever uma cena publicitária premium onde:
+- O produto REAL aparece como foco central SEM NENHUMA ALTERAÇÃO na embalagem, rótulo, formato, cores ou visual do produto
+- NÃO redesenhe, modifique ou altere a aparência do produto/embalagem de forma alguma
+- Apenas mude o CENÁRIO ao redor: iluminação, superfície, fundo, atmosfera
 - Iluminação profissional de estúdio
-- Composição limpa e atraente
-- Estilo de anúncio de alta conversão
 - SEM NENHUM TEXTO, lettering, tipografia ou palavras na imagem
-- A imagem deve ser 100% visual, sem textos sobrepostos
 
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária. IMPORTANT: NO TEXT, NO LETTERS, NO WORDS, NO TYPOGRAPHY, NO CAPTIONS in the image. Pure visual product photography only.",
+  "image_prompt": "Prompt em inglês descrevendo APENAS o cenário/ambiente ao redor do produto. CRITICAL: DO NOT modify the product appearance, packaging, label or branding. Only describe the background scene, lighting and atmosphere. NO TEXT in the image.",
   "alt_text": "Texto alternativo descritivo em português",
   "suggested_headline": "Headline persuasiva para acompanhar a imagem (PT-BR)"
 }`;
