@@ -965,7 +965,8 @@ const AutoGeneratePage: React.FC<{
 }> = ({ open, onOpenChange, onGenerated }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('landing-startup');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('startup-clean');
+  const [selectedCategory, setSelectedCategory] = useState<string>('startup');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState<'select' | 'template' | 'generating' | 'done'>('select');
