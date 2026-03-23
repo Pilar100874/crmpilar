@@ -296,8 +296,14 @@ export function StrategyAdminPanel() {
     resolve();
   }, [estabId]);
 
-  // Build unified agent list: built-in + custom
-  const allAgentKeys = [...AGENT_ORDER, ...customAgents.map(a => a.agent_key)];
+  // Build unified agent list: built-in + custom (deduplicated)
+  const allAgentKeys = React.useMemo(() => {
+    const keys = [...AGENT_ORDER];
+    for (const ca of customAgents) {
+      if (!keys.includes(ca.agent_key)) keys.push(ca.agent_key);
+    }
+    return keys;
+  }, [customAgents]);
 
   useEffect(() => {
     const loadConfigs = async () => {
