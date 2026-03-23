@@ -1014,11 +1014,11 @@ const AutoGeneratePage: React.FC<{
     const sections: PageSection[] = [];
     const addProgress = (msg: string) => setProgress(prev => [...prev, msg]);
 
-    // Also fetch artifacts
-    addProgress('📦 Buscando artefatos do projeto...');
+    // ── Fetch ALL artifacts (including custom agents) ──
+    addProgress('📦 Buscando TODOS os artefatos do projeto...');
     const { data: artifacts } = await supabase
       .from('strategy_artifacts')
-      .select('tipo, conteudo')
+      .select('tipo, conteudo, agent_name')
       .eq('project_id', project.id)
       .order('created_at', { ascending: false });
     const artMap = new Map<string, any>();
@@ -1026,7 +1026,47 @@ const AutoGeneratePage: React.FC<{
       if (!artMap.has(art.tipo)) artMap.set(art.tipo, art.conteudo);
     }
 
-    // Helper: collect text alternatives from multiple agents for a field
+    // Merge memory + artifacts for complete data
+    const allData: Record<string, any> = { ...mem };
+    artMap.forEach((val, key) => {
+      if (!allData[key]) allData[key] = val;
+    });
+
+    const agentKeys = Object.keys(allData);
+    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
+
+    // ── Call AI to generate compelling marketing copy ──
+    addProgress('🤖 Gerando textos de marketing com IA...');
+    
+    const summaryForAI = JSON.stringify({
+      nome_negocio: project.nome,
+      descricao: project.descricao_negocio,
+      agentes_disponiveis: agentKeys,
+      dados: Object.fromEntries(
+        Object.entries(allData).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 1500) : String(v).slice(0, 500)])
+      ),
+    });
+
+    let aiCopy: any = null;
+    try {
+      const { data: aiResult, error: aiError } = await supabase.functions.invoke('strategy-engine', {
+        body: {
+          action: 'generate_page_copy',
+          projectId: project.id,
+          contextSummary: summaryForAI,
+        }
+      });
+      if (!aiError && aiResult?.success && aiResult?.copy) {
+        aiCopy = aiResult.copy;
+        addProgress('✨ Textos de marketing gerados com sucesso!');
+      } else {
+        addProgress('⚠️ IA indisponível — usando dados diretos dos agentes...');
+      }
+    } catch {
+      addProgress('⚠️ IA indisponível — usando dados diretos dos agentes...');
+    }
+
+    // Helper functions
     const collectAlternatives = (sources: { agent: string; icon: string; data: any; keys: string[] }[]): { agent: string; icon: string; text: string }[] => {
       const alts: { agent: string; icon: string; text: string }[] = [];
       for (const src of sources) {
@@ -1044,8 +1084,7 @@ const AutoGeneratePage: React.FC<{
       return alts;
     };
 
-    // Helper to get data from memory or artifact
-    const getData = (key: string) => mem[key] || artMap.get(key) || null;
+    const getData = (key: string) => allData[key] || null;
 
     const pos = getData('positioning');
     const vox = getData('vox');
@@ -1061,75 +1100,77 @@ const AutoGeneratePage: React.FC<{
     const reelData = getData('reel');
     const cipherData = getData('cipher');
     const paidMedia = getData('paid_media');
+    const siteBuilder = getData('site_builder');
 
     // ── 1. Hero Section ──
-    addProgress('🎯 Construindo Hero com alternativas de texto...');
+    addProgress('🎯 Construindo Hero com textos persuasivos...');
+    const heroHeadline = aiCopy?.hero_headline 
+      || pos?.proposta_unica || pos?.headline || lp?.headline || lp?.hero_headline 
+      || creative?.headline || project.descricao_negocio || 'Transforme Seus Resultados Agora';
+    const heroSub = aiCopy?.hero_subheadline
+      || pos?.subheadline || pos?.descricao || lp?.subheadline || lp?.hero_subheadline
+      || vox?.dor_principal || seoData?.meta_description || 'Descubra a solução que vai revolucionar seu negócio.';
+    const heroCta = aiCopy?.hero_cta
+      || lp?.cta_text || lp?.hero_cta || creative?.cta || 'Quero Começar Agora';
+
     const headlineAlts = collectAlternatives([
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_headline'] },
       { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['proposta_unica', 'headline', 'titulo', 'proposta_valor', 'slogan'] },
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['headline', 'hero_headline', 'titulo', 'h1'] },
       { agent: 'SEO', icon: '🔎', data: seoData, keys: ['titulo_pagina', 'title', 'h1'] },
       { agent: 'Criativos', icon: '🎨', data: creative, keys: ['headline', 'titulo_principal', 'gancho'] },
-      { agent: 'Email', icon: '📧', data: emailData, keys: ['assunto_principal', 'headline', 'titulo'] },
-      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'headline', 'slogan'] },
     ]);
     const subAlts = collectAlternatives([
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_subheadline'] },
       { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['descricao', 'subheadline', 'subtitulo', 'proposta_descricao'] },
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['subheadline', 'hero_subheadline', 'subtitulo', 'descricao'] },
       { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['dor_principal', 'resumo', 'perfil_cliente'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['meta_description', 'descricao'] },
-      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['subtitulo', 'descricao', 'conceito'] },
     ]);
-    // Also extract from arrays
-    if (vox?.dores_principais && Array.isArray(vox.dores_principais) && vox.dores_principais.length > 0) {
-      subAlts.push({ agent: 'Voz do Cliente (Dor)', icon: '🎙️', text: vox.dores_principais[0] });
-    }
     const ctaAlts = collectAlternatives([
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_cta'] },
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_text', 'hero_cta', 'botao_principal'] },
       { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta', 'cta_text', 'chamada_acao'] },
-      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta', 'cta_text', 'chamada_acao'] },
     ]);
 
     sections.push({
       id: `auto-hero-${Date.now()}`, type: 'hero', title: 'Hero Principal', visible: true, styles: {},
       content: {
-        headline: headlineAlts[0]?.text || project.descricao_negocio || 'Seu Negócio, Sua Solução',
-        subheadline: subAlts[0]?.text || 'Descubra como podemos transformar sua experiência.',
-        cta_text: ctaAlts[0]?.text || 'Saiba Mais',
+        headline: heroHeadline,
+        subheadline: heroSub,
+        cta_text: heroCta,
         cta_url: '#contato',
         background_image: '',
         _alt_headline: headlineAlts,
         _alt_subheadline: subAlts,
         _alt_cta_text: ctaAlts,
-        _media_suggestion: '🖼️ Insira uma imagem de fundo impactante que represente seu negócio. Sugestão: foto profissional do produto/serviço ou imagem lifestyle do público-alvo.',
+        _media_suggestion: '🖼️ Insira uma imagem de fundo impactante que represente seu negócio.',
       }
     });
 
-    // ── 2. Social Proof (Numbers) ──
+    // ── 2. Social Proof ──
     addProgress('📊 Extraindo métricas e prova social...');
     const socialProofItems: any[] = [];
-    // Extract numbers from multiple agents
-    const numSources = [pos, lp, funnel, cipherData, socialData, emailData];
-    const numKeys = ['clientes', 'usuarios', 'cases', 'resultados', 'metricas', 'numeros', 'stats', 'kpis', 'indicadores', 'social_proof', 'provas_numericas'];
-    for (const src of numSources) {
-      if (!src) continue;
-      for (const key of numKeys) {
-        const val = src[key];
-        if (Array.isArray(val)) {
-          val.slice(0, 4).forEach((item: any) => {
-            if (typeof item === 'object' && item) {
-              socialProofItems.push({ number: item.numero || item.number || item.valor || item.value || '?', label: item.label || item.nome || item.descricao || item.description || '' });
-            }
-          });
-        } else if (typeof val === 'string' && val.match(/\d/)) {
-          socialProofItems.push({ number: val.slice(0, 20), label: key });
+    if (aiCopy?.social_proof && Array.isArray(aiCopy.social_proof)) {
+      aiCopy.social_proof.forEach((sp: any) => socialProofItems.push(sp));
+    }
+    if (socialProofItems.length === 0) {
+      const numSources = [pos, lp, funnel, cipherData, socialData, emailData];
+      const numKeys = ['clientes', 'usuarios', 'cases', 'resultados', 'metricas', 'numeros', 'stats', 'kpis', 'social_proof', 'provas_numericas'];
+      for (const src of numSources) {
+        if (!src) continue;
+        for (const key of numKeys) {
+          const val = src[key];
+          if (Array.isArray(val)) {
+            val.slice(0, 4).forEach((item: any) => {
+              if (typeof item === 'object' && item) {
+                socialProofItems.push({ number: item.numero || item.number || item.valor || '?', label: item.label || item.nome || item.descricao || '' });
+              }
+            });
+          }
         }
       }
+      if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
     }
-    // Also try to extract from vox satisfaction/market data
-    if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
-    if (vox?.satisfacao || vox?.nps) socialProofItems.push({ number: vox.satisfacao || vox.nps, label: 'Satisfação' });
-    if (pos?.market_share) socialProofItems.push({ number: pos.market_share, label: 'Market Share' });
-    
     if (socialProofItems.length === 0) {
       socialProofItems.push({ number: '1000+', label: 'Clientes Atendidos' }, { number: '98%', label: 'Satisfação' }, { number: '24/7', label: 'Suporte' });
     }
@@ -1140,31 +1181,28 @@ const AutoGeneratePage: React.FC<{
 
     // ── 3. Image placeholder ──
     addProgress('📸 Reservando espaço para imagem principal...');
-    const imgSuggestion = creative?.conceito_visual || creative?.estilo_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
+    const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || creative?.estilo_visual || 'Imagem profissional do produto';
     sections.push({
       id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
-      content: {
-        url: '', alt: 'Imagem do produto/serviço',
-        caption: imgSuggestion,
-        fit: 'cover',
-        _media_suggestion: `🖼️ Sugestão do agente Criativos: "${imgSuggestion}"`,
-      }
+      content: { url: '', alt: 'Imagem do produto/serviço', caption: imgSuggestion, fit: 'cover', _media_suggestion: `🖼️ ${imgSuggestion}` }
     });
 
     // ── 4. Features ──
-    addProgress('⚡ Extraindo diferenciais de múltiplos agentes...');
+    addProgress('⚡ Montando diferenciais com títulos persuasivos...');
     let featureItems: any[] = [];
-    const featureSources = [
-      extractArray(pos, 'diferenciais', 'features', 'beneficios', 'pontos_fortes'),
-      extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
-      extractArray(funnel, 'etapas', 'stages', 'features'),
-      extractArray(creative, 'beneficios', 'features'),
-      extractArray(cipherData, 'diferenciais', 'vantagens_competitivas', 'pontos_fortes'),
-      extractArray(paidMedia, 'beneficios', 'argumentos', 'features'),
-    ].filter(arr => arr.length > 0);
+    if (aiCopy?.features && Array.isArray(aiCopy.features)) {
+      featureItems = aiCopy.features.slice(0, 6);
+    }
+    if (featureItems.length === 0) {
+      const featureSources = [
+        extractArray(pos, 'diferenciais', 'features', 'beneficios', 'pontos_fortes'),
+        extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
+        extractArray(funnel, 'etapas', 'stages', 'features'),
+        extractArray(creative, 'beneficios', 'features'),
+        extractArray(cipherData, 'diferenciais', 'vantagens_competitivas', 'pontos_fortes'),
+        extractArray(paidMedia, 'beneficios', 'argumentos', 'features'),
+      ].filter(arr => arr.length > 0);
 
-    if (featureSources.length > 0) {
-      // Merge unique features from all sources
       const allFeats: any[] = [];
       for (const source of featureSources) {
         for (const f of source) {
@@ -1188,130 +1226,141 @@ const AutoGeneratePage: React.FC<{
       ];
     }
     sections.push({
-      id: `auto-feat-${Date.now()}`, type: 'features', title: 'Diferenciais', visible: true, styles: {},
+      id: `auto-feat-${Date.now()}`, type: 'features', title: aiCopy?.features_title || 'Por Que Nos Escolher', visible: true, styles: {},
       content: { items: featureItems }
     });
 
-    // ── 5. Process Steps (Funnel / How it works) ──
+    // ── 5. Process Steps ──
     addProgress('🔄 Montando etapas do processo...');
     let processItems: any[] = [];
-    const rawSteps = [
-      ...extractArray(funnel, 'etapas', 'stages', 'passos', 'steps', 'jornada'),
-      ...extractArray(lp, 'steps', 'como_funciona', 'etapas', 'processo'),
-      ...extractArray(pos, 'jornada_cliente', 'processo', 'etapas'),
-    ];
-    if (rawSteps.length > 0) {
-      processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({
-        step: `${i + 1}`,
-        title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || s.name || s.nome || s.etapa || `Etapa ${i + 1}`),
-        description: typeof s === 'string' ? s : (s.description || s.descricao || s.texto || s.acao || ''),
-      }));
+    if (aiCopy?.process_steps && Array.isArray(aiCopy.process_steps)) {
+      processItems = aiCopy.process_steps;
+    }
+    if (processItems.length === 0) {
+      const rawSteps = [
+        ...extractArray(funnel, 'etapas', 'stages', 'passos', 'steps', 'jornada'),
+        ...extractArray(lp, 'steps', 'como_funciona', 'etapas', 'processo'),
+        ...extractArray(pos, 'jornada_cliente', 'processo', 'etapas'),
+      ];
+      if (rawSteps.length > 0) {
+        processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({
+          step: `${i + 1}`,
+          title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || s.name || s.nome || s.etapa || `Etapa ${i + 1}`),
+          description: typeof s === 'string' ? s : (s.description || s.descricao || s.texto || s.acao || ''),
+        }));
+      }
     }
     if (processItems.length >= 2) {
       sections.push({
         id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {},
-        content: { title: 'Como Funciona', items: processItems }
+        content: { title: aiCopy?.process_title || 'Como Funciona', items: processItems }
       });
     }
 
     // ── 6. About text ──
     addProgress('📝 Criando seção sobre o negócio...');
+    const aboutText = aiCopy?.about_text
+      || pos?.historia || pos?.manifesto || pos?.narrativa || pos?.storytelling
+      || vox?.resumo || seoData?.conteudo_principal
+      || project.descricao_negocio || 'Conte a história do seu negócio aqui.';
     const aboutAlts = collectAlternatives([
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling', 'proposta_descricao', 'promessa'] },
-      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto', 'persona_descricao'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre', 'descricao_empresa'] },
-      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao', 'manifesto'] },
-      { agent: 'Inteligência Competitiva', icon: '🔍', data: cipherData, keys: ['resumo', 'posicionamento', 'analise'] },
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['about_text'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre'] },
     ]);
-    if (aboutAlts.length === 0) {
-      aboutAlts.push({ agent: 'Projeto', icon: '📋', text: project.descricao_negocio || 'Conte a história do seu negócio aqui.' });
-    }
     sections.push({
-      id: `auto-about-${Date.now()}`, type: 'text', title: 'Sobre Nós', visible: true, styles: {},
-      content: { body: aboutAlts[0]?.text, alignment: 'center', _alt_body: aboutAlts }
+      id: `auto-about-${Date.now()}`, type: 'text', title: aiCopy?.about_title || 'Nossa História', visible: true, styles: {},
+      content: { body: aboutText, alignment: 'center', _alt_body: aboutAlts }
     });
 
     // ── 7. Video placeholder ──
     addProgress('🎬 Reservando espaço para vídeo...');
-    const videoAlts = collectAlternatives([
-      { agent: 'Roteirista VSL', icon: '🎬', data: vsl, keys: ['titulo', 'gancho', 'headline', 'abertura'] },
-      { agent: 'Produtor de Vídeo', icon: '🎥', data: videoProd, keys: ['conceito', 'titulo', 'briefing'] },
-      { agent: 'Reels', icon: '📱', data: reelData, keys: ['titulo', 'gancho', 'hook'] },
-    ]);
+    const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
     sections.push({
       id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
-      content: {
-        url: '', poster: '', autoplay: false,
-        _media_suggestion: videoAlts.length > 0
-          ? `🎬 Sugestão: "${videoAlts[0].text}" (${videoAlts[0].agent})`
-          : '🎬 Grave um vídeo de apresentação do seu negócio.',
-      }
+      content: { url: '', poster: '', autoplay: false, _media_suggestion: `🎬 ${videoSuggestion}` }
     });
 
     // ── 8. Testimonials ──
     addProgress('💬 Montando depoimentos...');
     let testimonialItems: any[] = [];
-    const rawTest = [
-      ...extractArray(lp, 'testimonials', 'depoimentos', 'provas_sociais', 'cases'),
-      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais', 'cases_sucesso', 'resultados_clientes'),
-      ...extractArray(pos, 'depoimentos', 'cases', 'testimonials', 'provas'),
-      ...extractArray(funnel, 'depoimentos', 'cases', 'resultados'),
-      ...extractArray(emailData, 'depoimentos', 'testimonials'),
-      ...extractArray(creative, 'depoimentos', 'provas_sociais'),
-    ];
-    if (rawTest.length > 0) {
-      testimonialItems = rawTest.slice(0, 6).map((t: any) => ({
-        name: t.name || t.nome || t.cliente || 'Cliente',
-        role: t.role || t.cargo || t.empresa || t.segmento || '',
-        text: t.text || t.texto || t.depoimento || t.citacao || t.quote || '',
-        metrics: t.metrics || t.resultado || t.metrica || t.resultado_numerico || '',
-      }));
-    } else {
+    if (aiCopy?.testimonials && Array.isArray(aiCopy.testimonials)) {
+      testimonialItems = aiCopy.testimonials;
+    }
+    if (testimonialItems.length === 0) {
+      const rawTest = [
+        ...extractArray(lp, 'testimonials', 'depoimentos', 'provas_sociais'),
+        ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais', 'cases_sucesso'),
+        ...extractArray(pos, 'depoimentos', 'cases', 'testimonials'),
+        ...extractArray(funnel, 'depoimentos', 'cases', 'resultados'),
+      ];
+      if (rawTest.length > 0) {
+        testimonialItems = rawTest.slice(0, 6).map((t: any) => ({
+          name: t.name || t.nome || t.cliente || 'Cliente',
+          role: t.role || t.cargo || t.empresa || '',
+          text: t.text || t.texto || t.depoimento || t.citacao || t.quote || '',
+          metrics: t.metrics || t.resultado || '',
+        }));
+      }
+    }
+    if (testimonialItems.length === 0) {
       testimonialItems = [
-        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui. Dica: inclua números e resultados concretos.', metrics: '' },
-        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado para aumentar credibilidade.', metrics: '' },
-        { name: 'Terceiro Cliente', role: 'Empresa', text: 'Um terceiro depoimento. Quanto mais específico e detalhado, melhor.', metrics: '' },
+        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui com números e resultados concretos.', metrics: '' },
+        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado para credibilidade.', metrics: '' },
+        { name: 'Terceiro Cliente', role: 'Empresa', text: 'Um terceiro depoimento. Quanto mais específico, melhor.', metrics: '' },
       ];
     }
     sections.push({
-      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
+      id: `auto-test-${Date.now()}`, type: 'testimonials', title: aiCopy?.testimonials_title || 'O Que Nossos Clientes Dizem', visible: true, styles: {},
       content: { items: testimonialItems }
     });
 
     // ── 9. Objections ──
     addProgress('🚫 Extraindo objeções e respostas...');
     let objectionItems: any[] = [];
-    const rawObj = [
-      ...extractArray(vox, 'objecoes', 'objections', 'barreiras', 'medos', 'duvidas'),
-      ...extractArray(pos, 'objecoes', 'barreiras', 'resistencias'),
-      ...extractArray(lp, 'objecoes', 'objections', 'quebra_objecoes'),
-      ...extractArray(funnel, 'objecoes', 'barreiras'),
-      ...extractArray(cipherData, 'objecoes', 'fraquezas_concorrentes', 'barreiras_mercado'),
-    ];
-    if (rawObj.length > 0) {
-      objectionItems = rawObj.slice(0, 5).map((o: any) => ({
-        objection: typeof o === 'string' ? o : (o.objecao || o.objection || o.barreira || o.duvida || o.pergunta || ''),
-        response: typeof o === 'string' ? 'Responda a essa objeção aqui.' : (o.resposta || o.response || o.solucao || o.contra_argumento || ''),
-      }));
+    if (aiCopy?.objections && Array.isArray(aiCopy.objections)) {
+      objectionItems = aiCopy.objections;
+    }
+    if (objectionItems.length === 0) {
+      const rawObj = [
+        ...extractArray(vox, 'objecoes', 'objections', 'barreiras', 'medos', 'duvidas'),
+        ...extractArray(pos, 'objecoes', 'barreiras', 'resistencias'),
+        ...extractArray(lp, 'objecoes', 'objections', 'quebra_objecoes'),
+        ...extractArray(cipherData, 'objecoes', 'fraquezas_concorrentes'),
+      ];
+      if (rawObj.length > 0) {
+        objectionItems = rawObj.slice(0, 5).map((o: any) => ({
+          objection: typeof o === 'string' ? o : (o.objecao || o.objection || o.barreira || o.duvida || ''),
+          response: typeof o === 'string' ? 'Responda aqui.' : (o.resposta || o.response || o.solucao || o.contra_argumento || ''),
+        }));
+      }
     }
     if (objectionItems.length > 0) {
       sections.push({
-        id: `auto-obj-${Date.now()}`, type: 'objections', title: '🚫 Quebrando Objeções', visible: true, styles: {},
-        content: { title: 'Ainda tem dúvidas?', items: objectionItems }
+        id: `auto-obj-${Date.now()}`, type: 'objections', title: aiCopy?.objections_title || '🚫 Ainda Tem Dúvidas?', visible: true, styles: {},
+        content: { title: aiCopy?.objections_title || 'Ainda tem dúvidas?', items: objectionItems }
       });
     }
 
     // ── 10. Guarantee ──
     addProgress('🛡️ Montando seção de garantia...');
-    let guaranteeData = { title: 'Garantia Total', description: '', icon: '🛡️', duration: '' };
-    const rawGuarantee = pos?.garantia || lp?.garantia || lp?.guarantee || funnel?.garantia || vox?.garantia;
-    if (rawGuarantee) {
-      if (typeof rawGuarantee === 'string') {
-        guaranteeData.description = rawGuarantee;
-      } else {
-        guaranteeData.title = rawGuarantee.titulo || rawGuarantee.title || 'Garantia Total';
-        guaranteeData.description = rawGuarantee.descricao || rawGuarantee.description || rawGuarantee.texto || '';
-        guaranteeData.duration = rawGuarantee.duracao || rawGuarantee.prazo || rawGuarantee.dias || '';
+    let guaranteeData = {
+      title: aiCopy?.guarantee_title || 'Garantia Total',
+      description: aiCopy?.guarantee_description || '',
+      icon: '🛡️',
+      duration: aiCopy?.guarantee_duration || '',
+    };
+    if (!guaranteeData.description) {
+      const rawGuarantee = pos?.garantia || lp?.garantia || lp?.guarantee || funnel?.garantia;
+      if (rawGuarantee) {
+        if (typeof rawGuarantee === 'string') {
+          guaranteeData.description = rawGuarantee;
+        } else {
+          guaranteeData.title = rawGuarantee.titulo || rawGuarantee.title || guaranteeData.title;
+          guaranteeData.description = rawGuarantee.descricao || rawGuarantee.description || rawGuarantee.texto || '';
+          guaranteeData.duration = rawGuarantee.duracao || rawGuarantee.prazo || '';
+        }
       }
     }
     if (!guaranteeData.description) {
@@ -1326,24 +1375,28 @@ const AutoGeneratePage: React.FC<{
     // ── 11. Pricing ──
     addProgress('💰 Montando preços...');
     let pricingItems: any[] = [];
-    const rawPricing = [
-      ...extractArray(lp, 'planos', 'pricing', 'precos', 'tabela_precos'),
-      ...extractArray(funnel, 'planos', 'ofertas', 'precos'),
-      ...extractArray(pos, 'planos', 'precos', 'ofertas'),
-      ...extractArray(paidMedia, 'ofertas', 'planos'),
-    ];
-    if (rawPricing.length > 0) {
-      pricingItems = rawPricing.slice(0, 3).map((p: any, i: number) => ({
-        name: p.name || p.nome || p.plano || `Plano ${i + 1}`,
-        price: p.price || p.preco || p.valor || 'Consulte',
-        features: Array.isArray(p.features || p.recursos || p.beneficios) ? (p.features || p.recursos || p.beneficios) : [],
-        highlighted: i === 1,
-      }));
+    if (aiCopy?.pricing && Array.isArray(aiCopy.pricing)) {
+      pricingItems = aiCopy.pricing;
+    }
+    if (pricingItems.length === 0) {
+      const rawPricing = [
+        ...extractArray(lp, 'planos', 'pricing', 'precos', 'tabela_precos'),
+        ...extractArray(funnel, 'planos', 'ofertas', 'precos'),
+        ...extractArray(pos, 'planos', 'precos', 'ofertas'),
+      ];
+      if (rawPricing.length > 0) {
+        pricingItems = rawPricing.slice(0, 3).map((p: any, i: number) => ({
+          name: p.name || p.nome || p.plano || `Plano ${i + 1}`,
+          price: p.price || p.preco || p.valor || 'Consulte',
+          features: Array.isArray(p.features || p.recursos || p.beneficios) ? (p.features || p.recursos || p.beneficios) : [],
+          highlighted: i === 1,
+        }));
+      }
     }
     if (pricingItems.length > 0) {
       sections.push({
-        id: `auto-pricing-${Date.now()}`, type: 'pricing', title: '💰 Planos e Preços', visible: true, styles: {},
-        content: { title: 'Escolha seu Plano', items: pricingItems }
+        id: `auto-pricing-${Date.now()}`, type: 'pricing', title: aiCopy?.pricing_title || '💰 Planos e Preços', visible: true, styles: {},
+        content: { title: aiCopy?.pricing_title || 'Escolha seu Plano', items: pricingItems }
       });
     }
 
@@ -1351,33 +1404,33 @@ const AutoGeneratePage: React.FC<{
     addProgress('🖼️ Reservando galeria...');
     sections.push({
       id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {},
-      content: {
-        images: [],
-        _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais. Sugestão: produto em uso, detalhes, bastidores.',
-      }
+      content: { images: [], _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais do produto, serviço ou bastidores.' }
     });
 
     // ── 13. FAQ ──
     addProgress('❓ Montando FAQ...');
     let faqItems: any[] = [];
-    const rawFaq = [
-      ...extractArray(lp, 'faq', 'perguntas_frequentes'),
-      ...extractArray(seoData, 'faq', 'perguntas', 'perguntas_frequentes'),
-      ...extractArray(vox, 'duvidas_frequentes', 'faq', 'perguntas'),
-      ...extractArray(pos, 'faq', 'perguntas'),
-    ];
-    if (rawFaq.length > 0) {
-      faqItems = rawFaq.slice(0, 7).map((q: any) => ({
-        question: q.question || q.pergunta || '',
-        answer: q.answer || q.resposta || '',
-      }));
-    } else {
+    if (aiCopy?.faq && Array.isArray(aiCopy.faq)) {
+      faqItems = aiCopy.faq;
+    }
+    if (faqItems.length === 0) {
+      const rawFaq = [
+        ...extractArray(lp, 'faq', 'perguntas_frequentes'),
+        ...extractArray(seoData, 'faq', 'perguntas', 'perguntas_frequentes'),
+        ...extractArray(vox, 'duvidas_frequentes', 'faq', 'perguntas'),
+      ];
+      if (rawFaq.length > 0) {
+        faqItems = rawFaq.slice(0, 7).map((q: any) => ({
+          question: q.question || q.pergunta || '',
+          answer: q.answer || q.resposta || '',
+        }));
+      }
+    }
+    if (faqItems.length === 0) {
       faqItems = [
         { question: 'Como funciona?', answer: 'Descreva como funciona.' },
         { question: 'Quais os diferenciais?', answer: 'Liste seus diferenciais.' },
         { question: 'Como entro em contato?', answer: 'Informe seus canais.' },
-        { question: 'Qual o prazo de entrega?', answer: 'Informe seus prazos.' },
-        { question: 'Tem garantia?', answer: 'Descreva sua garantia.' },
       ];
     }
     sections.push({
@@ -1386,28 +1439,32 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 14. CTA Final ──
-    addProgress('🎯 Criando CTA final...');
+    addProgress('🎯 Criando CTA final persuasivo...');
+    const ctaFinalHeadline = aiCopy?.cta_final_headline
+      || lp?.cta_headline || funnel?.cta_final || emailData?.assunto_principal
+      || 'Pronto para Transformar Seus Resultados?';
+    const ctaFinalDesc = aiCopy?.cta_final_description
+      || lp?.cta_description || pos?.urgencia || pos?.chamada_acao
+      || 'Não perca mais tempo. Entre em contato agora e descubra como podemos ajudar.';
+    const ctaFinalButton = aiCopy?.cta_final_button || heroCta;
+
     const ctaHAlts = collectAlternatives([
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline', 'titulo_cta'] },
-      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_headline', 'assunto', 'titulo'] },
-      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta_headline', 'titulo_final'] },
-      { agent: 'Funil', icon: '📊', data: funnel, keys: ['cta_final', 'headline_conversao', 'titulo_oferta'] },
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['cta_final_headline'] },
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline'] },
+      { agent: 'Funil', icon: '📊', data: funnel, keys: ['cta_final', 'headline_conversao'] },
     ]);
-    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para transformar seus resultados?' });
     const ctaDAlts = collectAlternatives([
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_description', 'cta_final_description', 'descricao_cta'] },
-      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
+      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['cta_final_description'] },
       { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia', 'promessa_final'] },
-      { agent: 'Funil', icon: '📊', data: funnel, keys: ['urgencia', 'escassez', 'oferta_final'] },
+      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
     ]);
-    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Não perca mais tempo. Entre em contato agora e descubra como podemos ajudar.' });
 
     sections.push({
       id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
       content: {
-        headline: ctaHAlts[0].text,
-        description: ctaDAlts[0].text,
-        button_text: ctaAlts[0]?.text || 'Fale Conosco',
+        headline: ctaFinalHeadline,
+        description: ctaFinalDesc,
+        button_text: ctaFinalButton,
         button_url: '#contato',
         _alt_headline: ctaHAlts,
         _alt_description: ctaDAlts,
@@ -1421,22 +1478,26 @@ const AutoGeneratePage: React.FC<{
       content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
     });
 
-    // ── Config ──
+    // ── Config & Save ──
     addProgress('🔍 Aplicando configurações visuais e SEO...');
     const primaryColor = creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
     const accentColor = creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
 
+    // AI-generated page name or smart fallback
+    const pageName = aiCopy?.page_name || `${project.nome} — Página de Vendas`;
     const uniqueSuffix = Date.now().toString(36);
-    const pageName = `${project.nome} — Gerada ${uniqueSuffix}`;
-    const slug = generateSlug(pageName);
+    const slug = generateSlug(`${pageName} ${uniqueSuffix}`);
     const estabId = localStorage.getItem('estabelecimentoId');
+
+    const seoTitle = aiCopy?.seo_title || seoData?.titulo_pagina || seoData?.title || pageName;
+    const seoDesc = aiCopy?.seo_description || seoData?.meta_description || seoData?.descricao || project.descricao_negocio || '';
 
     const { data: saved, error } = await supabase.from('published_pages').insert({
       nome: pageName, slug,
       sections: sections as any,
       config: {
-        title: seoData?.titulo_pagina || seoData?.title || project.nome,
-        description: seoData?.meta_description || seoData?.descricao || project.descricao_negocio || '',
+        title: seoTitle,
+        description: seoDesc,
         favicon: '', primaryColor, secondaryColor: '#1e293b',
         accentColor, backgroundColor: '#ffffff', textColor: '#1f2937',
         fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
