@@ -4,7 +4,8 @@ import {
   ChevronDown, ChevronUp, Settings, Palette, Layout, Bot, ArrowDown,
   Sparkles, FileText, Monitor, Smartphone, Tablet, Copy, Save, Loader2,
   Columns, Square, AlignLeft, Link, ExternalLink, Upload, FolderOpen,
-  Wand2, LayoutTemplate, ImagePlus, Package, GalleryHorizontalEnd
+  Wand2, LayoutTemplate, ImagePlus, Package, GalleryHorizontalEnd,
+  MoreVertical, Pencil, FolderInput
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -641,9 +643,9 @@ const PageBuilderLanding: React.FC<{
 }> = ({ onOpen, onCreateNew }) => {
   const [pages, setPages] = useState<SavedPage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [dialogAction, setDialogAction] = useState<{ type: 'rename' | 'duplicate' | 'delete' | 'publish' | 'unpublish'; page: SavedPage } | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   const load = useCallback(async () => {
     const estabId = localStorage.getItem('estabelecimentoId');
@@ -655,33 +657,80 @@ const PageBuilderLanding: React.FC<{
 
   useEffect(() => { load(); }, [load]);
 
-  const handleRename = async (id: string) => {
-    if (!renameValue.trim()) return;
-    const slug = generateSlug(renameValue);
-    const { error } = await supabase.from('published_pages').update({ nome: renameValue, slug }).eq('id', id);
-    if (error) toast.error('Erro ao renomear');
-    else { toast.success('Renomeado!'); setRenamingId(null); load(); }
+  const openDialog = (type: 'rename' | 'duplicate' | 'delete' | 'publish' | 'unpublish', page: SavedPage) => {
+    setDialogAction({ type, page });
+    if (type === 'rename') setRenameValue(page.nome);
   };
 
-  const handleDuplicate = async (page: SavedPage) => {
-    const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId) return;
-    const newName = `${page.nome} (Cópia)`;
-    const { error } = await supabase.from('published_pages').insert({
-      nome: newName, slug: generateSlug(newName), sections: page.sections, config: page.config,
-      estabelecimento_id: estabId, publicado: false,
-    });
-    if (error) toast.error('Erro ao duplicar');
-    else { toast.success('Duplicado!'); load(); }
+  const closeDialog = () => { setDialogAction(null); setProcessing(false); };
+
+  const handleConfirm = async () => {
+    if (!dialogAction) return;
+    setProcessing(true);
+    const { type, page } = dialogAction;
+
+    try {
+      switch (type) {
+        case 'rename': {
+          if (!renameValue.trim()) { setProcessing(false); return; }
+          const slug = generateSlug(renameValue);
+          const { error } = await supabase.from('published_pages').update({ nome: renameValue, slug }).eq('id', page.id);
+          if (error) toast.error('Erro ao renomear');
+          else toast.success('Página renomeada!');
+          break;
+        }
+        case 'duplicate': {
+          const estabId = localStorage.getItem('estabelecimentoId');
+          if (!estabId) break;
+          const newName = `${page.nome} (Cópia)`;
+          const { error } = await supabase.from('published_pages').insert({
+            nome: newName, slug: generateSlug(newName), sections: page.sections, config: page.config,
+            estabelecimento_id: estabId, publicado: false,
+          });
+          if (error) toast.error('Erro ao duplicar');
+          else toast.success('Página duplicada!');
+          break;
+        }
+        case 'delete': {
+          const { error } = await supabase.from('published_pages').delete().eq('id', page.id);
+          if (error) toast.error('Erro ao excluir');
+          else toast.success('Página excluída!');
+          break;
+        }
+        case 'publish': {
+          const { error } = await supabase.from('published_pages').update({ publicado: true }).eq('id', page.id);
+          if (error) toast.error('Erro ao publicar');
+          else toast.success('Página publicada! 🎉');
+          break;
+        }
+        case 'unpublish': {
+          const { error } = await supabase.from('published_pages').update({ publicado: false }).eq('id', page.id);
+          if (error) toast.error('Erro ao despublicar');
+          else toast.success('Página despublicada.');
+          break;
+        }
+      }
+    } catch { toast.error('Erro inesperado'); }
+
+    closeDialog();
+    load();
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('published_pages').delete().eq('id', id);
-    if (error) toast.error('Erro ao excluir');
-    else { toast.success('Excluído!'); setDeletingId(null); load(); }
+  const getDialogContent = () => {
+    if (!dialogAction) return { title: '', description: '', confirmLabel: '', variant: 'default' as const };
+    const { type, page } = dialogAction;
+    switch (type) {
+      case 'rename': return { title: 'Renomear Página', description: `Altere o nome da página "${page.nome}".`, confirmLabel: 'Renomear', variant: 'default' as const };
+      case 'duplicate': return { title: 'Duplicar Página', description: `Deseja criar uma cópia de "${page.nome}"? A cópia será salva como rascunho.`, confirmLabel: 'Duplicar', variant: 'default' as const };
+      case 'delete': return { title: 'Excluir Página', description: `Tem certeza que deseja excluir "${page.nome}"? Esta ação não pode ser desfeita.`, confirmLabel: 'Excluir', variant: 'destructive' as const };
+      case 'publish': return { title: 'Publicar Página', description: `Deseja publicar "${page.nome}"? Ela ficará acessível publicamente em /p/${page.slug}.`, confirmLabel: 'Publicar', variant: 'default' as const };
+      case 'unpublish': return { title: 'Despublicar Página', description: `Deseja despublicar "${page.nome}"? Ela deixará de estar acessível publicamente.`, confirmLabel: 'Despublicar', variant: 'destructive' as const };
+    }
   };
 
   if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
+  const dialogContent = getDialogContent();
 
   return (
     <div className="space-y-6">
@@ -702,7 +751,6 @@ const PageBuilderLanding: React.FC<{
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {/* New page card */}
           <button onClick={onCreateNew}
             className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary hover:bg-primary/5 transition-all min-h-[200px]">
             <Plus className="h-8 w-8 text-muted-foreground" />
@@ -710,58 +758,86 @@ const PageBuilderLanding: React.FC<{
           </button>
 
           {pages.map(page => (
-            <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-shadow">
-              {/* Thumbnail area */}
+            <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-shadow relative">
+              {/* Context menu */}
+              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="icon" className="h-7 w-7 shadow-sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-popover w-48">
+                    <DropdownMenuItem onClick={() => onOpen(page)} className="gap-2 cursor-pointer">
+                      <FolderOpen className="h-4 w-4" /> Abrir
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openDialog('rename', page)} className="gap-2 cursor-pointer">
+                      <Pencil className="h-4 w-4" /> Renomear
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openDialog('duplicate', page)} className="gap-2 cursor-pointer">
+                      <Copy className="h-4 w-4" /> Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {page.publicado ? (
+                      <DropdownMenuItem onClick={() => openDialog('unpublish', page)} className="gap-2 cursor-pointer">
+                        <ExternalLink className="h-4 w-4" /> Despublicar
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => openDialog('publish', page)} className="gap-2 cursor-pointer">
+                        <Upload className="h-4 w-4" /> Publicar
+                      </DropdownMenuItem>
+                    )}
+                    {page.publicado && (
+                      <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/p/${page.slug}`); toast.success('URL copiada!'); }} className="gap-2 cursor-pointer">
+                        <Link className="h-4 w-4" /> Copiar URL
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => openDialog('delete', page)} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                      <Trash2 className="h-4 w-4" /> Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               <button onClick={() => onOpen(page)}
                 className="w-full h-32 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                 <Globe className="h-10 w-10 text-primary/30" />
               </button>
-              <div className="p-3 space-y-2">
-                {renamingId === page.id ? (
-                  <div className="flex gap-1">
-                    <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="h-7 text-sm"
-                      onKeyDown={e => { if (e.key === 'Enter') handleRename(page.id); if (e.key === 'Escape') setRenamingId(null); }}
-                      autoFocus />
-                    <Button size="sm" className="h-7 text-xs" onClick={() => handleRename(page.id)}>Ok</Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-sm truncate">{page.nome}</h4>
-                    <div className="flex items-center gap-0.5">
-                      {page.publicado && <Badge variant="default" className="text-[9px] h-4">Publicada</Badge>}
-                    </div>
-                  </div>
-                )}
+              <div className="p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm truncate flex-1">{page.nome}</h4>
+                  {page.publicado && <Badge variant="default" className="text-[9px] h-4 ml-1">Publicada</Badge>}
+                </div>
                 <p className="text-[10px] text-muted-foreground">/p/{page.slug}</p>
                 <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
-                <div className="flex gap-1 pt-1">
-                  <Button variant="outline" size="sm" className="h-6 text-[10px] flex-1" onClick={() => onOpen(page)}>
-                    Abrir
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => { setRenamingId(page.id); setRenameValue(page.nome); }}>
-                    <Type className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => handleDuplicate(page)}>
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5 text-destructive" onClick={() => setDeletingId(page.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" className="h-7 text-xs w-full mt-1" onClick={() => onOpen(page)}>
+                  Abrir Editor
+                </Button>
               </div>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Delete confirmation */}
-      <Dialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+      {/* Unified action confirmation dialog */}
+      <Dialog open={!!dialogAction} onOpenChange={() => closeDialog()}>
         <DialogContent className="bg-background sm:max-w-sm">
-          <DialogHeader><DialogTitle>Excluir Página</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Tem certeza que deseja excluir esta página? Esta ação não pode ser desfeita.</p>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setDeletingId(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => deletingId && handleDelete(deletingId)}>Excluir</Button>
+          <DialogHeader><DialogTitle>{dialogContent.title}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{dialogContent.description}</p>
+          {dialogAction?.type === 'rename' && (
+            <div className="space-y-2">
+              <Label className="text-xs">Novo nome</Label>
+              <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') handleConfirm(); }} />
+            </div>
+          )}
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={closeDialog} disabled={processing}>Cancelar</Button>
+            <Button variant={dialogContent.variant} onClick={handleConfirm} disabled={processing}>
+              {processing && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              {dialogContent.confirmLabel}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
