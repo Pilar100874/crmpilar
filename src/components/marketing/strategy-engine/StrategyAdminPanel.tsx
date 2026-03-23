@@ -77,6 +77,7 @@ function agentCardToEditable(card: AgentCard): EditableAgentCard {
     anti_patterns: [...card.anti_patterns],
     error_handling: card.error_handling,
     handoff: card.handoff,
+    destino_consumo: card.destino_consumo ? [...card.destino_consumo] : [],
   };
 }
 
