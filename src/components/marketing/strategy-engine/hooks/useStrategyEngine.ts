@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AgentExecution } from '../types';
 import { toast } from 'sonner';
 import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from '../types';
+import { AGENT_CARDS } from '../agent-cards';
 import jsPDF from 'jspdf';
 
 export function useStrategyEngine(projectId: string | null, onRefetch: () => void, agentOrder: string[] = AGENT_ORDER, agentInfo: Record<string, { name: string; icon: string; color: string; description: string }> = AGENT_INFO) {
@@ -594,6 +595,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       const cg = parseInt(color.slice(3, 5), 16);
       const cb = parseInt(color.slice(5, 7), 16);
 
+      // Get agent mission/summary for the PDF
+      const agentCard = AGENT_CARDS[art.tipo];
+      const agentMission = agentCard?.mission || '';
+      const agentRole = agentCard?.role || info?.description || '';
+
       if (mode === 'resumida') {
         // --- COMPACT SECTION ---
         check(22);
@@ -606,6 +612,21 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         doc.text(`${i + 1}. ${title}`, mL + 7, y + 4);
         doc.setFont('helvetica', 'normal');
         y += 12;
+
+        // Agent summary (compact)
+        if (agentMission) {
+          doc.setFontSize(fs.small);
+          doc.setTextColor(100, 105, 125);
+          doc.setFont('helvetica', 'italic');
+          const missionLines = doc.splitTextToSize(sanitizeForPDF(agentMission), cW - 14);
+          for (const ml of missionLines) {
+            check(lineH);
+            doc.text(ml, mL + 7, y);
+            y += lineH;
+          }
+          doc.setFont('helvetica', 'normal');
+          y += 2;
+        }
 
         const condensed = extractCondensedLines(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
@@ -642,14 +663,33 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         doc.setFont('helvetica', 'normal');
         y += 22;
 
-        // Description
-        if (info?.description) {
+        // Agent mission summary
+        if (agentMission) {
           doc.setFontSize(9);
-          doc.setTextColor(110, 115, 135);
+          doc.setTextColor(80, 85, 105);
           doc.setFont('helvetica', 'italic');
-          doc.text(sanitizeForPDF(info.description), mL + 2, y);
+          const missionWrapped = doc.splitTextToSize(sanitizeForPDF(agentMission), cW - 4);
+          for (const ml of missionWrapped) {
+            check(lineH);
+            doc.text(ml, mL + 2, y);
+            y += lineH;
+          }
           doc.setFont('helvetica', 'normal');
-          y += 8;
+          y += 2;
+        }
+
+        // Agent role description
+        if (agentRole) {
+          doc.setFontSize(8);
+          doc.setTextColor(120, 125, 145);
+          doc.setFont('helvetica', 'normal');
+          const roleWrapped = doc.splitTextToSize(sanitizeForPDF(agentRole), cW - 4);
+          for (const rl of roleWrapped) {
+            check(lineH);
+            doc.text(rl, mL + 2, y);
+            y += lineH;
+          }
+          y += 3;
         }
 
         const structured = extractStructured(art.conteudo).map(l => {
