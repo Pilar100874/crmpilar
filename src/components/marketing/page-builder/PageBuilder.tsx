@@ -1525,12 +1525,17 @@ const AutoGeneratePage: React.FC<{
                 <div className="text-[10px] text-muted-foreground space-y-1">
                   <p className="font-semibold text-foreground">A página gerada incluirá:</p>
                   <p>✅ Hero com dados de posicionamento</p>
-                  <p>✅ Seção de recursos/diferenciais</p>
-                  <p>✅ Depoimentos de clientes</p>
-                  <p>✅ FAQ automático</p>
-                  <p>✅ CTA otimizado</p>
-                  <p>📸 Espaços reservados para imagens (com sugestões)</p>
-                  <p>🎬 Espaço reservado para vídeo (com sugestão de roteiro)</p>
+                  <p>✅ Hero com título, subtítulo e CTA</p>
+                  <p>✅ Prova social com números/métricas</p>
+                  <p>✅ Diferenciais e recursos</p>
+                  <p>✅ Etapas do processo (Como Funciona)</p>
+                  <p>✅ Depoimentos com métricas</p>
+                  <p>✅ Quebra de objeções</p>
+                  <p>✅ Seção de garantia</p>
+                  <p>✅ Planos e preços</p>
+                  <p>✅ FAQ completo</p>
+                  <p>✅ CTA final otimizado</p>
+                  <p>📸 Espaços para imagens/vídeo (com sugestões)</p>
                   <p>🔍 Configurações de SEO aplicadas</p>
                 </div>
               </Card>
