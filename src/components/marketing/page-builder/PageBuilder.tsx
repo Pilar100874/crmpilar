@@ -23,6 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { TEMPLATE_CATEGORIES, ALL_THEMES, getThemeById } from './pageTemplates';
+import { FULL_TEMPLATE_CATEGORIES, ALL_FULL_TEMPLATES, FullTemplate } from './fullTemplates';
+import { TemplateMiniPreview } from './TemplateMiniPreview';
 import { AgentTextBank } from './AgentTextBank';
 import {
   DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay,
@@ -973,12 +975,40 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
 const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = ({ section, config }) => {
   if (!section.visible) return null;
   const c = section.content;
+  const layout = section.styles?.layout || '';
   switch (section.type) {
-    case 'hero': return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: '#fff' }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p><a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a></div></div>);
+    case 'hero': {
+      if (layout === 'split-left' || layout === 'split-right') {
+        const isRight = layout === 'split-right';
+        return (
+          <div className="relative py-12 px-6" style={{ backgroundColor: config.primaryColor, color: '#fff' }}>
+            <div className={`max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 ${isRight ? 'md:flex-row-reverse' : ''}`}>
+              <div className="flex-1 text-left">
+                <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
+                <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
+                {c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}
+              </div>
+              <div className="flex-1 w-full">
+                {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl bg-white/10 flex items-center justify-center text-white/30 text-sm">Imagem do Hero</div>}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: '#fff' }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}</div></div>);
+    }
     case 'text': return <div className="py-10 px-6 max-w-3xl mx-auto" style={{ textAlign: c.alignment as any }}><p className="text-base leading-relaxed whitespace-pre-wrap">{c.body}</p></div>;
     case 'image': return (<div className="py-8 px-6 max-w-4xl mx-auto text-center">{c.url ? <img src={c.url} alt={c.alt} className="w-full rounded-lg shadow-lg" style={{ objectFit: c.fit }} /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Image className="h-10 w-10 text-muted-foreground" /></div>}{c.caption && <p className="text-sm text-muted-foreground mt-2">{c.caption}</p>}</div>);
     case 'video': return (<div className="py-8 px-6 max-w-4xl mx-auto">{c.url ? <video src={c.url} controls poster={c.poster} className="w-full rounded-lg shadow-lg" /> : c.poster ? <div className="relative w-full rounded-lg shadow-lg overflow-hidden"><img src={c.poster} alt="Video poster" className="w-full aspect-video object-cover" style={{ filter: 'brightness(0.7)' }} /><div className="absolute inset-0 flex items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><Play className="h-7 w-7 text-white ml-1" /></div></div></div> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Video className="h-10 w-10 text-muted-foreground" /></div>}</div>);
-    case 'features': return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
+    case 'features': {
+      if (layout === 'zigzag') {
+        return (<div className="py-12 px-6 max-w-5xl mx-auto space-y-8">{(c.items || []).map((item: any, i: number) => (<div key={i} className={`flex flex-col md:flex-row items-center gap-6 ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''}`}><div className="flex-1 text-center md:text-left"><span className="text-4xl block mb-3">{item.icon}</span><h3 className="font-semibold text-xl mb-2">{item.title}</h3><p className="text-muted-foreground">{item.description}</p></div><div className="flex-1 w-full"><div className="aspect-video rounded-xl bg-muted/30 border flex items-center justify-center text-muted-foreground text-sm">Imagem</div></div></div>))}</div>);
+      }
+      if (layout === 'icons-left') {
+        return (<div className="py-12 px-6 max-w-4xl mx-auto space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-card border"><span className="text-3xl shrink-0">{item.icon}</span><div><h3 className="font-semibold text-lg mb-1">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div></div>))}</div>);
+      }
+      return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
+    }
     case 'cta': return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor }}>{c.button_text}</a></div>);
     case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
     case 'social_proof': return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i}><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>);
@@ -1043,8 +1073,16 @@ section{overflow-x:hidden}
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
-      case 'hero':
-        html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div></section>\n`; break;
+      case 'hero': {
+        const heroLayout = s.styles?.layout || '';
+        if (heroLayout === 'split-left' || heroLayout === 'split-right') {
+          const isRight = heroLayout === 'split-right';
+          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:#fff"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(255,255,255,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3)">Imagem</div>`}</div></div></section>\n`;
+        } else {
+          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div></section>\n`;
+        }
+        break;
+      }
       case 'text':
         html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px;text-align:${c.alignment||'left'}"><p style="font-size:1.1rem;line-height:1.8;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
       case 'image':
@@ -2432,6 +2470,8 @@ const PageBuilderEditor: React.FC<{
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [themeCategoryFilter, setThemeCategoryFilter] = useState(TEMPLATE_CATEGORIES[0]?.id || 'startup');
+  const [fullTemplateCategoryFilter, setFullTemplateCategoryFilter] = useState(FULL_TEMPLATE_CATEGORIES[0]?.id || 'landing');
+  const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -2506,6 +2546,16 @@ const PageBuilderEditor: React.FC<{
     setSelectedSectionId(timestamped[0]?.id || null);
     setShowTemplateDialog(false);
     toast.success(`Template "${template.name}" aplicado!`);
+  };
+
+  const applyFullTemplate = (ft: FullTemplate) => {
+    const timestamped = ft.sections.map(s => ({ ...s, id: `${s.id}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}` })) as PageSection[];
+    setSections(timestamped);
+    setConfig(c => ({ ...c, ...ft.config }));
+    if (!currentPageId) { setPageName(ft.name); setPageSlug(generateSlug(ft.name)); }
+    setSelectedSectionId(timestamped[0]?.id || null);
+    setShowTemplateDialog(false);
+    toast.success(`Template "${ft.name}" aplicado com tema completo!`);
   };
 
   const savePage = async () => {
@@ -2681,18 +2731,72 @@ const PageBuilderEditor: React.FC<{
 
       {/* Template & Theme Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className="bg-background sm:max-w-4xl max-h-[85vh] flex flex-col">
+        <DialogContent className="bg-background sm:max-w-5xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><LayoutTemplate className="h-5 w-5" /> Templates & Temas</DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="themes" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="themes" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Temas Visuais</TabsTrigger>
-              <TabsTrigger value="structure" className="gap-1.5"><Layout className="h-3.5 w-3.5" /> Estrutura</TabsTrigger>
+          <Tabs defaultValue="full" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="full" className="gap-1.5"><Package className="h-3.5 w-3.5" /> Templates Completos</TabsTrigger>
+              <TabsTrigger value="themes" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Só Tema Visual</TabsTrigger>
+              <TabsTrigger value="structure" className="gap-1.5"><Layout className="h-3.5 w-3.5" /> Só Estrutura</TabsTrigger>
             </TabsList>
+
+            {/* Full Templates Tab (ThemeForest-style) */}
+            <TabsContent value="full" className="flex-1 min-h-0 mt-3 flex flex-col gap-3">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {FULL_TEMPLATE_CATEGORIES.map(cat => (
+                  <button key={cat.id}
+                    onClick={() => setFullTemplateCategoryFilter(cat.id)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
+                      fullTemplateCategoryFilter === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 border-transparent hover:bg-muted"
+                    )}>
+                    <span>{cat.icon}</span> {cat.name}
+                  </button>
+                ))}
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pr-2">
+                  {(FULL_TEMPLATE_CATEGORIES.find(c => c.id === fullTemplateCategoryFilter)?.templates || ALL_FULL_TEMPLATES.slice(0, 9)).map(ft => (
+                    <button key={ft.id}
+                      onClick={() => applyFullTemplate(ft)}
+                      onMouseEnter={() => setHoveredTemplate(ft.id)}
+                      onMouseLeave={() => setHoveredTemplate(null)}
+                      className="flex flex-col gap-2 rounded-xl border-2 border-transparent hover:border-primary transition-all text-left group overflow-hidden">
+                      {/* Mini Preview */}
+                      <div className="w-full aspect-[3/4] overflow-hidden rounded-t-lg relative">
+                        <TemplateMiniPreview
+                          config={ft.config}
+                          sectionTypes={ft.sections.map(s => s.type)}
+                          className="w-full h-full"
+                        />
+                        {hoveredTemplate === ft.id && (
+                          <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] flex items-center justify-center">
+                            <span className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold shadow-lg">
+                              Aplicar Template
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="px-3 pb-3">
+                        <p className="text-sm font-semibold truncate">{ft.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{ft.description}</p>
+                        <div className="flex gap-1 flex-wrap mt-2">
+                          {ft.tags.slice(0, 3).map(tag => (
+                            <Badge key={tag} variant="outline" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+                          ))}
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{ft.sections.length} seções</Badge>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
 
             {/* Themes Tab */}
             <TabsContent value="themes" className="flex-1 min-h-0 mt-3 flex flex-col gap-3">
+              <p className="text-xs text-muted-foreground">Aplica apenas cores, fontes e estilo visual — mantém suas seções atuais.</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {TEMPLATE_CATEGORIES.map(cat => (
                   <button key={cat.id}
@@ -2742,6 +2846,7 @@ const PageBuilderEditor: React.FC<{
 
             {/* Structure Tab */}
             <TabsContent value="structure" className="flex-1 min-h-0 mt-3">
+              <p className="text-xs text-muted-foreground mb-3">Aplica apenas a estrutura de seções — mantém seu tema visual atual.</p>
               <ScrollArea className="h-full">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-2">
                   {PAGE_TEMPLATES.map(tpl => (
