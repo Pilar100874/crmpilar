@@ -386,6 +386,7 @@ export function StrategyAdminPanel() {
           anti_patterns: [],
           error_handling: '',
           handoff: '',
+          destino_consumo: [],
         };
 
         // Only set if not already modified by user in this session
