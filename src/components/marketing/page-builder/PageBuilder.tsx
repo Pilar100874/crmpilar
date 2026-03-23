@@ -1725,13 +1725,150 @@ const AutoGeneratePage: React.FC<{
             })()}
 
             <Button
+              onClick={async () => {
+                // Fetch products for selection
+                setLoadingProducts(true);
+                const estabId = localStorage.getItem('estabelecimentoId');
+                if (estabId) {
+                  const { data } = await supabase
+                    .from('produtos')
+                    .select('id, nome, codigo, foto_url, descricao, preco_tabela, marca')
+                    .eq('estabelecimento_id', estabId)
+                    .eq('ativo', true)
+                    .order('nome')
+                    .limit(100);
+                  setProducts(data || []);
+                }
+                setLoadingProducts(false);
+                setStep('product');
+              }}
+              disabled={generating}
+              className="w-full gap-2"
+            >
+              <Package className="h-4 w-4" /> Próximo: Selecionar Produto
+            </Button>
+          </div>
+        ) : step === 'product' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                <strong>Passo 3:</strong> Selecione o produto (opcional) para gerar imagem e vídeo com IA.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('template')} className="text-xs gap-1">
+                ← Voltar
+              </Button>
+            </div>
+
+            {/* Search */}
+            <Input
+              placeholder="🔍 Buscar produto por nome ou código..."
+              value={productSearch}
+              onChange={e => setProductSearch(e.target.value)}
+              className="text-sm"
+            />
+
+            {loadingProducts ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : (
+              <ScrollArea className="h-[300px] pr-2">
+                <div className="space-y-2">
+                  {/* Option: No product */}
+                  <button
+                    onClick={() => setSelectedProduct('')}
+                    className={cn(
+                      'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
+                      !selectedProduct
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-primary/40'
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">🚫</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Sem produto específico</p>
+                      <p className="text-[11px] text-muted-foreground">Gerar página apenas com dados da estratégia</p>
+                    </div>
+                    {!selectedProduct && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
+                  </button>
+
+                  {/* Products */}
+                  {products
+                    .filter(p => {
+                      if (!productSearch) return true;
+                      const search = productSearch.toLowerCase();
+                      return (p.nome || '').toLowerCase().includes(search) || (p.codigo || '').toLowerCase().includes(search);
+                    })
+                    .map(product => {
+                      const isSelected = selectedProduct === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => setSelectedProduct(product.id)}
+                          className={cn(
+                            'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          {product.foto_url ? (
+                            <img src={product.foto_url} alt={product.nome} className="w-12 h-12 rounded-lg object-cover border" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">📦</div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{product.nome}</p>
+                            <div className="flex items-center gap-2">
+                              {product.codigo && <span className="text-[10px] text-muted-foreground">#{product.codigo}</span>}
+                              {product.marca && <Badge variant="outline" className="text-[9px] h-4">{product.marca}</Badge>}
+                              {product.preco_tabela && (
+                                <span className="text-[10px] font-semibold text-primary">
+                                  R$ {Number(product.preco_tabela).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {isSelected && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+
+                  {products.length === 0 && !loadingProducts && (
+                    <div className="text-center py-6">
+                      <Package className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Nenhum produto encontrado.</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Selected product info */}
+            {selectedProduct && (() => {
+              const prod = products.find(p => p.id === selectedProduct);
+              if (!prod) return null;
+              return (
+                <Card className="p-3 flex items-center gap-3 bg-primary/5 border-primary/30">
+                  {prod.foto_url ? (
+                    <img src={prod.foto_url} alt={prod.nome} className="w-10 h-10 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">📦</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate">{prod.nome}</p>
+                    <p className="text-[10px] text-muted-foreground">🖼️ Imagem + 🎬 Vídeo serão gerados com IA</p>
+                  </div>
+                  <ImagePlus className="h-4 w-4 text-primary" />
+                </Card>
+              );
+            })()}
+
+            <Button
               onClick={generatePage}
               disabled={generating}
               className="w-full gap-2"
             >
-              <Zap className="h-4 w-4" /> Gerar Página com Este Tema
+              <Zap className="h-4 w-4" /> {selectedProduct ? 'Gerar Página com Produto e IA' : 'Gerar Página com Este Tema'}
             </Button>
-          </div>
         ) : (
           <div className="space-y-3 py-4">
             <div className="space-y-2">
