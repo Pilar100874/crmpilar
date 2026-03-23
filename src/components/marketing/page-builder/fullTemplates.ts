@@ -356,6 +356,102 @@ export const FULL_TEMPLATE_CATEGORIES: FullTemplateCategory[] = [
       },
     ]
   },
+  {
+    id: 'minimal', name: 'Minimalista', icon: '✨',
+    templates: [
+      {
+        id: 'ft-minimal-zen', name: 'Zen Minimal', category: 'minimal',
+        description: 'Ultra minimalista — muito espaço em branco, tipografia elegante, zero ruído',
+        tags: ['minimal', 'zen', 'clean', 'whitespace'],
+        config: { primaryColor: '#18181b', accentColor: '#a1a1aa', backgroundColor: '#fafafa', textColor: '#27272a', fontDisplay: 'Playfair Display', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'bordered', borderRadius: '4px', maxWidth: '800px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Menos é mais.', subheadline: 'Uma frase clara sobre o que você faz e por que importa.', cta_text: 'Saiba mais', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'text', title: 'Sobre', visible: true, styles: {}, content: { body: 'Uma descrição breve e direta. Sem adjetivos desnecessários. Apenas a verdade sobre o que entregamos.', alignment: 'left' } },
+          { id: 's3', type: 'features', title: 'O que fazemos', visible: true, styles: { layout: 'icons-left' }, content: { items: [{ icon: '—', title: 'Simplicidade', description: 'Direto ao ponto, sempre.' }, { icon: '—', title: 'Qualidade', description: 'Cada detalhe importa.' }, { icon: '—', title: 'Resultado', description: 'Métricas que falam por si.' }] } },
+          { id: 's4', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Vamos conversar?', description: '', button_text: 'Entrar em contato →', button_url: '#' } },
+          { id: 's5', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-minimal-mono', name: 'Mono Studio', category: 'minimal',
+        description: 'Design monocromático preto e branco, tipografia bold, estilo editorial',
+        tags: ['mono', 'black-white', 'editorial', 'bold'],
+        config: { primaryColor: '#000000', accentColor: '#525252', backgroundColor: '#ffffff', textColor: '#171717', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'bordered', borderRadius: '0px', maxWidth: '960px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'FAÇA DIFERENTE.', subheadline: 'Design, estratégia e execução para marcas que não seguem a manada.', cta_text: 'VER TRABALHO', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Números', visible: true, styles: {}, content: { items: [{ number: '200+', label: 'Projetos' }, { number: '50+', label: 'Clientes' }, { number: '8', label: 'Anos' }] } },
+          { id: 's3', type: 'features', title: 'Serviços', visible: true, styles: {}, content: { items: [{ icon: '01', title: 'Estratégia', description: 'Planejamento e posicionamento.' }, { icon: '02', title: 'Design', description: 'Identidade visual e interfaces.' }, { icon: '03', title: 'Execução', description: 'Desenvolvimento e entrega.' }] } },
+          { id: 's4', type: 'gallery', title: 'Projetos', visible: true, styles: {}, content: { images: [] } },
+          { id: 's5', type: 'cta', title: 'Contato', visible: true, styles: {}, content: { headline: 'Próximo projeto?', description: 'hello@studio.com', button_text: 'CONTATO', button_url: '#' } },
+          { id: 's6', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Studio', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-minimal-soft', name: 'Soft Touch', category: 'minimal',
+        description: 'Tons suaves, cantos arredondados, sensação acolhedora e feminina',
+        tags: ['soft', 'pastel', 'feminine', 'rounded'],
+        config: { primaryColor: '#be185d', accentColor: '#f9a8d4', backgroundColor: '#fdf2f8', textColor: '#831843', fontDisplay: 'Playfair Display', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'shadow', borderRadius: '24px', maxWidth: '960px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'Cuidado e atenção em cada detalhe', subheadline: 'Produtos pensados para quem valoriza qualidade, beleza e propósito.', cta_text: 'Conhecer →', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'image', title: 'Visual', visible: true, styles: {}, content: { url: '', alt: 'Produto', caption: '', fit: 'cover' } },
+          { id: 's3', type: 'features', title: 'Diferenciais', visible: true, styles: {}, content: { items: [{ icon: '🌸', title: 'Natural', description: 'Ingredientes selecionados com carinho.' }, { icon: '💜', title: 'Artesanal', description: 'Feito à mão, peça a peça.' }, { icon: '🌱', title: 'Sustentável', description: 'Embalagens eco-friendly.' }] } },
+          { id: 's4', type: 'testimonials', title: 'Clientes', visible: true, styles: {}, content: { items: [{ name: 'Ana', role: 'Cliente', text: 'Amei cada detalhe. Superou minhas expectativas.' }] } },
+          { id: 's5', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Pronta para experimentar?', description: 'Frete grátis no primeiro pedido.', button_text: 'Quero conhecer', button_url: '#' } },
+          { id: 's6', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${yr}` } },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'ugc', name: 'UGC & Creator', icon: '🤳',
+    templates: [
+      {
+        id: 'ft-ugc-creator', name: 'Creator Bio', category: 'ugc',
+        description: 'Bio page estilo Linktree premium para criadores de conteúdo e influenciadores',
+        tags: ['ugc', 'creator', 'bio', 'linktree'],
+        config: { primaryColor: '#7c3aed', accentColor: '#c084fc', backgroundColor: '#0c0a1d', textColor: '#e9e5f5', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'glass', borderRadius: '16px', maxWidth: '640px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: '@seunome', subheadline: 'Creator • Estrategista • Empreendedor | +500K seguidores', cta_text: 'Me siga no Instagram', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Stats', visible: true, styles: {}, content: { items: [{ number: '500K+', label: 'Seguidores' }, { number: '10M+', label: 'Views/mês' }, { number: '200+', label: 'Marcas parceiras' }] } },
+          { id: 's3', type: 'features', title: 'Links', visible: true, styles: {}, content: { items: [{ icon: '🎥', title: 'Meu Curso', description: 'Aprenda a criar conteúdo que vende.' }, { icon: '📱', title: 'Preset Pack', description: 'Filtros e templates exclusivos.' }, { icon: '📧', title: 'Newsletter', description: 'Dicas semanais no seu email.' }, { icon: '🤝', title: 'Parcerias', description: 'Mídia kit e propostas.' }] } },
+          { id: 's4', type: 'testimonials', title: 'Depoimentos', visible: true, styles: {}, content: { items: [{ name: 'Marca X', role: 'Parceria', text: 'ROI de 5x na campanha. Melhor creator que já trabalhamos.' }, { name: 'Aluno', role: 'Curso', text: 'Comecei do zero e em 30 dias já monetizei meu perfil.' }] } },
+          { id: 's5', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Quer criar conteúdo que converte?', description: 'Entre para a comunidade.', button_text: 'Acessar agora', button_url: '#' } },
+          { id: 's6', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '@seunome', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-ugc-portfolio', name: 'UGC Portfolio', category: 'ugc',
+        description: 'Portfólio para criadores UGC mostrando trabalhos, métricas e contato para marcas',
+        tags: ['ugc', 'portfolio', 'brands', 'media-kit'],
+        config: { primaryColor: '#f59e0b', accentColor: '#fbbf24', backgroundColor: '#fffbeb', textColor: '#78350f', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'split', cardStyle: 'shadow', borderRadius: '16px', maxWidth: '1000px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: { layout: 'split-left' }, content: { headline: 'Conteúdo autêntico que converte', subheadline: 'Criadora UGC especializada em lifestyle, beleza e tech. Conteúdo que parece orgânico e performa como anúncio.', cta_text: 'Ver Mídia Kit', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'social_proof', title: 'Resultados', visible: true, styles: {}, content: { items: [{ number: '150+', label: 'Conteúdos entregues' }, { number: '45+', label: 'Marcas atendidas' }, { number: '3.2x', label: 'ROAS médio' }, { number: '< 48h', label: 'Entrega' }] } },
+          { id: 's3', type: 'gallery', title: 'Portfolio', visible: true, styles: {}, content: { images: [] } },
+          { id: 's4', type: 'features', title: 'Serviços', visible: true, styles: {}, content: { items: [{ icon: '📱', title: 'UGC para Ads', description: 'Vídeos nativos para Meta e TikTok Ads.' }, { icon: '📸', title: 'Fotos Lifestyle', description: 'Fotos autênticas para feed e stories.' }, { icon: '🎬', title: 'Unboxing & Review', description: 'Conteúdo de prova social genuíno.' }, { icon: '✍️', title: 'Roteiro + Produção', description: 'Do briefing à entrega final.' }] } },
+          { id: 's5', type: 'process_steps', title: 'Processo', visible: true, styles: {}, content: { title: 'Como funciona', items: [{ step: '1', title: 'Briefing', description: 'Envie o produto e briefing.' }, { step: '2', title: 'Roteiro', description: 'Aprovo o roteiro em 24h.' }, { step: '3', title: 'Entrega', description: 'Conteúdo pronto em 48h.' }] } },
+          { id: 's6', type: 'testimonials', title: 'Marcas', visible: true, styles: {}, content: { items: [{ name: 'Brand Manager', role: 'E-commerce de beleza', text: 'Os vídeos da [nome] tiveram CTR 3x maior que nossos criativos internos.', metrics: '+300% CTR' }, { name: 'Head de Growth', role: 'Startup Tech', text: 'Conteúdo autêntico que realmente converte. Parceria contínua.', metrics: '4.5x ROAS' }] } },
+          { id: 's7', type: 'pricing', title: 'Pacotes', visible: true, styles: {}, content: { title: 'Pacotes', items: [{ name: 'Starter', price: 'R$ 500', features: ['2 vídeos UGC', 'Até 60s cada', '1 revisão'], highlighted: false }, { name: 'Pro', price: 'R$ 1.200', features: ['5 vídeos UGC', 'Fotos lifestyle', '2 revisões', 'Roteiro incluso'], highlighted: true }, { name: 'Brand Deal', price: 'Sob consulta', features: ['Conteúdo mensal', 'Exclusividade', 'Estratégia', 'Relatório de métricas'], highlighted: false }] } },
+          { id: 's8', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Vamos criar juntos?', description: 'Respondo em até 24h.', button_text: 'Solicitar orçamento', button_url: '#' } },
+          { id: 's9', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'UGC Creator', copyright: `© ${yr}` } },
+        ]
+      },
+      {
+        id: 'ft-ugc-launch', name: 'Product Drop', category: 'ugc',
+        description: 'Página de lançamento estilo drop/hype com countdown e escassez visual',
+        tags: ['ugc', 'drop', 'hype', 'launch'],
+        config: { primaryColor: '#dc2626', accentColor: '#ffffff', backgroundColor: '#000000', textColor: '#fafafa', fontDisplay: 'Inter', fontBody: 'Inter', heroStyle: 'minimal', cardStyle: 'glass', borderRadius: '0px', maxWidth: '900px' },
+        sections: [
+          { id: 's1', type: 'hero', title: 'Hero', visible: true, styles: {}, content: { headline: 'DROP 001 — ESGOTA RÁPIDO', subheadline: 'Edição limitada. Sem reposição. Quando acabar, acabou.', cta_text: 'GARANTIR O MEU', cta_url: '#', background_image: '' } },
+          { id: 's2', type: 'image', title: 'Produto', visible: true, styles: {}, content: { url: '', alt: 'Produto Drop', caption: '', fit: 'contain' } },
+          { id: 's3', type: 'social_proof', title: 'Hype', visible: true, styles: {}, content: { items: [{ number: '73', label: 'Unidades' }, { number: '2.4K', label: 'Na lista de espera' }, { number: '1', label: 'Chance' }] } },
+          { id: 's4', type: 'features', title: 'Detalhes', visible: true, styles: {}, content: { items: [{ icon: '🔥', title: 'Edição Limitada', description: 'Apenas 73 unidades produzidas.' }, { icon: '📦', title: 'Entrega Express', description: 'Envio em 24h após compra.' }, { icon: '🏷️', title: 'Certificado', description: 'Numeração individual exclusiva.' }] } },
+          { id: 's5', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'NÃO PERCA', description: 'Drop abre em breve.', button_text: 'ENTRAR NA LISTA VIP', button_url: '#' } },
+          { id: 's6', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${yr}` } },
+        ]
+      },
+    ]
+  },
 ];
 
 export const ALL_FULL_TEMPLATES: FullTemplate[] = FULL_TEMPLATE_CATEGORIES.flatMap(c => c.templates);
