@@ -100,7 +100,6 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [color, setColor] = useState('#8B5CF6');
   const [agentKey, setAgentKey] = useState('');
   const [description, setDescription] = useState('');
-  const [ordem, setOrdem] = useState(AGENT_ORDER.length + existingKeys.length + 1);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
   const [knowledgeBaseType, setKnowledgeBaseType] = useState<'internal' | 'external'>('internal');
