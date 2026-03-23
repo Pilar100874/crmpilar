@@ -10032,6 +10032,8 @@ export type Database = {
           execution_order: number | null
           id: string
           is_active: boolean | null
+          knowledge_base_files: Json | null
+          knowledge_base_type: string
           system_prompt: string
           updated_at: string | null
           validation_rules: Json | null
@@ -10045,6 +10047,8 @@ export type Database = {
           execution_order?: number | null
           id?: string
           is_active?: boolean | null
+          knowledge_base_files?: Json | null
+          knowledge_base_type?: string
           system_prompt: string
           updated_at?: string | null
           validation_rules?: Json | null
@@ -10058,6 +10062,8 @@ export type Database = {
           execution_order?: number | null
           id?: string
           is_active?: boolean | null
+          knowledge_base_files?: Json | null
+          knowledge_base_type?: string
           system_prompt?: string
           updated_at?: string | null
           validation_rules?: Json | null
@@ -10283,6 +10289,8 @@ export type Database = {
           estabelecimento_id: string
           icon: string
           id: string
+          knowledge_base_files: Json | null
+          knowledge_base_type: string
           name: string
           ordem: number
           output_schema: Json | null
@@ -10300,6 +10308,8 @@ export type Database = {
           estabelecimento_id: string
           icon?: string
           id?: string
+          knowledge_base_files?: Json | null
+          knowledge_base_type?: string
           name: string
           ordem?: number
           output_schema?: Json | null
@@ -10317,6 +10327,8 @@ export type Database = {
           estabelecimento_id?: string
           icon?: string
           id?: string
+          knowledge_base_files?: Json | null
+          knowledge_base_type?: string
           name?: string
           ordem?: number
           output_schema?: Json | null

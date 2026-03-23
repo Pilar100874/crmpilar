@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AGENT_INFO, AGENT_ORDER, AGENT_DEPENDENCIES } from './types';
 import { AGENT_CARDS, AgentCard, agentCardToSystemPrompt } from './agent-cards';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { CreateAgentDialog } from './CreateAgentDialog';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2 } from 'lucide-react';
+import { Save, Loader2, RotateCcw, ChevronDown, ChevronRight, Plus, Trash2, Copy, Link2, Upload, FileText, X, Database, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditableAgentCard {
@@ -37,6 +38,13 @@ interface EditableAgentCard {
   handoff: string;
 }
 
+interface KBFile {
+  name: string;
+  path: string;
+  size: number;
+  uploaded_at: string;
+}
+
 interface AgentConfig {
   card: EditableAgentCard;
   active: boolean;
@@ -47,6 +55,8 @@ interface AgentConfig {
   icon?: string;
   color?: string;
   dependencies: string[];
+  knowledgeBaseType: 'internal' | 'external';
+  knowledgeBaseFiles: KBFile[];
 }
 
 function agentCardToEditable(card: AgentCard): EditableAgentCard {
@@ -137,7 +147,125 @@ function FieldSection({ label, children, hint }: { label: string; children: Reac
     </div>
   );
 }
+// ─── KB File Manager Component ──────────────────────────────────────────────
+const ACCEPTED_KB_FORMATS = '.pdf,.txt,.md,.csv,.json,.xlsx,.docx';
 
+function KBFileManager({
+  agentKey,
+  files,
+  onFilesChange,
+  estabId,
+}: {
+  agentKey: string;
+  files: KBFile[];
+  onFilesChange: (files: KBFile[]) => void;
+  estabId?: string;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0 || !estabId) return;
+
+    setUploading(true);
+    const newFiles: KBFile[] = [...files];
+
+    try {
+      for (const file of Array.from(selectedFiles)) {
+        const path = `${estabId}/${agentKey}/${Date.now()}_${file.name}`;
+        const { error } = await supabase.storage
+          .from('agent-knowledge-base')
+          .upload(path, file);
+
+        if (error) {
+          toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
+          continue;
+        }
+
+        newFiles.push({
+          name: file.name,
+          path,
+          size: file.size,
+          uploaded_at: new Date().toISOString(),
+        });
+      }
+      onFilesChange(newFiles);
+      toast.success(`${selectedFiles.length} arquivo(s) enviado(s)`);
+    } catch (err: any) {
+      toast.error(`Erro no upload: ${err.message}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemove = async (index: number) => {
+    const file = files[index];
+    await supabase.storage.from('agent-knowledge-base').remove([file.path]);
+    const next = files.filter((_, i) => i !== index);
+    onFilesChange(next);
+    toast.success(`"${file.name}" removido`);
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="space-y-2 rounded-md border border-dashed border-muted-foreground/30 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] text-muted-foreground font-medium">
+          📂 Arquivos da Base de Conhecimento
+        </p>
+        <span className="text-[9px] text-muted-foreground">
+          PDF, TXT, MD, CSV, JSON, XLSX, DOCX
+        </span>
+      </div>
+
+      {files.length > 0 && (
+        <div className="space-y-1">
+          {files.map((file, i) => (
+            <div key={i} className="flex items-center gap-2 bg-muted/50 rounded px-2 py-1">
+              <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+              <span className="text-[10px] flex-1 truncate">{file.name}</span>
+              <span className="text-[9px] text-muted-foreground shrink-0">{formatSize(file.size)}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 shrink-0"
+                onClick={() => handleRemove(i)}
+              >
+                <X className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_KB_FORMATS}
+        multiple
+        className="hidden"
+        onChange={handleUpload}
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-[10px] w-full"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
+        {uploading ? 'Enviando...' : 'Enviar Arquivos'}
+      </Button>
+    </div>
+  );
+}
 export function StrategyAdminPanel() {
   const [configs, setConfigs] = useState<Record<string, AgentConfig>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -182,6 +310,8 @@ export function StrategyAdminPanel() {
           icon: info?.icon || '🤖',
           color: info?.color,
           dependencies: AGENT_DEPENDENCIES[key] ?? [],
+          knowledgeBaseType: 'internal',
+          knowledgeBaseFiles: [],
         };
       });
 
@@ -201,6 +331,8 @@ export function StrategyAdminPanel() {
               dbId: row.id,
               isCustom: false,
               dependencies: storedCard?.dependencies ?? initial[row.agent_type]?.dependencies ?? AGENT_DEPENDENCIES[row.agent_type] ?? [],
+              knowledgeBaseType: (row as any).knowledge_base_type || 'internal',
+              knowledgeBaseFiles: (row as any).knowledge_base_files || [],
             };
           }
         }
@@ -263,6 +395,8 @@ export function StrategyAdminPanel() {
             icon: ca.icon,
             color: ca.color,
             dependencies: ca.dependencies || [],
+            knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
+            knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
           };
         }
       }
@@ -296,6 +430,8 @@ export function StrategyAdminPanel() {
           ativo: config.active,
           agent_card_json: { ...config.card, dependencies: config.dependencies },
           dependencies: config.dependencies,
+          knowledge_base_type: config.knowledgeBaseType,
+          knowledge_base_files: config.knowledgeBaseFiles,
         } as any);
       } else {
         // Save built-in agent via strategy_agent_configs table
@@ -304,6 +440,8 @@ export function StrategyAdminPanel() {
           system_prompt: systemPrompt,
           is_active: config.active,
           agent_card_json: cardWithDeps,
+          knowledge_base_type: config.knowledgeBaseType,
+          knowledge_base_files: config.knowledgeBaseFiles,
         };
 
         if (config.dbId) {
@@ -355,6 +493,8 @@ export function StrategyAdminPanel() {
         active: true,
         saved: false,
         dependencies: AGENT_DEPENDENCIES[agentKey] ?? [],
+        knowledgeBaseType: 'internal',
+        knowledgeBaseFiles: [],
       },
     }));
     toast.info('Agent Card restaurado ao padrão');
@@ -461,6 +601,11 @@ export function StrategyAdminPanel() {
                           <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
+                          {config.knowledgeBaseType === 'external' && (
+                            <Badge variant="outline" className="text-[10px] gap-0.5 border-amber-500/50 text-amber-600">
+                              <Globe className="h-2.5 w-2.5" /> KB Externa
+                            </Badge>
+                          )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
@@ -539,6 +684,49 @@ export function StrategyAdminPanel() {
 
                           <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
                             <Input value={card.handoff} onChange={e => updateCard(agentKey, 'handoff', e.target.value)} className="text-xs h-8" />
+                          </FieldSection>
+
+                          <Separator />
+
+                          {/* ─── Knowledge Base Config ─── */}
+                          <FieldSection label="Base de Conhecimento" hint="Define se o agente usa dados internos (memória estratégica) ou uma base externa de arquivos">
+                            <div className="space-y-3">
+                              <Select
+                                value={config.knowledgeBaseType}
+                                onValueChange={(v: 'internal' | 'external') => {
+                                  setConfigs(prev => ({
+                                    ...prev,
+                                    [agentKey]: { ...prev[agentKey], knowledgeBaseType: v, saved: false },
+                                  }));
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="internal">
+                                    <span className="flex items-center gap-1.5"><Database className="h-3 w-3" /> Interna (Memória Estratégica)</span>
+                                  </SelectItem>
+                                  <SelectItem value="external">
+                                    <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Externa (Arquivos do Usuário)</span>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {config.knowledgeBaseType === 'external' && (
+                                <KBFileManager
+                                  agentKey={agentKey}
+                                  files={config.knowledgeBaseFiles}
+                                  onFilesChange={(files) => {
+                                    setConfigs(prev => ({
+                                      ...prev,
+                                      [agentKey]: { ...prev[agentKey], knowledgeBaseFiles: files, saved: false },
+                                    }));
+                                  }}
+                                  estabId={estabId}
+                                />
+                              )}
+                            </div>
                           </FieldSection>
 
                           <Separator />

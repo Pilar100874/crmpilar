@@ -718,6 +718,8 @@ Deno.serve(async (req) => {
     if (action === 'execute_agent') {
       let agent = AGENT_DEFINITIONS[agentType];
       let customDeps: string[] = [];
+      let kbType = 'internal';
+      let kbFiles: any[] = [];
       
       // If not a built-in agent, try loading from custom agents table
       if (!agent) {
@@ -735,6 +737,19 @@ Deno.serve(async (req) => {
           systemPrompt: (customAgent as any).system_prompt,
         };
         customDeps = (customAgent as any).dependencies || [];
+        kbType = (customAgent as any).knowledge_base_type || 'internal';
+        kbFiles = (customAgent as any).knowledge_base_files || [];
+      } else {
+        // Check built-in agent config for KB settings
+        const { data: agentConfig } = await supabase
+          .from('strategy_agent_configs')
+          .select('knowledge_base_type, knowledge_base_files')
+          .eq('agent_type', agentType)
+          .maybeSingle();
+        if (agentConfig) {
+          kbType = (agentConfig as any).knowledge_base_type || 'internal';
+          kbFiles = (agentConfig as any).knowledge_base_files || [];
+        }
       }
 
       // Always fetch latest memory from DB
@@ -745,6 +760,47 @@ Deno.serve(async (req) => {
       const missingDeps = deps.filter(d => !memory[d]);
       if (missingDeps.length > 0) {
         console.log(`⚠️ Agent ${agentType} missing dependencies: ${missingDeps.join(', ')} — executing anyway with available context`);
+      }
+
+      // Load external knowledge base content if configured
+      let kbContent = '';
+      if (kbType === 'external' && kbFiles.length > 0) {
+        console.log(`📂 Loading ${kbFiles.length} KB files for agent ${agentType}`);
+        const kbParts: string[] = [];
+        for (const file of kbFiles) {
+          try {
+            const { data: fileData, error: fileError } = await supabase.storage
+              .from('agent-knowledge-base')
+              .download(file.path);
+            if (fileError || !fileData) {
+              console.warn(`Failed to download KB file ${file.name}: ${fileError?.message}`);
+              continue;
+            }
+            const text = await fileData.text();
+            // Limit each file to ~8000 chars to avoid prompt overflow
+            const truncated = text.length > 8000 ? text.substring(0, 8000) + '\n...[conteúdo truncado]' : text;
+            kbParts.push(`--- ARQUIVO: ${file.name} ---\n${truncated}`);
+          } catch (e) {
+            console.warn(`Error reading KB file ${file.name}:`, e);
+          }
+        }
+        if (kbParts.length > 0) {
+          kbContent = kbParts.join('\n\n');
+        }
+      }
+
+      // Inject KB restriction into system prompt if external
+      let finalSystemPrompt = agent.systemPrompt;
+      if (kbType === 'external' && kbContent) {
+        finalSystemPrompt = `${agent.systemPrompt}
+
+═══════════════════════════════════════════════════════════════
+BASE DE CONHECIMENTO EXTERNA (RESTRIÇÃO OBRIGATÓRIA)
+═══════════════════════════════════════════════════════════════
+REGRA ABSOLUTA: Você DEVE responder EXCLUSIVAMENTE com base nas informações contidas na base de conhecimento fornecida abaixo. NÃO invente, NÃO extrapole, NÃO use conhecimento externo que não esteja presente nesses documentos. Se a informação solicitada não estiver na base, declare explicitamente: "Esta informação não está disponível na base de conhecimento fornecida."
+
+${kbContent}
+═══════════════════════════════════════════════════════════════`;
       }
 
       // Create execution record with dependency info
@@ -759,7 +815,9 @@ Deno.serve(async (req) => {
             dependencies: deps,
             missing_dependencies: missingDeps,
             memory_keys_available: Object.keys(memory),
-            descricao: project.descricao_negocio
+            descricao: project.descricao_negocio,
+            knowledge_base_type: kbType,
+            knowledge_base_files_count: kbFiles.length,
           }
         })
         .select()
@@ -775,7 +833,7 @@ Deno.serve(async (req) => {
         let lastError: Error | null = null;
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
-            const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
+            const rawResult = await callAI(LOVABLE_API_KEY, finalSystemPrompt, userPrompt);
             parsedResult = extractJSON(rawResult);
             lastError = null;
             break;
