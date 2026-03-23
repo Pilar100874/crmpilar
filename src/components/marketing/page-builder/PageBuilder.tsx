@@ -191,23 +191,24 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
     (async () => {
       const estabId = localStorage.getItem('estabelecimentoId');
       if (!estabId) return;
-      const [projRes, artRes] = await Promise.all([
-        supabase
-          .from('strategy_projects')
-          .select('id, nome, strategic_memory')
-          .eq('estabelecimento_id', estabId)
-          .order('updated_at', { ascending: false })
-          .limit(10),
-        supabase
+      const { data: projs } = await supabase
+        .from('strategy_projects')
+        .select('id, nome, strategic_memory')
+        .eq('estabelecimento_id', estabId)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+      const projectList = projs || [];
+      setProjects(projectList);
+      if (projectList.length > 0) {
+        const projectIds = projectList.map((p: any) => p.id);
+        const { data: arts } = await supabase
           .from('strategy_artifacts')
-          .select('id, tipo, resultado, created_at, project_id')
-          .eq('estabelecimento_id', estabId)
+          .select('id, tipo, conteudo, created_at, project_id')
+          .in('project_id', projectIds)
           .order('created_at', { ascending: false })
-          .limit(50)
-      ]);
-      const projs = projRes.data || [];
-      setProjects(projs);
-      setArtifacts(artRes.data || []);
+          .limit(50);
+        setArtifacts(arts || []);
+      }
       if (projs[0]) {
         setSelectedProject(projs[0].id);
         setMemory((projs[0].strategic_memory as Record<string, any>) || {});
