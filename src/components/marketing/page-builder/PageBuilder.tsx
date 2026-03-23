@@ -2133,7 +2133,7 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 15. Footer ──
-    const businessName = gCfg?.empresaNome || project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
+    const businessName = gCfg?.empresaNome || '';
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
       content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
