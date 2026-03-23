@@ -2761,6 +2761,7 @@ const PageBuilderEditor: React.FC<{
     ...(initialPage?.config as any || {}),
   });
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'editor' | 'agent' | 'config'>('editor');
   const [leftTab, setLeftTab] = useState<'sections' | 'assets'>('sections');
   const [showAddSection, setShowAddSection] = useState(false);
