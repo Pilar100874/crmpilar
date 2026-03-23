@@ -1882,8 +1882,8 @@ const AutoGeneratePage: React.FC<{
           videoGenPrompt = `Create a short cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Theme: ${videoPromptBase}. Style: professional advertising, clean visuals. No text overlays.`;
         }
 
-        // Determine model - try google/veo first (supports image-to-video)
-        const videoModel = mainImageUrl ? 'google/veo-3.1' : 'google/veo-3.1';
+        // Use auto mode to let backend pick the best available provider
+        const videoModel = 'auto';
         
         const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
           method: 'POST',
