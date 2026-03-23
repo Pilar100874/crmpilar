@@ -166,7 +166,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia de 7 Dias', description: 'Teste sem risco. Se não gostar, devolvemos seu dinheiro.', duration: '7 dias' } },
       { id: 't-faq', type: 'faq', title: 'Dúvidas', visible: true, styles: {}, content: { items: [{ question: 'Preciso de conhecimento prévio?', answer: 'Não! O curso foi feito para iniciantes.' }, { question: 'Por quanto tempo tenho acesso?', answer: 'Depende do plano escolhido. O Completo é vitalício.' }] } },
       { id: 't-cta', type: 'cta', title: 'CTA', visible: true, styles: {}, content: { headline: 'Comece Hoje Sua Transformação', description: 'Não adie mais seus sonhos.', button_text: 'Matricular-se Agora', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Escola', copyright: `© ${new Date().getFullYear()}` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()}` } },
     ]
   },
   {
