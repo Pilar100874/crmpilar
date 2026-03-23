@@ -1572,17 +1572,16 @@ Retorne EXCLUSIVAMENTE um JSON:
 Descrição do produto: ${productDescription}
 Contexto de marketing: ${marketingContext}
 
-O prompt deve ser em inglês e descrever uma imagem publicitária premium com:
-- O produto como foco central
+O prompt deve ser em inglês e descrever uma cena publicitária premium onde:
+- O produto REAL aparece como foco central SEM NENHUMA ALTERAÇÃO na embalagem, rótulo, formato, cores ou visual do produto
+- NÃO redesenhe, modifique ou altere a aparência do produto/embalagem de forma alguma
+- Apenas mude o CENÁRIO ao redor: iluminação, superfície, fundo, atmosfera
 - Iluminação profissional de estúdio
-- Composição limpa e atraente
-- Estilo de anúncio de alta conversão
 - SEM NENHUM TEXTO, lettering, tipografia ou palavras na imagem
-- A imagem deve ser 100% visual, sem textos sobrepostos
 
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária. IMPORTANT: NO TEXT, NO LETTERS, NO WORDS, NO TYPOGRAPHY, NO CAPTIONS in the image. Pure visual product photography only.",
+  "image_prompt": "Prompt em inglês descrevendo APENAS o cenário/ambiente ao redor do produto. CRITICAL: DO NOT modify the product appearance, packaging, label or branding. Only describe the background scene, lighting and atmosphere. NO TEXT in the image.",
   "alt_text": "Texto alternativo descritivo em português",
   "suggested_headline": "Headline persuasiva para acompanhar a imagem (PT-BR)"
 }`;
@@ -1600,7 +1599,7 @@ Retorne EXCLUSIVAMENTE um JSON:
           messages.push({
             role: 'user',
             content: [
-              { type: 'text', text: `Create a professional advertising image for this product. NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. Pure visual product photography only. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. No text or words in the image.`}` },
+              { type: 'text', text: `Place this EXACT product in a professional advertising scene. CRITICAL RULES: 1) DO NOT modify, redesign, or alter the product appearance, packaging, label, colors, shape, or branding in ANY way. The product must look IDENTICAL to the reference image. 2) Only change the BACKGROUND and ENVIRONMENT around the product (lighting, surface, props, atmosphere). 3) NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. 4) Keep the product as the hero/focal point with premium studio lighting. ${promptData?.image_prompt || `Professional product photography of "${productName}" with studio lighting and clean composition.`}` },
               { type: 'image_url', image_url: { url: productImageUrl } }
             ]
           });
