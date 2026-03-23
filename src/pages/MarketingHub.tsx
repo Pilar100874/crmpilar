@@ -63,6 +63,7 @@ const tabItems: TabItem[] = [
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
+  { id: 'page-builder', label: 'Page Builder', icon: Globe, description: 'Crie sites de página única com drag-and-drop' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
 
