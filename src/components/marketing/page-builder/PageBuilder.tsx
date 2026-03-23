@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Globe, GripVertical, Plus, Trash2, Eye, Code, Image, Video, Type,
+  Globe, GripVertical, Plus, Trash2, Eye, Code, Image, Video, Type, Play,
   ChevronDown, ChevronUp, Settings, Palette, Layout, Bot, ArrowDown,
   Sparkles, FileText, Monitor, Smartphone, Tablet, Copy, Save, Loader2,
   Columns, Square, AlignLeft, Link, ExternalLink, Upload, FolderOpen,
