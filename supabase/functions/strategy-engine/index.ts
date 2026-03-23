@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const COLLABORATION_DIRECTIVE_SENTENCE = 'Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
+
 // ─── AGENT DEPENDENCY GRAPH ────────────────────────────────────────────────────
 const AGENT_DEPENDENCIES: Record<string, string[]> = {
   vox: [],
