@@ -143,8 +143,8 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{info?.icon || '📄'}</span>
-                    <CardTitle className="text-sm">{artifact.titulo}</CardTitle>
+                     <span className="text-lg">{info?.icon || '📄'}</span>
+                    <CardTitle className="text-sm">{info?.name || artifact.titulo}</CardTitle>
                   </div>
                   <div className="flex items-center gap-1">
                     {avgScore !== null && (
