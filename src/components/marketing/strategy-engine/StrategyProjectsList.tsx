@@ -175,7 +175,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => deleteProject(project.id)}
+                          onClick={() => setDeleteTarget({ id: project.id, name: project.nome })}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                           Excluir
