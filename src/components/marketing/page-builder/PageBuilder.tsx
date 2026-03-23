@@ -2965,7 +2965,7 @@ const PageBuilderEditor: React.FC<{
       </div>
 
       {/* Center - Preview */}
-      <div className={`flex flex-col bg-muted/10 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : 'flex-1'}`}>
+      <div className="flex-1 flex flex-col bg-muted/10 overflow-hidden">
         <div className="border-b px-4 py-2 flex items-center justify-between bg-card">
           <div className="flex items-center gap-2">
             <Button variant={viewMode === 'desktop' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('desktop')}><Monitor className="h-4 w-4" /></Button>
