@@ -975,12 +975,40 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
 const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = ({ section, config }) => {
   if (!section.visible) return null;
   const c = section.content;
+  const layout = section.styles?.layout || '';
   switch (section.type) {
-    case 'hero': return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: '#fff' }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p><a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a></div></div>);
+    case 'hero': {
+      if (layout === 'split-left' || layout === 'split-right') {
+        const isRight = layout === 'split-right';
+        return (
+          <div className="relative py-12 px-6" style={{ backgroundColor: config.primaryColor, color: '#fff' }}>
+            <div className={`max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 ${isRight ? 'md:flex-row-reverse' : ''}`}>
+              <div className="flex-1 text-left">
+                <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
+                <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
+                {c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}
+              </div>
+              <div className="flex-1 w-full">
+                {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl bg-white/10 flex items-center justify-center text-white/30 text-sm">Imagem do Hero</div>}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: '#fff' }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}</div></div>);
+    }
     case 'text': return <div className="py-10 px-6 max-w-3xl mx-auto" style={{ textAlign: c.alignment as any }}><p className="text-base leading-relaxed whitespace-pre-wrap">{c.body}</p></div>;
     case 'image': return (<div className="py-8 px-6 max-w-4xl mx-auto text-center">{c.url ? <img src={c.url} alt={c.alt} className="w-full rounded-lg shadow-lg" style={{ objectFit: c.fit }} /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Image className="h-10 w-10 text-muted-foreground" /></div>}{c.caption && <p className="text-sm text-muted-foreground mt-2">{c.caption}</p>}</div>);
     case 'video': return (<div className="py-8 px-6 max-w-4xl mx-auto">{c.url ? <video src={c.url} controls poster={c.poster} className="w-full rounded-lg shadow-lg" /> : c.poster ? <div className="relative w-full rounded-lg shadow-lg overflow-hidden"><img src={c.poster} alt="Video poster" className="w-full aspect-video object-cover" style={{ filter: 'brightness(0.7)' }} /><div className="absolute inset-0 flex items-center justify-center"><div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><Play className="h-7 w-7 text-white ml-1" /></div></div></div> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Video className="h-10 w-10 text-muted-foreground" /></div>}</div>);
-    case 'features': return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
+    case 'features': {
+      if (layout === 'zigzag') {
+        return (<div className="py-12 px-6 max-w-5xl mx-auto space-y-8">{(c.items || []).map((item: any, i: number) => (<div key={i} className={`flex flex-col md:flex-row items-center gap-6 ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''}`}><div className="flex-1 text-center md:text-left"><span className="text-4xl block mb-3">{item.icon}</span><h3 className="font-semibold text-xl mb-2">{item.title}</h3><p className="text-muted-foreground">{item.description}</p></div><div className="flex-1 w-full"><div className="aspect-video rounded-xl bg-muted/30 border flex items-center justify-center text-muted-foreground text-sm">Imagem</div></div></div>))}</div>);
+      }
+      if (layout === 'icons-left') {
+        return (<div className="py-12 px-6 max-w-4xl mx-auto space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-card border"><span className="text-3xl shrink-0">{item.icon}</span><div><h3 className="font-semibold text-lg mb-1">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div></div>))}</div>);
+      }
+      return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
+    }
     case 'cta': return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor }}>{c.button_text}</a></div>);
     case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
     case 'social_proof': return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i}><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>);
