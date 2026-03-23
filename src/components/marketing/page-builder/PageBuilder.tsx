@@ -3,7 +3,8 @@ import {
   Globe, GripVertical, Plus, Trash2, Eye, Code, Image, Video, Type,
   ChevronDown, ChevronUp, Settings, Palette, Layout, Bot, ArrowDown,
   Sparkles, FileText, Monitor, Smartphone, Tablet, Copy, Save, Loader2,
-  PanelRightOpen, PanelRightClose, Columns, Square, AlignLeft
+  PanelRightOpen, PanelRightClose, Columns, Square, AlignLeft, Link,
+  ExternalLink, Upload, FolderOpen, Wand2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,17 @@ interface PageConfig {
   fontDisplay: string;
   fontBody: string;
   maxWidth: string;
+}
+
+interface SavedPage {
+  id: string;
+  nome: string;
+  slug: string;
+  sections: any;
+  config: any;
+  publicado: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // ── Section Templates ──────────────────────────────────────────────────────────
@@ -165,27 +177,40 @@ const MediaPicker: React.FC<{ onSelect: (url: string) => void; type?: 'image' | 
   );
 };
 
-// ── Strategy Text Picker ───────────────────────────────────────────────────────
+// ── Strategy Text Picker (Enhanced with agent filter + artifacts) ──────────────
 const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ onSelect }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [memory, setMemory] = useState<Record<string, any>>({});
+  const [artifacts, setArtifacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeAgent, setActiveAgent] = useState<string>('all');
+  const [sourceTab, setSourceTab] = useState<'memory' | 'artifacts'>('memory');
 
   useEffect(() => {
     (async () => {
       const estabId = localStorage.getItem('estabelecimentoId');
       if (!estabId) return;
-      const { data } = await supabase
-        .from('strategy_projects')
-        .select('id, nome, strategic_memory')
-        .eq('estabelecimento_id', estabId)
-        .order('updated_at', { ascending: false })
-        .limit(10);
-      setProjects(data || []);
-      if (data?.[0]) {
-        setSelectedProject(data[0].id);
-        setMemory((data[0].strategic_memory as Record<string, any>) || {});
+      const [projRes, artRes] = await Promise.all([
+        supabase
+          .from('strategy_projects')
+          .select('id, nome, strategic_memory')
+          .eq('estabelecimento_id', estabId)
+          .order('updated_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('strategy_artifacts')
+          .select('id, tipo, resultado, created_at, project_id')
+          .eq('estabelecimento_id', estabId)
+          .order('created_at', { ascending: false })
+          .limit(50)
+      ]);
+      const projs = projRes.data || [];
+      setProjects(projs);
+      setArtifacts(artRes.data || []);
+      if (projs[0]) {
+        setSelectedProject(projs[0].id);
+        setMemory((projs[0].strategic_memory as Record<string, any>) || {});
       }
       setLoading(false);
     })();
@@ -219,6 +244,8 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
   if (loading) return <div className="flex justify-center p-4"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
   const agentKeys = Object.keys(memory);
+  const filteredKeys = activeAgent === 'all' ? agentKeys : agentKeys.filter(k => k === activeAgent);
+  const projectArtifacts = artifacts.filter(a => a.project_id === selectedProject);
 
   return (
     <div className="space-y-3">
@@ -230,36 +257,91 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
           </SelectContent>
         </Select>
       )}
-      <ScrollArea className="h-[300px]">
-        {agentKeys.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum dado estratégico disponível. Execute os agentes primeiro.</p>}
-        {agentKeys.map(agentKey => {
-          const texts = extractTexts(memory[agentKey]);
-          if (texts.length === 0) return null;
-          return (
-            <div key={agentKey} className="mb-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{agentKey}</p>
-              {texts.slice(0, 8).map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => onSelect(t.text)}
-                  className="block w-full text-left text-xs p-2 rounded hover:bg-muted/50 transition-colors border-b border-border/30"
-                >
-                  <span className="text-muted-foreground">{t.path}: </span>
-                  <span className="text-foreground">{t.text.slice(0, 120)}{t.text.length > 120 ? '...' : ''}</span>
-                </button>
+
+      <Tabs value={sourceTab} onValueChange={(v) => setSourceTab(v as any)}>
+        <TabsList className="w-full">
+          <TabsTrigger value="memory" className="flex-1 text-xs">Memória Estratégica</TabsTrigger>
+          <TabsTrigger value="artifacts" className="flex-1 text-xs">Artefatos dos Agentes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="memory" className="mt-2">
+          {agentKeys.length > 1 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              <Badge
+                variant={activeAgent === 'all' ? 'default' : 'outline'}
+                className="cursor-pointer text-[10px]"
+                onClick={() => setActiveAgent('all')}
+              >Todos</Badge>
+              {agentKeys.map(k => (
+                <Badge
+                  key={k}
+                  variant={activeAgent === k ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px]"
+                  onClick={() => setActiveAgent(k)}
+                >{k}</Badge>
               ))}
             </div>
-          );
-        })}
-      </ScrollArea>
+          )}
+          <ScrollArea className="h-[260px]">
+            {filteredKeys.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum dado estratégico disponível.</p>}
+            {filteredKeys.map(agentKey => {
+              const texts = extractTexts(memory[agentKey]);
+              if (texts.length === 0) return null;
+              return (
+                <div key={agentKey} className="mb-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{agentKey}</p>
+                  {texts.slice(0, 12).map((t, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onSelect(t.text)}
+                      className="block w-full text-left text-xs p-2 rounded hover:bg-muted/50 transition-colors border-b border-border/30"
+                    >
+                      <span className="text-muted-foreground">{t.path}: </span>
+                      <span className="text-foreground">{t.text.slice(0, 120)}{t.text.length > 120 ? '...' : ''}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="artifacts" className="mt-2">
+          <ScrollArea className="h-[280px]">
+            {projectArtifacts.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum artefato encontrado. Execute agentes no Motor de Estratégia.</p>}
+            {projectArtifacts.map(art => {
+              const texts = extractTexts(art.resultado as any);
+              if (texts.length === 0) return null;
+              return (
+                <div key={art.id} className="mb-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{art.tipo}</p>
+                  {texts.slice(0, 10).map((t, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onSelect(t.text)}
+                      className="block w-full text-left text-xs p-2 rounded hover:bg-muted/50 transition-colors border-b border-border/30"
+                    >
+                      <span className="text-muted-foreground">{t.path}: </span>
+                      <span className="text-foreground">{t.text.slice(0, 120)}{t.text.length > 120 ? '...' : ''}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-// ── Site Builder Agent Viewer ──────────────────────────────────────────────────
-const SiteBuilderAgentViewer: React.FC = () => {
+// ── Site Builder Agent Viewer (Enhanced with auto-import) ─────────────────────
+const SiteBuilderAgentViewer: React.FC<{
+  onImportSections?: (sections: PageSection[], config?: Partial<PageConfig>) => void;
+}> = ({ onImportSections }) => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -278,15 +360,145 @@ const SiteBuilderAgentViewer: React.FC = () => {
     })();
   }, []);
 
+  const handleImport = () => {
+    if (!result || !onImportSections) return;
+    setImporting(true);
+
+    try {
+      const importedSections: PageSection[] = [];
+      const r = result;
+
+      // Try to extract sections from Site Builder output
+      if (r.headline || r.titulo || r.hero_headline) {
+        importedSections.push({
+          id: `hero-imp-${Date.now()}`, type: 'hero', title: 'Hero (Importado)', visible: true, styles: {},
+          content: {
+            headline: r.hero_headline || r.headline || r.titulo || '',
+            subheadline: r.hero_subheadline || r.subheadline || r.subtitulo || r.descricao || '',
+            cta_text: r.cta_text || r.hero_cta || 'Saiba Mais',
+            cta_url: r.cta_url || '#',
+            background_image: r.hero_image || '',
+          }
+        });
+      }
+
+      if (r.features || r.recursos || r.beneficios) {
+        const items = r.features || r.recursos || r.beneficios || [];
+        if (Array.isArray(items) && items.length > 0) {
+          importedSections.push({
+            id: `feat-imp-${Date.now()}`, type: 'features', title: 'Recursos (Importado)', visible: true, styles: {},
+            content: {
+              items: items.slice(0, 6).map((f: any) => ({
+                icon: f.icon || f.icone || '✨',
+                title: f.title || f.titulo || f.name || f.nome || '',
+                description: f.description || f.descricao || '',
+              }))
+            }
+          });
+        }
+      }
+
+      if (r.testimonials || r.depoimentos) {
+        const items = r.testimonials || r.depoimentos || [];
+        if (Array.isArray(items) && items.length > 0) {
+          importedSections.push({
+            id: `test-imp-${Date.now()}`, type: 'testimonials', title: 'Depoimentos (Importado)', visible: true, styles: {},
+            content: {
+              items: items.map((t: any) => ({
+                name: t.name || t.nome || 'Cliente',
+                role: t.role || t.cargo || '',
+                text: t.text || t.texto || t.depoimento || '',
+              }))
+            }
+          });
+        }
+      }
+
+      if (r.faq || r.perguntas_frequentes) {
+        const items = r.faq || r.perguntas_frequentes || [];
+        if (Array.isArray(items) && items.length > 0) {
+          importedSections.push({
+            id: `faq-imp-${Date.now()}`, type: 'faq', title: 'FAQ (Importado)', visible: true, styles: {},
+            content: {
+              items: items.map((q: any) => ({
+                question: q.question || q.pergunta || '',
+                answer: q.answer || q.resposta || '',
+              }))
+            }
+          });
+        }
+      }
+
+      if (r.cta || r.chamada_acao) {
+        const cta = r.cta || r.chamada_acao || {};
+        importedSections.push({
+          id: `cta-imp-${Date.now()}`, type: 'cta', title: 'CTA (Importado)', visible: true, styles: {},
+          content: {
+            headline: cta.headline || cta.titulo || r.cta_headline || 'Pronto para começar?',
+            description: cta.description || cta.descricao || '',
+            button_text: cta.button_text || cta.texto_botao || 'Entrar em Contato',
+            button_url: cta.button_url || cta.url || '#',
+          }
+        });
+      }
+
+      // Extract config hints
+      const configHints: Partial<PageConfig> = {};
+      if (r.title || r.titulo_pagina) configHints.title = r.title || r.titulo_pagina;
+      if (r.primary_color || r.cor_primaria) configHints.primaryColor = r.primary_color || r.cor_primaria;
+      if (r.accent_color || r.cor_destaque) configHints.accentColor = r.accent_color || r.cor_destaque;
+
+      if (importedSections.length > 0) {
+        onImportSections(importedSections, configHints);
+        toast.success(`${importedSections.length} seções importadas do Site Builder!`);
+      } else {
+        // Fallback: try to extract any text content as sections
+        const texts = extractTextsFlat(r);
+        if (texts.length > 0) {
+          const textSections: PageSection[] = texts.slice(0, 5).map((t, i) => ({
+            id: `text-imp-${Date.now()}-${i}`, type: 'text' as const, title: `Texto ${i + 1} (Importado)`, visible: true, styles: {},
+            content: { body: t, alignment: 'left' }
+          }));
+          onImportSections(textSections, configHints);
+          toast.success(`${textSections.length} blocos de texto importados!`);
+        } else {
+          toast.info('O output do Site Builder não contém seções estruturadas reconhecíveis.');
+        }
+      }
+    } catch (e) {
+      toast.error('Erro ao importar dados do agente');
+    }
+    setImporting(false);
+  };
+
   if (loading) return <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   if (!result) return <p className="text-sm text-muted-foreground text-center py-6">O agente Site Builder ainda não foi executado. Execute-o no Motor de Estratégia.</p>;
 
   return (
-    <ScrollArea className="h-[400px]">
-      <pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap font-mono">{JSON.stringify(result, null, 2)}</pre>
-    </ScrollArea>
+    <div className="space-y-3">
+      {onImportSections && (
+        <Button variant="default" size="sm" className="w-full gap-2" onClick={handleImport} disabled={importing}>
+          {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          Importar Seções do Site Builder
+        </Button>
+      )}
+      <ScrollArea className="h-[350px]">
+        <pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap font-mono">{JSON.stringify(result, null, 2)}</pre>
+      </ScrollArea>
+    </div>
   );
 };
+
+function extractTextsFlat(obj: any): string[] {
+  const results: string[] = [];
+  if (!obj) return results;
+  for (const val of Object.values(obj)) {
+    if (typeof val === 'string' && val.length > 20 && val.length < 2000) results.push(val);
+    else if (Array.isArray(val)) val.forEach(item => { if (typeof item === 'string' && item.length > 20) results.push(item); });
+    else if (typeof val === 'object' && val !== null) results.push(...extractTextsFlat(val));
+  }
+  return results;
+}
 
 // ── Section Editor ─────────────────────────────────────────────────────────────
 const SectionEditor: React.FC<{
@@ -312,6 +524,12 @@ const SectionEditor: React.FC<{
     setShowStrategyPicker(true);
   };
 
+  const StrategyButton: React.FC<{ targetKey: string }> = ({ targetKey }) => (
+    <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker(targetKey)}>
+      <Sparkles className="h-3 w-3" /> Estratégia
+    </Button>
+  );
+
   const renderFields = () => {
     switch (section.type) {
       case 'hero':
@@ -320,18 +538,14 @@ const SectionEditor: React.FC<{
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label className="text-xs">Título</Label>
-                <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker('headline')}>
-                  <Sparkles className="h-3 w-3" /> Estratégia
-                </Button>
+                <StrategyButton targetKey="headline" />
               </div>
               <Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label className="text-xs">Subtítulo</Label>
-                <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker('subheadline')}>
-                  <Sparkles className="h-3 w-3" /> Estratégia
-                </Button>
+                <StrategyButton targetKey="subheadline" />
               </div>
               <Textarea value={section.content.subheadline} onChange={e => updateContent('subheadline', e.target.value)} rows={2} />
             </div>
@@ -359,9 +573,7 @@ const SectionEditor: React.FC<{
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-1">
               <Label className="text-xs">Conteúdo</Label>
-              <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker('body')}>
-                <Sparkles className="h-3 w-3" /> Estratégia
-              </Button>
+              <StrategyButton targetKey="body" />
             </div>
             <Textarea value={section.content.body} onChange={e => updateContent('body', e.target.value)} rows={5} />
           </div>
@@ -391,9 +603,7 @@ const SectionEditor: React.FC<{
                 <Button variant="outline" size="sm" onClick={() => { setMediaPickerTarget('url'); setShowMediaPicker(true); }}><Video className="h-4 w-4" /></Button>
               </div>
             </div>
-            {section.content.url && (
-              <video src={section.content.url} controls className="w-full max-h-40 rounded border" />
-            )}
+            {section.content.url && <video src={section.content.url} controls className="w-full max-h-40 rounded border" />}
           </div>
         );
       case 'cta':
@@ -402,13 +612,17 @@ const SectionEditor: React.FC<{
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label className="text-xs">Título</Label>
-                <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker('headline')}>
-                  <Sparkles className="h-3 w-3" /> Estratégia
-                </Button>
+                <StrategyButton targetKey="headline" />
               </div>
               <Input value={section.content.headline} onChange={e => updateContent('headline', e.target.value)} />
             </div>
-            <Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={2} placeholder="Descrição" />
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs">Descrição</Label>
+                <StrategyButton targetKey="description" />
+              </div>
+              <Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={2} />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Input value={section.content.button_text} onChange={e => updateContent('button_text', e.target.value)} placeholder="Texto do botão" />
               <Input value={section.content.button_url} onChange={e => updateContent('button_url', e.target.value)} placeholder="URL" />
@@ -544,7 +758,6 @@ const SectionEditor: React.FC<{
       <Separator />
       {renderFields()}
 
-      {/* Media Picker Dialog */}
       <Dialog open={showMediaPicker} onOpenChange={setShowMediaPicker}>
         <DialogContent className="bg-background sm:max-w-lg">
           <DialogHeader><DialogTitle>Selecionar Mídia da Galeria</DialogTitle></DialogHeader>
@@ -562,7 +775,6 @@ const SectionEditor: React.FC<{
         </DialogContent>
       </Dialog>
 
-      {/* Strategy Text Picker Dialog */}
       <Dialog open={showStrategyPicker} onOpenChange={setShowStrategyPicker}>
         <DialogContent className="bg-background sm:max-w-lg">
           <DialogHeader><DialogTitle>Importar Texto do Motor de Estratégia</DialogTitle></DialogHeader>
@@ -686,6 +898,15 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
   }
 };
 
+// ── Generate Slug ──────────────────────────────────────────────────────────────
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || `page-${Date.now()}`;
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 const PageBuilder: React.FC = () => {
   const [sections, setSections] = useState<PageSection[]>([
@@ -704,10 +925,35 @@ const PageBuilder: React.FC = () => {
   const [showAddSection, setShowAddSection] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [dragActiveId, setDragActiveId] = useState<string | null>(null);
+
+  // Save/Load/Publish state
+  const [savedPages, setSavedPages] = useState<SavedPage[]>([]);
+  const [currentPageId, setCurrentPageId] = useState<string | null>(null);
+  const [pageName, setPageName] = useState('Meu Site');
+  const [pageSlug, setPageSlug] = useState('meu-site');
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const selectedSection = sections.find(s => s.id === selectedSectionId) || null;
+
+  // Load saved pages list
+  const loadSavedPages = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    const { data } = await supabase
+      .from('published_pages')
+      .select('*')
+      .eq('estabelecimento_id', estabId)
+      .order('updated_at', { ascending: false });
+    setSavedPages((data || []) as unknown as SavedPage[]);
+  }, []);
+
+  useEffect(() => { loadSavedPages(); }, [loadSavedPages]);
 
   const addSection = (type: PageSection['type']) => {
     const id = `${type}-${Date.now()}`;
@@ -736,6 +982,83 @@ const PageBuilder: React.FC = () => {
         const newIndex = prev.findIndex(s => s.id === over.id);
         return arrayMove(prev, oldIndex, newIndex);
       });
+    }
+  };
+
+  // Save page
+  const savePage = async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
+    setSaving(true);
+
+    const payload = {
+      nome: pageName,
+      slug: pageSlug,
+      sections: sections as any,
+      config: config as any,
+      estabelecimento_id: estabId,
+    };
+
+    let result;
+    if (currentPageId) {
+      result = await supabase.from('published_pages').update(payload).eq('id', currentPageId).select().single();
+    } else {
+      result = await supabase.from('published_pages').insert(payload).select().single();
+    }
+
+    if (result.error) {
+      if (result.error.message.includes('duplicate') || result.error.message.includes('unique')) {
+        toast.error('Esse slug já está em uso. Escolha outro.');
+      } else {
+        toast.error('Erro ao salvar: ' + result.error.message);
+      }
+    } else {
+      setCurrentPageId(result.data.id);
+      setIsPublished((result.data as any).publicado);
+      toast.success('Página salva com sucesso!');
+      await loadSavedPages();
+    }
+    setSaving(false);
+    setShowSaveDialog(false);
+  };
+
+  // Publish / Unpublish
+  const togglePublish = async () => {
+    if (!currentPageId) {
+      setShowSaveDialog(true);
+      toast.info('Salve a página primeiro antes de publicar.');
+      return;
+    }
+    setPublishing(true);
+    const newStatus = !isPublished;
+    const { error } = await supabase.from('published_pages').update({ publicado: newStatus }).eq('id', currentPageId);
+    if (error) {
+      toast.error('Erro ao publicar: ' + error.message);
+    } else {
+      setIsPublished(newStatus);
+      toast.success(newStatus ? 'Página publicada! 🎉' : 'Página despublicada.');
+      await loadSavedPages();
+    }
+    setPublishing(false);
+  };
+
+  // Load a saved page
+  const loadPage = (page: SavedPage) => {
+    setCurrentPageId(page.id);
+    setPageName(page.nome);
+    setPageSlug(page.slug);
+    setSections((page.sections as any[]) || []);
+    setConfig({ ...config, ...(page.config as any) });
+    setIsPublished(page.publicado);
+    setShowLoadDialog(false);
+    toast.success(`"${page.nome}" carregada`);
+  };
+
+  // Import from Site Builder agent
+  const handleImportFromAgent = (importedSections: PageSection[], configHints?: Partial<PageConfig>) => {
+    setSections(prev => [...prev, ...importedSections]);
+    if (configHints) {
+      setConfig(c => ({ ...c, ...configHints }));
     }
   };
 
@@ -774,16 +1097,27 @@ const PageBuilder: React.FC = () => {
   }, [sections, config]);
 
   const previewWidth = viewMode === 'mobile' ? 375 : viewMode === 'tablet' ? 768 : '100%';
+  const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
   return (
     <div className="flex h-[calc(100vh-200px)] gap-0 overflow-hidden -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
       {/* Left Panel - Sections List */}
       <div className="w-64 border-r bg-muted/20 flex flex-col shrink-0">
-        <div className="p-3 border-b flex items-center justify-between">
-          <h3 className="text-sm font-semibold flex items-center gap-1.5"><Globe className="h-4 w-4 text-primary" /> Seções</h3>
-          <Button variant="outline" size="sm" className="h-7" onClick={() => setShowAddSection(true)}>
-            <Plus className="h-3 w-3 mr-1" /> Adicionar
-          </Button>
+        <div className="p-3 border-b">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold flex items-center gap-1.5"><Globe className="h-4 w-4 text-primary" /> Seções</h3>
+            <Button variant="outline" size="sm" className="h-7" onClick={() => setShowAddSection(true)}>
+              <Plus className="h-3 w-3 mr-1" /> Adicionar
+            </Button>
+          </div>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowLoadDialog(true)}>
+              <FolderOpen className="h-3 w-3" /> Abrir
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowSaveDialog(true)}>
+              <Save className="h-3 w-3" /> Salvar
+            </Button>
+          </div>
         </div>
         <ScrollArea className="flex-1 p-2">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e: DragStartEvent) => setDragActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
@@ -810,10 +1144,34 @@ const PageBuilder: React.FC = () => {
             <Button variant={viewMode === 'desktop' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('desktop')}><Monitor className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'tablet' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('tablet')}><Tablet className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'mobile' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('mobile')}><Smartphone className="h-4 w-4" /></Button>
+            {publicUrl && (
+              <div className="flex items-center gap-1 ml-2 pl-2 border-l">
+                <Badge variant="secondary" className="text-[10px] gap-1">
+                  <Link className="h-3 w-3" />
+                  <span className="max-w-[200px] truncate">/p/{pageSlug}</span>
+                </Badge>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success('URL copiada!'); }}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => window.open(publicUrl, '_blank')}>
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
+            <Button
+              variant={isPublished ? 'secondary' : 'default'}
+              size="sm"
+              className="h-7 gap-1"
+              onClick={togglePublish}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+              {isPublished ? 'Despublicar' : 'Publicar'}
+            </Button>
           </div>
         </div>
         <ScrollArea className="flex-1">
@@ -915,7 +1273,7 @@ const PageBuilder: React.FC = () => {
               </div>
             </div>
           )}
-          {rightPanel === 'agent' && <SiteBuilderAgentViewer />}
+          {rightPanel === 'agent' && <SiteBuilderAgentViewer onImportSections={handleImportFromAgent} />}
         </ScrollArea>
       </div>
 
@@ -936,6 +1294,63 @@ const PageBuilder: React.FC = () => {
               </button>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="bg-background sm:max-w-md">
+          <DialogHeader><DialogTitle>Salvar Página</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome da Página</Label>
+              <Input value={pageName} onChange={e => { setPageName(e.target.value); if (!currentPageId) setPageSlug(generateSlug(e.target.value)); }} />
+            </div>
+            <div>
+              <Label>Slug (URL)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">/p/</span>
+                <Input value={pageSlug} onChange={e => setPageSlug(generateSlug(e.target.value))} className="flex-1" />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">URL pública: {window.location.origin}/p/{pageSlug}</p>
+            </div>
+            <Button onClick={savePage} disabled={saving || !pageName.trim()} className="w-full">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {currentPageId ? 'Atualizar' : 'Salvar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Load Dialog */}
+      <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
+        <DialogContent className="bg-background sm:max-w-md">
+          <DialogHeader><DialogTitle>Abrir Página Salva</DialogTitle></DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {savedPages.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Nenhuma página salva ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {savedPages.map(page => (
+                  <button
+                    key={page.id}
+                    onClick={() => loadPage(page)}
+                    className={cn(
+                      "w-full text-left p-3 rounded-lg border transition-colors hover:bg-muted/50",
+                      currentPageId === page.id && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{page.nome}</span>
+                      {page.publicado && <Badge variant="default" className="text-[10px]">Publicada</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">/p/{page.slug}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
