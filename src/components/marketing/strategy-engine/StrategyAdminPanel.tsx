@@ -601,6 +601,11 @@ export function StrategyAdminPanel() {
                           <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
+                          {config.knowledgeBaseType === 'external' && (
+                            <Badge variant="outline" className="text-[10px] gap-0.5 border-amber-500/50 text-amber-600">
+                              <Globe className="h-2.5 w-2.5" /> KB Externa
+                            </Badge>
+                          )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
