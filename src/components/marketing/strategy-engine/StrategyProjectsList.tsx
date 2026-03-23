@@ -30,6 +30,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
   const [descricao, setDescricao] = useState('');
   const [creating, setCreating] = useState(false);
   const [cloning, setCloning] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
