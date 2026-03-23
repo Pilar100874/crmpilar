@@ -2908,11 +2908,18 @@ const PageBuilderEditor: React.FC<{
 }> = ({ initialPage, onBack }) => {
   const [sections, setSections] = useState<PageSection[]>((initialPage?.sections as any[]) || []);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [config, setConfig] = useState<PageConfig>({
-    title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
-    accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
-    fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
-    ...(initialPage?.config as any || {}),
+  const savedGlobal = loadGlobalConfig();
+  const [config, setConfig] = useState<PageConfig>(() => {
+    const base: PageConfig = {
+      title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
+      accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
+      fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
+      empresaNome: savedGlobal.empresaNome, empresaEndereco: savedGlobal.empresaEndereco,
+      empresaTelefone: savedGlobal.empresaTelefone, whatsappGlobal: savedGlobal.whatsappGlobal,
+      siteGlobal: savedGlobal.siteGlobal,
+      ...(initialPage?.config as any || {}),
+    };
+    return base;
   });
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFullscreen, setIsFullscreen] = useState(false);
