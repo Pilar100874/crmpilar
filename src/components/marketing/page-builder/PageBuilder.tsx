@@ -32,7 +32,7 @@ import { CSS } from '@dnd-kit/utilities';
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PageSection {
   id: string;
-  type: 'hero' | 'text' | 'image' | 'video' | 'gallery' | 'cta' | 'features' | 'testimonials' | 'faq' | 'footer' | 'custom_html' | 'spacer';
+  type: 'hero' | 'text' | 'image' | 'video' | 'gallery' | 'cta' | 'features' | 'testimonials' | 'faq' | 'footer' | 'custom_html' | 'spacer' | 'social_proof' | 'guarantee' | 'objections' | 'pricing' | 'process_steps';
   title: string;
   content: Record<string, any>;
   visible: boolean;
@@ -63,6 +63,11 @@ const SECTION_TEMPLATES: { type: PageSection['type']; label: string; icon: React
   { type: 'video', label: 'Vídeo', icon: <Video className="h-4 w-4" />, description: 'Player de vídeo' },
   { type: 'features', label: 'Recursos', icon: <Columns className="h-4 w-4" />, description: 'Grade de recursos' },
   { type: 'testimonials', label: 'Depoimentos', icon: <FileText className="h-4 w-4" />, description: 'Depoimentos de clientes' },
+  { type: 'social_proof', label: 'Prova Social', icon: <FileText className="h-4 w-4" />, description: 'Números e métricas' },
+  { type: 'guarantee', label: 'Garantia', icon: <Square className="h-4 w-4" />, description: 'Seção de garantia' },
+  { type: 'objections', label: 'Objeções', icon: <AlignLeft className="h-4 w-4" />, description: 'Quebra de objeções' },
+  { type: 'pricing', label: 'Preços', icon: <FileText className="h-4 w-4" />, description: 'Tabela de preços' },
+  { type: 'process_steps', label: 'Processo', icon: <Columns className="h-4 w-4" />, description: 'Etapas do processo' },
   { type: 'cta', label: 'CTA', icon: <Square className="h-4 w-4" />, description: 'Call-to-action' },
   { type: 'faq', label: 'FAQ', icon: <AlignLeft className="h-4 w-4" />, description: 'Perguntas frequentes' },
   { type: 'gallery', label: 'Galeria', icon: <Image className="h-4 w-4" />, description: 'Grid de imagens' },
@@ -78,6 +83,11 @@ const defaultContent: Record<PageSection['type'], Record<string, any>> = {
   video: { url: '', poster: '', autoplay: false },
   features: { items: [{ icon: '🚀', title: 'Recurso 1', description: 'Descrição' }, { icon: '⚡', title: 'Recurso 2', description: 'Descrição' }, { icon: '🎯', title: 'Recurso 3', description: 'Descrição' }] },
   testimonials: { items: [{ name: 'Cliente', role: 'Cargo', text: 'Depoimento...', avatar: '' }] },
+  social_proof: { items: [{ number: '1000+', label: 'Clientes Atendidos' }, { number: '98%', label: 'Satisfação' }, { number: '5+', label: 'Anos no Mercado' }] },
+  guarantee: { title: 'Garantia Total', description: 'Oferecemos garantia incondicional de 30 dias. Se não ficar satisfeito, devolvemos seu dinheiro.', icon: '🛡️', duration: '30 dias' },
+  objections: { title: 'Tire Suas Dúvidas', items: [{ objection: 'É caro demais', response: 'Nosso produto se paga em menos de 30 dias.' }, { objection: 'Não sei se funciona', response: 'Temos centenas de cases de sucesso comprovados.' }] },
+  pricing: { title: 'Planos e Preços', items: [{ name: 'Básico', price: 'R$ 97/mês', features: ['Recurso 1', 'Recurso 2'], highlighted: false }, { name: 'Profissional', price: 'R$ 197/mês', features: ['Tudo do Básico', 'Recurso 3', 'Recurso 4'], highlighted: true }] },
+  process_steps: { title: 'Como Funciona', items: [{ step: '1', title: 'Cadastre-se', description: 'Crie sua conta em segundos' }, { step: '2', title: 'Configure', description: 'Personalize conforme suas necessidades' }, { step: '3', title: 'Resultados', description: 'Comece a ver resultados imediatos' }] },
   cta: { headline: 'Pronto para começar?', description: 'Não perca essa oportunidade', button_text: 'Fale Conosco', button_url: '#', style: 'primary' },
   faq: { items: [{ question: 'Pergunta?', answer: 'Resposta.' }] },
   gallery: { images: [] },
@@ -772,10 +782,79 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
                 <Input value={item.role} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, role: e.target.value }; updateContent('items', items); }} placeholder="Cargo" />
               </div>
               <Textarea value={item.text} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, text: e.target.value }; updateContent('items', items); }} rows={2} placeholder="Depoimento" />
+              {item.metrics && <Input value={item.metrics} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, metrics: e.target.value }; updateContent('items', items); }} placeholder="Resultado/Métrica (ex: +300% vendas)" />}
               <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
             </Card>
           ))}
-          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Cliente', role: '', text: 'Depoimento...', metrics: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'social_proof': return (
+        <div className="space-y-3">
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2">
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <Input value={item.number} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, number: e.target.value }; updateContent('items', items); }} placeholder="1000+" className="text-center font-bold" />
+                <Input value={item.label} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, label: e.target.value }; updateContent('items', items); }} placeholder="Clientes" />
+              </div>
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs mt-1" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { number: '100+', label: 'Novo Indicador' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'guarantee': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Ícone</Label><Input value={section.content.icon} onChange={e => updateContent('icon', e.target.value)} /></div>
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título</Label><SB t="title" /></div><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Descrição</Label><SB t="description" /></div><Textarea value={section.content.description} onChange={e => updateContent('description', e.target.value)} rows={3} /></div>
+          <div><Label className="text-xs">Duração</Label><Input value={section.content.duration} onChange={e => updateContent('duration', e.target.value)} placeholder="30 dias" /></div>
+        </div>
+      );
+      case 'objections': return (
+        <div className="space-y-3">
+          <div><div className="flex items-center justify-between mb-1"><Label className="text-xs">Título da Seção</Label><SB t="title" /></div><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2 space-y-1">
+              <Input value={item.objection} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, objection: e.target.value }; updateContent('items', items); }} placeholder="Objeção (ex: É caro)" />
+              <Textarea value={item.response} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, response: e.target.value }; updateContent('items', items); }} rows={2} placeholder="Resposta persuasiva" />
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { objection: 'Nova objeção', response: 'Resposta...' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar</Button>
+        </div>
+      );
+      case 'pricing': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Título</Label><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2 space-y-1">
+              <div className="grid grid-cols-2 gap-2">
+                <Input value={item.name} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, name: e.target.value }; updateContent('items', items); }} placeholder="Nome do plano" />
+                <Input value={item.price} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, price: e.target.value }; updateContent('items', items); }} placeholder="R$ 97/mês" />
+              </div>
+              <Textarea value={(item.features || []).join('\n')} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, features: e.target.value.split('\n') }; updateContent('items', items); }} rows={3} placeholder="Um recurso por linha" />
+              <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={item.highlighted} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, highlighted: e.target.checked }; updateContent('items', items); }} /> Destacar</label>
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { name: 'Plano', price: 'R$ 0', features: ['Recurso'], highlighted: false }])}><Plus className="h-3 w-3 mr-1" /> Adicionar Plano</Button>
+        </div>
+      );
+      case 'process_steps': return (
+        <div className="space-y-3">
+          <div><Label className="text-xs">Título</Label><Input value={section.content.title} onChange={e => updateContent('title', e.target.value)} /></div>
+          {(section.content.items || []).map((item: any, i: number) => (
+            <Card key={i} className="p-2">
+              <div className="grid grid-cols-[40px_1fr] gap-2">
+                <Input value={item.step} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, step: e.target.value }; updateContent('items', items); }} className="text-center font-bold" />
+                <Input value={item.title} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, title: e.target.value }; updateContent('items', items); }} placeholder="Título da etapa" />
+              </div>
+              <Textarea value={item.description} onChange={e => { const items = [...section.content.items]; items[i] = { ...item, description: e.target.value }; updateContent('items', items); }} rows={1} className="mt-1" placeholder="Descrição" />
+              <Button variant="ghost" size="sm" className="text-destructive h-6 text-xs mt-1" onClick={() => updateContent('items', section.content.items.filter((_: any, idx: number) => idx !== i))}>Remover</Button>
+            </Card>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => updateContent('items', [...(section.content.items || []), { step: `${(section.content.items || []).length + 1}`, title: 'Nova Etapa', description: '' }])}><Plus className="h-3 w-3 mr-1" /> Adicionar Etapa</Button>
         </div>
       );
       case 'spacer': return (<div><Label className="text-xs">Altura (px)</Label><Input type="number" value={section.content.height} onChange={e => updateContent('height', e.target.value)} /></div>);
@@ -823,7 +902,12 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
     case 'video': return (<div className="py-8 px-6 max-w-4xl mx-auto">{c.url ? <video src={c.url} controls poster={c.poster} className="w-full rounded-lg shadow-lg" /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Video className="h-10 w-10 text-muted-foreground" /></div>}</div>);
     case 'features': return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     case 'cta': return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor }}>{c.button_text}</a></div>);
-    case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p><p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
+    case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
+    case 'social_proof': return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i}><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>);
+    case 'guarantee': return (<div className="py-12 px-6 max-w-3xl mx-auto text-center"><div className="p-8 rounded-2xl border-2 border-dashed" style={{ borderColor: config.accentColor }}><span className="text-5xl block mb-4">{c.icon || '🛡️'}</span><h3 className="text-2xl font-bold mb-3">{c.title}</h3><p className="text-base text-muted-foreground mb-2">{c.description}</p>{c.duration && <Badge variant="secondary" className="text-sm">{c.duration}</Badge>}</div></div>);
+    case 'objections': return (<div className="py-12 px-6 max-w-3xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Tire Suas Dúvidas'}</h3><div className="space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-5 rounded-xl border bg-card"><p className="font-semibold text-destructive mb-2">❌ "{item.objection}"</p><p className="text-sm text-foreground">✅ {item.response}</p></div>))}</div></div>);
+    case 'pricing': return (<div className="py-12 px-6 max-w-4xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Planos'}</h3><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className={cn("p-6 rounded-xl border-2 text-center", item.highlighted ? "border-primary shadow-lg scale-105" : "border-border")}><h4 className="font-bold text-lg mb-2">{item.name}</h4><p className="text-3xl font-bold mb-4" style={{ color: config.primaryColor }}>{item.price}</p><ul className="text-sm space-y-2 text-left">{(item.features || []).map((f: string, fi: number) => <li key={fi} className="flex items-center gap-2">✅ {f}</li>)}</ul></div>))}</div></div>);
+    case 'process_steps': return (<div className="py-12 px-6 max-w-4xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Como Funciona'}</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6"><div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{item.step}</div><h4 className="font-semibold text-lg mb-2">{item.title}</h4><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     case 'faq': return (<div className="py-12 px-6 max-w-3xl mx-auto space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="border rounded-lg p-4"><h4 className="font-semibold mb-2">{item.question}</h4><p className="text-sm text-muted-foreground">{item.answer}</p></div>))}</div>);
     case 'gallery': return (<div className="py-8 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-2 md:grid-cols-3 gap-3">{(c.images || []).map((url: string, i: number) => <img key={i} src={url} alt="" className="w-full aspect-square object-cover rounded-lg" />)}</div></div>);
     case 'footer': return (<div className="py-8 px-6 text-center border-t bg-muted/30"><p className="font-semibold mb-2">{c.company}</p><p className="text-xs text-muted-foreground">{c.copyright}</p></div>);
@@ -855,7 +939,12 @@ const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sec
       case 'video': html += `<section style="padding:32px 24px"><div class="container">${c.url ? `<video src="${c.url}" controls style="width:100%;border-radius:8px"></video>` : ''}</div></section>`; break;
       case 'features': html += `<section style="padding:48px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:24px;border:1px solid #e5e7eb;border-radius:12px"><span style="font-size:2rem;display:block;margin-bottom:12px">${f.icon||''}</span><h3 style="font-weight:600;margin-bottom:8px">${f.title||''}</h3><p style="font-size:.875rem;opacity:.7">${f.description||''}</p></div>`).join('')}</div></section>`; break;
       case 'cta': html += `<section style="padding:64px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container"><h2 style="font-size:2rem;font-weight:bold;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.1rem;margin-bottom:24px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${c.button_url||'#'}" style="display:inline-block;padding:12px 32px;background:${cfg.accentColor};color:#fff;border-radius:8px;font-weight:600;text-decoration:none">${c.button_text}</a>` : ''}</div></section>`; break;
-      case 'testimonials': html += `<section style="padding:48px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">${(c.items||[]).map((t:any)=>`<div style="padding:24px;border:1px solid #e5e7eb;border-radius:12px;font-style:italic"><p style="margin-bottom:12px">"${t.text||''}"</p><p style="font-size:.875rem;font-weight:600;font-style:normal">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></section>`; break;
+      case 'testimonials': html += `<section style="padding:48px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">${(c.items||[]).map((t:any)=>`<div style="padding:24px;border:1px solid #e5e7eb;border-radius:12px;font-style:italic"><p style="margin-bottom:12px">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.875rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-size:.875rem;font-weight:600;font-style:normal">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></section>`; break;
+      case 'social_proof': html += `<section style="padding:48px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:32px">${(c.items||[]).map((item:any)=>`<div><p style="font-size:2.5rem;font-weight:bold;margin-bottom:4px">${item.number||''}</p><p style="font-size:.875rem;opacity:.8">${item.label||''}</p></div>`).join('')}</div></section>`; break;
+      case 'guarantee': html += `<section style="padding:48px 24px;text-align:center"><div class="container" style="max-width:600px;padding:40px;border:2px dashed ${cfg.accentColor};border-radius:16px"><span style="font-size:3rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.5rem;font-weight:bold;margin-bottom:12px">${c.title||''}</h3><p style="opacity:.8;margin-bottom:8px">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:4px 12px;background:#f3f4f6;border-radius:20px;font-size:.875rem">${c.duration}</span>`:''}</div></section>`; break;
+      case 'objections': html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px"><h3 style="font-size:1.5rem;font-weight:bold;text-align:center;margin-bottom:32px">${c.title||''}</h3>${(c.items||[]).map((item:any)=>`<div style="padding:20px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:16px"><p style="font-weight:600;color:#dc2626;margin-bottom:8px">❌ "${item.objection||''}"</p><p style="font-size:.875rem">✅ ${item.response||''}</p></div>`).join('')}</div></section>`; break;
+      case 'pricing': html += `<section style="padding:48px 24px"><div class="container"><h3 style="font-size:1.5rem;font-weight:bold;text-align:center;margin-bottom:32px">${c.title||'Planos'}</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px">${(c.items||[]).map((item:any)=>`<div style="padding:32px;border:${item.highlighted?`2px solid ${cfg.primaryColor}`:'1px solid #e5e7eb'};border-radius:16px;text-align:center;${item.highlighted?'box-shadow:0 10px 30px rgba(0,0,0,.1);transform:scale(1.02)':''}"><h4 style="font-weight:600;font-size:1.2rem;margin-bottom:8px">${item.name||''}</h4><p style="font-size:2rem;font-weight:bold;color:${cfg.primaryColor};margin-bottom:16px">${item.price||''}</p><ul style="list-style:none;text-align:left;font-size:.875rem">${(item.features||[]).map((f:string)=>`<li style="padding:4px 0">✅ ${f}</li>`).join('')}</ul></div>`).join('')}</div></div></section>`; break;
+      case 'process_steps': html += `<section style="padding:48px 24px"><div class="container"><h3 style="font-size:1.5rem;font-weight:bold;text-align:center;margin-bottom:32px">${c.title||'Como Funciona'}</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:24px"><div style="width:48px;height:48px;border-radius:50%;background:${cfg.accentColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:bold;margin:0 auto 12px">${item.step||''}</div><h4 style="font-weight:600;margin-bottom:8px">${item.title||''}</h4><p style="font-size:.875rem;opacity:.7">${item.description||''}</p></div>`).join('')}</div></div></section>`; break;
       case 'faq': html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px">${(c.items||[]).map((q:any)=>`<div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px"><h4 style="font-weight:600;margin-bottom:8px">${q.question||''}</h4><p style="font-size:.875rem;opacity:.7">${q.answer||''}</p></div>`).join('')}</div></section>`; break;
       case 'gallery': html += `<section style="padding:32px 24px"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">${(c.images||[]).map((url:string)=>`<img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px">`).join('')}</div></section>`; break;
       case 'footer': html += `<footer style="padding:32px 24px;text-align:center;border-top:1px solid #e5e7eb;font-size:.875rem;opacity:.6"><p>${c.company||''}</p><p>${c.copyright||''}</p></footer>`; break;
@@ -971,6 +1060,7 @@ const AutoGeneratePage: React.FC<{
     const socialData = getData('social_media');
     const reelData = getData('reel');
     const cipherData = getData('cipher');
+    const paidMedia = getData('paid_media');
 
     // ── 1. Hero Section ──
     addProgress('🎯 Construindo Hero com alternativas de texto...');
@@ -1014,7 +1104,41 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 2. Image placeholder ──
+    // ── 2. Social Proof (Numbers) ──
+    addProgress('📊 Extraindo métricas e prova social...');
+    const socialProofItems: any[] = [];
+    // Extract numbers from multiple agents
+    const numSources = [pos, lp, funnel, cipherData, socialData, emailData];
+    const numKeys = ['clientes', 'usuarios', 'cases', 'resultados', 'metricas', 'numeros', 'stats', 'kpis', 'indicadores', 'social_proof', 'provas_numericas'];
+    for (const src of numSources) {
+      if (!src) continue;
+      for (const key of numKeys) {
+        const val = src[key];
+        if (Array.isArray(val)) {
+          val.slice(0, 4).forEach((item: any) => {
+            if (typeof item === 'object' && item) {
+              socialProofItems.push({ number: item.numero || item.number || item.valor || item.value || '?', label: item.label || item.nome || item.descricao || item.description || '' });
+            }
+          });
+        } else if (typeof val === 'string' && val.match(/\d/)) {
+          socialProofItems.push({ number: val.slice(0, 20), label: key });
+        }
+      }
+    }
+    // Also try to extract from vox satisfaction/market data
+    if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
+    if (vox?.satisfacao || vox?.nps) socialProofItems.push({ number: vox.satisfacao || vox.nps, label: 'Satisfação' });
+    if (pos?.market_share) socialProofItems.push({ number: pos.market_share, label: 'Market Share' });
+    
+    if (socialProofItems.length === 0) {
+      socialProofItems.push({ number: '1000+', label: 'Clientes Atendidos' }, { number: '98%', label: 'Satisfação' }, { number: '24/7', label: 'Suporte' });
+    }
+    sections.push({
+      id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {},
+      content: { items: socialProofItems.slice(0, 4) }
+    });
+
+    // ── 3. Image placeholder ──
     addProgress('📸 Reservando espaço para imagem principal...');
     const imgSuggestion = creative?.conceito_visual || creative?.estilo_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
     sections.push({
@@ -1027,7 +1151,7 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 3. Features ──
+    // ── 4. Features ──
     addProgress('⚡ Extraindo diferenciais de múltiplos agentes...');
     let featureItems: any[] = [];
     const featureSources = [
@@ -1035,16 +1159,28 @@ const AutoGeneratePage: React.FC<{
       extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
       extractArray(funnel, 'etapas', 'stages', 'features'),
       extractArray(creative, 'beneficios', 'features'),
+      extractArray(cipherData, 'diferenciais', 'vantagens_competitivas', 'pontos_fortes'),
+      extractArray(paidMedia, 'beneficios', 'argumentos', 'features'),
     ].filter(arr => arr.length > 0);
 
     if (featureSources.length > 0) {
-      const allFeats = featureSources[0];
-      featureItems = allFeats.slice(0, 6).map((f: any, i: number) => ({
-        icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][i % 6],
-        title: typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || `Recurso ${i + 1}`),
-        description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
-      }));
-    } else {
+      // Merge unique features from all sources
+      const allFeats: any[] = [];
+      for (const source of featureSources) {
+        for (const f of source) {
+          const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
+          if (title && !allFeats.find(e => e.title === title)) {
+            allFeats.push({
+              icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6],
+              title,
+              description: typeof f === 'string' ? f : (f.description || f.descricao || f.texto || ''),
+            });
+          }
+        }
+      }
+      featureItems = allFeats.slice(0, 6);
+    }
+    if (featureItems.length === 0) {
       featureItems = [
         { icon: '🚀', title: 'Agilidade', description: 'Descreva seu diferencial aqui' },
         { icon: '🎯', title: 'Precisão', description: 'Descreva seu diferencial aqui' },
@@ -1056,13 +1192,36 @@ const AutoGeneratePage: React.FC<{
       content: { items: featureItems }
     });
 
-    // ── 4. About text ──
+    // ── 5. Process Steps (Funnel / How it works) ──
+    addProgress('🔄 Montando etapas do processo...');
+    let processItems: any[] = [];
+    const rawSteps = [
+      ...extractArray(funnel, 'etapas', 'stages', 'passos', 'steps', 'jornada'),
+      ...extractArray(lp, 'steps', 'como_funciona', 'etapas', 'processo'),
+      ...extractArray(pos, 'jornada_cliente', 'processo', 'etapas'),
+    ];
+    if (rawSteps.length > 0) {
+      processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({
+        step: `${i + 1}`,
+        title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || s.name || s.nome || s.etapa || `Etapa ${i + 1}`),
+        description: typeof s === 'string' ? s : (s.description || s.descricao || s.texto || s.acao || ''),
+      }));
+    }
+    if (processItems.length >= 2) {
+      sections.push({
+        id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {},
+        content: { title: 'Como Funciona', items: processItems }
+      });
+    }
+
+    // ── 6. About text ──
     addProgress('📝 Criando seção sobre o negócio...');
     const aboutAlts = collectAlternatives([
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling'] },
-      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre'] },
-      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling', 'proposta_descricao', 'promessa'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto', 'persona_descricao'] },
+      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre', 'descricao_empresa'] },
+      { agent: 'Social Media', icon: '📲', data: socialData, keys: ['bio', 'sobre', 'descricao', 'manifesto'] },
+      { agent: 'Inteligência Competitiva', icon: '🔍', data: cipherData, keys: ['resumo', 'posicionamento', 'analise'] },
     ]);
     if (aboutAlts.length === 0) {
       aboutAlts.push({ agent: 'Projeto', icon: '📋', text: project.descricao_negocio || 'Conte a história do seu negócio aqui.' });
@@ -1072,7 +1231,7 @@ const AutoGeneratePage: React.FC<{
       content: { body: aboutAlts[0]?.text, alignment: 'center', _alt_body: aboutAlts }
     });
 
-    // ── 5. Video placeholder ──
+    // ── 7. Video placeholder ──
     addProgress('🎬 Reservando espaço para vídeo...');
     const videoAlts = collectAlternatives([
       { agent: 'Roteirista VSL', icon: '🎬', data: vsl, keys: ['titulo', 'gancho', 'headline', 'abertura'] },
@@ -1089,7 +1248,106 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 6. Gallery ──
+    // ── 8. Testimonials ──
+    addProgress('💬 Montando depoimentos...');
+    let testimonialItems: any[] = [];
+    const rawTest = [
+      ...extractArray(lp, 'testimonials', 'depoimentos', 'provas_sociais', 'cases'),
+      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais', 'cases_sucesso', 'resultados_clientes'),
+      ...extractArray(pos, 'depoimentos', 'cases', 'testimonials', 'provas'),
+      ...extractArray(funnel, 'depoimentos', 'cases', 'resultados'),
+      ...extractArray(emailData, 'depoimentos', 'testimonials'),
+      ...extractArray(creative, 'depoimentos', 'provas_sociais'),
+    ];
+    if (rawTest.length > 0) {
+      testimonialItems = rawTest.slice(0, 6).map((t: any) => ({
+        name: t.name || t.nome || t.cliente || 'Cliente',
+        role: t.role || t.cargo || t.empresa || t.segmento || '',
+        text: t.text || t.texto || t.depoimento || t.citacao || t.quote || '',
+        metrics: t.metrics || t.resultado || t.metrica || t.resultado_numerico || '',
+      }));
+    } else {
+      testimonialItems = [
+        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui. Dica: inclua números e resultados concretos.', metrics: '' },
+        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado para aumentar credibilidade.', metrics: '' },
+        { name: 'Terceiro Cliente', role: 'Empresa', text: 'Um terceiro depoimento. Quanto mais específico e detalhado, melhor.', metrics: '' },
+      ];
+    }
+    sections.push({
+      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
+      content: { items: testimonialItems }
+    });
+
+    // ── 9. Objections ──
+    addProgress('🚫 Extraindo objeções e respostas...');
+    let objectionItems: any[] = [];
+    const rawObj = [
+      ...extractArray(vox, 'objecoes', 'objections', 'barreiras', 'medos', 'duvidas'),
+      ...extractArray(pos, 'objecoes', 'barreiras', 'resistencias'),
+      ...extractArray(lp, 'objecoes', 'objections', 'quebra_objecoes'),
+      ...extractArray(funnel, 'objecoes', 'barreiras'),
+      ...extractArray(cipherData, 'objecoes', 'fraquezas_concorrentes', 'barreiras_mercado'),
+    ];
+    if (rawObj.length > 0) {
+      objectionItems = rawObj.slice(0, 5).map((o: any) => ({
+        objection: typeof o === 'string' ? o : (o.objecao || o.objection || o.barreira || o.duvida || o.pergunta || ''),
+        response: typeof o === 'string' ? 'Responda a essa objeção aqui.' : (o.resposta || o.response || o.solucao || o.contra_argumento || ''),
+      }));
+    }
+    if (objectionItems.length > 0) {
+      sections.push({
+        id: `auto-obj-${Date.now()}`, type: 'objections', title: '🚫 Quebrando Objeções', visible: true, styles: {},
+        content: { title: 'Ainda tem dúvidas?', items: objectionItems }
+      });
+    }
+
+    // ── 10. Guarantee ──
+    addProgress('🛡️ Montando seção de garantia...');
+    let guaranteeData = { title: 'Garantia Total', description: '', icon: '🛡️', duration: '' };
+    const rawGuarantee = pos?.garantia || lp?.garantia || lp?.guarantee || funnel?.garantia || vox?.garantia;
+    if (rawGuarantee) {
+      if (typeof rawGuarantee === 'string') {
+        guaranteeData.description = rawGuarantee;
+      } else {
+        guaranteeData.title = rawGuarantee.titulo || rawGuarantee.title || 'Garantia Total';
+        guaranteeData.description = rawGuarantee.descricao || rawGuarantee.description || rawGuarantee.texto || '';
+        guaranteeData.duration = rawGuarantee.duracao || rawGuarantee.prazo || rawGuarantee.dias || '';
+      }
+    }
+    if (!guaranteeData.description) {
+      guaranteeData.description = 'Se você não ficar 100% satisfeito, devolvemos seu dinheiro. Sem burocracia, sem perguntas.';
+      guaranteeData.duration = '30 dias';
+    }
+    sections.push({
+      id: `auto-guarantee-${Date.now()}`, type: 'guarantee', title: '🛡️ Garantia', visible: true, styles: {},
+      content: guaranteeData
+    });
+
+    // ── 11. Pricing ──
+    addProgress('💰 Montando preços...');
+    let pricingItems: any[] = [];
+    const rawPricing = [
+      ...extractArray(lp, 'planos', 'pricing', 'precos', 'tabela_precos'),
+      ...extractArray(funnel, 'planos', 'ofertas', 'precos'),
+      ...extractArray(pos, 'planos', 'precos', 'ofertas'),
+      ...extractArray(paidMedia, 'ofertas', 'planos'),
+    ];
+    if (rawPricing.length > 0) {
+      pricingItems = rawPricing.slice(0, 3).map((p: any, i: number) => ({
+        name: p.name || p.nome || p.plano || `Plano ${i + 1}`,
+        price: p.price || p.preco || p.valor || 'Consulte',
+        features: Array.isArray(p.features || p.recursos || p.beneficios) ? (p.features || p.recursos || p.beneficios) : [],
+        highlighted: i === 1,
+      }));
+    }
+    if (pricingItems.length > 0) {
+      sections.push({
+        id: `auto-pricing-${Date.now()}`, type: 'pricing', title: '💰 Planos e Preços', visible: true, styles: {},
+        content: { title: 'Escolha seu Plano', items: pricingItems }
+      });
+    }
+
+    // ── 12. Gallery ──
     addProgress('🖼️ Reservando galeria...');
     sections.push({
       id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {},
@@ -1099,49 +1357,17 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 7. Testimonials ──
-    addProgress('💬 Montando depoimentos...');
-    let testimonialItems: any[] = [];
-    const rawTest = [
-      ...extractArray(lp, 'testimonials', 'depoimentos'),
-      ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais'),
-    ];
-    if (rawTest.length > 0) {
-      testimonialItems = rawTest.slice(0, 4).map((t: any) => ({
-        name: t.name || t.nome || 'Cliente',
-        role: t.role || t.cargo || '',
-        text: t.text || t.texto || t.depoimento || '',
-      }));
-    } else {
-      testimonialItems = [
-        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui.' },
-        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado.' },
-      ];
-    }
-    sections.push({
-      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
-      content: { items: testimonialItems }
-    });
-
-    // ── 8. Second Image ──
-    addProgress('🤳 Reservando imagem de marca...');
-    sections.push({
-      id: `auto-img2-${Date.now()}`, type: 'image', title: '🤳 Imagem de Marca', visible: true, styles: {},
-      content: {
-        url: '', alt: 'Imagem de marca', caption: '', fit: 'cover',
-        _media_suggestion: `🤳 Sugestão: foto lifestyle, equipe ou bastidores da marca.`,
-      }
-    });
-
-    // ── 9. FAQ ──
+    // ── 13. FAQ ──
     addProgress('❓ Montando FAQ...');
     let faqItems: any[] = [];
     const rawFaq = [
       ...extractArray(lp, 'faq', 'perguntas_frequentes'),
-      ...extractArray(seoData, 'faq', 'perguntas'),
+      ...extractArray(seoData, 'faq', 'perguntas', 'perguntas_frequentes'),
+      ...extractArray(vox, 'duvidas_frequentes', 'faq', 'perguntas'),
+      ...extractArray(pos, 'faq', 'perguntas'),
     ];
     if (rawFaq.length > 0) {
-      faqItems = rawFaq.slice(0, 5).map((q: any) => ({
+      faqItems = rawFaq.slice(0, 7).map((q: any) => ({
         question: q.question || q.pergunta || '',
         answer: q.answer || q.resposta || '',
       }));
@@ -1150,6 +1376,8 @@ const AutoGeneratePage: React.FC<{
         { question: 'Como funciona?', answer: 'Descreva como funciona.' },
         { question: 'Quais os diferenciais?', answer: 'Liste seus diferenciais.' },
         { question: 'Como entro em contato?', answer: 'Informe seus canais.' },
+        { question: 'Qual o prazo de entrega?', answer: 'Informe seus prazos.' },
+        { question: 'Tem garantia?', answer: 'Descreva sua garantia.' },
       ];
     }
     sections.push({
@@ -1157,20 +1385,22 @@ const AutoGeneratePage: React.FC<{
       content: { items: faqItems }
     });
 
-    // ── 10. CTA Final ──
+    // ── 14. CTA Final ──
     addProgress('🎯 Criando CTA final...');
     const ctaHAlts = collectAlternatives([
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline', 'titulo_cta'] },
       { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_headline', 'assunto', 'titulo'] },
       { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta_headline', 'titulo_final'] },
+      { agent: 'Funil', icon: '📊', data: funnel, keys: ['cta_final', 'headline_conversao', 'titulo_oferta'] },
     ]);
-    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para começar?' });
+    if (ctaHAlts.length === 0) ctaHAlts.push({ agent: 'Padrão', icon: '📋', text: 'Pronto para transformar seus resultados?' });
     const ctaDAlts = collectAlternatives([
       { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_description', 'cta_final_description', 'descricao_cta'] },
       { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia', 'promessa_final'] },
+      { agent: 'Funil', icon: '📊', data: funnel, keys: ['urgencia', 'escassez', 'oferta_final'] },
     ]);
-    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Entre em contato e descubra como podemos ajudar.' });
+    if (ctaDAlts.length === 0) ctaDAlts.push({ agent: 'Padrão', icon: '📋', text: 'Não perca mais tempo. Entre em contato agora e descubra como podemos ajudar.' });
 
     sections.push({
       id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
@@ -1185,7 +1415,7 @@ const AutoGeneratePage: React.FC<{
       }
     });
 
-    // ── 11. Footer ──
+    // ── 15. Footer ──
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
       content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
@@ -1219,9 +1449,9 @@ const AutoGeneratePage: React.FC<{
       toast.error('Erro ao salvar: ' + error.message);
       setStep('select');
     } else {
-      addProgress('✅ Página gerada com sucesso!');
+      addProgress('✅ Página de vendas gerada com sucesso!');
       setStep('done');
-      toast.success('Página gerada automaticamente! 🎉');
+      toast.success('Página de vendas completa gerada! 🎉');
       setTimeout(() => {
         onGenerated(saved as unknown as SavedPage);
         onOpenChange(false);
@@ -1295,12 +1525,17 @@ const AutoGeneratePage: React.FC<{
                 <div className="text-[10px] text-muted-foreground space-y-1">
                   <p className="font-semibold text-foreground">A página gerada incluirá:</p>
                   <p>✅ Hero com dados de posicionamento</p>
-                  <p>✅ Seção de recursos/diferenciais</p>
-                  <p>✅ Depoimentos de clientes</p>
-                  <p>✅ FAQ automático</p>
-                  <p>✅ CTA otimizado</p>
-                  <p>📸 Espaços reservados para imagens (com sugestões)</p>
-                  <p>🎬 Espaço reservado para vídeo (com sugestão de roteiro)</p>
+                  <p>✅ Hero com título, subtítulo e CTA</p>
+                  <p>✅ Prova social com números/métricas</p>
+                  <p>✅ Diferenciais e recursos</p>
+                  <p>✅ Etapas do processo (Como Funciona)</p>
+                  <p>✅ Depoimentos com métricas</p>
+                  <p>✅ Quebra de objeções</p>
+                  <p>✅ Seção de garantia</p>
+                  <p>✅ Planos e preços</p>
+                  <p>✅ FAQ completo</p>
+                  <p>✅ CTA final otimizado</p>
+                  <p>📸 Espaços para imagens/vídeo (com sugestões)</p>
                   <p>🔍 Configurações de SEO aplicadas</p>
                 </div>
               </Card>
