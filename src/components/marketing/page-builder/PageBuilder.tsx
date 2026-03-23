@@ -634,11 +634,154 @@ function generateSlug(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${Date.now()}`;
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
-const PageBuilder: React.FC = () => {
-  const [sections, setSections] = useState<PageSection[]>([]);
+// ── Project Listing (Landing) ──────────────────────────────────────────────────
+const PageBuilderLanding: React.FC<{
+  onOpen: (page: SavedPage) => void;
+  onCreateNew: () => void;
+}> = ({ onOpen, onCreateNew }) => {
+  const [pages, setPages] = useState<SavedPage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { setLoading(false); return; }
+    const { data } = await supabase.from('published_pages').select('*').eq('estabelecimento_id', estabId).order('updated_at', { ascending: false });
+    setPages((data || []) as unknown as SavedPage[]);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleRename = async (id: string) => {
+    if (!renameValue.trim()) return;
+    const slug = generateSlug(renameValue);
+    const { error } = await supabase.from('published_pages').update({ nome: renameValue, slug }).eq('id', id);
+    if (error) toast.error('Erro ao renomear');
+    else { toast.success('Renomeado!'); setRenamingId(null); load(); }
+  };
+
+  const handleDuplicate = async (page: SavedPage) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    const newName = `${page.nome} (Cópia)`;
+    const { error } = await supabase.from('published_pages').insert({
+      nome: newName, slug: generateSlug(newName), sections: page.sections, config: page.config,
+      estabelecimento_id: estabId, publicado: false,
+    });
+    if (error) toast.error('Erro ao duplicar');
+    else { toast.success('Duplicado!'); load(); }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('published_pages').delete().eq('id', id);
+    if (error) toast.error('Erro ao excluir');
+    else { toast.success('Excluído!'); setDeletingId(null); load(); }
+  };
+
+  if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /> Page Builder</h2>
+          <p className="text-sm text-muted-foreground">Crie e gerencie suas páginas</p>
+        </div>
+        <Button onClick={onCreateNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Página</Button>
+      </div>
+
+      {pages.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center py-16 text-center">
+          <Globe className="h-12 w-12 text-muted-foreground/30 mb-4" />
+          <h3 className="text-lg font-semibold mb-1">Nenhuma página criada</h3>
+          <p className="text-sm text-muted-foreground mb-4">Comece criando sua primeira página</p>
+          <Button onClick={onCreateNew} className="gap-2"><Plus className="h-4 w-4" /> Criar Página</Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* New page card */}
+          <button onClick={onCreateNew}
+            className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary hover:bg-primary/5 transition-all min-h-[200px]">
+            <Plus className="h-8 w-8 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Nova Página</span>
+          </button>
+
+          {pages.map(page => (
+            <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-shadow">
+              {/* Thumbnail area */}
+              <button onClick={() => onOpen(page)}
+                className="w-full h-32 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <Globe className="h-10 w-10 text-primary/30" />
+              </button>
+              <div className="p-3 space-y-2">
+                {renamingId === page.id ? (
+                  <div className="flex gap-1">
+                    <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="h-7 text-sm"
+                      onKeyDown={e => { if (e.key === 'Enter') handleRename(page.id); if (e.key === 'Escape') setRenamingId(null); }}
+                      autoFocus />
+                    <Button size="sm" className="h-7 text-xs" onClick={() => handleRename(page.id)}>Ok</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm truncate">{page.nome}</h4>
+                    <div className="flex items-center gap-0.5">
+                      {page.publicado && <Badge variant="default" className="text-[9px] h-4">Publicada</Badge>}
+                    </div>
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground">/p/{page.slug}</p>
+                <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
+                <div className="flex gap-1 pt-1">
+                  <Button variant="outline" size="sm" className="h-6 text-[10px] flex-1" onClick={() => onOpen(page)}>
+                    Abrir
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => { setRenamingId(page.id); setRenameValue(page.nome); }}>
+                    <Type className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5" onClick={() => handleDuplicate(page)}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-1.5 text-destructive" onClick={() => setDeletingId(page.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      <Dialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+        <DialogContent className="bg-background sm:max-w-sm">
+          <DialogHeader><DialogTitle>Excluir Página</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Tem certeza que deseja excluir esta página? Esta ação não pode ser desfeita.</p>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setDeletingId(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => deletingId && handleDelete(deletingId)}>Excluir</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ── Editor Component ───────────────────────────────────────────────────────────
+const PageBuilderEditor: React.FC<{
+  initialPage?: SavedPage | null;
+  onBack: () => void;
+}> = ({ initialPage, onBack }) => {
+  const [sections, setSections] = useState<PageSection[]>((initialPage?.sections as any[]) || []);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [config, setConfig] = useState<PageConfig>({ title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6', accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937', fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px' });
+  const [config, setConfig] = useState<PageConfig>({
+    title: 'Meu Site', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
+    accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
+    fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
+    ...(initialPage?.config as any || {}),
+  });
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [rightPanel, setRightPanel] = useState<'editor' | 'agent' | 'config'>('editor');
   const [leftTab, setLeftTab] = useState<'sections' | 'assets'>('sections');
@@ -646,30 +789,30 @@ const PageBuilder: React.FC = () => {
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [showLoadDialog, setShowLoadDialog] = useState(false);
-  const [showTemplateDialog, setShowTemplateDialog] = useState(sections.length === 0);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(!initialPage && sections.length === 0);
   const [dragActiveId, setDragActiveId] = useState<string | null>(null);
 
-  const [savedPages, setSavedPages] = useState<SavedPage[]>([]);
-  const [currentPageId, setCurrentPageId] = useState<string | null>(null);
-  const [pageName, setPageName] = useState('Meu Site');
-  const [pageSlug, setPageSlug] = useState('meu-site');
+  const [currentPageId, setCurrentPageId] = useState<string | null>(initialPage?.id || null);
+  const [pageName, setPageName] = useState(initialPage?.nome || 'Meu Site');
+  const [pageSlug, setPageSlug] = useState(initialPage?.slug || 'meu-site');
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished, setIsPublished] = useState(initialPage?.publicado || false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const selectedSection = sections.find(s => s.id === selectedSectionId) || null;
 
-  const loadSavedPages = useCallback(async () => {
-    const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId) return;
-    const { data } = await supabase.from('published_pages').select('*').eq('estabelecimento_id', estabId).order('updated_at', { ascending: false });
-    setSavedPages((data || []) as unknown as SavedPage[]);
-  }, []);
+  // Track changes
+  useEffect(() => { setHasChanges(true); }, [sections, config]);
 
-  useEffect(() => { loadSavedPages(); }, [loadSavedPages]);
+  const handleBack = () => {
+    if (hasChanges && sections.length > 0) {
+      if (!confirm('Você tem alterações não salvas. Deseja sair mesmo assim?')) return;
+    }
+    onBack();
+  };
 
   const addSection = (type: PageSection['type'], content?: Record<string, any>) => {
     const id = `${type}-${Date.now()}`;
@@ -692,7 +835,6 @@ const PageBuilder: React.FC = () => {
     }
   };
 
-  // Handle drop from assets panel (native HTML drag)
   const handlePreviewDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     try {
@@ -700,30 +842,22 @@ const PageBuilder: React.FC = () => {
       if (!data) return;
       const asset: MediaAsset = JSON.parse(data);
       const isVideo = asset.tipo === 'video';
-      if (isVideo) {
-        addSection('video', { url: asset.public_url, poster: '', autoplay: false });
-      } else {
-        addSection('image', { url: asset.public_url, alt: asset.nome, caption: '', fit: 'cover' });
-      }
-    } catch { /* ignore non-asset drops */ }
+      if (isVideo) addSection('video', { url: asset.public_url, poster: '', autoplay: false });
+      else addSection('image', { url: asset.public_url, alt: asset.nome, caption: '', fit: 'cover' });
+    } catch { /* ignore */ }
   }, []);
 
   const handleAssetClick = (asset: MediaAsset) => {
     const isVideo = asset.tipo === 'video';
-    if (isVideo) {
-      addSection('video', { url: asset.public_url, poster: '', autoplay: false });
-    } else {
-      addSection('image', { url: asset.public_url, alt: asset.nome, caption: '', fit: 'cover' });
-    }
+    if (isVideo) addSection('video', { url: asset.public_url, poster: '', autoplay: false });
+    else addSection('image', { url: asset.public_url, alt: asset.nome, caption: '', fit: 'cover' });
   };
 
-  // Apply template
   const applyTemplate = (template: PageTemplate) => {
     const timestamped = template.sections.map(s => ({ ...s, id: `${s.id}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}` }));
     setSections(timestamped);
     setConfig(c => ({ ...c, ...template.config }));
-    setPageName(template.name);
-    setPageSlug(generateSlug(template.name));
+    if (!currentPageId) { setPageName(template.name); setPageSlug(generateSlug(template.name)); }
     setSelectedSectionId(timestamped[0]?.id || null);
     setShowTemplateDialog(false);
     toast.success(`Template "${template.name}" aplicado!`);
@@ -738,7 +872,7 @@ const PageBuilder: React.FC = () => {
     if (currentPageId) result = await supabase.from('published_pages').update(payload).eq('id', currentPageId).select().single();
     else result = await supabase.from('published_pages').insert(payload).select().single();
     if (result.error) { toast.error(result.error.message.includes('unique') ? 'Slug já em uso.' : 'Erro: ' + result.error.message); }
-    else { setCurrentPageId(result.data.id); setIsPublished((result.data as any).publicado); toast.success('Salvo!'); await loadSavedPages(); }
+    else { setCurrentPageId(result.data.id); setIsPublished((result.data as any).publicado); setHasChanges(false); toast.success('Salvo!'); }
     setSaving(false); setShowSaveDialog(false);
   };
 
@@ -748,14 +882,8 @@ const PageBuilder: React.FC = () => {
     const ns = !isPublished;
     const { error } = await supabase.from('published_pages').update({ publicado: ns }).eq('id', currentPageId);
     if (error) toast.error('Erro: ' + error.message);
-    else { setIsPublished(ns); toast.success(ns ? 'Publicada! 🎉' : 'Despublicada.'); await loadSavedPages(); }
+    else { setIsPublished(ns); toast.success(ns ? 'Publicada! 🎉' : 'Despublicada.'); }
     setPublishing(false);
-  };
-
-  const loadPage = (page: SavedPage) => {
-    setCurrentPageId(page.id); setPageName(page.nome); setPageSlug(page.slug);
-    setSections((page.sections as any[]) || []); setConfig(c => ({ ...c, ...(page.config as any) }));
-    setIsPublished(page.publicado); setShowLoadDialog(false); toast.success(`"${page.nome}" carregada`);
   };
 
   const handleImportFromAgent = (imported: PageSection[], configHints?: Partial<PageConfig>) => {
@@ -786,6 +914,9 @@ const PageBuilder: React.FC = () => {
       {/* Left Panel */}
       <div className="w-64 border-r bg-muted/20 flex flex-col shrink-0">
         <div className="p-2 border-b">
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 w-full justify-start mb-1" onClick={handleBack}>
+            <ChevronUp className="h-3 w-3 rotate-[-90deg]" /> Voltar aos Projetos
+          </Button>
           <Tabs value={leftTab} onValueChange={(v) => setLeftTab(v as any)}>
             <TabsList className="w-full h-8">
               <TabsTrigger value="sections" className="flex-1 text-xs h-7 gap-1"><Layout className="h-3 w-3" /> Seções</TabsTrigger>
@@ -801,10 +932,7 @@ const PageBuilder: React.FC = () => {
                 <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowAddSection(true)}><Plus className="h-3 w-3" /> Seção</Button>
                 <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowTemplateDialog(true)}><LayoutTemplate className="h-3 w-3" /> Template</Button>
               </div>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowLoadDialog(true)}><FolderOpen className="h-3 w-3" /> Abrir</Button>
-                <Button variant="outline" size="sm" className="h-7 flex-1 text-xs gap-1" onClick={() => setShowSaveDialog(true)}><Save className="h-3 w-3" /> Salvar</Button>
-              </div>
+              <Button variant="outline" size="sm" className="h-7 w-full text-xs gap-1" onClick={() => setShowSaveDialog(true)}><Save className="h-3 w-3" /> Salvar</Button>
             </div>
             <ScrollArea className="flex-1 p-2">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e: DragStartEvent) => setDragActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
@@ -963,24 +1091,6 @@ const PageBuilder: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Load Dialog */}
-      <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="bg-background sm:max-w-md">
-          <DialogHeader><DialogTitle>Abrir Página</DialogTitle></DialogHeader>
-          <ScrollArea className="max-h-[400px]">
-            {savedPages.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Nenhuma página salva.</p> : (
-              <div className="space-y-2">{savedPages.map(page => (
-                <button key={page.id} onClick={() => loadPage(page)} className={cn("w-full text-left p-3 rounded-lg border transition-colors hover:bg-muted/50", currentPageId === page.id && "border-primary bg-primary/5")}>
-                  <div className="flex items-center justify-between"><span className="font-medium text-sm">{page.nome}</span>{page.publicado && <Badge variant="default" className="text-[10px]">Publicada</Badge>}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">/p/{page.slug}</p>
-                  <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
-                </button>
-              ))}</div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="bg-background max-w-[95vw] h-[90vh]">
           <DialogHeader><DialogTitle>Preview</DialogTitle></DialogHeader>
@@ -996,6 +1106,33 @@ const PageBuilder: React.FC = () => {
       </Dialog>
     </div>
   );
+};
+
+// ── Main Component (Router) ────────────────────────────────────────────────────
+const PageBuilder: React.FC = () => {
+  const [view, setView] = useState<'list' | 'editor'>('list');
+  const [editingPage, setEditingPage] = useState<SavedPage | null>(null);
+
+  const handleOpen = (page: SavedPage) => {
+    setEditingPage(page);
+    setView('editor');
+  };
+
+  const handleCreateNew = () => {
+    setEditingPage(null);
+    setView('editor');
+  };
+
+  const handleBack = () => {
+    setEditingPage(null);
+    setView('list');
+  };
+
+  if (view === 'editor') {
+    return <PageBuilderEditor key={editingPage?.id || 'new'} initialPage={editingPage} onBack={handleBack} />;
+  }
+
+  return <PageBuilderLanding onOpen={handleOpen} onCreateNew={handleCreateNew} />;
 };
 
 export default PageBuilder;
