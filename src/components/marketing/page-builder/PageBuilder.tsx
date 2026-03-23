@@ -1406,6 +1406,10 @@ const AutoGeneratePage: React.FC<{
 
     setGenerating(true);
     setStep('generating');
+    setProgress([]);
+    setVideoError('');
+    setSavedPageRef(null);
+    let generationError = '';
     const mem: Record<string, any> = (project.strategic_memory as Record<string, any>) || {};
     const sections: PageSection[] = [];
     const addProgress = (msg: string) => setProgress(prev => [...prev, msg]);

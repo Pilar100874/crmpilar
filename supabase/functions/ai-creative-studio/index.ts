@@ -779,14 +779,21 @@ function extractApiframeVideoUrl(payload: any): string | null {
   return payload?.video_urls?.[0]
     || payload?.video_url
     || payload?.result_url
-    || payload?.output
+    || payload?.output_url
+    || (Array.isArray(payload?.output) ? payload.output[0] : payload?.output)
     || payload?.result?.video_urls?.[0]
     || payload?.result?.video_url
     || payload?.result?.result_url
+    || payload?.result?.output_url
+    || (Array.isArray(payload?.result?.output) ? payload.result.output[0] : payload?.result?.output)
     || payload?.data?.video_urls?.[0]
     || payload?.data?.video_url
+    || payload?.data?.result_url
+    || payload?.data?.output_url
+    || payload?.data?.url
     || payload?.generation?.assets?.video
     || payload?.assets?.video
+    || payload?.url
     || null;
 }
 
