@@ -814,6 +814,52 @@ INSTRUÇÃO FINAL: Execute sua análise agora.
   return prompt;
 }
 
+function ensureCollaborationDirective(prompt: string): string {
+  const normalizedPrompt = (prompt || '').trim();
+  if (!normalizedPrompt) return COLLABORATION_DIRECTIVE_SENTENCE;
+  if (normalizedPrompt.includes(COLLABORATION_DIRECTIVE_SENTENCE)) return normalizedPrompt;
+  return `${normalizedPrompt}\n\n${COLLABORATION_DIRECTIVE_SENTENCE}`;
+}
+
+async function resolveAgentDefinition(supabase: any, agentType: string) {
+  const builtInAgent = AGENT_DEFINITIONS[agentType];
+  if (builtInAgent) {
+    return {
+      agent: {
+        ...builtInAgent,
+        systemPrompt: ensureCollaborationDirective(builtInAgent.systemPrompt),
+      },
+      customDeps: [] as string[],
+      kbType: 'internal',
+      kbFiles: [] as any[],
+      isCustom: false,
+    };
+  }
+
+  const { data: customAgent } = await supabase
+    .from('strategy_custom_agents')
+    .select('*')
+    .eq('agent_key', agentType)
+    .eq('ativo', true)
+    .maybeSingle();
+
+  if (!customAgent) {
+    throw new Error(`Agente desconhecido: ${agentType}`);
+  }
+
+  return {
+    agent: {
+      name: (customAgent as any).name,
+      type: agentType,
+      systemPrompt: ensureCollaborationDirective((customAgent as any).system_prompt || ''),
+    },
+    customDeps: (customAgent as any).dependencies || [],
+    kbType: (customAgent as any).knowledge_base_type || 'internal',
+    kbFiles: (customAgent as any).knowledge_base_files || [],
+    isCustom: true,
+  };
+}
+
 /**
  * Fetch the latest strategic memory from the database (not a stale local copy).
  */
