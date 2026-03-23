@@ -1416,7 +1416,7 @@ REGRAS:
           const { memory: latestMemory } = await getLatestMemory(supabase, projectId);
 
           // Log dependency status
-          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : ((custom as any)?.dependencies || []);
+          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : (resolved.customDeps || []);
           const availableDeps = deps.filter((d: string) => latestMemory[d]);
           const missingDeps = deps.filter((d: string) => !latestMemory[d]);
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
