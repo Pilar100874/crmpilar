@@ -1466,6 +1466,15 @@ const PageBuilderLanding: React.FC<{
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Auto Generate Dialog */}
+      <AutoGeneratePage
+        open={showAutoGenerate}
+        onOpenChange={setShowAutoGenerate}
+        onGenerated={(page) => {
+          onOpen(page);
+        }}
+      />
     </div>
   );
 };
