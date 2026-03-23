@@ -21,6 +21,8 @@ interface Props {
   onReject?: (id: string) => void;
   onRevise?: (id: string, agentType: string) => void;
   onUpdateContent?: (id: string, content: any) => void;
+  onExportSinglePDF?: (artifactType: string) => void;
+  onFeedback?: (artifactId: string, feedback: 'positive' | 'negative') => void;
   runningAgents?: Set<string>;
   agentInfo?: AgentInfoMap;
 }
