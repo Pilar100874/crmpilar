@@ -1480,9 +1480,14 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── Config & Save ──
-    addProgress('🔍 Aplicando configurações visuais e SEO...');
-    const primaryColor = creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
-    const accentColor = creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
+    addProgress('🔍 Aplicando estilo do template e SEO...');
+    const tpl = PAGE_TEMPLATES.find(t => t.id === selectedTemplate);
+    const tplConfig = tpl?.config || {};
+    const primaryColor = tplConfig.primaryColor || creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
+    const accentColor = tplConfig.accentColor || creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
+    const bgColor = tplConfig.backgroundColor || '#ffffff';
+    const txtColor = tplConfig.textColor || '#1f2937';
+    const fontDisplay = tplConfig.fontDisplay || 'Inter';
 
     // AI-generated page name or smart fallback
     const pageName = aiCopy?.page_name || `${project.nome} — Página de Vendas`;
@@ -1500,8 +1505,8 @@ const AutoGeneratePage: React.FC<{
         title: seoTitle,
         description: seoDesc,
         favicon: '', primaryColor, secondaryColor: '#1e293b',
-        accentColor, backgroundColor: '#ffffff', textColor: '#1f2937',
-        fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
+        accentColor, backgroundColor: bgColor, textColor: txtColor,
+        fontDisplay, fontBody: fontDisplay, maxWidth: '1200px',
       } as any,
       estabelecimento_id: estabId,
       publicado: false,
