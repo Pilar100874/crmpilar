@@ -1483,8 +1483,8 @@ const AutoGeneratePage: React.FC<{
 
     // ── Config & Save ──
     addProgress('🔍 Aplicando estilo do template e SEO...');
-    const tpl = PAGE_TEMPLATES.find(t => t.id === selectedTemplate);
-    const tplConfig = tpl?.config || {};
+    const theme = getThemeById(selectedTemplate);
+    const tplConfig = theme?.config || {};
     const primaryColor = tplConfig.primaryColor || creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
     const accentColor = tplConfig.accentColor || creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
     const bgColor = tplConfig.backgroundColor || '#ffffff';
