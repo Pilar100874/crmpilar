@@ -345,13 +345,15 @@ const SortableSectionItem: React.FC<{
       )} onClick={onSelect}>
       <div {...attributes} {...listeners} className="cursor-grab text-muted-foreground hover:text-foreground"><GripVertical className="h-4 w-4" /></div>
       <span className="text-sm">{tpl?.icon}</span>
-      <span className={cn("flex-1 text-sm truncate", !section.visible && "line-through text-muted-foreground")}>{section.title}</span>
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); onToggleVisible(); }}>
-        <Eye className={cn("h-3 w-3", !section.visible && "opacity-30")} />
-      </Button>
-      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
-        <Trash2 className="h-3 w-3" />
-      </Button>
+      <span className={cn("flex-1 text-sm truncate min-w-0", !section.visible && "line-through text-muted-foreground")}>{section.title}</span>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={(e) => { e.stopPropagation(); onToggleVisible(); }} title={section.visible ? "Ocultar seção" : "Mostrar seção"}>
+          {section.visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3 opacity-50" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir seção">
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 };
