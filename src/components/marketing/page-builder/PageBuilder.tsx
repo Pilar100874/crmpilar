@@ -1779,7 +1779,7 @@ const AutoGeneratePage: React.FC<{
         description: seoDesc,
         favicon: '', primaryColor, secondaryColor: '#1e293b',
         accentColor, backgroundColor: bgColor, textColor: txtColor,
-        fontDisplay, fontBody: fontDisplay, maxWidth: '1200px',
+        fontDisplay, fontBody: fontDisplay, maxWidth,
       } as any,
       estabelecimento_id: estabId,
       publicado: false,
