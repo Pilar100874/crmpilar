@@ -1164,7 +1164,11 @@ section{overflow-x:hidden}
 
   const primaryTextHTML = getContrastText(cfg.primaryColor);
   const accentTextHTML = getContrastTextForAccent(cfg.accentColor);
-
+  const pageBgText = getContrastText(cfg.backgroundColor);
+  const cardBg = getCardBg(cfg.backgroundColor);
+  const cardBrd = getCardBorder(cfg.backgroundColor);
+  const subtleText = getSubtleText(cfg.backgroundColor);
+  const altBg = getSectionAltBg(cfg.backgroundColor);
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
