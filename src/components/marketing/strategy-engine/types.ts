@@ -64,7 +64,7 @@ export const AGENT_INFO: Record<string, { name: string; icon: string; color: str
   social_media: { name: 'Social Media', icon: '📲', color: '#7C3AED', description: 'Calendário e estratégia de redes sociais' },
 };
 
-export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel'];
+export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media'];
 
 // Dependency map: each agent lists agents that MUST be completed before it can run
 export const AGENT_DEPENDENCIES: Record<string, string[]> = {
