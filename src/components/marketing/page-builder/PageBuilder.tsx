@@ -3091,6 +3091,10 @@ const PageBuilderEditor: React.FC<{
                 </div>
               </div>
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">📱 Links Globais</p>
+              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links da página quando não houver valor específico.</p>
+              <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => setConfig(c => ({ ...c, whatsappGlobal: e.target.value }))} placeholder="5511999999999 (com DDI)" className="text-xs" /><p className="text-[9px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número</p></div>
+              <div><Label className="text-[10px]">🌐 Site / URL Padrão</Label><Input value={config.siteGlobal || ''} onChange={e => setConfig(c => ({ ...c, siteGlobal: e.target.value }))} placeholder="https://seusite.com.br" className="text-xs" /></div>
             </div>
           )}
           {rightPanel === 'agent' && <AgentTextBank />}
