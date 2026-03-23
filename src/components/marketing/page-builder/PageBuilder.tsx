@@ -1362,6 +1362,7 @@ const AutoGeneratePage: React.FC<{
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [productSearch, setProductSearch] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [savedPageRef, setSavedPageRef] = useState<SavedPage | null>(null);
 
   useEffect(() => {
     if (!open) return;
