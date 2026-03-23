@@ -1718,6 +1718,83 @@ const AutoGeneratePage: React.FC<{
       const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
       videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
     }
+
+    // ── 7b. Actually generate the video using AI ──
+    const videoStoryboard = videoContent._storyboard || [];
+    const videoPromptBase = videoContent._video_prompt || '';
+    const estabIdForVideo = localStorage.getItem('estabelecimentoId');
+    if (estabIdForVideo && (videoStoryboard.length > 0 || videoPromptBase)) {
+      addProgress('🎬 Gerando vídeo com IA... (pode levar até 2 minutos)');
+      try {
+        // Build a cinematic prompt from the storyboard
+        let videoGenPrompt = '';
+        if (videoStoryboard.length > 0) {
+          const sceneDescriptions = videoStoryboard.map((s: any, i: number) => {
+            const parts = [];
+            if (s.descricao_visual) parts.push(s.descricao_visual);
+            if (s.naracao) parts.push(`Narração: "${s.naracao}"`);
+            if (s.movimento_camera) parts.push(`Câmera: ${s.movimento_camera}`);
+            if (s.enquadramento) parts.push(`Enquadramento: ${s.enquadramento}`);
+            return `Cena ${i + 1} (${s.duracao || '2s'}): ${parts.join('. ')}`;
+          }).join(' → ');
+          videoGenPrompt = `Create a cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for the product "${selectedProd?.nome || ''}". Storyboard: ${sceneDescriptions}. Style: professional, clean, modern advertising. No text overlays.`;
+        } else if (videoPromptBase) {
+          videoGenPrompt = `Create a short cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Theme: ${videoPromptBase}. Style: professional advertising, clean visuals. No text overlays.`;
+        }
+
+        // Determine model - try google/veo first (supports image-to-video)
+        const videoModel = mainImageUrl ? 'google/veo-3.1' : 'google/veo-3.1';
+        
+        const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: 'generate_video',
+            params: {
+              model: videoModel,
+              prompt: videoGenPrompt,
+              estabelecimentoId: estabIdForVideo,
+              duration: MAX_VIDEO_DURATION,
+              aspectRatio: '16:9',
+              imageUrls: mainImageUrl ? [mainImageUrl] : [],
+              withAudio: false,
+              withMusic: false,
+            },
+          }),
+        });
+
+        if (videoGenResponse.ok) {
+          const videoGenResult = await videoGenResponse.json();
+          if (videoGenResult?.result?.videoUrl) {
+            videoContent.url = videoGenResult.result.videoUrl;
+            videoContent.autoplay = true;
+            addProgress('✅ Vídeo gerado com sucesso!');
+          } else if (videoGenResult?.result?.error) {
+            addProgress(`⚠️ Não foi possível gerar o vídeo: ${videoGenResult.result.error.substring(0, 100)}`);
+          } else {
+            addProgress('⚠️ Vídeo não gerado — usando storyboard como referência.');
+          }
+        } else {
+          const errText = await videoGenResponse.text().catch(() => '');
+          console.warn('[AutoGen] Video generation failed:', videoGenResponse.status, errText);
+          // Check for specific errors
+          if (videoGenResponse.status === 402) {
+            addProgress('⚠️ Créditos insuficientes no provedor de IA para gerar vídeo. Usando storyboard.');
+          } else if (videoGenResponse.status === 401) {
+            addProgress('⚠️ Chave de API do provedor de vídeo não configurada. Configure em APIs Pagas para gerar vídeos automaticamente.');
+          } else {
+            addProgress('⚠️ Erro na geração de vídeo — usando storyboard como referência.');
+          }
+        }
+      } catch (videoErr: any) {
+        console.warn('[AutoGen] Video generation error:', videoErr);
+        addProgress('⚠️ Timeout ou erro na geração de vídeo — usando storyboard como referência.');
+      }
+    }
+
     sections.push({
       id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
       content: videoContent
