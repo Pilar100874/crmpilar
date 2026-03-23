@@ -1381,6 +1381,7 @@ const AutoGeneratePage: React.FC<{
       setLoading(false);
       setStep('select');
       setProgress([]);
+      setVideoError('');
     })();
   }, [open]);
 
