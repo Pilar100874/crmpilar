@@ -76,13 +76,13 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
         );
       case 'features':
         return (
-          <div key={i} style={{ padding: '4px 6px', background: backgroundColor }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+          <div key={i} style={{ padding: '10px 14px', background: backgroundColor }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {[0, 1, 2].map(j => (
-                <div key={j} style={{ padding: 3, border: `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2, background: cardBg, textAlign: 'center' as const }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: accentColor, margin: '0 auto 2px' }} />
-                  <div style={{ height: 2, width: '70%', background: textColor, opacity: 0.5, borderRadius: 1, margin: '0 auto 1px' }} />
-                  <div style={{ height: 1, width: '80%', background: mutedText, borderRadius: 1, margin: '0 auto' }} />
+                <div key={j} style={{ padding: 8, border: `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4, background: cardBg, textAlign: 'center' as const }}>
+                  <div style={{ width: 14, height: 14, borderRadius: '50%', background: accentColor, margin: '0 auto 5px' }} />
+                  <div style={{ height: 4, width: '70%', background: textColor, opacity: 0.5, borderRadius: 2, margin: '0 auto 3px' }} />
+                  <div style={{ height: 3, width: '80%', background: mutedText, borderRadius: 2, margin: '0 auto' }} />
                 </div>
               ))}
             </div>
@@ -90,12 +90,12 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
         );
       case 'testimonials':
         return (
-          <div key={i} style={{ padding: '4px 6px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+          <div key={i} style={{ padding: '10px 14px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {[0, 1].map(j => (
-                <div key={j} style={{ padding: 3, border: `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2, background: cardBg }}>
-                  <div style={{ height: 1, width: '80%', background: mutedText, borderRadius: 1, marginBottom: 2 }} />
-                  <div style={{ height: 1, width: '40%', background: textColor, opacity: 0.4, borderRadius: 1 }} />
+                <div key={j} style={{ padding: 8, border: `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4, background: cardBg }}>
+                  <div style={{ height: 3, width: '80%', background: mutedText, borderRadius: 2, marginBottom: 5 }} />
+                  <div style={{ height: 3, width: '40%', background: textColor, opacity: 0.4, borderRadius: 2 }} />
                 </div>
               ))}
             </div>
@@ -103,24 +103,24 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
         );
       case 'social_proof':
         return (
-          <div key={i} style={{ padding: '4px 6px', background: primaryColor, display: 'flex', justifyContent: 'space-around' }}>
+          <div key={i} style={{ padding: '10px 14px', background: primaryColor, display: 'flex', justifyContent: 'space-around' }}>
             {[0, 1, 2, 3].map(j => (
               <div key={j} style={{ textAlign: 'center' as const }}>
-                <div style={{ height: 3, width: 12, background: '#fff', borderRadius: 1, margin: '0 auto 1px' }} />
-                <div style={{ height: 1, width: 14, background: 'rgba(255,255,255,0.5)', borderRadius: 1, margin: '0 auto' }} />
+                <div style={{ height: 7, width: 28, background: '#fff', borderRadius: 2, margin: '0 auto 3px' }} />
+                <div style={{ height: 3, width: 32, background: 'rgba(255,255,255,0.5)', borderRadius: 2, margin: '0 auto' }} />
               </div>
             ))}
           </div>
         );
       case 'pricing':
         return (
-          <div key={i} style={{ padding: '4px 6px', background: backgroundColor }}>
-            <div style={{ height: 2, width: '30%', background: textColor, opacity: 0.5, borderRadius: 1, margin: '0 auto 3px' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+          <div key={i} style={{ padding: '10px 14px', background: backgroundColor }}>
+            <div style={{ height: 5, width: '30%', background: textColor, opacity: 0.5, borderRadius: 2, margin: '0 auto 8px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
               {[0, 1, 2].map(j => (
-                <div key={j} style={{ padding: 2, border: j === 1 ? `1.5px solid ${primaryColor}` : `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2, background: cardBg, transform: j === 1 ? 'scale(1.05)' : undefined }}>
-                  <div style={{ height: 2, width: '60%', background: primaryColor, borderRadius: 1, margin: '0 auto 1px' }} />
-                  <div style={{ height: 1, width: '80%', background: mutedText, borderRadius: 1, margin: '0 auto' }} />
+                <div key={j} style={{ padding: 6, border: j === 1 ? `2px solid ${primaryColor}` : `1px solid ${cardBorder}`, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4, background: cardBg, transform: j === 1 ? 'scale(1.05)' : undefined }}>
+                  <div style={{ height: 4, width: '60%', background: primaryColor, borderRadius: 2, margin: '0 auto 3px' }} />
+                  <div style={{ height: 3, width: '80%', background: mutedText, borderRadius: 2, margin: '0 auto' }} />
                 </div>
               ))}
             </div>
@@ -128,38 +128,38 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
         );
       case 'cta':
         return (
-          <div key={i} style={{ padding: '5px 6px', background: primaryColor, textAlign: 'center' as const }}>
-            <div style={{ height: 3, width: '40%', background: '#fff', borderRadius: 1, margin: '0 auto 2px' }} />
-            <div style={{ height: 3, width: '20%', background: accentColor, borderRadius: 2, margin: '0 auto' }} />
+          <div key={i} style={{ padding: '12px 14px', background: primaryColor, textAlign: 'center' as const }}>
+            <div style={{ height: 6, width: '40%', background: '#fff', borderRadius: 2, margin: '0 auto 5px' }} />
+            <div style={{ height: 7, width: '20%', background: accentColor, borderRadius: 4, margin: '0 auto' }} />
           </div>
         );
       case 'faq':
         return (
-          <div key={i} style={{ padding: '3px 6px', background: backgroundColor }}>
+          <div key={i} style={{ padding: '8px 14px', background: backgroundColor }}>
             {[0, 1, 2].map(j => (
-              <div key={j} style={{ borderBottom: `1px solid ${cardBorder}`, padding: '2px 0' }}>
-                <div style={{ height: 1.5, width: `${50 + j * 10}%`, background: textColor, opacity: 0.4, borderRadius: 1 }} />
+              <div key={j} style={{ borderBottom: `1px solid ${cardBorder}`, padding: '5px 0' }}>
+                <div style={{ height: 4, width: `${50 + j * 10}%`, background: textColor, opacity: 0.4, borderRadius: 2 }} />
               </div>
             ))}
           </div>
         );
       case 'guarantee':
         return (
-          <div key={i} style={{ padding: '4px 8px', background: backgroundColor, textAlign: 'center' as const }}>
-            <div style={{ border: `1.5px dashed ${accentColor}`, borderRadius: borderRadius ? parseInt(borderRadius) / 3 : 4, padding: '3px' }}>
-              <div style={{ fontSize: 8, marginBottom: 1 }}>🛡️</div>
-              <div style={{ height: 2, width: '50%', background: textColor, opacity: 0.5, borderRadius: 1, margin: '0 auto' }} />
+          <div key={i} style={{ padding: '10px 18px', background: backgroundColor, textAlign: 'center' as const }}>
+            <div style={{ border: `2px dashed ${accentColor}`, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 6, padding: '8px' }}>
+              <div style={{ fontSize: 14, marginBottom: 3 }}>🛡️</div>
+              <div style={{ height: 4, width: '50%', background: textColor, opacity: 0.5, borderRadius: 2, margin: '0 auto' }} />
             </div>
           </div>
         );
       case 'process_steps':
         return (
-          <div key={i} style={{ padding: '3px 6px', background: backgroundColor }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+          <div key={i} style={{ padding: '8px 14px', background: backgroundColor }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
               {[1, 2, 3].map(j => (
                 <div key={j} style={{ textAlign: 'center' as const }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: accentColor, color: '#fff', fontSize: 5, lineHeight: '8px', textAlign: 'center' as const, margin: '0 auto 1px' }}>{j}</div>
-                  <div style={{ height: 1, width: 14, background: textColor, opacity: 0.4, borderRadius: 1, margin: '0 auto' }} />
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: accentColor, color: '#fff', fontSize: 10, lineHeight: '18px', textAlign: 'center' as const, margin: '0 auto 3px' }}>{j}</div>
+                  <div style={{ height: 3, width: 30, background: textColor, opacity: 0.4, borderRadius: 2, margin: '0 auto' }} />
                 </div>
               ))}
             </div>
@@ -167,52 +167,52 @@ export const TemplateMiniPreview: React.FC<MiniPreviewProps> = ({ config, sectio
         );
       case 'objections':
         return (
-          <div key={i} style={{ padding: '3px 6px', background: backgroundColor }}>
+          <div key={i} style={{ padding: '8px 14px', background: backgroundColor }}>
             {[0, 1].map(j => (
-              <div key={j} style={{ border: `1px solid ${cardBorder}`, borderRadius: 2, padding: 2, marginBottom: 2, background: cardBg }}>
-                <div style={{ height: 1, width: '50%', background: '#dc2626', opacity: 0.5, borderRadius: 1, marginBottom: 1 }} />
-                <div style={{ height: 1, width: '70%', background: mutedText, borderRadius: 1 }} />
+              <div key={j} style={{ border: `1px solid ${cardBorder}`, borderRadius: 4, padding: 6, marginBottom: 5, background: cardBg }}>
+                <div style={{ height: 3, width: '50%', background: '#dc2626', opacity: 0.5, borderRadius: 2, marginBottom: 3 }} />
+                <div style={{ height: 3, width: '70%', background: mutedText, borderRadius: 2 }} />
               </div>
             ))}
           </div>
         );
       case 'video':
         return (
-          <div key={i} style={{ padding: '3px 6px', background: backgroundColor }}>
-            <div style={{ aspectRatio: '16/7', background: mutedColor, borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 0, height: 0, borderLeft: '4px solid white', borderTop: '3px solid transparent', borderBottom: '3px solid transparent' }} />
+          <div key={i} style={{ padding: '8px 14px', background: backgroundColor }}>
+            <div style={{ aspectRatio: '16/7', background: mutedColor, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 0, height: 0, borderLeft: '8px solid white', borderTop: '5px solid transparent', borderBottom: '5px solid transparent' }} />
               </div>
             </div>
           </div>
         );
       case 'text':
         return (
-          <div key={i} style={{ padding: '3px 8px', background: backgroundColor }}>
-            <div style={{ height: 1, width: '90%', background: mutedText, borderRadius: 1, margin: '0 auto 1px' }} />
-            <div style={{ height: 1, width: '70%', background: mutedText, borderRadius: 1, margin: '0 auto' }} />
+          <div key={i} style={{ padding: '8px 18px', background: backgroundColor }}>
+            <div style={{ height: 3, width: '90%', background: mutedText, borderRadius: 2, margin: '0 auto 3px' }} />
+            <div style={{ height: 3, width: '70%', background: mutedText, borderRadius: 2, margin: '0 auto' }} />
           </div>
         );
       case 'image':
         return (
-          <div key={i} style={{ padding: '2px 6px', background: backgroundColor }}>
-            <div style={{ aspectRatio: '16/7', background: mutedColor, borderRadius: borderRadius ? parseInt(borderRadius) / 4 : 2 }} />
+          <div key={i} style={{ padding: '6px 14px', background: backgroundColor }}>
+            <div style={{ aspectRatio: '16/7', background: mutedColor, borderRadius: borderRadius ? parseInt(borderRadius) / 2 : 4 }} />
           </div>
         );
       case 'gallery':
         return (
-          <div key={i} style={{ padding: '2px 6px', background: backgroundColor }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+          <div key={i} style={{ padding: '6px 14px', background: backgroundColor }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
               {[0, 1, 2].map(j => (
-                <div key={j} style={{ aspectRatio: '1', background: mutedColor, borderRadius: 1 }} />
+                <div key={j} style={{ aspectRatio: '1', background: mutedColor, borderRadius: 3 }} />
               ))}
             </div>
           </div>
         );
       case 'footer':
         return (
-          <div key={i} style={{ padding: '3px 6px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6', borderTop: `1px solid ${cardBorder}`, textAlign: 'center' as const }}>
-            <div style={{ height: 1, width: '25%', background: mutedText, borderRadius: 1, margin: '0 auto' }} />
+          <div key={i} style={{ padding: '8px 14px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f3f4f6', borderTop: `1px solid ${cardBorder}`, textAlign: 'center' as const }}>
+            <div style={{ height: 3, width: '25%', background: mutedText, borderRadius: 2, margin: '0 auto' }} />
           </div>
         );
       default:
