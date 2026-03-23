@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { useStrategyProjects } from './hooks/useStrategyProjects';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
   const [descricao, setDescricao] = useState('');
   const [creating, setCreating] = useState(false);
   const [cloning, setCloning] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
@@ -174,7 +176,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => deleteProject(project.id)}
+                          onClick={() => setDeleteTarget({ id: project.id, name: project.nome })}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                           Excluir
@@ -202,6 +204,17 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
           })}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={() => {
+          if (deleteTarget) deleteProject(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+        title="Excluir projeto"
+        itemName={deleteTarget?.name}
+      />
     </div>
   );
 }
