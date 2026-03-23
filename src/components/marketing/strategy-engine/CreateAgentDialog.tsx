@@ -276,24 +276,10 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
         {/* ─── Meta fields ─── */}
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Chave (ID único)</Label>
-              <Input
-                value={agentKey}
-                onChange={e => setAgentKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))}
-                placeholder="meu_agente"
-                className="text-sm h-9"
-              />
-              <p className="text-[10px] text-muted-foreground">Apenas letras minúsculas e _</p>
-            </div>
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Descrição Curta</Label>
               <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="O que este agente faz..." className="text-sm h-9" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Ordem na Timeline</Label>
-              <Input type="number" value={ordem} onChange={e => setOrdem(parseInt(e.target.value) || 100)} className="text-sm h-9" />
             </div>
           </div>
 
