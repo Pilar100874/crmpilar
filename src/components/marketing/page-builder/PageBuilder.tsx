@@ -1013,16 +1013,31 @@ function generateFullHTML(sections: PageSection[], config: PageConfig): string {
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@400;600;700&family=${encodeURIComponent(cfg.fontBody)}:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor}}
+body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor};-webkit-text-size-adjust:100%}
 .container{max-width:${cfg.maxWidth};margin:0 auto;padding:0 24px}
-img{max-width:100%}video{max-width:100%}
+img{max-width:100%;height:auto}video{max-width:100%;height:auto}
 a{text-decoration:none}
-.btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:600;font-size:1.1rem;cursor:pointer;transition:opacity .2s}
+.btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:600;font-size:1.1rem;cursor:pointer;transition:opacity .2s;text-align:center}
 .btn:hover{opacity:.9}
-.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
 .text-center{text-align:center}
-@media(max-width:768px){.grid-3,.grid-2{grid-template-columns:1fr}}
+section{overflow-x:hidden}
+@media(max-width:1024px){
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .container{padding:0 16px}
+  .btn{padding:12px 24px;font-size:1rem;width:100%;max-width:320px}
+}
+@media(max-width:480px){
+  .grid-4{grid-template-columns:1fr}
+  body{font-size:15px}
+}
 </style></head><body>`;
 
   for (const s of vs) {
