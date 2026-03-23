@@ -2986,7 +2986,17 @@ const PageBuilderEditor: React.FC<{
           <Button variant={rightPanel === 'agent' ? 'secondary' : 'ghost'} size="sm" className="h-7 text-xs flex-1" onClick={() => setRightPanel('agent')}><Bot className="h-3 w-3 mr-1" /> Agente</Button>
         </div>
         <ScrollArea className="flex-1 p-3">
-          {rightPanel === 'editor' && (selectedSection ? <SectionEditor section={selectedSection} onChange={updateSection} /> : <p className="text-sm text-muted-foreground text-center py-6">Selecione uma seção para editar</p>)}
+          {rightPanel === 'editor' && (selectedSection ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium truncate">{selectedSection.title}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteSection(selectedSection.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <SectionEditor section={selectedSection} onChange={updateSection} />
+            </div>
+          ) : <p className="text-sm text-muted-foreground text-center py-6">Selecione uma seção para editar</p>)}
           {rightPanel === 'config' && (
             <div className="space-y-4">
               <div><Label className="text-xs">Título do Site</Label><Input value={config.title} onChange={e => setConfig(c => ({ ...c, title: e.target.value }))} /></div>
