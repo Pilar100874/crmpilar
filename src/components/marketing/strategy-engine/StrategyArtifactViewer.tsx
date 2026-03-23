@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StrategyArtifact, AGENT_INFO } from './types';
 type AgentInfoMap = Record<string, { name: string; icon: string; color: string; description: string }>;
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { ArtifactHistory } from './ArtifactHistory';
 import { ArtifactABComparison } from './ArtifactABComparison';
 import { supabase } from '@/integrations/supabase/client';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface Props {
   artifacts: StrategyArtifact[];
@@ -37,6 +38,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
   const [editedContent, setEditedContent] = useState<any>(null);
   const [validating, setValidating] = useState<string | null>(null);
   const [validationResults, setValidationResults] = useState<Record<string, any>>({});
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const exportJSON = (artifact: StrategyArtifact) => {
     const blob = new Blob([JSON.stringify(artifact.conteudo, null, 2)], { type: 'application/json' });
@@ -238,11 +240,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                       size="sm"
                       variant="outline"
                       className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={() => {
-                        if (window.confirm('Tem certeza que deseja excluir este artefato?')) {
-                          onDeleteArtifact(artifact.id);
-                        }
-                      }}
+                      onClick={() => setDeleteTarget({ id: artifact.id, name: info.name })}
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
                       Excluir
@@ -406,6 +404,19 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           )}
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={() => {
+          if (deleteTarget && onDeleteArtifact) {
+            onDeleteArtifact(deleteTarget.id);
+          }
+          setDeleteTarget(null);
+        }}
+        title="Excluir artefato"
+        itemName={deleteTarget?.name}
+      />
     </>
   );
 }
