@@ -699,7 +699,7 @@ const VideoTimelineEditor: React.FC = () => {
   const clipsRef = useRef(state.clips);
   clipsRef.current = state.clips;
 
-  const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, targetTrackId?: string) => {
+  const handleAddClip = useCallback((type: 'video' | 'audio' | 'image' | 'text', media?: MediaItem, targetTrackId?: string, dropStartTime?: number) => {
     const tracks = tracksRef.current;
     const clips = clipsRef.current;
     let trackId = targetTrackId;
@@ -713,10 +713,15 @@ const VideoTimelineEditor: React.FC = () => {
     }
     if (!trackId) return;
 
-    const lastClip = clips
-      .filter((c) => c.trackId === trackId)
-      .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
-    const startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
+    let startTime: number;
+    if (dropStartTime !== undefined && dropStartTime >= 0) {
+      startTime = dropStartTime;
+    } else {
+      const lastClip = clips
+        .filter((c) => c.trackId === trackId)
+        .sort((a, b) => (b.startTime + b.duration) - (a.startTime + a.duration))[0];
+      startTime = lastClip ? lastClip.startTime + lastClip.duration : 0;
+    }
     const targetTrack = tracks.find(t => t.id === trackId);
     const trackType = targetTrack?.type || (type === 'image' ? 'video' : type);
     const color = TRACK_COLORS[trackType] || TRACK_COLORS.video;
