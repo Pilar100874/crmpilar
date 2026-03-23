@@ -1205,8 +1205,48 @@ section{overflow-x:hidden}
 }
 
 // ── Preview Iframe (standalone) ─────────────────────────────────────────────────
+const PREVIEW_DEVICES = [
+  { key: 'desktop', label: 'Desktop', icon: 'Monitor', width: '100%' },
+  { key: 'tablet', label: 'Tablet', icon: 'Tablet', width: '768px' },
+  { key: 'mobile', label: 'Celular', icon: 'Smartphone', width: '375px' },
+] as const;
+
 const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
-  return <iframe srcDoc={generateFullHTML(sections, config as PageConfig)} className="w-full h-full border-0" />;
+  const [device, setDevice] = React.useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const current = PREVIEW_DEVICES.find(d => d.key === device)!;
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-center gap-1 py-2 border-b bg-muted/30">
+        {PREVIEW_DEVICES.map(d => (
+          <Button
+            key={d.key}
+            variant={device === d.key ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setDevice(d.key)}
+          >
+            {d.key === 'desktop' && <Monitor className="h-3.5 w-3.5" />}
+            {d.key === 'tablet' && <Tablet className="h-3.5 w-3.5" />}
+            {d.key === 'mobile' && <Smartphone className="h-3.5 w-3.5" />}
+            {d.label}
+          </Button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-auto flex justify-center bg-muted/20 p-2">
+        <iframe
+          srcDoc={generateFullHTML(sections, config as PageConfig)}
+          className="border-0 bg-white shadow-lg transition-all duration-300"
+          style={{
+            width: current.width,
+            maxWidth: '100%',
+            height: '100%',
+            borderRadius: device !== 'desktop' ? '16px' : '0',
+          }}
+        />
+      </div>
+    </div>
+  );
 };
 
 // ── Auto Generate Page from Strategy ──────────────────────────────────────────
