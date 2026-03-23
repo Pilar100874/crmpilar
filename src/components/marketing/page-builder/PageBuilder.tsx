@@ -480,7 +480,7 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
           {agentKeys.length > 1 && (
             <div className="flex flex-wrap gap-1 mb-2">
               <Badge variant={activeAgent === 'all' ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent('all')}>Todos</Badge>
-              {agentKeys.map(k => <Badge key={k} variant={activeAgent === k ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent(k)}>{k}</Badge>)}
+              {agentKeys.map(k => <Badge key={k} variant={activeAgent === k ? 'default' : 'outline'} className="cursor-pointer text-[10px]" onClick={() => setActiveAgent(k)}>{(AGENT_INFO_MAP as any)[k]?.icon || '🔹'} {(AGENT_INFO_MAP as any)[k]?.name || k}</Badge>)}
             </div>
           )}
           <ScrollArea className="h-[260px]">
@@ -490,7 +490,7 @@ const StrategyTextPicker: React.FC<{ onSelect: (text: string) => void }> = ({ on
               if (texts.length === 0) return null;
               return (
                 <div key={agentKey} className="mb-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{agentKey}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{(AGENT_INFO_MAP as any)[agentKey]?.icon || '🔹'} {(AGENT_INFO_MAP as any)[agentKey]?.name || agentKey}</p>
                   {texts.slice(0, 12).map((t, i) => (
                     <button key={i} onClick={() => onSelect(t.text)} className="block w-full text-left text-xs p-2 rounded hover:bg-muted/50 transition-colors border-b border-border/30">
                       <span className="text-muted-foreground">{t.path}: </span>
@@ -1426,7 +1426,7 @@ const AutoGeneratePage: React.FC<{
     });
 
     const agentKeys = Object.keys(allData);
-    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
+    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).map(k => (AGENT_INFO_MAP as any)[k]?.name || k).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
 
     // ── Call AI to generate compelling marketing copy ──
     addProgress('🤖 Gerando textos de marketing com IA...');
