@@ -2912,7 +2912,7 @@ const PageBuilderEditor: React.FC<{
   const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
   return (
-    <div className="flex h-[calc(100vh-200px)] gap-0 overflow-hidden -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
+    <div className={`flex gap-0 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-200px)] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6'}`}>
       {/* Left Panel */}
       <div className="w-64 border-r bg-muted/20 flex flex-col shrink-0">
         <div className="p-2 border-b">
