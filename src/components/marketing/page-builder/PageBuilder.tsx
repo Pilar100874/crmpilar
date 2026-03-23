@@ -1716,7 +1716,7 @@ const AutoGeneratePage: React.FC<{
             </Button>
           </div>
         ) : step === 'template' ? (
-          <div className="space-y-4">
+          <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 <strong>Passo 2:</strong> Escolha a categoria e o tema visual.
