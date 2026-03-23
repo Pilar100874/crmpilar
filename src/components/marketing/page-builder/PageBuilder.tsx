@@ -1310,12 +1310,52 @@ const AutoGeneratePage: React.FC<{
       content: { body: aboutText, alignment: 'center', _alt_body: aboutAlts }
     });
 
-    // ── 7. Video placeholder ──
-    addProgress('🎬 Reservando espaço para vídeo...');
-    const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+    // ── 7. Video — generate storyboard with AI if product selected ──
+    let videoContent: Record<string, any> = { url: '', poster: '', autoplay: false };
+    if (selectedProd) {
+      addProgress(`🎬 Gerando roteiro de vídeo para "${selectedProd.nome}" com IA...`);
+      try {
+        const { data: videoResult, error: videoError } = await supabase.functions.invoke('strategy-engine', {
+          body: {
+            action: 'generate_page_media',
+            mediaType: 'video',
+            productName: selectedProd.nome,
+            productDescription: selectedProd.descricao || '',
+            productImageUrl: selectedProd.foto_url || '',
+            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
+          }
+        });
+        if (!videoError && videoResult?.success && videoResult?.data) {
+          const vd = videoResult.data;
+          videoContent = {
+            url: '',
+            poster: mainImageUrl || selectedProd.foto_url || '',
+            autoplay: false,
+            _video_prompt: vd.video_prompt || '',
+            _storyboard: vd.storyboard || [],
+            _headline_overlay: vd.headline_overlay || '',
+            _cta_overlay: vd.cta_overlay || '',
+            _media_suggestion: `🎬 Roteiro gerado pela IA: ${vd.headline_overlay || ''}. Use o AI Creative Studio para produzir o vídeo.`,
+          };
+          addProgress('✅ Roteiro de vídeo gerado com sucesso!');
+        } else {
+          const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+          videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+          addProgress('⚠️ Não foi possível gerar roteiro — usando sugestão...');
+        }
+      } catch {
+        const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || 'Grave um vídeo de apresentação.';
+        videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+        addProgress('⚠️ Erro na geração de roteiro — usando sugestão...');
+      }
+    } else {
+      addProgress('🎬 Reservando espaço para vídeo...');
+      const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+      videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+    }
     sections.push({
       id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
-      content: { url: '', poster: '', autoplay: false, _media_suggestion: `🎬 ${videoSuggestion}` }
+      content: videoContent
     });
 
     // ── 8. Testimonials ──
