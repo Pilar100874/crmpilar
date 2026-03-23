@@ -2127,8 +2127,8 @@ const AutoGeneratePage: React.FC<{
   const agentCount = selectedProj ? Object.keys((selectedProj.strategic_memory as Record<string, any>) || {}).length : 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("bg-background", step === 'template' ? 'sm:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col' : 'sm:max-w-2xl')}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !generating) onOpenChange(false); }}>
+      <DialogContent className={cn("bg-background", step === 'template' ? 'sm:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col' : 'sm:max-w-2xl')} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { if (generating) e.preventDefault(); }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
