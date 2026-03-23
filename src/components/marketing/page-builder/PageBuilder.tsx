@@ -1426,7 +1426,7 @@ const AutoGeneratePage: React.FC<{
     });
 
     const agentKeys = Object.keys(allData);
-    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
+    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).map(k => (AGENT_INFO_MAP as any)[k]?.name || k).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
 
     // ── Call AI to generate compelling marketing copy ──
     addProgress('🤖 Gerando textos de marketing com IA...');
