@@ -595,6 +595,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       const cg = parseInt(color.slice(3, 5), 16);
       const cb = parseInt(color.slice(5, 7), 16);
 
+      // Get agent mission/summary for the PDF
+      const agentCard = AGENT_CARDS[art.tipo];
+      const agentMission = agentCard?.mission || '';
+      const agentRole = agentCard?.role || info?.description || '';
+
       if (mode === 'resumida') {
         // --- COMPACT SECTION ---
         check(22);
@@ -607,6 +612,21 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         doc.text(`${i + 1}. ${title}`, mL + 7, y + 4);
         doc.setFont('helvetica', 'normal');
         y += 12;
+
+        // Agent summary (compact)
+        if (agentMission) {
+          doc.setFontSize(fs.small);
+          doc.setTextColor(100, 105, 125);
+          doc.setFont('helvetica', 'italic');
+          const missionLines = doc.splitTextToSize(sanitizeForPDF(agentMission), cW - 14);
+          for (const ml of missionLines) {
+            check(lineH);
+            doc.text(ml, mL + 7, y);
+            y += lineH;
+          }
+          doc.setFont('helvetica', 'normal');
+          y += 2;
+        }
 
         const condensed = extractCondensedLines(art.conteudo).map(l => {
           if (l.type === 'keyvalue') return { ...l, label: sanitizeForPDF(l.label), value: sanitizeForPDF(l.value) };
