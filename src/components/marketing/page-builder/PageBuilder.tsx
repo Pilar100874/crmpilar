@@ -971,6 +971,25 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
   );
 };
 
+// ── Contrast helper ────────────────────────────────────────────────────────────
+function getContrastText(hex: string): string {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) || 0;
+  const g = parseInt(c.substring(2, 4), 16) || 0;
+  const b = parseInt(c.substring(4, 6), 16) || 0;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+}
+
+function getContrastTextForAccent(hex: string): string {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) || 0;
+  const g = parseInt(c.substring(2, 4), 16) || 0;
+  const b = parseInt(c.substring(4, 6), 16) || 0;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+}
+
 // ── Preview Renderer ───────────────────────────────────────────────────────────
 const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = ({ section, config }) => {
   if (!section.visible) return null;
@@ -978,24 +997,26 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
   const layout = section.styles?.layout || '';
   switch (section.type) {
     case 'hero': {
+      const primaryText = getContrastText(config.primaryColor);
+      const accentText = getContrastTextForAccent(config.accentColor);
       if (layout === 'split-left' || layout === 'split-right') {
         const isRight = layout === 'split-right';
         return (
-          <div className="relative py-12 px-6" style={{ backgroundColor: config.primaryColor, color: '#fff' }}>
+          <div className="relative py-12 px-6" style={{ backgroundColor: config.primaryColor, color: primaryText }}>
             <div className={`max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 ${isRight ? 'md:flex-row-reverse' : ''}`}>
               <div className="flex-1 text-left">
                 <h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1>
                 <p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>
-                {c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}
+                {c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_text}</a>}
               </div>
               <div className="flex-1 w-full">
-                {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl bg-white/10 flex items-center justify-center text-white/30 text-sm">Imagem do Hero</div>}
+                {c.background_image ? <img src={c.background_image} alt="" className="w-full rounded-xl shadow-2xl" /> : <div className="w-full aspect-[4/3] rounded-xl flex items-center justify-center text-sm" style={{ background: primaryText === '#ffffff' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: primaryText === '#ffffff' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}>Imagem do Hero</div>}
               </div>
             </div>
           </div>
         );
       }
-      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: '#fff' }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: '#fff' }}>{c.cta_text}</a>}</div></div>);
+      return (<div className="relative py-20 px-6 text-center" style={{ backgroundImage: c.background_image ? `url(${c.background_image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: c.background_image ? undefined : config.primaryColor, color: c.background_image ? '#fff' : primaryText }}>{c.background_image && <div className="absolute inset-0 bg-black/50" />}<div className="relative z-10 max-w-3xl mx-auto"><h1 className="text-3xl md:text-5xl font-bold mb-4" style={{ fontFamily: config.fontDisplay }}>{c.headline}</h1><p className="text-lg md:text-xl mb-8 opacity-90">{c.subheadline}</p>{c.cta_text && <a href={c.cta_url} className="inline-block px-8 py-3 rounded-lg font-semibold text-lg" style={{ backgroundColor: config.accentColor, color: accentText }}>{c.cta_text}</a>}</div></div>);
     }
     case 'text': return <div className="py-10 px-6 max-w-3xl mx-auto" style={{ textAlign: c.alignment as any }}><p className="text-base leading-relaxed whitespace-pre-wrap">{c.body}</p></div>;
     case 'image': return (<div className="py-8 px-6 max-w-4xl mx-auto text-center">{c.url ? <img src={c.url} alt={c.alt} className="w-full rounded-lg shadow-lg" style={{ objectFit: c.fit }} /> : <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><Image className="h-10 w-10 text-muted-foreground" /></div>}{c.caption && <p className="text-sm text-muted-foreground mt-2">{c.caption}</p>}</div>);
@@ -1009,9 +1030,9 @@ const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = (
       }
       return (<div className="py-12 px-6 max-w-5xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="text-center p-6 rounded-xl bg-card border"><span className="text-3xl mb-3 block">{item.icon}</span><h3 className="font-semibold text-lg mb-2">{item.title}</h3><p className="text-sm text-muted-foreground">{item.description}</p></div>))}</div></div>);
     }
-    case 'cta': return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor }}>{c.button_text}</a></div>);
+    case 'cta': { const ctaPrimaryText = getContrastText(config.primaryColor); const ctaAccentText = getContrastTextForAccent(config.accentColor); return (<div className="py-16 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: ctaPrimaryText }}><h2 className="text-2xl md:text-3xl font-bold mb-3">{c.headline}</h2><p className="text-lg mb-6 opacity-90">{c.description}</p><a href={c.button_url} className="inline-block px-8 py-3 rounded-lg font-semibold" style={{ backgroundColor: config.accentColor, color: ctaAccentText }}>{c.button_text}</a></div>); }
     case 'testimonials': return (<div className="py-12 px-6 max-w-4xl mx-auto"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-6 rounded-xl bg-card border italic"><p className="mb-3">"{item.text}"</p>{item.metrics && <p className="text-sm font-bold not-italic mb-2" style={{ color: config.accentColor }}>📈 {item.metrics}</p>}<p className="text-sm font-semibold not-italic">{item.name}{item.role ? ` — ${item.role}` : ''}</p></div>))}</div></div>);
-    case 'social_proof': return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: '#fff' }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i}><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>);
+    case 'social_proof': { const spText = getContrastText(config.primaryColor); return (<div className="py-12 px-6 text-center" style={{ backgroundColor: config.primaryColor, color: spText }}><div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">{(c.items || []).map((item: any, i: number) => (<div key={i}><p className="text-3xl md:text-4xl font-bold mb-1">{item.number}</p><p className="text-sm opacity-80">{item.label}</p></div>))}</div></div>); }
     case 'guarantee': return (<div className="py-12 px-6 max-w-3xl mx-auto text-center"><div className="p-8 rounded-2xl border-2 border-dashed" style={{ borderColor: config.accentColor }}><span className="text-5xl block mb-4">{c.icon || '🛡️'}</span><h3 className="text-2xl font-bold mb-3">{c.title}</h3><p className="text-base text-muted-foreground mb-2">{c.description}</p>{c.duration && <Badge variant="secondary" className="text-sm">{c.duration}</Badge>}</div></div>);
     case 'objections': return (<div className="py-12 px-6 max-w-3xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Tire Suas Dúvidas'}</h3><div className="space-y-4">{(c.items || []).map((item: any, i: number) => (<div key={i} className="p-5 rounded-xl border bg-card"><p className="font-semibold text-destructive mb-2">❌ "{item.objection}"</p><p className="text-sm text-foreground">✅ {item.response}</p></div>))}</div></div>);
     case 'pricing': return (<div className="py-12 px-6 max-w-4xl mx-auto"><h3 className="text-2xl font-bold text-center mb-8">{c.title || 'Planos'}</h3><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{(c.items || []).map((item: any, i: number) => (<div key={i} className={cn("p-6 rounded-xl border-2 text-center", item.highlighted ? "border-primary shadow-lg scale-105" : "border-border")}><h4 className="font-bold text-lg mb-2">{item.name}</h4><p className="text-3xl font-bold mb-4" style={{ color: config.primaryColor }}>{item.price}</p><ul className="text-sm space-y-2 text-left">{(item.features || []).map((f: string, fi: number) => <li key={fi} className="flex items-center gap-2">✅ {f}</li>)}</ul></div>))}</div></div>);
@@ -1070,6 +1091,9 @@ section{overflow-x:hidden}
 }
 </style></head><body>`;
 
+  const primaryTextHTML = getContrastText(cfg.primaryColor);
+  const accentTextHTML = getContrastTextForAccent(cfg.accentColor);
+
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
@@ -1077,9 +1101,9 @@ section{overflow-x:hidden}
         const heroLayout = s.styles?.layout || '';
         if (heroLayout === 'split-left' || heroLayout === 'split-right') {
           const isRight = heroLayout === 'split-right';
-          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:#fff"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(255,255,255,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3)">Imagem</div>`}</div></div></section>\n`;
+          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
         } else {
-          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div></section>\n`;
+          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_text}</a>` : ''}</div></section>\n`;
         }
         break;
       }
@@ -1119,11 +1143,11 @@ section{overflow-x:hidden}
       case 'features':
         html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid #e5e7eb;background:#fff"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px">${f.title||''}</h3><p style="color:#6b7280;font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'cta':
-        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${c.button_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.button_text}</a>` : ''}</div></section>\n`; break;
+        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${c.button_url||'#'}" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_text}</a>` : ''}</div></section>\n`; break;
       case 'testimonials':
         html += `<section style="padding:64px 24px;background:#f9fafb"><div class="container"><div class="grid-2">${(c.items||[]).map((t:any)=>`<div style="padding:28px;border-radius:16px;background:#fff;border:1px solid #e5e7eb;font-style:italic"><p style="margin-bottom:16px;font-size:1.05rem;line-height:1.7">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.95rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-weight:600;font-style:normal;font-size:.95rem">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'social_proof':
-        html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container grid-4">${(c.items||[]).map((item:any)=>`<div><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px">${item.number||''}</p><p style="font-size:.95rem;opacity:.8">${item.label||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container grid-4">${(c.items||[]).map((item:any)=>`<div><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px">${item.number||''}</p><p style="font-size:.95rem;opacity:.8">${item.label||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'guarantee':
         html += `<section style="padding:64px 24px;text-align:center"><div class="container" style="max-width:640px"><div style="padding:48px;border:2px dashed ${cfg.accentColor};border-radius:20px"><span style="font-size:3.5rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.8rem;font-weight:700;margin-bottom:12px">${c.title||''}</h3><p style="font-size:1.05rem;color:#6b7280;margin-bottom:12px;line-height:1.7">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:6px 16px;background:#f3f4f6;border-radius:24px;font-size:.95rem;font-weight:500">${c.duration}</span>`:''}</div></div></section>\n`; break;
       case 'objections':
@@ -1131,7 +1155,7 @@ section{overflow-x:hidden}
       case 'pricing':
         html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||'Planos'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="padding:36px;border:${item.highlighted?`2px solid ${cfg.primaryColor}`:'1px solid #e5e7eb'};border-radius:20px;text-align:center;${item.highlighted?'box-shadow:0 10px 40px rgba(0,0,0,.1);transform:scale(1.03)':''}"><h4 style="font-weight:600;font-size:1.3rem;margin-bottom:8px">${item.name||''}</h4><p style="font-size:2.2rem;font-weight:700;color:${cfg.primaryColor};margin-bottom:20px">${item.price||''}</p><ul style="list-style:none;text-align:left;font-size:.95rem">${(item.features||[]).map((f:string)=>`<li style="padding:6px 0;border-bottom:1px solid #f3f4f6">✅ ${f}</li>`).join('')}</ul></div>`).join('')}</div></div></section>\n`; break;
       case 'process_steps':
-        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||'Como Funciona'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:28px"><div style="width:56px;height:56px;border-radius:50%;background:${cfg.accentColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin:0 auto 16px">${item.step||''}</div><h4 style="font-weight:600;font-size:1.15rem;margin-bottom:8px">${item.title||''}</h4><p style="color:#6b7280;line-height:1.6">${item.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px">${c.title||'Como Funciona'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:28px"><div style="width:56px;height:56px;border-radius:50%;background:${cfg.accentColor};color:${accentTextHTML};display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin:0 auto 16px">${item.step||''}</div><h4 style="font-weight:600;font-size:1.15rem;margin-bottom:8px">${item.title||''}</h4><p style="color:#6b7280;line-height:1.6">${item.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'faq':
         html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid #e5e7eb"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px">${q.question||''}</h4><p style="color:#6b7280;line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'gallery':
