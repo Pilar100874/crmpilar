@@ -82,7 +82,7 @@ const defaultCard: EditableAgentCard = {
   id: '', name: '', version: '1.0', role: '', mission: '',
   capabilities: [], non_capabilities: [], inputs: [], context_dependencies: [],
   reasoning_protocol: [], output_schema: '{}', quality_standards: [], anti_patterns: [],
-  error_handling: '', handoff: '',
+  error_handling: '', handoff: '', destino_consumo: [],
 };
 
 interface Props {
