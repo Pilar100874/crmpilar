@@ -2912,7 +2912,7 @@ const PageBuilderEditor: React.FC<{
   const publicUrl = currentPageId && isPublished ? `${window.location.origin}/p/${pageSlug}` : null;
 
   return (
-    <div className="flex h-[calc(100vh-200px)] gap-0 overflow-hidden -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
+    <div className={`flex gap-0 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-200px)] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6'}`}>
       {/* Left Panel */}
       <div className="w-64 border-r bg-muted/20 flex flex-col shrink-0">
         <div className="p-2 border-b">
@@ -2965,7 +2965,7 @@ const PageBuilderEditor: React.FC<{
       </div>
 
       {/* Center - Preview */}
-      <div className={`flex flex-col bg-muted/10 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : 'flex-1'}`}>
+      <div className="flex-1 flex flex-col bg-muted/10 overflow-hidden">
         <div className="border-b px-4 py-2 flex items-center justify-between bg-card">
           <div className="flex items-center gap-2">
             <Button variant={viewMode === 'desktop' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7" onClick={() => setViewMode('desktop')}><Monitor className="h-4 w-4" /></Button>
