@@ -3115,8 +3115,13 @@ const PageBuilderEditor: React.FC<{
                 </div>
               </div>
               <div><Label className="text-[10px]">Largura Máxima</Label><Input value={config.maxWidth} onChange={e => setConfig(c => ({ ...c, maxWidth: e.target.value }))} className="text-xs" /></div>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">🏢 Dados da Empresa</p>
+              <p className="text-[10px] text-muted-foreground">Exibidos automaticamente no rodapé de todas as páginas.</p>
+              <div><Label className="text-[10px]">🏷️ Nome da Empresa</Label><Input value={config.empresaNome || ''} onChange={e => setConfig(c => ({ ...c, empresaNome: e.target.value }))} placeholder="Minha Empresa Ltda." className="text-xs" /></div>
+              <div><Label className="text-[10px]">📍 Endereço</Label><Input value={config.empresaEndereco || ''} onChange={e => setConfig(c => ({ ...c, empresaEndereco: e.target.value }))} placeholder="Rua Exemplo, 123 - Cidade/UF" className="text-xs" /></div>
+              <div><Label className="text-[10px]">📞 Telefone</Label><Input value={config.empresaTelefone || ''} onChange={e => setConfig(c => ({ ...c, empresaTelefone: e.target.value }))} placeholder="(11) 3000-0000" className="text-xs" /></div>
               <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">📱 Links Globais</p>
-              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links da página quando não houver valor específico.</p>
+              <p className="text-[10px] text-muted-foreground">Usados como padrão em todos os botões e links.</p>
               <div><Label className="text-[10px]">💬 WhatsApp Global</Label><Input value={config.whatsappGlobal || ''} onChange={e => setConfig(c => ({ ...c, whatsappGlobal: e.target.value }))} placeholder="5511999999999 (com DDI)" className="text-xs" /><p className="text-[9px] text-muted-foreground mt-0.5">Formato: 55 + DDD + número</p></div>
               <div><Label className="text-[10px]">🌐 Site / URL Padrão</Label><Input value={config.siteGlobal || ''} onChange={e => setConfig(c => ({ ...c, siteGlobal: e.target.value }))} placeholder="https://seusite.com.br" className="text-xs" /></div>
             </div>
