@@ -426,7 +426,7 @@ export function StrategyAdminPanel() {
 
   const handleSave = async (agentKey: string) => {
     setSaving(agentKey);
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     const systemPrompt = editableToSystemPrompt(config.card);
 
     try {
