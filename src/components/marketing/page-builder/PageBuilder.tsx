@@ -2244,7 +2244,7 @@ const AutoGeneratePage: React.FC<{
 
             {/* Template Grid with Mini Previews */}
             <ScrollArea className="flex-1 min-h-0 pr-2">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates.map(ft => {
                   const isSelected = selectedTemplate === ft.id;
                   return (
@@ -2258,8 +2258,7 @@ const AutoGeneratePage: React.FC<{
                           : 'border-border hover:border-primary/50 hover:shadow-md'
                       )}
                     >
-                      {/* Mini Preview */}
-                      <div className="h-[140px] w-full overflow-hidden bg-muted/20 relative">
+                      <div className="h-[120px] w-full overflow-hidden bg-muted/20 relative">
                         <TemplateMiniPreview config={ft.config} sectionTypes={ft.sections.map(s => s.type)} />
                         {isSelected && (
                           <div className="absolute top-1.5 right-1.5 z-10">
@@ -2267,16 +2266,14 @@ const AutoGeneratePage: React.FC<{
                           </div>
                         )}
                       </div>
-
-                      {/* Info */}
-                      <div className="px-3 py-2.5 space-y-1">
-                        <p className={cn('text-xs font-semibold', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{ft.description}</p>
+                      <div className="px-2 py-2 space-y-0.5">
+                        <p className={cn('text-xs font-semibold truncate', isSelected ? 'text-primary' : 'text-foreground')}>{ft.name}</p>
+                        <p className="text-[9px] text-muted-foreground line-clamp-1 leading-tight">{ft.description}</p>
                         <div className="flex items-center gap-1 pt-0.5">
-                          {[ft.config.primaryColor, ft.config.accentColor, ft.config.backgroundColor].filter(Boolean).map((c, i) => (
-                            <div key={i} className="w-3 h-3 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
+                          {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => (
+                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
                           ))}
-                          <span className="text-[9px] text-muted-foreground ml-1">{ft.sections.length} seções</span>
+                          <span className="text-[8px] text-muted-foreground ml-auto">{ft.sections.length} seções</span>
                         </div>
                       </div>
                     </button>
