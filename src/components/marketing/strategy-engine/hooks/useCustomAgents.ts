@@ -79,9 +79,16 @@ export function useCustomAgents(estabelecimentoId: string | undefined) {
   };
 
   const updateAgent = async (id: string, updates: Partial<CustomAgent>) => {
+    const normalizedUpdates = {
+      ...updates,
+      ...(typeof updates.system_prompt === 'string'
+        ? { system_prompt: ensureCollaborationDirective(updates.system_prompt) }
+        : {}),
+    };
+
     const { error } = await supabase
       .from('strategy_custom_agents')
-      .update(updates as any)
+      .update(normalizedUpdates as any)
       .eq('id', id);
 
     if (error) {

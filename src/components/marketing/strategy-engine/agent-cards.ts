@@ -309,7 +309,9 @@ export const AGENT_CARDS: Record<string, AgentCard> = {
 };
 
 // ─── Collaboration directive injected into every system prompt ──────────────
-const COLLABORATION_DIRECTIVE = `
+export const COLLABORATION_DIRECTIVE_SENTENCE = 'Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
+
+export const COLLABORATION_DIRECTIVE = `
 
 ═══════════════════════════════════════════════════════════════
 DIRETIVA DE COLABORAÇÃO OBRIGATÓRIA
@@ -321,11 +323,18 @@ ANTES de executar qualquer tarefa, você DEVE:
 4. Referenciar explicitamente insights de outros agentes quando relevante
 5. Nunca contradizer posicionamento, ICP ou mecanismo já definidos sem justificativa
 
-Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.
+${COLLABORATION_DIRECTIVE_SENTENCE}
 ═══════════════════════════════════════════════════════════════`;
 
+export function ensureCollaborationDirective(prompt: string): string {
+  const normalizedPrompt = (prompt || '').trim();
+  if (!normalizedPrompt) return COLLABORATION_DIRECTIVE.trim();
+  if (normalizedPrompt.includes(COLLABORATION_DIRECTIVE_SENTENCE)) return normalizedPrompt;
+  return `${normalizedPrompt}\n${COLLABORATION_DIRECTIVE}`.trim();
+}
+
 export function agentCardToSystemPrompt(card: AgentCard): string {
-  return [
+  return ensureCollaborationDirective([
     `Você é o ${card.name} (v${card.version}).`,
     `\nPAPEL:\n${card.role}`,
     `\nMISSÃO:\n${card.mission}`,
@@ -340,5 +349,5 @@ export function agentCardToSystemPrompt(card: AgentCard): string {
     `\nTRATAMENTO DE ERROS:\n${card.error_handling}`,
     COLLABORATION_DIRECTIVE,
     `\nINSTRUÇÃO FINAL: Retorne EXCLUSIVAMENTE um JSON válido (sem markdown, sem comentários, sem explicações). Siga o esquema de saída rigorosamente.`
-  ].join('\n');
+  ].join('\n'));
 }

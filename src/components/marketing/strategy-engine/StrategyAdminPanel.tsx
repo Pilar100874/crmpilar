@@ -94,7 +94,7 @@ function editableToSystemPrompt(editable: EditableAgentCard): string {
     output_schema: schema,
     destino_consumo: editable.destino_consumo || [],
   };
-  return agentCardToSystemPrompt(card);
+  return ensureCollaborationDirective(agentCardToSystemPrompt(card));
 }
 
 // ─── Editable List Component ────────────────────────────────────────────────

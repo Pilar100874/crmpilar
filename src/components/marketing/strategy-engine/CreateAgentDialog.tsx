@@ -40,7 +40,7 @@ function editableToSystemPrompt(editable: EditableAgentCard): string {
   let schema: Record<string, any>;
   try { schema = JSON.parse(editable.output_schema); } catch { schema = {}; }
   const card: AgentCard = { ...editable, output_schema: schema };
-  return agentCardToSystemPrompt(card);
+  return ensureCollaborationDirective(agentCardToSystemPrompt(card));
 }
 
 // ─── Editable List ──────────────────────────────────────────────────────────
