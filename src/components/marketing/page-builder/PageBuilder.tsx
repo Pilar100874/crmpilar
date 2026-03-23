@@ -2195,7 +2195,7 @@ const PageBuilderLanding: React.FC<{
             <Card key={page.id} className="overflow-hidden group hover:shadow-md transition-shadow relative">
               {/* Context menu */}
               <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="icon" className="h-7 w-7 shadow-sm">
                       <MoreVertical className="h-4 w-4" />
