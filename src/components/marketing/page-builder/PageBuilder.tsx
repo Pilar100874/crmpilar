@@ -1012,6 +1012,16 @@ function getContrastTextForAccent(hex: string): string {
   return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
 }
 
+// ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
+function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
+  if (type === 'whatsapp' && whatsappNumber) {
+    const clean = whatsappNumber.replace(/\D/g, '');
+    const msg = encodeURIComponent(buttonText || 'Olá!');
+    return `https://wa.me/${clean}?text=${msg}`;
+  }
+  return url || '#';
+}
+
 // ── Preview Renderer ───────────────────────────────────────────────────────────
 const SectionPreview: React.FC<{ section: PageSection; config: PageConfig }> = ({ section, config }) => {
   if (!section.visible) return null;
