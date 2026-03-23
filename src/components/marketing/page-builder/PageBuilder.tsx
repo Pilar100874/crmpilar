@@ -993,24 +993,63 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
   );
 };
 
-// ── Contrast helper ────────────────────────────────────────────────────────────
-function getContrastText(hex: string): string {
+// ── Contrast helpers ────────────────────────────────────────────────────────────
+function hexToLuminance(hex: string): number {
   const c = hex.replace('#', '');
   const r = parseInt(c.substring(0, 2), 16) || 0;
   const g = parseInt(c.substring(2, 4), 16) || 0;
   const b = parseInt(c.substring(4, 6), 16) || 0;
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function getContrastText(hex: string): string {
+  return hexToLuminance(hex) > 0.55 ? '#1a1a1a' : '#ffffff';
 }
 
 function getContrastTextForAccent(hex: string): string {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.substring(0, 2), 16) || 0;
-  const g = parseInt(c.substring(2, 4), 16) || 0;
-  const b = parseInt(c.substring(4, 6), 16) || 0;
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  return hexToLuminance(hex) > 0.55 ? '#1a1a1a' : '#ffffff';
 }
+
+// Get a card background that contrasts with the page background
+function getCardBg(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#ffffff' : '#1e293b';
+}
+
+function getCardBorder(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#e5e7eb' : '#334155';
+}
+
+function getSubtleText(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#6b7280' : '#94a3b8';
+}
+
+function getSectionAltBg(pageBg: string): string {
+  const lum = hexToLuminance(pageBg);
+  return lum > 0.55 ? '#f9fafb' : '#0f172a';
+}
+
+// ── Pre-defined Color Palettes ─────────────────────────────────────────────────
+const COLOR_PALETTES = [
+  { name: 'Índigo Pro', primary: '#4f46e5', accent: '#06b6d4', bg: '#ffffff', text: '#1e293b', secondary: '#6366f1' },
+  { name: 'Esmeralda', primary: '#059669', accent: '#fbbf24', bg: '#ffffff', text: '#064e3b', secondary: '#10b981' },
+  { name: 'Sunset', primary: '#ea580c', accent: '#facc15', bg: '#fffbeb', text: '#431407', secondary: '#f97316' },
+  { name: 'Dark Elegance', primary: '#6366f1', accent: '#f472b6', bg: '#0f172a', text: '#e2e8f0', secondary: '#818cf8' },
+  { name: 'Midnight Blue', primary: '#1e40af', accent: '#38bdf8', bg: '#0a1628', text: '#e0f2fe', secondary: '#3b82f6' },
+  { name: 'Ruby', primary: '#dc2626', accent: '#fbbf24', bg: '#ffffff', text: '#1c1917', secondary: '#ef4444' },
+  { name: 'Royal Purple', primary: '#7c3aed', accent: '#f59e0b', bg: '#faf5ff', text: '#1e1b4b', secondary: '#8b5cf6' },
+  { name: 'Forest', primary: '#166534', accent: '#a3e635', bg: '#f0fdf4', text: '#14532d', secondary: '#22c55e' },
+  { name: 'Ocean Dark', primary: '#0ea5e9', accent: '#f97316', bg: '#0c1222', text: '#e0f2fe', secondary: '#38bdf8' },
+  { name: 'Coral Clean', primary: '#f43f5e', accent: '#06b6d4', bg: '#fff1f2', text: '#1c1917', secondary: '#fb7185' },
+  { name: 'Carbon', primary: '#18181b', accent: '#22d3ee', bg: '#09090b', text: '#fafafa', secondary: '#3f3f46' },
+  { name: 'Warm Earth', primary: '#92400e', accent: '#d97706', bg: '#fffbeb', text: '#451a03', secondary: '#b45309' },
+  { name: 'Teal Minimal', primary: '#0d9488', accent: '#f59e0b', bg: '#ffffff', text: '#134e4a', secondary: '#14b8a6' },
+  { name: 'Neon Night', primary: '#8b5cf6', accent: '#22d3ee', bg: '#030712', text: '#f8fafc', secondary: '#a78bfa' },
+  { name: 'Slate Pro', primary: '#334155', accent: '#3b82f6', bg: '#f8fafc', text: '#0f172a', secondary: '#475569' },
+  { name: 'Rose Gold', primary: '#be185d', accent: '#fbbf24', bg: '#fff1f2', text: '#1c1917', secondary: '#ec4899' },
+];
 
 // ── URL resolver (WhatsApp or regular) ─────────────────────────────────────────
 function resolveButtonUrl(type: string | undefined, url: string | undefined, whatsappNumber: string | undefined, buttonText?: string): string {
