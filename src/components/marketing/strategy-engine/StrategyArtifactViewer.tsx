@@ -143,8 +143,8 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{info?.icon || '📄'}</span>
-                    <CardTitle className="text-sm">{artifact.titulo}</CardTitle>
+                     <span className="text-lg">{info?.icon || '📄'}</span>
+                    <CardTitle className="text-sm">{info?.name || artifact.titulo}</CardTitle>
                   </div>
                   <div className="flex items-center gap-1">
                     {avgScore !== null && (
@@ -246,7 +246,7 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>{resolvedInfo[selectedArtifact?.tipo || '']?.icon || '📄'}</span>
-              {selectedArtifact?.titulo}
+              {resolvedInfo[selectedArtifact?.tipo || '']?.name || selectedArtifact?.titulo}
               <Badge variant="outline" className="text-xs ml-2">v{selectedArtifact?.version}</Badge>
               {selectedArtifact && getStatusBadge(selectedArtifact.status)}
             </DialogTitle>

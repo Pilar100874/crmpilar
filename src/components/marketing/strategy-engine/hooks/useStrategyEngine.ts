@@ -388,6 +388,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       ? { title: 11, sub: 9, label: 8.5, body: 8.5, bullet: 8.5, small: 7.5 }
       : { title: 13, sub: 10.5, label: 10, body: 10, bullet: 9.5, small: 8 };
     const lineH = mode === 'resumida' ? 4 : 5;
+    // Max content width for text wrapping to prevent cut-off
+    const maxTextW = cW - 8;
 
     // Shared: render page header + footer
     const renderPageChrome = () => {
@@ -456,24 +458,22 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.text(lbl, mL + 6, y);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(65, 65, 80);
-            const valSpace = cW - lblW - 10;
-            if (valSpace > 50) {
+            const valSpace = maxTextW - lblW - 6;
+            if (valSpace > 40) {
               const wrapped = doc.splitTextToSize(line.value, valSpace);
-              doc.text(wrapped[0], mL + 6 + lblW, y);
-              for (let w = 1; w < wrapped.length; w++) {
-                y += lineH;
-                check(lineH);
+              for (let w = 0; w < wrapped.length; w++) {
+                if (w > 0) { y += lineH; check(lineH); }
                 doc.text(wrapped[w], mL + 6 + lblW, y);
               }
             } else {
               y += lineH;
-              const wrapped = doc.splitTextToSize(line.value, cW - 14);
+              const wrapped = doc.splitTextToSize(line.value, maxTextW - 10);
               for (const wl of wrapped) {
                 check(lineH);
                 doc.text(wl, mL + 10, y);
                 y += lineH;
               }
-              y -= lineH; // compensate last increment
+              y -= lineH;
             }
             y += lineH;
             break;
@@ -485,7 +485,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setTextColor(65, 65, 80);
             doc.setFillColor(cr, cg, cb);
             doc.circle(mL + indent + 1.2, y - 1, 0.9, 'F');
-            const bW = cW - indent - 8;
+            const bW = maxTextW - indent - 6;
             const wrapped = doc.splitTextToSize(line.text, bW);
             for (const wl of wrapped) {
               check(lineH);
@@ -499,7 +499,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.setFontSize(fs.body);
             doc.setTextColor(55, 55, 70);
             doc.setFont('helvetica', 'normal');
-            const wrapped = doc.splitTextToSize(line.text, cW - 6);
+            const wrapped = doc.splitTextToSize(line.text, maxTextW - 4);
             for (const wl of wrapped) {
               check(lineH);
               doc.text(wl, mL + 3, y);
@@ -560,11 +560,11 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
       doc.setFont('helvetica', 'normal');
       for (let i = 0; i < arts.length; i++) {
         const inf = agentInfo[arts[i].tipo];
-        const t = stripEmoji(arts[i].titulo || inf?.name || arts[i].tipo);
+        // Always use agent name, not artifact titulo
+        const t = stripEmoji(inf?.name || arts[i].tipo);
         doc.setFontSize(10);
         doc.setTextColor(55, 55, 70);
         doc.text(`${i + 1}.  ${t}`, mL + 4, y);
-        // Dot leader
         const tw = doc.getTextWidth(`${i + 1}.  ${t}`);
         doc.setTextColor(180, 180, 190);
         const dotsStart = mL + 4 + tw + 3;
@@ -576,7 +576,7 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         }
         doc.setFontSize(10);
         doc.setTextColor(99, 102, 241);
-        doc.text(`${i + 3}`, pageW - mR - 8, y, { align: 'right' }); // approx page
+        doc.text(`${i + 3}`, pageW - mR - 8, y, { align: 'right' });
         y += 7;
       }
     }
@@ -589,7 +589,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
-      const title = stripEmoji(art.titulo || info?.name || art.tipo);
+      // Always use agent name for consistent naming
+      const title = stripEmoji(info?.name || art.tipo);
       const color = info?.color || '#6366F1';
       const cr = parseInt(color.slice(1, 3), 16);
       const cg = parseInt(color.slice(3, 5), 16);
