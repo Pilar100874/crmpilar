@@ -846,6 +846,27 @@ const PageBuilderLanding: React.FC<{
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewPage} onOpenChange={() => setPreviewPage(null)}>
+        <DialogContent className="bg-background max-w-[95vw] h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Preview — {previewPage?.nome}
+              {previewPage?.publicado && (
+                <Button variant="outline" size="sm" className="ml-auto h-7 gap-1 text-xs" onClick={() => window.open(`${window.location.origin}/p/${previewPage.slug}`, '_blank')}>
+                  <ExternalLink className="h-3 w-3" /> Abrir URL
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewPage && (
+            <div className="flex-1 overflow-hidden rounded border" style={{ height: 'calc(90vh - 80px)' }}>
+              <PreviewIframe sections={(previewPage.sections as any[]) || []} config={previewPage.config as any} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
