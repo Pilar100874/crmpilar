@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, Trash2, Copy, Sparkles } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Loader2, Trash2, Copy, Sparkles, Database, Globe } from 'lucide-react';
 import { AGENT_ORDER, AGENT_INFO, AGENT_DEPENDENCIES } from './types';
 import { agentCardToSystemPrompt, AgentCard } from './agent-cards';
 import { supabase } from '@/integrations/supabase/client';
@@ -102,6 +103,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [ordem, setOrdem] = useState(AGENT_ORDER.length + existingKeys.length + 1);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
+  const [knowledgeBaseType, setKnowledgeBaseType] = useState<'internal' | 'external'>('internal');
 
   const updateCard = useCallback((field: keyof EditableAgentCard, value: any) => {
     setCard(prev => ({ ...prev, [field]: value }));
@@ -129,6 +131,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setOrdem(AGENT_ORDER.length + existingKeys.length + 1);
     setDependencies([]);
     setAiDescription('');
+    setKnowledgeBaseType('internal');
   };
 
   const handleGenerateWithAI = async () => {
@@ -204,6 +207,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
       output_schema: schema,
       ordem,
       agent_card_json: card,
+      knowledge_base_type: knowledgeBaseType,
     });
 
     setSaving(false);
@@ -370,6 +374,29 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
             <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
               <Textarea value={card.mission} onChange={e => updateCard('mission', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Gerar relatório detalhado de..." />
+            </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Base de Conhecimento" hint="Define se o agente usa dados internos (memória estratégica) ou uma base externa de arquivos">
+              <Select value={knowledgeBaseType} onValueChange={(v: 'internal' | 'external') => setKnowledgeBaseType(v)}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">
+                    <span className="flex items-center gap-1.5"><Database className="h-3 w-3" /> Interna (Memória Estratégica)</span>
+                  </SelectItem>
+                  <SelectItem value="external">
+                    <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Externa (Arquivos do Usuário)</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {knowledgeBaseType === 'external' && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  📂 Após criar o agente, você poderá enviar arquivos na edição do Agent Card.
+                </p>
+              )}
             </FieldSection>
           </TabsContent>
 
