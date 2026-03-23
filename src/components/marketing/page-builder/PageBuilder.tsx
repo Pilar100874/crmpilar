@@ -1018,7 +1018,7 @@ const AutoGeneratePage: React.FC<{
     addProgress('📦 Buscando TODOS os artefatos do projeto...');
     const { data: artifacts } = await supabase
       .from('strategy_artifacts')
-      .select('tipo, conteudo, agent_name')
+      .select('tipo, conteudo')
       .eq('project_id', project.id)
       .order('created_at', { ascending: false });
     const artMap = new Map<string, any>();
