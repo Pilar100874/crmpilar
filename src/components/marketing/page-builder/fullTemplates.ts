@@ -356,8 +356,6 @@ export const FULL_TEMPLATE_CATEGORIES: FullTemplateCategory[] = [
       },
     ]
   },
-];
-
   {
     id: 'minimal', name: 'Minimalista', icon: '✨',
     templates: [
