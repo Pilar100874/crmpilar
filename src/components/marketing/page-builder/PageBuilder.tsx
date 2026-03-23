@@ -1347,7 +1347,8 @@ const AutoGeneratePage: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onGenerated: (page: SavedPage) => void;
-}> = ({ open, onOpenChange, onGenerated }) => {
+  globalConfig?: GlobalPageConfig;
+}> = ({ open, onOpenChange, onGenerated, globalConfig: gCfg }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('ft-saas-clean');
