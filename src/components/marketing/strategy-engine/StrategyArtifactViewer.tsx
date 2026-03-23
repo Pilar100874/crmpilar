@@ -185,19 +185,49 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                     <Download className="h-3.5 w-3.5 mr-1" />
                     MD
                   </Button>
+                  {onExportSinglePDF && (
+                    <Button variant="ghost" size="sm" onClick={() => onExportSinglePDF(artifact.tipo)}>
+                      <FileDown className="h-3.5 w-3.5 mr-1" />
+                      PDF
+                    </Button>
+                  )}
                   <ArtifactABComparison
                     projectId={projectId}
                     artifactType={artifact.tipo}
                     currentContent={artifact.conteudo}
                     onSelectVariation={(content) => {
                       onUpdateContent?.(artifact.id, content);
-                      // Also update local selectedArtifact if it's the same one
                       if (selectedArtifact?.id === artifact.id) {
                         setSelectedArtifact({ ...artifact, conteudo: content });
                       }
                     }}
                   />
                 </div>
+
+                {/* Feedback buttons */}
+                {onFeedback && (
+                  <div className="flex items-center gap-1.5 border-t pt-2">
+                    <span className="text-xs text-muted-foreground mr-1">Avaliar:</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-green-600 hover:bg-green-500/10"
+                      onClick={() => onFeedback(artifact.id, 'positive')}
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+                      Útil
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-600 hover:bg-red-500/10"
+                      onClick={() => onFeedback(artifact.id, 'negative')}
+                    >
+                      <ThumbsDown className="h-3.5 w-3.5 mr-1" />
+                      Melhorar
+                    </Button>
+                  </div>
+                )}
 
                 {/* Approve / Reject / Revise */}
                 <div className="flex items-center gap-1.5 border-t pt-2">
