@@ -364,12 +364,30 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     return lines;
   };
 
-  // Strip emojis and normalize for PDF (jsPDF default font has limited Unicode support)
+  // Strip emojis, normalize accents and unicode for PDF (jsPDF default font has limited Unicode support)
   const sanitizeForPDF = (str: string): string => {
     // Remove emojis
     let clean = str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]|[\u{2700}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]/gu, '');
     // Replace common unicode chars that jsPDF can't render
     clean = clean.replace(/[""]/g, '"').replace(/['']/g, "'").replace(/—/g, '-').replace(/–/g, '-').replace(/…/g, '...').replace(/•/g, '-');
+    // Normalize accented characters to ASCII for reliable jsPDF rendering
+    const accentMap: Record<string, string> = {
+      'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
+      'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+      'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+      'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+      'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+      'ç': 'c', 'ñ': 'n',
+      'Á': 'A', 'À': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A',
+      'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+      'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+      'Ó': 'O', 'Ò': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O',
+      'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+      'Ç': 'C', 'Ñ': 'N',
+      '™': '(TM)', '®': '(R)', '©': '(C)',
+      '°': 'o', '²': '2', '³': '3',
+    };
+    clean = clean.replace(/[^\x00-\x7F]/g, ch => accentMap[ch] || '');
     return clean.trim();
   };
   const stripEmoji = sanitizeForPDF;
