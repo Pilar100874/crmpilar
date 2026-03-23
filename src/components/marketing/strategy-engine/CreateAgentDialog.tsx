@@ -375,31 +375,31 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
           {/* ─── CONTRACTS TAB ─── */}
           <TabsContent value="contracts" className="space-y-3 mt-3">
-            <FieldSection label="Capabilities" hint="Lista de tarefas que o agente é capaz de executar">
+            <FieldSection label="Capacidades" hint="Lista de tarefas que o agente é capaz de executar">
               <EditableList items={card.capabilities} onChange={v => updateCard('capabilities', v)} placeholder="Capacidade..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Non-Capabilities" hint="Lista explícita do que o agente NÃO deve fazer">
+            <FieldSection label="Restrições" hint="Lista explícita do que o agente NÃO deve fazer">
               <EditableList items={card.non_capabilities} onChange={v => updateCard('non_capabilities', v)} placeholder="Restrição..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Inputs" hint="Tipos de dados aceitos pelo agente">
+            <FieldSection label="Entradas" hint="Tipos de dados aceitos pelo agente">
               <EditableList items={card.inputs} onChange={v => updateCard('inputs', v)} placeholder="Tipo de dado..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Context Dependencies" hint="Dados da memória estratégica necessários">
+            <FieldSection label="Dependências de Contexto" hint="Dados da memória estratégica necessários">
               <EditableList items={card.context_dependencies} onChange={v => updateCard('context_dependencies', v)} placeholder="Dependência..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Output Schema" hint="JSON schema obrigatório para a saída do agente">
+            <FieldSection label="Esquema de Saída" hint="JSON schema obrigatório para a saída do agente">
               <Textarea value={card.output_schema} onChange={e => updateCard('output_schema', e.target.value)} rows={8} className="text-xs font-mono" placeholder='{ "campo": "tipo" }' />
             </FieldSection>
           </TabsContent>
