@@ -240,11 +240,8 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                       size="sm"
                       variant="outline"
                       className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={() => {
-                        if (window.confirm('Tem certeza que deseja excluir este artefato?')) {
-                          onDeleteArtifact(artifact.id);
-                        }
-                      }}
+                      onClick={() => setDeleteTarget({ id: artifact.id, name: info.name })}
+                    >
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
                       Excluir
