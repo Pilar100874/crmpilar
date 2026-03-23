@@ -687,8 +687,32 @@ export function StrategyAdminPanel() {
                             <Textarea value={card.mission} onChange={e => updateCard(agentKey, 'mission', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
 
-                          <FieldSection label="Handoff" hint="Qual agente deve consumir o resultado gerado">
-                            <Input value={card.handoff} onChange={e => updateCard(agentKey, 'handoff', e.target.value)} className="text-xs h-8" />
+                          <FieldSection label="Destino de Consumo" hint="Selecione os agentes que devem consumir o resultado deste agente">
+                            <div className="flex flex-wrap gap-1">
+                              {allAgentKeys.filter(k => k !== agentKey).map(dest => {
+                                const currentDest = card.destino_consumo || [];
+                                const isSelected = currentDest.includes(dest);
+                                const destIcon = configs[dest]?.icon || AGENT_INFO[dest]?.icon || '🤖';
+                                const destName = configs[dest]?.card?.name?.split(' ')[0] || AGENT_INFO[dest]?.name?.split(' ')[0] || dest;
+                                return (
+                                  <Badge
+                                    key={dest}
+                                    variant={isSelected ? 'default' : 'outline'}
+                                    className="text-[10px] cursor-pointer gap-0.5 hover:opacity-80 transition-opacity"
+                                    onClick={() => {
+                                      const newDest = isSelected
+                                        ? currentDest.filter((d: string) => d !== dest)
+                                        : [...currentDest, dest];
+                                      updateCard(agentKey, 'destino_consumo', newDest);
+                                      // Keep handoff in sync
+                                      updateCard(agentKey, 'handoff', newDest.join(', '));
+                                    }}
+                                  >
+                                    {destIcon} {destName}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
                           </FieldSection>
 
                           <Separator />
