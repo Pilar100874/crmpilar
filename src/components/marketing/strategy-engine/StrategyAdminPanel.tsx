@@ -515,7 +515,7 @@ export function StrategyAdminPanel() {
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     const agentKey = deleteTarget;
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     setDeleteLoading(true);
 
     try {
