@@ -353,67 +353,65 @@ export function StrategyAdminPanel() {
     loadConfigs();
   }, []);
 
-  // Merge custom agents into configs whenever they change
-  useEffect(() => {
-    setConfigs(prev => {
-      const next = { ...prev };
-      for (const ca of customAgents) {
-        const storedCard = (ca as any).agent_card_json;
-        const cardData: EditableAgentCard = storedCard ? {
-          id: storedCard.id || ca.agent_key,
-          name: storedCard.name || ca.name,
-          version: storedCard.version || '1.0',
-          role: storedCard.role || '',
-          mission: storedCard.mission || ca.description || '',
-          capabilities: storedCard.capabilities || [],
-          non_capabilities: storedCard.non_capabilities || [],
-          inputs: storedCard.inputs || [],
-          context_dependencies: storedCard.context_dependencies || [],
-          reasoning_protocol: storedCard.reasoning_protocol || [],
-          output_schema: typeof storedCard.output_schema === 'string' ? storedCard.output_schema : JSON.stringify(storedCard.output_schema || ca.output_schema || {}, null, 2),
-          quality_standards: storedCard.quality_standards || [],
-          anti_patterns: storedCard.anti_patterns || [],
-          error_handling: storedCard.error_handling || '',
-          handoff: storedCard.handoff || '',
-          destino_consumo: storedCard.destino_consumo || [],
-        } : {
-          id: ca.agent_key,
-          name: ca.name,
-          version: '1.0',
-          role: '',
-          mission: ca.description || '',
-          capabilities: [],
-          non_capabilities: [],
-          inputs: [],
-          context_dependencies: [],
-          reasoning_protocol: [],
-          output_schema: JSON.stringify(ca.output_schema || {}, null, 2),
-          quality_standards: [],
-          anti_patterns: [],
-          error_handling: '',
-          handoff: '',
-          destino_consumo: [],
-        };
+  // Merge custom agents into configs whenever they change — synchronous via useMemo-like pattern
+  const configsWithCustom = React.useMemo(() => {
+    const next = { ...configs };
+    for (const ca of customAgents) {
+      const storedCard = (ca as any).agent_card_json;
+      const cardData: EditableAgentCard = storedCard ? {
+        id: storedCard.id || ca.agent_key,
+        name: storedCard.name || ca.name,
+        version: storedCard.version || '1.0',
+        role: storedCard.role || '',
+        mission: storedCard.mission || ca.description || '',
+        capabilities: storedCard.capabilities || [],
+        non_capabilities: storedCard.non_capabilities || [],
+        inputs: storedCard.inputs || [],
+        context_dependencies: storedCard.context_dependencies || [],
+        reasoning_protocol: storedCard.reasoning_protocol || [],
+        output_schema: typeof storedCard.output_schema === 'string' ? storedCard.output_schema : JSON.stringify(storedCard.output_schema || ca.output_schema || {}, null, 2),
+        quality_standards: storedCard.quality_standards || [],
+        anti_patterns: storedCard.anti_patterns || [],
+        error_handling: storedCard.error_handling || '',
+        handoff: storedCard.handoff || '',
+        destino_consumo: storedCard.destino_consumo || [],
+      } : {
+        id: ca.agent_key,
+        name: ca.name,
+        version: '1.0',
+        role: '',
+        mission: ca.description || '',
+        capabilities: [],
+        non_capabilities: [],
+        inputs: [],
+        context_dependencies: [],
+        reasoning_protocol: [],
+        output_schema: JSON.stringify(ca.output_schema || {}, null, 2),
+        quality_standards: [],
+        anti_patterns: [],
+        error_handling: '',
+        handoff: '',
+        destino_consumo: [],
+      };
 
-        // Only set if not already modified by user in this session
-        if (!next[ca.agent_key] || next[ca.agent_key]?.saved !== false) {
-          next[ca.agent_key] = {
-            card: cardData,
-            active: ca.ativo,
-            saved: true,
-            isCustom: true,
-            customAgentId: ca.id,
-            icon: ca.icon,
-            color: ca.color,
-            dependencies: ca.dependencies || [],
-            knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
-            knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
-          };
-        }
+      // Only set if not already modified by user in this session
+      if (!next[ca.agent_key] || next[ca.agent_key]?.saved !== false) {
+        next[ca.agent_key] = {
+          card: cardData,
+          active: ca.ativo,
+          saved: true,
+          isCustom: true,
+          customAgentId: ca.id,
+          icon: ca.icon,
+          color: ca.color,
+          dependencies: ca.dependencies || [],
+          knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
+          knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
+        };
       }
-      return next;
-    });
-  }, [customAgents]);
+    }
+    return next;
+  }, [configs, customAgents]);
 
   const updateCard = useCallback((agentKey: string, field: keyof EditableAgentCard, value: any) => {
     setConfigs(prev => ({
