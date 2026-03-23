@@ -2335,20 +2335,31 @@ const AutoGeneratePage: React.FC<{
               </Select>
             </div>
 
-            {/* Selected Template Preview */}
+            {/* Selected Template Visual Preview */}
             {(() => {
               const currentFt = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
               if (!currentFt) return null;
-              const sectionNames: Record<string, string> = {
-                hero: '🎯 Hero', features: '⭐ Features', testimonials: '💬 Depoimentos',
-                social_proof: '📊 Prova Social', pricing: '💰 Preços', cta: '🔥 CTA',
-                faq: '❓ FAQ', guarantee: '🛡️ Garantia', process_steps: '📋 Passos',
-                objections: '🚫 Objeções', video: '🎬 Vídeo', text: '📝 Texto',
-                image: '🖼️ Imagem', gallery: '🎨 Galeria', footer: '📌 Rodapé',
-              };
+              const previewHtml = generateFullHTML(
+                currentFt.sections as PageSection[],
+                { ...currentFt.config, title: currentFt.name, description: currentFt.description } as PageConfig
+              );
               return (
                 <div className="rounded-xl border overflow-hidden">
-                  <div className="flex items-center gap-3 p-3" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
+                  <div className="relative w-full overflow-hidden bg-muted/20" style={{ height: 280 }}>
+                    <iframe
+                      srcDoc={previewHtml}
+                      className="border-0 pointer-events-none"
+                      style={{
+                        width: 1200,
+                        height: 900,
+                        transform: 'scale(0.38)',
+                        transformOrigin: 'top left',
+                      }}
+                      title="Template Preview"
+                      sandbox="allow-same-origin"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white drop-shadow-sm">{currentFt.name}</p>
                       <p className="text-[10px] text-white/70">{currentFt.description}</p>
@@ -2357,22 +2368,6 @@ const AutoGeneratePage: React.FC<{
                       {[currentFt.config.primaryColor, currentFt.config.accentColor].filter(Boolean).map((c, i) => (
                         <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
                       ))}
-                    </div>
-                  </div>
-                  <div className="p-3 space-y-1.5 bg-muted/30">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Seções incluídas ({currentFt.sections.length})</p>
-                    <div className="flex flex-wrap gap-1">
-                      {currentFt.sections.map((s, idx) => (
-                        <span key={idx} className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-background border border-border text-foreground">
-                          {sectionNames[s.type] || s.type}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-[10px] text-muted-foreground">Estilo hero:</span>
-                      <span className="text-[10px] font-medium text-foreground">{currentFt.config.heroStyle || 'centered'}</span>
-                      <span className="text-[10px] text-muted-foreground ml-2">Cards:</span>
-                      <span className="text-[10px] font-medium text-foreground">{currentFt.config.cardStyle || 'bordered'}</span>
                     </div>
                   </div>
                 </div>
