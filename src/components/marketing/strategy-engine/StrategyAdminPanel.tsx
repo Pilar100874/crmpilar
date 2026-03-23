@@ -213,6 +213,8 @@ export function StrategyAdminPanel() {
               dbId: row.id,
               isCustom: false,
               dependencies: storedCard?.dependencies ?? initial[row.agent_type]?.dependencies ?? AGENT_DEPENDENCIES[row.agent_type] ?? [],
+              knowledgeBaseType: (row as any).knowledge_base_type || 'internal',
+              knowledgeBaseFiles: (row as any).knowledge_base_files || [],
             };
           }
         }
