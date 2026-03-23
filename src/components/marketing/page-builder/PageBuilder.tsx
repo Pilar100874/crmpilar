@@ -1186,12 +1186,41 @@ const AutoGeneratePage: React.FC<{
       content: { items: socialProofItems.slice(0, 4) }
     });
 
-    // ── 3. Image placeholder ──
-    addProgress('📸 Reservando espaço para imagem principal...');
+    // ── 3. Image — generate with AI if product selected ──
+    let mainImageUrl = '';
+    let mainImageAlt = 'Imagem do produto/serviço';
+    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+
+    if (selectedProd) {
+      addProgress(`📸 Gerando imagem publicitária do produto "${selectedProd.nome}" com IA...`);
+      try {
+        const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', {
+          body: {
+            action: 'generate_page_media',
+            mediaType: 'image',
+            productName: selectedProd.nome,
+            productDescription: selectedProd.descricao || '',
+            productImageUrl: selectedProd.foto_url || '',
+            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
+          }
+        });
+        if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
+          mainImageUrl = mediaResult.generatedImageUrl;
+          mainImageAlt = mediaResult.data?.alt_text || `Anúncio - ${selectedProd.nome}`;
+          addProgress('✅ Imagem publicitária gerada com sucesso!');
+        } else {
+          addProgress('⚠️ Não foi possível gerar imagem — usando placeholder...');
+        }
+      } catch {
+        addProgress('⚠️ Erro na geração de imagem — usando placeholder...');
+      }
+    } else {
+      addProgress('📸 Reservando espaço para imagem principal...');
+    }
     const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || creative?.estilo_visual || 'Imagem profissional do produto';
     sections.push({
       id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
-      content: { url: '', alt: 'Imagem do produto/serviço', caption: imgSuggestion, fit: 'cover', _media_suggestion: `🖼️ ${imgSuggestion}` }
+      content: { url: mainImageUrl, alt: mainImageAlt, caption: mainImageUrl ? (selectedProd?.nome || '') : imgSuggestion, fit: 'cover', _media_suggestion: mainImageUrl ? '' : `🖼️ ${imgSuggestion}` }
     });
 
     // ── 4. Features ──
