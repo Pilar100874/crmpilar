@@ -663,14 +663,33 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
         doc.setFont('helvetica', 'normal');
         y += 22;
 
-        // Description
-        if (info?.description) {
+        // Agent mission summary
+        if (agentMission) {
           doc.setFontSize(9);
-          doc.setTextColor(110, 115, 135);
+          doc.setTextColor(80, 85, 105);
           doc.setFont('helvetica', 'italic');
-          doc.text(sanitizeForPDF(info.description), mL + 2, y);
+          const missionWrapped = doc.splitTextToSize(sanitizeForPDF(agentMission), cW - 4);
+          for (const ml of missionWrapped) {
+            check(lineH);
+            doc.text(ml, mL + 2, y);
+            y += lineH;
+          }
           doc.setFont('helvetica', 'normal');
-          y += 8;
+          y += 2;
+        }
+
+        // Agent role description
+        if (agentRole) {
+          doc.setFontSize(8);
+          doc.setTextColor(120, 125, 145);
+          doc.setFont('helvetica', 'normal');
+          const roleWrapped = doc.splitTextToSize(sanitizeForPDF(agentRole), cW - 4);
+          for (const rl of roleWrapped) {
+            check(lineH);
+            doc.text(rl, mL + 2, y);
+            y += lineH;
+          }
+          y += 3;
         }
 
         const structured = extractStructured(art.conteudo).map(l => {
