@@ -2331,6 +2331,7 @@ const PageBuilderEditor: React.FC<{
   const [publishing, setPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(initialPage?.publicado || false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -2341,8 +2342,20 @@ const PageBuilderEditor: React.FC<{
 
   const handleBack = () => {
     if (hasChanges && sections.length > 0) {
-      if (!confirm('Você tem alterações não salvas. Deseja sair mesmo assim?')) return;
+      setShowUnsavedDialog(true);
+      return;
     }
+    onBack();
+  };
+
+  const handleSaveAndBack = async () => {
+    await savePage();
+    setShowUnsavedDialog(false);
+    onBack();
+  };
+
+  const handleDiscardAndBack = () => {
+    setShowUnsavedDialog(false);
     onBack();
   };
 
