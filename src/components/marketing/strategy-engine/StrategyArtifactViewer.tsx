@@ -242,7 +242,6 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                       className="text-destructive border-destructive/30 hover:bg-destructive/10"
                       onClick={() => setDeleteTarget({ id: artifact.id, name: info.name })}
                     >
-                    >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
                       Excluir
                     </Button>
