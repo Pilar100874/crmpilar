@@ -1754,7 +1754,7 @@ const AutoGeneratePage: React.FC<{
     // ── Config & Save ──
     addProgress('🔍 Aplicando estilo do template e SEO...');
     const fullTpl = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
-    const tplConfig = fullTpl?.config || {};
+    const tplConfig: Record<string, string> = (fullTpl?.config || {}) as Record<string, string>;
     const primaryColor = tplConfig.primaryColor || creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
     const accentColor = tplConfig.accentColor || creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
     const bgColor = tplConfig.backgroundColor || '#ffffff';
