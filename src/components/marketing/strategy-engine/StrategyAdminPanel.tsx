@@ -563,6 +563,49 @@ export function StrategyAdminPanel() {
 
                           <Separator />
 
+                          {/* ─── Knowledge Base Config ─── */}
+                          <FieldSection label="Base de Conhecimento" hint="Define se o agente usa dados internos (memória estratégica) ou uma base externa de arquivos">
+                            <div className="space-y-3">
+                              <Select
+                                value={config.knowledgeBaseType}
+                                onValueChange={(v: 'internal' | 'external') => {
+                                  setConfigs(prev => ({
+                                    ...prev,
+                                    [agentKey]: { ...prev[agentKey], knowledgeBaseType: v, saved: false },
+                                  }));
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="internal">
+                                    <span className="flex items-center gap-1.5"><Database className="h-3 w-3" /> Interna (Memória Estratégica)</span>
+                                  </SelectItem>
+                                  <SelectItem value="external">
+                                    <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Externa (Arquivos do Usuário)</span>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {config.knowledgeBaseType === 'external' && (
+                                <KBFileManager
+                                  agentKey={agentKey}
+                                  files={config.knowledgeBaseFiles}
+                                  onFilesChange={(files) => {
+                                    setConfigs(prev => ({
+                                      ...prev,
+                                      [agentKey]: { ...prev[agentKey], knowledgeBaseFiles: files, saved: false },
+                                    }));
+                                  }}
+                                  estabId={estabId}
+                                />
+                              )}
+                            </div>
+                          </FieldSection>
+
+                          <Separator />
+
                           <FieldSection label="Dependências de Execução" hint="Clique para adicionar/remover. Agentes que DEVEM ser concluídos antes deste poder executar.">
                             <div className="flex flex-wrap gap-1">
                               {allAgentKeys.filter(k => k !== agentKey).map(dep => {
