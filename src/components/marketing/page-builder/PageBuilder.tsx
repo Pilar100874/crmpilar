@@ -657,7 +657,7 @@ const PageBuilderLanding: React.FC<{
 
   useEffect(() => { load(); }, [load]);
 
-  const openDialog = (type: typeof dialogAction extends infer T ? T extends null ? never : NonNullable<T>['type'] : never, page: SavedPage) => {
+  const openDialog = (type: 'rename' | 'duplicate' | 'delete' | 'publish' | 'unpublish', page: SavedPage) => {
     setDialogAction({ type, page });
     if (type === 'rename') setRenameValue(page.nome);
   };
