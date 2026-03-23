@@ -887,7 +887,7 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { error: startData?.error || `Erro ao iniciar geração via Apiframe (${startResp.status})` };
   }
 
-  const taskId = startData?.task_id;
+  const taskId = startData?.task_id || startData?.taskId || startData?.id || startData?.data?.task_id || startData?.data?.taskId || startData?.data?.id;
   if (taskId) {
     console.log(`[apiframe-video] Task started: ${taskId}`);
     return { taskId };
@@ -901,6 +901,7 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { videoUrl: storedUrl || directUrl };
   }
 
+  console.log(`[apiframe-video] Unexpected start payload: ${JSON.stringify(startData).substring(0, 600)}`);
   return { error: "Apiframe não retornou task_id nem video_url." };
 }
 
