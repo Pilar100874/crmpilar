@@ -296,8 +296,14 @@ export function StrategyAdminPanel() {
     resolve();
   }, [estabId]);
 
-  // Build unified agent list: built-in + custom
-  const allAgentKeys = [...AGENT_ORDER, ...customAgents.map(a => a.agent_key)];
+  // Build unified agent list: built-in + custom (deduplicated)
+  const allAgentKeys = React.useMemo(() => {
+    const keys = [...AGENT_ORDER];
+    for (const ca of customAgents) {
+      if (!keys.includes(ca.agent_key)) keys.push(ca.agent_key);
+    }
+    return keys;
+  }, [customAgents]);
 
   useEffect(() => {
     const loadConfigs = async () => {
@@ -347,67 +353,65 @@ export function StrategyAdminPanel() {
     loadConfigs();
   }, []);
 
-  // Merge custom agents into configs whenever they change
-  useEffect(() => {
-    setConfigs(prev => {
-      const next = { ...prev };
-      for (const ca of customAgents) {
-        const storedCard = (ca as any).agent_card_json;
-        const cardData: EditableAgentCard = storedCard ? {
-          id: storedCard.id || ca.agent_key,
-          name: storedCard.name || ca.name,
-          version: storedCard.version || '1.0',
-          role: storedCard.role || '',
-          mission: storedCard.mission || ca.description || '',
-          capabilities: storedCard.capabilities || [],
-          non_capabilities: storedCard.non_capabilities || [],
-          inputs: storedCard.inputs || [],
-          context_dependencies: storedCard.context_dependencies || [],
-          reasoning_protocol: storedCard.reasoning_protocol || [],
-          output_schema: typeof storedCard.output_schema === 'string' ? storedCard.output_schema : JSON.stringify(storedCard.output_schema || ca.output_schema || {}, null, 2),
-          quality_standards: storedCard.quality_standards || [],
-          anti_patterns: storedCard.anti_patterns || [],
-          error_handling: storedCard.error_handling || '',
-          handoff: storedCard.handoff || '',
-          destino_consumo: storedCard.destino_consumo || [],
-        } : {
-          id: ca.agent_key,
-          name: ca.name,
-          version: '1.0',
-          role: '',
-          mission: ca.description || '',
-          capabilities: [],
-          non_capabilities: [],
-          inputs: [],
-          context_dependencies: [],
-          reasoning_protocol: [],
-          output_schema: JSON.stringify(ca.output_schema || {}, null, 2),
-          quality_standards: [],
-          anti_patterns: [],
-          error_handling: '',
-          handoff: '',
-          destino_consumo: [],
-        };
+  // Merge custom agents into configs whenever they change — synchronous via useMemo-like pattern
+  const configsWithCustom = React.useMemo(() => {
+    const next = { ...configs };
+    for (const ca of customAgents) {
+      const storedCard = (ca as any).agent_card_json;
+      const cardData: EditableAgentCard = storedCard ? {
+        id: storedCard.id || ca.agent_key,
+        name: storedCard.name || ca.name,
+        version: storedCard.version || '1.0',
+        role: storedCard.role || '',
+        mission: storedCard.mission || ca.description || '',
+        capabilities: storedCard.capabilities || [],
+        non_capabilities: storedCard.non_capabilities || [],
+        inputs: storedCard.inputs || [],
+        context_dependencies: storedCard.context_dependencies || [],
+        reasoning_protocol: storedCard.reasoning_protocol || [],
+        output_schema: typeof storedCard.output_schema === 'string' ? storedCard.output_schema : JSON.stringify(storedCard.output_schema || ca.output_schema || {}, null, 2),
+        quality_standards: storedCard.quality_standards || [],
+        anti_patterns: storedCard.anti_patterns || [],
+        error_handling: storedCard.error_handling || '',
+        handoff: storedCard.handoff || '',
+        destino_consumo: storedCard.destino_consumo || [],
+      } : {
+        id: ca.agent_key,
+        name: ca.name,
+        version: '1.0',
+        role: '',
+        mission: ca.description || '',
+        capabilities: [],
+        non_capabilities: [],
+        inputs: [],
+        context_dependencies: [],
+        reasoning_protocol: [],
+        output_schema: JSON.stringify(ca.output_schema || {}, null, 2),
+        quality_standards: [],
+        anti_patterns: [],
+        error_handling: '',
+        handoff: '',
+        destino_consumo: [],
+      };
 
-        // Only set if not already modified by user in this session
-        if (!next[ca.agent_key] || next[ca.agent_key]?.saved !== false) {
-          next[ca.agent_key] = {
-            card: cardData,
-            active: ca.ativo,
-            saved: true,
-            isCustom: true,
-            customAgentId: ca.id,
-            icon: ca.icon,
-            color: ca.color,
-            dependencies: ca.dependencies || [],
-            knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
-            knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
-          };
-        }
+      // Only set if not already modified by user in this session
+      if (!next[ca.agent_key] || next[ca.agent_key]?.saved !== false) {
+        next[ca.agent_key] = {
+          card: cardData,
+          active: ca.ativo,
+          saved: true,
+          isCustom: true,
+          customAgentId: ca.id,
+          icon: ca.icon,
+          color: ca.color,
+          dependencies: ca.dependencies || [],
+          knowledgeBaseType: (ca as any).knowledge_base_type || 'internal',
+          knowledgeBaseFiles: (ca as any).knowledge_base_files || [],
+        };
       }
-      return next;
-    });
-  }, [customAgents]);
+    }
+    return next;
+  }, [configs, customAgents]);
 
   const updateCard = useCallback((agentKey: string, field: keyof EditableAgentCard, value: any) => {
     setConfigs(prev => ({
@@ -422,7 +426,7 @@ export function StrategyAdminPanel() {
 
   const handleSave = async (agentKey: string) => {
     setSaving(agentKey);
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     const systemPrompt = editableToSystemPrompt(config.card);
 
     try {
@@ -511,7 +515,7 @@ export function StrategyAdminPanel() {
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     const agentKey = deleteTarget;
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     setDeleteLoading(true);
 
     try {
@@ -547,7 +551,7 @@ export function StrategyAdminPanel() {
   };
 
   const copyPrompt = (agentKey: string) => {
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     if (!config) return;
     const prompt = editableToSystemPrompt(config.card);
     navigator.clipboard.writeText(prompt);
@@ -588,7 +592,7 @@ export function StrategyAdminPanel() {
       <ScrollArea className="h-[650px] pr-2">
         <div className="space-y-2">
           {allAgentKeys.map((agentKey, index) => {
-            const config = configs[agentKey];
+            const config = configsWithCustom[agentKey];
             if (!config) return null;
             const { card } = config;
             const isExpanded = expandedAgent === agentKey;
@@ -636,8 +640,8 @@ export function StrategyAdminPanel() {
                             <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                             <span className="text-[10px] text-muted-foreground">Depende de:</span>
                             {(config.dependencies ?? []).map(dep => {
-                              const depInfo = AGENT_INFO[dep] || configs[dep]?.card;
-                              const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                              const depInfo = AGENT_INFO[dep] || configsWithCustom[dep]?.card;
+                              const depIcon = configsWithCustom[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
                               const depName = depInfo?.name?.split(' ')[0] || dep;
                               return (
                                 <Badge key={dep} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
@@ -735,8 +739,8 @@ export function StrategyAdminPanel() {
                               {allAgentKeys.filter(k => k !== agentKey).map(dep => {
                                 const currentDeps = config.dependencies || [];
                                 const isSelected = currentDeps.includes(dep);
-                                const depIcon = configs[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
-                                const depName = configs[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
+                                const depIcon = configsWithCustom[dep]?.icon || AGENT_INFO[dep]?.icon || '🤖';
+                                const depName = configsWithCustom[dep]?.card?.name?.split(' ')[0] || AGENT_INFO[dep]?.name?.split(' ')[0] || dep;
                                 return (
                                   <Badge
                                     key={dep}
@@ -874,7 +878,7 @@ export function StrategyAdminPanel() {
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         onConfirm={handleDeleteConfirm}
-        itemName={deleteTarget ? configs[deleteTarget]?.card?.name : undefined}
+        itemName={deleteTarget ? configsWithCustom[deleteTarget]?.card?.name : undefined}
         isLoading={deleteLoading}
       />
     </div>
