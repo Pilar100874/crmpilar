@@ -315,48 +315,46 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
     });
   };
 
-  // Extract a rich condensed summary: all key insights as key-value + top bullets
+  // Extract a rich condensed summary: all key insights as key-value + top bullets (NO truncation)
   const extractCondensedLines = (conteudo: any): PdfLine[] => {
     if (!conteudo || typeof conteudo !== 'object') {
-      if (typeof conteudo === 'string') return [{ type: 'body', text: conteudo.substring(0, 500) }];
+      if (typeof conteudo === 'string') return [{ type: 'body', text: conteudo }];
       return [];
     }
     const lines: PdfLine[] = [];
     for (const [key, val] of Object.entries(conteudo)) {
       const label = key.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       if (typeof val === 'string' && val.trim()) {
-        // Truncate long values but keep meaningful content
-        lines.push({ type: 'keyvalue', label, value: val.trim().substring(0, 200) });
+        lines.push({ type: 'keyvalue', label, value: val.trim() });
       } else if (typeof val === 'number' || typeof val === 'boolean') {
         lines.push({ type: 'keyvalue', label, value: String(val) });
       } else if (Array.isArray(val)) {
-        const items = val.filter(v => typeof v === 'string' && v.trim()).slice(0, 4);
+        const items = val.filter(v => typeof v === 'string' && v.trim()).slice(0, 5);
         if (items.length > 0) {
           lines.push({ type: 'subheading', text: label });
           for (const item of items) {
-            lines.push({ type: 'bullet', text: (item as string).trim().substring(0, 150), level: 0 });
+            lines.push({ type: 'bullet', text: (item as string).trim(), level: 0 });
           }
-          if (val.length > 4) lines.push({ type: 'body', text: `(+${val.length - 4} itens)` });
+          if (val.length > 5) lines.push({ type: 'body', text: `(+${val.length - 5} itens)` });
         } else {
-          // Array of objects: extract key-values from first few
           const objItems = val.filter(v => typeof v === 'object' && v !== null).slice(0, 3);
           if (objItems.length > 0) {
             lines.push({ type: 'subheading', text: label });
             for (const obj of objItems) {
-              const firstEntries = Object.entries(obj).slice(0, 2);
-              const summary = firstEntries.map(([k, v]) => `${k.replace(/[_-]/g, ' ')}: ${String(v).substring(0, 80)}`).join(' | ');
+              const firstEntries = Object.entries(obj).slice(0, 3);
+              const summary = firstEntries.map(([k, v]) => `${k.replace(/[_-]/g, ' ')}: ${String(v)}`).join(' | ');
               lines.push({ type: 'bullet', text: summary, level: 0 });
             }
+            if (val.length > 3) lines.push({ type: 'body', text: `(+${val.length - 3} itens)` });
           }
         }
       } else if (typeof val === 'object' && val !== null) {
-        // Nested object: extract its key-values inline
-        const subEntries = Object.entries(val).filter(([, v]) => typeof v === 'string' || typeof v === 'number').slice(0, 4);
+        const subEntries = Object.entries(val).filter(([, v]) => typeof v === 'string' || typeof v === 'number');
         if (subEntries.length > 0) {
           lines.push({ type: 'subheading', text: label });
           for (const [sk, sv] of subEntries) {
             const sl = sk.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            lines.push({ type: 'keyvalue', label: sl, value: String(sv).substring(0, 150) });
+            lines.push({ type: 'keyvalue', label: sl, value: String(sv) });
           }
         }
       }
