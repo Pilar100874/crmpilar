@@ -404,6 +404,19 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           )}
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onConfirm={() => {
+          if (deleteTarget && onDeleteArtifact) {
+            onDeleteArtifact(deleteTarget.id);
+          }
+          setDeleteTarget(null);
+        }}
+        title="Excluir artefato"
+        itemName={deleteTarget?.name}
+      />
     </>
   );
 }
