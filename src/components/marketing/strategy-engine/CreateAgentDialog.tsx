@@ -103,6 +103,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [ordem, setOrdem] = useState(AGENT_ORDER.length + existingKeys.length + 1);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
+  const [knowledgeBaseType, setKnowledgeBaseType] = useState<'internal' | 'external'>('internal');
 
   const updateCard = useCallback((field: keyof EditableAgentCard, value: any) => {
     setCard(prev => ({ ...prev, [field]: value }));
