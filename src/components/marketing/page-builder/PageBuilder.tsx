@@ -1952,6 +1952,7 @@ const AutoGeneratePage: React.FC<{
       } catch (videoErr: any) {
         console.warn('[AutoGen] Video generation error:', videoErr);
         const msg = videoErr?.message || 'Timeout ou erro na geração de vídeo.';
+        generationError = msg;
         addProgress(`❌ ${msg}`);
         setVideoError(msg);
       }
