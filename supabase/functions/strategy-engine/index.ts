@@ -1399,13 +1399,10 @@ REGRAS:
 
       // Execute agents sequentially, RE-READING memory from DB before each agent
       for (const exec of executions) {
+        const resolved = await resolveAgentDefinition(supabase, exec.key);
         const builtIn = AGENT_DEFINITIONS[exec.key];
         const custom = (customAgentsList || []).find((a: any) => a.agent_key === exec.key);
-        const agent = builtIn || {
-          name: (custom as any)?.name || exec.key,
-          type: exec.key,
-          systemPrompt: (custom as any)?.system_prompt || '',
-        };
+        const agent = resolved.agent;
         const startTime = Date.now();
 
         // Mark as running
