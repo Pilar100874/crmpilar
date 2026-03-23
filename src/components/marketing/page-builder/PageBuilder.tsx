@@ -2699,6 +2699,48 @@ const PageBuilderLanding: React.FC<{
         </div>
       </div>
 
+      {/* Global Config */}
+      <Card className="overflow-hidden">
+        <button
+          onClick={() => setShowGlobalConfig(!showGlobalConfig)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Configurações Globais</span>
+            <span className="text-[10px] text-muted-foreground">(Empresa, WhatsApp, Site — usados em todas as páginas)</span>
+          </div>
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showGlobalConfig && "rotate-180")} />
+        </button>
+        {showGlobalConfig && (
+          <div className="px-4 pb-4 pt-1 border-t">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mt-2">
+              <div>
+                <Label className="text-[10px] text-muted-foreground">🏷️ Nome da Empresa</Label>
+                <Input value={globalConfig.empresaNome} onChange={e => updateGlobalConfig({ empresaNome: e.target.value })} placeholder="Minha Empresa Ltda." className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">📍 Endereço</Label>
+                <Input value={globalConfig.empresaEndereco} onChange={e => updateGlobalConfig({ empresaEndereco: e.target.value })} placeholder="Rua Exemplo, 123 - Cidade/UF" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">📞 Telefone</Label>
+                <Input value={globalConfig.empresaTelefone} onChange={e => updateGlobalConfig({ empresaTelefone: e.target.value })} placeholder="(11) 3000-0000" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">💬 WhatsApp</Label>
+                <Input value={globalConfig.whatsappGlobal} onChange={e => updateGlobalConfig({ whatsappGlobal: e.target.value })} placeholder="5511999999999" className="text-xs h-8 mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] text-muted-foreground">🌐 Site / URL</Label>
+                <Input value={globalConfig.siteGlobal} onChange={e => updateGlobalConfig({ siteGlobal: e.target.value })} placeholder="https://seusite.com.br" className="text-xs h-8 mt-0.5" />
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-2">Estes dados serão aplicados automaticamente no rodapé e nos botões/links ao gerar páginas automáticas.</p>
+          </div>
+        )}
+      </Card>
+
       {pages.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-16 text-center">
           <Globe className="h-12 w-12 text-muted-foreground/30 mb-4" />
