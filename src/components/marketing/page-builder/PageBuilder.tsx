@@ -2562,7 +2562,8 @@ const AutoGeneratePage: React.FC<{
                     {msg}
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
             {step === 'done' && (
               <div className="space-y-3 pt-4">
