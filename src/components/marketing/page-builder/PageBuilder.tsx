@@ -2341,8 +2341,10 @@ const AutoGeneratePage: React.FC<{
               if (!currentFt) return null;
               return (
                 <div className="rounded-xl border overflow-hidden">
-                  <div className="h-[120px] w-full overflow-hidden bg-muted/20">
-                    <TemplateMiniPreview config={currentFt.config} sectionTypes={currentFt.sections.map(s => s.type)} />
+                  <div className="w-full overflow-hidden bg-muted/20 relative" style={{ height: 200 }}>
+                    <div style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%' }}>
+                      <TemplateMiniPreview config={currentFt.config} sectionTypes={currentFt.sections.map(s => s.type)} className="w-full" />
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 p-3" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
                     <div className="flex-1 min-w-0">
