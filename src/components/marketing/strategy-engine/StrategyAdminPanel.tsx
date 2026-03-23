@@ -266,8 +266,7 @@ function KBFileManager({
     </div>
   );
 }
-
-
+export function StrategyAdminPanel() {
   const [configs, setConfigs] = useState<Record<string, AgentConfig>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
