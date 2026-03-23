@@ -2649,6 +2649,33 @@ const PageBuilderEditor: React.FC<{
           <ScrollArea className="h-[500px]"><pre className="text-xs bg-muted p-4 rounded font-mono whitespace-pre-wrap">{generateHTML()}</pre></ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Unsaved Changes Dialog */}
+      <Dialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <DialogContent className="bg-background sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Alterações não salvas
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Você tem alterações que ainda não foram salvas. O que deseja fazer?
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleSaveAndBack} className="w-full gap-2">
+                <Save className="h-4 w-4" /> Salvar e sair
+              </Button>
+              <Button variant="destructive" onClick={handleDiscardAndBack} className="w-full gap-2">
+                <Trash2 className="h-4 w-4" /> Descartar alterações
+              </Button>
+              <Button variant="outline" onClick={() => setShowUnsavedDialog(false)} className="w-full">
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
