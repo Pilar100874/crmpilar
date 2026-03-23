@@ -375,6 +375,29 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
             <FieldSection label="Missão" hint="Resultado estratégico que o agente deve produzir">
               <Textarea value={card.mission} onChange={e => updateCard('mission', e.target.value)} rows={2} className="text-xs" placeholder="Ex: Gerar relatório detalhado de..." />
             </FieldSection>
+
+            <Separator />
+
+            <FieldSection label="Base de Conhecimento" hint="Define se o agente usa dados internos (memória estratégica) ou uma base externa de arquivos">
+              <Select value={knowledgeBaseType} onValueChange={(v: 'internal' | 'external') => setKnowledgeBaseType(v)}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">
+                    <span className="flex items-center gap-1.5"><Database className="h-3 w-3" /> Interna (Memória Estratégica)</span>
+                  </SelectItem>
+                  <SelectItem value="external">
+                    <span className="flex items-center gap-1.5"><Globe className="h-3 w-3" /> Externa (Arquivos do Usuário)</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {knowledgeBaseType === 'external' && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  📂 Após criar o agente, você poderá enviar arquivos na edição do Agent Card.
+                </p>
+              )}
+            </FieldSection>
           </TabsContent>
 
           {/* ─── CONTRACTS TAB ─── */}
