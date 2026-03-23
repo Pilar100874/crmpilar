@@ -935,8 +935,8 @@ function generateSlug(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `page-${Date.now()}`;
 }
 
-// ── Preview Iframe (standalone) ─────────────────────────────────────────────────
-const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
+// ── Shared HTML Generator ───────────────────────────────────────────────────────
+function generateFullHTML(sections: PageSection[], config: PageConfig): string {
   const cfg: PageConfig = {
     title: '', description: '', favicon: '', primaryColor: '#1e40af', secondaryColor: '#3b82f6',
     accentColor: '#f59e0b', backgroundColor: '#ffffff', textColor: '#1f2937',
@@ -945,6 +945,7 @@ const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sec
   const vs = sections.filter((s: PageSection) => s.visible);
 
   let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${cfg.title}</title><meta name="description" content="${cfg.description}">
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@400;600;700&family=${encodeURIComponent(cfg.fontBody)}:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1027,7 +1028,12 @@ a{text-decoration:none}
     }
   }
   html += '</body></html>';
-  return <iframe srcDoc={html} className="w-full h-full border-0" />;
+  return html;
+}
+
+// ── Preview Iframe (standalone) ─────────────────────────────────────────────────
+const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sections, config }) => {
+  return <iframe srcDoc={generateFullHTML(sections, config as PageConfig)} className="w-full h-full border-0" />;
 };
 
 // ── Auto Generate Page from Strategy ──────────────────────────────────────────
