@@ -419,14 +419,14 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
           {/* ─── QUALITY TAB ─── */}
           <TabsContent value="quality" className="space-y-3 mt-3">
-            <FieldSection label="Quality Standards" hint="Critérios que definem se o output é aceitável">
+            <FieldSection label="Padrões de Qualidade" hint="Critérios que definem se o output é aceitável">
               <EditableList items={card.quality_standards} onChange={v => updateCard('quality_standards', v)} placeholder="Padrão de qualidade..." />
             </FieldSection>
 
             <Separator />
 
-            <FieldSection label="Anti-Patterns" hint="Comportamentos proibidos que devem ser evitados">
-              <EditableList items={card.anti_patterns} onChange={v => updateCard('anti_patterns', v)} placeholder="Anti-pattern..." />
+            <FieldSection label="Anti-Padrões" hint="Comportamentos proibidos que devem ser evitados">
+              <EditableList items={card.anti_patterns} onChange={v => updateCard('anti_patterns', v)} placeholder="Anti-padrão..." />
             </FieldSection>
           </TabsContent>
 
