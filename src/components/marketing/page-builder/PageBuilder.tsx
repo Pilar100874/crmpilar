@@ -2683,7 +2683,16 @@ const PageBuilderLanding: React.FC<{
                     Abrir Editor
                   </Button>
                   <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setPreviewPage(page)}>
-                    <Eye className="h-3 w-3" /> Preview
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant={page.publicado ? 'secondary' : 'default'}
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => openDialog(page.publicado ? 'unpublish' : 'publish', page)}
+                  >
+                    <Upload className="h-3 w-3" />
+                    {page.publicado ? 'Despublicar' : 'Publicar'}
                   </Button>
                 </div>
               </div>
