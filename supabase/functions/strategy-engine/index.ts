@@ -1541,16 +1541,22 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
 Contexto de marketing: ${marketingContext}
 Descrição do produto: ${productDescription}
 
+REGRAS OBRIGATÓRIAS:
+- O vídeo NÃO deve conter NENHUM texto, legenda, título ou overlay de texto
+- O vídeo NÃO deve conter áudio, narração ou música
+- Foco 100% visual: apenas imagens cinematográficas do produto
+- Sem textos sobrepostos de nenhum tipo
+
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "video_prompt": "Prompt detalhado para geração de vídeo em inglês, cinematográfico, focado no produto",
+  "video_prompt": "Prompt detalhado para geração de vídeo em inglês, cinematográfico, focado no produto. NO TEXT OVERLAYS. NO AUDIO. NO CAPTIONS. NO TITLES. Pure visual cinematic product footage only.",
   "storyboard": [
-    {"timestamp": "0-3s", "description": "Descrição da cena"},
-    {"timestamp": "3-8s", "description": "Descrição da cena"},
-    {"timestamp": "8-15s", "description": "Descrição da cena"}
+    {"timestamp": "0-3s", "description": "Descrição da cena visual (sem texto)"},
+    {"timestamp": "3-8s", "description": "Descrição da cena visual (sem texto)"},
+    {"timestamp": "8-15s", "description": "Descrição da cena visual (sem texto)"}
   ],
-  "headline_overlay": "Texto de destaque para sobrepor no vídeo (PT-BR)",
-  "cta_overlay": "Call-to-action para o final do vídeo (PT-BR)"
+  "headline_overlay": "",
+  "cta_overlay": ""
 }`;
 
         const rawResult = await callAI(LOVABLE_API_KEY, 'Você é um diretor criativo de vídeos publicitários. Gere roteiros persuasivos e visualmente impactantes.', videoPrompt);
@@ -1571,10 +1577,12 @@ O prompt deve ser em inglês e descrever uma imagem publicitária premium com:
 - Iluminação profissional de estúdio
 - Composição limpa e atraente
 - Estilo de anúncio de alta conversão
+- SEM NENHUM TEXTO, lettering, tipografia ou palavras na imagem
+- A imagem deve ser 100% visual, sem textos sobrepostos
 
 Retorne EXCLUSIVAMENTE um JSON:
 {
-  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária",
+  "image_prompt": "Prompt detalhado em inglês para geração de imagem publicitária. IMPORTANT: NO TEXT, NO LETTERS, NO WORDS, NO TYPOGRAPHY, NO CAPTIONS in the image. Pure visual product photography only.",
   "alt_text": "Texto alternativo descritivo em português",
   "suggested_headline": "Headline persuasiva para acompanhar a imagem (PT-BR)"
 }`;
@@ -1592,14 +1600,14 @@ Retorne EXCLUSIVAMENTE um JSON:
           messages.push({
             role: 'user',
             content: [
-              { type: 'text', text: `Create a professional advertising image for this product. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. Marketing style.`}` },
+              { type: 'text', text: `Create a professional advertising image for this product. NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. Pure visual product photography only. ${promptData?.image_prompt || `High-end product advertisement photo of "${productName}" with studio lighting, clean composition, premium look. No text or words in the image.`}` },
               { type: 'image_url', image_url: { url: productImageUrl } }
             ]
           });
         } else {
           messages.push({
             role: 'user',
-            content: promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style.`
+            content: `NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY in the image. Pure visual only. ${promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style. No text overlay.`}`
           });
         }
 
