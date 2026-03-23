@@ -1140,7 +1140,7 @@ section{overflow-x:hidden}
         break;
       }
       case 'text':
-        html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px;text-align:${c.alignment||'left'}"><p style="font-size:1.1rem;line-height:1.8;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
+        html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px;text-align:center"><p style="font-size:1.1rem;line-height:1.8;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
       case 'image':
         html += `<section style="padding:40px 24px"><div class="container text-center">${c.url ? `<img src="${c.url}" alt="${c.alt||''}" style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);width:100%;object-fit:${c.fit||'cover'}">` : ''}${c.caption ? `<p style="margin-top:12px;color:#6b7280;font-size:.9rem">${c.caption}</p>` : ''}</div></section>\n`; break;
       case 'video': {
