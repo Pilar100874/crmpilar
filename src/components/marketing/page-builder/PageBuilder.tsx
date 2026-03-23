@@ -150,7 +150,7 @@ const PAGE_TEMPLATES: PageTemplate[] = [
       { id: 't-guar', type: 'guarantee', title: 'Garantia', visible: true, styles: {}, content: { icon: '🛡️', title: 'Garantia Incondicional de 30 Dias', description: 'Se em 30 dias você não estiver 100% satisfeito, devolvemos cada centavo. Sem perguntas.', duration: '30 dias de garantia' } },
       { id: 't-price', type: 'pricing', title: 'Preços', visible: true, styles: {}, content: { title: 'Escolha Seu Plano', items: [{ name: 'Essencial', price: 'R$ 197', features: ['Acesso ao curso', 'Suporte por email', 'Certificado'], highlighted: false }, { name: 'Profissional', price: 'R$ 397', features: ['Tudo do Essencial', 'Mentoria em grupo', 'Comunidade VIP', 'Bônus exclusivos'], highlighted: true }, { name: 'Premium', price: 'R$ 997', features: ['Tudo do Profissional', 'Mentoria individual', 'Acesso vitalício', 'Consultoria 1:1'], highlighted: false }] } },
       { id: 't-cta', type: 'cta', title: 'CTA Final', visible: true, styles: {}, content: { headline: 'Não Perca Essa Oportunidade', description: 'Vagas limitadas. Garanta a sua agora!', button_text: 'Quero Garantir Minha Vaga', button_url: '#' } },
-      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: 'Sua Empresa', copyright: `© ${new Date().getFullYear()} — Todos os direitos reservados` } },
+      { id: 't-footer', type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: '', copyright: `© ${new Date().getFullYear()} — Todos os direitos reservados` } },
     ]
   },
   {
