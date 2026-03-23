@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, ThumbsUp, ThumbsDown, FileDown } from 'lucide-react';
+import { FileText, Download, Eye, Code, LayoutList, ShieldCheck, Loader2, Check, X, RefreshCw, Pencil, Save, History, ThumbsUp, ThumbsDown, FileDown, Trash2, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { ArtifactHistory } from './ArtifactHistory';
@@ -23,11 +23,13 @@ interface Props {
   onUpdateContent?: (id: string, content: any) => void;
   onExportSinglePDF?: (artifactType: string) => void;
   onFeedback?: (artifactId: string, feedback: 'positive' | 'negative') => void;
+  onDeleteArtifact?: (id: string) => void;
+  onRegenerateAgent?: (agentType: string) => void;
   runningAgents?: Set<string>;
   agentInfo?: AgentInfoMap;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, runningAgents = new Set(), agentInfo }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, onDeleteArtifact, onRegenerateAgent, runningAgents = new Set(), agentInfo }: Props) {
   const resolvedInfo = agentInfo || AGENT_INFO;
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
@@ -229,28 +231,34 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
                   </div>
                 )}
 
-                {/* Approve / Reject / Revise */}
+                {/* Delete / Regenerate */}
                 <div className="flex items-center gap-1.5 border-t pt-2">
-                  {artifact.status !== 'approved' && (
-                    <Button size="sm" variant="outline" className="text-green-600 border-green-500/30 hover:bg-green-500/10" onClick={() => onApprove?.(artifact.id)}>
-                      <Check className="h-3.5 w-3.5 mr-1" />
-                      Aprovar
+                  {onDeleteArtifact && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                      onClick={() => {
+                        if (window.confirm('Tem certeza que deseja excluir este artefato?')) {
+                          onDeleteArtifact(artifact.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Excluir
                     </Button>
                   )}
-                  {artifact.status !== 'rejected' && (
-                    <Button size="sm" variant="outline" className="text-red-600 border-red-500/30 hover:bg-red-500/10" onClick={() => onReject?.(artifact.id)}>
-                      <X className="h-3.5 w-3.5 mr-1" />
-                      Rejeitar
+                  {onRegenerateAgent && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onRegenerateAgent(artifact.tipo)}
+                      disabled={runningAgents.has(artifact.tipo)}
+                    >
+                      {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1" />}
+                      Gerar Novamente
                     </Button>
                   )}
-                  <Button
-                    size="sm" variant="outline"
-                    onClick={() => onRevise?.(artifact.id, artifact.tipo)}
-                    disabled={runningAgents.has(artifact.tipo)}
-                  >
-                    {runningAgents.has(artifact.tipo) ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
-                    Revisar
-                  </Button>
                 </div>
 
                 {/* Validation scores inline */}
