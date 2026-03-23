@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { TEMPLATE_CATEGORIES, ALL_THEMES, getThemeById } from './pageTemplates';
 import {
   DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay,
   useSensor, useSensors, PointerSensor, useDroppable, useDraggable
