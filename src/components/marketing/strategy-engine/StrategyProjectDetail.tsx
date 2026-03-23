@@ -180,6 +180,8 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             onUpdateContent={updateArtifactContent}
             onExportSinglePDF={(type) => exportSinglePDF(projectId, type)}
             onFeedback={feedbackArtifact}
+            onDeleteArtifact={deleteArtifact}
+            onRegenerateAgent={executeAgent}
             runningAgents={runningAgents}
             agentInfo={mergedInfo}
           />
