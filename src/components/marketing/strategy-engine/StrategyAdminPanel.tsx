@@ -551,7 +551,7 @@ export function StrategyAdminPanel() {
   };
 
   const copyPrompt = (agentKey: string) => {
-    const config = configs[agentKey];
+    const config = configsWithCustom[agentKey];
     if (!config) return;
     const prompt = editableToSystemPrompt(config.card);
     navigator.clipboard.writeText(prompt);
