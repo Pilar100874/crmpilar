@@ -1601,7 +1601,9 @@ const AutoGeneratePage: React.FC<{
             )}
 
             <Button 
-              onClick={() => setStep('template')} 
+              onClick={() => {
+                setStep('template');
+              }} 
               disabled={!selectedProject} 
               className="w-full gap-2"
             >
