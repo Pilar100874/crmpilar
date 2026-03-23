@@ -458,24 +458,22 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
             doc.text(lbl, mL + 6, y);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(65, 65, 80);
-            const valSpace = cW - lblW - 10;
-            if (valSpace > 50) {
+            const valSpace = maxTextW - lblW - 6;
+            if (valSpace > 40) {
               const wrapped = doc.splitTextToSize(line.value, valSpace);
-              doc.text(wrapped[0], mL + 6 + lblW, y);
-              for (let w = 1; w < wrapped.length; w++) {
-                y += lineH;
-                check(lineH);
+              for (let w = 0; w < wrapped.length; w++) {
+                if (w > 0) { y += lineH; check(lineH); }
                 doc.text(wrapped[w], mL + 6 + lblW, y);
               }
             } else {
               y += lineH;
-              const wrapped = doc.splitTextToSize(line.value, cW - 14);
+              const wrapped = doc.splitTextToSize(line.value, maxTextW - 10);
               for (const wl of wrapped) {
                 check(lineH);
                 doc.text(wl, mL + 10, y);
                 y += lineH;
               }
-              y -= lineH; // compensate last increment
+              y -= lineH;
             }
             y += lineH;
             break;
