@@ -3144,6 +3144,26 @@ const PageBuilderEditor: React.FC<{
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Section Confirmation */}
+      <Dialog open={!!sectionToDelete} onOpenChange={(open) => { if (!open) setSectionToDelete(null); }}>
+        <DialogContent className="bg-background sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Remover Seção
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja remover esta seção? Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button variant="outline" onClick={() => setSectionToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={confirmDeleteSection} className="gap-2">
+              <Trash2 className="h-4 w-4" /> Remover
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
