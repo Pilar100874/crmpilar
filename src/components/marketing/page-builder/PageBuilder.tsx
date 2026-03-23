@@ -4,7 +4,8 @@ import {
   ChevronDown, ChevronUp, Settings, Palette, Layout, Bot, ArrowDown,
   Sparkles, FileText, Monitor, Smartphone, Tablet, Copy, Save, Loader2,
   Columns, Square, AlignLeft, Link, ExternalLink, Upload, FolderOpen,
-  Wand2, LayoutTemplate, ImagePlus, Package, GalleryHorizontalEnd
+  Wand2, LayoutTemplate, ImagePlus, Package, GalleryHorizontalEnd,
+  MoreVertical, Pencil, FolderInput
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
