@@ -100,7 +100,6 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   const [color, setColor] = useState('#8B5CF6');
   const [agentKey, setAgentKey] = useState('');
   const [description, setDescription] = useState('');
-  const [ordem, setOrdem] = useState(AGENT_ORDER.length + existingKeys.length + 1);
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [card, setCard] = useState<EditableAgentCard>({ ...defaultCard });
   const [knowledgeBaseType, setKnowledgeBaseType] = useState<'internal' | 'external'>('internal');
@@ -128,7 +127,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     setDescription('');
     setIcon('🤖');
     setColor('#8B5CF6');
-    setOrdem(AGENT_ORDER.length + existingKeys.length + 1);
+    
     setDependencies([]);
     setAiDescription('');
     setKnowledgeBaseType('internal');
@@ -187,17 +186,21 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
   };
 
   const handleSubmit = async () => {
-    if (!agentKey.trim()) { toast.error('Informe uma chave para o agente'); return; }
     if (!card.name.trim()) { toast.error('Informe o nome do agente'); return; }
-    if (existingKeys.includes(agentKey)) { toast.error('Já existe um agente com essa chave'); return; }
-    if (!/^[a-z_]+$/.test(agentKey)) { toast.error('A chave deve conter apenas letras minúsculas e _'); return; }
+
+    // Auto-generate key from name
+    const generatedKey = agentKey.trim() || card.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    if (existingKeys.includes(generatedKey)) { toast.error('Já existe um agente com esse nome/chave. Escolha outro nome.'); return; }
+
+    // Auto-calculate ordem based on dependencies
+    const ordem = AGENT_ORDER.length + existingKeys.length + 1;
 
     setSaving(true);
     let schema = {};
     try { schema = JSON.parse(card.output_schema); } catch { /* empty */ }
 
     const result = await onCreate({
-      agent_key: agentKey,
+      agent_key: generatedKey,
       name: card.name,
       icon,
       color,
@@ -276,24 +279,10 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
         {/* ─── Meta fields ─── */}
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Chave (ID único)</Label>
-              <Input
-                value={agentKey}
-                onChange={e => setAgentKey(e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))}
-                placeholder="meu_agente"
-                className="text-sm h-9"
-              />
-              <p className="text-[10px] text-muted-foreground">Apenas letras minúsculas e _</p>
-            </div>
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Descrição Curta</Label>
               <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="O que este agente faz..." className="text-sm h-9" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Ordem na Timeline</Label>
-              <Input type="number" value={ordem} onChange={e => setOrdem(parseInt(e.target.value) || 100)} className="text-sm h-9" />
             </div>
           </div>
 
