@@ -1312,6 +1312,97 @@ const VideoTimelineEditor: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Roteiro import dialog */}
+        <Dialog open={roteiroDialogOpen} onOpenChange={setRoteiroDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Criar Projeto do Roteiro
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Selecione um projeto estratégico e importe o storyboard do Produtor de Vídeo (máx. 8 segundos).
+            </p>
+
+            {roteiroLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : roteiroProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhum projeto estratégico encontrado. Execute o Motor de Estratégia primeiro.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground">Selecione o projeto:</p>
+                <ScrollArea className="max-h-[200px]">
+                  <div className="space-y-1">
+                    {roteiroProjects.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => loadRoteiroArtifacts(p.id)}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                          selectedRoteiroProjectId === p.id
+                            ? 'bg-primary/10 border border-primary/30 text-foreground'
+                            : 'hover:bg-muted/50 text-muted-foreground'
+                        }`}
+                      >
+                        <span className="font-medium">{p.nome}</span>
+                        <span className="text-[10px] ml-2 text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                {loadingArtifacts && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+
+                {selectedRoteiroProjectId && !loadingArtifacts && roteiroArtifacts.length === 0 && (
+                  <p className="text-xs text-destructive text-center py-3">
+                    Nenhum roteiro encontrado. Execute o agente Produtor de Vídeo, Roteirista de Vídeo ou Roteirista de Reels primeiro.
+                  </p>
+                )}
+
+                {roteiroArtifacts.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Roteiros disponíveis:</p>
+                    {roteiroArtifacts.map((art) => {
+                      const content = art.conteudo as any;
+                      const sceneCount = content?.storyboard?.length || (content?.hook ? 'VSL' : '?');
+                      const agentLabels: Record<string, string> = {
+                        video_producer: '🎥 Produtor de Vídeo',
+                        vsl: '🎬 Roteirista de Vídeo',
+                        reel: '📱 Roteirista de Reels',
+                      };
+                      return (
+                        <button
+                          key={art.id}
+                          onClick={() => createProjectFromRoteiro(art)}
+                          className="w-full text-left px-3 py-2.5 rounded-md border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{agentLabels[art.tipo] || art.titulo}</span>
+                            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {typeof sceneCount === 'number' ? `${sceneCount} cenas` : sceneCount}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                            {content?.conceito_criativo?.tema_visual || content?.hook?.texto?.slice(0, 80) || art.titulo}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
