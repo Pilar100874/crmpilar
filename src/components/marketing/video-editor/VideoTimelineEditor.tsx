@@ -1054,7 +1054,130 @@ const VideoTimelineEditor: React.FC = () => {
     loadProjects();
   }, [currentProjectId, saveProject, loadProjects]);
 
-  // Landing page
+  // ─── Roteiro / Storyboard import ─────────────────────────────
+  const openRoteiroDialog = useCallback(async () => {
+    setRoteiroDialogOpen(true);
+    setRoteiroLoading(true);
+    setSelectedRoteiroProjectId(null);
+    setRoteiroArtifacts([]);
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { setRoteiroLoading(false); return; }
+    const { data } = await supabase
+      .from('strategy_projects')
+      .select('id, nome, created_at')
+      .eq('estabelecimento_id', estabId)
+      .order('created_at', { ascending: false });
+    setRoteiroProjects(data || []);
+    setRoteiroLoading(false);
+  }, []);
+
+  const loadRoteiroArtifacts = useCallback(async (projectId: string) => {
+    setSelectedRoteiroProjectId(projectId);
+    setLoadingArtifacts(true);
+    const { data } = await supabase
+      .from('strategy_artifacts')
+      .select('*')
+      .eq('project_id', projectId)
+      .in('tipo', ['video_producer', 'vsl', 'reel'])
+      .order('created_at', { ascending: false });
+    // Deduplicate: keep latest per tipo
+    const latest = new Map<string, any>();
+    for (const art of (data || [])) {
+      if (!latest.has(art.tipo)) latest.set(art.tipo, art);
+    }
+    setRoteiroArtifacts(Array.from(latest.values()));
+    setLoadingArtifacts(false);
+  }, []);
+
+  const createProjectFromRoteiro = useCallback((artifact: any) => {
+    const content = artifact.conteudo as any;
+    if (!content) { toast.error('Artefato sem conteúdo'); return; }
+
+    const MAX_DURATION = 8; // max 8 seconds
+
+    // Try to extract storyboard scenes
+    let scenes: any[] = [];
+    if (content.storyboard && Array.isArray(content.storyboard)) {
+      scenes = content.storyboard;
+    } else if (content.hook) {
+      // VSL format: sections as scenes
+      const sections = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'bonus', 'garantia', 'escassez', 'cta'];
+      scenes = sections
+        .filter(s => content[s]?.texto)
+        .map((s, i) => ({
+          cena: `Cena ${i + 1} - ${s.charAt(0).toUpperCase() + s.slice(1)}`,
+          descricao_visual: content[s].texto?.slice(0, 200),
+          naracao: content[s].texto?.slice(0, 200),
+          duracao: content[s].duracao_estimada || '5s',
+        }));
+    }
+
+    if (scenes.length === 0) {
+      toast.error('Nenhuma cena encontrada no roteiro');
+      return;
+    }
+
+    // Parse durations & adapt to 8s max
+    const parseDuration = (d: string | number | undefined): number => {
+      if (typeof d === 'number') return d;
+      if (!d) return 2;
+      const match = String(d).match(/(\d+)/);
+      return match ? parseInt(match[1]) : 2;
+    };
+
+    const rawDurations = scenes.map(s => parseDuration(s.duracao || s.duracao_estimada));
+    const totalRaw = rawDurations.reduce((a, b) => a + b, 0);
+    const scale = totalRaw > MAX_DURATION ? MAX_DURATION / totalRaw : 1;
+    const adaptedDurations = rawDurations.map(d => Math.max(0.5, parseFloat((d * scale).toFixed(2))));
+
+    // Reset timeline
+    timeline.updateState({
+      tracks: [...DEFAULT_TRACKS],
+      clips: [],
+      duration: MAX_DURATION,
+      currentTime: 0,
+    });
+
+    // Create image placeholder clips for each scene on the image track
+    const imgTrack = DEFAULT_TRACKS.find(t => t.type === 'image');
+    if (!imgTrack) return;
+
+    let currentTime = 0;
+    scenes.forEach((scene, i) => {
+      const dur = adaptedDurations[i];
+      const sceneName = scene.cena || scene.titulo || `Cena ${i + 1}`;
+      const desc = scene.descricao_visual || scene.naracao || scene.texto_overlay || '';
+      timeline.addClip({
+        trackId: imgTrack.id,
+        type: 'image',
+        name: `📋 ${sceneName}`,
+        startTime: currentTime,
+        duration: dur,
+        trimStart: 0,
+        trimEnd: 0,
+        color: TRACK_COLORS.image,
+        volume: 1,
+        opacity: 1,
+        filters: [],
+        x: 0, y: 0, w: 100, h: 100,
+      });
+      currentTime += dur;
+    });
+
+    // Set project name
+    const projName = roteiroProjects.find(p => p.id === selectedRoteiroProjectId)?.nome || 'Roteiro';
+    setProjectName(`Vídeo - ${projName}`);
+    setCurrentProjectId(null);
+    setLastSavedState('');
+    setRoteiroDialogOpen(false);
+    setShowEditor(true);
+
+    // Build a summary toast
+    const sceneSummary = scenes.map((s, i) => `${i + 1}. ${s.cena || `Cena ${i + 1}`} (${adaptedDurations[i].toFixed(1)}s)`).join('\n');
+    toast.success(`Roteiro importado: ${scenes.length} cenas em ${MAX_DURATION}s`, { description: 'Substitua os placeholders por suas mídias.' });
+  }, [timeline, roteiroProjects, selectedRoteiroProjectId]);
+
+
   if (!showEditor) {
     return (
       <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
