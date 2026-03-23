@@ -1342,7 +1342,7 @@ const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sec
   );
 };
 
-// ── Auto Generate Page from Strategy ──────────────────────────────────────────
+// ── Auto Generate Page from Strategy (Multi-Step Wizard) ──────────────────────
 const AutoGeneratePage: React.FC<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -1355,7 +1355,7 @@ const AutoGeneratePage: React.FC<{
   const [selectedCategory, setSelectedCategory] = useState<string>('landing');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [step, setStep] = useState<'select' | 'template' | 'product' | 'generating' | 'done'>('select');
+  const [step, setStep] = useState<'select' | 'template' | 'product' | 'image_text' | 'video_script' | 'generating' | 'done'>('select');
   const [videoError, setVideoError] = useState<string>('');
   const [progress, setProgress] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -1363,6 +1363,28 @@ const AutoGeneratePage: React.FC<{
   const [productSearch, setProductSearch] = useState('');
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [savedPageRef, setSavedPageRef] = useState<SavedPage | null>(null);
+
+  // Multi-step media states
+  const [allAgentData, setAllAgentData] = useState<Record<string, any>>({});
+  const [aiCopyData, setAiCopyData] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  // Image step
+  const [imageTexts, setImageTexts] = useState<{ agent: string; icon: string; text: string }[]>([]);
+  const [selectedImageTextIdx, setSelectedImageTextIdx] = useState(0);
+  const [customImagePrompt, setCustomImagePrompt] = useState('');
+  const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState('');
+
+  // Video step
+  const [videoScripts, setVideoScripts] = useState<{ agent: string; icon: string; label: string; storyboard: any[]; prompt: string }[]>([]);
+  const [selectedVideoIdx, setSelectedVideoIdx] = useState(0);
+  const [customVideoPrompt, setCustomVideoPrompt] = useState('');
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
+  const [videoLoading, setVideoLoading] = useState(false);
+
+  const MAX_VIDEO_DURATION = 8;
 
   useEffect(() => {
     if (!open) return;
@@ -1383,6 +1405,11 @@ const AutoGeneratePage: React.FC<{
       setStep('select');
       setProgress([]);
       setVideoError('');
+      setGeneratedImageUrl('');
+      setGeneratedVideoUrl('');
+      setImageError('');
+      setAiCopyData(null);
+      setAllAgentData({});
     })();
   }, [open]);
 
@@ -1400,73 +1427,238 @@ const AutoGeneratePage: React.FC<{
     return [];
   };
 
-  const generatePage = async () => {
+  const parseDur = (d: string | number | undefined): number => {
+    if (typeof d === 'number') return d;
+    if (!d) return 2;
+    const m = String(d).match(/(\d+)/);
+    return m ? parseInt(m[1]) : 2;
+  };
+
+  // ── Prepare agent data + extract image texts + video scripts ──
+  const prepareAgentData = async () => {
+    setDataLoading(true);
     const project = projects.find(p => p.id === selectedProject);
-    if (!project) return;
+    if (!project) { setDataLoading(false); return; }
 
-    setGenerating(true);
-    setStep('generating');
-    setProgress([]);
-    setVideoError('');
-    setSavedPageRef(null);
-    let generationError = '';
     const mem: Record<string, any> = (project.strategic_memory as Record<string, any>) || {};
-    const sections: PageSection[] = [];
-    const addProgress = (msg: string) => setProgress(prev => [...prev, msg]);
-
-    // ── Fetch ALL artifacts (including custom agents) ──
-    addProgress('📦 Buscando TODOS os artefatos do projeto...');
     const { data: artifacts } = await supabase
       .from('strategy_artifacts')
       .select('tipo, conteudo')
       .eq('project_id', project.id)
       .order('created_at', { ascending: false });
-    const artMap = new Map<string, any>();
-    for (const art of (artifacts || [])) {
-      if (!artMap.has(art.tipo)) artMap.set(art.tipo, art.conteudo);
-    }
-
-    // Merge memory + artifacts for complete data
     const allData: Record<string, any> = { ...mem };
-    artMap.forEach((val, key) => {
-      if (!allData[key]) allData[key] = val;
-    });
+    for (const art of (artifacts || [])) {
+      if (!allData[art.tipo]) allData[art.tipo] = art.conteudo;
+    }
+    setAllAgentData(allData);
 
-    const agentKeys = Object.keys(allData);
-    addProgress(`✅ ${agentKeys.length} agentes encontrados: ${agentKeys.slice(0, 8).map(k => (AGENT_INFO_MAP as any)[k]?.name || k).join(', ')}${agentKeys.length > 8 ? '...' : ''}`);
-
-    // ── Call AI to generate compelling marketing copy ──
-    addProgress('🤖 Gerando textos de marketing com IA...');
-    
-    const summaryForAI = JSON.stringify({
-      nome_negocio: project.nome,
-      descricao: project.descricao_negocio,
-      agentes_disponiveis: agentKeys,
-      dados: Object.fromEntries(
-        Object.entries(allData).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 1500) : String(v).slice(0, 500)])
-      ),
-    });
-
+    // Call AI for marketing copy
     let aiCopy: any = null;
     try {
+      const summaryForAI = JSON.stringify({
+        nome_negocio: project.nome,
+        descricao: project.descricao_negocio,
+        agentes_disponiveis: Object.keys(allData),
+        dados: Object.fromEntries(
+          Object.entries(allData).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v).slice(0, 1500) : String(v).slice(0, 500)])
+        ),
+      });
       const { data: aiResult, error: aiError } = await supabase.functions.invoke('strategy-engine', {
+        body: { action: 'generate_page_copy', projectId: project.id, contextSummary: summaryForAI }
+      });
+      if (!aiError && aiResult?.success && aiResult?.copy) aiCopy = aiResult.copy;
+    } catch {}
+    setAiCopyData(aiCopy);
+
+    // Extract image-worthy texts from agents
+    const texts: { agent: string; icon: string; text: string }[] = [];
+    const addText = (agent: string, icon: string, data: any, keys: string[]) => {
+      if (!data) return;
+      for (const key of keys) {
+        const val = data[key];
+        if (typeof val === 'string' && val.length > 10 && !texts.find(t => t.text === val)) {
+          texts.push({ agent, icon, text: val });
+        }
+      }
+    };
+    addText('IA Marketing', '🤖', aiCopy, ['hero_headline', 'hero_subheadline', 'image_suggestion']);
+    addText('Posicionamento', '🎯', allData.positioning, ['proposta_unica', 'headline', 'descricao', 'conceito_visual', 'proposta_valor']);
+    addText('Landing Page', '🏗️', allData.landing_page, ['headline', 'hero_headline', 'subheadline', 'conceito_visual']);
+    addText('Criativos', '🎨', allData.creative, ['headline', 'conceito_visual', 'estilo_visual', 'direção_arte']);
+    addText('Influencer', '🤳', allData.influencer_content, ['conceito', 'descricao_visual', 'headline']);
+    addText('Site Builder', '🌐', allData.site_builder, ['hero_headline', 'hero_descricao', 'conceito']);
+    addText('SEO', '🔎', allData.seo, ['titulo_pagina', 'meta_description']);
+    addText('Social Media', '📲', allData.social_media, ['headline', 'conceito', 'descricao']);
+    setImageTexts(texts);
+
+    // Extract video scripts/storyboards
+    const scripts: { agent: string; icon: string; label: string; storyboard: any[]; prompt: string }[] = [];
+    const vp = allData.video_producer;
+    if (vp?.storyboard && Array.isArray(vp.storyboard) && vp.storyboard.length > 0) {
+      scripts.push({
+        agent: 'Produtor de Vídeo', icon: '🎥',
+        label: `Storyboard (${vp.storyboard.length} cenas)`,
+        storyboard: vp.storyboard,
+        prompt: vp.conceito_criativo?.tema_visual || '',
+      });
+    }
+    const vslData = allData.vsl;
+    if (vslData) {
+      let vslScenes: any[] = [];
+      if (vslData.storyboard && Array.isArray(vslData.storyboard)) {
+        vslScenes = vslData.storyboard;
+      } else {
+        const sectionKeys = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'cta'];
+        vslScenes = sectionKeys
+          .filter(k => vslData[k]?.texto)
+          .map((k, i) => ({
+            cena: `${k.charAt(0).toUpperCase() + k.slice(1)}`,
+            duracao: vslData[k].duracao_estimada || '3s',
+            naracao: (vslData[k].texto || '').slice(0, 200),
+            descricao_visual: '',
+          }));
+      }
+      if (vslScenes.length > 0) {
+        scripts.push({
+          agent: 'Roteirista de Vídeo', icon: '🎬',
+          label: `VSL (${vslScenes.length} cenas)`,
+          storyboard: vslScenes,
+          prompt: vslData.hook?.texto?.slice(0, 100) || '',
+        });
+      }
+    }
+    const reelData = allData.reel;
+    if (reelData) {
+      let reelScenes: any[] = [];
+      if (Array.isArray(reelData.storyboard)) reelScenes = reelData.storyboard;
+      else if (Array.isArray(reelData.roteiro)) reelScenes = reelData.roteiro;
+      else if (Array.isArray(reelData.cenas)) reelScenes = reelData.cenas;
+      if (reelScenes.length > 0) {
+        scripts.push({
+          agent: 'Roteirista de Reels', icon: '📱',
+          label: `Reels (${reelScenes.length} cenas)`,
+          storyboard: reelScenes,
+          prompt: reelData.conceito || reelData.tema || '',
+        });
+      }
+    }
+    setVideoScripts(scripts);
+    setDataLoading(false);
+  };
+
+  // ── Generate Image ──
+  const handleGenerateImage = async () => {
+    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+    if (!selectedProd) return;
+    setImageLoading(true);
+    setImageError('');
+    try {
+      const promptText = customImagePrompt || imageTexts[selectedImageTextIdx]?.text || selectedProd.nome;
+      const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', {
         body: {
-          action: 'generate_page_copy',
-          projectId: project.id,
-          contextSummary: summaryForAI,
+          action: 'generate_page_media',
+          mediaType: 'image',
+          productName: selectedProd.nome,
+          productDescription: selectedProd.descricao || '',
+          productImageUrl: selectedProd.foto_url || '',
+          marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
         }
       });
-      if (!aiError && aiResult?.success && aiResult?.copy) {
-        aiCopy = aiResult.copy;
-        addProgress('✨ Textos de marketing gerados com sucesso!');
+      if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
+        setGeneratedImageUrl(mediaResult.generatedImageUrl);
       } else {
-        addProgress('⚠️ IA indisponível — usando dados diretos dos agentes...');
+        setImageError(mediaResult?.error || 'Não foi possível gerar a imagem. Tente novamente.');
       }
-    } catch {
-      addProgress('⚠️ IA indisponível — usando dados diretos dos agentes...');
+    } catch (err: any) {
+      setImageError(err?.message || 'Erro ao gerar imagem.');
     }
+    setImageLoading(false);
+  };
 
-    // Helper functions
+  // ── Generate Video ──
+  const handleGenerateVideo = async () => {
+    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+    setVideoLoading(true);
+    setVideoError('');
+    try {
+      const script = videoScripts[selectedVideoIdx];
+      let videoGenPrompt = customVideoPrompt || '';
+      if (!videoGenPrompt && script) {
+        const sceneDescriptions = script.storyboard.map((s: any, i: number) => {
+          const parts = [];
+          if (s.descricao_visual) parts.push(s.descricao_visual);
+          if (s.naracao) parts.push(`Narração: "${s.naracao}"`);
+          if (s.movimento_camera) parts.push(`Câmera: ${s.movimento_camera}`);
+          return `Cena ${i + 1} (${s.duracao || '2s'}): ${parts.join('. ')}`;
+        }).join(' → ');
+        videoGenPrompt = `Create a cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Storyboard: ${sceneDescriptions}. Style: professional, clean, modern advertising.`;
+      } else if (!videoGenPrompt) {
+        videoGenPrompt = `Create a short cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Style: professional advertising.`;
+      }
+
+      const estabId = localStorage.getItem('estabelecimentoId');
+      const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'generate_video',
+          params: {
+            model: 'auto',
+            prompt: videoGenPrompt,
+            estabelecimentoId: estabId,
+            duration: MAX_VIDEO_DURATION,
+            aspectRatio: '16:9',
+            imageUrls: generatedImageUrl ? [generatedImageUrl] : [],
+            withAudio: false,
+            withMusic: false,
+          },
+        }),
+      });
+
+      if (videoGenResponse.ok) {
+        const videoGenResult = await videoGenResponse.json();
+        if (videoGenResult?.result?.videoUrl) {
+          setGeneratedVideoUrl(videoGenResult.result.videoUrl);
+        } else {
+          const errMsg = videoGenResult?.result?.error?.substring(0, 200) || 'O provedor de vídeo não retornou resultado.';
+          setVideoError(errMsg);
+        }
+      } else {
+        const errText = await videoGenResponse.text().catch(() => '');
+        try {
+          const errJson = JSON.parse(errText);
+          const errMsg = errJson?.error || `Erro HTTP ${videoGenResponse.status}`;
+          setVideoError(errMsg.includes('Nenhum provedor')
+            ? 'Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas.'
+            : errMsg);
+        } catch {
+          setVideoError(`Erro HTTP ${videoGenResponse.status} na geração de vídeo.`);
+        }
+      }
+    } catch (err: any) {
+      setVideoError(err?.message || 'Timeout ou erro na geração de vídeo.');
+    }
+    setVideoLoading(false);
+  };
+
+  // ── Finalize: build page sections & save ──
+  const finalizePage = async () => {
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project) return;
+    setGenerating(true);
+    setStep('generating');
+    setProgress([]);
+    setSavedPageRef(null);
+    let generationError = '';
+    const addProgress = (msg: string) => setProgress(prev => [...prev, msg]);
+    const allData = allAgentData;
+    const aiCopy = aiCopyData;
+    const sections: PageSection[] = [];
+    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+
     const collectAlternatives = (sources: { agent: string; icon: string; data: any; keys: string[] }[]): { agent: string; icon: string; text: string }[] => {
       const alts: { agent: string; icon: string; text: string }[] = [];
       for (const src of sources) {
@@ -1485,719 +1677,227 @@ const AutoGeneratePage: React.FC<{
     };
 
     const getData = (key: string) => allData[key] || null;
-
     const pos = getData('positioning');
     const vox = getData('vox');
     const lp = getData('landing_page');
     const creative = getData('creative');
-    const influencer = getData('influencer_content');
     const funnel = getData('funnel');
     const vsl = getData('vsl');
     const videoProd = getData('video_producer');
     const seoData = getData('seo');
     const emailData = getData('email');
     const socialData = getData('social_media');
-    const reelData = getData('reel');
     const cipherData = getData('cipher');
     const paidMedia = getData('paid_media');
-    const siteBuilder = getData('site_builder');
 
-    // ── 1. Hero Section ──
-    addProgress('🎯 Construindo Hero com textos persuasivos...');
-    const heroHeadline = aiCopy?.hero_headline 
-      || pos?.proposta_unica || pos?.headline || lp?.headline || lp?.hero_headline 
-      || creative?.headline || project.descricao_negocio || 'Transforme Seus Resultados Agora';
-    const heroSub = aiCopy?.hero_subheadline
-      || pos?.subheadline || pos?.descricao || lp?.subheadline || lp?.hero_subheadline
-      || vox?.dor_principal || seoData?.meta_description || 'Descubra a solução que vai revolucionar seu negócio.';
-    const heroCta = aiCopy?.hero_cta
-      || lp?.cta_text || lp?.hero_cta || creative?.cta || 'Quero Começar Agora';
+    // 1. Hero
+    addProgress('🎯 Construindo Hero...');
+    const heroHeadline = aiCopy?.hero_headline || pos?.proposta_unica || pos?.headline || lp?.headline || lp?.hero_headline || creative?.headline || project.descricao_negocio || 'Transforme Seus Resultados Agora';
+    const heroSub = aiCopy?.hero_subheadline || pos?.subheadline || pos?.descricao || lp?.subheadline || vox?.dor_principal || seoData?.meta_description || 'Descubra a solução que vai revolucionar seu negócio.';
+    const heroCta = aiCopy?.hero_cta || lp?.cta_text || creative?.cta || 'Quero Começar Agora';
 
     const headlineAlts = collectAlternatives([
       { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_headline'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['proposta_unica', 'headline', 'titulo', 'proposta_valor', 'slogan'] },
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['headline', 'hero_headline', 'titulo', 'h1'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['titulo_pagina', 'title', 'h1'] },
-      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['headline', 'titulo_principal', 'gancho'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['proposta_unica', 'headline', 'titulo', 'proposta_valor'] },
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['headline', 'hero_headline', 'titulo'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['headline', 'titulo_principal'] },
     ]);
     const subAlts = collectAlternatives([
       { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_subheadline'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['descricao', 'subheadline', 'subtitulo', 'proposta_descricao'] },
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['subheadline', 'hero_subheadline', 'subtitulo', 'descricao'] },
-      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['dor_principal', 'resumo', 'perfil_cliente'] },
+      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['descricao', 'subheadline'] },
+      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['dor_principal', 'resumo'] },
     ]);
     const ctaAlts = collectAlternatives([
       { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['hero_cta'] },
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_text', 'hero_cta', 'botao_principal'] },
-      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta', 'cta_text', 'chamada_acao'] },
+      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_text', 'hero_cta'] },
+      { agent: 'Criativos', icon: '🎨', data: creative, keys: ['cta', 'cta_text'] },
     ]);
 
     sections.push({
       id: `auto-hero-${Date.now()}`, type: 'hero', title: 'Hero Principal', visible: true, styles: {},
       content: {
-        headline: heroHeadline,
-        subheadline: heroSub,
-        cta_text: heroCta,
+        headline: heroHeadline, subheadline: heroSub, cta_text: heroCta,
         cta_type: gCfg?.whatsappGlobal ? 'whatsapp' : 'url',
         cta_url: gCfg?.siteGlobal || '#contato',
         whatsapp_number: gCfg?.whatsappGlobal || '',
         background_image: '',
-        _alt_headline: headlineAlts,
-        _alt_subheadline: subAlts,
-        _alt_cta_text: ctaAlts,
-        _media_suggestion: '🖼️ Insira uma imagem de fundo impactante que represente seu negócio.',
+        _alt_headline: headlineAlts, _alt_subheadline: subAlts, _alt_cta_text: ctaAlts,
       }
     });
 
-    // ── 2. Social Proof ──
-    addProgress('📊 Extraindo métricas e prova social...');
+    // 2. Social Proof
+    addProgress('📊 Extraindo prova social...');
     const socialProofItems: any[] = [];
-    if (aiCopy?.social_proof && Array.isArray(aiCopy.social_proof)) {
-      aiCopy.social_proof.forEach((sp: any) => socialProofItems.push(sp));
-    }
+    if (aiCopy?.social_proof && Array.isArray(aiCopy.social_proof)) aiCopy.social_proof.forEach((sp: any) => socialProofItems.push(sp));
     if (socialProofItems.length === 0) {
       const numSources = [pos, lp, funnel, cipherData, socialData, emailData];
-      const numKeys = ['clientes', 'usuarios', 'cases', 'resultados', 'metricas', 'numeros', 'stats', 'kpis', 'social_proof', 'provas_numericas'];
+      const numKeys = ['clientes', 'usuarios', 'cases', 'metricas', 'numeros', 'social_proof'];
       for (const src of numSources) {
         if (!src) continue;
         for (const key of numKeys) {
           const val = src[key];
-          if (Array.isArray(val)) {
-            val.slice(0, 4).forEach((item: any) => {
-              if (typeof item === 'object' && item) {
-                socialProofItems.push({ number: item.numero || item.number || item.valor || '?', label: item.label || item.nome || item.descricao || '' });
-              }
-            });
-          }
+          if (Array.isArray(val)) val.slice(0, 4).forEach((item: any) => {
+            if (typeof item === 'object' && item) socialProofItems.push({ number: item.numero || item.number || item.valor || '?', label: item.label || item.nome || '' });
+          });
         }
       }
-      if (vox?.tamanho_mercado) socialProofItems.push({ number: vox.tamanho_mercado, label: 'Tamanho do Mercado' });
     }
-    if (socialProofItems.length === 0) {
-      socialProofItems.push({ number: '[Preencher]', label: 'Clientes Atendidos' }, { number: '[Preencher]', label: 'Satisfação' }, { number: '[Preencher]', label: 'Anos no Mercado' });
-    }
-    sections.push({
-      id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {},
-      content: { items: socialProofItems.slice(0, 4) }
-    });
+    if (socialProofItems.length === 0) socialProofItems.push({ number: '[Preencher]', label: 'Clientes' }, { number: '[Preencher]', label: 'Satisfação' }, { number: '[Preencher]', label: 'Anos' });
+    sections.push({ id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {}, content: { items: socialProofItems.slice(0, 4) } });
 
-    // ── 3. Image — generate with AI if product selected ──
-    let mainImageUrl = '';
-    let mainImageAlt = 'Imagem do produto/serviço';
-    const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
-
-    if (selectedProd) {
-      addProgress(`📸 Gerando imagem publicitária do produto "${selectedProd.nome}" com IA...`);
-      try {
-        const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', {
-          body: {
-            action: 'generate_page_media',
-            mediaType: 'image',
-            productName: selectedProd.nome,
-            productDescription: selectedProd.descricao || '',
-            productImageUrl: selectedProd.foto_url || '',
-            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}`,
-          }
-        });
-        if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
-          mainImageUrl = mediaResult.generatedImageUrl;
-          mainImageAlt = mediaResult.data?.alt_text || `Anúncio - ${selectedProd.nome}`;
-          addProgress('✅ Imagem publicitária gerada com sucesso!');
-        } else {
-          addProgress('⚠️ Não foi possível gerar imagem — usando placeholder...');
-        }
-      } catch {
-        addProgress('⚠️ Erro na geração de imagem — usando placeholder...');
-      }
-    } else {
-      addProgress('📸 Reservando espaço para imagem principal...');
-    }
-    const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || creative?.estilo_visual || 'Imagem profissional do produto';
+    // 3. Image (use pre-generated)
+    addProgress('📸 Inserindo imagem...');
+    const mainImageUrl = generatedImageUrl;
+    const mainImageAlt = mainImageUrl ? (selectedProd?.nome || 'Imagem do produto') : 'Imagem do produto/serviço';
+    const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || 'Imagem profissional do produto';
     sections.push({
       id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
       content: { url: mainImageUrl, alt: mainImageAlt, caption: mainImageUrl ? (selectedProd?.nome || '') : imgSuggestion, fit: 'cover', _media_suggestion: mainImageUrl ? '' : `🖼️ ${imgSuggestion}` }
     });
 
-    // ── 4. Features ──
-    addProgress('⚡ Montando diferenciais com títulos persuasivos...');
+    // 4. Features
+    addProgress('⚡ Montando diferenciais...');
     let featureItems: any[] = [];
-    if (aiCopy?.features && Array.isArray(aiCopy.features)) {
-      featureItems = aiCopy.features.slice(0, 6);
-    }
+    if (aiCopy?.features && Array.isArray(aiCopy.features)) featureItems = aiCopy.features.slice(0, 6);
     if (featureItems.length === 0) {
       const featureSources = [
-        extractArray(pos, 'diferenciais', 'features', 'beneficios', 'pontos_fortes'),
-        extractArray(lp, 'features', 'recursos', 'beneficios', 'diferenciais'),
-        extractArray(funnel, 'etapas', 'stages', 'features'),
+        extractArray(pos, 'diferenciais', 'features', 'beneficios'),
+        extractArray(lp, 'features', 'recursos', 'beneficios'),
+        extractArray(funnel, 'etapas', 'features'),
         extractArray(creative, 'beneficios', 'features'),
-        extractArray(cipherData, 'diferenciais', 'vantagens_competitivas', 'pontos_fortes'),
-        extractArray(paidMedia, 'beneficios', 'argumentos', 'features'),
+        extractArray(cipherData, 'diferenciais', 'vantagens_competitivas'),
       ].filter(arr => arr.length > 0);
-
       const allFeats: any[] = [];
       for (const source of featureSources) {
         for (const f of source) {
           const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
           const desc = typeof f === 'string' ? f : (f.description || f.descricao || f.texto || '');
-          // Skip items with empty title or description (e.g. storyboard scenes leaking in)
-          if (!title || title.trim().length < 3) continue;
-          if (!desc || desc.trim().length < 3) continue;
+          if (!title || title.trim().length < 3 || !desc || desc.trim().length < 3) continue;
           if (!allFeats.find(e => e.title === title)) {
-            allFeats.push({
-              icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6],
-              title,
-              description: desc,
-            });
+            allFeats.push({ icon: f.icon || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6], title, description: desc });
           }
         }
       }
       featureItems = allFeats.slice(0, 6);
     }
-    if (featureItems.length === 0) {
-      featureItems = [
-        { icon: '🚀', title: 'Agilidade', description: 'Descreva seu diferencial aqui' },
-        { icon: '🎯', title: 'Precisão', description: 'Descreva seu diferencial aqui' },
-        { icon: '💡', title: 'Inovação', description: 'Descreva seu diferencial aqui' },
-      ];
-    }
-    sections.push({
-      id: `auto-feat-${Date.now()}`, type: 'features', title: aiCopy?.features_title || 'Por Que Nos Escolher', visible: true, styles: {},
-      content: { items: featureItems }
-    });
+    if (featureItems.length === 0) featureItems = [{ icon: '🚀', title: 'Agilidade', description: 'Descreva' }, { icon: '🎯', title: 'Precisão', description: 'Descreva' }, { icon: '💡', title: 'Inovação', description: 'Descreva' }];
+    sections.push({ id: `auto-feat-${Date.now()}`, type: 'features', title: aiCopy?.features_title || 'Por Que Nos Escolher', visible: true, styles: {}, content: { items: featureItems } });
 
-    // ── 5. Process Steps ──
-    addProgress('🔄 Montando etapas do processo...');
+    // 5. Process Steps
+    addProgress('🔄 Montando etapas...');
     let processItems: any[] = [];
-    if (aiCopy?.process_steps && Array.isArray(aiCopy.process_steps)) {
-      processItems = aiCopy.process_steps;
-    }
+    if (aiCopy?.process_steps && Array.isArray(aiCopy.process_steps)) processItems = aiCopy.process_steps;
     if (processItems.length === 0) {
-      const rawSteps = [
-        ...extractArray(funnel, 'etapas', 'stages', 'passos', 'steps', 'jornada'),
-        ...extractArray(lp, 'steps', 'como_funciona', 'etapas', 'processo'),
-        ...extractArray(pos, 'jornada_cliente', 'processo', 'etapas'),
-      ];
-      if (rawSteps.length > 0) {
-        processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({
-          step: `${i + 1}`,
-          title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || s.name || s.nome || s.etapa || `Etapa ${i + 1}`),
-          description: typeof s === 'string' ? s : (s.description || s.descricao || s.texto || s.acao || ''),
-        }));
-      }
+      const rawSteps = [...extractArray(funnel, 'etapas', 'stages', 'passos'), ...extractArray(lp, 'steps', 'como_funciona', 'etapas'), ...extractArray(pos, 'jornada_cliente', 'processo')];
+      if (rawSteps.length > 0) processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({ step: `${i + 1}`, title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || `Etapa ${i + 1}`), description: typeof s === 'string' ? s : (s.description || s.descricao || '') }));
     }
-    if (processItems.length >= 2) {
-      sections.push({
-        id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {},
-        content: { title: aiCopy?.process_title || 'Como Funciona', items: processItems }
-      });
-    }
+    if (processItems.length >= 2) sections.push({ id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {}, content: { title: aiCopy?.process_title || 'Como Funciona', items: processItems } });
 
-    // ── 6. About text ──
-    addProgress('📝 Criando seção sobre o negócio...');
-    const aboutText = aiCopy?.about_text
-      || pos?.historia || pos?.manifesto || pos?.narrativa || pos?.storytelling
-      || vox?.resumo || seoData?.conteudo_principal
-      || project.descricao_negocio || 'Conte a história do seu negócio aqui.';
-    const aboutAlts = collectAlternatives([
-      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['about_text'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['historia', 'sobre', 'manifesto', 'narrativa', 'storytelling'] },
-      { agent: 'Voz do Cliente', icon: '🎙️', data: vox, keys: ['perfil_cliente', 'resumo', 'contexto'] },
-      { agent: 'SEO', icon: '🔎', data: seoData, keys: ['conteudo_principal', 'about', 'sobre'] },
-    ]);
-    sections.push({
-      id: `auto-about-${Date.now()}`, type: 'text', title: aiCopy?.about_title || 'Nossa História', visible: true, styles: {},
-      content: { body: aboutText, alignment: 'center', _alt_body: aboutAlts }
-    });
+    // 6. About
+    addProgress('📝 Seção sobre o negócio...');
+    const aboutText = aiCopy?.about_text || pos?.historia || pos?.manifesto || vox?.resumo || project.descricao_negocio || 'Conte a história do seu negócio aqui.';
+    sections.push({ id: `auto-about-${Date.now()}`, type: 'text', title: aiCopy?.about_title || 'Nossa História', visible: true, styles: {}, content: { body: aboutText, alignment: 'center' } });
 
-    // ── 7. Video — use storyboard from Produtor de Vídeo / Roteirista (max 8s), fallback to AI ──
-    let videoContent: Record<string, any> = { url: '', poster: '', autoplay: false };
-    const MAX_VIDEO_DURATION = 8; // seconds
-
-    // Helper: parse duration string like "5s", "10 segundos", "3" → number
-    const parseDur = (d: string | number | undefined): number => {
-      if (typeof d === 'number') return d;
-      if (!d) return 2;
-      const m = String(d).match(/(\d+)/);
-      return m ? parseInt(m[1]) : 2;
+    // 7. Video (use pre-generated)
+    addProgress('🎬 Inserindo vídeo...');
+    const videoContent: Record<string, any> = {
+      url: generatedVideoUrl || '',
+      poster: mainImageUrl || (selectedProd?.foto_url) || '',
+      autoplay: !!generatedVideoUrl,
     };
-
-    // Try video_producer storyboard first
-    if (videoProd?.storyboard && Array.isArray(videoProd.storyboard) && videoProd.storyboard.length > 0) {
-      addProgress(`🎥 Usando storyboard do Produtor de Vídeo (${videoProd.storyboard.length} cenas)...`);
-      const scenes = videoProd.storyboard;
-      const rawDurations = scenes.map((s: any) => parseDur(s.duracao || s.duracao_estimada));
-      const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
-      const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
-      const adaptedScenes = scenes.map((s: any, i: number) => ({
-        cena: s.cena || `Cena ${i + 1}`,
-        duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
-        descricao_visual: s.descricao_visual || '',
-        naracao: s.naracao || '',
-        movimento_camera: s.movimento_camera || '',
-        enquadramento: s.enquadramento || '',
-        texto_overlay: s.texto_overlay || '',
-        transicao_entrada: s.transicao_entrada || '',
-        transicao_saida: s.transicao_saida || '',
-      }));
-      videoContent = {
-        url: '',
-        poster: mainImageUrl || (selectedProd?.foto_url) || '',
-        autoplay: false,
-        _storyboard: adaptedScenes,
-        _video_prompt: videoProd.conceito_criativo?.tema_visual || '',
-        _headline_overlay: adaptedScenes[0]?.texto_overlay || videoProd.conceito_criativo?.tom_emocional || '',
-        _cta_overlay: adaptedScenes[adaptedScenes.length - 1]?.texto_overlay || '',
-        _audio_direction: videoProd.audio || null,
-        _art_direction: videoProd.direcao_arte || null,
-        _formats: videoProd.formatos || null,
-        _media_suggestion: `🎬 Roteiro do Produtor de Vídeo adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas). Use o Editor de Vídeo ou AI Studio para produzir.`,
-      };
-      addProgress(`✅ Storyboard adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
-    }
-    // Try VSL script
-    else if (vsl && (vsl.hook || vsl.storyboard)) {
-      addProgress('🎬 Usando roteiro do Roteirista de Vídeo (VSL)...');
-      let vslScenes: any[] = [];
-      if (vsl.storyboard && Array.isArray(vsl.storyboard)) {
-        vslScenes = vsl.storyboard;
-      } else {
-        const sectionKeys = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'cta'];
-        vslScenes = sectionKeys
-          .filter(k => vsl[k]?.texto)
-          .map((k, i) => ({
-            cena: `${k.charAt(0).toUpperCase() + k.slice(1)}`,
-            duracao: vsl[k].duracao_estimada || '3s',
-            naracao: (vsl[k].texto || '').slice(0, 200),
-            descricao_visual: '',
-          }));
-      }
-      if (vslScenes.length > 0) {
-        const rawDurations = vslScenes.map((s: any) => parseDur(s.duracao || s.duracao_estimada));
-        const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
-        const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
-        const adaptedScenes = vslScenes.map((s: any, i: number) => ({
-          ...s,
-          duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
-        }));
-        videoContent = {
-          url: '',
-          poster: mainImageUrl || (selectedProd?.foto_url) || '',
-          autoplay: false,
-          _storyboard: adaptedScenes,
-          _video_prompt: vsl.hook?.texto?.slice(0, 100) || '',
-          _headline_overlay: vsl.hook?.texto?.slice(0, 60) || '',
-          _cta_overlay: vsl.cta?.acao_especifica || vsl.cta?.texto?.slice(0, 60) || '',
-          _media_suggestion: `🎬 Roteiro VSL adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas). Use o Editor de Vídeo ou AI Studio.`,
-        };
-        addProgress(`✅ VSL adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
-      }
-    }
-    // Try Reel script
-    else if (reelData?.roteiro || reelData?.script || reelData?.storyboard) {
-      addProgress('📱 Usando roteiro do Roteirista de Reels...');
-      let reelScenes: any[] = [];
-      if (Array.isArray(reelData.storyboard)) reelScenes = reelData.storyboard;
-      else if (Array.isArray(reelData.roteiro)) reelScenes = reelData.roteiro;
-      else if (Array.isArray(reelData.script)) reelScenes = reelData.script;
-      else if (Array.isArray(reelData.cenas)) reelScenes = reelData.cenas;
-
-      if (reelScenes.length > 0) {
-        const rawDurations = reelScenes.map((s: any) => parseDur(s.duracao || s.tempo || '2'));
-        const totalRaw = rawDurations.reduce((a: number, b: number) => a + b, 0);
-        const scale = totalRaw > MAX_VIDEO_DURATION ? MAX_VIDEO_DURATION / totalRaw : 1;
-        const adaptedScenes = reelScenes.map((s: any, i: number) => ({
-          cena: s.cena || s.titulo || `Cena ${i + 1}`,
-          duracao: `${Math.max(0.5, parseFloat((rawDurations[i] * scale).toFixed(1)))}s`,
-          naracao: s.naracao || s.texto || s.legenda || '',
-          descricao_visual: s.descricao_visual || s.descricao || '',
-        }));
-        videoContent = {
-          url: '',
-          poster: mainImageUrl || '',
-          autoplay: false,
-          _storyboard: adaptedScenes,
-          _video_prompt: reelData.conceito || reelData.tema || '',
-          _headline_overlay: adaptedScenes[0]?.naracao?.slice(0, 60) || '',
-          _media_suggestion: `📱 Roteiro de Reels adaptado para ${MAX_VIDEO_DURATION}s (${adaptedScenes.length} cenas).`,
-        };
-        addProgress(`✅ Roteiro Reels adaptado: ${adaptedScenes.length} cenas em ${MAX_VIDEO_DURATION}s`);
-      }
-    }
-    // Fallback: AI generation or placeholder
-    else if (selectedProd) {
-      addProgress(`🎬 Gerando roteiro de vídeo para "${selectedProd.nome}" com IA...`);
-      try {
-        const { data: videoResult, error: videoError } = await supabase.functions.invoke('strategy-engine', {
-          body: {
-            action: 'generate_page_media',
-            mediaType: 'video',
-            productName: selectedProd.nome,
-            productDescription: selectedProd.descricao || '',
-            productImageUrl: selectedProd.foto_url || '',
-            marketingContext: `Headline: ${heroHeadline}. ${project.descricao_negocio || ''}. DURAÇÃO MÁXIMA: ${MAX_VIDEO_DURATION} segundos.`,
-          }
-        });
-        if (!videoError && videoResult?.success && videoResult?.data) {
-          const vd = videoResult.data;
-          videoContent = {
-            url: '',
-            poster: mainImageUrl || selectedProd.foto_url || '',
-            autoplay: false,
-            _video_prompt: vd.video_prompt || '',
-            _storyboard: vd.storyboard || [],
-            _headline_overlay: vd.headline_overlay || '',
-            _cta_overlay: vd.cta_overlay || '',
-            _media_suggestion: `🎬 Roteiro gerado pela IA (${MAX_VIDEO_DURATION}s): ${vd.headline_overlay || ''}. Use o AI Creative Studio para produzir o vídeo.`,
-          };
-          addProgress('✅ Roteiro de vídeo gerado com sucesso!');
-        } else {
-          const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
-          videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
-          addProgress('⚠️ Não foi possível gerar roteiro — usando sugestão...');
-        }
-      } catch {
-        const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || 'Grave um vídeo de apresentação.';
-        videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
-        addProgress('⚠️ Erro na geração de roteiro — usando sugestão...');
-      }
-    } else {
-      addProgress('🎬 Reservando espaço para vídeo...');
-      const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Grave um vídeo de apresentação do seu negócio.';
+    if (!generatedVideoUrl) {
+      const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || videoProd?.conceito || 'Grave um vídeo de apresentação.';
       videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
     }
+    sections.push({ id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo', visible: true, styles: {}, content: videoContent });
 
-    // ── 7b. Actually generate the video using AI ──
-    const videoStoryboard = videoContent._storyboard || [];
-    const videoPromptBase = videoContent._video_prompt || '';
-    const estabIdForVideo = localStorage.getItem('estabelecimentoId');
-    if (estabIdForVideo && (videoStoryboard.length > 0 || videoPromptBase)) {
-      addProgress('🎬 Gerando vídeo com IA... (pode levar até 2 minutos)');
-      try {
-        // Build a cinematic prompt from the storyboard
-        let videoGenPrompt = '';
-        if (videoStoryboard.length > 0) {
-          const sceneDescriptions = videoStoryboard.map((s: any, i: number) => {
-            const parts = [];
-            if (s.descricao_visual) parts.push(s.descricao_visual);
-            if (s.naracao) parts.push(`Narração: "${s.naracao}"`);
-            if (s.movimento_camera) parts.push(`Câmera: ${s.movimento_camera}`);
-            if (s.enquadramento) parts.push(`Enquadramento: ${s.enquadramento}`);
-            return `Cena ${i + 1} (${s.duracao || '2s'}): ${parts.join('. ')}`;
-          }).join(' → ');
-          videoGenPrompt = `Create a cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for the product "${selectedProd?.nome || ''}". Storyboard: ${sceneDescriptions}. Style: professional, clean, modern advertising. No text overlays.`;
-        } else if (videoPromptBase) {
-          videoGenPrompt = `Create a short cinematic promotional video (max ${MAX_VIDEO_DURATION} seconds) for "${selectedProd?.nome || ''}". Theme: ${videoPromptBase}. Style: professional advertising, clean visuals. No text overlays.`;
-        }
-
-        // Use auto mode to let backend pick the best available provider
-        const videoModel = 'auto';
-        
-        const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            action: 'generate_video',
-            params: {
-              model: videoModel,
-              prompt: videoGenPrompt,
-              estabelecimentoId: estabIdForVideo,
-              duration: MAX_VIDEO_DURATION,
-              aspectRatio: '16:9',
-              imageUrls: mainImageUrl ? [mainImageUrl] : [],
-              withAudio: false,
-              withMusic: false,
-            },
-          }),
-        });
-
-        if (videoGenResponse.ok) {
-          const videoGenResult = await videoGenResponse.json();
-          if (videoGenResult?.result?.videoUrl) {
-            videoContent.url = videoGenResult.result.videoUrl;
-            videoContent.autoplay = true;
-            addProgress('✅ Vídeo gerado com sucesso!');
-          } else if (videoGenResult?.result?.error) {
-            const errMsg = videoGenResult.result.error.substring(0, 200);
-            generationError = errMsg;
-            addProgress(`❌ Erro na geração do vídeo: ${errMsg}`);
-            setVideoError(errMsg);
-          } else {
-            const msg = 'O provedor de vídeo não retornou resultado. Verifique sua configuração de API.';
-            generationError = msg;
-            addProgress(`❌ ${msg}`);
-            setVideoError(msg);
-          }
-        } else {
-          const errText = await videoGenResponse.text().catch(() => '');
-          console.warn('[AutoGen] Video generation failed:', videoGenResponse.status, errText);
-          try {
-            const errJson = JSON.parse(errText);
-            const errMsg = errJson?.error || '';
-            const msg = errMsg.includes('Nenhum provedor')
-              ? 'Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.'
-              : (errMsg || `Erro HTTP ${videoGenResponse.status}`);
-            generationError = msg;
-            addProgress(`❌ Erro na geração de vídeo: ${msg}`);
-            setVideoError(msg);
-          } catch {
-            const msg = `Erro HTTP ${videoGenResponse.status} na geração de vídeo.`;
-            generationError = msg;
-            addProgress(`❌ ${msg}`);
-            setVideoError(msg);
-          }
-        }
-      } catch (videoErr: any) {
-        console.warn('[AutoGen] Video generation error:', videoErr);
-        const msg = videoErr?.message || 'Timeout ou erro na geração de vídeo.';
-        generationError = msg;
-        addProgress(`❌ ${msg}`);
-        setVideoError(msg);
-      }
-    }
-
-    sections.push({
-      id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
-      content: videoContent
-    });
-
-    // ── 8. Testimonials ──
-    addProgress('💬 Montando depoimentos...');
+    // 8. Testimonials
+    addProgress('💬 Depoimentos...');
     let testimonialItems: any[] = [];
-    if (aiCopy?.testimonials && Array.isArray(aiCopy.testimonials)) {
-      testimonialItems = aiCopy.testimonials;
-    }
+    if (aiCopy?.testimonials && Array.isArray(aiCopy.testimonials)) testimonialItems = aiCopy.testimonials;
     if (testimonialItems.length === 0) {
-      const rawTest = [
-        ...extractArray(lp, 'testimonials', 'depoimentos', 'provas_sociais'),
-        ...extractArray(vox, 'depoimentos', 'testimonials', 'provas_sociais', 'cases_sucesso'),
-        ...extractArray(pos, 'depoimentos', 'cases', 'testimonials'),
-        ...extractArray(funnel, 'depoimentos', 'cases', 'resultados'),
-      ];
-      if (rawTest.length > 0) {
-        testimonialItems = rawTest.slice(0, 6).map((t: any) => ({
-          name: t.name || t.nome || t.cliente || 'Cliente',
-          role: t.role || t.cargo || t.empresa || '',
-          text: t.text || t.texto || t.depoimento || t.citacao || t.quote || '',
-          metrics: t.metrics || t.resultado || '',
-        }));
-      }
+      const rawTest = [...extractArray(lp, 'testimonials', 'depoimentos'), ...extractArray(vox, 'depoimentos', 'testimonials'), ...extractArray(pos, 'depoimentos', 'cases')];
+      if (rawTest.length > 0) testimonialItems = rawTest.slice(0, 6).map((t: any) => ({ name: t.name || t.nome || 'Cliente', role: t.role || t.cargo || '', text: t.text || t.texto || t.depoimento || '', metrics: t.metrics || '' }));
     }
-    if (testimonialItems.length === 0) {
-      testimonialItems = [
-        { name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui com números e resultados concretos.', metrics: '' },
-        { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento. Inclua métricas de resultado para credibilidade.', metrics: '' },
-        { name: 'Terceiro Cliente', role: 'Empresa', text: 'Um terceiro depoimento. Quanto mais específico, melhor.', metrics: '' },
-      ];
-    }
-    sections.push({
-      id: `auto-test-${Date.now()}`, type: 'testimonials', title: aiCopy?.testimonials_title || 'O Que Nossos Clientes Dizem', visible: true, styles: {},
-      content: { items: testimonialItems }
-    });
+    if (testimonialItems.length === 0) testimonialItems = [{ name: 'Cliente Satisfeito', role: 'Empresa', text: 'Insira um depoimento real aqui.' }, { name: 'Outro Cliente', role: 'Empresa', text: 'Mais um depoimento.' }];
+    sections.push({ id: `auto-test-${Date.now()}`, type: 'testimonials', title: '💬 Depoimentos', visible: true, styles: {}, content: { items: testimonialItems } });
 
-    // ── 9. Objections ──
-    addProgress('🚫 Extraindo objeções e respostas...');
+    // 9. Objections
+    addProgress('🚫 Objeções...');
     let objectionItems: any[] = [];
-    if (aiCopy?.objections && Array.isArray(aiCopy.objections)) {
-      objectionItems = aiCopy.objections;
-    }
+    if (aiCopy?.objections && Array.isArray(aiCopy.objections)) objectionItems = aiCopy.objections;
     if (objectionItems.length === 0) {
-      const rawObj = [
-        ...extractArray(vox, 'objecoes', 'objections', 'barreiras', 'medos', 'duvidas'),
-        ...extractArray(pos, 'objecoes', 'barreiras', 'resistencias'),
-        ...extractArray(lp, 'objecoes', 'objections', 'quebra_objecoes'),
-        ...extractArray(cipherData, 'objecoes', 'fraquezas_concorrentes'),
-      ];
-      if (rawObj.length > 0) {
-        objectionItems = rawObj.slice(0, 5).map((o: any) => ({
-          objection: typeof o === 'string' ? o : (o.objecao || o.objection || o.barreira || o.duvida || ''),
-          response: typeof o === 'string' ? 'Responda aqui.' : (o.resposta || o.response || o.solucao || o.contra_argumento || ''),
-        }));
-      }
+      const rawObj = [...extractArray(vox, 'objecoes', 'objections', 'barreiras'), ...extractArray(pos, 'objecoes', 'barreiras'), ...extractArray(lp, 'objecoes', 'objections')];
+      if (rawObj.length > 0) objectionItems = rawObj.slice(0, 5).map((o: any) => ({ objection: typeof o === 'string' ? o : (o.objecao || o.objection || ''), response: typeof o === 'string' ? 'Responda aqui.' : (o.resposta || o.response || '') }));
     }
-    if (objectionItems.length > 0) {
-      sections.push({
-        id: `auto-obj-${Date.now()}`, type: 'objections', title: aiCopy?.objections_title || '🚫 Ainda Tem Dúvidas?', visible: true, styles: {},
-        content: { title: aiCopy?.objections_title || 'Ainda tem dúvidas?', items: objectionItems }
-      });
-    }
+    if (objectionItems.length > 0) sections.push({ id: `auto-obj-${Date.now()}`, type: 'objections', title: '🚫 Objeções', visible: true, styles: {}, content: { title: 'Ainda tem dúvidas?', items: objectionItems } });
 
-    // ── 10. Guarantee ──
-    addProgress('🛡️ Montando seção de garantia...');
-    let guaranteeData = {
-      title: aiCopy?.guarantee_title || 'Garantia Total',
-      description: aiCopy?.guarantee_description || '',
-      icon: '🛡️',
-      duration: aiCopy?.guarantee_duration || '',
-    };
+    // 10. Guarantee
+    addProgress('🛡️ Garantia...');
+    let guaranteeData = { title: aiCopy?.guarantee_title || 'Garantia Total', description: aiCopy?.guarantee_description || '', icon: '🛡️', duration: aiCopy?.guarantee_duration || '' };
     if (!guaranteeData.description) {
-      const rawGuarantee = pos?.garantia || lp?.garantia || lp?.guarantee || funnel?.garantia;
-      if (rawGuarantee) {
-        if (typeof rawGuarantee === 'string') {
-          guaranteeData.description = rawGuarantee;
-        } else {
-          guaranteeData.title = rawGuarantee.titulo || rawGuarantee.title || guaranteeData.title;
-          guaranteeData.description = rawGuarantee.descricao || rawGuarantee.description || rawGuarantee.texto || '';
-          guaranteeData.duration = rawGuarantee.duracao || rawGuarantee.prazo || '';
-        }
-      }
+      const rawG = pos?.garantia || lp?.garantia || funnel?.garantia;
+      if (rawG && typeof rawG === 'object') { guaranteeData.title = rawG.titulo || guaranteeData.title; guaranteeData.description = rawG.descricao || rawG.description || ''; guaranteeData.duration = rawG.duracao || rawG.prazo || ''; }
+      else if (typeof rawG === 'string') guaranteeData.description = rawG;
     }
-    if (!guaranteeData.description) {
-      guaranteeData.description = 'Se você não ficar 100% satisfeito, devolvemos seu dinheiro. Sem burocracia, sem perguntas.';
-      guaranteeData.duration = '30 dias';
-    }
-    sections.push({
-      id: `auto-guarantee-${Date.now()}`, type: 'guarantee', title: '🛡️ Garantia', visible: true, styles: {},
-      content: guaranteeData
-    });
+    if (!guaranteeData.description) { guaranteeData.description = 'Se não ficar satisfeito, devolvemos seu dinheiro.'; guaranteeData.duration = '30 dias'; }
+    sections.push({ id: `auto-guarantee-${Date.now()}`, type: 'guarantee', title: '🛡️ Garantia', visible: true, styles: {}, content: guaranteeData });
 
-    // ── 11. Pricing ──
-    addProgress('💰 Montando preços...');
+    // 11. Pricing
+    addProgress('💰 Preços...');
     let pricingItems: any[] = [];
-    if (aiCopy?.pricing && Array.isArray(aiCopy.pricing)) {
-      pricingItems = aiCopy.pricing;
-    }
+    if (aiCopy?.pricing && Array.isArray(aiCopy.pricing)) pricingItems = aiCopy.pricing;
     if (pricingItems.length === 0) {
-      const rawPricing = [
-        ...extractArray(lp, 'planos', 'pricing', 'precos', 'tabela_precos'),
-        ...extractArray(funnel, 'planos', 'ofertas', 'precos'),
-        ...extractArray(pos, 'planos', 'precos', 'ofertas'),
-      ];
-      if (rawPricing.length > 0) {
-        pricingItems = rawPricing.slice(0, 3).map((p: any, i: number) => ({
-          name: p.name || p.nome || p.plano || `Plano ${i + 1}`,
-          price: p.price || p.preco || p.valor || 'Consulte',
-          features: Array.isArray(p.features || p.recursos || p.beneficios) ? (p.features || p.recursos || p.beneficios) : [],
-          highlighted: i === 1,
-        }));
-      }
+      const rawP = [...extractArray(lp, 'planos', 'pricing', 'precos'), ...extractArray(funnel, 'planos', 'ofertas')];
+      if (rawP.length > 0) pricingItems = rawP.slice(0, 3).map((p: any, i: number) => ({ name: p.name || p.nome || `Plano ${i + 1}`, price: p.price || p.preco || 'Consulte', features: Array.isArray(p.features || p.recursos) ? (p.features || p.recursos) : [], highlighted: i === 1 }));
     }
-    if (pricingItems.length > 0) {
-      sections.push({
-        id: `auto-pricing-${Date.now()}`, type: 'pricing', title: aiCopy?.pricing_title || '💰 Planos e Preços', visible: true, styles: {},
-        content: { title: aiCopy?.pricing_title || 'Escolha seu Plano', items: pricingItems }
-      });
-    }
+    if (pricingItems.length > 0) sections.push({ id: `auto-pricing-${Date.now()}`, type: 'pricing', title: '💰 Preços', visible: true, styles: {}, content: { title: 'Escolha seu Plano', items: pricingItems } });
 
-    // ── 12. Gallery ──
-    addProgress('🖼️ Reservando galeria...');
-    sections.push({
-      id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {},
-      content: { images: [], _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais do produto, serviço ou bastidores.' }
-    });
+    // 12. Gallery
+    sections.push({ id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria', visible: true, styles: {}, content: { images: [], _media_suggestion: '🖼️ Adicione fotos profissionais.' } });
 
-    // ── 13. FAQ ──
-    addProgress('❓ Montando FAQ...');
+    // 13. FAQ
+    addProgress('❓ FAQ...');
     let faqItems: any[] = [];
-    if (aiCopy?.faq && Array.isArray(aiCopy.faq)) {
-      faqItems = aiCopy.faq;
-    }
+    if (aiCopy?.faq && Array.isArray(aiCopy.faq)) faqItems = aiCopy.faq;
     if (faqItems.length === 0) {
-      const rawFaq = [
-        ...extractArray(lp, 'faq', 'perguntas_frequentes'),
-        ...extractArray(seoData, 'faq', 'perguntas', 'perguntas_frequentes'),
-        ...extractArray(vox, 'duvidas_frequentes', 'faq', 'perguntas'),
-      ];
-      if (rawFaq.length > 0) {
-        faqItems = rawFaq.slice(0, 7).map((q: any) => ({
-          question: q.question || q.pergunta || '',
-          answer: q.answer || q.resposta || '',
-        }));
-      }
+      const rawFaq = [...extractArray(lp, 'faq', 'perguntas_frequentes'), ...extractArray(seoData, 'faq', 'perguntas'), ...extractArray(vox, 'duvidas_frequentes', 'faq')];
+      if (rawFaq.length > 0) faqItems = rawFaq.slice(0, 7).map((q: any) => ({ question: q.question || q.pergunta || '', answer: q.answer || q.resposta || '' }));
     }
-    if (faqItems.length === 0) {
-      faqItems = [
-        { question: 'Como funciona?', answer: 'Descreva como funciona.' },
-        { question: 'Quais os diferenciais?', answer: 'Liste seus diferenciais.' },
-        { question: 'Como entro em contato?', answer: 'Informe seus canais.' },
-      ];
-    }
-    sections.push({
-      id: `auto-faq-${Date.now()}`, type: 'faq', title: 'FAQ', visible: true, styles: {},
-      content: { items: faqItems }
-    });
+    if (faqItems.length === 0) faqItems = [{ question: 'Como funciona?', answer: 'Descreva.' }, { question: 'Quais os diferenciais?', answer: 'Liste.' }];
+    sections.push({ id: `auto-faq-${Date.now()}`, type: 'faq', title: 'FAQ', visible: true, styles: {}, content: { items: faqItems } });
 
-    // ── 14. CTA Final ──
-    addProgress('🎯 Criando CTA final persuasivo...');
-    const ctaFinalHeadline = aiCopy?.cta_final_headline
-      || lp?.cta_headline || funnel?.cta_final || emailData?.assunto_principal
-      || 'Pronto para Transformar Seus Resultados?';
-    const ctaFinalDesc = aiCopy?.cta_final_description
-      || lp?.cta_description || pos?.urgencia || pos?.chamada_acao
-      || 'Não perca mais tempo. Entre em contato agora e descubra como podemos ajudar.';
-    const ctaFinalButton = aiCopy?.cta_final_button || heroCta;
-
-    const ctaHAlts = collectAlternatives([
-      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['cta_final_headline'] },
-      { agent: 'Landing Page', icon: '🏗️', data: lp, keys: ['cta_headline', 'cta_final_headline'] },
-      { agent: 'Funil', icon: '📊', data: funnel, keys: ['cta_final', 'headline_conversao'] },
-    ]);
-    const ctaDAlts = collectAlternatives([
-      { agent: 'IA Marketing', icon: '🤖', data: aiCopy, keys: ['cta_final_description'] },
-      { agent: 'Posicionamento', icon: '🎯', data: pos, keys: ['chamada_acao', 'urgencia', 'promessa_final'] },
-      { agent: 'Email', icon: '📧', data: emailData, keys: ['cta_description', 'preview_text'] },
-    ]);
-
+    // 14. CTA Final
+    addProgress('🎯 CTA final...');
+    const ctaFinalHeadline = aiCopy?.cta_final_headline || lp?.cta_headline || 'Pronto para Transformar Seus Resultados?';
+    const ctaFinalDesc = aiCopy?.cta_final_description || pos?.urgencia || 'Não perca mais tempo.';
     sections.push({
       id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
-      content: {
-        headline: ctaFinalHeadline,
-        description: ctaFinalDesc,
-        button_text: ctaFinalButton,
-        button_type: gCfg?.whatsappGlobal ? 'whatsapp' : 'url',
-        button_url: gCfg?.siteGlobal || '#contato',
-        whatsapp_number: gCfg?.whatsappGlobal || '',
-        _alt_headline: ctaHAlts,
-        _alt_description: ctaDAlts,
-        _alt_button_text: ctaAlts,
-      }
+      content: { headline: ctaFinalHeadline, description: ctaFinalDesc, button_text: heroCta, button_type: gCfg?.whatsappGlobal ? 'whatsapp' : 'url', button_url: gCfg?.siteGlobal || '#contato', whatsapp_number: gCfg?.whatsappGlobal || '' }
     });
 
-    // ── 15. Footer ──
-    const businessName = gCfg?.empresaNome || '';
-    sections.push({
-      id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
-      content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
-    });
+    // 15. Footer
+    sections.push({ id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {}, content: { company: gCfg?.empresaNome || '', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` } });
 
-    // ── Config & Save ──
-    addProgress('🔍 Aplicando estilo do template e SEO...');
+    // Save
+    addProgress('💾 Salvando página...');
     const fullTpl = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
     const tplConfig: Record<string, string> = (fullTpl?.config || {}) as Record<string, string>;
-    const primaryColor = tplConfig.primaryColor || creative?.cor_primaria || creative?.cores?.primaria || '#0f172a';
-    const accentColor = tplConfig.accentColor || creative?.cor_destaque || creative?.cores?.destaque || '#3b82f6';
-    const bgColor = tplConfig.backgroundColor || '#ffffff';
-    const txtColor = tplConfig.textColor || '#1f2937';
-    const fontDisplay = tplConfig.fontDisplay || 'Inter';
-    const maxWidth = tplConfig.maxWidth || '1200px';
-
-    // AI-generated page name or smart fallback
     const pageName = aiCopy?.page_name || `${project.nome} — Página de Vendas`;
-    const uniqueSuffix = Date.now().toString(36);
-    const slug = generateSlug(`${pageName} ${uniqueSuffix}`);
+    const slug = generateSlug(`${pageName} ${Date.now().toString(36)}`);
     const estabId = localStorage.getItem('estabelecimentoId');
-
-    const seoTitle = aiCopy?.seo_title || seoData?.titulo_pagina || seoData?.title || pageName;
-    const seoDesc = aiCopy?.seo_description || seoData?.meta_description || seoData?.descricao || project.descricao_negocio || '';
 
     const { data: saved, error } = await supabase.from('published_pages').insert({
       nome: pageName, slug,
       sections: sections as any,
       config: {
-        title: seoTitle,
-        description: seoDesc,
-        favicon: '', primaryColor, secondaryColor: '#1e293b',
-        accentColor, backgroundColor: bgColor, textColor: txtColor,
-        fontDisplay, fontBody: fontDisplay, maxWidth,
-        ...(gCfg ? {
-          empresaNome: gCfg.empresaNome || '',
-          empresaEndereco: gCfg.empresaEndereco || '',
-          empresaTelefone: gCfg.empresaTelefone || '',
-          whatsappGlobal: gCfg.whatsappGlobal || '',
-          siteGlobal: gCfg.siteGlobal || '',
-        } : {}),
+        title: aiCopy?.seo_title || seoData?.titulo_pagina || pageName,
+        description: aiCopy?.seo_description || seoData?.meta_description || project.descricao_negocio || '',
+        favicon: '', primaryColor: tplConfig.primaryColor || '#0f172a', secondaryColor: '#1e293b',
+        accentColor: tplConfig.accentColor || '#3b82f6', backgroundColor: tplConfig.backgroundColor || '#ffffff',
+        textColor: tplConfig.textColor || '#1f2937', fontDisplay: tplConfig.fontDisplay || 'Inter',
+        fontBody: tplConfig.fontDisplay || 'Inter', maxWidth: tplConfig.maxWidth || '1200px',
+        ...(gCfg ? { empresaNome: gCfg.empresaNome || '', empresaEndereco: gCfg.empresaEndereco || '', empresaTelefone: gCfg.empresaTelefone || '', whatsappGlobal: gCfg.whatsappGlobal || '', siteGlobal: gCfg.siteGlobal || '' } : {}),
         _autoGenerated: true,
       } as any,
       estabelecimento_id: estabId,
@@ -2205,41 +1905,37 @@ const AutoGeneratePage: React.FC<{
     }).select().single();
 
     if (error) {
-      const msg = 'Erro ao salvar: ' + error.message;
-      generationError = generationError || msg;
-      addProgress(`❌ ${msg}`);
-      toast.error(msg);
-      setStep('done');
+      addProgress(`❌ Erro ao salvar: ${error.message}`);
+      toast.error('Erro ao salvar: ' + error.message);
     } else {
       const savedPage = saved as unknown as SavedPage;
       setSavedPageRef(savedPage);
-      addProgress('✅ Página de vendas gerada com sucesso!');
-      setStep('done');
+      addProgress('✅ Página gerada com sucesso!');
       toast.success('Página de vendas completa gerada! 🎉');
-      if (!generationError) {
-        setTimeout(() => {
-          onGenerated(savedPage);
-          onOpenChange(false);
-        }, 1500);
-      }
+      setTimeout(() => {
+        onGenerated(savedPage);
+        onOpenChange(false);
+      }, 1500);
     }
+    setStep('done');
     setGenerating(false);
   };
 
   const selectedProj = projects.find(p => p.id === selectedProject);
   const agentCount = selectedProj ? Object.keys((selectedProj.strategic_memory as Record<string, any>) || {}).length : 0;
+  const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+
+  const totalSteps = selectedProduct ? 5 : 3;
+  const currentStepNum = step === 'select' ? 1 : step === 'template' ? 2 : step === 'product' ? 3 : step === 'image_text' ? 4 : step === 'video_script' ? 5 : 0;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v && !generating) onOpenChange(false); }}>
-      <DialogContent className={cn("bg-background", step === 'template' ? 'sm:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col' : 'sm:max-w-2xl')} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { if (generating) e.preventDefault(); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !generating && !imageLoading && !videoLoading) onOpenChange(false); }}>
+      <DialogContent className={cn("bg-background", (step === 'template' || step === 'image_text' || step === 'video_script') ? 'sm:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col' : 'sm:max-w-2xl')} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { if (generating || imageLoading || videoLoading) e.preventDefault(); }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
-            {step === 'template' && (
-              <Badge variant="outline" className="ml-auto text-[10px]">Passo 2 de 3</Badge>
-            )}
-            {step === 'product' && (
-              <Badge variant="outline" className="ml-auto text-[10px]">Passo 3 de 3</Badge>
+            {currentStepNum > 0 && (
+              <Badge variant="outline" className="ml-auto text-[10px]">Passo {currentStepNum} de {totalSteps}</Badge>
             )}
           </DialogTitle>
         </DialogHeader>
@@ -2252,12 +1948,11 @@ const AutoGeneratePage: React.FC<{
             <p className="text-sm text-muted-foreground">Nenhum projeto de estratégia encontrado.</p>
             <p className="text-xs text-muted-foreground mt-1">Crie um projeto no Motor de Estratégia primeiro.</p>
           </div>
-        ) : step === 'select' ? (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              <strong>Passo 1:</strong> Selecione o projeto do Motor de Estratégia que será usado como base.
-            </p>
 
+        ) : step === 'select' ? (
+          /* ── STEP 1: Select Project ── */
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground"><strong>Passo 1:</strong> Selecione o projeto base.</p>
             <div className="space-y-2">
               <Label className="text-xs font-semibold">Projeto</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -2276,7 +1971,6 @@ const AutoGeneratePage: React.FC<{
                 </SelectContent>
               </Select>
             </div>
-
             {selectedProj && (
               <Card className="p-3 space-y-2 bg-muted/30">
                 <p className="text-xs font-semibold">{selectedProj.nome}</p>
@@ -2285,77 +1979,47 @@ const AutoGeneratePage: React.FC<{
                   <div className="flex flex-wrap gap-1">
                     {Object.keys((selectedProj.strategic_memory as Record<string, any>) || {}).map(key => {
                       const info = (AGENT_INFO_MAP as any)[key];
-                      return (
-                        <Badge key={key} variant="secondary" className="text-[10px] gap-0.5">
-                          {info?.icon || '🔹'} {info?.name || key}
-                        </Badge>
-                      );
+                      return <Badge key={key} variant="secondary" className="text-[10px] gap-0.5">{info?.icon || '🔹'} {info?.name || key}</Badge>;
                     })}
                   </div>
                 )}
               </Card>
             )}
-
-            <Button 
-              onClick={() => {
-                setStep('template');
-              }} 
-              disabled={!selectedProject} 
-              className="w-full gap-2"
-            >
-              Próximo: Escolher Estilo <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+            <Button onClick={() => setStep('template')} disabled={!selectedProject} className="w-full gap-2">
+              Próximo: Escolher Template <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
             </Button>
           </div>
+
         ) : step === 'template' ? (
+          /* ── STEP 2: Select Template ── */
           <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                <strong>Passo 2:</strong> Escolha o template completo (layout + estilo visual).
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs gap-1">
-                ← Voltar
-              </Button>
+              <p className="text-sm text-muted-foreground"><strong>Passo 2:</strong> Escolha o template.</p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs gap-1">← Voltar</Button>
             </div>
-
-            {/* Category Dropdown */}
             <div className="space-y-2">
               <Label className="text-xs font-medium">Categoria</Label>
               <Select value={selectedCategory} onValueChange={(val) => {
                 setSelectedCategory(val);
                 const cat = FULL_TEMPLATE_CATEGORIES.find(c => c.id === val);
-                if (cat && cat.templates.length > 0) {
-                  const currentInCat = cat.templates.find(t => t.id === selectedTemplate);
-                  if (!currentInCat) setSelectedTemplate(cat.templates[0].id);
-                }
+                if (cat && cat.templates.length > 0 && !cat.templates.find(t => t.id === selectedTemplate)) setSelectedTemplate(cat.templates[0].id);
               }}>
-                <SelectTrigger className="w-full text-xs">
-                  <SelectValue placeholder="Selecione a categoria" />
-                </SelectTrigger>
+                <SelectTrigger className="w-full text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {FULL_TEMPLATE_CATEGORIES.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id} className="text-xs">
-                      {cat.icon} {cat.name} ({cat.templates.length})
-                    </SelectItem>
-                  ))}
+                  {FULL_TEMPLATE_CATEGORIES.map(cat => <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.icon} {cat.name} ({cat.templates.length})</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Template Dropdown */}
             <div className="space-y-2">
               <Label className="text-xs font-medium">Template</Label>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                <SelectTrigger className="w-full text-xs">
-                  <SelectValue placeholder="Selecione o template" />
-                </SelectTrigger>
+                <SelectTrigger className="w-full text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(FULL_TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.templates || []).map(ft => (
                     <SelectItem key={ft.id} value={ft.id} className="text-xs">
                       <div className="flex items-center gap-2">
                         <div className="flex gap-0.5">
-                          {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => (
-                            <div key={i} className="w-2.5 h-2.5 rounded-full border border-border" style={{ backgroundColor: c }} />
-                          ))}
+                          {[ft.config.primaryColor, ft.config.accentColor].filter(Boolean).map((c, i) => <div key={i} className="w-2.5 h-2.5 rounded-full border border-border" style={{ backgroundColor: c }} />)}
                         </div>
                         <span>{ft.name}</span>
                         <span className="text-muted-foreground">({ft.sections.length} seções)</span>
@@ -2365,104 +2029,52 @@ const AutoGeneratePage: React.FC<{
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Selected Template Visual Preview */}
             {(() => {
               const currentFt = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
               if (!currentFt) return null;
-              const previewHtml = generateFullHTML(
-                currentFt.sections as PageSection[],
-                { ...currentFt.config, title: currentFt.name, description: currentFt.description } as PageConfig
-              );
+              const previewHtml = generateFullHTML(currentFt.sections as PageSection[], { ...currentFt.config, title: currentFt.name, description: currentFt.description } as PageConfig);
               return (
                 <div className="rounded-xl border overflow-hidden">
                   <div className="relative w-full overflow-hidden bg-muted/20" style={{ height: 280 }}>
-                    <iframe
-                      srcDoc={previewHtml}
-                      className="border-0 pointer-events-none"
-                      style={{
-                        width: 1200,
-                        height: 900,
-                        transform: 'scale(0.38)',
-                        transformOrigin: 'top left',
-                      }}
-                      title="Template Preview"
-                      sandbox="allow-same-origin"
-                    />
+                    <iframe srcDoc={previewHtml} className="border-0 pointer-events-none" style={{ width: 1200, height: 900, transform: 'scale(0.38)', transformOrigin: 'top left' }} title="Template Preview" sandbox="allow-same-origin" />
                   </div>
                   <div className="flex items-center gap-3 p-2.5" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white drop-shadow-sm">{currentFt.name}</p>
                       <p className="text-[10px] text-white/70">{currentFt.description}</p>
                     </div>
-                    <div className="flex gap-1">
-                      {[currentFt.config.primaryColor, currentFt.config.accentColor].filter(Boolean).map((c, i) => (
-                        <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
-                      ))}
-                    </div>
                   </div>
                 </div>
               );
             })()}
-
-            <Button
-              onClick={async () => {
-                // Fetch products for selection
-                setLoadingProducts(true);
-                const estabId = localStorage.getItem('estabelecimentoId');
-                if (estabId) {
-                  const { data } = await supabase
-                    .from('produtos')
-                    .select('id, nome, codigo, foto_url, descricao, preco_tabela, marca')
-                    .eq('estabelecimento_id', estabId)
-                    .eq('ativo', true)
-                    .order('nome')
-                    .limit(100);
-                  setProducts(data || []);
-                }
-                setLoadingProducts(false);
-                setStep('product');
-              }}
-              disabled={generating}
-              className="w-full gap-2"
-            >
+            <Button onClick={async () => {
+              setLoadingProducts(true);
+              const estabId = localStorage.getItem('estabelecimentoId');
+              if (estabId) {
+                const { data } = await supabase.from('produtos').select('id, nome, codigo, foto_url, descricao, preco_tabela, marca').eq('estabelecimento_id', estabId).eq('ativo', true).order('nome').limit(100);
+                setProducts(data || []);
+              }
+              setLoadingProducts(false);
+              setStep('product');
+            }} className="w-full gap-2">
               <Package className="h-4 w-4" /> Próximo: Selecionar Produto
             </Button>
           </div>
+
         ) : step === 'product' ? (
+          /* ── STEP 3: Select Product ── */
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                <strong>Passo 3:</strong> Selecione o produto (opcional) para gerar imagem e vídeo com IA.
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => setStep('template')} className="text-xs gap-1">
-                ← Voltar
-              </Button>
+              <p className="text-sm text-muted-foreground"><strong>Passo 3:</strong> Selecione o produto (opcional).</p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('template')} className="text-xs gap-1">← Voltar</Button>
             </div>
-
-            {/* Search */}
-            <Input
-              placeholder="🔍 Buscar produto por nome ou código..."
-              value={productSearch}
-              onChange={e => setProductSearch(e.target.value)}
-              className="text-sm"
-            />
-
+            <Input placeholder="🔍 Buscar produto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} className="text-sm" />
             {loadingProducts ? (
               <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : (
               <ScrollArea className="h-[300px] pr-2">
                 <div className="space-y-2">
-                  {/* Option: No product */}
-                  <button
-                    onClick={() => setSelectedProduct('')}
-                    className={cn(
-                      'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                      !selectedProduct
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-border hover:border-primary/40'
-                    )}
-                  >
+                  <button onClick={() => setSelectedProduct('')} className={cn('w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left', !selectedProduct ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40')}>
                     <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">🚫</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">Sem produto específico</p>
@@ -2470,136 +2082,201 @@ const AutoGeneratePage: React.FC<{
                     </div>
                     {!selectedProduct && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
                   </button>
-
-                  {/* Products */}
-                  {products
-                    .filter(p => {
-                      if (!productSearch) return true;
-                      const search = productSearch.toLowerCase();
-                      return (p.nome || '').toLowerCase().includes(search) || (p.codigo || '').toLowerCase().includes(search);
-                    })
-                    .map(product => {
-                      const isSelected = selectedProduct === product.id;
-                      return (
-                        <button
-                          key={product.id}
-                          onClick={() => setSelectedProduct(product.id)}
-                          className={cn(
-                            'w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                            isSelected
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-border hover:border-primary/40'
-                          )}
-                        >
-                          {product.foto_url ? (
-                            <img src={product.foto_url} alt={product.nome} className="w-12 h-12 rounded-lg object-cover border" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">📦</div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{product.nome}</p>
-                            <div className="flex items-center gap-2">
-                              {product.codigo && <span className="text-[10px] text-muted-foreground">#{product.codigo}</span>}
-                              {product.marca && <Badge variant="outline" className="text-[9px] h-4">{product.marca}</Badge>}
-                              {product.preco_tabela && (
-                                <span className="text-[10px] font-semibold text-primary">
-                                  R$ {Number(product.preco_tabela).toFixed(2)}
-                                </span>
-                              )}
-                            </div>
+                  {products.filter(p => { if (!productSearch) return true; const s = productSearch.toLowerCase(); return (p.nome || '').toLowerCase().includes(s) || (p.codigo || '').toLowerCase().includes(s); }).map(product => {
+                    const isSelected = selectedProduct === product.id;
+                    return (
+                      <button key={product.id} onClick={() => setSelectedProduct(product.id)} className={cn('w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left', isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40')}>
+                        {product.foto_url ? <img src={product.foto_url} alt={product.nome} className="w-12 h-12 rounded-lg object-cover border" /> : <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-lg">📦</div>}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{product.nome}</p>
+                          <div className="flex items-center gap-2">
+                            {product.codigo && <span className="text-[10px] text-muted-foreground">#{product.codigo}</span>}
+                            {product.marca && <Badge variant="outline" className="text-[9px] h-4">{product.marca}</Badge>}
+                            {product.preco_tabela && <span className="text-[10px] font-semibold text-primary">R$ {Number(product.preco_tabela).toFixed(2)}</span>}
                           </div>
-                          {isSelected && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
-                        </button>
-                      );
-                    })}
-
-                  {products.length === 0 && !loadingProducts && (
-                    <div className="text-center py-6">
-                      <Package className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">Nenhum produto encontrado.</p>
-                    </div>
-                  )}
+                        </div>
+                        {isSelected && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             )}
-
-            {/* Selected product info */}
-            {selectedProduct && (() => {
-              const prod = products.find(p => p.id === selectedProduct);
-              if (!prod) return null;
-              return (
-                <Card className="p-3 flex items-center gap-3 bg-primary/5 border-primary/30">
-                  {prod.foto_url ? (
-                    <img src={prod.foto_url} alt={prod.nome} className="w-10 h-10 rounded-lg object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">📦</div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{prod.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">🖼️ Imagem + 🎬 Vídeo serão gerados com IA</p>
-                  </div>
-                  <ImagePlus className="h-4 w-4 text-primary" />
-                </Card>
-              );
-            })()}
-
-            <Button
-              onClick={generatePage}
-              disabled={generating}
-              className="w-full gap-2"
-            >
-              <Zap className="h-4 w-4" /> {selectedProduct ? 'Gerar Página com Produto e IA' : 'Gerar Página com Este Tema'}
+            <Button onClick={async () => {
+              if (selectedProduct) {
+                // Prepare agent data for image/video steps
+                setDataLoading(true);
+                await prepareAgentData();
+                setStep('image_text');
+              } else {
+                // No product → prepare data & finalize directly
+                await prepareAgentData();
+                finalizePage();
+              }
+            }} disabled={dataLoading} className="w-full gap-2">
+              {dataLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Carregando dados dos agentes...</> : selectedProduct ? <><ImagePlus className="h-4 w-4" /> Próximo: Criar Imagem</> : <><Zap className="h-4 w-4" /> Gerar Página (sem mídia)</>}
             </Button>
           </div>
+
+        ) : step === 'image_text' ? (
+          /* ── STEP 4: Choose Agent Text for Image ── */
+          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground"><strong>Passo 4:</strong> Escolha o texto base para gerar a imagem publicitária.</p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('product')} className="text-xs gap-1">← Voltar</Button>
+            </div>
+
+            {selectedProd && (
+              <Card className="p-3 flex items-center gap-3 bg-primary/5 border-primary/30">
+                {selectedProd.foto_url ? <img src={selectedProd.foto_url} alt={selectedProd.nome} className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">📦</div>}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate">{selectedProd.nome}</p>
+                  <p className="text-[10px] text-muted-foreground">Produto selecionado</p>
+                </div>
+              </Card>
+            )}
+
+            {imageTexts.length > 0 ? (
+              <ScrollArea className="flex-1 min-h-0 pr-2">
+                <div className="space-y-2">
+                  {imageTexts.map((item, idx) => (
+                    <button key={idx} onClick={() => { setSelectedImageTextIdx(idx); setCustomImagePrompt(''); }} className={cn('w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left', selectedImageTextIdx === idx && !customImagePrompt ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40')}>
+                      <span className="text-lg shrink-0 mt-0.5">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-muted-foreground mb-1">{item.agent}</p>
+                        <p className="text-xs leading-relaxed">{item.text.slice(0, 200)}{item.text.length > 200 ? '...' : ''}</p>
+                      </div>
+                      {selectedImageTextIdx === idx && !customImagePrompt && <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-1" />}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhum texto de agente disponível. Use o campo abaixo.</p>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-medium text-muted-foreground">Ou escreva um prompt personalizado:</Label>
+              <Textarea placeholder="Descreva a imagem que deseja gerar..." value={customImagePrompt} onChange={e => setCustomImagePrompt(e.target.value)} className="text-xs min-h-[60px]" />
+            </div>
+
+            {/* Image preview area */}
+            {generatedImageUrl && (
+              <div className="rounded-xl border overflow-hidden">
+                <img src={generatedImageUrl} alt="Imagem gerada" className="w-full max-h-[200px] object-cover" />
+                <div className="p-2 flex items-center justify-between bg-muted/30">
+                  <p className="text-[10px] text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Imagem gerada</p>
+                  <Button variant="ghost" size="sm" onClick={handleGenerateImage} disabled={imageLoading} className="text-[10px] h-6 gap-1">
+                    {imageLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />} Regenerar
+                  </Button>
+                </div>
+              </div>
+            )}
+            {imageError && (
+              <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2">
+                <p className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {imageError}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={handleGenerateImage} disabled={imageLoading} variant={generatedImageUrl ? 'outline' : 'default'} className="flex-1 gap-2">
+                {imageLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando imagem...</> : <><Wand2 className="h-4 w-4" /> {generatedImageUrl ? 'Regenerar Imagem' : 'Gerar Imagem'}</>}
+              </Button>
+              <Button onClick={() => setStep('video_script')} disabled={imageLoading} className="flex-1 gap-2">
+                {generatedImageUrl ? 'Próximo: Vídeo →' : 'Pular → Vídeo'} 
+              </Button>
+            </div>
+          </div>
+
+        ) : step === 'video_script' ? (
+          /* ── STEP 5: Choose Script for Video ── */
+          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground"><strong>Passo 5:</strong> Escolha o roteiro para gerar o vídeo.</p>
+              <Button variant="ghost" size="sm" onClick={() => setStep('image_text')} className="text-xs gap-1">← Voltar</Button>
+            </div>
+
+            {videoScripts.length > 0 ? (
+              <ScrollArea className="flex-1 min-h-0 pr-2">
+                <div className="space-y-2">
+                  {videoScripts.map((script, idx) => (
+                    <button key={idx} onClick={() => { setSelectedVideoIdx(idx); setCustomVideoPrompt(''); }} className={cn('w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left', selectedVideoIdx === idx && !customVideoPrompt ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40')}>
+                      <span className="text-lg shrink-0 mt-0.5">{script.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold">{script.agent}</p>
+                        <p className="text-[10px] text-muted-foreground">{script.label}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {script.storyboard.slice(0, 4).map((s: any, si: number) => (
+                            <Badge key={si} variant="outline" className="text-[9px]">{s.cena || s.titulo || `Cena ${si + 1}`}</Badge>
+                          ))}
+                          {script.storyboard.length > 4 && <Badge variant="outline" className="text-[9px]">+{script.storyboard.length - 4}</Badge>}
+                        </div>
+                      </div>
+                      {selectedVideoIdx === idx && !customVideoPrompt && <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-1" />}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhum roteiro de agente disponível. Use o campo abaixo ou pule.</p>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-medium text-muted-foreground">Ou escreva um prompt personalizado:</Label>
+              <Textarea placeholder="Descreva o vídeo que deseja gerar..." value={customVideoPrompt} onChange={e => setCustomVideoPrompt(e.target.value)} className="text-xs min-h-[60px]" />
+            </div>
+
+            {/* Video preview area */}
+            {generatedVideoUrl && (
+              <div className="rounded-xl border overflow-hidden">
+                <video src={generatedVideoUrl} controls className="w-full max-h-[200px]" />
+                <div className="p-2 flex items-center justify-between bg-muted/30">
+                  <p className="text-[10px] text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Vídeo gerado</p>
+                  <Button variant="ghost" size="sm" onClick={handleGenerateVideo} disabled={videoLoading} className="text-[10px] h-6 gap-1">
+                    {videoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />} Regenerar
+                  </Button>
+                </div>
+              </div>
+            )}
+            {videoError && (
+              <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2">
+                <p className="text-xs text-destructive flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {videoError}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button onClick={handleGenerateVideo} disabled={videoLoading} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
+                {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
+              </Button>
+              <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
+                <Zap className="h-4 w-4" /> Finalizar Página
+              </Button>
+            </div>
+          </div>
+
         ) : (
+          /* ── GENERATING / DONE ── */
           <div className="space-y-3 py-4">
             <div className="space-y-2">
               {progress.map((msg, i) => {
                 const isError = msg.startsWith('❌');
                 return (
-                <div key={i} className="flex items-center gap-2 text-sm animate-in fade-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}>
-                  {step === 'done' || i < progress.length - 1 ? (
-                    isError ? <AlertTriangle className="h-4 w-4 text-destructive shrink-0" /> : <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                  ) : (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
-                  )}
-                  <span className={cn(
-                    i === progress.length - 1 && step !== 'done' ? 'text-foreground font-medium' : 'text-muted-foreground',
-                    isError && 'text-destructive font-medium'
-                  )}>
-                    {msg}
-                  </span>
-                </div>
+                  <div key={i} className="flex items-center gap-2 text-sm animate-in fade-in slide-in-from-left-2" style={{ animationDelay: `${i * 50}ms` }}>
+                    {step === 'done' || i < progress.length - 1 ? (
+                      isError ? <AlertTriangle className="h-4 w-4 text-destructive shrink-0" /> : <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    ) : (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                    )}
+                    <span className={cn(i === progress.length - 1 && step !== 'done' ? 'text-foreground font-medium' : 'text-muted-foreground', isError && 'text-destructive font-medium')}>{msg}</span>
+                  </div>
                 );
               })}
             </div>
             {step === 'done' && (
-              <div className="space-y-3 pt-4">
-                {videoError ? (
-                  <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-3 space-y-2">
-                    <p className="text-sm font-medium text-destructive flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" /> Erro na geração do vídeo
-                    </p>
-                    <p className="text-xs text-muted-foreground">{videoError}</p>
-                    <p className="text-xs text-muted-foreground">A página foi criada sem vídeo. Você pode adicionar um vídeo manualmente no editor.</p>
-                  </div>
-                ) : null}
-                <div className="text-center">
-                  <Badge variant="default" className="text-sm px-4 py-1.5 gap-1.5">
-                    <Sparkles className="h-4 w-4" /> Página pronta para edição!
-                  </Badge>
-                </div>
-                {videoError && (
-                  <Button
-                    className="w-full gap-2"
-                    onClick={() => {
-                      if (savedPageRef) onGenerated(savedPageRef);
-                      onOpenChange(false);
-                    }}
-                  >
-                    Continuar para o Editor →
-                  </Button>
-                )}
+              <div className="text-center pt-4">
+                <Badge variant="default" className="text-sm px-4 py-1.5 gap-1.5">
+                  <Sparkles className="h-4 w-4" /> Página pronta para edição!
+                </Badge>
               </div>
             )}
           </div>
@@ -2608,7 +2285,6 @@ const AutoGeneratePage: React.FC<{
     </Dialog>
   );
 };
-
 // AGENT_INFO reference for the auto-generator
 const AGENT_INFO_MAP: Record<string, { name: string; icon: string }> = {
   vox: { name: 'Voz do Cliente', icon: '🎙️' },
