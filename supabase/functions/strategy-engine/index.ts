@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const COLLABORATION_DIRECTIVE_SENTENCE = 'Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
+
 // ─── AGENT DEPENDENCY GRAPH ────────────────────────────────────────────────────
 const AGENT_DEPENDENCIES: Record<string, string[]> = {
   vox: [],
@@ -812,6 +814,52 @@ INSTRUÇÃO FINAL: Execute sua análise agora.
   return prompt;
 }
 
+function ensureCollaborationDirective(prompt: string): string {
+  const normalizedPrompt = (prompt || '').trim();
+  if (!normalizedPrompt) return COLLABORATION_DIRECTIVE_SENTENCE;
+  if (normalizedPrompt.includes(COLLABORATION_DIRECTIVE_SENTENCE)) return normalizedPrompt;
+  return `${normalizedPrompt}\n\n${COLLABORATION_DIRECTIVE_SENTENCE}`;
+}
+
+async function resolveAgentDefinition(supabase: any, agentType: string) {
+  const builtInAgent = AGENT_DEFINITIONS[agentType];
+  if (builtInAgent) {
+    return {
+      agent: {
+        ...builtInAgent,
+        systemPrompt: ensureCollaborationDirective(builtInAgent.systemPrompt),
+      },
+      customDeps: [] as string[],
+      kbType: 'internal',
+      kbFiles: [] as any[],
+      isCustom: false,
+    };
+  }
+
+  const { data: customAgent } = await supabase
+    .from('strategy_custom_agents')
+    .select('*')
+    .eq('agent_key', agentType)
+    .eq('ativo', true)
+    .maybeSingle();
+
+  if (!customAgent) {
+    throw new Error(`Agente desconhecido: ${agentType}`);
+  }
+
+  return {
+    agent: {
+      name: (customAgent as any).name,
+      type: agentType,
+      systemPrompt: ensureCollaborationDirective((customAgent as any).system_prompt || ''),
+    },
+    customDeps: (customAgent as any).dependencies || [],
+    kbType: (customAgent as any).knowledge_base_type || 'internal',
+    kbFiles: (customAgent as any).knowledge_base_files || [],
+    isCustom: true,
+  };
+}
+
 /**
  * Fetch the latest strategic memory from the database (not a stale local copy).
  */
@@ -890,30 +938,13 @@ Deno.serve(async (req) => {
     // ACTION: Execute single agent
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'execute_agent') {
-      let agent = AGENT_DEFINITIONS[agentType];
-      let customDeps: string[] = [];
-      let kbType = 'internal';
-      let kbFiles: any[] = [];
+      const resolved = await resolveAgentDefinition(supabase, agentType);
+      let agent = resolved.agent;
+      let customDeps: string[] = resolved.customDeps;
+      let kbType = resolved.kbType;
+      let kbFiles: any[] = resolved.kbFiles;
       
-      // If not a built-in agent, try loading from custom agents table
-      if (!agent) {
-        const { data: customAgent } = await supabase
-          .from('strategy_custom_agents')
-          .select('*')
-          .eq('agent_key', agentType)
-          .eq('ativo', true)
-          .single();
-        
-        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
-        agent = {
-          name: (customAgent as any).name,
-          type: agentType,
-          systemPrompt: (customAgent as any).system_prompt,
-        };
-        customDeps = (customAgent as any).dependencies || [];
-        kbType = (customAgent as any).knowledge_base_type || 'internal';
-        kbFiles = (customAgent as any).knowledge_base_files || [];
-      } else {
+      if (!resolved.isCustom) {
         // Check built-in agent config for KB settings
         const { data: agentConfig } = await supabase
           .from('strategy_agent_configs')
@@ -978,20 +1009,7 @@ ${kbContent}
       }
 
       // Always inject collaboration directive
-      finalSystemPrompt += `
-
-═══════════════════════════════════════════════════════════════
-DIRETIVA DE COLABORAÇÃO OBRIGATÓRIA
-═══════════════════════════════════════════════════════════════
-ANTES de executar qualquer tarefa, você DEVE:
-1. Ler COMPLETAMENTE a memória estratégica compartilhada do projeto
-2. Utilizar os dados gerados por agentes anteriores como base para suas decisões
-3. Garantir coesão estratégica com os artefatos já produzidos
-4. Referenciar explicitamente insights de outros agentes quando relevante
-5. Nunca contradizer posicionamento, ICP ou mecanismo já definidos sem justificativa
-
-Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.
-═══════════════════════════════════════════════════════════════`;
+      finalSystemPrompt = ensureCollaborationDirective(finalSystemPrompt);
 
       // Create execution record with dependency info
       const { data: execution } = await supabase
@@ -1102,17 +1120,8 @@ Improve collaboration between squads and ensure all agents read the shared strat
     // ACTION: Generate A/B variation
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'generate_variation') {
-      let agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) {
-        const { data: customAgent } = await supabase
-          .from('strategy_custom_agents')
-          .select('*')
-          .eq('agent_key', agentType)
-          .eq('ativo', true)
-          .single();
-        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
-        agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
-      }
+      const resolved = await resolveAgentDefinition(supabase, agentType);
+      const agent = resolved.agent;
 
       const { variationStyle } = body;
       const { project, memory } = await getLatestMemory(supabase, projectId);
@@ -1191,17 +1200,8 @@ ESTILO OBRIGATÓRIO: ${styleInstruction}
     // ACTION: Revise agent (re-execute with feedback)
     // ═══════════════════════════════════════════════════════════════════════════
     if (action === 'revise_agent') {
-      let agent = AGENT_DEFINITIONS[agentType];
-      if (!agent) {
-        const { data: customAgent } = await supabase
-          .from('strategy_custom_agents')
-          .select('*')
-          .eq('agent_key', agentType)
-          .eq('ativo', true)
-          .single();
-        if (!customAgent) throw new Error(`Agente desconhecido: ${agentType}`);
-        agent = { name: (customAgent as any).name, type: agentType, systemPrompt: (customAgent as any).system_prompt };
-      }
+      const resolved = await resolveAgentDefinition(supabase, agentType);
+      const agent = resolved.agent;
 
       // Always re-read latest memory
       const { project, memory } = await getLatestMemory(supabase, projectId);
@@ -1399,13 +1399,10 @@ REGRAS:
 
       // Execute agents sequentially, RE-READING memory from DB before each agent
       for (const exec of executions) {
+        const resolved = await resolveAgentDefinition(supabase, exec.key);
         const builtIn = AGENT_DEFINITIONS[exec.key];
         const custom = (customAgentsList || []).find((a: any) => a.agent_key === exec.key);
-        const agent = builtIn || {
-          name: (custom as any)?.name || exec.key,
-          type: exec.key,
-          systemPrompt: (custom as any)?.system_prompt || '',
-        };
+        const agent = resolved.agent;
         const startTime = Date.now();
 
         // Mark as running
@@ -1419,7 +1416,7 @@ REGRAS:
           const { memory: latestMemory } = await getLatestMemory(supabase, projectId);
 
           // Log dependency status
-          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : ((custom as any)?.dependencies || []);
+          const deps = builtIn ? (AGENT_DEPENDENCIES[exec.key] || []) : (resolved.customDeps || []);
           const availableDeps = deps.filter((d: string) => latestMemory[d]);
           const missingDeps = deps.filter((d: string) => !latestMemory[d]);
           console.log(`🤖 ${agent.name}: deps=${deps.join(',')}, available=${availableDeps.join(',')}, missing=${missingDeps.join(',')}`);
