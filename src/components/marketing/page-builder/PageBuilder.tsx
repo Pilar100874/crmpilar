@@ -1921,11 +1921,14 @@ const AutoGeneratePage: React.FC<{
             addProgress('✅ Vídeo gerado com sucesso!');
           } else if (videoGenResult?.result?.error) {
             const errMsg = videoGenResult.result.error.substring(0, 200);
+            generationError = errMsg;
             addProgress(`❌ Erro na geração do vídeo: ${errMsg}`);
             setVideoError(errMsg);
           } else {
-            addProgress('⚠️ Vídeo não gerado — usando storyboard como referência.');
-            setVideoError('O provedor de vídeo não retornou resultado. Verifique sua configuração de API.');
+            const msg = 'O provedor de vídeo não retornou resultado. Verifique sua configuração de API.';
+            generationError = msg;
+            addProgress(`❌ ${msg}`);
+            setVideoError(msg);
           }
         } else {
           const errText = await videoGenResponse.text().catch(() => '');
@@ -1933,17 +1936,15 @@ const AutoGeneratePage: React.FC<{
           try {
             const errJson = JSON.parse(errText);
             const errMsg = errJson?.error || '';
-            if (errMsg.includes('Nenhum provedor')) {
-              const msg = 'Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.';
-              addProgress(`❌ ${msg}`);
-              setVideoError(msg);
-            } else {
-              const msg = errMsg || `Erro HTTP ${videoGenResponse.status}`;
-              addProgress(`❌ Erro na geração de vídeo: ${msg}`);
-              setVideoError(msg);
-            }
+            const msg = errMsg.includes('Nenhum provedor')
+              ? 'Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas para gerar vídeos automaticamente.'
+              : (errMsg || `Erro HTTP ${videoGenResponse.status}`);
+            generationError = msg;
+            addProgress(`❌ Erro na geração de vídeo: ${msg}`);
+            setVideoError(msg);
           } catch {
             const msg = `Erro HTTP ${videoGenResponse.status} na geração de vídeo.`;
+            generationError = msg;
             addProgress(`❌ ${msg}`);
             setVideoError(msg);
           }
