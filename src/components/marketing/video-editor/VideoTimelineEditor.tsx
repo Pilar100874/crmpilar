@@ -1213,6 +1213,14 @@ const VideoTimelineEditor: React.FC = () => {
                 <Plus className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Novo Projeto
               </Button>
+              <Button
+                variant="outline"
+                onClick={openRoteiroDialog}
+                className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm"
+              >
+                <BookOpen className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                Criar do Roteiro
+              </Button>
             </div>
           </motion.div>
 
