@@ -2164,6 +2164,13 @@ const AutoGeneratePage: React.FC<{
         favicon: '', primaryColor, secondaryColor: '#1e293b',
         accentColor, backgroundColor: bgColor, textColor: txtColor,
         fontDisplay, fontBody: fontDisplay, maxWidth,
+        ...(gCfg ? {
+          empresaNome: gCfg.empresaNome || '',
+          empresaEndereco: gCfg.empresaEndereco || '',
+          empresaTelefone: gCfg.empresaTelefone || '',
+          whatsappGlobal: gCfg.whatsappGlobal || '',
+          siteGlobal: gCfg.siteGlobal || '',
+        } : {}),
       } as any,
       estabelecimento_id: estabId,
       publicado: false,
