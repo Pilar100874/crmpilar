@@ -1073,8 +1073,16 @@ section{overflow-x:hidden}
   for (const s of vs) {
     const c = s.content;
     switch (s.type) {
-      case 'hero':
-        html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div></section>\n`; break;
+      case 'hero': {
+        const heroLayout = s.styles?.layout || '';
+        if (heroLayout === 'split-left' || heroLayout === 'split-right') {
+          const isRight = heroLayout === 'split-right';
+          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:#fff"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(255,255,255,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3)">Imagem</div>`}</div></div></section>\n`;
+        } else {
+          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:#fff"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${c.cta_url||'#'}" class="btn" style="background:${cfg.accentColor};color:#fff">${c.cta_text}</a>` : ''}</div></section>\n`;
+        }
+        break;
+      }
       case 'text':
         html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px;text-align:${c.alignment||'left'}"><p style="font-size:1.1rem;line-height:1.8;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
       case 'image':
