@@ -811,9 +811,14 @@ const PageBuilderLanding: React.FC<{
                 </div>
                 <p className="text-[10px] text-muted-foreground">/p/{page.slug}</p>
                 <p className="text-[10px] text-muted-foreground">{new Date(page.updated_at).toLocaleString('pt-BR')}</p>
-                <Button variant="outline" size="sm" className="h-7 text-xs w-full mt-1" onClick={() => onOpen(page)}>
-                  Abrir Editor
-                </Button>
+                <div className="flex gap-1 mt-1">
+                  <Button variant="outline" size="sm" className="h-7 text-xs flex-1" onClick={() => onOpen(page)}>
+                    Abrir Editor
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setPreviewPage(page)}>
+                    <Eye className="h-3 w-3" /> Preview
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
