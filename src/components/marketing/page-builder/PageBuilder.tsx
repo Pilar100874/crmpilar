@@ -2340,7 +2340,7 @@ const AutoGeneratePage: React.FC<{
               const currentFt = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
               if (!currentFt) return null;
               const previewHtml = generateFullHTML(
-                currentFt.sections,
+                currentFt.sections as PageSection[],
                 { ...currentFt.config, title: currentFt.name, description: currentFt.description } as PageConfig
               );
               return (
