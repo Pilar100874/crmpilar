@@ -48,6 +48,7 @@ interface PageConfig {
   primaryColor: string; secondaryColor: string; accentColor: string;
   backgroundColor: string; textColor: string;
   fontDisplay: string; fontBody: string; maxWidth: string;
+  whatsappGlobal?: string; siteGlobal?: string;
 }
 
 interface SavedPage {
