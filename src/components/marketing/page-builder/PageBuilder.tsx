@@ -1333,7 +1333,12 @@ const PageBuilderLanding: React.FC<{
           <h2 className="text-xl font-bold flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /> Page Builder</h2>
           <p className="text-sm text-muted-foreground">Crie e gerencie suas páginas</p>
         </div>
-        <Button onClick={onCreateNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Página</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowAutoGenerate(true)} className="gap-2">
+            <Zap className="h-4 w-4" /> Gerar Automática
+          </Button>
+          <Button onClick={onCreateNew} className="gap-2"><Plus className="h-4 w-4" /> Nova Página</Button>
+        </div>
       </div>
 
       {pages.length === 0 ? (
