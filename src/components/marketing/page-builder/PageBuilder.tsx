@@ -798,6 +798,437 @@ const PreviewIframe: React.FC<{ sections: PageSection[]; config: any }> = ({ sec
   return <iframe srcDoc={html} className="w-full h-full border-0" />;
 };
 
+// ── Auto Generate Page from Strategy ──────────────────────────────────────────
+const AutoGeneratePage: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onGenerated: (page: SavedPage) => void;
+}> = ({ open, onOpenChange, onGenerated }) => {
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [step, setStep] = useState<'select' | 'generating' | 'done'>('select');
+  const [progress, setProgress] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      setLoading(true);
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (!estabId) { setLoading(false); return; }
+      const { data } = await supabase
+        .from('strategy_projects')
+        .select('id, nome, descricao_negocio, strategic_memory, updated_at')
+        .eq('estabelecimento_id', estabId)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+      const projs = data || [];
+      setProjects(projs);
+      if (projs.length > 0) setSelectedProject(projs[0].id);
+      setLoading(false);
+      setStep('select');
+      setProgress([]);
+    })();
+  }, [open]);
+
+  const extractText = (obj: any, key: string): string => {
+    if (!obj) return '';
+    if (typeof obj[key] === 'string') return obj[key];
+    return '';
+  };
+
+  const extractArray = (obj: any, ...keys: string[]): any[] => {
+    if (!obj) return [];
+    for (const k of keys) {
+      if (Array.isArray(obj[k])) return obj[k];
+    }
+    return [];
+  };
+
+  const generatePage = async () => {
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project) return;
+
+    setGenerating(true);
+    setStep('generating');
+    const mem: Record<string, any> = (project.strategic_memory as Record<string, any>) || {};
+    const sections: PageSection[] = [];
+    const addProgress = (msg: string) => setProgress(prev => [...prev, msg]);
+
+    // Also fetch artifacts
+    addProgress('📦 Buscando artefatos do projeto...');
+    const { data: artifacts } = await supabase
+      .from('strategy_artifacts')
+      .select('tipo, conteudo')
+      .eq('project_id', project.id)
+      .order('created_at', { ascending: false });
+    const artMap = new Map<string, any>();
+    for (const art of (artifacts || [])) {
+      if (!artMap.has(art.tipo)) artMap.set(art.tipo, art.conteudo);
+    }
+
+    // Helper to get data from memory or artifact
+    const getData = (key: string) => mem[key] || artMap.get(key) || null;
+
+    // ── 1. Hero Section from positioning/vox ──
+    addProgress('🎯 Construindo Hero com dados de posicionamento...');
+    const pos = getData('positioning');
+    const vox = getData('vox');
+    const lp = getData('landing_page');
+    const heroHeadline = pos?.proposta_unica || pos?.headline || pos?.titulo || lp?.headline || lp?.hero_headline || project.descricao_negocio || 'Seu Negócio, Sua Solução';
+    const heroSub = pos?.descricao || pos?.subheadline || vox?.dores_principais?.[0] || lp?.subheadline || lp?.hero_subheadline || 'Descubra como podemos transformar sua experiência.';
+    const heroCta = lp?.cta_text || lp?.hero_cta || 'Saiba Mais';
+    sections.push({
+      id: `auto-hero-${Date.now()}`, type: 'hero', title: 'Hero Principal', visible: true, styles: {},
+      content: {
+        headline: heroHeadline, subheadline: heroSub,
+        cta_text: heroCta, cta_url: '#contato',
+        background_image: '',
+        _media_suggestion: '🖼️ Insira uma imagem de fundo impactante que represente seu negócio. Sugestão: foto profissional do produto/serviço ou imagem lifestyle do público-alvo.',
+      }
+    });
+
+    // ── 2. Image section (product/brand) ──
+    addProgress('📸 Reservando espaço para imagem principal...');
+    const creative = getData('creative');
+    const influencer = getData('influencer_content');
+    const imgSuggestion = creative?.conceito_visual || influencer?.estilo_visual || 'Imagem profissional do produto ou serviço principal';
+    sections.push({
+      id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
+      content: {
+        url: '', alt: 'Imagem do produto/serviço', 
+        caption: imgSuggestion,
+        fit: 'cover',
+        _media_suggestion: `🖼️ Sugestão baseada no agente Criativos: "${imgSuggestion}". Adicione uma foto profissional de alta qualidade.`,
+      }
+    });
+
+    // ── 3. Features from funnel/landing_page ──
+    addProgress('⚡ Extraindo recursos e diferenciais...');
+    const funnel = getData('funnel');
+    let featureItems: any[] = [];
+    const rawFeatures = extractArray(pos, 'diferenciais', 'features', 'beneficios')
+      || extractArray(lp, 'features', 'recursos', 'beneficios')
+      || extractArray(funnel, 'etapas', 'stages', 'features');
+
+    if (rawFeatures.length > 0) {
+      featureItems = rawFeatures.slice(0, 6).map((f: any, i: number) => ({
+        icon: f.icon || f.icone || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][i % 6],
+        title: f.title || f.titulo || f.name || f.nome || `Recurso ${i + 1}`,
+        description: f.description || f.descricao || f.texto || '',
+      }));
+    } else {
+      // Fallback: extract key points from positioning
+      const diffs = pos?.diferenciais || pos?.pontos_fortes || [];
+      if (Array.isArray(diffs) && diffs.length > 0) {
+        featureItems = diffs.slice(0, 6).map((d: any, i: number) => ({
+          icon: ['✨', '🎯', '💡', '⚡', '🔒', '📊'][i % 6],
+          title: typeof d === 'string' ? d.slice(0, 40) : (d.titulo || d.title || `Diferencial ${i + 1}`),
+          description: typeof d === 'string' ? d : (d.descricao || d.description || ''),
+        }));
+      } else {
+        featureItems = [
+          { icon: '🚀', title: 'Agilidade', description: 'Insira a descrição do diferencial' },
+          { icon: '🎯', title: 'Precisão', description: 'Insira a descrição do diferencial' },
+          { icon: '💡', title: 'Inovação', description: 'Insira a descrição do diferencial' },
+        ];
+      }
+    }
+    sections.push({
+      id: `auto-feat-${Date.now()}`, type: 'features', title: 'Diferenciais', visible: true, styles: {},
+      content: { items: featureItems }
+    });
+
+    // ── 4. Video Section (VSL/Producer) ──
+    addProgress('🎬 Reservando espaço para vídeo...');
+    const vsl = getData('vsl');
+    const videoProd = getData('video_producer');
+    const videoSuggestion = vsl?.titulo || vsl?.gancho || videoProd?.conceito || 'Vídeo de apresentação do negócio';
+    sections.push({
+      id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo de Apresentação', visible: true, styles: {},
+      content: {
+        url: '', poster: '', autoplay: false,
+        _media_suggestion: `🎬 Sugestão baseada no agente VSL/Produtor: "${videoSuggestion}". Grave um vídeo de vendas seguindo o roteiro gerado.`,
+      }
+    });
+
+    // ── 5. Text block (about/story) ──
+    addProgress('📝 Criando seção sobre o negócio...');
+    const aboutText = pos?.historia || pos?.sobre || pos?.manifesto 
+      || vox?.perfil_cliente || project.descricao_negocio
+      || 'Conte a história do seu negócio aqui. Use o texto gerado pelo Motor de Estratégia para criar uma narrativa envolvente.';
+    sections.push({
+      id: `auto-about-${Date.now()}`, type: 'text', title: 'Sobre Nós', visible: true, styles: {},
+      content: { body: aboutText, alignment: 'center' }
+    });
+
+    // ── 6. Gallery (product images) ──
+    addProgress('🖼️ Reservando galeria de imagens...');
+    sections.push({
+      id: `auto-gallery-${Date.now()}`, type: 'gallery', title: '📸 Galeria de Produtos', visible: true, styles: {},
+      content: {
+        images: [],
+        _media_suggestion: '🖼️ Adicione 3-6 fotos profissionais dos seus produtos/serviços. Sugestão: fotos do produto em uso, detalhes do produto, ambiente de trabalho.',
+      }
+    });
+
+    // ── 7. Testimonials ──
+    addProgress('💬 Montando seção de depoimentos...');
+    let testimonialItems: any[] = [];
+    const rawTest = extractArray(lp, 'testimonials', 'depoimentos')
+      || extractArray(vox, 'depoimentos', 'testimonials');
+    if (rawTest.length > 0) {
+      testimonialItems = rawTest.slice(0, 4).map((t: any) => ({
+        name: t.name || t.nome || 'Cliente',
+        role: t.role || t.cargo || '',
+        text: t.text || t.texto || t.depoimento || '',
+      }));
+    } else {
+      testimonialItems = [
+        { name: 'Cliente Satisfeito', role: 'Empresa X', text: 'Insira um depoimento real aqui. Use os dados da Voz do Cliente para criar depoimentos autênticos.' },
+        { name: 'Outro Cliente', role: 'Empresa Y', text: 'Mais um depoimento do seu portfólio. Inclua métricas de resultados quando possível.' },
+      ];
+    }
+    sections.push({
+      id: `auto-test-${Date.now()}`, type: 'testimonials', title: 'Depoimentos', visible: true, styles: {},
+      content: { items: testimonialItems }
+    });
+
+    // ── 8. Second Image (lifestyle/brand) ──
+    addProgress('🤳 Reservando espaço para imagem de marca...');
+    const influencerSuggestion = influencer?.tipo_conteudo || influencer?.estilo || creative?.estilo_visual || 'Foto lifestyle da marca/equipe';
+    sections.push({
+      id: `auto-img2-${Date.now()}`, type: 'image', title: '🤳 Imagem de Marca', visible: true, styles: {},
+      content: {
+        url: '', alt: 'Imagem de marca',
+        caption: '',
+        fit: 'cover',
+        _media_suggestion: `🤳 Sugestão baseada no agente Influencer: "${influencerSuggestion}". Use uma foto que transmita a identidade visual da marca.`,
+      }
+    });
+
+    // ── 9. FAQ ──
+    addProgress('❓ Montando perguntas frequentes...');
+    let faqItems: any[] = [];
+    const rawFaq = extractArray(lp, 'faq', 'perguntas_frequentes')
+      || extractArray(getData('seo'), 'faq', 'perguntas');
+    if (rawFaq.length > 0) {
+      faqItems = rawFaq.slice(0, 5).map((q: any) => ({
+        question: q.question || q.pergunta || '',
+        answer: q.answer || q.resposta || '',
+      }));
+    } else {
+      faqItems = [
+        { question: 'Como funciona?', answer: 'Descreva como seu produto ou serviço funciona de forma clara e objetiva.' },
+        { question: 'Quais os diferenciais?', answer: 'Liste os principais motivos para o cliente escolher sua solução.' },
+        { question: 'Como entro em contato?', answer: 'Informe seus canais de atendimento e horário de funcionamento.' },
+      ];
+    }
+    sections.push({
+      id: `auto-faq-${Date.now()}`, type: 'faq', title: 'FAQ', visible: true, styles: {},
+      content: { items: faqItems }
+    });
+
+    // ── 10. CTA Final ──
+    addProgress('🎯 Criando CTA final...');
+    const ctaHeadline = lp?.cta_final?.headline || lp?.cta_headline || 'Pronto para começar?';
+    const ctaDesc = lp?.cta_final?.description || lp?.cta_description || 'Não perca tempo. Entre em contato e descubra como podemos ajudar.';
+    const ctaBtn = lp?.cta_final?.button_text || lp?.cta_button || 'Fale Conosco';
+    sections.push({
+      id: `auto-cta-${Date.now()}`, type: 'cta', title: 'CTA Final', visible: true, styles: {},
+      content: { headline: ctaHeadline, description: ctaDesc, button_text: ctaBtn, button_url: '#contato' }
+    });
+
+    // ── 11. Footer ──
+    sections.push({
+      id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
+      content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
+    });
+
+    // ── Config from SEO agent ──
+    addProgress('🔍 Aplicando configurações de SEO...');
+    const seoData = getData('seo');
+    const configHints: Partial<PageConfig> = {};
+    if (seoData?.titulo_pagina || seoData?.title) configHints.title = seoData.titulo_pagina || seoData.title;
+    else configHints.title = project.nome;
+    if (seoData?.meta_description || seoData?.descricao) configHints.description = seoData.meta_description || seoData.descricao;
+    else configHints.description = project.descricao_negocio;
+
+    // Extract colors from creative/positioning if available
+    if (creative?.cor_primaria || creative?.cores?.primaria) configHints.primaryColor = creative.cor_primaria || creative.cores?.primaria;
+    if (creative?.cor_destaque || creative?.cores?.destaque) configHints.accentColor = creative.cor_destaque || creative.cores?.destaque;
+
+    // ── Save to DB ──
+    addProgress('💾 Salvando página...');
+    const estabId = localStorage.getItem('estabelecimentoId');
+    const pageName = `${project.nome} — Gerada`;
+    const slug = generateSlug(pageName);
+
+    const { data: saved, error } = await supabase.from('published_pages').insert({
+      nome: pageName,
+      slug,
+      sections: sections as any,
+      config: {
+        title: configHints.title || project.nome,
+        description: configHints.description || '',
+        favicon: '', primaryColor: configHints.primaryColor || '#1e40af',
+        secondaryColor: '#3b82f6', accentColor: configHints.accentColor || '#f59e0b',
+        backgroundColor: '#ffffff', textColor: '#1f2937',
+        fontDisplay: 'Inter', fontBody: 'Inter', maxWidth: '1200px',
+      } as any,
+      estabelecimento_id: estabId,
+      publicado: false,
+    }).select().single();
+
+    if (error) {
+      toast.error('Erro ao salvar: ' + error.message);
+      setStep('select');
+    } else {
+      addProgress('✅ Página gerada com sucesso!');
+      setStep('done');
+      toast.success('Página gerada automaticamente! 🎉');
+      setTimeout(() => {
+        onGenerated(saved as unknown as SavedPage);
+        onOpenChange(false);
+      }, 1500);
+    }
+    setGenerating(false);
+  };
+
+  const selectedProj = projects.find(p => p.id === selectedProject);
+  const agentCount = selectedProj ? Object.keys((selectedProj.strategic_memory as Record<string, any>) || {}).length : 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-background sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
+          </DialogTitle>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-8">
+            <Bot className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Nenhum projeto de estratégia encontrado.</p>
+            <p className="text-xs text-muted-foreground mt-1">Crie um projeto no Motor de Estratégia primeiro.</p>
+          </div>
+        ) : step === 'select' ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Selecione um projeto do Motor de Estratégia. Os dados de <strong>todos os agentes</strong> serão usados para montar a página automaticamente.
+            </p>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Projeto</Label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent className="bg-popover">
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{p.nome}</span>
+                        <Badge variant="outline" className="text-[10px] ml-auto">
+                          {Object.keys((p.strategic_memory as Record<string, any>) || {}).length} agentes
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedProj && (
+              <Card className="p-3 space-y-2 bg-muted/30">
+                <p className="text-xs font-semibold">{selectedProj.nome}</p>
+                <p className="text-[11px] text-muted-foreground line-clamp-2">{selectedProj.descricao_negocio}</p>
+                {agentCount > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {Object.keys((selectedProj.strategic_memory as Record<string, any>) || {}).map(key => {
+                      const info = (AGENT_INFO_MAP as any)[key];
+                      return (
+                        <Badge key={key} variant="secondary" className="text-[10px] gap-0.5">
+                          {info?.icon || '🔹'} {info?.name || key}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+                <Separator />
+                <div className="text-[10px] text-muted-foreground space-y-1">
+                  <p className="font-semibold text-foreground">A página gerada incluirá:</p>
+                  <p>✅ Hero com dados de posicionamento</p>
+                  <p>✅ Seção de recursos/diferenciais</p>
+                  <p>✅ Depoimentos de clientes</p>
+                  <p>✅ FAQ automático</p>
+                  <p>✅ CTA otimizado</p>
+                  <p>📸 Espaços reservados para imagens (com sugestões)</p>
+                  <p>🎬 Espaço reservado para vídeo (com sugestão de roteiro)</p>
+                  <p>🔍 Configurações de SEO aplicadas</p>
+                </div>
+              </Card>
+            )}
+
+            <Button 
+              onClick={generatePage} 
+              disabled={!selectedProject || generating} 
+              className="w-full gap-2"
+            >
+              <Zap className="h-4 w-4" /> Gerar Página Automaticamente
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3 py-4">
+            <div className="space-y-2">
+              {progress.map((msg, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm animate-in fade-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}>
+                  {step === 'done' || i < progress.length - 1 ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                  ) : (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                  )}
+                  <span className={i === progress.length - 1 && step !== 'done' ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                    {msg}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {step === 'done' && (
+              <div className="text-center pt-4">
+                <Badge variant="default" className="text-sm px-4 py-1.5 gap-1.5">
+                  <Sparkles className="h-4 w-4" /> Página pronta para edição!
+                </Badge>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// AGENT_INFO reference for the auto-generator
+const AGENT_INFO_MAP: Record<string, { name: string; icon: string }> = {
+  vox: { name: 'Voz do Cliente', icon: '🎙️' },
+  cipher: { name: 'Inteligência Competitiva', icon: '🔍' },
+  positioning: { name: 'Posicionamento', icon: '🎯' },
+  funnel: { name: 'Arquiteto de Funil', icon: '📊' },
+  vsl: { name: 'Roteirista de Vídeo', icon: '🎬' },
+  landing_page: { name: 'Landing Page', icon: '🏗️' },
+  creative: { name: 'Criativos', icon: '🎨' },
+  email: { name: 'Email Marketing', icon: '📧' },
+  reel: { name: 'Roteirista de Reels', icon: '📱' },
+  seo: { name: 'SEO & Conteúdo', icon: '🔎' },
+  paid_media: { name: 'Mídia Paga', icon: '💰' },
+  social_media: { name: 'Social Media', icon: '📲' },
+  site_builder: { name: 'Site Builder', icon: '🌐' },
+  video_producer: { name: 'Produtor de Vídeo', icon: '🎥' },
+  influencer_content: { name: 'Influencer & Imagens', icon: '🤳' },
+};
+
 // ── Project Listing (Landing) ──────────────────────────────────────────────────
 const PageBuilderLanding: React.FC<{
   onOpen: (page: SavedPage) => void;
