@@ -39,6 +39,46 @@ interface ImportedMedia {
   thumbnail?: string | null;
 }
 
+const VideoThumbnail: React.FC<{ src: string; thumbnail?: string | null }> = ({ src, thumbnail }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(thumbnail || null);
+
+  useEffect(() => {
+    if (thumbnail) { setThumbUrl(thumbnail); return; }
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.preload = 'auto';
+    video.playsInline = true;
+
+    const handleSeeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 96;
+        canvas.height = video.videoHeight || 72;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          setThumbUrl(canvas.toDataURL('image/jpeg', 0.7));
+        }
+      } catch { /* cross-origin fallback */ }
+      video.removeEventListener('seeked', handleSeeked);
+      video.src = '';
+      video.load();
+    };
+
+    video.addEventListener('seeked', handleSeeked);
+    video.addEventListener('loadeddata', () => { video.currentTime = 0.1; });
+    video.addEventListener('error', () => { /* silently fail, show placeholder */ });
+    video.src = src;
+
+    return () => { video.src = ''; video.load(); };
+  }, [src, thumbnail]);
+
+  if (thumbUrl) return <img src={thumbUrl} className="w-full h-full object-cover" alt="" />;
+  return <video ref={videoRef} src={src} className="w-full h-full object-cover" muted preload="auto" onLoadedData={(e) => { (e.target as HTMLVideoElement).currentTime = 0.1; }} />;
+};
+
 const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryType, setGalleryType] = useState<'video' | 'image'>('video');
@@ -316,7 +356,7 @@ const MediaBin: React.FC<Props> = ({ onAddClip, tracks }) => {
                     <div className="w-12 h-9 rounded bg-muted shrink-0 overflow-hidden relative">
                       {media.type === 'video' ? (
                         <>
-                          <video src={media.src} className="w-full h-full object-cover" muted preload="metadata" />
+                          <VideoThumbnail src={media.src} thumbnail={media.thumbnail} />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <Play className="h-3 w-3 text-white drop-shadow" />
                           </div>
