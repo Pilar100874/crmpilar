@@ -44,6 +44,7 @@ import { AICreativeStudio } from '@/components/marketing/ai-studio';
 import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
 import { StrategyEngine } from '@/components/marketing/strategy-engine';
+import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
 
 interface TabItem {
   id: string;
