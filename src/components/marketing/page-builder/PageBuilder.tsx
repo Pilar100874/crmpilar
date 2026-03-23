@@ -1013,16 +1013,31 @@ function generateFullHTML(sections: PageSection[], config: PageConfig): string {
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@400;600;700&family=${encodeURIComponent(cfg.fontBody)}:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor}}
+body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor};-webkit-text-size-adjust:100%}
 .container{max-width:${cfg.maxWidth};margin:0 auto;padding:0 24px}
-img{max-width:100%}video{max-width:100%}
+img{max-width:100%;height:auto}video{max-width:100%;height:auto}
 a{text-decoration:none}
-.btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:600;font-size:1.1rem;cursor:pointer;transition:opacity .2s}
+.btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:600;font-size:1.1rem;cursor:pointer;transition:opacity .2s;text-align:center}
 .btn:hover{opacity:.9}
-.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
 .text-center{text-align:center}
-@media(max-width:768px){.grid-3,.grid-2{grid-template-columns:1fr}}
+section{overflow-x:hidden}
+@media(max-width:1024px){
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .container{padding:0 16px}
+  .btn{padding:12px 24px;font-size:1rem;width:100%;max-width:320px}
+}
+@media(max-width:480px){
+  .grid-4{grid-template-columns:1fr}
+  body{font-size:15px}
+}
 </style></head><body>`;
 
   for (const s of vs) {
@@ -1070,7 +1085,7 @@ a{text-decoration:none}
       case 'testimonials':
         html += `<section style="padding:64px 24px;background:#f9fafb"><div class="container"><div class="grid-2">${(c.items||[]).map((t:any)=>`<div style="padding:28px;border-radius:16px;background:#fff;border:1px solid #e5e7eb;font-style:italic"><p style="margin-bottom:16px;font-size:1.05rem;line-height:1.7">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.95rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-weight:600;font-style:normal;font-size:.95rem">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></div></section>\n`; break;
       case 'social_proof':
-        html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:32px">${(c.items||[]).map((item:any)=>`<div><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px">${item.number||''}</p><p style="font-size:.95rem;opacity:.8">${item.label||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:#fff"><div class="container grid-4">${(c.items||[]).map((item:any)=>`<div><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px">${item.number||''}</p><p style="font-size:.95rem;opacity:.8">${item.label||''}</p></div>`).join('')}</div></section>\n`; break;
       case 'guarantee':
         html += `<section style="padding:64px 24px;text-align:center"><div class="container" style="max-width:640px"><div style="padding:48px;border:2px dashed ${cfg.accentColor};border-radius:20px"><span style="font-size:3.5rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.8rem;font-weight:700;margin-bottom:12px">${c.title||''}</h3><p style="font-size:1.05rem;color:#6b7280;margin-bottom:12px;line-height:1.7">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:6px 16px;background:#f3f4f6;border-radius:24px;font-size:.95rem;font-weight:500">${c.duration}</span>`:''}</div></div></section>\n`; break;
       case 'objections':
@@ -1692,9 +1707,10 @@ const AutoGeneratePage: React.FC<{
     });
 
     // ── 15. Footer ──
+    const businessName = project.descricao_negocio?.split(/[.\n]/)?.[0]?.trim()?.slice(0, 60) || 'Sua Empresa';
     sections.push({
       id: `auto-footer-${Date.now()}`, type: 'footer', title: 'Rodapé', visible: true, styles: {},
-      content: { company: project.nome || 'Sua Empresa', copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
+      content: { company: businessName, copyright: `© ${new Date().getFullYear()} Todos os direitos reservados.` }
     });
 
     // ── Config & Save ──
@@ -2596,6 +2612,7 @@ const PageBuilderEditor: React.FC<{
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowTemplateDialog(true)}><LayoutTemplate className="h-3 w-3" /> Template</Button>
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowPreviewDialog(true)}><Eye className="h-3 w-3" /> Preview</Button>
             <Button variant="outline" size="sm" className="h-7 gap-1" onClick={() => setShowCodeDialog(true)}><Code className="h-3 w-3" /> HTML</Button>
             <Button variant={isPublished ? 'secondary' : 'default'} size="sm" className="h-7 gap-1" onClick={togglePublish} disabled={publishing}>
