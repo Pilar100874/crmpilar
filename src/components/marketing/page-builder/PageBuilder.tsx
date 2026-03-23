@@ -1608,72 +1608,122 @@ const AutoGeneratePage: React.FC<{
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                <strong>Passo 2:</strong> Escolha o estilo visual da sua página.
+                <strong>Passo 2:</strong> Escolha a categoria e o tema visual.
               </p>
               <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs gap-1">
                 ← Voltar
               </Button>
             </div>
 
-            <ScrollArea className="h-[400px] pr-2">
+            {/* Category Tabs */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {TEMPLATE_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    // Auto-select first theme of category if current isn't in it
+                    const currentInCat = cat.themes.find(t => t.id === selectedTemplate);
+                    if (!currentInCat && cat.themes.length > 0) {
+                      setSelectedTemplate(cat.themes[0].id);
+                    }
+                  }}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border',
+                    selectedCategory === cat.id
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1 ml-0.5">{cat.themes.length}</Badge>
+                </button>
+              ))}
+            </div>
+
+            {/* Theme Grid */}
+            <ScrollArea className="h-[340px] pr-2">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {PAGE_TEMPLATES.filter(t => t.id !== 'blank').map(tpl => {
-                  const isSelected = selectedTemplate === tpl.id;
+                {TEMPLATE_CATEGORIES.find(c => c.id === selectedCategory)?.themes.map(theme => {
+                  const isSelected = selectedTemplate === theme.id;
                   return (
                     <button
-                      key={tpl.id}
-                      onClick={() => setSelectedTemplate(tpl.id)}
-                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center group hover:shadow-md ${
-                        isSelected 
-                          ? 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/20' 
-                          : 'border-border hover:border-primary/50 hover:bg-muted/30'
-                      }`}
+                      key={theme.id}
+                      onClick={() => setSelectedTemplate(theme.id)}
+                      className={cn(
+                        'relative flex flex-col gap-2 rounded-xl border-2 transition-all text-left group overflow-hidden',
+                        isSelected
+                          ? 'border-primary shadow-lg ring-2 ring-primary/20'
+                          : 'border-border hover:border-primary/50 hover:shadow-md'
+                      )}
                     >
-                      {isSelected && (
-                        <div className="absolute top-2 right-2">
-                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                      {/* Preview Gradient Header */}
+                      <div
+                        className="h-20 w-full relative"
+                        style={{ background: theme.preview_gradient }}
+                      >
+                        {/* Simulated page elements */}
+                        <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                          <div className="w-3/4 h-2 rounded-full bg-white/30 mb-1" />
+                          <div className="w-1/2 h-1.5 rounded-full bg-white/20" />
+                          <div className="flex gap-1 mt-2">
+                            <div className="w-8 h-3 rounded" style={{ backgroundColor: theme.config.accentColor || theme.config.primaryColor }} />
+                          </div>
                         </div>
-                      )}
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110 ${
-                        isSelected ? 'bg-primary/10' : 'bg-muted'
-                      }`}>
-                        {tpl.thumbnail}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5">
+                            <CheckCircle2 className="h-5 w-5 text-white drop-shadow-lg" />
+                          </div>
+                        )}
+                        <div className="absolute top-1.5 left-1.5 text-lg drop-shadow-lg">{theme.thumbnail}</div>
                       </div>
-                      <div>
-                        <p className={`text-sm font-semibold ${isSelected ? 'text-primary' : 'text-foreground'}`}>{tpl.name}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{tpl.description}</p>
-                      </div>
-                      {tpl.config.primaryColor && (
-                        <div className="flex gap-1 mt-1">
-                          <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.primaryColor }} />
-                          {tpl.config.accentColor && (
-                            <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.accentColor }} />
-                          )}
-                          {tpl.config.backgroundColor && tpl.config.backgroundColor !== '#ffffff' && (
-                            <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: tpl.config.backgroundColor }} />
+
+                      {/* Info */}
+                      <div className="px-3 pb-3 space-y-1">
+                        <p className={cn('text-xs font-semibold', isSelected ? 'text-primary' : 'text-foreground')}>{theme.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{theme.description}</p>
+                        <div className="flex items-center gap-1 pt-0.5">
+                          {[theme.config.primaryColor, theme.config.accentColor, theme.config.backgroundColor].filter(Boolean).map((c, i) => (
+                            <div key={i} className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: c }} />
+                          ))}
+                          {theme.config.fontDisplay && (
+                            <span className="text-[9px] text-muted-foreground ml-1">{theme.config.fontDisplay}</span>
                           )}
                         </div>
-                      )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
             </ScrollArea>
 
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <div className="text-lg">{PAGE_TEMPLATES.find(t => t.id === selectedTemplate)?.thumbnail}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate">{PAGE_TEMPLATES.find(t => t.id === selectedTemplate)?.name}</p>
-                <p className="text-[10px] text-muted-foreground">As cores e tipografia do template serão aplicadas à página gerada</p>
-              </div>
-            </div>
+            {/* Selected Theme Footer */}
+            {(() => {
+              const currentTheme = getThemeById(selectedTemplate);
+              if (!currentTheme) return null;
+              return (
+                <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: currentTheme.preview_gradient }}>
+                  <div className="text-2xl drop-shadow-lg">{currentTheme.thumbnail}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white drop-shadow-sm">{currentTheme.name}</p>
+                    <p className="text-[10px] text-white/70">{currentTheme.description}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    {[currentTheme.config.primaryColor, currentTheme.config.accentColor].filter(Boolean).map((c, i) => (
+                      <div key={i} className="w-5 h-5 rounded-full border-2 border-white/30 shadow-lg" style={{ backgroundColor: c }} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
-            <Button 
-              onClick={generatePage} 
-              disabled={generating} 
+            <Button
+              onClick={generatePage}
+              disabled={generating}
               className="w-full gap-2"
             >
-              <Zap className="h-4 w-4" /> Gerar Página com Este Estilo
+              <Zap className="h-4 w-4" /> Gerar Página com Este Tema
             </Button>
           </div>
         ) : (
