@@ -1081,6 +1081,46 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   
   if (!estabelecimentoId) throw new Error("estabelecimentoId é obrigatório para geração de vídeo");
 
+  // AUTO mode: detect first available provider
+  if (model === "auto" || provider === "auto") {
+    console.log(`[generate_video] AUTO mode: detecting available providers...`);
+    // Priority order: google (veo), apiframe, openai, runway, stability, luma
+    const providerPriority = [
+      { provider: "google", model: "google/veo-3.1" },
+      { provider: "apiframe", model: "apiframe/kling-2.6" },
+      { provider: "openai", model: "openai/sora" },
+      { provider: "runway", model: "runway/gen4" },
+      { provider: "stability", model: "stability/stable-video" },
+      { provider: "luma", model: "luma/dream-machine" },
+    ];
+    let foundProvider = false;
+    for (const p of providerPriority) {
+      if (p.provider === "apiframe") {
+        // Apiframe uses its own proxy — check if key exists there
+        const afKey = await fetchApiKey(estabelecimentoId, "apiframe");
+        if (afKey) {
+          console.log(`[generate_video] AUTO: Found apiframe key, using ${p.model}`);
+          provider = "apiframe";
+          params.model = p.model;
+          foundProvider = true;
+          break;
+        }
+      } else {
+        const key = await fetchApiKey(estabelecimentoId, p.provider);
+        if (key) {
+          console.log(`[generate_video] AUTO: Found ${p.provider} key, using ${p.model}`);
+          provider = p.provider;
+          params.model = p.model;
+          foundProvider = true;
+          break;
+        }
+      }
+    }
+    if (!foundProvider) {
+      throw new Error("Nenhum provedor de vídeo configurado. Configure uma chave de API em Configurações → APIs Pagas (Google, ApiFrame, OpenAI, Runway, etc.).");
+    }
+  }
+
   // Audio controls (default both ON for new behavior)
   const withAudio = params.withAudio !== false;
   const withMusic = withAudio ? params.withMusic !== false : false;
