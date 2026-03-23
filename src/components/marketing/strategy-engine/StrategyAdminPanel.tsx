@@ -799,13 +799,13 @@ export function StrategyAdminPanel() {
 
                         {/* ─── REASONING TAB ─── */}
                         <TabsContent value="reasoning" className="space-y-3 mt-3">
-                          <FieldSection label="Reasoning Protocol" hint="Passos ordenados que o agente deve seguir ao executar">
+                          <FieldSection label="Protocolo de Raciocínio" hint="Passos ordenados que o agente deve seguir ao executar">
                             <EditableList items={card.reasoning_protocol} onChange={v => updateCard(agentKey, 'reasoning_protocol', v)} placeholder="Passo..." ordered />
                           </FieldSection>
 
                           <Separator />
 
-                          <FieldSection label="Error Handling" hint="Como o agente reage quando dados são insuficientes">
+                          <FieldSection label="Tratamento de Erros" hint="Como o agente reage quando dados são insuficientes">
                             <Textarea value={card.error_handling} onChange={e => updateCard(agentKey, 'error_handling', e.target.value)} rows={2} className="text-xs" />
                           </FieldSection>
                         </TabsContent>
