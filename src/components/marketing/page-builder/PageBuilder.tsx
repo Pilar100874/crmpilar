@@ -1961,7 +1961,7 @@ const AutoGeneratePage: React.FC<{
 
             {/* Selected Template Footer */}
             {(() => {
-              const currentFt = getFullTemplateById(selectedTemplate);
+              const currentFt = ALL_FULL_TEMPLATES.find(t => t.id === selectedTemplate);
               if (!currentFt) return null;
               return (
                 <div className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: `linear-gradient(135deg, ${currentFt.config.primaryColor}, ${currentFt.config.backgroundColor})` }}>
