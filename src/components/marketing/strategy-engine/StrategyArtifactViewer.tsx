@@ -13,6 +13,7 @@ import { ArtifactRenderer } from './renderers/ArtifactRenderer';
 import { ArtifactHistory } from './ArtifactHistory';
 import { ArtifactABComparison } from './ArtifactABComparison';
 import { supabase } from '@/integrations/supabase/client';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface Props {
   artifacts: StrategyArtifact[];
