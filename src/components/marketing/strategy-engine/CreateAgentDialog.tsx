@@ -201,7 +201,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
     try { schema = JSON.parse(card.output_schema); } catch { /* empty */ }
 
     const result = await onCreate({
-      agent_key: agentKey,
+      agent_key: generatedKey,
       name: card.name,
       icon,
       color,
