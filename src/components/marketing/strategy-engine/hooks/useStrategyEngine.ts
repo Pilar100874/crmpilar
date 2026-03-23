@@ -591,7 +591,8 @@ export function useStrategyEngine(projectId: string | null, onRefetch: () => voi
 
       const art = arts[i];
       const info = agentInfo[art.tipo];
-      const title = stripEmoji(art.titulo || info?.name || art.tipo);
+      // Always use agent name for consistent naming
+      const title = stripEmoji(info?.name || art.tipo);
       const color = info?.color || '#6366F1';
       const cr = parseInt(color.slice(1, 3), 16);
       const cg = parseInt(color.slice(3, 5), 16);
