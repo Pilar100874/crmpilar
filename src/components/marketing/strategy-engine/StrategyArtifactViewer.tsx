@@ -27,7 +27,7 @@ interface Props {
   agentInfo?: AgentInfoMap;
 }
 
-export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, runningAgents = new Set(), agentInfo }: Props) {
+export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReject, onRevise, onUpdateContent, onExportSinglePDF, onFeedback, runningAgents = new Set(), agentInfo }: Props) {
   const resolvedInfo = agentInfo || AGENT_INFO;
   const [selectedArtifact, setSelectedArtifact] = useState<StrategyArtifact | null>(null);
   const [viewMode, setViewMode] = useState<'formatted' | 'json' | 'history'>('formatted');
