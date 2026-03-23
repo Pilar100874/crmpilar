@@ -614,6 +614,56 @@ const SiteBuilderAgentViewer: React.FC<{ onImportSections?: (sections: PageSecti
 };
 
 // ── Section Editor ─────────────────────────────────────────────────────────────
+// ── Alternatives Picker (for auto-generated content) ──────────────────────────
+const AlternativesPicker: React.FC<{
+  field: string;
+  alternatives: { agent: string; icon: string; text: string }[];
+  currentValue: string;
+  onSelect: (text: string) => void;
+}> = ({ field, alternatives, currentValue, onSelect }) => {
+  if (!alternatives || alternatives.length <= 1) return null;
+  const [open, setOpen] = useState(false);
+  const currentIdx = alternatives.findIndex(a => a.text === currentValue);
+
+  return (
+    <div className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-6 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/10"
+        onClick={() => setOpen(!open)}
+      >
+        <ArrowDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+        {alternatives.length} opções
+      </Button>
+      {open && (
+        <div className="absolute z-50 right-0 top-7 w-72 bg-popover border rounded-lg shadow-lg p-1.5 space-y-1 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1">
+          {alternatives.map((alt, i) => (
+            <button
+              key={i}
+              onClick={() => { onSelect(alt.text); setOpen(false); }}
+              className={cn(
+                "w-full text-left p-2 rounded-md text-xs transition-colors",
+                alt.text === currentValue
+                  ? "bg-primary/10 border border-primary/30"
+                  : "hover:bg-muted/60"
+              )}
+            >
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">{alt.icon}</span>
+                <span className="font-semibold text-[10px] text-muted-foreground uppercase">{alt.agent}</span>
+                {alt.text === currentValue && <Badge variant="secondary" className="text-[8px] h-3 ml-auto">Atual</Badge>}
+              </div>
+              <p className="text-foreground line-clamp-2">{alt.text}</p>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Section Editor ─────────────────────────────────────────────────────────────
 const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection) => void }> = ({ section, onChange }) => {
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [showStrategyPicker, setShowStrategyPicker] = useState(false);
@@ -624,9 +674,22 @@ const SectionEditor: React.FC<{ section: PageSection; onChange: (u: PageSection)
   const openMediaPicker = (t: string) => { setMediaPickerTarget(t); setShowMediaPicker(true); };
   const openStrategyPicker = (t: string) => { setStrategyTarget(t); setShowStrategyPicker(true); };
 
-  const SB: React.FC<{ t: string }> = ({ t }) => (
-    <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker(t)}><Sparkles className="h-3 w-3" /> Estratégia</Button>
-  );
+  const SB: React.FC<{ t: string }> = ({ t }) => {
+    const alts = section.content[`_alt_${t}`];
+    return (
+      <div className="flex items-center gap-1">
+        {alts && alts.length > 1 && (
+          <AlternativesPicker
+            field={t}
+            alternatives={alts}
+            currentValue={section.content[t] || ''}
+            onSelect={(text) => updateContent(t, text)}
+          />
+        )}
+        <Button variant="ghost" size="sm" className="h-5 text-[10px] gap-1" onClick={() => openStrategyPicker(t)}><Sparkles className="h-3 w-3" /> Estratégia</Button>
+      </div>
+    );
+  };
 
   const renderFields = () => {
     switch (section.type) {
