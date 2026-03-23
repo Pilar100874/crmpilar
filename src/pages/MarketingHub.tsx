@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Target, 
   Palette, 
   Zap, 
@@ -19,6 +19,7 @@ import {
   Sparkles,
   Clapperboard,
   Brain,
+  Globe,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
