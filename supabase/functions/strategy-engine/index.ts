@@ -1627,34 +1627,51 @@ Retorne EXCLUSIVAMENTE um JSON:
           }),
         });
 
-        if (imgResponse.ok) {
-          const imgData = await imgResponse.json();
-          const base64Image = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-          
-          if (base64Image) {
-            // Upload to storage
-            const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-            const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-            const storageClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-            
-            const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
-            const binaryData = Uint8Array.from(atob(base64Data), (c: string) => c.charCodeAt(0));
-            const filename = `page-builder/${Date.now()}-ad.png`;
-            
-            const { error: uploadError } = await storageClient.storage
-              .from('marketing-images')
-              .upload(filename, binaryData, { contentType: 'image/png', upsert: true });
-
-            if (!uploadError) {
-              const { data: urlData } = storageClient.storage
-                .from('marketing-images')
-                .getPublicUrl(filename);
-              generatedImageUrl = urlData.publicUrl;
-            }
-          }
+        if (!imgResponse.ok) {
+          const errText = await imgResponse.text();
+          console.error('Image generation API error:', imgResponse.status, errText);
+          throw new Error(`Erro na API de geração de imagem (${imgResponse.status}): ${errText.substring(0, 200)}`);
         }
+        
+        const imgData = await imgResponse.json();
+        const base64Image = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (!base64Image) {
+          console.error('No image in response:', JSON.stringify(imgData).substring(0, 500));
+          throw new Error('A API retornou resposta sem imagem. Tente novamente.');
+        }
+
+        // Upload to storage
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+        const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const storageClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+        
+        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+        const binaryData = Uint8Array.from(atob(base64Data), (c: string) => c.charCodeAt(0));
+        const filename = `page-builder/${Date.now()}-ad.png`;
+        
+        const { error: uploadError } = await storageClient.storage
+          .from('marketing-images')
+          .upload(filename, binaryData, { contentType: 'image/png', upsert: true });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw new Error(`Erro ao salvar imagem: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = storageClient.storage
+          .from('marketing-images')
+          .getPublicUrl(filename);
+        generatedImageUrl = urlData.publicUrl;
       } catch (imgError: any) {
         console.error('Image generation error:', imgError.message);
+        return new Response(JSON.stringify({
+          success: false,
+          error: imgError.message || 'Erro ao gerar imagem',
+          mediaType: 'image',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       return new Response(JSON.stringify({
