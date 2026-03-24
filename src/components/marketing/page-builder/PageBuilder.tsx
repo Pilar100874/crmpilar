@@ -1934,11 +1934,34 @@ const AutoGeneratePage: React.FC<{
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" /> Gerar Página Automática
-            {currentStepNum > 0 && (
-              <Badge variant="outline" className="ml-auto text-[10px]">Passo {currentStepNum} de {totalSteps}</Badge>
-            )}
           </DialogTitle>
         </DialogHeader>
+
+        {/* ── Step indicator ── */}
+        {currentStepNum > 0 && (
+          <div className="flex items-center gap-1 px-1 pb-2">
+            {Array.from({ length: totalSteps }, (_, i) => {
+              const stepNum = i + 1;
+              const stepLabels = ['Projeto', 'Template', 'Produto', 'Imagem', 'Vídeo'];
+              const isActive = stepNum === currentStepNum;
+              const isDone = stepNum < currentStepNum;
+              return (
+                <div key={stepNum} className="flex items-center gap-1 flex-1">
+                  <div className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium w-full justify-center transition-colors",
+                    isActive ? "bg-primary text-primary-foreground" : isDone ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  )}>
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0", isActive ? "bg-primary-foreground text-primary" : isDone ? "bg-primary text-primary-foreground" : "bg-muted-foreground/30 text-muted-foreground")}>
+                      {isDone ? '✓' : stepNum}
+                    </span>
+                    <span className="truncate hidden sm:inline">{stepLabels[i]}</span>
+                  </div>
+                  {stepNum < totalSteps && <div className={cn("w-3 h-0.5 shrink-0", stepNum < currentStepNum ? "bg-primary" : "bg-border")} />}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
