@@ -1392,6 +1392,11 @@ const AutoGeneratePage: React.FC<{
   const [availableImageModels, setAvailableImageModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
   const [availableVideoModels, setAvailableVideoModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
 
+  // Gallery selection
+  const [galleryImages, setGalleryImages] = useState<{ url: string; titulo: string }[]>([]);
+  const [galleryVideos, setGalleryVideos] = useState<{ url: string; titulo: string }[]>([]);
+  const [showGalleryPicker, setShowGalleryPicker] = useState<'image' | 'video' | null>(null);
+
   const MAX_VIDEO_DURATION = 8;
 
   useEffect(() => {
