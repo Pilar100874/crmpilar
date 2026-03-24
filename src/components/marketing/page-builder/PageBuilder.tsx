@@ -1473,6 +1473,27 @@ const AutoGeneratePage: React.FC<{
       setAvailableVideoModels(vidModels);
       if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
 
+      // Load gallery images and videos from contents table
+      const { data: imgContents } = await supabase
+        .from('contents')
+        .select('titulo, url')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['imagem', 'image', 'gif'])
+        .not('url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setGalleryImages((imgContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+
+      const { data: vidContents } = await supabase
+        .from('contents')
+        .select('titulo, url')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['video'])
+        .not('url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setGalleryVideos((vidContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+
       setLoading(false);
       setStep('select');
       setProgress([]);
