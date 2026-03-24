@@ -1694,9 +1694,9 @@ const AutoGeneratePage: React.FC<{
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            action: 'start_apiframe_video',
+            action: selectedVideoModel === 'google-veo' ? 'generate_video' : 'start_apiframe_video',
             params: {
-              model: 'auto',
+              model: selectedVideoModel === 'google-veo' ? 'google-veo' : (selectedVideoModel === 'auto' ? 'auto' : selectedVideoModel),
               prompt: videoGenPrompt,
               estabelecimentoId: estabId,
               duration: MAX_VIDEO_DURATION,
