@@ -1599,26 +1599,41 @@ const AutoGeneratePage: React.FC<{
       const estabId = localStorage.getItem('estabelecimentoId');
       
       // Step 1: Start the video generation (returns taskId for async providers)
-      const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          action: 'start_apiframe_video',
-          params: {
-            model: 'auto',
-            prompt: videoGenPrompt,
-            estabelecimentoId: estabId,
-            duration: MAX_VIDEO_DURATION,
-            aspectRatio: '16:9',
-            imageUrls: generatedImageUrl ? [generatedImageUrl] : [],
-            withAudio: false,
-            withMusic: false,
+      const startController = new AbortController();
+      const startTimeout = setTimeout(() => startController.abort(), 55000); // 55s timeout
+      let videoGenResponse: Response;
+      try {
+        videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+          method: 'POST',
+          signal: startController.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-        }),
-      });
+          body: JSON.stringify({
+            action: 'start_apiframe_video',
+            params: {
+              model: 'auto',
+              prompt: videoGenPrompt,
+              estabelecimentoId: estabId,
+              duration: MAX_VIDEO_DURATION,
+              aspectRatio: '16:9',
+              imageUrls: generatedImageUrl ? [generatedImageUrl] : [],
+              withAudio: false,
+              withMusic: false,
+            },
+          }),
+        });
+      } catch (fetchErr: any) {
+        clearTimeout(startTimeout);
+        const msg = fetchErr?.name === 'AbortError'
+          ? 'Timeout ao conectar com o servidor de vídeo. Tente novamente.'
+          : 'Erro de conexão com o servidor. Verifique sua internet e tente novamente.';
+        setVideoError(msg);
+        setVideoLoading(false);
+        return;
+      }
+      clearTimeout(startTimeout);
 
       if (!videoGenResponse.ok) {
         const errText = await videoGenResponse.text().catch(() => '');
