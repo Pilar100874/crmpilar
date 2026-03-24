@@ -2423,10 +2423,32 @@ const AutoGeneratePage: React.FC<{
               </div>
             )}
 
+            {/* Gallery picker */}
+            {showGalleryPicker === 'image' && galleryImages.length > 0 && (
+              <div className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
+                  {galleryImages.map((img, i) => (
+                    <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
+                      <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleGenerateImage} disabled={imageLoading} variant={generatedImageUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {imageLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando imagem...</> : <><Wand2 className="h-4 w-4" /> {generatedImageUrl ? 'Regenerar Imagem' : 'Gerar Imagem'}</>}
               </Button>
+              {galleryImages.length > 0 && (
+                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
+                  <FolderOpen className="h-4 w-4" /> Galeria
+                </Button>
+              )}
               <Button onClick={() => setStep('video_script')} disabled={imageLoading} className="flex-1 gap-2">
                 {generatedImageUrl ? 'Próximo: Vídeo →' : 'Pular → Vídeo'} 
               </Button>
