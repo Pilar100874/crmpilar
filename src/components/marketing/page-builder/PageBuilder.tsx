@@ -2469,7 +2469,7 @@ const AutoGeneratePage: React.FC<{
             )}
 
             <div className="flex gap-2">
-              <Button onClick={handleGenerateVideo} disabled={videoLoading} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
+              <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
