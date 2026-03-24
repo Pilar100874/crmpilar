@@ -1711,7 +1711,12 @@ const AutoGeneratePage: React.FC<{
       }
       setVideoError('Tempo limite excedido aguardando o vídeo. Tente novamente.');
     } catch (err: any) {
-      setVideoError(err?.message || 'Erro ao gerar vídeo.');
+      const errMsg = err?.message || '';
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('fetch')) {
+        setVideoError('Erro de conexão com o servidor de vídeo. Verifique sua internet e tente novamente.');
+      } else {
+        setVideoError(errMsg || 'Erro ao gerar vídeo.');
+      }
     }
     setVideoLoading(false);
   };
