@@ -1376,6 +1376,7 @@ const AutoGeneratePage: React.FC<{
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [selectedImageModel, setSelectedImageModel] = useState('gemini-flash-image');
 
   // Video step
   const [videoScripts, setVideoScripts] = useState<{ agent: string; icon: string; label: string; storyboard: any[]; prompt: string }[]>([]);
@@ -1383,6 +1384,11 @@ const AutoGeneratePage: React.FC<{
   const [customVideoPrompt, setCustomVideoPrompt] = useState('');
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
   const [videoLoading, setVideoLoading] = useState(false);
+  const [selectedVideoModel, setSelectedVideoModel] = useState('auto');
+
+  // Available models
+  const [availableImageModels, setAvailableImageModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
+  const [availableVideoModels, setAvailableVideoModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
 
   const MAX_VIDEO_DURATION = 8;
 
