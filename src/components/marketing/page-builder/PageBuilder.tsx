@@ -1546,31 +1546,57 @@ const AutoGeneratePage: React.FC<{
     setDataLoading(false);
   };
 
-  // ── Generate Image ──
+  // ── Generate Image (with auto-retry on 429) ──
   const handleGenerateImage = async () => {
     const selectedProd = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
     if (!selectedProd) return;
     setImageLoading(true);
     setImageError('');
-    try {
-      const promptText = customImagePrompt || imageTexts[selectedImageTextIdx]?.text || selectedProd.nome;
-      const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', {
-        body: {
-          action: 'generate_page_media',
-          mediaType: 'image',
-          productName: selectedProd.nome,
-          productDescription: selectedProd.descricao || '',
-          productImageUrl: selectedProd.foto_url || '',
-          marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
+
+    const maxRetries = 3;
+    const promptText = customImagePrompt || imageTexts[selectedImageTextIdx]?.text || selectedProd.nome;
+    const invokeBody = {
+      action: 'generate_page_media',
+      mediaType: 'image',
+      productName: selectedProd.nome,
+      productDescription: selectedProd.descricao || '',
+      productImageUrl: selectedProd.foto_url || '',
+      marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
+    };
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { data: mediaResult, error: mediaError } = await supabase.functions.invoke('strategy-engine', { body: invokeBody });
+        const errText = mediaError?.message || mediaResult?.error || '';
+        const is429 = errText.includes('429') || errText.toLowerCase().includes('rate limit') || errText.toLowerCase().includes('resource exhausted');
+
+        if (is429 && attempt < maxRetries) {
+          const delay = attempt * 4000; // 4s, 8s
+          setImageError(`Limite de requisições atingido. Tentando novamente em ${delay / 1000}s... (tentativa ${attempt + 1}/${maxRetries})`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
         }
-      });
-      if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
-        setGeneratedImageUrl(mediaResult.generatedImageUrl);
-      } else {
-        setImageError(mediaResult?.error || 'Não foi possível gerar a imagem. Tente novamente.');
+
+        if (!mediaError && mediaResult?.success && mediaResult?.generatedImageUrl) {
+          setGeneratedImageUrl(mediaResult.generatedImageUrl);
+          setImageError('');
+          break;
+        } else {
+          setImageError(errText || 'Não foi possível gerar a imagem. Tente novamente.');
+          break;
+        }
+      } catch (err: any) {
+        const errMsg = err?.message || '';
+        const is429 = errMsg.includes('429') || errMsg.toLowerCase().includes('rate limit');
+        if (is429 && attempt < maxRetries) {
+          const delay = attempt * 4000;
+          setImageError(`Limite de requisições atingido. Tentando novamente em ${delay / 1000}s... (tentativa ${attempt + 1}/${maxRetries})`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        setImageError(errMsg || 'Erro ao gerar imagem.');
+        break;
       }
-    } catch (err: any) {
-      setImageError(err?.message || 'Erro ao gerar imagem.');
     }
     setImageLoading(false);
   };
