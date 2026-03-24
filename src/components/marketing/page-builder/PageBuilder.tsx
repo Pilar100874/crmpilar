@@ -1601,13 +1601,24 @@ const AutoGeneratePage: React.FC<{
 
     const maxRetries = 3;
     const promptText = customImagePrompt || imageTexts[selectedImageTextIdx]?.text || selectedProd.nome;
-    const invokeBody = {
+
+    // Map model IDs to backend params
+    const imageModelMap: Record<string, string> = {
+      'gemini-flash-image': 'google/gemini-3.1-flash-image-preview',
+      'gemini-pro-image': 'google/gemini-3-pro-image-preview',
+      'gemini-flash-image-old': 'google/gemini-2.5-flash-image',
+    };
+    const isApiframeImage = selectedImageModel.startsWith('apiframe/');
+
+    const invokeBody: Record<string, any> = {
       action: 'generate_page_media',
       mediaType: 'image',
       productName: selectedProd.nome,
       productDescription: selectedProd.descricao || '',
       productImageUrl: selectedProd.foto_url || '',
       marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
+      imageModel: isApiframeImage ? selectedImageModel : (imageModelMap[selectedImageModel] || 'google/gemini-3.1-flash-image-preview'),
+      useApiframe: isApiframeImage,
     };
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
