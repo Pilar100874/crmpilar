@@ -1376,6 +1376,7 @@ const AutoGeneratePage: React.FC<{
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [selectedImageModel, setSelectedImageModel] = useState('gemini-flash-image');
 
   // Video step
   const [videoScripts, setVideoScripts] = useState<{ agent: string; icon: string; label: string; storyboard: any[]; prompt: string }[]>([]);
@@ -1383,6 +1384,11 @@ const AutoGeneratePage: React.FC<{
   const [customVideoPrompt, setCustomVideoPrompt] = useState('');
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState('');
   const [videoLoading, setVideoLoading] = useState(false);
+  const [selectedVideoModel, setSelectedVideoModel] = useState('auto');
+
+  // Available models
+  const [availableImageModels, setAvailableImageModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
+  const [availableVideoModels, setAvailableVideoModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
 
   const MAX_VIDEO_DURATION = 8;
 
@@ -1401,6 +1407,46 @@ const AutoGeneratePage: React.FC<{
       const projs = data || [];
       setProjects(projs);
       if (projs.length > 0) setSelectedProject(projs[0].id);
+
+      // Load available AI models based on configured API keys
+      const imgModels: { id: string; label: string; paid: boolean }[] = [
+        { id: 'gemini-flash-image', label: 'Nano Banana 2 (Rápido)', paid: false },
+        { id: 'gemini-pro-image', label: 'Nano Banana Pro (Alta qualidade)', paid: false },
+        { id: 'gemini-flash-image-old', label: 'Nano Banana (Econômico)', paid: false },
+      ];
+      const vidModels: { id: string; label: string; paid: boolean }[] = [];
+
+      // Check paid providers
+      const { data: apiKeys } = await supabase
+        .from('ai_api_keys')
+        .select('provider, is_active')
+        .eq('estabelecimento_id', estabId)
+        .eq('is_active', true);
+
+      const activeProviders = (apiKeys || []).map(k => k.provider);
+
+      if (activeProviders.includes('apiframe')) {
+        imgModels.push(
+          { id: 'apiframe/flux-imagine', label: 'Flux (ApiFrame)', paid: true },
+          { id: 'apiframe/ideogram-imagine', label: 'Ideogram (ApiFrame)', paid: true },
+          { id: 'apiframe/gpt-image', label: 'GPT Image (ApiFrame)', paid: true },
+          { id: 'apiframe/midjourney-imagine', label: 'Midjourney (ApiFrame)', paid: true },
+        );
+        vidModels.push(
+          { id: 'apiframe/kling-2.6', label: 'Kling 2.6 (ApiFrame)', paid: true },
+          { id: 'apiframe/kling-2.5', label: 'Kling 2.5 Turbo (ApiFrame)', paid: true },
+          { id: 'apiframe/runway', label: 'Runway Gen4 (ApiFrame)', paid: true },
+          { id: 'apiframe/luma', label: 'Luma (ApiFrame)', paid: true },
+        );
+      }
+      if (activeProviders.includes('google')) {
+        vidModels.push({ id: 'google-veo', label: 'Google Veo', paid: true });
+      }
+
+      setAvailableImageModels(imgModels);
+      setAvailableVideoModels(vidModels);
+      if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
+
       setLoading(false);
       setStep('select');
       setProgress([]);
@@ -1555,13 +1601,26 @@ const AutoGeneratePage: React.FC<{
 
     const maxRetries = 3;
     const promptText = customImagePrompt || imageTexts[selectedImageTextIdx]?.text || selectedProd.nome;
-    const invokeBody = {
+
+    // Map model IDs to backend params
+    const imageModelMap: Record<string, string> = {
+      'gemini-flash-image': 'google/gemini-3.1-flash-image-preview',
+      'gemini-pro-image': 'google/gemini-3-pro-image-preview',
+      'gemini-flash-image-old': 'google/gemini-2.5-flash-image',
+    };
+    const isApiframeImage = selectedImageModel.startsWith('apiframe/');
+
+    const estabId = localStorage.getItem('estabelecimentoId');
+    const invokeBody: Record<string, any> = {
       action: 'generate_page_media',
       mediaType: 'image',
       productName: selectedProd.nome,
       productDescription: selectedProd.descricao || '',
       productImageUrl: selectedProd.foto_url || '',
       marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
+      imageModel: isApiframeImage ? selectedImageModel : (imageModelMap[selectedImageModel] || 'google/gemini-3.1-flash-image-preview'),
+      useApiframe: isApiframeImage,
+      estabelecimentoId: estabId,
     };
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -1637,9 +1696,9 @@ const AutoGeneratePage: React.FC<{
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            action: 'start_apiframe_video',
+            action: selectedVideoModel === 'google-veo' ? 'generate_video' : 'start_apiframe_video',
             params: {
-              model: 'auto',
+              model: selectedVideoModel === 'google-veo' ? 'google-veo' : (selectedVideoModel === 'auto' ? 'auto' : selectedVideoModel),
               prompt: videoGenPrompt,
               estabelecimentoId: estabId,
               duration: MAX_VIDEO_DURATION,
@@ -2262,6 +2321,22 @@ const AutoGeneratePage: React.FC<{
               </Card>
             )}
 
+            {/* Model selector */}
+            <div className="flex items-center gap-2">
+              <Label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Modelo:</Label>
+              <Select value={selectedImageModel} onValueChange={setSelectedImageModel}>
+                <SelectTrigger className="h-8 text-xs flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableImageModels.map(m => (
+                    <SelectItem key={m.id} value={m.id} className="text-xs">
+                      {m.paid ? '💲 ' : '✨ '}{m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {imageTexts.length > 0 ? (
               <ScrollArea className="flex-1 min-h-0 pr-2">
                 <div className="space-y-2">
@@ -2347,6 +2422,29 @@ const AutoGeneratePage: React.FC<{
               <p className="text-xs text-muted-foreground text-center py-4">Nenhum roteiro de agente disponível. Use o campo abaixo ou pule.</p>
             )}
 
+            {/* Model selector */}
+            {availableVideoModels.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <Label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Modelo:</Label>
+                <Select value={selectedVideoModel} onValueChange={setSelectedVideoModel}>
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVideoModels.map(m => (
+                      <SelectItem key={m.id} value={m.id} className="text-xs">
+                        {m.paid ? '💲 ' : '✨ '}{m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/5 p-2">
+                <p className="text-xs text-yellow-700 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Nenhum provedor de vídeo configurado. Configure uma API em Config APIs.</p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-[10px] font-medium text-muted-foreground">Ou escreva um prompt personalizado:</Label>
               <Textarea placeholder="Descreva o vídeo que deseja gerar..." value={customVideoPrompt} onChange={e => setCustomVideoPrompt(e.target.value)} className="text-xs min-h-[60px]" />
@@ -2371,7 +2469,7 @@ const AutoGeneratePage: React.FC<{
             )}
 
             <div className="flex gap-2">
-              <Button onClick={handleGenerateVideo} disabled={videoLoading} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
+              <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
