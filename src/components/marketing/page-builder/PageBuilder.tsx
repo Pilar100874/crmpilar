@@ -1945,7 +1945,47 @@ const AutoGeneratePage: React.FC<{
     }
 
     // 4. Features
-...
+    addProgress('⚡ Montando diferenciais...');
+    let featureItems: any[] = [];
+    if (aiCopy?.features && Array.isArray(aiCopy.features)) featureItems = aiCopy.features.slice(0, 6);
+    if (featureItems.length === 0) {
+      const featureSources = [
+        extractArray(pos, 'diferenciais', 'features', 'beneficios'),
+        extractArray(lp, 'features', 'recursos', 'beneficios'),
+        extractArray(funnel, 'etapas', 'features'),
+        extractArray(creative, 'beneficios', 'features'),
+        extractArray(cipherData, 'diferenciais', 'vantagens_competitivas'),
+      ].filter(arr => arr.length > 0);
+      const allFeats: any[] = [];
+      for (const source of featureSources) {
+        for (const f of source) {
+          const title = typeof f === 'string' ? f.slice(0, 50) : (f.title || f.titulo || f.name || f.nome || '');
+          const desc = typeof f === 'string' ? f : (f.description || f.descricao || f.texto || '');
+          if (!title || title.trim().length < 3 || !desc || desc.trim().length < 3) continue;
+          if (!allFeats.find(e => e.title === title)) {
+            allFeats.push({ icon: f.icon || ['🚀', '⚡', '🎯', '💡', '🔒', '📊'][allFeats.length % 6], title, description: desc });
+          }
+        }
+      }
+      featureItems = allFeats.slice(0, 6);
+    }
+    if (featureItems.length === 0) featureItems = [{ icon: '🚀', title: 'Agilidade', description: 'Descreva' }, { icon: '🎯', title: 'Precisão', description: 'Descreva' }, { icon: '💡', title: 'Inovação', description: 'Descreva' }];
+    sections.push({ id: `auto-feat-${Date.now()}`, type: 'features', title: aiCopy?.features_title || 'Por Que Nos Escolher', visible: true, styles: {}, content: { items: featureItems } });
+
+    // 5. Process Steps
+    addProgress('🔄 Montando etapas...');
+    let processItems: any[] = [];
+    if (aiCopy?.process_steps && Array.isArray(aiCopy.process_steps)) processItems = aiCopy.process_steps;
+    if (processItems.length === 0) {
+      const rawSteps = [...extractArray(funnel, 'etapas', 'stages', 'passos'), ...extractArray(lp, 'steps', 'como_funciona', 'etapas'), ...extractArray(pos, 'jornada_cliente', 'processo')];
+      if (rawSteps.length > 0) processItems = rawSteps.slice(0, 5).map((s: any, i: number) => ({ step: `${i + 1}`, title: typeof s === 'string' ? s.slice(0, 40) : (s.title || s.titulo || `Etapa ${i + 1}`), description: typeof s === 'string' ? s : (s.description || s.descricao || '') }));
+    }
+    if (processItems.length >= 2) sections.push({ id: `auto-process-${Date.now()}`, type: 'process_steps', title: '🔄 Como Funciona', visible: true, styles: {}, content: { title: aiCopy?.process_title || 'Como Funciona', items: processItems } });
+
+    // 6. About
+    addProgress('📝 Seção sobre o negócio...');
+    const aboutText = aiCopy?.about_text || pos?.historia || pos?.manifesto || vox?.resumo || project.descricao_negocio || 'Conte a história do seu negócio aqui.';
+    sections.push({ id: `auto-about-${Date.now()}`, type: 'text', title: aiCopy?.about_title || 'Nossa História', visible: true, styles: {}, content: { body: aboutText, alignment: 'center' } });
     // 7. Video (use pre-generated) — only add if there's a video
     if (generatedVideoUrl) {
       addProgress('🎬 Inserindo vídeo...');
