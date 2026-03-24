@@ -1682,7 +1682,30 @@ Deno.serve(async (req) => {
       }
 
       case "start_apiframe_video": {
-        const started = await startVideoApiframe(params.estabelecimentoId, params);
+        // Auto-detect provider if model is 'auto'
+        let videoParams = { ...params };
+        if (videoParams.model === 'auto' || !videoParams.model) {
+          const estabId = videoParams.estabelecimentoId;
+          // Check apiframe first
+          const afKey = await fetchApiKey(estabId, "apiframe");
+          if (afKey) {
+            videoParams.model = "apiframe/kling-2.6";
+          } else {
+            // Check google
+            const googleKey = await fetchApiKey(estabId, "google");
+            if (googleKey) {
+              // For google, use the full generate_video flow instead
+              const fullResult = await handleVideoGeneration(videoParams);
+              return new Response(JSON.stringify({ result: fullResult }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            return new Response(JSON.stringify({ result: { error: "Nenhum provedor de vídeo configurado. Configure uma API em Configurações → APIs Pagas." } }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+        const started = await startVideoApiframe(videoParams.estabelecimentoId, videoParams);
         return new Response(JSON.stringify({ result: started }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
