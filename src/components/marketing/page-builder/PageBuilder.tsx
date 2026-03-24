@@ -1392,6 +1392,11 @@ const AutoGeneratePage: React.FC<{
   const [availableImageModels, setAvailableImageModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
   const [availableVideoModels, setAvailableVideoModels] = useState<{ id: string; label: string; paid: boolean }[]>([]);
 
+  // Gallery selection
+  const [galleryImages, setGalleryImages] = useState<{ url: string; titulo: string }[]>([]);
+  const [galleryVideos, setGalleryVideos] = useState<{ url: string; titulo: string }[]>([]);
+  const [showGalleryPicker, setShowGalleryPicker] = useState<'image' | 'video' | null>(null);
+
   const MAX_VIDEO_DURATION = 8;
 
   useEffect(() => {
@@ -1467,6 +1472,27 @@ const AutoGeneratePage: React.FC<{
       setAvailableImageModels(imgModels);
       setAvailableVideoModels(vidModels);
       if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
+
+      // Load gallery images and videos from contents table
+      const { data: imgContents } = await supabase
+        .from('contents')
+        .select('titulo, url')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['imagem', 'image', 'gif'])
+        .not('url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setGalleryImages((imgContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+
+      const { data: vidContents } = await supabase
+        .from('contents')
+        .select('titulo, url')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['video'])
+        .not('url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setGalleryVideos((vidContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
 
       setLoading(false);
       setStep('select');
@@ -1928,15 +1954,16 @@ const AutoGeneratePage: React.FC<{
     if (socialProofItems.length === 0) socialProofItems.push({ number: '[Preencher]', label: 'Clientes' }, { number: '[Preencher]', label: 'Satisfação' }, { number: '[Preencher]', label: 'Anos' });
     sections.push({ id: `auto-social-${Date.now()}`, type: 'social_proof', title: '📊 Prova Social', visible: true, styles: {}, content: { items: socialProofItems.slice(0, 4) } });
 
-    // 3. Image (use pre-generated)
-    addProgress('📸 Inserindo imagem...');
+    // 3. Image (use pre-generated) — only add if there's an image
     const mainImageUrl = generatedImageUrl;
-    const mainImageAlt = mainImageUrl ? (selectedProd?.nome || 'Imagem do produto') : 'Imagem do produto/serviço';
-    const imgSuggestion = aiCopy?.image_suggestion || creative?.conceito_visual || 'Imagem profissional do produto';
-    sections.push({
-      id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
-      content: { url: mainImageUrl, alt: mainImageAlt, caption: mainImageUrl ? (selectedProd?.nome || '') : imgSuggestion, fit: 'cover', _media_suggestion: mainImageUrl ? '' : `🖼️ ${imgSuggestion}` }
-    });
+    if (mainImageUrl) {
+      addProgress('📸 Inserindo imagem...');
+      const mainImageAlt = selectedProd?.nome || 'Imagem do produto';
+      sections.push({
+        id: `auto-img-${Date.now()}`, type: 'image', title: '📸 Imagem Principal', visible: true, styles: {},
+        content: { url: mainImageUrl, alt: mainImageAlt, caption: selectedProd?.nome || '', fit: 'cover' }
+      });
+    }
 
     // 4. Features
     addProgress('⚡ Montando diferenciais...');
@@ -1980,19 +2007,15 @@ const AutoGeneratePage: React.FC<{
     addProgress('📝 Seção sobre o negócio...');
     const aboutText = aiCopy?.about_text || pos?.historia || pos?.manifesto || vox?.resumo || project.descricao_negocio || 'Conte a história do seu negócio aqui.';
     sections.push({ id: `auto-about-${Date.now()}`, type: 'text', title: aiCopy?.about_title || 'Nossa História', visible: true, styles: {}, content: { body: aboutText, alignment: 'center' } });
-
-    // 7. Video (use pre-generated)
-    addProgress('🎬 Inserindo vídeo...');
-    const videoContent: Record<string, any> = {
-      url: generatedVideoUrl || '',
-      poster: mainImageUrl || (selectedProd?.foto_url) || '',
-      autoplay: !!generatedVideoUrl,
-    };
-    if (!generatedVideoUrl) {
-      const videoSuggestion = aiCopy?.video_suggestion || vsl?.titulo || videoProd?.conceito || 'Grave um vídeo de apresentação.';
-      videoContent._media_suggestion = `🎬 ${videoSuggestion}`;
+    // 7. Video (use pre-generated) — only add if there's a video
+    if (generatedVideoUrl) {
+      addProgress('🎬 Inserindo vídeo...');
+      sections.push({ id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo', visible: true, styles: {}, content: {
+        url: generatedVideoUrl,
+        poster: mainImageUrl || (selectedProd?.foto_url) || '',
+        autoplay: true,
+      }});
     }
-    sections.push({ id: `auto-video-${Date.now()}`, type: 'video', title: '🎬 Vídeo', visible: true, styles: {}, content: videoContent });
 
     // 8. Testimonials
     addProgress('💬 Depoimentos...');
@@ -2400,10 +2423,32 @@ const AutoGeneratePage: React.FC<{
               </div>
             )}
 
+            {/* Gallery picker */}
+            {showGalleryPicker === 'image' && galleryImages.length > 0 && (
+              <div className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
+                  {galleryImages.map((img, i) => (
+                    <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
+                      <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleGenerateImage} disabled={imageLoading} variant={generatedImageUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {imageLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando imagem...</> : <><Wand2 className="h-4 w-4" /> {generatedImageUrl ? 'Regenerar Imagem' : 'Gerar Imagem'}</>}
               </Button>
+              {galleryImages.length > 0 && (
+                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
+                  <FolderOpen className="h-4 w-4" /> Galeria
+                </Button>
+              )}
               <Button onClick={() => setStep('video_script')} disabled={imageLoading} className="flex-1 gap-2">
                 {generatedImageUrl ? 'Próximo: Vídeo →' : 'Pular → Vídeo'} 
               </Button>
@@ -2489,10 +2534,32 @@ const AutoGeneratePage: React.FC<{
               </div>
             )}
 
+            {/* Gallery picker for videos */}
+            {showGalleryPicker === 'video' && galleryVideos.length > 0 && (
+              <div className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
+                  {galleryVideos.map((vid, i) => (
+                    <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
+                      <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
+              {galleryVideos.length > 0 && (
+                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
+                  <FolderOpen className="h-4 w-4" /> Galeria
+                </Button>
+              )}
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
                 <Zap className="h-4 w-4" /> Finalizar Página
               </Button>
