@@ -1183,6 +1183,8 @@ function generateFullHTML(sections: PageSection[], config: PageConfig): string {
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor};-webkit-text-size-adjust:100%}
+h1,h2,h3,h4,h5,h6{font-family:'${cfg.fontDisplay}',sans-serif}
+p,span,li,a,td,th,label,input,textarea,select,button{font-family:'${cfg.fontBody}',sans-serif}
 .container{max-width:${cfg.maxWidth};margin:0 auto;padding:0 24px}
 img{max-width:100%;height:auto}video{max-width:100%;height:auto}
 a{text-decoration:none}
