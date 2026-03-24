@@ -2534,10 +2534,32 @@ const AutoGeneratePage: React.FC<{
               </div>
             )}
 
+            {/* Gallery picker for videos */}
+            {showGalleryPicker === 'video' && galleryVideos.length > 0 && (
+              <div className="rounded-xl border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
+                  {galleryVideos.map((vid, i) => (
+                    <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
+                      <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
+              {galleryVideos.length > 0 && (
+                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
+                  <FolderOpen className="h-4 w-4" /> Galeria
+                </Button>
+              )}
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
                 <Zap className="h-4 w-4" /> Finalizar Página
               </Button>
