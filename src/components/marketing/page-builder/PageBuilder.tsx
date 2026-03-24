@@ -1610,6 +1610,7 @@ const AutoGeneratePage: React.FC<{
     };
     const isApiframeImage = selectedImageModel.startsWith('apiframe/');
 
+    const estabId = localStorage.getItem('estabelecimentoId');
     const invokeBody: Record<string, any> = {
       action: 'generate_page_media',
       mediaType: 'image',
@@ -1619,6 +1620,7 @@ const AutoGeneratePage: React.FC<{
       marketingContext: `${promptText}. ${projects.find(p => p.id === selectedProject)?.descricao_negocio || ''}`,
       imageModel: isApiframeImage ? selectedImageModel : (imageModelMap[selectedImageModel] || 'google/gemini-3.1-flash-image-preview'),
       useApiframe: isApiframeImage,
+      estabelecimentoId: estabId,
     };
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
