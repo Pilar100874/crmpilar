@@ -1597,6 +1597,8 @@ const AutoGeneratePage: React.FC<{
       }
 
       const estabId = localStorage.getItem('estabelecimentoId');
+      
+      // Step 1: Start the video generation (returns taskId for async providers)
       const videoGenResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
         method: 'POST',
         headers: {
@@ -1604,7 +1606,7 @@ const AutoGeneratePage: React.FC<{
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          action: 'generate_video',
+          action: 'start_apiframe_video',
           params: {
             model: 'auto',
             prompt: videoGenPrompt,
@@ -1618,15 +1620,7 @@ const AutoGeneratePage: React.FC<{
         }),
       });
 
-      if (videoGenResponse.ok) {
-        const videoGenResult = await videoGenResponse.json();
-        if (videoGenResult?.result?.videoUrl) {
-          setGeneratedVideoUrl(videoGenResult.result.videoUrl);
-        } else {
-          const errMsg = videoGenResult?.result?.error?.substring(0, 200) || 'O provedor de vídeo não retornou resultado.';
-          setVideoError(errMsg);
-        }
-      } else {
+      if (!videoGenResponse.ok) {
         const errText = await videoGenResponse.text().catch(() => '');
         try {
           const errJson = JSON.parse(errText);
@@ -1637,9 +1631,72 @@ const AutoGeneratePage: React.FC<{
         } catch {
           setVideoError(`Erro HTTP ${videoGenResponse.status} na geração de vídeo.`);
         }
+        setVideoLoading(false);
+        return;
       }
+
+      const startResult = await videoGenResponse.json();
+      const result = startResult?.result;
+
+      // If we got a direct videoUrl, we're done
+      if (result?.videoUrl) {
+        setGeneratedVideoUrl(result.videoUrl);
+        setVideoLoading(false);
+        return;
+      }
+
+      // If we got an error, show it
+      if (result?.error) {
+        setVideoError(result.error.substring(0, 300));
+        setVideoLoading(false);
+        return;
+      }
+
+      // If we got a taskId, poll for completion
+      const taskId = result?.taskId;
+      if (!taskId) {
+        setVideoError('O provedor de vídeo não retornou resultado. Tente novamente.');
+        setVideoLoading(false);
+        return;
+      }
+
+      // Step 2: Poll for completion (client-side, avoids edge function timeout)
+      const maxPolls = 60; // 60 * 5s = 5 minutes max
+      for (let i = 0; i < maxPolls; i++) {
+        await new Promise(r => setTimeout(r, 5000));
+        try {
+          const pollResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              action: 'fetch_apiframe_video',
+              params: { estabelecimentoId: estabId, taskId },
+            }),
+          });
+          if (!pollResp.ok) continue;
+          const pollData = await pollResp.json();
+          const pollResult = pollData?.result;
+          if (pollResult?.error) {
+            setVideoError(pollResult.error.substring(0, 300));
+            setVideoLoading(false);
+            return;
+          }
+          if (pollResult?.done && pollResult?.videoUrl) {
+            setGeneratedVideoUrl(pollResult.videoUrl);
+            setVideoLoading(false);
+            return;
+          }
+          // Not done yet, continue polling
+        } catch {
+          // Network hiccup, retry
+        }
+      }
+      setVideoError('Tempo limite excedido aguardando o vídeo. Tente novamente.');
     } catch (err: any) {
-      setVideoError(err?.message || 'Timeout ou erro na geração de vídeo.');
+      setVideoError(err?.message || 'Erro ao gerar vídeo.');
     }
     setVideoLoading(false);
   };
