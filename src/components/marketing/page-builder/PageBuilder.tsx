@@ -1416,15 +1416,17 @@ const AutoGeneratePage: React.FC<{
       ];
       const vidModels: { id: string; label: string; paid: boolean }[] = [];
 
-      // Check paid providers
+      // Check ALL configured providers from Config APIs
       const { data: apiKeys } = await supabase
         .from('ai_api_keys')
-        .select('provider, is_active')
-        .eq('estabelecimento_id', estabId)
-        .eq('is_active', true);
+        .select('provider, provider_display_name, is_active')
+        .eq('estabelecimento_id', estabId);
 
-      const activeProviders = (apiKeys || []).map(k => k.provider);
+      const allProviders = apiKeys || [];
+      const activeProviders = allProviders.filter(k => k.is_active).map(k => k.provider);
+      const inactiveProviders = allProviders.filter(k => !k.is_active).map(k => k.provider);
 
+      // ApiFrame models
       if (activeProviders.includes('apiframe')) {
         imgModels.push(
           { id: 'apiframe/flux-imagine', label: 'Flux (ApiFrame)', paid: true },
@@ -1439,8 +1441,25 @@ const AutoGeneratePage: React.FC<{
           { id: 'apiframe/luma', label: 'Luma (ApiFrame)', paid: true },
         );
       }
-      if (activeProviders.includes('google')) {
+      // Google Veo (video)
+      if (activeProviders.includes('google') || activeProviders.includes('veo3')) {
         vidModels.push({ id: 'google-veo', label: 'Google Veo', paid: true });
+      }
+      // OpenAI (image - DALL-E via API)
+      if (activeProviders.includes('openai')) {
+        imgModels.push({ id: 'openai/dall-e', label: 'DALL-E (OpenAI)', paid: true });
+      }
+      // Stability AI (image)
+      if (activeProviders.includes('stability')) {
+        imgModels.push({ id: 'stability/sdxl', label: 'Stable Diffusion (Stability)', paid: true });
+      }
+      // Replicate (image/video)
+      if (activeProviders.includes('replicate')) {
+        imgModels.push({ id: 'replicate/flux', label: 'Flux (Replicate)', paid: true });
+      }
+      // Seedream / ByteDance (image)
+      if (activeProviders.includes('seedream')) {
+        imgModels.push({ id: 'seedream/generate', label: 'Seedream (ByteDance)', paid: true });
       }
 
       setAvailableImageModels(imgModels);
