@@ -1538,6 +1538,8 @@ Retorne EXCLUSIVAMENTE um JSON com esta estrutura:
       const productImageUrl = body.productImageUrl || '';
       const marketingContext = body.marketingContext || '';
       const mediaType = body.mediaType || 'image'; // 'image' or 'video'
+      const imageModel = body.imageModel || 'google/gemini-3.1-flash-image-preview';
+      const useApiframe = body.useApiframe === true;
 
       if (mediaType === 'video') {
         // For video, generate a compelling prompt/storyboard
