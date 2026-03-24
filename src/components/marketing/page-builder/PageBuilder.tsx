@@ -1407,6 +1407,46 @@ const AutoGeneratePage: React.FC<{
       const projs = data || [];
       setProjects(projs);
       if (projs.length > 0) setSelectedProject(projs[0].id);
+
+      // Load available AI models based on configured API keys
+      const imgModels: { id: string; label: string; paid: boolean }[] = [
+        { id: 'gemini-flash-image', label: 'Nano Banana 2 (Rápido)', paid: false },
+        { id: 'gemini-pro-image', label: 'Nano Banana Pro (Alta qualidade)', paid: false },
+        { id: 'gemini-flash-image-old', label: 'Nano Banana (Econômico)', paid: false },
+      ];
+      const vidModels: { id: string; label: string; paid: boolean }[] = [];
+
+      // Check paid providers
+      const { data: apiKeys } = await supabase
+        .from('ai_api_keys')
+        .select('provider, is_active')
+        .eq('estabelecimento_id', estabId)
+        .eq('is_active', true);
+
+      const activeProviders = (apiKeys || []).map(k => k.provider);
+
+      if (activeProviders.includes('apiframe')) {
+        imgModels.push(
+          { id: 'apiframe/flux-imagine', label: 'Flux (ApiFrame)', paid: true },
+          { id: 'apiframe/ideogram-imagine', label: 'Ideogram (ApiFrame)', paid: true },
+          { id: 'apiframe/gpt-image', label: 'GPT Image (ApiFrame)', paid: true },
+          { id: 'apiframe/midjourney-imagine', label: 'Midjourney (ApiFrame)', paid: true },
+        );
+        vidModels.push(
+          { id: 'apiframe/kling-2.6', label: 'Kling 2.6 (ApiFrame)', paid: true },
+          { id: 'apiframe/kling-2.5', label: 'Kling 2.5 Turbo (ApiFrame)', paid: true },
+          { id: 'apiframe/runway', label: 'Runway Gen4 (ApiFrame)', paid: true },
+          { id: 'apiframe/luma', label: 'Luma (ApiFrame)', paid: true },
+        );
+      }
+      if (activeProviders.includes('google')) {
+        vidModels.push({ id: 'google-veo', label: 'Google Veo', paid: true });
+      }
+
+      setAvailableImageModels(imgModels);
+      setAvailableVideoModels(vidModels);
+      if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
+
       setLoading(false);
       setStep('select');
       setProgress([]);
