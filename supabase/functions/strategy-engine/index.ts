@@ -1595,39 +1595,65 @@ Retorne EXCLUSIVAMENTE um JSON:
       const rawPromptResult = await callAI(LOVABLE_API_KEY, 'Você é um diretor de arte publicitária. Crie prompts visuais impactantes.', imagePromptRequest);
       const promptData = extractJSON(rawPromptResult);
 
-      // Now generate the actual image using AI image generation
+      // Now generate the actual image
       let generatedImageUrl = '';
       try {
-        const messages: any[] = [];
-        
-        if (productImageUrl) {
-          // If product has an image, use it as reference for editing/composing
-          messages.push({
-            role: 'user',
-            content: [
-              { type: 'text', text: `Place this EXACT product in a professional advertising scene. CRITICAL RULES: 1) DO NOT modify, redesign, or alter the product appearance, packaging, label, colors, shape, or branding in ANY way. The product must look IDENTICAL to the reference image. 2) Only change the BACKGROUND and ENVIRONMENT around the product (lighting, surface, props, atmosphere). 3) NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. 4) Keep the product as the hero/focal point with premium studio lighting. ${promptData?.image_prompt || `Professional product photography of "${productName}" with studio lighting and clean composition.`}` },
-              { type: 'image_url', image_url: { url: productImageUrl } }
-            ]
-          });
-        } else {
-          messages.push({
-            role: 'user',
-            content: `NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY in the image. Pure visual only. ${promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style. No text overlay.`}`
-          });
-        }
+        if (useApiframe) {
+          // Use ApiFrame proxy for paid image models
+          const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+          const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          const afAction = imageModel.replace('apiframe/', '');
+          const afPrompt = promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, premium style. No text.`;
+          const afParams: Record<string, any> = { prompt: afPrompt };
+          if (productImageUrl) afParams.image_url = productImageUrl;
 
-        const imgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-3.1-flash-image-preview',
-            messages,
-            modalities: ['image', 'text'],
-          }),
-        });
+          const afResp = await fetch(`${SUPABASE_URL}/functions/v1/apiframe-proxy`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_ROLE_KEY}` },
+            body: JSON.stringify({ action: afAction, estabelecimentoId: body.estabelecimentoId || '', params: afParams }),
+          });
+          const afData = await afResp.json();
+          if (!afResp.ok || afData?.error) throw new Error(afData?.error || `Erro ApiFrame (${afResp.status})`);
+
+          // ApiFrame returns task_id for async generation - for page builder just return the task info
+          const directUrl = afData?.image_url || afData?.output?.[0]?.url || afData?.output?.image_url;
+          if (directUrl) {
+            generatedImageUrl = directUrl;
+          } else {
+            // Has task_id, need to poll - for simplicity just pass the error
+            throw new Error('ApiFrame imagem: geração em processamento. Tente novamente em alguns segundos.');
+          }
+        } else {
+          // Use Lovable AI gateway
+          const messages: any[] = [];
+          
+          if (productImageUrl) {
+            messages.push({
+              role: 'user',
+              content: [
+                { type: 'text', text: `Place this EXACT product in a professional advertising scene. CRITICAL RULES: 1) DO NOT modify, redesign, or alter the product appearance, packaging, label, colors, shape, or branding in ANY way. The product must look IDENTICAL to the reference image. 2) Only change the BACKGROUND and ENVIRONMENT around the product (lighting, surface, props, atmosphere). 3) NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY anywhere in the image. 4) Keep the product as the hero/focal point with premium studio lighting. ${promptData?.image_prompt || `Professional product photography of "${productName}" with studio lighting and clean composition.`}` },
+                { type: 'image_url', image_url: { url: productImageUrl } }
+              ]
+            });
+          } else {
+            messages.push({
+              role: 'user',
+              content: `NO TEXT, NO WORDS, NO LETTERS, NO TYPOGRAPHY in the image. Pure visual only. ${promptData?.image_prompt || `Professional advertising photo of "${productName}". ${productDescription}. Studio lighting, clean background, premium marketing style. No text overlay.`}`
+            });
+          }
+
+          const imgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: imageModel,
+              messages,
+              modalities: ['image', 'text'],
+            }),
+          });
 
         if (!imgResponse.ok) {
           const errText = await imgResponse.text();
