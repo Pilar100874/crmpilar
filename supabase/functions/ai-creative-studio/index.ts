@@ -832,6 +832,15 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     if (dirMatch?.[1]?.trim()) cleanPrompt = dirMatch[1].trim();
     console.log(`[apiframe-video] Bridge mode: cleaned prompt to "${cleanPrompt.substring(0, 120)}..."`);
   }
+  // Apiframe has a prompt length limit (~500 chars for most models)
+  // Truncate long storyboard prompts to a concise version
+  if (cleanPrompt.length > 480) {
+    // Try to extract just the product name and style from long prompts
+    const productMatch = cleanPrompt.match(/for "([^"]+)"/);
+    const productName = productMatch?.[1] || '';
+    cleanPrompt = `Cinematic promotional video for "${productName}". Professional product advertising, clean modern style, premium lighting, smooth camera movements. No text overlays, no audio.`;
+    console.log(`[apiframe-video] Prompt truncated from ${(params.prompt || "").length} chars to ${cleanPrompt.length}`);
+  }
   afParams.prompt = cleanPrompt;
 
   if (subModel === "kling-2.5") {
