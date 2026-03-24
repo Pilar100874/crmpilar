@@ -2319,6 +2319,22 @@ const AutoGeneratePage: React.FC<{
               </Card>
             )}
 
+            {/* Model selector */}
+            <div className="flex items-center gap-2">
+              <Label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Modelo:</Label>
+              <Select value={selectedImageModel} onValueChange={setSelectedImageModel}>
+                <SelectTrigger className="h-8 text-xs flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableImageModels.map(m => (
+                    <SelectItem key={m.id} value={m.id} className="text-xs">
+                      {m.paid ? '💲 ' : '✨ '}{m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {imageTexts.length > 0 ? (
               <ScrollArea className="flex-1 min-h-0 pr-2">
                 <div className="space-y-2">
