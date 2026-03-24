@@ -3209,16 +3209,50 @@ const PageBuilderEditor: React.FC<{
                   <div key={key}><Label className="text-[10px]">{label}</Label><div className="flex gap-1"><input type="color" value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="w-8 h-8 rounded border cursor-pointer" /><Input value={(config as any)[key]} onChange={e => setConfig(c => ({ ...c, [key]: e.target.value }))} className="text-xs h-8" /></div></div>
                 ))}
               </div>
-              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Tipografia</p>
+              <Separator /><p className="text-xs font-semibold text-muted-foreground uppercase">Estilos de Tipografia</p>
+              <p className="text-[10px] text-muted-foreground">Clique para aplicar um estilo pronto (mesmo do Editor de Design)</p>
+              <div className="grid grid-cols-2 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                {([
+                  { id: 'titulo-grande', name: 'Título Grande', display: 'Montserrat', body: 'Inter', preview: 'Aa', previewSub: 'Moderno e impactante' },
+                  { id: 'elegante', name: 'Elegante', display: 'Playfair Display', body: 'Raleway', preview: 'Aa', previewSub: 'Sofisticado e refinado' },
+                  { id: 'moderno-minimal', name: 'Minimalista', display: 'Poppins', body: 'Inter', preview: 'Aa', previewSub: 'Simples e direto' },
+                  { id: 'corporativo', name: 'Corporativo', display: 'Roboto', body: 'Open Sans', preview: 'Aa', previewSub: 'Profissional e limpo' },
+                  { id: 'luxo', name: 'Luxo Dourado', display: 'Cinzel', body: 'Cormorant Garamond', preview: 'Aa', previewSub: 'Premium e distinto' },
+                  { id: 'tech', name: 'Tech Futurista', display: 'Orbitron', body: 'Rajdhani', preview: 'Aa', previewSub: 'Inovação digital' },
+                  { id: 'retro', name: 'Retro Negrito', display: 'Bebas Neue', body: 'Oswald', preview: 'Aa', previewSub: 'Vibrante e ousado' },
+                  { id: 'serifado', name: 'Serifado Clássico', display: 'Merriweather', body: 'Lora', preview: 'Aa', previewSub: 'Atemporal' },
+                  { id: 'editorial', name: 'Editorial', display: 'DM Serif Display', body: 'IBM Plex Sans', preview: 'Aa', previewSub: 'Estilo jornalístico' },
+                  { id: 'fashion', name: 'Fashion Chic', display: 'Oswald', body: 'Raleway', preview: 'Aa', previewSub: 'Alta costura' },
+                  { id: 'esportivo', name: 'Esportivo', display: 'Alfa Slab One', body: 'Barlow', preview: 'Aa', previewSub: 'Energia e ação' },
+                  { id: 'art-deco', name: 'Art Déco', display: 'Poiret One', body: 'Raleway', preview: 'Aa', previewSub: 'Glamour geométrico' },
+                  { id: 'food', name: 'Food Gourmet', display: 'Lobster Two', body: 'Lato', preview: 'Aa', previewSub: 'Gastronômico' },
+                  { id: 'natureza', name: 'Natural', display: 'Amatic SC', body: 'Nunito', preview: 'Aa', previewSub: 'Orgânico e suave' },
+                  { id: 'geometrico', name: 'Geométrico', display: 'Exo 2', body: 'Barlow', preview: 'Aa', previewSub: 'Formas precisas' },
+                  { id: 'negocios', name: 'Negócios', display: 'Roboto Slab', body: 'Source Sans Pro', preview: 'Aa', previewSub: 'Formal e confiável' },
+                  { id: 'neon', name: 'Neon Vibrante', display: 'Righteous', body: 'Nunito', preview: 'Aa', previewSub: 'Energia pura' },
+                  { id: 'vintage', name: 'Vintage', display: 'Abril Fatface', body: 'Libre Baskerville', preview: 'Aa', previewSub: 'Charme retrô' },
+                  { id: 'zen', name: 'Zen Minimalista', display: 'Work Sans', body: 'Noto Sans', preview: 'Aa', previewSub: 'Paz e equilíbrio' },
+                  { id: 'swiss', name: 'Suíço', display: 'Space Grotesk', body: 'DM Sans', preview: 'Aa', previewSub: 'Funcional e preciso' },
+                ] as { id: string; name: string; display: string; body: string; preview: string; previewSub: string }[]).map(style => (
+                  <button key={style.id} onClick={() => setConfig(c => ({ ...c, fontDisplay: style.display, fontBody: style.body }))}
+                    className={cn("flex flex-col items-start p-2 rounded-lg border text-left transition-all hover:shadow-sm", config.fontDisplay === style.display && config.fontBody === style.body ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/50 hover:border-primary/30")}>
+                    <span className="text-lg font-bold leading-none" style={{ fontFamily: style.display }}>{style.preview}</span>
+                    <span className="text-[10px] font-semibold mt-0.5 truncate w-full">{style.name}</span>
+                    <span className="text-[8px] text-muted-foreground truncate w-full" style={{ fontFamily: style.body }}>{style.previewSub}</span>
+                  </button>
+                ))}
+              </div>
+              <Separator className="my-1" />
+              <p className="text-[10px] font-medium text-muted-foreground">Ou escolha manualmente:</p>
               <div className="grid grid-cols-2 gap-2">
                 <div><Label className="text-[10px]">Display (Títulos)</Label>
                   <select value={config.fontDisplay} onChange={e => setConfig(c => ({ ...c, fontDisplay: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontDisplay }}>
-                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Oswald', 'Playfair Display', 'Merriweather', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Georgia', 'Bebas Neue', 'Archivo', 'Barlow', 'Manrope', 'Lexend', 'Satoshi', 'Cabinet Grotesk'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Oswald', 'Playfair Display', 'Merriweather', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Bricolage Grotesque', 'Plus Jakarta Sans', 'Georgia', 'Bebas Neue', 'Archivo', 'Barlow', 'Manrope', 'Lexend', 'Cinzel', 'Orbitron', 'Alfa Slab One', 'Poiret One', 'Lobster Two', 'Amatic SC', 'Exo 2', 'Roboto Slab', 'Righteous', 'Abril Fatface', 'DM Serif Display', 'Rajdhani', 'Cormorant Garamond'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
                   </select>
                 </div>
                 <div><Label className="text-[10px]">Body (Textos)</Label>
                   <select value={config.fontBody} onChange={e => setConfig(c => ({ ...c, fontBody: e.target.value }))} className="w-full h-8 rounded-md border bg-background px-2 text-xs" style={{ fontFamily: config.fontBody }}>
-                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Plus Jakarta Sans', 'Georgia', 'Barlow', 'Manrope', 'Lexend', 'Merriweather', 'Source Sans Pro', 'Noto Sans', 'IBM Plex Sans', 'Figtree'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+                    {['Inter', 'Poppins', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Raleway', 'Nunito', 'Rubik', 'Work Sans', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Plus Jakarta Sans', 'Georgia', 'Barlow', 'Manrope', 'Lexend', 'Merriweather', 'Source Sans Pro', 'Noto Sans', 'IBM Plex Sans', 'Figtree', 'Cormorant Garamond', 'Rajdhani', 'Oswald', 'Lora', 'Libre Baskerville'].map(f => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
                   </select>
                 </div>
               </div>
