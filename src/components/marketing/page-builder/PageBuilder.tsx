@@ -2420,6 +2420,29 @@ const AutoGeneratePage: React.FC<{
               <p className="text-xs text-muted-foreground text-center py-4">Nenhum roteiro de agente disponível. Use o campo abaixo ou pule.</p>
             )}
 
+            {/* Model selector */}
+            {availableVideoModels.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <Label className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Modelo:</Label>
+                <Select value={selectedVideoModel} onValueChange={setSelectedVideoModel}>
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVideoModels.map(m => (
+                      <SelectItem key={m.id} value={m.id} className="text-xs">
+                        {m.paid ? '💲 ' : '✨ '}{m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/5 p-2">
+                <p className="text-xs text-yellow-700 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Nenhum provedor de vídeo configurado. Configure uma API em Config APIs.</p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-[10px] font-medium text-muted-foreground">Ou escreva um prompt personalizado:</Label>
               <Textarea placeholder="Descreva o vídeo que deseja gerar..." value={customVideoPrompt} onChange={e => setCustomVideoPrompt(e.target.value)} className="text-xs min-h-[60px]" />
