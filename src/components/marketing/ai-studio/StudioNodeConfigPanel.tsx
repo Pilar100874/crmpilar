@@ -563,9 +563,13 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
-  // Detect if this videoGen node has multiple distinct subject references connected
+  // Detect if this node has multiple distinct subject references connected (works for videoGen and imageGen)
   const hasMultipleSubjectRefs = useMemo(() => {
-    if (node.data.type !== 'videoGen' || !allNodes || !allEdges) return false;
+    if (node.data.type !== 'videoGen' && node.data.type !== 'imageGen' && node.data.type !== 'productComposite') {
+      if (!allNodes || !allEdges) return false;
+      return false;
+    }
+    if (!allNodes || !allEdges) return false;
     const incomingNodeIds = allEdges.filter(e => e.target === node.id).map(e => e.source);
     const incomingNodes = allNodes.filter(n => incomingNodeIds.includes(n.id));
     const subjectTypes = new Set<string>();
@@ -578,7 +582,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   }, [node.id, node.data.type, allNodes, allEdges]);
 
   const currentVideoModel = config.videoModel || 'free/gif-animated';
-  const isCurrentModelMultiRefCapable = isMultiRefModel(currentVideoModel);
+  const currentImageModel = config.model || 'google/gemini-2.5-flash-image';
+  const isCurrentModelMultiRefCapable = node.data.type === 'videoGen'
+    ? isMultiRefModel(currentVideoModel)
+    : isMultiRefModel(currentImageModel);
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
