@@ -1473,7 +1473,11 @@ const AutoGeneratePage: React.FC<{
       setAvailableVideoModels(vidModels);
       if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
 
-      // Load gallery images and videos from contents table
+      // Load gallery images from multiple sources
+      const allImages: { url: string; titulo: string }[] = [];
+      const allVideos: { url: string; titulo: string }[] = [];
+
+      // 1. contents table
       const { data: imgContents } = await supabase
         .from('contents')
         .select('titulo, url')
@@ -1482,7 +1486,7 @@ const AutoGeneratePage: React.FC<{
         .not('url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      setGalleryImages((imgContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+      (imgContents || []).filter(c => c.url).forEach(c => allImages.push({ url: c.url!, titulo: c.titulo }));
 
       const { data: vidContents } = await supabase
         .from('contents')
@@ -1492,7 +1496,37 @@ const AutoGeneratePage: React.FC<{
         .not('url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      setGalleryVideos((vidContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+      (vidContents || []).filter(c => c.url).forEach(c => allVideos.push({ url: c.url!, titulo: c.titulo }));
+
+      // 2. media_gallery table
+      const { data: mediaGallery } = await supabase
+        .from('media_gallery')
+        .select('nome, public_url, tipo')
+        .eq('estabelecimento_id', estabId)
+        .not('public_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      (mediaGallery || []).forEach((m: any) => {
+        if (m.tipo === 'image') allImages.push({ url: m.public_url, titulo: m.nome || 'Mídia' });
+        if (m.tipo === 'video') allVideos.push({ url: m.public_url, titulo: m.nome || 'Vídeo' });
+      });
+
+      // 3. catalog_ai_images table
+      const { data: aiImages } = await supabase
+        .from('catalog_ai_images')
+        .select('prompt, public_url')
+        .eq('estabelecimento_id', estabId)
+        .not('public_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      (aiImages || []).forEach((a: any) => allImages.push({ url: a.public_url, titulo: a.prompt || 'Imagem IA' }));
+
+      // Deduplicate by URL
+      const uniqueImages = allImages.filter((img, i, arr) => arr.findIndex(x => x.url === img.url) === i);
+      const uniqueVideos = allVideos.filter((vid, i, arr) => arr.findIndex(x => x.url === vid.url) === i);
+
+      setGalleryImages(uniqueImages);
+      setGalleryVideos(uniqueVideos);
 
       setLoading(false);
       setStep('select');
@@ -2424,19 +2458,23 @@ const AutoGeneratePage: React.FC<{
             )}
 
             {/* Gallery picker */}
-            {showGalleryPicker === 'image' && galleryImages.length > 0 && (
+            {showGalleryPicker === 'image' && (
               <div className="rounded-xl border p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
                   <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
                 </div>
-                <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
-                  {galleryImages.map((img, i) => (
-                    <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
-                      <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
+                {galleryImages.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
+                    {galleryImages.map((img, i) => (
+                      <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
+                        <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhuma imagem na galeria ainda.</p>
+                )}
               </div>
             )}
 
@@ -2444,11 +2482,9 @@ const AutoGeneratePage: React.FC<{
               <Button onClick={handleGenerateImage} disabled={imageLoading} variant={generatedImageUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {imageLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando imagem...</> : <><Wand2 className="h-4 w-4" /> {generatedImageUrl ? 'Regenerar Imagem' : 'Gerar Imagem'}</>}
               </Button>
-              {galleryImages.length > 0 && (
-                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
-                  <FolderOpen className="h-4 w-4" /> Galeria
-                </Button>
-              )}
+              <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
+                <FolderOpen className="h-4 w-4" /> Galeria
+              </Button>
               <Button onClick={() => setStep('video_script')} disabled={imageLoading} className="flex-1 gap-2">
                 {generatedImageUrl ? 'Próximo: Vídeo →' : 'Pular → Vídeo'} 
               </Button>
@@ -2535,19 +2571,23 @@ const AutoGeneratePage: React.FC<{
             )}
 
             {/* Gallery picker for videos */}
-            {showGalleryPicker === 'video' && galleryVideos.length > 0 && (
+            {showGalleryPicker === 'video' && (
               <div className="rounded-xl border p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
                   <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
                 </div>
-                <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
-                  {galleryVideos.map((vid, i) => (
-                    <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
-                      <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
-                    </button>
-                  ))}
-                </div>
+                {galleryVideos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
+                    {galleryVideos.map((vid, i) => (
+                      <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
+                        <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum vídeo na galeria ainda.</p>
+                )}
               </div>
             )}
 
@@ -2555,11 +2595,9 @@ const AutoGeneratePage: React.FC<{
               <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
-              {galleryVideos.length > 0 && (
-                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
-                  <FolderOpen className="h-4 w-4" /> Galeria
-                </Button>
-              )}
+              <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
+                <FolderOpen className="h-4 w-4" /> Galeria
+              </Button>
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
                 <Zap className="h-4 w-4" /> Finalizar Página
               </Button>
