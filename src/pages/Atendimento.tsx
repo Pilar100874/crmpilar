@@ -6290,13 +6290,13 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* Active Agent Banner */}
-              {activeClientAgent && (
+              {/* Active Agent Banner (compact, when panel is closed) */}
+              {activeClientAgent && !showAgentChatPanel && (
                 <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 mb-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-lg">{activeClientAgent.icone}</span>
                     <span className="font-medium">{activeClientAgent.nome}</span>
-                    <span className="text-muted-foreground">— respondendo automaticamente ao cliente</span>
+                    <span className="text-muted-foreground">— respondendo automaticamente</span>
                     {agentLoading && <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
                   </div>
                   <Button
@@ -6386,6 +6386,21 @@ ${recentMessages}
                   }}
                   isLoading={agentPrivateLoading}
                   clientMessages={messages.slice(-15)}
+                  isClientAgentActive={!!selectedConversation && !!activeClientAgents[selectedConversation] && activeClientAgents[selectedConversation]?.id === agentPrivateChatAgent.id}
+                  onActivateClientAgent={() => {
+                    if (!selectedConversation) return;
+                    setActiveClientAgents(prev => ({ ...prev, [selectedConversation]: agentPrivateChatAgent }));
+                    toast.success(`${agentPrivateChatAgent.icone} ${agentPrivateChatAgent.nome} ativado para responder ao cliente`);
+                  }}
+                  onDeactivateClientAgent={() => {
+                    if (!selectedConversation) return;
+                    setActiveClientAgents(prev => {
+                      const next = { ...prev };
+                      delete next[selectedConversation];
+                      return next;
+                    });
+                    toast.info("Agente suspenso — você voltou ao controle");
+                  }}
                 />
               )}
 

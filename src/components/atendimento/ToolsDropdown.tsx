@@ -176,25 +176,12 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                                 setOpen(false);
                                 setTimeout(() => onSelectAgent?.(agent, 'privado'), 150);
                               }}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border transition-colors"
-                              style={{ borderColor: agentColor + '40', color: agentColor }}
+                              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium text-white transition-colors"
+                              style={{ backgroundColor: agentColor }}
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
                               Conversar
                             </button>
-                            {agent.permite_cliente && (
-                              <button
-                                onClick={() => {
-                                  setOpen(false);
-                                  setTimeout(() => onSelectAgent?.(agent, 'cliente'), 150);
-                                }}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium text-white transition-colors"
-                                style={{ backgroundColor: agentColor }}
-                              >
-                                <Send className="h-3.5 w-3.5" />
-                                Enviar ao cliente
-                              </button>
-                            )}
                           </div>
                         </div>
                       );

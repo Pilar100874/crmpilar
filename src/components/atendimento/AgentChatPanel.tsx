@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, X, Copy, ArrowUp, MessageSquare, Eye } from 'lucide-react';
+import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,6 +24,9 @@ interface AgentChatPanelProps {
   onClose: () => void;
   isLoading: boolean;
   clientMessages?: Array<{ sender: string; text: string; created_at: string }>;
+  isClientAgentActive?: boolean;
+  onActivateClientAgent?: () => void;
+  onDeactivateClientAgent?: () => void;
 }
 
 export function AgentChatPanel({
@@ -35,6 +37,9 @@ export function AgentChatPanel({
   onClose,
   isLoading,
   clientMessages = [],
+  isClientAgentActive = false,
+  onActivateClientAgent,
+  onDeactivateClientAgent,
 }: AgentChatPanelProps) {
   const [input, setInput] = useState('');
   const [showClientContext, setShowClientContext] = useState(false);
@@ -87,6 +92,31 @@ export function AgentChatPanel({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {/* Activate/Deactivate client agent button */}
+          {agent.permite_cliente && (
+            isClientAgentActive ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onDeactivateClientAgent}
+                className="h-7 text-xs gap-1 rounded-full flex-shrink-0 bg-destructive/10 text-destructive hover:bg-destructive/20"
+              >
+                <Pause className="h-3 w-3" />
+                Suspender auto-resposta
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onActivateClientAgent}
+                className="h-7 text-xs gap-1 rounded-full flex-shrink-0 text-white hover:opacity-90"
+                style={{ backgroundColor: agentColor }}
+              >
+                <BotMessageSquare className="h-3 w-3" />
+                Ativar para cliente
+              </Button>
+            )
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -95,7 +125,7 @@ export function AgentChatPanel({
             style={{ color: agentColor }}
           >
             <Eye className="h-3 w-3" />
-            {showClientContext ? "Ocultar conversa" : "Ver conversa cliente"}
+            {showClientContext ? "Ocultar" : "Ver cliente"}
           </Button>
           <Button
             size="sm"
@@ -107,6 +137,14 @@ export function AgentChatPanel({
           </Button>
         </div>
       </div>
+
+      {/* Active agent indicator */}
+      {isClientAgentActive && (
+        <div className="px-4 py-1.5 text-[11px] font-medium flex items-center gap-1.5" style={{ backgroundColor: agentColor + '15', color: agentColor }}>
+          <div className="h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: agentColor }} />
+          Respondendo automaticamente ao cliente
+        </div>
+      )}
 
       <div className="p-4 space-y-3">
         {/* Client context panel */}
@@ -148,7 +186,7 @@ export function AgentChatPanel({
               </p>
               {agent.permite_cliente && (
                 <p className="text-[10px] mt-1 opacity-50">
-                  Você pode encaminhar respostas direto para o cliente.
+                  Use "Ativar para cliente" para respostas automáticas.
                 </p>
               )}
             </div>
@@ -195,7 +233,7 @@ export function AgentChatPanel({
                           size="sm"
                           variant="ghost"
                           className="h-5 text-[10px] px-1.5 gap-1 text-white hover:text-white"
-                          style={{ backgroundColor: agentColor, }}
+                          style={{ backgroundColor: agentColor }}
                           onClick={() => onSendToClient(msg.content)}
                         >
                           <Send className="h-3 w-3" /> Enviar ao cliente
