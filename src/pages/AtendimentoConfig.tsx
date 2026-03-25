@@ -488,7 +488,15 @@ export default function AtendimentoConfig() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="textos-prontos" className="mt-0 h-full">
+            <TabsContent value="agentes-chat" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Bot className="h-4 w-4 sm:h-5 sm:w-5" />Agentes de Chat</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Crie agentes de IA para auxiliar ou responder automaticamente no atendimento</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatAgentsCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><MessageSquareQuote className="h-4 w-4 sm:h-5 sm:w-5" />Textos Prontos</CardTitle>
