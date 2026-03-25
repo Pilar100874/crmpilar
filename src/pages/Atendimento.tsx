@@ -6402,6 +6402,8 @@ ${recentMessages}
                     });
                     toast.info("Agente suspenso — você voltou ao controle");
                   }}
+                  onInsertToClientChat={(text) => setInjectedChatText(text)}
+                  lastClientMessage={messages.filter(m => m.sender === 'customer').slice(-1)[0]?.text}
                 />
               )}
 
