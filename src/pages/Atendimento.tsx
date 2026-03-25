@@ -6437,8 +6437,27 @@ ${recentMessages}
                     </div>
                   ) : null}
                 </Card>
-              )}
+               )}
 
+              {/* Agent Chat Panel - Embedded */}
+              {showAgentChatPanel && agentPrivateChatAgent && (
+                <AgentChatPanel
+                  agent={agentPrivateChatAgent}
+                  messages={agentPrivateMessages}
+                  onSendMessage={(text) => handleAgentPrivateSend(text)}
+                  onSendToClient={(text) => {
+                    handleSendMessage(text, 'text');
+                    toast.success("Resposta do agente enviada ao cliente!");
+                  }}
+                  onClose={() => {
+                    setShowAgentChatPanel(false);
+                    setAgentPrivateChatAgent(null);
+                    setAgentPrivateMessages([]);
+                  }}
+                  isLoading={agentPrivateLoading}
+                  clientMessages={messages.slice(-15)}
+                />
+              )}
 
 
 
