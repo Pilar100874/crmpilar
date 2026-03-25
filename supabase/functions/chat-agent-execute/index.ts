@@ -17,7 +17,7 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { agent_id, mensagem_cliente, historico_chat, conversation_id } = await req.json();
+    const { agent_id, mensagem_cliente, historico_chat, conversation_id, modo_privado, contexto_chat_cliente } = await req.json();
 
     if (!agent_id || !mensagem_cliente) {
       return new Response(JSON.stringify({ error: "agent_id e mensagem_cliente são obrigatórios" }), {
@@ -121,6 +121,12 @@ serve(async (req) => {
     systemPrompt = systemPrompt.replace("{{mensagem_cliente}}", mensagem_cliente);
     systemPrompt += kbContext;
     systemPrompt += apiContext;
+
+    // Modo privado: adicionar contexto da conversa com o cliente
+    if (modo_privado && contexto_chat_cliente) {
+      systemPrompt += "\n\n--- CONTEXTO DA CONVERSA COM O CLIENTE ---\n" + contexto_chat_cliente + "\n--- FIM DO CONTEXTO ---\n";
+      systemPrompt += "\nIMPORTANTE: Você está conversando com o ATENDENTE (não com o cliente). Ajude o atendente a formular respostas, encontrar informações e resolver dúvidas. Seja direto e objetivo.";
+    }
 
     if (agent.knowledge_base_type === "externa" && kbContext) {
       systemPrompt += "\n\nIMPORTANTE: Responda EXCLUSIVAMENTE com base nos documentos fornecidos na Base de Conhecimento. Se a informação não estiver disponível nos documentos, informe que não possui essa informação.";
