@@ -558,7 +558,24 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
-  const update = (key: string, value: any) => {
+  // Detect if this videoGen node has multiple distinct subject references connected
+  const hasMultipleSubjectRefs = useMemo(() => {
+    if (node.data.type !== 'videoGen' || !allNodes || !allEdges) return false;
+    const incomingNodeIds = allEdges.filter(e => e.target === node.id).map(e => e.source);
+    const incomingNodes = allNodes.filter(n => incomingNodeIds.includes(n.id));
+    const subjectTypes = new Set<string>();
+    incomingNodes.forEach(n => {
+      const t = (n.data as any)?.type as StudioNodeType;
+      if (t === 'productImageSelect' || t === 'multiProductSelect') subjectTypes.add('produto');
+      if (t === 'galleryInfluencer') subjectTypes.add('influencer');
+    });
+    return subjectTypes.size >= 2;
+  }, [node.id, node.data.type, allNodes, allEdges]);
+
+  const currentVideoModel = config.videoModel || 'free/gif-animated';
+  const isCurrentModelMultiRefCapable = isMultiRefModel(currentVideoModel);
+
+
     onUpdateConfig(node.id, { [key]: value });
   };
 
