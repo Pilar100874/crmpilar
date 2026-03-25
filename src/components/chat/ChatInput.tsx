@@ -947,13 +947,13 @@ export default function ChatInput({
 
   // === ANEXOS ===
   groupAnexos.push(
-    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="image" icon={Image} title="Imagem" color="#10b981" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
-    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" color="#6366f1" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
-    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" color="#f59e0b" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
     <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
