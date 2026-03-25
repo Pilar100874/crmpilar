@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 
@@ -364,6 +364,24 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="conhecimento" className="mt-0 space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      Usar Produtos Importados de Terceiros
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      O agente terá acesso aos dados de produtos de terceiros ativos e válidos para enriquecer suas respostas com informações de estoque, preços e detalhes dos fornecedores.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.usar_produtos_importados || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })}
+                  />
+                </div>
+
+                <Separator />
+
                 <div>
                   <Label>Tipo de Base de Conhecimento</Label>
                   <Select value={formData.knowledge_base_type} onValueChange={v => setFormData({ ...formData, knowledge_base_type: v as any })}>
