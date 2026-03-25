@@ -325,7 +325,7 @@ export default function Atendimento() {
   const [creatingEmpresaForCustomerId, setCreatingEmpresaForCustomerId] = useState<string | null>(null);
 
   // Ferramentas dinâmicas por aba
-  const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
+  const { getRadialMenuItems, getToolbarFerramentas, getAllFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
   const { agents: chatAgents } = useChatAgents(estabelecimentoId || null);
 
   // Omnichannel routing
@@ -6441,7 +6441,7 @@ ${recentMessages}
               {/* Chat Tools & Agents */}
               <div className="flex items-center gap-2">
                 <ToolsDropdown
-                  ferramentas={getToolbarFerramentas('chat')}
+                  ferramentas={getAllFerramentas('chat')}
                   onSelectTool={handleToolSelect}
                   tabType="chat"
                   chatAgents={chatAgents}
@@ -6573,7 +6573,7 @@ ${recentMessages}
                 </div>
                 <div className="flex items-center gap-2">
                   <ToolsDropdown 
-                    ferramentas={getToolbarFerramentas('agenda')} 
+                    ferramentas={getAllFerramentas('agenda')} 
                     onSelectTool={handleToolSelect} 
                     tabType="agenda"
                     chatAgents={chatAgents}
@@ -6674,7 +6674,7 @@ ${recentMessages}
             }}
             toolsSlot={
               <ToolsDropdown 
-                ferramentas={getToolbarFerramentas('email')} 
+                ferramentas={getAllFerramentas('email')} 
                 onSelectTool={handleToolSelect} 
                 tabType="email"
                 chatAgents={chatAgents}
