@@ -232,6 +232,7 @@ export function AgentChatPanel({
                       data={parsed.tableData}
                       onSendToClient={agent.permite_cliente ? onSendToClient : undefined}
                       onInsertToClientChat={onInsertToClientChat}
+                      onSendFileToClient={onSendFileToClient}
                     />
                   )}
 
