@@ -10,6 +10,7 @@ export interface ChatAgent {
   icone: string;
   cor: string;
   modo_operacao: 'sugerir' | 'automatico';
+  permite_cliente: boolean;
   system_prompt: string;
   modelo_ia: string;
   knowledge_base_type: 'nenhuma' | 'interna' | 'externa';
@@ -63,6 +64,7 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
       icone: agent.icone || '🤖',
       cor: agent.cor || '#8B5CF6',
       modo_operacao: agent.modo_operacao || 'sugerir',
+      permite_cliente: agent.permite_cliente !== undefined ? agent.permite_cliente : true,
       system_prompt: agent.system_prompt || '',
       modelo_ia: agent.modelo_ia || 'google/gemini-3-flash-preview',
       knowledge_base_type: agent.knowledge_base_type || 'nenhuma',
