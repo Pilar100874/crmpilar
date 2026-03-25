@@ -16,6 +16,7 @@ export interface ChatAgent {
   knowledge_base_type: 'nenhuma' | 'interna' | 'externa';
   knowledge_base_internal_data: any[];
   api_endpoint_ids: string[];
+  usar_produtos_importados: boolean;
   ativo: boolean;
   ordem: number;
   created_at: string;
@@ -70,6 +71,7 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
       knowledge_base_type: agent.knowledge_base_type || 'nenhuma',
       knowledge_base_internal_data: agent.knowledge_base_internal_data || [],
       api_endpoint_ids: agent.api_endpoint_ids || [],
+      usar_produtos_importados: agent.usar_produtos_importados || false,
       ativo: agent.ativo !== undefined ? agent.ativo : true,
       ordem: agent.ordem || 0,
     };
