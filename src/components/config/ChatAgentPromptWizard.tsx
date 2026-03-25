@@ -207,13 +207,27 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
   const [aiDescription, setAiDescription] = useState('');
   const [generating, setGenerating] = useState(false);
 
+  const [freeText, setFreeText] = useState<string>(() => {
+    if (value?.trim()) return extractFreeText(value);
+    return '';
+  });
+
   const updateField = (field: keyof ChatAgentCardData, val: any) => {
     const updated = { ...cardData, [field]: val };
     setCardData(updated);
-    onChange(cardDataToPrompt(updated));
+    onChange(cardDataToPrompt(updated, freeText));
   };
 
-  const generatedPrompt = cardDataToPrompt(cardData);
+  const generatedPrompt = cardDataToPrompt(cardData, freeText);
+
+  // When preview textarea is edited directly, sync back
+  const handleDirectPromptEdit = (newPrompt: string) => {
+    const newCard = promptToCardData(newPrompt);
+    const newFree = extractFreeText(newPrompt);
+    setCardData(newCard);
+    setFreeText(newFree);
+    onChange(newPrompt);
+  };
 
   const handleGenerateWithAI = async () => {
     if (!aiDescription.trim()) {
