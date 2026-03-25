@@ -190,6 +190,7 @@ export default function Atendimento() {
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   const [activeClientAgents, setActiveClientAgents] = useState<Record<string, ChatAgent>>({});
   const activeClientAgentsRef = useRef<Record<string, ChatAgent>>({});
+  const [injectedChatText, setInjectedChatText] = useState<string | undefined>(undefined);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
