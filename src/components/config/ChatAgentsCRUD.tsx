@@ -374,6 +374,22 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-primary" />
+                      Usar Estoque do Sistema
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      O agente terá acesso aos produtos cadastrados no estoque do sistema (nome, código, preço, estoque disponível, marca, etc.).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.usar_estoque_sistema || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
                       <Package className="h-4 w-4 text-primary" />
                       Usar Produtos Importados de Terceiros
                     </Label>
