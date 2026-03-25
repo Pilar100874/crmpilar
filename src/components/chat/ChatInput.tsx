@@ -1058,7 +1058,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Webhook size={18} />
+                  <Webhook size={18} style={{ color: '#ec4899' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
