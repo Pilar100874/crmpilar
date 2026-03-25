@@ -2903,8 +2903,28 @@ ${recentMessages}
           }
 
           // Auto-reply with active client agent when customer sends a message
-          if (newMessage.sender === 'customer' && activeClientAgent) {
-            setTimeout(() => handleAgentAutoReply(newMessage.text), 500);
+          if (newMessage.sender === 'customer' && activeClientAgentRef.current) {
+            const agentToUse = activeClientAgentRef.current;
+            setTimeout(async () => {
+              setAgentLoading(true);
+              try {
+                const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+                  body: {
+                    agent_id: agentToUse.id,
+                    mensagem_cliente: newMessage.text,
+                    historico_chat: [],
+                    conversation_id: conversationId,
+                  },
+                });
+                if (error) throw error;
+                await handleSendMessage(data.resposta, 'text');
+              } catch (err: any) {
+                console.error("Erro no auto-reply:", err);
+                toast.error("Erro no agente automático");
+              } finally {
+                setAgentLoading(false);
+              }
+            }, 500);
           }
         }
       )
