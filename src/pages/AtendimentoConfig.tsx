@@ -82,6 +82,7 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
+  { id: 'agentes-chat', label: 'Agentes de Chat', icon: Bot },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
   { id: 'anexos-rapidos', label: 'Anexos Rápidos', icon: Paperclip },
   { id: 'skills', label: 'Skills de Atendimento', icon: Award },
