@@ -6463,6 +6463,8 @@ ${recentMessages}
                   customerId={selectedConv?.customer?.id}
                   chatAgents={chatAgents}
                   onSelectAgent={handleSelectAgent}
+                  externalText={injectedChatText}
+                  onExternalTextConsumed={() => setInjectedChatText(undefined)}
                 />
               </div>
             </div>
