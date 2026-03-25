@@ -110,6 +110,7 @@ const menuItems: MenuItem[] = [
     icon: MessageSquare,
     subItems: [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
+      { id: "Agentes IA", title: "Agentes IA", url: "/agentes-chat", icon: LucideIcons.Bot },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
