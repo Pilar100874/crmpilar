@@ -181,6 +181,11 @@ export default function Atendimento() {
   // Chat Agent states
   const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
   const [agentLoading, setAgentLoading] = useState(false);
+  const [agentPrivateChatOpen, setAgentPrivateChatOpen] = useState(false);
+  const [agentPrivateChatAgent, setAgentPrivateChatAgent] = useState<ChatAgent | null>(null);
+  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [agentPrivateInput, setAgentPrivateInput] = useState('');
+  const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
