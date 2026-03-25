@@ -183,8 +183,9 @@ export default function Atendimento() {
   const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentPrivateChatOpen, setAgentPrivateChatOpen] = useState(false);
+  const [showAgentChatPanel, setShowAgentChatPanel] = useState(false);
   const [agentPrivateChatAgent, setAgentPrivateChatAgent] = useState<ChatAgent | null>(null);
-  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }[]>([]);
   const [agentPrivateInput, setAgentPrivateInput] = useState('');
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   
