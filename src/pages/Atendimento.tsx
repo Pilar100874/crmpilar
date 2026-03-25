@@ -6438,16 +6438,8 @@ ${recentMessages}
                 </Card>
               )}
 
-              {/* Chat Tools & Agents */}
-              <div className="flex items-center gap-2">
-                <ToolsDropdown
-                  ferramentas={getAllFerramentas('chat')}
-                  onSelectTool={handleToolSelect}
-                  tabType="chat"
-                  chatAgents={chatAgents}
-                  onSelectAgent={handleSelectAgent}
-                />
-              </div>
+
+
 
               <div className="flex flex-col gap-3">
                 <ChatInput
