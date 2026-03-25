@@ -225,7 +225,13 @@ export function AgentChatPanel({
                   <p className="whitespace-pre-wrap break-words text-[13px] leading-snug">
                     {parsed ? parsed.text : msg.content}
                   </p>
-                  {parsed?.tableData && <AgentTableRenderer data={parsed.tableData} />}
+                  {parsed?.tableData && (
+                    <AgentTableRenderer
+                      data={parsed.tableData}
+                      onSendToClient={agent.permite_cliente ? onSendToClient : undefined}
+                      onInsertToClientChat={onInsertToClientChat}
+                    />
+                  )}
 
                   {msg.role === 'assistant' && (
                     <div className="flex gap-1 mt-2 pt-1 border-t border-border/30">
