@@ -387,7 +387,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     setFormData({
                       ...formData,
                       knowledge_base_type: tipo,
-                      ...(resetFlags ? { usar_estoque_sistema: false, usar_produtos_importados: false } : {}),
+                      ...(resetFlags ? { usar_estoque_sistema: false, usar_produtos_importados: false, api_endpoint_ids: [] } : {}),
                     });
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
