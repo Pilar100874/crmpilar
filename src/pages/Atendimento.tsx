@@ -3632,7 +3632,7 @@ ${recentMessages}
 
       if (error) throw error;
 
-      if (data?.modo_operacao === 'automatico') {
+      if (agent.permite_cliente) {
         await handleSendMessage(data.resposta, 'text');
         toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
       } else {
