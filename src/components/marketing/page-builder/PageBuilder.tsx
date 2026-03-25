@@ -2571,19 +2571,23 @@ const AutoGeneratePage: React.FC<{
             )}
 
             {/* Gallery picker for videos */}
-            {showGalleryPicker === 'video' && galleryVideos.length > 0 && (
+            {showGalleryPicker === 'video' && (
               <div className="rounded-xl border p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
                   <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
                 </div>
-                <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
-                  {galleryVideos.map((vid, i) => (
-                    <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
-                      <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
-                    </button>
-                  ))}
-                </div>
+                {galleryVideos.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-[160px] overflow-auto">
+                    {galleryVideos.map((vid, i) => (
+                      <button key={i} onClick={() => { setGeneratedVideoUrl(vid.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-video bg-muted flex items-center justify-center">
+                        <video src={vid.url} className="w-full h-full object-cover" muted preload="metadata" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhum vídeo na galeria ainda.</p>
+                )}
               </div>
             )}
 
