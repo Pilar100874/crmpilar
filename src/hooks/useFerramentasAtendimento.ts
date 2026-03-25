@@ -75,6 +75,13 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
     return ferramentas.filter(f => f[field] === true);
   }, [ferramentas]);
 
+  // Retorna TODAS as ferramentas de uma aba (toolbar + radial, sem duplicatas)
+  const getAllFerramentas = useCallback((tab: TabType) => {
+    const abaField = `aba_${tab}` as keyof FerramentaConfig;
+    const radialField = `radial_${tab}` as keyof FerramentaConfig;
+    return ferramentas.filter(f => f[abaField] === true || f[radialField] === true);
+  }, [ferramentas]);
+
   // Converte ferramentas para o formato do RadialMenu
   const getRadialMenuItems = useCallback((tab: TabType) => {
     const radialFerramentas = getRadialFerramentas(tab);
