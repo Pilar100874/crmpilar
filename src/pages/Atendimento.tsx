@@ -3648,11 +3648,11 @@ ${recentMessages}
     }
   };
 
-  const handleAgentPrivateSend = async () => {
-    if (!agentPrivateInput.trim() || !agentPrivateChatAgent || agentPrivateLoading) return;
-    const userMsg = agentPrivateInput.trim();
+  const handleAgentPrivateSend = async (userMsg?: string) => {
+    const msg = userMsg || agentPrivateInput.trim();
+    if (!msg || !agentPrivateChatAgent || agentPrivateLoading) return;
     setAgentPrivateInput('');
-    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: userMsg }];
+    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: msg, timestamp: new Date() }];
     setAgentPrivateMessages(newMessages);
     setAgentPrivateLoading(true);
 
@@ -3663,7 +3663,7 @@ ${recentMessages}
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
           agent_id: agentPrivateChatAgent.id,
-          mensagem_cliente: userMsg,
+          mensagem_cliente: msg,
           historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
           conversation_id: selectedConversation,
           modo_privado: true,
@@ -3672,7 +3672,7 @@ ${recentMessages}
       });
 
       if (error) throw error;
-      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta }]);
+      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta, timestamp: new Date() }]);
     } catch (err: any) {
       toast.error(err.message || "Erro ao consultar agente");
     } finally {
