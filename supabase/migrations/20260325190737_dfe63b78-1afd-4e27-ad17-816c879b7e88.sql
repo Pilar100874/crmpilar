@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN permite_cliente boolean NOT NULL DEFAULT true;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Wrench, X, Bot } from 'lucide-react';
+import { Wrench, X, Bot, MessageSquare, Send } from 'lucide-react';
 import { type FerramentaConfig, type TabType } from '@/hooks/useFerramentasAtendimento';
 import { type ChatAgent } from '@/hooks/useChatAgents';
 
@@ -11,7 +11,7 @@ interface ToolsDropdownProps {
   tabType: TabType;
   insideDialog?: boolean;
   chatAgents?: ChatAgent[];
-  onSelectAgent?: (agent: ChatAgent) => void;
+  onSelectAgent?: (agent: ChatAgent, mode: 'cliente' | 'privado') => void;
 }
 
 export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog = false, chatAgents = [], onSelectAgent }: ToolsDropdownProps) {
@@ -112,23 +112,44 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                 )}
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-muted-foreground px-1">Agentes de IA</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
                     {activeAgents.map(agent => (
-                      <button
+                      <div
                         key={agent.id}
-                        onClick={() => {
-                          setOpen(false);
-                          setTimeout(() => onSelectAgent?.(agent), 150);
-                        }}
-                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
-                        data-macro-id={`agent-${agent.id}`}
+                        className="rounded-lg border border-border p-3 space-y-2"
                       >
-                        <span className="text-xl">{agent.icone}</span>
-                        <span className="text-xs font-medium leading-tight">{agent.nome}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {agent.modo_operacao === 'automatico' ? '⚡ Auto' : '✨ Sugestão'}
-                        </span>
-                      </button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{agent.icone}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium leading-tight truncate">{agent.nome}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || 'Agente de IA'}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => {
+                              setOpen(false);
+                              setTimeout(() => onSelectAgent?.(agent, 'privado'), 150);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            Conversar
+                          </button>
+                          {agent.permite_cliente && (
+                            <button
+                              onClick={() => {
+                                setOpen(false);
+                                setTimeout(() => onSelectAgent?.(agent, 'cliente'), 150);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {agent.modo_operacao === 'automatico' ? 'Enviar ao cliente' : 'Sugerir resposta'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

@@ -181,6 +181,11 @@ export default function Atendimento() {
   // Chat Agent states
   const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
   const [agentLoading, setAgentLoading] = useState(false);
+  const [agentPrivateChatOpen, setAgentPrivateChatOpen] = useState(false);
+  const [agentPrivateChatAgent, setAgentPrivateChatAgent] = useState<ChatAgent | null>(null);
+  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [agentPrivateInput, setAgentPrivateInput] = useState('');
+  const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
@@ -3593,7 +3598,17 @@ ${recentMessages}
 
   
 
-  const handleSelectAgent = async (agent: ChatAgent) => {
+  const handleSelectAgent = async (agent: ChatAgent, mode: 'cliente' | 'privado' = 'cliente') => {
+    if (mode === 'privado') {
+      // Open private chat dialog with agent
+      setAgentPrivateChatAgent(agent);
+      setAgentPrivateMessages([]);
+      setAgentPrivateInput('');
+      setAgentPrivateChatOpen(true);
+      return;
+    }
+
+    // Mode 'cliente' — existing behavior
     if (!lastUserMessage) {
       toast.error("Nenhuma mensagem do cliente para processar");
       return;
@@ -3618,11 +3633,9 @@ ${recentMessages}
       if (error) throw error;
 
       if (data?.modo_operacao === 'automatico') {
-        // Enviar resposta diretamente
         await handleSendMessage(data.resposta, 'text');
         toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
       } else {
-        // Modo sugestão: mostrar para o atendente
         setAgentResponse(data);
         toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
       }
@@ -3632,6 +3645,48 @@ ${recentMessages}
     } finally {
       setAgentLoading(false);
     }
+  };
+
+  const handleAgentPrivateSend = async () => {
+    if (!agentPrivateInput.trim() || !agentPrivateChatAgent || agentPrivateLoading) return;
+    const userMsg = agentPrivateInput.trim();
+    setAgentPrivateInput('');
+    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: userMsg }];
+    setAgentPrivateMessages(newMessages);
+    setAgentPrivateLoading(true);
+
+    try {
+      // Include chat context if available
+      const chatContext = messages.slice(-10).map(m => `${m.sender === 'customer' ? 'Cliente' : 'Atendente'}: ${m.text}`).join('\n');
+
+      const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+        body: {
+          agent_id: agentPrivateChatAgent.id,
+          mensagem_cliente: userMsg,
+          historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
+          conversation_id: selectedConversation,
+          modo_privado: true,
+          contexto_chat_cliente: chatContext,
+        },
+      });
+
+      if (error) throw error;
+      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta }]);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao consultar agente");
+    } finally {
+      setAgentPrivateLoading(false);
+    }
+  };
+
+  const handleCopyAgentResponse = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Resposta copiada!");
+  };
+
+  const handleSendAgentResponseToChat = (text: string) => {
+    handleSendMessage(text, 'text');
+    toast.success("Resposta enviada ao cliente!");
   };
 
   // Handlers para os dialogs do RadialMenu
@@ -3678,6 +3733,92 @@ ${recentMessages}
 
   return (
     <>
+    {/* Dialog de Chat Privado com Agente */}
+    <Dialog open={agentPrivateChatOpen} onOpenChange={setAgentPrivateChatOpen}>
+      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0">
+        <DialogHeader className="px-4 pt-4 pb-2 border-b">
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <span className="text-xl">{agentPrivateChatAgent?.icone}</span>
+            Chat com {agentPrivateChatAgent?.nome}
+            <Badge variant="outline" className="text-[10px] ml-auto">Privado</Badge>
+          </DialogTitle>
+          <p className="text-xs text-muted-foreground">
+            Converse com o agente e copie as respostas para enviar ao cliente.
+          </p>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 px-4 py-3 min-h-0" style={{ maxHeight: '50vh' }}>
+          <div className="space-y-3">
+            {agentPrivateMessages.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-8">
+                Faça uma pergunta ao agente. O contexto da conversa atual com o cliente será incluído.
+              </p>
+            )}
+            {agentPrivateMessages.map((msg, idx) => (
+              <div key={idx} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                <div className={cn(
+                  "rounded-lg px-3 py-2 max-w-[85%] text-sm",
+                  msg.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                )}>
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'assistant' && (
+                    <div className="flex gap-1 mt-2 pt-1 border-t border-border/50">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => handleCopyAgentResponse(msg.content)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" /> Copiar
+                      </Button>
+                      {agentPrivateChatAgent?.permite_cliente && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => handleSendAgentResponseToChat(msg.content)}
+                        >
+                          <Send className="h-3 w-3 mr-1" /> Enviar ao cliente
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {agentPrivateLoading && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-lg px-3 py-2 text-sm flex items-center gap-2 text-muted-foreground">
+                  <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Pensando...
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <div className="px-4 py-3 border-t flex gap-2">
+          <Input
+            value={agentPrivateInput}
+            onChange={e => setAgentPrivateInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAgentPrivateSend()}
+            placeholder="Pergunte ao agente..."
+            disabled={agentPrivateLoading}
+            className="flex-1"
+          />
+          <Button
+            size="sm"
+            onClick={handleAgentPrivateSend}
+            disabled={agentPrivateLoading || !agentPrivateInput.trim()}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
     {/* Dialogs do RadialMenu */}
     <Dialog open={showRadialTranslateDialog} onOpenChange={setShowRadialTranslateDialog}>
       <DialogContent className="sm:max-w-md">

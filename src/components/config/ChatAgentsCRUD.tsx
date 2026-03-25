@@ -44,6 +44,7 @@ const emptyForm: Partial<ChatAgent> = {
   icone: '🤖',
   cor: '#8B5CF6',
   modo_operacao: 'sugerir',
+  permite_cliente: true,
   system_prompt: '',
   modelo_ia: 'google/gemini-3-flash-preview',
   knowledge_base_type: 'nenhuma',
@@ -104,6 +105,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       icone: agent.icone,
       cor: agent.cor,
       modo_operacao: agent.modo_operacao,
+      permite_cliente: agent.permite_cliente,
       system_prompt: agent.system_prompt,
       modelo_ia: agent.modelo_ia,
       knowledge_base_type: agent.knowledge_base_type,
@@ -240,6 +242,11 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     {agent.modo_operacao === 'automatico' ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
                     {agent.modo_operacao === 'automatico' ? 'Automático' : 'Sugestão'}
                   </Badge>
+                  {!agent.permite_cliente && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Somente interno
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
@@ -330,6 +337,18 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <Label>Pode ser direcionado ao cliente</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Se desativado, o agente só conversa com o atendente (chat privado) e não pode responder diretamente ao cliente.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.permite_cliente !== false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, permite_cliente: checked })}
+                  />
                 </div>
                 <div>
                   <Label>Modelo de IA</Label>
