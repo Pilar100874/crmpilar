@@ -257,6 +257,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       {(agent.api_endpoint_ids || []).length} API{(agent.api_endpoint_ids || []).length > 1 ? 's' : ''}
                     </Badge>
                   )}
+                  {agent.usar_produtos_importados && (
+                    <Badge variant="outline" className="text-xs">
+                      <Package className="h-3 w-3 mr-1" />
+                      Prod. Terceiros
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex gap-1 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(agent)}>
