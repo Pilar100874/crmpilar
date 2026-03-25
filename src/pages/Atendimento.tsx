@@ -6436,7 +6436,9 @@ ${recentMessages}
                   <ToolsDropdown 
                     ferramentas={getToolbarFerramentas('agenda')} 
                     onSelectTool={handleToolSelect} 
-                    tabType="agenda" 
+                    tabType="agenda"
+                    chatAgents={chatAgents}
+                    onSelectAgent={handleSelectAgent}
                   />
                   <Button
                     size="sm"
@@ -6535,7 +6537,9 @@ ${recentMessages}
               <ToolsDropdown 
                 ferramentas={getToolbarFerramentas('email')} 
                 onSelectTool={handleToolSelect} 
-                tabType="email" 
+                tabType="email"
+                chatAgents={chatAgents}
+                onSelectAgent={handleSelectAgent}
               />
             }
           />
