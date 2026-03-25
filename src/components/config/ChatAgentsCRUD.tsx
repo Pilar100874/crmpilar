@@ -381,7 +381,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 <div>
                   <Label className="text-base font-semibold">Tipo de Base de Conhecimento</Label>
                   <p className="text-xs text-muted-foreground mb-2">Define como o agente obtém informações para responder.</p>
-                  <Select value={formData.knowledge_base_type} onValueChange={v => setFormData({ ...formData, knowledge_base_type: v as any })}>
+                  <Select value={formData.knowledge_base_type} onValueChange={v => {
+                    const tipo = v as any;
+                    const resetFlags = tipo === 'nenhuma' || tipo === 'terceiros';
+                    setFormData({
+                      ...formData,
+                      knowledge_base_type: tipo,
+                      ...(resetFlags ? { usar_estoque_sistema: false, usar_produtos_importados: false } : {}),
+                    });
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="nenhuma">Somente Prompt — Responde apenas com as instruções do prompt</SelectItem>
