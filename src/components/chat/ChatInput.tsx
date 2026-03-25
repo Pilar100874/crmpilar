@@ -165,7 +165,7 @@ export default function ChatInput({
   // Agent Assist states
   const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [isSuggestingKBArticles, setIsSuggestingKBArticles] = useState(false);
+  
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslatePopover, setShowTranslatePopover] = useState(false);
   const [showRealTimeTranslatePopover, setShowRealTimeTranslatePopover] = useState(false);
@@ -247,9 +247,6 @@ export default function ChatInput({
         break;
       case 'summary':
         handleGenerateSummary();
-        break;
-      case 'kb':
-        handleSuggestKBArticles();
         break;
       case 'realtime-translate':
         setShowRealTimeTranslatePopover(true);
@@ -717,38 +714,6 @@ export default function ChatInput({
       setShowToolsMenu(false);
     }
   };
-
-  // Agent Assist - Suggest KB articles
-  const handleSuggestKBArticles = async () => {
-    if (!conversationId || conversationMessages.length === 0) {
-      toast.error("Nenhuma mensagem para analisar");
-      return;
-    }
-    setIsSuggestingKBArticles(true);
-    try {
-      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
-      const lastUserMessage = conversationMessages.filter(m => m.sender === 'customer').slice(-1)[0]?.text || '';
-      const response = await supabase.functions.invoke("agent-assist-suggest-kb", {
-        body: { conversationId, lastUserMessage, estabelecimentoId }
-      });
-      if (response.error) throw response.error;
-      const articles = response.data?.articles;
-      if (articles && articles.length > 0) {
-        const articleText = articles.map((a: any) => `• ${a.titulo}`).join("\n");
-        setMessage(articleText);
-        toast.success("Artigos sugeridos!");
-      } else {
-        toast.info("Nenhum artigo relevante encontrado");
-      }
-    } catch (error) {
-      console.error("Erro:", error);
-      toast.error("Erro ao buscar artigos");
-    } finally {
-      setIsSuggestingKBArticles(false);
-      setShowToolsMenu(false);
-    }
-  };
-
   // Translate message
   const handleTranslateMessage = async () => {
     if (!message.trim()) {
@@ -1186,9 +1151,6 @@ export default function ChatInput({
     );
   }
 
-  groupIA.push(
-    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" color="#8b5cf6" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
-  );
 
   // === TRADUÇÃO ===
   groupTraducao.push(

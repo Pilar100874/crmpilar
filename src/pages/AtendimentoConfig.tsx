@@ -56,7 +56,7 @@ import { OmnichannelFlowsCRUD } from '@/components/config/OmnichannelFlowsCRUD';
 import PesquisasSatisfacaoCRUD from '@/components/atendimento/PesquisasSatisfacaoCRUD';
 import QualityAssuranceCRUD from '@/components/config/QualityAssuranceCRUD';
 import SentimentAnalysisCRUD from '@/components/config/SentimentAnalysisCRUD';
-import KnowledgeBaseCRUD from '@/components/config/KnowledgeBaseCRUD';
+
 import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
@@ -93,7 +93,7 @@ const tabItems: TabItem[] = [
   { id: 'pesquisas', label: 'Pesquisas de Satisfação', icon: Star },
   { id: 'quality-assurance', label: 'Quality Assurance', icon: ClipboardCheck },
   { id: 'sentimento', label: 'Análise de Sentimento', icon: Brain },
-  { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
+  
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
   { id: 'templates-mensagem', label: 'Templates de Mensagem', icon: FileText },
@@ -597,15 +597,6 @@ export default function AtendimentoConfig() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="base-conhecimento" className="mt-0 h-full">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />Base de Conhecimento</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Gerencie artigos e documentação de suporte</CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="ia-config" className="mt-0 h-full">
               <Card className="h-full">
