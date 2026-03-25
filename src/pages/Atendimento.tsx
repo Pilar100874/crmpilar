@@ -3587,9 +3587,7 @@ ${recentMessages}
     }
   };
 
-  // Handler para seleção de agente de chat
-  const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
-  const [agentLoading, setAgentLoading] = useState(false);
+  
 
   const handleSelectAgent = async (agent: ChatAgent) => {
     if (!lastUserMessage) {
