@@ -272,21 +272,26 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
       {/* Dialog de Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{editingAgent ? 'Editar Agente' : 'Novo Agente de Chat'}</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-2xl">{formData.icone || '🤖'}</span>
+              {editingAgent ? 'Editar Agente' : 'Novo Agente de Chat'}
+            </DialogTitle>
             <DialogDescription>Configure um agente de IA para auxiliar no atendimento</DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="identidade" className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="identidade">Identidade</TabsTrigger>
-              <TabsTrigger value="prompt">Prompt</TabsTrigger>
-              <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
-              <TabsTrigger value="apis">APIs</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="identidade" className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-6 pt-4 shrink-0">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="identidade">Identidade</TabsTrigger>
+                <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
+                <TabsTrigger value="apis">APIs</TabsTrigger>
+              </TabsList>
+            </div>
 
-            <ScrollArea className="flex-1 mt-4 pr-2">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               <TabsContent value="identidade" className="mt-0 space-y-4">
                 <div>
                   <Label>Nome *</Label>
@@ -460,10 +465,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   )}
                 </div>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="px-6 py-4 border-t shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSave}>{editingAgent ? 'Atualizar' : 'Criar Agente'}</Button>
           </DialogFooter>

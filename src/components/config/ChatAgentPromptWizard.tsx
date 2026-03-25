@@ -240,7 +240,7 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
       </div>
 
       {/* Step Content */}
-      <div className="min-h-[280px]">
+      <div>
         {/* Step 0: AI Generation */}
         {step === 0 && (
           <div className="space-y-4">
