@@ -70,26 +70,15 @@ function formatSelectedAsText(items: any[]): string {
   if (items.length === 0) return '';
   const columns = Object.keys(items[0]);
 
-  // Calculate max width per column for alignment
-  const widths: Record<string, number> = {};
-  columns.forEach(col => {
-    widths[col] = col.length;
-    items.forEach(item => {
-      const val = String(item[col] ?? '-');
-      if (val.length > widths[col]) widths[col] = val.length;
-    });
-  });
-
-  // Header
-  const header = columns.map(col => col.padEnd(widths[col])).join(' │ ');
-  const separator = columns.map(col => '─'.repeat(widths[col])).join('─┼─');
-
-  // Rows
-  const rows = items.map(item =>
-    columns.map(col => String(item[col] ?? '-').padEnd(widths[col])).join(' │ ')
-  );
-
-  return '```\n' + header + '\n' + separator + '\n' + rows.join('\n') + '\n```';
+  return items.map((item, i) => {
+    const lines = columns
+      .map(col => {
+        const val = item[col] ?? '-';
+        return val && val !== '----' && val !== '-' ? `*${col}:* ${val}` : null;
+      })
+      .filter(Boolean);
+    return `📦 *Item ${i + 1}*\n${lines.join('\n')}`;
+  }).join('\n\n');
 }
 
 export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat, onSendFileToClient }: AgentTableRendererProps) {
