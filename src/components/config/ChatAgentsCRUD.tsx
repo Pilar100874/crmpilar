@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
