@@ -93,7 +93,7 @@ const tabItems: TabItem[] = [
   { id: 'pesquisas', label: 'Pesquisas de Satisfação', icon: Star },
   { id: 'quality-assurance', label: 'Quality Assurance', icon: ClipboardCheck },
   { id: 'sentimento', label: 'Análise de Sentimento', icon: Brain },
-  { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
+  
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
   { id: 'templates-mensagem', label: 'Templates de Mensagem', icon: FileText },
