@@ -6442,6 +6442,15 @@ ${recentMessages}
 
 
               <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <ToolsDropdown 
+                    ferramentas={getAllFerramentas('chat')} 
+                    onSelectTool={handleToolSelect} 
+                    tabType="chat"
+                    chatAgents={chatAgents}
+                    onSelectAgent={handleSelectAgent}
+                  />
+                </div>
                 <ChatInput
                   onSendMessage={handleSendMessage}
                   disabled={false}

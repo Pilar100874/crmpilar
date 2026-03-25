@@ -5,6 +5,37 @@ import { Wrench, X, Bot, MessageSquare, Send } from 'lucide-react';
 import { type FerramentaConfig, type TabType } from '@/hooks/useFerramentasAtendimento';
 import { type ChatAgent } from '@/hooks/useChatAgents';
 
+// Cores para ícones de ferramentas por tipo
+const TOOL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  'tool-image': { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
+  'tool-file': { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+  'tool-variables': { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
+  'tool-quick-replies': { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
+  'tool-quick-attachments': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+  'tool-orcamento': { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
+  'tool-catalog': { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200' },
+  'tool-bot': { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
+  'tool-webhook': { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+  'tool-transfer': { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200' },
+  'tool-reports': { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
+  'tool-agenda-tracking': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200' },
+  'tool-translate': { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+  'tool-realtime-translate': { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', border: 'border-fuchsia-200' },
+};
+
+const IA_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  'tool-context': { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+  'tool-summary': { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
+  'tool-kb': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+};
+
+const DEFAULT_COLOR = { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200' };
+
+function getToolColor(ferramentaId: string, tipo: string) {
+  if (tipo === 'ia') return IA_COLORS[ferramentaId] || DEFAULT_COLOR;
+  return TOOL_COLORS[ferramentaId] || DEFAULT_COLOR;
+}
+
 interface ToolsDropdownProps {
   ferramentas: FerramentaConfig[];
   onSelectTool: (ferramentaId: string) => void;
@@ -53,10 +84,11 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
           <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
             {toolsFerramentas.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground px-1">Ferramentas</p>
+                <p className="text-xs font-semibold text-muted-foreground px-1">🛠️ Ferramentas</p>
                 <div className="grid grid-cols-2 gap-2">
                   {toolsFerramentas.map(ferramenta => {
                     const Icon = ferramenta.IconComponent;
+                    const colors = getToolColor(ferramenta.ferramenta_id, ferramenta.tipo);
                     return (
                       <button
                         key={ferramenta.id}
@@ -64,11 +96,13 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                           setOpen(false);
                           setTimeout(() => onSelectTool(ferramenta.ferramenta_id), 150);
                         }}
-                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border ${colors.border} ${colors.bg} hover:brightness-95 transition-all cursor-pointer text-center`}
                         data-macro-id={`tool-${ferramenta.ferramenta_id}`}
                       >
-                        <Icon className="h-5 w-5 text-primary" />
-                        <span className="text-xs font-medium leading-tight">{ferramenta.nome}</span>
+                        <div className={`h-9 w-9 rounded-full ${colors.bg} flex items-center justify-center`}>
+                          <Icon className={`h-5 w-5 ${colors.text}`} />
+                        </div>
+                        <span className={`text-xs font-medium leading-tight ${colors.text}`}>{ferramenta.nome}</span>
                       </button>
                     );
                   })}
@@ -82,10 +116,11 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
 
             {iaFerramentas.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground px-1">Inteligência Artificial</p>
+                <p className="text-xs font-semibold text-muted-foreground px-1">🤖 Inteligência Artificial</p>
                 <div className="grid grid-cols-2 gap-2">
                   {iaFerramentas.map(ferramenta => {
                     const Icon = ferramenta.IconComponent;
+                    const colors = getToolColor(ferramenta.ferramenta_id, ferramenta.tipo);
                     return (
                       <button
                         key={ferramenta.id}
@@ -93,11 +128,13 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                           setOpen(false);
                           setTimeout(() => onSelectTool(ferramenta.ferramenta_id), 150);
                         }}
-                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border ${colors.border} ${colors.bg} hover:brightness-95 transition-all cursor-pointer text-center`}
                         data-macro-id={`tool-${ferramenta.ferramenta_id}`}
                       >
-                        <Icon className="h-5 w-5 text-primary" />
-                        <span className="text-xs font-medium leading-tight">{ferramenta.nome}</span>
+                        <div className={`h-9 w-9 rounded-full ${colors.bg} flex items-center justify-center`}>
+                          <Icon className={`h-5 w-5 ${colors.text}`} />
+                        </div>
+                        <span className={`text-xs font-medium leading-tight ${colors.text}`}>{ferramenta.nome}</span>
                       </button>
                     );
                   })}
@@ -111,46 +148,57 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                   <div className="border-t border-border" />
                 )}
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground px-1">Agentes de IA</p>
+                  <p className="text-xs font-semibold text-muted-foreground px-1">💬 Agentes de IA</p>
                   <div className="space-y-2">
-                    {activeAgents.map(agent => (
-                      <div
-                        key={agent.id}
-                        className="rounded-lg border border-border p-3 space-y-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{agent.icone}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium leading-tight truncate">{agent.nome}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || 'Agente de IA'}</p>
+                    {activeAgents.map(agent => {
+                      const agentColor = agent.cor || '#6366f1';
+                      return (
+                        <div
+                          key={agent.id}
+                          className="rounded-lg border p-3 space-y-2"
+                          style={{ borderColor: agentColor + '40', backgroundColor: agentColor + '08' }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="h-9 w-9 rounded-full flex items-center justify-center text-lg"
+                              style={{ backgroundColor: agentColor + '20' }}
+                            >
+                              {agent.icone}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium leading-tight truncate" style={{ color: agentColor }}>{agent.nome}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || 'Agente de IA'}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => {
-                              setOpen(false);
-                              setTimeout(() => onSelectAgent?.(agent, 'privado'), 150);
-                            }}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Conversar
-                          </button>
-                          {agent.permite_cliente && (
+                          <div className="flex gap-1.5">
                             <button
                               onClick={() => {
                                 setOpen(false);
-                                setTimeout(() => onSelectAgent?.(agent, 'cliente'), 150);
+                                setTimeout(() => onSelectAgent?.(agent, 'privado'), 150);
                               }}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border transition-colors"
+                              style={{ borderColor: agentColor + '40', color: agentColor }}
                             >
-                              <Send className="h-3.5 w-3.5" />
-                              Enviar ao cliente
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Conversar
                             </button>
-                          )}
+                            {agent.permite_cliente && (
+                              <button
+                                onClick={() => {
+                                  setOpen(false);
+                                  setTimeout(() => onSelectAgent?.(agent, 'cliente'), 150);
+                                }}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium text-white transition-colors"
+                                style={{ backgroundColor: agentColor }}
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                Enviar ao cliente
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </>
