@@ -85,6 +85,8 @@ interface ChatInputProps {
   // Chat agents
   chatAgents?: any[];
   onSelectAgent?: (agent: any, mode: 'cliente' | 'privado') => void;
+  externalText?: string;
+  onExternalTextConsumed?: () => void;
 }
 
 export default function ChatInput({ 
