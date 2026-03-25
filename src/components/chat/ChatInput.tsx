@@ -1063,43 +1063,7 @@ export default function ChatInput({
     );
   }
 
-  if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
-    groupAtendimento.push(
-      <TooltipProvider key="webhook" delayDuration={200}>
-        <Tooltip>
-          <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Webhook size={18} style={{ color: '#ec4899' }} />
-                </button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Resposta Automática</Label>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
-                    <button onClick={() => setShowWebhookPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
-                  </div>
-                </div>
-                <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
-                  <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
-                  <SelectContent>
-                    {webhooksForAutoResponse.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </PopoverContent>
-          </Popover>
-          <TooltipContent><p>Resposta Automática</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
+  // Resposta Automática removida do menu de ferramentas
 
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
     groupAtendimento.push(
