@@ -812,12 +812,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       case 'productComposite':
         return (
           <div className="space-y-2.5">
-            {hasMultipleSubjectRefs && !isCurrentModelMultiRefCapable && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            {hasMultipleSubjectRefs && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Modelo incompatível com múltiplas referências</strong>
-                  Este modelo não consegue compor produto + influencer juntos de forma confiável pois não aceita múltiplas imagens de referência. Use modelos como <strong>Gemini Flash Image</strong>, <strong>Gemini 3 Pro Image</strong>, <strong>DALL·E 4</strong> ou <strong>AF: GPT Image</strong>, ou conecte apenas uma referência (produto OU influencer).
+                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
+                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
                 </div>
               </div>
             )}
@@ -990,12 +990,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-2.5">
-            {hasMultipleSubjectRefs && !isCurrentModelMultiRefCapable && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            {hasMultipleSubjectRefs && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Modelo incompatível com múltiplas referências</strong>
-                  Este modelo gera vídeos de cena única e não consegue compor produto + influencer juntos de forma confiável. Use o <strong>GIF Animado (Gratuito)</strong> que suporta múltiplas referências visuais, ou conecte apenas uma referência (produto OU influencer).
+                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
+                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
                 </div>
               </div>
             )}
