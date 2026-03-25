@@ -2890,6 +2890,11 @@ ${recentMessages}
           if (isRealTimeTranslationActive) {
             translateMessage(newMessage.id, newMessage.text);
           }
+
+          // Auto-reply with active client agent when customer sends a message
+          if (newMessage.sender === 'customer' && activeClientAgent) {
+            setTimeout(() => handleAgentAutoReply(newMessage.text), 500);
+          }
         }
       )
       .subscribe();
