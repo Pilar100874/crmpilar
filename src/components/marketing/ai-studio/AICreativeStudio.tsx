@@ -1714,6 +1714,8 @@ const AICreativeStudioInner: React.FC = () => {
                 onUpdateConfig={updateNodeConfig}
                 onClose={() => setSelectedNode(null)}
                 onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
+                allNodes={nodes as StudioNode[]}
+                allEdges={edges}
               />
             </div>
           </>
