@@ -190,6 +190,7 @@ export default function Atendimento() {
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   const [activeClientAgents, setActiveClientAgents] = useState<Record<string, ChatAgent>>({});
   const activeClientAgentsRef = useRef<Record<string, ChatAgent>>({});
+  const [injectedChatText, setInjectedChatText] = useState<string | undefined>(undefined);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
@@ -6401,6 +6402,8 @@ ${recentMessages}
                     });
                     toast.info("Agente suspenso — você voltou ao controle");
                   }}
+                  onInsertToClientChat={(text) => setInjectedChatText(text)}
+                  lastClientMessage={messages.filter(m => m.sender === 'customer').slice(-1)[0]?.text}
                 />
               )}
 
@@ -6460,6 +6463,8 @@ ${recentMessages}
                   customerId={selectedConv?.customer?.id}
                   chatAgents={chatAgents}
                   onSelectAgent={handleSelectAgent}
+                  externalText={injectedChatText}
+                  onExternalTextConsumed={() => setInjectedChatText(undefined)}
                 />
               </div>
             </div>

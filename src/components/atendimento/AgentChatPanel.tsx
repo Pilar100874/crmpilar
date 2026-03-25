@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,6 +28,8 @@ interface AgentChatPanelProps {
   isClientAgentActive?: boolean;
   onActivateClientAgent?: () => void;
   onDeactivateClientAgent?: () => void;
+  onInsertToClientChat?: (text: string) => void;
+  lastClientMessage?: string;
 }
 
 export function AgentChatPanel({
@@ -40,6 +43,8 @@ export function AgentChatPanel({
   isClientAgentActive = false,
   onActivateClientAgent,
   onDeactivateClientAgent,
+  onInsertToClientChat,
+  lastClientMessage,
 }: AgentChatPanelProps) {
   const [input, setInput] = useState('');
   const [showClientContext, setShowClientContext] = useState(false);
@@ -228,6 +233,24 @@ export function AgentChatPanel({
                       >
                         <Copy className="h-3 w-3" /> Copiar
                       </Button>
+                      {onInsertToClientChat && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 text-[10px] px-1.5 gap-1"
+                                style={{ color: agentColor }}
+                                onClick={() => onInsertToClientChat(msg.content)}
+                              >
+                                <ArrowUp className="h-3 w-3" /> Chat
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Inserir no chat do cliente</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       {agent.permite_cliente && (
                         <Button
                           size="sm"
@@ -272,7 +295,24 @@ export function AgentChatPanel({
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {lastClientMessage && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-9 w-9 shrink-0 rounded-full border-border/50"
+                    onClick={() => setInput(prev => prev ? prev + '\n' + lastClientMessage : lastClientMessage)}
+                  >
+                    <ArrowDown className="h-4 w-4" style={{ color: agentColor }} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Puxar última msg do cliente</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
