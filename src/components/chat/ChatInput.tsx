@@ -134,6 +134,15 @@ export default function ChatInput({
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle external text injection
+  useEffect(() => {
+    if (externalText) {
+      setMessage(prev => prev ? prev + '\n' + externalText : externalText);
+      onExternalTextConsumed?.();
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, [externalText, onExternalTextConsumed]);
   const menuRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
