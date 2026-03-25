@@ -82,6 +82,9 @@ interface ChatInputProps {
   customerPhone?: string;
   customerName?: string;
   customerId?: string;
+  // Chat agents
+  chatAgents?: any[];
+  onSelectAgent?: (agent: any, mode: 'cliente' | 'privado') => void;
 }
 
 export default function ChatInput({ 
@@ -117,7 +120,9 @@ export default function ChatInput({
   onToolTriggered,
   customerPhone,
   customerName,
-  customerId
+  customerId,
+  chatAgents = [],
+  onSelectAgent
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
