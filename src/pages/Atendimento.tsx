@@ -325,7 +325,7 @@ export default function Atendimento() {
   const [creatingEmpresaForCustomerId, setCreatingEmpresaForCustomerId] = useState<string | null>(null);
 
   // Ferramentas dinâmicas por aba
-  const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
+  const { getRadialMenuItems, getToolbarFerramentas, getAllFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
   const { agents: chatAgents } = useChatAgents(estabelecimentoId || null);
 
   // Omnichannel routing
