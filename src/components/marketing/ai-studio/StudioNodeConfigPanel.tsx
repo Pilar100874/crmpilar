@@ -581,6 +581,21 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     return subjectTypes.size >= 2;
   }, [node.id, node.data.type, allNodes, allEdges]);
 
+  // When multiple subject refs are connected, filter to only multi-ref capable models
+  const filteredImage = useMemo(() => {
+    if (hasMultipleSubjectRefs) {
+      return filteredImageBase.filter(m => m.supportsMultiRef);
+    }
+    return filteredImageBase;
+  }, [filteredImageBase, hasMultipleSubjectRefs]);
+
+  const filteredVideoFinal = useMemo(() => {
+    if (hasMultipleSubjectRefs) {
+      return filteredVideo.filter(m => m.supportsMultiRef);
+    }
+    return filteredVideo;
+  }, [filteredVideo, hasMultipleSubjectRefs]);
+
   const currentVideoModel = config.videoModel || 'free/gif-animated';
   const currentImageModel = config.model || 'google/gemini-2.5-flash-image';
   const isCurrentModelMultiRefCapable = node.data.type === 'videoGen'
