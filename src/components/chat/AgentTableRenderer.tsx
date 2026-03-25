@@ -11,25 +11,60 @@ interface AgentTableRendererProps {
   onInsertToClientChat?: (text: string) => void;
 }
 
+function parseMarkdownTable(content: string): { text: string; tableData: any[] | null } {
+  // Match markdown tables: | header | header |\n|---|---|\n| data | data |
+  const tableRegex = /(\|[^\n]+\|\n\|[\s:-]+\|[\s:|-]*\n(?:\|[^\n]+\|\n?)+)/g;
+  const match = tableRegex.exec(content);
+  if (!match) return { text: content, tableData: null };
+
+  const tableStr = match[1].trim();
+  const lines = tableStr.split('\n').filter(l => l.trim());
+  if (lines.length < 3) return { text: content, tableData: null };
+
+  const parseRow = (line: string) =>
+    line.split('|').map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length);
+
+  const headers = parseRow(lines[0]);
+  // lines[1] is the separator row (|---|---|)
+  const dataRows = lines.slice(2);
+
+  const data = dataRows.map(line => {
+    const cells = parseRow(line);
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => { obj[h] = cells[i] ?? ''; });
+    return obj;
+  });
+
+  if (data.length === 0) return { text: content, tableData: null };
+
+  const textBefore = content.substring(0, match.index).trim();
+  const textAfter = content.substring(match.index + match[0].length).trim();
+
+  return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
+}
+
 export function parseAgentTableData(content: string): { text: string; tableData: any[] | null } {
+  // First try JSON tags
   const startTag = '<!--TABLE_DATA_START-->';
   const endTag = '<!--TABLE_DATA_END-->';
   const startIdx = content.indexOf(startTag);
   const endIdx = content.indexOf(endTag);
 
-  if (startIdx === -1 || endIdx === -1) return { text: content, tableData: null };
+  if (startIdx !== -1 && endIdx !== -1) {
+    const jsonStr = content.substring(startIdx + startTag.length, endIdx).trim();
+    const textBefore = content.substring(0, startIdx).trim();
+    const textAfter = content.substring(endIdx + endTag.length).trim();
 
-  const jsonStr = content.substring(startIdx + startTag.length, endIdx).trim();
-  const textBefore = content.substring(0, startIdx).trim();
-  const textAfter = content.substring(endIdx + endTag.length).trim();
+    try {
+      const data = JSON.parse(jsonStr);
+      if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+        return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
+      }
+    } catch {}
+  }
 
-  try {
-    const data = JSON.parse(jsonStr);
-    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-      return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
-    }
-  } catch {}
-  return { text: content, tableData: null };
+  // Fallback: try parsing markdown tables
+  return parseMarkdownTable(content);
 }
 
 function formatSelectedAsText(items: any[]): string {
