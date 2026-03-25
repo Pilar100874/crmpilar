@@ -3541,7 +3541,16 @@ ${recentMessages}
       case "ai-translate":
         setShowRadialRealTimeTranslateDialog(true);
         break;
-    }
+      default:
+        // Handle agent selections from radial menu
+        if (typeof item.id === 'string' && item.id.startsWith('agent-')) {
+          const agentId = item.id.replace('agent-', '');
+          const agent = chatAgents.find(a => a.id === agentId);
+          if (agent) {
+            handleSelectAgent(agent, 'privado');
+          }
+        }
+        break;
   };
 
   // Handler para seleção de ferramenta (usado pelo ToolsDropdown e RadialMenu)
