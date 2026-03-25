@@ -36,7 +36,44 @@ const emptyCard: ChatAgentCardData = {
   instrucoes_extras: '',
 };
 
-export function cardDataToPrompt(card: ChatAgentCardData): string {
+// Known section headers for parsing
+const KNOWN_HEADERS = [
+  'PAPEL', 'MISSÃO', 'TOM DE VOZ', 'CAPACIDADES',
+  'RESTRIÇÕES', 'PROTOCOLO DE RACIOCÍNIO', 'PADRÕES DE QUALIDADE',
+  'ANTI-PADRÕES', 'TRATAMENTO DE ERROS', 'INSTRUÇÕES ADICIONAIS', 'CONTEXTO DISPONÍVEL'
+];
+
+const HEADER_REGEX = new RegExp(`^(${KNOWN_HEADERS.map(h => h.replace(/[()]/g, '\\$&')).join('|')})`, 'i');
+
+function extractFreeText(prompt: string): string {
+  if (!prompt) return '';
+  const lines = prompt.split('\n');
+  const freeLines: string[] = [];
+  let insideKnownSection = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (HEADER_REGEX.test(trimmed.replace(/[:(].*/, '').trim())) {
+      insideKnownSection = true;
+      continue;
+    }
+    if (insideKnownSection) {
+      // Content belongs to a known section — skip
+      // Detect end of section (empty line followed by non-bullet/numbered line)
+      if (trimmed === '') {
+        insideKnownSection = false;
+      }
+      continue;
+    }
+    // Not inside a known section — this is free text
+    if (trimmed !== '') {
+      freeLines.push(line);
+    }
+  }
+  return freeLines.join('\n').trim();
+}
+
+export function cardDataToPrompt(card: ChatAgentCardData, freeText?: string): string {
   const sections: string[] = [];
 
   if (card.papel) sections.push(`PAPEL:\n${card.papel}`);
@@ -61,6 +98,11 @@ export function cardDataToPrompt(card: ChatAgentCardData): string {
   if (card.tratamento_erros) sections.push(`TRATAMENTO DE ERROS:\n${card.tratamento_erros}`);
   if (card.instrucoes_extras) sections.push(`INSTRUÇÕES ADICIONAIS:\n${card.instrucoes_extras}`);
 
+  // Preserve free text typed directly
+  if (freeText?.trim()) {
+    sections.push(freeText.trim());
+  }
+
   sections.push(`\nCONTEXTO DISPONÍVEL:\n• Use {{historico_chat}} para acessar o histórico da conversa\n• Use {{mensagem_cliente}} para a última mensagem do cliente`);
 
   return sections.join('\n\n');
@@ -70,7 +112,7 @@ export function promptToCardData(prompt: string): ChatAgentCardData {
   const card = { ...emptyCard };
   
   const extractSection = (label: string): string => {
-    const regex = new RegExp(`${label}:?\\n([\\s\\S]*?)(?=\\n(?:PAPEL|MISSÃO|TOM DE VOZ|CAPACIDADES|RESTRIÇÕES|PROTOCOLO|PADRÕES|ANTI-PADRÕES|TRATAMENTO|INSTRUÇÕES|CONTEXTO)|$)`, 'i');
+    const regex = new RegExp(`${label}[^:]*:?\\n([\\s\\S]*?)(?=\\n(?:PAPEL|MISSÃO|TOM DE VOZ|CAPACIDADES|RESTRIÇÕES|PROTOCOLO|PADRÕES|ANTI-PADRÕES|TRATAMENTO|INSTRUÇÕES|CONTEXTO)|$)`, 'i');
     const match = prompt.match(regex);
     return match ? match[1].trim() : '';
   };
