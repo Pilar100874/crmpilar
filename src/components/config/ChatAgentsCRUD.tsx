@@ -51,6 +51,7 @@ const emptyForm: Partial<ChatAgent> = {
   knowledge_base_type: 'nenhuma',
   knowledge_base_internal_data: [],
   api_endpoint_ids: [],
+  usar_produtos_importados: false,
   ativo: true,
   ordem: 0,
 };
