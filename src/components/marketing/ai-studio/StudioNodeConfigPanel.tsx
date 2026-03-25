@@ -511,7 +511,7 @@ const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: stri
     .sort((a, b) => Number(a.disabled) - Number(b.disabled));
 };
 
-const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
+const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode, allNodes, allEdges }) => {
   const meta = getNodeMeta(node.data.type);
   const config = node.data.config;
   const { result: storeResult } = useNodeResult(node.id);
