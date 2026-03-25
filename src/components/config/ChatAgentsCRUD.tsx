@@ -302,7 +302,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
                 <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
-                <TabsTrigger value="apis">APIs</TabsTrigger>
+                <TabsTrigger value="apis" disabled={formData.knowledge_base_type === 'nenhuma' || formData.knowledge_base_type === 'terceiros'}>APIs</TabsTrigger>
               </TabsList>
             </div>
 
@@ -387,7 +387,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     setFormData({
                       ...formData,
                       knowledge_base_type: tipo,
-                      ...(resetFlags ? { usar_estoque_sistema: false, usar_produtos_importados: false } : {}),
+                      ...(resetFlags ? { usar_estoque_sistema: false, usar_produtos_importados: false, api_endpoint_ids: [] } : {}),
                     });
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
