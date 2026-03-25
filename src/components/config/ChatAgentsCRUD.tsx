@@ -54,7 +54,7 @@ const emptyForm: Partial<ChatAgent> = {
   api_endpoint_ids: [],
   usar_produtos_importados: false,
   usar_estoque_sistema: false,
-  estoque_formato_tabela: false,
+  resposta_formato_tabela: false,
   ativo: true,
   ordem: 0,
 };
@@ -118,7 +118,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       api_endpoint_ids: agent.api_endpoint_ids || [],
       usar_produtos_importados: agent.usar_produtos_importados ?? false,
       usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
-      estoque_formato_tabela: (agent as any).estoque_formato_tabela ?? false,
+      resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -354,6 +354,21 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <Switch
                     checked={formData.permite_cliente !== false}
                     onCheckedChange={(checked) => setFormData({ ...formData, permite_cliente: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Table className="h-4 w-4 text-primary" />
+                      Respostas em Formato Tabela
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Quando ativado, respostas com listas ou dados tabulares serão exibidas como tabela interativa com opção de download Excel.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.resposta_formato_tabela || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, resposta_formato_tabela: checked })}
                   />
                 </div>
                 <div>

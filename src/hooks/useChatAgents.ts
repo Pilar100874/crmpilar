@@ -18,7 +18,7 @@ export interface ChatAgent {
   api_endpoint_ids: string[];
   usar_produtos_importados: boolean;
   usar_estoque_sistema: boolean;
-  estoque_formato_tabela: boolean;
+  resposta_formato_tabela: boolean;
   ativo: boolean;
   ordem: number;
   created_at: string;
