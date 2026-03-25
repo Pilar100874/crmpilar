@@ -6291,8 +6291,31 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* Agent Chat Panel - Embedded */}
+              {/* Active Agent Banner */}
+              {activeClientAgent && (
+                <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 mb-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-lg">{activeClientAgent.icone}</span>
+                    <span className="font-medium">{activeClientAgent.nome}</span>
+                    <span className="text-muted-foreground">— respondendo automaticamente ao cliente</span>
+                    {agentLoading && <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveClientAgent(null);
+                      toast.info("Agente suspenso — você voltou ao controle");
+                    }}
+                    className="text-xs"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Suspender
+                  </Button>
+                </div>
+              )}
 
+              {/* Agent Chat Panel - Embedded */}
               {/* Summary Panel */}
               {showSummaryPanel && (
                 <Card className="bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl overflow-hidden">
