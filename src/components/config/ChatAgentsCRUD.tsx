@@ -45,7 +45,7 @@ const emptyForm: Partial<ChatAgent> = {
   icone: '🤖',
   cor: '#8B5CF6',
   modo_operacao: 'sugerir',
-  permite_cliente: true,
+  permite_cliente: false,
   system_prompt: '',
   modelo_ia: 'google/gemini-3-flash-preview',
   knowledge_base_type: 'nenhuma',
@@ -239,15 +239,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="flex flex-wrap gap-1 mb-3">
-                  <Badge variant={agent.modo_operacao === 'automatico' ? 'default' : 'secondary'} className="text-xs">
-                    {agent.modo_operacao === 'automatico' ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-                    {agent.modo_operacao === 'automatico' ? 'Automático' : 'Sugestão'}
+                  <Badge variant={agent.permite_cliente ? 'default' : 'secondary'} className="text-xs">
+                    {agent.permite_cliente ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
+                    {agent.permite_cliente ? 'Atende cliente' : 'Somente interno'}
                   </Badge>
-                  {!agent.permite_cliente && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">
-                      Somente interno
-                    </Badge>
-                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
@@ -324,20 +319,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <Input value={formData.cor || '#8B5CF6'} onChange={e => setFormData({ ...formData, cor: e.target.value })} className="flex-1" />
                     </div>
                   </div>
-                </div>
-                <div>
-                  <Label>Modo de Operação</Label>
-                  <Select value={formData.modo_operacao} onValueChange={v => setFormData({ ...formData, modo_operacao: v as any })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sugerir">
-                        <div className="flex items-center gap-2"><Wand2 className="h-4 w-4" /> Sugerir — O agente sugere respostas para o atendente revisar</div>
-                      </SelectItem>
-                      <SelectItem value="automatico">
-                        <div className="flex items-center gap-2"><Zap className="h-4 w-4" /> Automático — O agente responde diretamente ao cliente</div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
