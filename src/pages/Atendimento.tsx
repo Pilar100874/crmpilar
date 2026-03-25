@@ -3598,7 +3598,17 @@ ${recentMessages}
 
   
 
-  const handleSelectAgent = async (agent: ChatAgent) => {
+  const handleSelectAgent = async (agent: ChatAgent, mode: 'cliente' | 'privado' = 'cliente') => {
+    if (mode === 'privado') {
+      // Open private chat dialog with agent
+      setAgentPrivateChatAgent(agent);
+      setAgentPrivateMessages([]);
+      setAgentPrivateInput('');
+      setAgentPrivateChatOpen(true);
+      return;
+    }
+
+    // Mode 'cliente' — existing behavior
     if (!lastUserMessage) {
       toast.error("Nenhuma mensagem do cliente para processar");
       return;
@@ -3623,11 +3633,9 @@ ${recentMessages}
       if (error) throw error;
 
       if (data?.modo_operacao === 'automatico') {
-        // Enviar resposta diretamente
         await handleSendMessage(data.resposta, 'text');
         toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
       } else {
-        // Modo sugestão: mostrar para o atendente
         setAgentResponse(data);
         toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
       }
@@ -3637,6 +3645,48 @@ ${recentMessages}
     } finally {
       setAgentLoading(false);
     }
+  };
+
+  const handleAgentPrivateSend = async () => {
+    if (!agentPrivateInput.trim() || !agentPrivateChatAgent || agentPrivateLoading) return;
+    const userMsg = agentPrivateInput.trim();
+    setAgentPrivateInput('');
+    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: userMsg }];
+    setAgentPrivateMessages(newMessages);
+    setAgentPrivateLoading(true);
+
+    try {
+      // Include chat context if available
+      const chatContext = messages.slice(-10).map(m => `${m.sender === 'customer' ? 'Cliente' : 'Atendente'}: ${m.text}`).join('\n');
+
+      const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+        body: {
+          agent_id: agentPrivateChatAgent.id,
+          mensagem_cliente: userMsg,
+          historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
+          conversation_id: selectedConversation,
+          modo_privado: true,
+          contexto_chat_cliente: chatContext,
+        },
+      });
+
+      if (error) throw error;
+      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta }]);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao consultar agente");
+    } finally {
+      setAgentPrivateLoading(false);
+    }
+  };
+
+  const handleCopyAgentResponse = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Resposta copiada!");
+  };
+
+  const handleSendAgentResponseToChat = (text: string) => {
+    handleSendMessage(text, 'text');
+    toast.success("Resposta enviada ao cliente!");
   };
 
   // Handlers para os dialogs do RadialMenu
