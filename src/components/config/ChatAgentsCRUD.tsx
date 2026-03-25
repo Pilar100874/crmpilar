@@ -53,6 +53,7 @@ const emptyForm: Partial<ChatAgent> = {
   knowledge_base_internal_data: [],
   api_endpoint_ids: [],
   usar_produtos_importados: false,
+  usar_estoque_sistema: false,
   ativo: true,
   ordem: 0,
 };
@@ -255,6 +256,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <Badge variant="outline" className="text-xs">
                       <Database className="h-3 w-3 mr-1" />
                       {(agent.api_endpoint_ids || []).length} API{(agent.api_endpoint_ids || []).length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                  {agent.usar_estoque_sistema && (
+                    <Badge variant="outline" className="text-xs">
+                      <Database className="h-3 w-3 mr-1" />
+                      Estoque
                     </Badge>
                   )}
                   {agent.usar_produtos_importados && (
