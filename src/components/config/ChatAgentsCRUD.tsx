@@ -118,6 +118,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       api_endpoint_ids: agent.api_endpoint_ids || [],
       usar_produtos_importados: agent.usar_produtos_importados ?? false,
       usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
+      estoque_formato_tabela: (agent as any).estoque_formato_tabela ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
