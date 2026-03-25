@@ -165,7 +165,7 @@ export default function ChatInput({
   // Agent Assist states
   const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [isSuggestingKBArticles, setIsSuggestingKBArticles] = useState(false);
+  
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslatePopover, setShowTranslatePopover] = useState(false);
   const [showRealTimeTranslatePopover, setShowRealTimeTranslatePopover] = useState(false);
@@ -247,9 +247,6 @@ export default function ChatInput({
         break;
       case 'summary':
         handleGenerateSummary();
-        break;
-      case 'kb':
-        handleSuggestKBArticles();
         break;
       case 'realtime-translate':
         setShowRealTimeTranslatePopover(true);
@@ -1186,9 +1183,6 @@ export default function ChatInput({
     );
   }
 
-  groupIA.push(
-    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" color="#8b5cf6" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
-  );
 
   // === TRADUÇÃO ===
   groupTraducao.push(

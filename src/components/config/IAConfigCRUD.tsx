@@ -55,7 +55,7 @@ const CONTEXTOS = [
   { value: "summarize", label: "Resumo de Conversa", description: "IA resume conversas longas" },
   { value: "translate", label: "Tradução", description: "IA traduz mensagens em tempo real" },
   { value: "sentiment", label: "Análise de Sentimento", description: "IA analisa sentimento das mensagens" },
-  { value: "kb_articles", label: "Sugestão de Artigos KB", description: "IA sugere artigos da base de conhecimento" },
+  
   { value: "extract_items", label: "Extração de Itens", description: "IA extrai itens de orçamento de imagens" },
   { value: "suggest_products", label: "Sugestão de Produtos", description: "IA sugere produtos com base no contexto" },
   { value: "default", label: "Padrão (Geral)", description: "Configuração padrão para contextos não especificados" },

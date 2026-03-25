@@ -91,7 +91,7 @@ const DEFAULT_TOOLS = [
   { ferramenta_id: 'ai-chat', nome: 'Chat IA', icone: 'Wand2', descricao: 'Conversar com IA', tipo: 'ia', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'ai-suggestion', nome: 'Sugestão Contextual', icone: 'Sparkles', descricao: 'Sugestão de resposta', tipo: 'ia', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'ai-summary', nome: 'Gerar Resumo', icone: 'FileText', descricao: 'Resumo da conversa', tipo: 'ia', aba_chat: true, radial_chat: true },
-  { ferramenta_id: 'ai-kb', nome: 'Artigos KB', icone: 'BookOpen', descricao: 'Base de conhecimento', tipo: 'ia', aba_chat: true, radial_chat: true },
+  
   { ferramenta_id: 'ai-translate', nome: 'Tradução em Tempo Real', icone: 'Languages', descricao: 'Tradução automática', tipo: 'ia', aba_chat: true, radial_chat: true },
 ];
 
