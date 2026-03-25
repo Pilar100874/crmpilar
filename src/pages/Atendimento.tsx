@@ -3602,11 +3602,10 @@ ${recentMessages}
 
   const handleSelectAgent = async (agent: ChatAgent, mode: 'cliente' | 'privado' = 'cliente') => {
     if (mode === 'privado') {
-      // Open private chat dialog with agent
+      // Show embedded agent chat panel
       setAgentPrivateChatAgent(agent);
       setAgentPrivateMessages([]);
-      setAgentPrivateInput('');
-      setAgentPrivateChatOpen(true);
+      setShowAgentChatPanel(true);
       return;
     }
 
