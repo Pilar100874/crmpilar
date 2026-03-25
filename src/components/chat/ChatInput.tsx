@@ -25,7 +25,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 
 // Elegant toolbar button styles
-const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
+const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
 
 export type ChatToolTrigger = 
@@ -563,14 +563,15 @@ export default function ChatInput({
     );
   };
 
-  // Simple Toolbar Button Component with animated tooltip
+  // Simple Toolbar Button Component with animated tooltip and color
   const ToolbarBtn = ({ 
     icon: Icon, 
     title, 
     onClick, 
     disabled = false, 
     isActive = false, 
-    isLoading = false 
+    isLoading = false,
+    color
   }: { 
     icon: React.ElementType;
     title: string;
@@ -578,6 +579,7 @@ export default function ChatInput({
     disabled?: boolean;
     isActive?: boolean;
     isLoading?: boolean;
+    color?: string;
   }) => (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
@@ -590,7 +592,7 @@ export default function ChatInput({
             {isLoading ? (
               <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Icon size={20} />
+              <Icon size={20} style={color ? { color } : undefined} />
             )}
           </button>
         </TooltipTrigger>
@@ -945,13 +947,13 @@ export default function ChatInput({
 
   // === ANEXOS ===
   groupAnexos.push(
-    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="image" icon={Image} title="Imagem" color="#10b981" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
-    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" color="#6366f1" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
-    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" color="#f59e0b" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
   );
   groupAnexos.push(
     <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
@@ -1018,7 +1020,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Bot size={18} />
+                  <Bot size={18} style={{ color: '#8b5cf6' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
@@ -1056,7 +1058,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Webhook size={18} />
+                  <Webhook size={18} style={{ color: '#ec4899' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
@@ -1094,7 +1096,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <UserPlus size={18} />
+                  <UserPlus size={18} style={{ color: '#0ea5e9' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
@@ -1131,7 +1133,7 @@ export default function ChatInput({
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                <FileCheck size={18} />
+                <FileCheck size={18} style={{ color: '#14b8a6' }} />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
@@ -1198,17 +1200,17 @@ export default function ChatInput({
 
   // === IA ===
   groupIA.push(
-    <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
+    <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" color="#f59e0b" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
   );
 
   if (onSummaryGenerated) {
     groupIA.push(
-      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
+      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" color="#ef4444" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
     );
   }
 
   groupIA.push(
-    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
+    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" color="#8b5cf6" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
   );
 
   // === TRADUÇÃO ===
@@ -1219,7 +1221,7 @@ export default function ChatInput({
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
-                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
+                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} style={{ color: '#06b6d4' }} />}
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
@@ -1258,7 +1260,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Globe size={18} />
+                  <Globe size={18} style={{ color: '#3b82f6' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
