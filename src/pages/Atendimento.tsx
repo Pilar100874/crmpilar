@@ -49,6 +49,7 @@ import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
+import { AgentChatPanel } from "@/components/atendimento/AgentChatPanel";
 import { useChatAgents, type ChatAgent } from "@/hooks/useChatAgents";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
@@ -182,8 +183,9 @@ export default function Atendimento() {
   const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentPrivateChatOpen, setAgentPrivateChatOpen] = useState(false);
+  const [showAgentChatPanel, setShowAgentChatPanel] = useState(false);
   const [agentPrivateChatAgent, setAgentPrivateChatAgent] = useState<ChatAgent | null>(null);
-  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }[]>([]);
   const [agentPrivateInput, setAgentPrivateInput] = useState('');
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
   
@@ -3600,11 +3602,10 @@ ${recentMessages}
 
   const handleSelectAgent = async (agent: ChatAgent, mode: 'cliente' | 'privado' = 'cliente') => {
     if (mode === 'privado') {
-      // Open private chat dialog with agent
+      // Show embedded agent chat panel
       setAgentPrivateChatAgent(agent);
       setAgentPrivateMessages([]);
-      setAgentPrivateInput('');
-      setAgentPrivateChatOpen(true);
+      setShowAgentChatPanel(true);
       return;
     }
 
@@ -3647,11 +3648,11 @@ ${recentMessages}
     }
   };
 
-  const handleAgentPrivateSend = async () => {
-    if (!agentPrivateInput.trim() || !agentPrivateChatAgent || agentPrivateLoading) return;
-    const userMsg = agentPrivateInput.trim();
+  const handleAgentPrivateSend = async (userMsg?: string) => {
+    const msg = userMsg || agentPrivateInput.trim();
+    if (!msg || !agentPrivateChatAgent || agentPrivateLoading) return;
     setAgentPrivateInput('');
-    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: userMsg }];
+    const newMessages = [...agentPrivateMessages, { role: 'user' as const, content: msg, timestamp: new Date() }];
     setAgentPrivateMessages(newMessages);
     setAgentPrivateLoading(true);
 
@@ -3662,7 +3663,7 @@ ${recentMessages}
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
           agent_id: agentPrivateChatAgent.id,
-          mensagem_cliente: userMsg,
+          mensagem_cliente: msg,
           historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
           conversation_id: selectedConversation,
           modo_privado: true,
@@ -3671,7 +3672,7 @@ ${recentMessages}
       });
 
       if (error) throw error;
-      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta }]);
+      setAgentPrivateMessages([...newMessages, { role: 'assistant', content: data.resposta, timestamp: new Date() }]);
     } catch (err: any) {
       toast.error(err.message || "Erro ao consultar agente");
     } finally {
@@ -3810,7 +3811,7 @@ ${recentMessages}
           />
           <Button
             size="sm"
-            onClick={handleAgentPrivateSend}
+            onClick={() => handleAgentPrivateSend()}
             disabled={agentPrivateLoading || !agentPrivateInput.trim()}
           >
             <Send className="h-4 w-4" />
@@ -6436,8 +6437,27 @@ ${recentMessages}
                     </div>
                   ) : null}
                 </Card>
-              )}
+               )}
 
+              {/* Agent Chat Panel - Embedded */}
+              {showAgentChatPanel && agentPrivateChatAgent && (
+                <AgentChatPanel
+                  agent={agentPrivateChatAgent}
+                  messages={agentPrivateMessages}
+                  onSendMessage={(text) => handleAgentPrivateSend(text)}
+                  onSendToClient={(text) => {
+                    handleSendMessage(text, 'text');
+                    toast.success("Resposta do agente enviada ao cliente!");
+                  }}
+                  onClose={() => {
+                    setShowAgentChatPanel(false);
+                    setAgentPrivateChatAgent(null);
+                    setAgentPrivateMessages([]);
+                  }}
+                  isLoading={agentPrivateLoading}
+                  clientMessages={messages.slice(-15)}
+                />
+              )}
 
 
 
