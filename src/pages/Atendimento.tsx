@@ -3419,8 +3419,15 @@ ${recentMessages}
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
     const tools = getRadialMenuItems(currentTabType);
-    return tools.length > 0 ? tools : [];
-  }, [currentTabType, getRadialMenuItems]);
+    // Add active agents to radial tools
+    const activeAgents = chatAgents.filter(a => a.ativo);
+    const agentItems: RadialMenuItem[] = activeAgents.map(agent => ({
+      id: `agent-${agent.id}`,
+      icon: Bot,
+      label: agent.nome,
+    }));
+    return [...tools, ...agentItems];
+  }, [currentTabType, getRadialMenuItems, chatAgents]);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
