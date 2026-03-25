@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,6 +28,8 @@ interface AgentChatPanelProps {
   isClientAgentActive?: boolean;
   onActivateClientAgent?: () => void;
   onDeactivateClientAgent?: () => void;
+  onInsertToClientChat?: (text: string) => void;
+  lastClientMessage?: string;
 }
 
 export function AgentChatPanel({
@@ -40,6 +43,8 @@ export function AgentChatPanel({
   isClientAgentActive = false,
   onActivateClientAgent,
   onDeactivateClientAgent,
+  onInsertToClientChat,
+  lastClientMessage,
 }: AgentChatPanelProps) {
   const [input, setInput] = useState('');
   const [showClientContext, setShowClientContext] = useState(false);
