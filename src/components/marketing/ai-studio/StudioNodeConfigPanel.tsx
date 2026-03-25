@@ -575,7 +575,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const currentVideoModel = config.videoModel || 'free/gif-animated';
   const isCurrentModelMultiRefCapable = isMultiRefModel(currentVideoModel);
 
-
+  const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
   };
 
