@@ -56,7 +56,7 @@ import { OmnichannelFlowsCRUD } from '@/components/config/OmnichannelFlowsCRUD';
 import PesquisasSatisfacaoCRUD from '@/components/atendimento/PesquisasSatisfacaoCRUD';
 import QualityAssuranceCRUD from '@/components/config/QualityAssuranceCRUD';
 import SentimentAnalysisCRUD from '@/components/config/SentimentAnalysisCRUD';
-import KnowledgeBaseCRUD from '@/components/config/KnowledgeBaseCRUD';
+
 import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
