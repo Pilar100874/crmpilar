@@ -64,6 +64,7 @@ import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookCo
 import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplatesCRUD';
 import { CampaignPermissionsCRUD } from '@/components/config/CampaignPermissionsCRUD';
 import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
+import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
