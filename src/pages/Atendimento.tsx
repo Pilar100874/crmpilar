@@ -188,6 +188,7 @@ export default function Atendimento() {
   const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }[]>([]);
   const [agentPrivateInput, setAgentPrivateInput] = useState('');
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
+  const [activeClientAgent, setActiveClientAgent] = useState<ChatAgent | null>(null);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
