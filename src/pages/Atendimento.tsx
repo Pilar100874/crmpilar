@@ -6265,6 +6265,51 @@ ${recentMessages}
                 </Card>
               )}
 
+              {/* Agent Suggestion Panel */}
+              {(agentResponse || agentLoading) && (
+                <Card className="border-primary/30 bg-primary/5 rounded-xl p-3">
+                  {agentLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span>Agente processando...</span>
+                    </div>
+                  ) : agentResponse ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-primary">
+                          {agentResponse.agent_icone} {agentResponse.agent_nome} — Sugestão
+                        </span>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setAgentResponse(null)}>
+                            Descartar
+                          </Button>
+                          <Button size="sm" className="h-6 text-xs" onClick={() => {
+                            handleSendMessage(agentResponse.resposta, 'text');
+                            setAgentResponse(null);
+                          }}>
+                            Enviar
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{agentResponse.resposta}</p>
+                    </div>
+                  ) : null}
+                </Card>
+              )}
+
+              {/* Chat Agent Tools */}
+              {chatAgents.filter(a => a.ativo).length > 0 && (
+                <div className="flex items-center gap-2">
+                  <ToolsDropdown
+                    ferramentas={getToolbarFerramentas('chat')}
+                    onSelectTool={handleToolSelect}
+                    tabType="chat"
+                    chatAgents={chatAgents}
+                    onSelectAgent={handleSelectAgent}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col gap-3">
                 <ChatInput
                   onSendMessage={handleSendMessage}
