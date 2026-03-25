@@ -1366,7 +1366,7 @@ export default function ChatInput({
                         "text-muted-foreground hover:text-foreground",
                         showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
                       )}
-                      onClick={() => { setShowToolsMenu(!showToolsMenu); setShowAgentMenu(false); }}}
+                      onClick={() => { setShowToolsMenu(!showToolsMenu); setShowAgentMenu(false); }}
                     >
                       <Plus className="h-5 w-5" />
                     </button>
