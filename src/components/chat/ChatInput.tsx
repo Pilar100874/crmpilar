@@ -1200,17 +1200,17 @@ export default function ChatInput({
 
   // === IA ===
   groupIA.push(
-    <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
+    <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" color="#f59e0b" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
   );
 
   if (onSummaryGenerated) {
     groupIA.push(
-      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
+      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" color="#ef4444" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
     );
   }
 
   groupIA.push(
-    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
+    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" color="#8b5cf6" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
   );
 
   // === TRADUÇÃO ===
