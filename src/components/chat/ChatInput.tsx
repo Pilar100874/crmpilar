@@ -1133,7 +1133,7 @@ export default function ChatInput({
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                <FileCheck size={18} />
+                <FileCheck size={18} style={{ color: '#14b8a6' }} />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
