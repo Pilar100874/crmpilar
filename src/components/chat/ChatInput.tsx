@@ -132,6 +132,8 @@ export default function ChatInput({
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showAgentMenu, setShowAgentMenu] = useState(false);
+  const agentMenuRef = useRef<HTMLDivElement>(null);
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
