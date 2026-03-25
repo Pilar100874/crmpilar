@@ -98,6 +98,7 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
     loadFerramentas,
     getToolbarFerramentas,
     getRadialFerramentas,
-    getRadialMenuItems
+    getRadialMenuItems,
+    getAllFerramentas
   };
 }
