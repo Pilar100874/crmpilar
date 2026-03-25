@@ -177,6 +177,10 @@ export default function Atendimento() {
   
   // Tool trigger state (for radial menu -> ChatInput communication)
   const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
+
+  // Chat Agent states
+  const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
