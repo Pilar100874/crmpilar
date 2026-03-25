@@ -3569,9 +3569,6 @@ ${recentMessages}
       case "ai-summary":
         setTriggerTool('summary');
         break;
-      case "ai-kb":
-        setTriggerTool('kb');
-        break;
       case "ai-translate":
         setShowRadialRealTimeTranslateDialog(true);
         break;
@@ -3634,9 +3631,6 @@ ${recentMessages}
         break;
       case "ai-summary":
         setTriggerTool('summary');
-        break;
-      case "ai-kb":
-        setTriggerTool('kb');
         break;
       case "ai-translate":
         setShowRadialRealTimeTranslateDialog(true);

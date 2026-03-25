@@ -597,15 +597,6 @@ export default function AtendimentoConfig() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="base-conhecimento" className="mt-0 h-full">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />Base de Conhecimento</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Gerencie artigos e documentação de suporte</CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <KnowledgeBaseCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="ia-config" className="mt-0 h-full">
               <Card className="h-full">
