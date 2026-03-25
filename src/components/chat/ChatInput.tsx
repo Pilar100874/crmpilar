@@ -563,14 +563,15 @@ export default function ChatInput({
     );
   };
 
-  // Simple Toolbar Button Component with animated tooltip
+  // Simple Toolbar Button Component with animated tooltip and color
   const ToolbarBtn = ({ 
     icon: Icon, 
     title, 
     onClick, 
     disabled = false, 
     isActive = false, 
-    isLoading = false 
+    isLoading = false,
+    color
   }: { 
     icon: React.ElementType;
     title: string;
@@ -578,6 +579,7 @@ export default function ChatInput({
     disabled?: boolean;
     isActive?: boolean;
     isLoading?: boolean;
+    color?: string;
   }) => (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
@@ -590,7 +592,7 @@ export default function ChatInput({
             {isLoading ? (
               <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Icon size={20} />
+              <Icon size={20} style={color ? { color } : undefined} />
             )}
           </button>
         </TooltipTrigger>
