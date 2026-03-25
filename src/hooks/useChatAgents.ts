@@ -13,7 +13,7 @@ export interface ChatAgent {
   permite_cliente: boolean;
   system_prompt: string;
   modelo_ia: string;
-  knowledge_base_type: 'nenhuma' | 'interna' | 'externa';
+  knowledge_base_type: 'nenhuma' | 'interna' | 'externa' | 'terceiros';
   knowledge_base_internal_data: any[];
   api_endpoint_ids: string[];
   usar_produtos_importados: boolean;
