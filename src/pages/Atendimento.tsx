@@ -188,8 +188,8 @@ export default function Atendimento() {
   const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }[]>([]);
   const [agentPrivateInput, setAgentPrivateInput] = useState('');
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
-  const [activeClientAgent, setActiveClientAgent] = useState<ChatAgent | null>(null);
-  const activeClientAgentRef = useRef<ChatAgent | null>(null);
+  const [activeClientAgents, setActiveClientAgents] = useState<Record<string, ChatAgent>>({});
+  const activeClientAgentsRef = useRef<Record<string, ChatAgent>>({});
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
@@ -538,15 +538,10 @@ export default function Atendimento() {
   
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
-  // Keep activeClientAgentRef in sync
+  // Keep activeClientAgentsRef in sync
   useEffect(() => {
-    activeClientAgentRef.current = activeClientAgent;
-  }, [activeClientAgent]);
-
-  // Clear active agent when switching conversations
-  useEffect(() => {
-    setActiveClientAgent(null);
-  }, [selectedConversation]);
+    activeClientAgentsRef.current = activeClientAgents;
+  }, [activeClientAgents]);
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
@@ -2903,8 +2898,9 @@ ${recentMessages}
           }
 
           // Auto-reply with active client agent when customer sends a message
-          if (newMessage.sender === 'customer' && activeClientAgentRef.current) {
-            const agentToUse = activeClientAgentRef.current;
+          const agentForConv = activeClientAgentsRef.current[conversationId];
+          if (newMessage.sender === 'customer' && agentForConv) {
+            const agentToUse = agentForConv;
             setTimeout(async () => {
               setAgentLoading(true);
               try {
@@ -3659,7 +3655,8 @@ ${recentMessages}
     }
 
     // Mode 'cliente' — activate agent to auto-respond to customer messages
-    setActiveClientAgent(agent);
+    if (!selectedConversation) return;
+    setActiveClientAgents(prev => ({ ...prev, [selectedConversation]: agent }));
     toast.success(`${agent.icone} ${agent.nome} ativado — respondendo automaticamente ao cliente`);
 
     // If there's a last message from customer, respond immediately
@@ -3690,6 +3687,8 @@ ${recentMessages}
       }
     }
   };
+
+  const activeClientAgent = selectedConversation ? activeClientAgents[selectedConversation] ?? null : null;
 
   // Auto-reply when new customer message arrives and agent is active
   const handleAgentAutoReply = async (customerMessage: string) => {
@@ -6304,7 +6303,13 @@ ${recentMessages}
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setActiveClientAgent(null);
+                      if (selectedConversation) {
+                        setActiveClientAgents(prev => {
+                          const next = { ...prev };
+                          delete next[selectedConversation];
+                          return next;
+                        });
+                      }
                       toast.info("Agente suspenso — você voltou ao controle");
                     }}
                     className="text-xs"
