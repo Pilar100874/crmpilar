@@ -196,12 +196,15 @@ export default function ChatInput({
       if (menuRef.current && !menuRef.current.contains(target)) {
         setShowToolsMenu(false);
       }
+      if (agentMenuRef.current && !agentMenuRef.current.contains(target)) {
+        setShowAgentMenu(false);
+      }
     };
-    if (showToolsMenu) {
+    if (showToolsMenu || showAgentMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showToolsMenu]);
+  }, [showToolsMenu, showAgentMenu]);
 
   // Handle external tool triggers
   useEffect(() => {
