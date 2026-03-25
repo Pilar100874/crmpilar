@@ -47,7 +47,7 @@ import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
 import PedagioAPIConfigCRUD from "./PedagioAPIConfigCRUD";
 import { CustosVeiculosCRUD } from "./CustosVeiculosCRUD";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
-import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
+
 import IAConfigCRUD from "./IAConfigCRUD";
 import { ResendConfigSection } from "./ResendConfigSection";
 import {
