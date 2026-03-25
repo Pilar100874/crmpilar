@@ -1753,6 +1753,7 @@ export type Database = {
           permite_cliente: boolean
           system_prompt: string
           updated_at: string
+          usar_estoque_sistema: boolean
           usar_produtos_importados: boolean
         }
         Insert: {
@@ -1773,6 +1774,7 @@ export type Database = {
           permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
+          usar_estoque_sistema?: boolean
           usar_produtos_importados?: boolean
         }
         Update: {
@@ -1793,6 +1795,7 @@ export type Database = {
           permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
+          usar_estoque_sistema?: boolean
           usar_produtos_importados?: boolean
         }
         Relationships: [

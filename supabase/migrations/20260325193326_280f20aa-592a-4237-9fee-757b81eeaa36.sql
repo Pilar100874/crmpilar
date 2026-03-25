@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN IF NOT EXISTS usar_estoque_sistema boolean NOT NULL DEFAULT false;
