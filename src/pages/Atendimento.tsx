@@ -538,6 +538,16 @@ export default function Atendimento() {
   
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
+  // Keep activeClientAgentRef in sync
+  useEffect(() => {
+    activeClientAgentRef.current = activeClientAgent;
+  }, [activeClientAgent]);
+
+  // Clear active agent when switching conversations
+  useEffect(() => {
+    setActiveClientAgent(null);
+  }, [selectedConversation]);
+
   // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
     // Limpar conversa quando não estiver na aba chat
