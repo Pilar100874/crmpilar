@@ -152,6 +152,7 @@ serve(async (req) => {
     systemPrompt = systemPrompt.replace("{{historico_chat}}", historico_chat || "");
     systemPrompt = systemPrompt.replace("{{mensagem_cliente}}", mensagem_cliente);
     systemPrompt += kbContext;
+    systemPrompt += produtosImportadosContext;
     systemPrompt += apiContext;
 
     // Modo privado: adicionar contexto da conversa com o cliente
