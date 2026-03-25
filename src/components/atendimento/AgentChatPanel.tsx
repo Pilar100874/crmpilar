@@ -295,7 +295,24 @@ export function AgentChatPanel({
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {lastClientMessage && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-9 w-9 shrink-0 rounded-full border-border/50"
+                    onClick={() => setInput(prev => prev ? prev + '\n' + lastClientMessage : lastClientMessage)}
+                  >
+                    <ArrowDown className="h-4 w-4" style={{ color: agentColor }} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Puxar última msg do cliente</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Textarea
             value={input}
             onChange={e => setInput(e.target.value)}
