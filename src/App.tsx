@@ -61,7 +61,7 @@ import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
 import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
 import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 
-import BaseConhecimento from "./pages/BaseConhecimento";
+
 import QualityAssurance from "./pages/QualityAssurance";
 import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
@@ -189,7 +189,7 @@ const App = () => (
               <Route path="/dashboard-pesquisas-satisfacao" element={<DashboardPesquisasSatisfacao />} />
               
               <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
-              <Route path="/base-conhecimento" element={<BaseConhecimento />} />
+              
               <Route path="/quality-assurance" element={<QualityAssurance />} />
               <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
               <Route path="/editor-regras" element={<EditorRegras />} />
