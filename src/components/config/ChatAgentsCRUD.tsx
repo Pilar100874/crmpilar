@@ -249,7 +249,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
-                      KB {agent.knowledge_base_type === 'interna' ? 'Interna' : 'Externa'}
+                      KB {agent.knowledge_base_type === 'interna' ? 'Interna' : agent.knowledge_base_type === 'terceiros' ? 'Terceiros' : 'Externa'}
                     </Badge>
                   )}
                   {(agent.api_endpoint_ids || []).length > 0 && (
@@ -419,7 +419,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <SelectContent>
                       <SelectItem value="nenhuma">Nenhuma — Apenas o prompt do sistema</SelectItem>
                       <SelectItem value="interna">Interna — Textos inseridos manualmente</SelectItem>
-                      <SelectItem value="externa">Externa — Upload de arquivos (PDF, TXT, MD, CSV)</SelectItem>
+                      <SelectItem value="externa">Externa — Upload de arquivos ou flags marcados</SelectItem>
+                      <SelectItem value="terceiros">Terceiros — Base de conhecimento do modelo (Gemini, ChatGPT, etc.)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
