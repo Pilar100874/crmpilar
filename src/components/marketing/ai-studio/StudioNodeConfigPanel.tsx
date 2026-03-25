@@ -954,6 +954,15 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-2.5">
+            {hasMultipleSubjectRefs && !isCurrentModelMultiRefCapable && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block mb-0.5">Modelo incompatível com múltiplas referências</strong>
+                  Este modelo gera vídeos de cena única e não consegue compor produto + influencer juntos de forma confiável. Use o <strong>GIF Animado (Gratuito)</strong> que suporta múltiplas referências visuais, ou conecte apenas uma referência (produto OU influencer).
+                </div>
+              </div>
+            )}
             <ConfigField label="Modelo de Vídeo">
               <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => {
                 update('videoModel', v);
