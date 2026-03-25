@@ -1,23 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Wrench, X } from 'lucide-react';
+import { Wrench, X, Bot } from 'lucide-react';
 import { type FerramentaConfig, type TabType } from '@/hooks/useFerramentasAtendimento';
+import { type ChatAgent } from '@/hooks/useChatAgents';
 
 interface ToolsDropdownProps {
   ferramentas: FerramentaConfig[];
   onSelectTool: (ferramentaId: string) => void;
   tabType: TabType;
   insideDialog?: boolean;
+  chatAgents?: ChatAgent[];
+  onSelectAgent?: (agent: ChatAgent) => void;
 }
 
-export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog = false }: ToolsDropdownProps) {
+export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog = false, chatAgents = [], onSelectAgent }: ToolsDropdownProps) {
   const [open, setOpen] = useState(false);
 
   const toolsFerramentas = ferramentas.filter(f => f.tipo === 'ferramenta');
   const iaFerramentas = ferramentas.filter(f => f.tipo === 'ia');
+  const activeAgents = chatAgents.filter(a => a.ativo);
 
-  if (ferramentas.length === 0) {
+  if (ferramentas.length === 0 && activeAgents.length === 0) {
     return null;
   }
 
@@ -99,6 +103,36 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                   })}
                 </div>
               </div>
+            )}
+
+            {activeAgents.length > 0 && (
+              <>
+                {(toolsFerramentas.length > 0 || iaFerramentas.length > 0) && (
+                  <div className="border-t border-border" />
+                )}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground px-1">Agentes de IA</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeAgents.map(agent => (
+                      <button
+                        key={agent.id}
+                        onClick={() => {
+                          setOpen(false);
+                          setTimeout(() => onSelectAgent?.(agent), 150);
+                        }}
+                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
+                        data-macro-id={`agent-${agent.id}`}
+                      >
+                        <span className="text-xl">{agent.icone}</span>
+                        <span className="text-xs font-medium leading-tight">{agent.nome}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {agent.modo_operacao === 'automatico' ? '⚡ Auto' : '✨ Sugestão'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </DialogContent>

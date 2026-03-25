@@ -1696,6 +1696,109 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_agent_kb_files: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes: number | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes?: number | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_agent_kb_files_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_agents: {
+        Row: {
+          api_endpoint_ids: string[] | null
+          ativo: boolean
+          cor: string
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          icone: string
+          id: string
+          knowledge_base_internal_data: Json | null
+          knowledge_base_type: string
+          modelo_ia: string
+          modo_operacao: string
+          nome: string
+          ordem: number
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint_ids?: string[] | null
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          icone?: string
+          id?: string
+          knowledge_base_internal_data?: Json | null
+          knowledge_base_type?: string
+          modelo_ia?: string
+          modo_operacao?: string
+          nome: string
+          ordem?: number
+          system_prompt?: string
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint_ids?: string[] | null
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          icone?: string
+          id?: string
+          knowledge_base_internal_data?: Json | null
+          knowledge_base_type?: string
+          modelo_ia?: string
+          modo_operacao?: string
+          nome?: string
+          ordem?: number
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_agents_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_interno_conversas: {
         Row: {
           created_at: string

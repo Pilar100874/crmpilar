@@ -49,6 +49,7 @@ import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
+import { useChatAgents, type ChatAgent } from "@/hooks/useChatAgents";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
@@ -176,6 +177,10 @@ export default function Atendimento() {
   
   // Tool trigger state (for radial menu -> ChatInput communication)
   const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
+
+  // Chat Agent states
+  const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
@@ -316,6 +321,7 @@ export default function Atendimento() {
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
+  const { agents: chatAgents } = useChatAgents(estabelecimentoId || null);
 
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
@@ -3585,6 +3591,49 @@ ${recentMessages}
     }
   };
 
+  
+
+  const handleSelectAgent = async (agent: ChatAgent) => {
+    if (!lastUserMessage) {
+      toast.error("Nenhuma mensagem do cliente para processar");
+      return;
+    }
+    setAgentLoading(true);
+    setAgentResponse(null);
+    try {
+      const historico = messages.slice(-20).map(m => ({
+        role: m.sender === 'customer' ? 'user' : 'assistant',
+        content: m.text,
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+        body: {
+          agent_id: agent.id,
+          mensagem_cliente: lastUserMessage,
+          historico_chat: historico,
+          conversation_id: selectedConversation,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.modo_operacao === 'automatico') {
+        // Enviar resposta diretamente
+        await handleSendMessage(data.resposta, 'text');
+        toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
+      } else {
+        // Modo sugestão: mostrar para o atendente
+        setAgentResponse(data);
+        toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
+      }
+    } catch (err: any) {
+      console.error("Erro ao executar agente:", err);
+      toast.error(err.message || "Erro ao executar agente");
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
   // Handlers para os dialogs do RadialMenu
   const handleRadialTranslate = async () => {
     if (!radialTranslateText.trim()) {
@@ -6216,6 +6265,51 @@ ${recentMessages}
                 </Card>
               )}
 
+              {/* Agent Suggestion Panel */}
+              {(agentResponse || agentLoading) && (
+                <Card className="border-primary/30 bg-primary/5 rounded-xl p-3">
+                  {agentLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span>Agente processando...</span>
+                    </div>
+                  ) : agentResponse ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-primary">
+                          {agentResponse.agent_icone} {agentResponse.agent_nome} — Sugestão
+                        </span>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setAgentResponse(null)}>
+                            Descartar
+                          </Button>
+                          <Button size="sm" className="h-6 text-xs" onClick={() => {
+                            handleSendMessage(agentResponse.resposta, 'text');
+                            setAgentResponse(null);
+                          }}>
+                            Enviar
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{agentResponse.resposta}</p>
+                    </div>
+                  ) : null}
+                </Card>
+              )}
+
+              {/* Chat Agent Tools */}
+              {chatAgents.filter(a => a.ativo).length > 0 && (
+                <div className="flex items-center gap-2">
+                  <ToolsDropdown
+                    ferramentas={getToolbarFerramentas('chat')}
+                    onSelectTool={handleToolSelect}
+                    tabType="chat"
+                    chatAgents={chatAgents}
+                    onSelectAgent={handleSelectAgent}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col gap-3">
                 <ChatInput
                   onSendMessage={handleSendMessage}
@@ -6342,7 +6436,9 @@ ${recentMessages}
                   <ToolsDropdown 
                     ferramentas={getToolbarFerramentas('agenda')} 
                     onSelectTool={handleToolSelect} 
-                    tabType="agenda" 
+                    tabType="agenda"
+                    chatAgents={chatAgents}
+                    onSelectAgent={handleSelectAgent}
                   />
                   <Button
                     size="sm"
@@ -6441,7 +6537,9 @@ ${recentMessages}
               <ToolsDropdown 
                 ferramentas={getToolbarFerramentas('email')} 
                 onSelectTool={handleToolSelect} 
-                tabType="email" 
+                tabType="email"
+                chatAgents={chatAgents}
+                onSelectAgent={handleSelectAgent}
               />
             }
           />

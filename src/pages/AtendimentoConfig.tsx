@@ -27,7 +27,8 @@ import {
   Send,
   FileText,
   Shield,
-  Activity
+  Activity,
+  Bot
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,6 +64,7 @@ import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookCo
 import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplatesCRUD';
 import { CampaignPermissionsCRUD } from '@/components/config/CampaignPermissionsCRUD';
 import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
+import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -80,6 +82,7 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
+  { id: 'agentes-chat', label: 'Agentes de Chat', icon: Bot },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
   { id: 'anexos-rapidos', label: 'Anexos Rápidos', icon: Paperclip },
   { id: 'skills', label: 'Skills de Atendimento', icon: Award },
@@ -485,6 +488,15 @@ export default function AtendimentoConfig() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="agentes-chat" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Bot className="h-4 w-4 sm:h-5 sm:w-5" />Agentes de Chat</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Crie agentes de IA para auxiliar ou responder automaticamente no atendimento</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatAgentsCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
             <TabsContent value="textos-prontos" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
