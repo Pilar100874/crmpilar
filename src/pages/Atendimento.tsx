@@ -6386,6 +6386,21 @@ ${recentMessages}
                   }}
                   isLoading={agentPrivateLoading}
                   clientMessages={messages.slice(-15)}
+                  isClientAgentActive={!!selectedConversation && !!activeClientAgents[selectedConversation] && activeClientAgents[selectedConversation]?.id === agentPrivateChatAgent.id}
+                  onActivateClientAgent={() => {
+                    if (!selectedConversation) return;
+                    setActiveClientAgents(prev => ({ ...prev, [selectedConversation]: agentPrivateChatAgent }));
+                    toast.success(`${agentPrivateChatAgent.icone} ${agentPrivateChatAgent.nome} ativado para responder ao cliente`);
+                  }}
+                  onDeactivateClientAgent={() => {
+                    if (!selectedConversation) return;
+                    setActiveClientAgents(prev => {
+                      const next = { ...prev };
+                      delete next[selectedConversation];
+                      return next;
+                    });
+                    toast.info("Agente suspenso — você voltou ao controle");
+                  }}
                 />
               )}
 
