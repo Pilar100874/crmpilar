@@ -242,6 +242,11 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     {agent.modo_operacao === 'automatico' ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
                     {agent.modo_operacao === 'automatico' ? 'Automático' : 'Sugestão'}
                   </Badge>
+                  {!agent.permite_cliente && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Somente interno
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
