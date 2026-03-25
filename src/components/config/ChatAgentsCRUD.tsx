@@ -457,20 +457,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
-                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked, estoque_formato_tabela: checked ? formData.estoque_formato_tabela : false })} />
+                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
                     </div>
-                    {formData.usar_estoque_sistema && (
-                      <div className="flex items-center justify-between rounded-lg border p-3 ml-4 border-dashed">
-                        <div className="space-y-0.5">
-                          <Label className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-primary" />
-                            Resposta em Formato Tabela
-                          </Label>
-                          <p className="text-xs text-muted-foreground">Retorna dados de estoque em tabela com opção de download Excel.</p>
-                        </div>
-                        <Switch checked={formData.estoque_formato_tabela || false} onCheckedChange={(checked) => setFormData({ ...formData, estoque_formato_tabela: checked })} />
-                      </div>
-                    )}
                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
