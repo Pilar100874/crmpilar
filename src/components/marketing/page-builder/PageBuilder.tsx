@@ -1473,7 +1473,11 @@ const AutoGeneratePage: React.FC<{
       setAvailableVideoModels(vidModels);
       if (vidModels.length > 0) setSelectedVideoModel(vidModels[0].id);
 
-      // Load gallery images and videos from contents table
+      // Load gallery images from multiple sources
+      const allImages: { url: string; titulo: string }[] = [];
+      const allVideos: { url: string; titulo: string }[] = [];
+
+      // 1. contents table
       const { data: imgContents } = await supabase
         .from('contents')
         .select('titulo, url')
@@ -1482,7 +1486,7 @@ const AutoGeneratePage: React.FC<{
         .not('url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      setGalleryImages((imgContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+      (imgContents || []).filter(c => c.url).forEach(c => allImages.push({ url: c.url!, titulo: c.titulo }));
 
       const { data: vidContents } = await supabase
         .from('contents')
@@ -1492,7 +1496,37 @@ const AutoGeneratePage: React.FC<{
         .not('url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      setGalleryVideos((vidContents || []).filter(c => c.url).map(c => ({ url: c.url!, titulo: c.titulo })));
+      (vidContents || []).filter(c => c.url).forEach(c => allVideos.push({ url: c.url!, titulo: c.titulo }));
+
+      // 2. media_gallery table
+      const { data: mediaGallery } = await supabase
+        .from('media_gallery')
+        .select('nome, public_url, tipo')
+        .eq('estabelecimento_id', estabId)
+        .not('public_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      (mediaGallery || []).forEach((m: any) => {
+        if (m.tipo === 'image') allImages.push({ url: m.public_url, titulo: m.nome || 'Mídia' });
+        if (m.tipo === 'video') allVideos.push({ url: m.public_url, titulo: m.nome || 'Vídeo' });
+      });
+
+      // 3. catalog_ai_images table
+      const { data: aiImages } = await supabase
+        .from('catalog_ai_images')
+        .select('prompt, public_url')
+        .eq('estabelecimento_id', estabId)
+        .not('public_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      (aiImages || []).forEach((a: any) => allImages.push({ url: a.public_url, titulo: a.prompt || 'Imagem IA' }));
+
+      // Deduplicate by URL
+      const uniqueImages = allImages.filter((img, i, arr) => arr.findIndex(x => x.url === img.url) === i);
+      const uniqueVideos = allVideos.filter((vid, i, arr) => arr.findIndex(x => x.url === vid.url) === i);
+
+      setGalleryImages(uniqueImages);
+      setGalleryVideos(uniqueVideos);
 
       setLoading(false);
       setStep('select');
