@@ -1260,7 +1260,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Globe size={18} />
+                  <Globe size={18} style={{ color: '#3b82f6' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
