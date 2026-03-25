@@ -3811,7 +3811,7 @@ ${recentMessages}
           />
           <Button
             size="sm"
-            onClick={handleAgentPrivateSend}
+            onClick={() => handleAgentPrivateSend()}
             disabled={agentPrivateLoading || !agentPrivateInput.trim()}
           >
             <Send className="h-4 w-4" />
