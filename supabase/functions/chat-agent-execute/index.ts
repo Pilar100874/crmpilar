@@ -75,6 +75,38 @@ serve(async (req) => {
       }
     }
 
+    // Buscar estoque do sistema se habilitado
+    let estoqueSistemaContext = "";
+    if (agent.usar_estoque_sistema) {
+      try {
+        const { data: produtos } = await supabase
+          .from("produtos")
+          .select("nome, codigo, ean_13, preco_tabela, estoque, marca, descricao, categoria, unidade, foto_url")
+          .eq("estabelecimento_id", agent.estabelecimento_id)
+          .limit(500);
+
+        if (produtos?.length) {
+          estoqueSistemaContext = "\n\n--- ESTOQUE DO SISTEMA ---\n";
+          estoqueSistemaContext += "Produtos cadastrados no sistema com informações de estoque e preços:\n\n";
+          for (const p of produtos) {
+            const parts = [`Nome: ${p.nome}`];
+            if (p.codigo) parts.push(`Código: ${p.codigo}`);
+            if (p.ean_13) parts.push(`EAN: ${p.ean_13}`);
+            if (p.preco_tabela) parts.push(`Preço: R$${Number(p.preco_tabela).toFixed(2)}`);
+            if (p.estoque !== null && p.estoque !== undefined) parts.push(`Estoque: ${p.estoque}`);
+            if (p.marca) parts.push(`Marca: ${p.marca}`);
+            if (p.categoria) parts.push(`Categoria: ${p.categoria}`);
+            if (p.unidade) parts.push(`Unidade: ${p.unidade}`);
+            if (p.descricao) parts.push(`Desc: ${p.descricao}`);
+            estoqueSistemaContext += `• ${parts.join(" | ")}\n`;
+          }
+          estoqueSistemaContext += "--- FIM ESTOQUE DO SISTEMA ---\n";
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estoque do sistema:", e);
+      }
+    }
+
     // Buscar produtos importados de terceiros se habilitado
     let produtosImportadosContext = "";
     if (agent.usar_produtos_importados) {
@@ -152,6 +184,7 @@ serve(async (req) => {
     systemPrompt = systemPrompt.replace("{{historico_chat}}", historico_chat || "");
     systemPrompt = systemPrompt.replace("{{mensagem_cliente}}", mensagem_cliente);
     systemPrompt += kbContext;
+    systemPrompt += estoqueSistemaContext;
     systemPrompt += produtosImportadosContext;
     systemPrompt += apiContext;
 
