@@ -461,7 +461,7 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
             <FieldSection label="Prompt do Sistema (Gerado)" hint="Este prompt é gerado automaticamente a partir dos campos preenchidos. Você pode editá-lo diretamente se preferir.">
               <Textarea
                 value={generatedPrompt}
-                onChange={e => onChange(e.target.value)}
+                onChange={e => handleDirectPromptEdit(e.target.value)}
                 rows={16}
                 className="text-xs font-mono"
               />
