@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
@@ -367,21 +368,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="prompt" className="mt-0 space-y-4">
-                <div>
-                  <Label>Prompt do Sistema *</Label>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Instrua o agente sobre seu papel, tom de voz e como deve se comportar.
-                    Use {"{{historico_chat}}"} para incluir o histórico da conversa e {"{{mensagem_cliente}}"} para a última mensagem.
-                  </p>
-                  <Textarea
-                    value={formData.system_prompt || ''}
-                    onChange={e => setFormData({ ...formData, system_prompt: e.target.value })}
-                    placeholder={`Você é um assistente de vendas especializado em nossos produtos.\n\nSeu objetivo é:\n- Ajudar o atendente a encontrar produtos no estoque\n- Sugerir produtos com base na necessidade do cliente\n- Fornecer informações de preço e disponibilidade\n\nSempre responda de forma profissional e objetiva.`}
-                    rows={14}
-                    className="font-mono text-sm"
-                  />
-                </div>
+              <TabsContent value="prompt" className="mt-0">
+                <ChatAgentPromptWizard
+                  value={formData.system_prompt || ''}
+                  onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
+                  agentName={formData.nome}
+                />
               </TabsContent>
 
               <TabsContent value="conhecimento" className="mt-0 space-y-4">
