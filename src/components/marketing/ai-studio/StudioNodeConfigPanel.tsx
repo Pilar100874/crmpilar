@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { StudioNode, getNodeMeta } from './types';
+import { StudioNode, StudioEdge, getNodeMeta, StudioNodeType } from './types';
 import { useNodeResult } from './useNodeResults';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw } from 'lucide-react';
+import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -19,9 +19,11 @@ interface Props {
   onUpdateConfig: (nodeId: string, config: Record<string, any>) => void;
   onClose: () => void;
   onExecuteFromNode?: (nodeId: string) => void;
+  allNodes?: StudioNode[];
+  allEdges?: StudioEdge[];
 }
 
-type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string };
+type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string; supportsMultiRef?: boolean };
 
 const LLM_MODELS: ModelInfo[] = [
   { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico, ótimo custo-benefício' },
@@ -83,54 +85,71 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'polloai/sdxl', label: '🐔 PL: SDXL', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
 ];
 
+// Models that support composing multiple distinct visual references (product + person) in one video.
+// Most single-shot video models can only handle one subject reference well.
+// supportsMultiRef = true means the model can receive multiple image refs and compose them together.
 const VIDEO_MODELS: ModelInfo[] = [
-  { value: 'free/gif-animated', label: '🎞️ GIF Animado (Gratuito)', provider: 'Lovable AI', cost: 'GRÁTIS', quality: 3, tip: 'Gera múltiplos frames animados, sem custo' },
-  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google', cost: '$$$$', quality: 5, tip: 'Melhor vídeo Google, com áudio' },
-  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google', cost: '$$$', quality: 4, tip: 'Versão rápida do Veo 3.1' },
-  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google', cost: '$$$', quality: 5, tip: 'Alta qualidade com diálogos' },
-  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google', cost: '$$', quality: 4, tip: 'Bom custo-benefício em vídeo' },
-  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Referência em vídeo IA, premium' },
-  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo alto' },
-  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway', cost: '$$$$', quality: 5, tip: 'Cinematográfico, controle preciso' },
-  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway', cost: '$$', quality: 4, tip: 'Rápido, bom para iteração' },
-  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou', cost: '$$', quality: 4, tip: 'Bom com movimento, acessível' },
-  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou', cost: '$', quality: 3, tip: 'Econômico, qualidade aceitável' },
-  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika', cost: '$$', quality: 4, tip: 'Criativo, bom para efeitos' },
-  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax', cost: '$', quality: 3, tip: 'Barato, vídeos curtos' },
-  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma', cost: '$$', quality: 4, tip: 'Boa física e movimentos' },
-  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico' },
-  { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
-  { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)' },
+  { value: 'free/gif-animated', label: '🎞️ GIF Animado (Gratuito)', provider: 'Lovable AI', cost: 'GRÁTIS', quality: 3, tip: 'Gera múltiplos frames animados, sem custo', supportsMultiRef: true },
+  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google', cost: '$$$$', quality: 5, tip: 'Melhor vídeo Google, com áudio', supportsMultiRef: false },
+  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google', cost: '$$$', quality: 4, tip: 'Versão rápida do Veo 3.1', supportsMultiRef: false },
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google', cost: '$$$', quality: 5, tip: 'Alta qualidade com diálogos', supportsMultiRef: false },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google', cost: '$$', quality: 4, tip: 'Bom custo-benefício em vídeo', supportsMultiRef: false },
+  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Referência em vídeo IA, premium', supportsMultiRef: false },
+  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo alto', supportsMultiRef: false },
+  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway', cost: '$$$$', quality: 5, tip: 'Cinematográfico, controle preciso', supportsMultiRef: false },
+  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway', cost: '$$', quality: 4, tip: 'Rápido, bom para iteração', supportsMultiRef: false },
+  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou', cost: '$$', quality: 4, tip: 'Bom com movimento, acessível', supportsMultiRef: false },
+  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou', cost: '$', quality: 3, tip: 'Econômico, qualidade aceitável', supportsMultiRef: false },
+  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika', cost: '$$', quality: 4, tip: 'Criativo, bom para efeitos', supportsMultiRef: false },
+  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax', cost: '$', quality: 3, tip: 'Barato, vídeos curtos', supportsMultiRef: false },
+  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma', cost: '$$', quality: 4, tip: 'Boa física e movimentos', supportsMultiRef: false },
+  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico', supportsMultiRef: false },
+  { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo', supportsMultiRef: false },
+  { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)', supportsMultiRef: false },
   // Apiframe video models
-  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe' },
-  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe' },
-  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos' },
-  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos' },
-  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos' },
-  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos' },
-  // Google Veo e Sora 2 removidos - endpoints não disponíveis no Apiframe ainda
-  // Apiframe video models below are not yet available on Apiframe API
-  // { value: 'apiframe/pika', ... }, { value: 'apiframe/hailuo-minimax', ... }, etc.
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
+  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos', supportsMultiRef: false },
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos', supportsMultiRef: false },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos', supportsMultiRef: false },
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos', supportsMultiRef: false },
   // AIML API video models
-  { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25' },
-  { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28' },
-  { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.20' },
-  { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
-  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
-  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
-  { value: 'aimlapi/pika', label: '🤖 ML: Pika', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API' },
-  { value: 'aimlapi/wan-video', label: '🤖 ML: Wan Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
-  { value: 'aimlapi/stable-video', label: '🤖 ML: Stable Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API' },
+  { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25', supportsMultiRef: false },
+  { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28', supportsMultiRef: false },
+  { value: 'aimlapi/luma', label: '🤖 ML: Luma Dream Machine', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.20', supportsMultiRef: false },
+  { value: 'aimlapi/minimax', label: '🤖 ML: Minimax Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API', supportsMultiRef: false },
+  { value: 'aimlapi/cogvideox', label: '🤖 ML: CogVideoX', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API', supportsMultiRef: false },
+  { value: 'aimlapi/haiper', label: '🤖 ML: Haiper 2.0', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API', supportsMultiRef: false },
+  { value: 'aimlapi/pika', label: '🤖 ML: Pika', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API', supportsMultiRef: false },
+  { value: 'aimlapi/wan-video', label: '🤖 ML: Wan Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API', supportsMultiRef: false },
+  { value: 'aimlapi/stable-video', label: '🤖 ML: Stable Video', provider: 'AIML API', cost: '$', quality: 3, tip: 'Via AIML API', supportsMultiRef: false },
   // Pollo AI video models
-  { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'Pollo AI', cost: '$$', quality: 5, tip: 'Via Pollo AI, 10 créditos' },
-  { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 8 créditos' },
-  { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
-  { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 6 créditos' },
-  { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 5 créditos' },
-  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
-  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
-  { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI' },
-  { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  { value: 'polloai/runway', label: '🐔 PL: Runway Gen-3', provider: 'Pollo AI', cost: '$$', quality: 5, tip: 'Via Pollo AI, 10 créditos', supportsMultiRef: false },
+  { value: 'polloai/kling-v2', label: '🐔 PL: Kling v2', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 8 créditos', supportsMultiRef: false },
+  { value: 'polloai/kling-v1.5', label: '🐔 PL: Kling v1.5', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
+  { value: 'polloai/luma', label: '🐔 PL: Luma Dream Machine', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI, 6 créditos', supportsMultiRef: false },
+  { value: 'polloai/minimax', label: '🐔 PL: Minimax Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI, 5 créditos', supportsMultiRef: false },
+  { value: 'polloai/hunyuan', label: '🐔 PL: Hunyuan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
+  { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
+  { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI', supportsMultiRef: false },
+  { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
+];
+
+// Helper to check if a video model supports multiple reference images
+export const isMultiRefModel = (modelValue: string): boolean => {
+  const model = VIDEO_MODELS.find(m => m.value === modelValue);
+  return model?.supportsMultiRef ?? false;
+};
+
+// Reference node types that count as distinct visual subjects
+const MULTI_REF_NODE_TYPES: StudioNodeType[] = [
+  'productImageSelect', 'multiProductSelect', 'galleryInfluencer', 'imageInput', 'multiImageRef',
+  'galleryAmbiente', 'galleryEstilo', 'galleryPose', 'galleryRoupa', 'gallerySalvas',
+];
+
+// Types that represent distinct "subjects" (product vs person) — having 2+ of these = multi-ref
+const SUBJECT_REF_TYPES: StudioNodeType[] = [
+  'productImageSelect', 'multiProductSelect', 'galleryInfluencer',
 ];
 
 const AUDIO_MODELS: ModelInfo[] = [
