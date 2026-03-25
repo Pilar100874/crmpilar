@@ -2,14 +2,16 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Download, Table, Send, ArrowUp, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, Search, X } from 'lucide-react';
+import { Download, Table, Send, ArrowUp, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, Search, X, MessageSquare, FileSpreadsheet } from 'lucide-react';
 import { toast } from '@/lib/toast-config';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AgentTableRendererProps {
   data: any[];
   onSendToClient?: (text: string) => void;
   onInsertToClientChat?: (text: string) => void;
+  onSendFileToClient?: (fileUrl: string, fileName: string) => void;
 }
 
 function parseMarkdownTable(content: string): { text: string; tableData: any[] | null } {
@@ -72,15 +74,15 @@ function formatSelectedAsText(items: any[]): string {
   ).join('\n');
 }
 
-export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat }: AgentTableRendererProps) {
+export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat, onSendFileToClient }: AgentTableRendererProps) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [filter, setFilter] = useState('');
   const [showFilter, setShowFilter] = useState(false);
+  const [sendingExcel, setSendingExcel] = useState(false);
   const columns = Object.keys(data[0]);
 
-  // Filter data
   const filteredData = useMemo(() => {
     if (!filter.trim()) return data;
     const q = filter.toLowerCase();
@@ -89,7 +91,6 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
     );
   }, [data, filter, columns]);
 
-  // Sort data
   const sortedData = useMemo(() => {
     if (!sortCol) return filteredData;
     return [...filteredData].sort((a, b) => {
@@ -97,9 +98,7 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
       const vb = b[sortCol] ?? '';
       const na = parseFloat(String(va).replace(/[^\d.-]/g, ''));
       const nb = parseFloat(String(vb).replace(/[^\d.-]/g, ''));
-      if (!isNaN(na) && !isNaN(nb)) {
-        return sortDir === 'asc' ? na - nb : nb - na;
-      }
+      if (!isNaN(na) && !isNaN(nb)) return sortDir === 'asc' ? na - nb : nb - na;
       const cmp = String(va).localeCompare(String(vb), 'pt-BR', { numeric: true });
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -129,22 +128,14 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
     const allOriginalIdxs = sortedData.map(row => data.indexOf(row));
     const allSelected = allOriginalIdxs.every(i => selected.has(i));
     if (allSelected) {
-      setSelected(prev => {
-        const next = new Set(prev);
-        allOriginalIdxs.forEach(i => next.delete(i));
-        return next;
-      });
+      setSelected(prev => { const next = new Set(prev); allOriginalIdxs.forEach(i => next.delete(i)); return next; });
     } else {
-      setSelected(prev => {
-        const next = new Set(prev);
-        allOriginalIdxs.forEach(i => next.add(i));
-        return next;
-      });
+      setSelected(prev => { const next = new Set(prev); allOriginalIdxs.forEach(i => next.add(i)); return next; });
     }
   };
 
   const isRowSelected = (idx: number) => selected.has(data.indexOf(sortedData[idx]));
-  const allVisibleSelected = sortedData.length > 0 && sortedData.every((row) => selected.has(data.indexOf(row)));
+  const allVisibleSelected = sortedData.length > 0 && sortedData.every(row => selected.has(data.indexOf(row)));
 
   const handleDownload = (onlySelected = false) => {
     const rows = onlySelected ? data.filter((_, i) => selected.has(i)) : sortedData;
@@ -154,6 +145,40 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
     XLSX.writeFile(wb, `dados_${Date.now()}.xlsx`);
     toast.success('Arquivo Excel baixado!');
+  };
+
+  const handleSendExcelToWhatsApp = async () => {
+    if (!onSendFileToClient) return;
+    const rows = hasSelection ? selectedItems : sortedData;
+    if (rows.length === 0) { toast.error('Nenhum dado para enviar'); return; }
+
+    setSendingExcel(true);
+    try {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      const fileName = `dados_${Date.now()}.xlsx`;
+      const filePath = `agent-tables/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, blob, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('chat-attachments').getPublicUrl(filePath);
+      if (!urlData?.publicUrl) throw new Error('Erro ao gerar URL');
+
+      onSendFileToClient(urlData.publicUrl, fileName);
+      toast.success(`Excel com ${rows.length} registro(s) enviado ao WhatsApp!`);
+    } catch (err: any) {
+      toast.error(`Erro ao enviar Excel: ${err.message}`);
+    } finally {
+      setSendingExcel(false);
+    }
   };
 
   const selectedItems = data.filter((_, i) => selected.has(i));
@@ -173,20 +198,25 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
             {showFilter ? <X className="h-3 w-3" /> : <Search className="h-3 w-3" />}
           </Button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {hasSelection && onInsertToClientChat && (
             <Button size="sm" variant="outline" onClick={() => { onInsertToClientChat(formatSelectedAsText(selectedItems)); toast.success(`${selected.size} item(ns) inserido(s) no chat`); }} className="h-7 text-xs gap-1">
-              <ArrowUp className="h-3 w-3" /> Inserir no chat
+              <ArrowUp className="h-3 w-3" /> Inserir
             </Button>
           )}
           {hasSelection && onSendToClient && (
-            <Button size="sm" variant="default" onClick={() => { onSendToClient(formatSelectedAsText(selectedItems)); toast.success(`${selected.size} item(ns) enviado(s) ao cliente`); }} className="h-7 text-xs gap-1">
-              <Send className="h-3 w-3" /> Enviar ao cliente
+            <Button size="sm" variant="outline" onClick={() => { onSendToClient(formatSelectedAsText(selectedItems)); toast.success(`${selected.size} item(ns) enviado(s) ao cliente`); }} className="h-7 text-xs gap-1">
+              <MessageSquare className="h-3 w-3" /> Texto
+            </Button>
+          )}
+          {onSendFileToClient && (
+            <Button size="sm" variant="outline" onClick={handleSendExcelToWhatsApp} disabled={sendingExcel} className="h-7 text-xs gap-1">
+              <FileSpreadsheet className="h-3 w-3" /> {sendingExcel ? 'Enviando...' : hasSelection ? `Excel WhatsApp (${selected.size})` : 'Excel WhatsApp'}
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={() => handleDownload(hasSelection)} className="h-7 text-xs gap-1">
             <Download className="h-3 w-3" />
-            {hasSelection ? `Excel (${selected.size})` : 'Excel'}
+            {hasSelection ? `Download (${selected.size})` : 'Download'}
           </Button>
         </div>
       </div>
@@ -210,8 +240,8 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat 
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-auto max-h-[300px] rounded-lg border bg-background">
+      {/* Table - full height, no vertical scroll limit */}
+      <div className="overflow-x-auto rounded-lg border bg-background">
         <table className="w-full text-xs">
           <thead className="bg-muted/60 sticky top-0 z-10">
             <tr>
