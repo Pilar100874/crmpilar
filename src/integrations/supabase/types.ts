@@ -1742,6 +1742,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           estabelecimento_id: string
+          estoque_formato_tabela: boolean
           icone: string
           id: string
           knowledge_base_internal_data: Json | null
@@ -1763,6 +1764,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id: string
+          estoque_formato_tabela?: boolean
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null
@@ -1784,6 +1786,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string
+          estoque_formato_tabela?: boolean
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null

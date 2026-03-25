@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN estoque_formato_tabela boolean NOT NULL DEFAULT false;

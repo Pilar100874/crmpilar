@@ -86,21 +86,41 @@ serve(async (req) => {
           .limit(500);
 
         if (produtos?.length) {
-          estoqueSistemaContext = "\n\n--- ESTOQUE DO SISTEMA ---\n";
-          estoqueSistemaContext += "Produtos cadastrados no sistema com informações de estoque e preços:\n\n";
-          for (const p of produtos) {
-            const parts = [`Nome: ${p.nome}`];
-            if (p.codigo) parts.push(`Código: ${p.codigo}`);
-            if (p.ean_13) parts.push(`EAN: ${p.ean_13}`);
-            if (p.preco_tabela) parts.push(`Preço: R$${Number(p.preco_tabela).toFixed(2)}`);
-            if (p.estoque !== null && p.estoque !== undefined) parts.push(`Estoque: ${p.estoque}`);
-            if (p.marca) parts.push(`Marca: ${p.marca}`);
-            if (p.categoria) parts.push(`Categoria: ${p.categoria}`);
-            if (p.unidade) parts.push(`Unidade: ${p.unidade}`);
-            if (p.descricao) parts.push(`Desc: ${p.descricao}`);
-            estoqueSistemaContext += `• ${parts.join(" | ")}\n`;
+          // Se formato tabela habilitado, enviar como JSON estruturado
+          if (agent.estoque_formato_tabela) {
+            const tableData = produtos.map((p: any) => ({
+              Nome: p.nome || '',
+              Código: p.codigo || '',
+              EAN: p.ean_13 || '',
+              'Preço (R$)': p.preco_tabela ? Number(p.preco_tabela).toFixed(2) : '',
+              Estoque: p.estoque ?? '',
+              Marca: p.marca || '',
+              Categoria: p.categoria || '',
+              Unidade: p.unidade || '',
+            }));
+            estoqueSistemaContext = "\n\n--- ESTOQUE DO SISTEMA (DADOS ESTRUTURADOS) ---\n";
+            estoqueSistemaContext += "IMPORTANTE: Quando o usuário pedir dados de estoque/produtos, responda OBRIGATORIAMENTE incluindo um bloco JSON com a tag <!--TABLE_DATA_START--> antes e <!--TABLE_DATA_END--> depois. Exemplo:\n";
+            estoqueSistemaContext += "<!--TABLE_DATA_START-->\n[{\"Nome\":\"Produto\",\"Preço (R$)\":\"10.00\"}]\n<!--TABLE_DATA_END-->\n";
+            estoqueSistemaContext += "Inclua também texto explicativo antes ou depois da tabela. Filtre os dados conforme o pedido do usuário.\n\n";
+            estoqueSistemaContext += "Dados disponíveis:\n" + JSON.stringify(tableData) + "\n";
+            estoqueSistemaContext += "--- FIM ESTOQUE DO SISTEMA ---\n";
+          } else {
+            estoqueSistemaContext = "\n\n--- ESTOQUE DO SISTEMA ---\n";
+            estoqueSistemaContext += "Produtos cadastrados no sistema com informações de estoque e preços:\n\n";
+            for (const p of produtos) {
+              const parts = [`Nome: ${p.nome}`];
+              if (p.codigo) parts.push(`Código: ${p.codigo}`);
+              if (p.ean_13) parts.push(`EAN: ${p.ean_13}`);
+              if (p.preco_tabela) parts.push(`Preço: R$${Number(p.preco_tabela).toFixed(2)}`);
+              if (p.estoque !== null && p.estoque !== undefined) parts.push(`Estoque: ${p.estoque}`);
+              if (p.marca) parts.push(`Marca: ${p.marca}`);
+              if (p.categoria) parts.push(`Categoria: ${p.categoria}`);
+              if (p.unidade) parts.push(`Unidade: ${p.unidade}`);
+              if (p.descricao) parts.push(`Desc: ${p.descricao}`);
+              estoqueSistemaContext += `• ${parts.join(" | ")}\n`;
+            }
+            estoqueSistemaContext += "--- FIM ESTOQUE DO SISTEMA ---\n";
           }
-          estoqueSistemaContext += "--- FIM ESTOQUE DO SISTEMA ---\n";
         }
       } catch (e) {
         console.error("Erro ao carregar estoque do sistema:", e);

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, ArrowLeft, Copy, Bot, Sparkles } from 'lucide-react';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Download, Table } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,11 +11,80 @@ import { toast } from '@/lib/toast-config';
 import { supabase } from '@/integrations/supabase/client';
 import { useChatAgents, type ChatAgent } from '@/hooks/useChatAgents';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import * as XLSX from 'xlsx';
 
 interface AgentMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+function parseTableData(content: string): { text: string; tableData: any[] | null } {
+  const startTag = '<!--TABLE_DATA_START-->';
+  const endTag = '<!--TABLE_DATA_END-->';
+  const startIdx = content.indexOf(startTag);
+  const endIdx = content.indexOf(endTag);
+
+  if (startIdx === -1 || endIdx === -1) return { text: content, tableData: null };
+
+  const jsonStr = content.substring(startIdx + startTag.length, endIdx).trim();
+  const textBefore = content.substring(0, startIdx).trim();
+  const textAfter = content.substring(endIdx + endTag.length).trim();
+
+  try {
+    const data = JSON.parse(jsonStr);
+    if (Array.isArray(data) && data.length > 0) {
+      return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
+    }
+  } catch {}
+  return { text: content, tableData: null };
+}
+
+function StockTable({ data }: { data: any[] }) {
+  const columns = Object.keys(data[0]);
+
+  const handleDownload = () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Estoque');
+    XLSX.writeFile(wb, `estoque_${Date.now()}.xlsx`);
+    toast.success('Arquivo Excel baixado!');
+  };
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Table className="h-3 w-3" />
+          {data.length} registro{data.length > 1 ? 's' : ''}
+        </span>
+        <Button size="sm" variant="outline" onClick={handleDownload} className="h-7 text-xs gap-1">
+          <Download className="h-3 w-3" />
+          Excel
+        </Button>
+      </div>
+      <div className="overflow-auto max-h-[300px] rounded-lg border">
+        <table className="w-full text-xs">
+          <thead className="bg-muted/60 sticky top-0">
+            <tr>
+              {columns.map(col => (
+                <th key={col} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i} className="border-t hover:bg-muted/30 transition-colors">
+                {columns.map(col => (
+                  <td key={col} className="px-3 py-1.5 whitespace-nowrap">{row[col] ?? ''}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 export default function AgentChat() {
@@ -193,43 +262,48 @@ export default function AgentChat() {
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <div key={i} className={cn("flex gap-2", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-            {msg.role === 'assistant' && (
-              <div
-                className="h-8 w-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-1"
-                style={{ backgroundColor: agentColor + '20' }}
-              >
-                {selectedAgent.icone}
-              </div>
-            )}
-            <div className="max-w-[75%] space-y-1">
-              <div
-                className={cn(
-                  "rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap",
-                  msg.role === 'user'
-                    ? "bg-primary text-primary-foreground rounded-br-md"
-                    : "bg-muted/80 text-foreground rounded-bl-md"
-                )}
-              >
-                {msg.content}
-              </div>
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-[10px] text-muted-foreground">
-                  {format(msg.timestamp, "HH:mm", { locale: ptBR })}
-                </span>
-                {msg.role === 'assistant' && (
-                  <button
-                    onClick={() => handleCopy(msg.content)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </button>
-                )}
+        {messages.map((msg, i) => {
+          const parsed = msg.role === 'assistant' ? parseTableData(msg.content) : null;
+
+          return (
+            <div key={i} className={cn("flex gap-2", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+              {msg.role === 'assistant' && (
+                <div
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-1"
+                  style={{ backgroundColor: agentColor + '20' }}
+                >
+                  {selectedAgent.icone}
+                </div>
+              )}
+              <div className="max-w-[80%] space-y-1">
+                <div
+                  className={cn(
+                    "rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap",
+                    msg.role === 'user'
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted/80 text-foreground rounded-bl-md"
+                  )}
+                >
+                  {parsed ? parsed.text : msg.content}
+                  {parsed?.tableData && <StockTable data={parsed.tableData} />}
+                </div>
+                <div className="flex items-center gap-2 px-1">
+                  <span className="text-[10px] text-muted-foreground">
+                    {format(msg.timestamp, "HH:mm", { locale: ptBR })}
+                  </span>
+                  {msg.role === 'assistant' && (
+                    <button
+                      onClick={() => handleCopy(msg.content)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex gap-2">
