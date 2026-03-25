@@ -145,7 +145,7 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                             >
                               <Send className="h-3.5 w-3.5" />
-                              {agent.modo_operacao === 'automatico' ? 'Enviar ao cliente' : 'Sugerir resposta'}
+                              Enviar ao cliente
                             </button>
                           )}
                         </div>
