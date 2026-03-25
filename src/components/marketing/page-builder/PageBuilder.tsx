@@ -1179,22 +1179,68 @@ function generateFullHTML(sections: PageSection[], config: PageConfig): string {
 
   let html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${cfg.title}</title><meta name="description" content="${cfg.description}">
-<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@400;600;700&family=${encodeURIComponent(cfg.fontBody)}:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(cfg.fontDisplay)}:wght@300;400;500;600;700;800;900&family=${encodeURIComponent(cfg.fontBody)}:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor};-webkit-text-size-adjust:100%}
-h1,h2,h3,h4,h5,h6{font-family:'${cfg.fontDisplay}',sans-serif}
+html{scroll-behavior:smooth}
+body{font-family:'${cfg.fontBody}',sans-serif;color:${cfg.textColor};background:${cfg.backgroundColor};-webkit-text-size-adjust:100%;overflow-x:hidden;line-height:1.6}
+h1,h2,h3,h4,h5,h6{font-family:'${cfg.fontDisplay}',sans-serif;line-height:1.15}
 p,span,li,a,td,th,label,input,textarea,select,button{font-family:'${cfg.fontBody}',sans-serif}
-.container{max-width:${cfg.maxWidth};margin:0 auto;padding:0 24px}
-img{max-width:100%;height:auto}video{max-width:100%;height:auto}
-a{text-decoration:none}
-.btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:600;font-size:1.1rem;cursor:pointer;transition:opacity .2s;text-align:center}
-.btn:hover{opacity:.9}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.container{max-width:${cfg.maxWidth};margin:0 auto;padding:0 clamp(16px,4vw,48px)}
+img{max-width:100%;height:auto;display:block}video{max-width:100%;height:auto}
+a{text-decoration:none;transition:all .3s ease}
+section{overflow-x:hidden;position:relative}
+
+/* ── Animations ─────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(99,102,241,.15)}50%{box-shadow:0 0 40px rgba(99,102,241,.35)}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes counter{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+.reveal-delay-5{transition-delay:.5s}
+
+/* ── Buttons ────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:16px 40px;border-radius:100px;font-weight:600;font-size:1.05rem;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1);text-align:center;border:none;position:relative;overflow:hidden;letter-spacing:.02em}
+.btn:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.btn:active{transform:translateY(-1px)}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);opacity:0;transition:opacity .3s}
+.btn:hover::after{opacity:1}
+.btn-outline{background:transparent;border:2px solid;backdrop-filter:blur(8px)}
+.btn-outline:hover{transform:translateY(-3px)}
+
+/* ── Cards ──────────────────────────────────────────── */
+.card{border-radius:20px;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.card:hover{transform:translateY(-6px)}
+.card::before{content:'';position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .4s;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);pointer-events:none}
+.card:hover::before{opacity:1}
+.card-glass{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)}
+.card-glass:hover{border-color:rgba(255,255,255,.2);box-shadow:0 20px 60px rgba(0,0,0,.15)}
+
+/* ── Layout ─────────────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(16px,3vw,32px)}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,3vw,32px)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,3vw,28px)}
 .text-center{text-align:center}
-section{overflow-x:hidden}
+
+/* ── Decorative ─────────────────────────────────────── */
+.gradient-text{background:linear-gradient(135deg,${cfg.accentColor},${cfg.primaryColor});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow-accent{box-shadow:0 0 60px -12px ${cfg.accentColor}40}
+.divider{width:60px;height:4px;border-radius:4px;background:linear-gradient(90deg,${cfg.accentColor},${cfg.primaryColor});margin:0 auto 32px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;font-size:.8rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;pointer-events:none;z-index:0}
+
+/* ── Responsive ─────────────────────────────────────── */
 @media(max-width:1024px){
   .grid-3{grid-template-columns:repeat(2,1fr)}
   .grid-4{grid-template-columns:repeat(2,1fr)}
@@ -1202,12 +1248,14 @@ section{overflow-x:hidden}
 @media(max-width:768px){
   .grid-3,.grid-2{grid-template-columns:1fr}
   .grid-4{grid-template-columns:repeat(2,1fr)}
-  .container{padding:0 16px}
-  .btn{padding:12px 24px;font-size:1rem;width:100%;max-width:320px}
+  .btn{padding:14px 28px;font-size:.95rem;width:100%;max-width:360px}
+  .hero-split{flex-direction:column !important}
+  .hero-split>div{min-width:100% !important;width:100% !important}
 }
 @media(max-width:480px){
   .grid-4{grid-template-columns:1fr}
   body{font-size:15px}
+  .btn{max-width:100%}
 }
 </style></head><body>`;
 
@@ -1218,62 +1266,138 @@ section{overflow-x:hidden}
   const cardBrd = getCardBorder(cfg.backgroundColor);
   const subtleText = getSubtleText(cfg.backgroundColor);
   const altBg = getSectionAltBg(cfg.backgroundColor);
-  for (const s of vs) {
+  for (let si = 0; si < vs.length; si++) {
+    const s = vs[si];
     const c = s.content;
+    const isAlt = si % 2 === 1;
     switch (s.type) {
       case 'hero': {
         const heroLayout = s.styles?.layout || '';
         if (heroLayout === 'split-left' || heroLayout === 'split-right') {
           const isRight = heroLayout === 'split-right';
-          html += `<section style="padding:60px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container" style="display:flex;flex-wrap:wrap;align-items:center;gap:40px;${isRight ? 'flex-direction:row-reverse' : ''}"><div style="flex:1;min-width:280px;text-align:center"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div><div style="flex:1;min-width:280px">${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3)">` : `<div style="width:100%;aspect-ratio:4/3;background:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.1);border-radius:16px;display:flex;align-items:center;justify-content:center;color:rgba(${primaryTextHTML === '#ffffff' ? '255,255,255' : '0,0,0'},.3)">Imagem</div>`}</div></div></section>\n`;
+          html += `<section style="min-height:90vh;display:flex;align-items:center;padding:clamp(40px,8vw,100px) 24px;background:${cfg.primaryColor};color:${primaryTextHTML};position:relative;overflow:hidden">
+            <div class="blob" style="width:500px;height:500px;background:${cfg.accentColor};top:-100px;right:-100px"></div>
+            <div class="blob" style="width:400px;height:400px;background:${cfg.primaryColor};bottom:-100px;left:-100px"></div>
+            <div class="container hero-split" style="display:flex;flex-wrap:wrap;align-items:center;gap:clamp(32px,5vw,80px);${isRight ? 'flex-direction:row-reverse' : ''};position:relative;z-index:1">
+              <div style="flex:1;min-width:280px;text-align:left">
+                <div class="badge" style="background:${cfg.accentColor}20;color:${cfg.accentColor};margin-bottom:20px;animation:fadeUp .6s ease both">🚀 Novo</div>
+                <h1 style="font-size:clamp(2.2rem,5vw,4rem);font-weight:800;margin-bottom:20px;line-height:1.1;animation:fadeUp .6s ease .1s both">${c.headline||''}</h1>
+                <p style="font-size:clamp(1rem,2vw,1.25rem);margin-bottom:36px;opacity:.8;max-width:540px;line-height:1.7;animation:fadeUp .6s ease .2s both">${c.subheadline||''}</p>
+                ${c.cta_text ? `<div style="display:flex;flex-wrap:wrap;gap:12px;animation:fadeUp .6s ease .3s both"><a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a></div>` : ''}
+              </div>
+              <div style="flex:1;min-width:280px;animation:scaleIn .8s ease .2s both">
+                ${c.background_image ? `<img src="${c.background_image}" style="width:100%;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.35)">` : `<div style="width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,${cfg.accentColor}15,${cfg.accentColor}05);border:1px solid rgba(255,255,255,.08);border-radius:24px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(20px)"><span style="opacity:.25;font-size:3rem">📷</span></div>`}
+              </div>
+            </div>
+          </section>\n`;
         } else {
-          html += `<section style="padding:80px 24px;text-align:center;${c.background_image ? `background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),url(${c.background_image}) center/cover` : `background:${cfg.primaryColor}`};color:${c.background_image ? '#fff' : primaryTextHTML}"><div class="container"><h1 style="font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:16px;font-family:'${cfg.fontDisplay}',sans-serif">${c.headline||''}</h1><p style="font-size:clamp(1rem,2vw,1.3rem);margin-bottom:32px;opacity:.9;max-width:700px;margin-left:auto;margin-right:auto">${c.subheadline||''}</p>${c.cta_text ? `<a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a>` : ''}</div></section>\n`;
+          html += `<section style="min-height:90vh;display:flex;align-items:center;padding:clamp(60px,10vw,120px) 24px;text-align:center;${c.background_image ? `background:linear-gradient(165deg,rgba(0,0,0,.65),rgba(0,0,0,.4)),url(${c.background_image}) center/cover no-repeat` : `background:linear-gradient(165deg,${cfg.primaryColor},${cfg.primaryColor}ee)`};color:${c.background_image ? '#fff' : primaryTextHTML};position:relative;overflow:hidden">
+            <div class="blob" style="width:600px;height:600px;background:${cfg.accentColor};top:-200px;right:-200px"></div>
+            <div class="blob" style="width:500px;height:500px;background:${cfg.primaryColor};bottom:-200px;left:-100px"></div>
+            <div class="container" style="position:relative;z-index:1">
+              <div class="badge" style="background:rgba(255,255,255,.12);color:${c.background_image ? '#fff' : primaryTextHTML};margin-bottom:24px;animation:fadeUp .6s ease both;backdrop-filter:blur(8px)">✨ Bem-vindo</div>
+              <h1 style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;margin-bottom:24px;line-height:1.08;max-width:900px;margin-left:auto;margin-right:auto;animation:fadeUp .6s ease .1s both;letter-spacing:-.02em">${c.headline||''}</h1>
+              <p style="font-size:clamp(1.05rem,2vw,1.3rem);margin-bottom:40px;opacity:.85;max-width:680px;margin-left:auto;margin-right:auto;line-height:1.7;animation:fadeUp .6s ease .2s both">${c.subheadline||''}</p>
+              ${c.cta_text ? `<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;animation:fadeUp .6s ease .3s both"><a href="${resolveButtonUrl(c.cta_type, c.cta_url, c.whatsapp_number, c.cta_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML};font-size:1.1rem;padding:18px 48px">${c.cta_type === 'whatsapp' ? '💬 ' : ''}${c.cta_text}</a></div>` : ''}
+            </div>
+          </section>\n`;
         }
         break;
       }
       case 'text':
-        html += `<section style="padding:48px 24px"><div class="container" style="max-width:768px;text-align:center"><p style="font-size:1.1rem;line-height:1.8;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
+        html += `<section style="padding:clamp(40px,6vw,80px) 24px"><div class="container reveal" style="max-width:768px;text-align:center"><p style="font-size:clamp(1rem,1.5vw,1.2rem);line-height:1.9;white-space:pre-wrap">${c.body||''}</p></div></section>\n`; break;
       case 'image':
-        html += `<section style="padding:40px 24px"><div class="container text-center">${c.url ? `<img src="${c.url}" alt="${c.alt||''}" style="border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);width:100%;object-fit:${c.fit||'cover'}">` : ''}${c.caption ? `<p style="margin-top:12px;color:#6b7280;font-size:.9rem">${c.caption}</p>` : ''}</div></section>\n`; break;
+        html += `<section style="padding:clamp(32px,5vw,64px) 24px"><div class="container text-center reveal">${c.url ? `<img src="${c.url}" alt="${c.alt||''}" style="border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.12);width:100%;object-fit:${c.fit||'cover'}">` : ''}${c.caption ? `<p style="margin-top:16px;color:${subtleText};font-size:.9rem">${c.caption}</p>` : ''}</div></section>\n`; break;
       case 'video': {
         const hasVideo = c.url && c.url.length > 5;
         const hasPoster = c.poster && c.poster.length > 5;
         const headlineOverlay = c._headline_overlay || '';
         const ctaOverlay = c._cta_overlay || '';
         if (hasVideo) {
-          html += `<section style="padding:40px 24px"><div class="container" style="max-width:900px"><video src="${c.url}" controls ${hasPoster ? `poster="${c.poster}"` : ''} style="width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1)"></video></div></section>\n`;
+          html += `<section style="padding:clamp(32px,5vw,64px) 24px"><div class="container reveal" style="max-width:960px"><video src="${c.url}" controls ${hasPoster ? `poster="${c.poster}"` : ''} style="width:100%;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15)"></video></div></section>\n`;
         } else if (hasPoster) {
-          html += `<section style="padding:40px 24px"><div class="container" style="max-width:900px">`;
-          html += `<div style="position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"><img src="${c.poster}" style="width:100%;aspect-ratio:16/9;object-fit:cover;filter:brightness(0.7)" />`;
-          html += `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px">`;
-          html += `<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>`;
-          if (headlineOverlay) html += `<p style="font-size:1.3rem;font-weight:700;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)">${headlineOverlay}</p>`;
-          if (ctaOverlay) html += `<p style="font-size:1rem;opacity:.9;text-shadow:0 2px 4px rgba(0,0,0,.5)">${ctaOverlay}</p>`;
-          html += `</div></div>`;
-          html += `</div></section>\n`;
+          html += `<section style="padding:clamp(32px,5vw,64px) 24px"><div class="container reveal" style="max-width:960px">
+            <div style="position:relative;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.15)"><img src="${c.poster}" style="width:100%;aspect-ratio:16/9;object-fit:cover;filter:brightness(0.6)" />
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px">
+            <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;transition:transform .3s,background .3s;border:2px solid rgba(255,255,255,.2)" onmouseover="this.style.transform='scale(1.1)';this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.transform='scale(1)';this.style.background='rgba(255,255,255,.15)'"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+            ${headlineOverlay ? `<p style="font-size:1.4rem;font-weight:700;margin-bottom:8px;text-shadow:0 2px 12px rgba(0,0,0,.5)">${headlineOverlay}</p>` : ''}
+            ${ctaOverlay ? `<p style="font-size:1rem;opacity:.9;text-shadow:0 2px 6px rgba(0,0,0,.5)">${ctaOverlay}</p>` : ''}
+            </div></div></div></section>\n`;
         }
         break;
       }
       case 'features':
-        html += `<section style="padding:64px 24px"><div class="container"><div class="grid-3">${(c.items||[]).map((f:any)=>`<div style="text-align:center;padding:32px 20px;border-radius:16px;border:1px solid ${cardBrd};background:${cardBg}"><span style="font-size:2.5rem;display:block;margin-bottom:12px">${f.icon||'✨'}</span><h3 style="font-weight:600;font-size:1.2rem;margin-bottom:8px;color:${cfg.textColor}">${f.title||''}</h3><p style="color:${subtleText};font-size:.95rem">${f.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px;background:${isAlt ? altBg : 'transparent'}"><div class="container">
+          <div class="grid-3">${(c.items||[]).map((f:any,i:number)=>`<div class="card reveal reveal-delay-${Math.min(i+1,5)}" style="text-align:center;padding:clamp(24px,3vw,40px) clamp(16px,2vw,28px);border-radius:20px;border:1px solid ${cardBrd};background:${cardBg};box-shadow:0 4px 20px rgba(0,0,0,.04)">
+            <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,${cfg.accentColor}18,${cfg.accentColor}08);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem">${f.icon||'✨'}</div>
+            <h3 style="font-weight:700;font-size:clamp(1rem,1.5vw,1.2rem);margin-bottom:10px;color:${cfg.textColor}">${f.title||''}</h3>
+            <p style="color:${subtleText};font-size:clamp(.85rem,1.2vw,.95rem);line-height:1.7">${f.description||''}</p>
+          </div>`).join('')}</div></div></section>\n`; break;
       case 'cta':
-        html += `<section style="padding:80px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><h2 style="font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:12px">${c.headline||''}</h2><p style="font-size:1.2rem;margin-bottom:32px;opacity:.9">${c.description||''}</p>${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML}">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}</div></section>\n`; break;
+        html += `<section style="padding:clamp(60px,10vw,120px) 24px;text-align:center;background:linear-gradient(165deg,${cfg.primaryColor},${cfg.primaryColor}dd);color:${primaryTextHTML};position:relative;overflow:hidden">
+          <div class="blob" style="width:400px;height:400px;background:${cfg.accentColor};top:-100px;right:-100px"></div>
+          <div class="container reveal" style="position:relative;z-index:1">
+            <h2 style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:16px;letter-spacing:-.01em">${c.headline||''}</h2>
+            <p style="font-size:clamp(1rem,2vw,1.2rem);margin-bottom:36px;opacity:.85;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7">${c.description||''}</p>
+            ${c.button_text ? `<a href="${resolveButtonUrl(c.button_type, c.button_url, c.whatsapp_number, c.button_text, cfg)}" target="_blank" rel="noopener noreferrer" class="btn" style="background:${cfg.accentColor};color:${accentTextHTML};padding:18px 48px;font-size:1.1rem">${c.button_type === 'whatsapp' ? '💬 ' : ''}${c.button_text}</a>` : ''}
+          </div></section>\n`; break;
       case 'testimonials':
-        html += `<section style="padding:64px 24px;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><div class="grid-2">${(c.items||[]).map((t:any)=>`<div style="padding:28px;border-radius:16px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);font-style:italic;text-align:center"><p style="margin-bottom:16px;font-size:1.05rem;line-height:1.7">"${t.text||''}"</p>${t.metrics?`<p style="font-size:.95rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:8px">📈 ${t.metrics}</p>`:''}<p style="font-weight:600;font-style:normal;font-size:.95rem">${t.name||''}${t.role ? ` — ${t.role}`:''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px;background:linear-gradient(165deg,${cfg.primaryColor},${cfg.primaryColor}ee);color:${primaryTextHTML}"><div class="container">
+          <div class="divider" style="background:linear-gradient(90deg,${cfg.accentColor},transparent)"></div>
+          <div class="grid-2">${(c.items||[]).map((t:any,i:number)=>`<div class="card card-glass reveal reveal-delay-${Math.min(i+1,5)}" style="padding:clamp(24px,3vw,36px);text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:12px;opacity:.3">❝</div>
+            <p style="margin-bottom:20px;font-size:clamp(.95rem,1.3vw,1.1rem);line-height:1.8;font-style:italic;opacity:.92">${t.text||''}</p>
+            ${t.metrics?`<p style="font-size:.9rem;font-weight:700;font-style:normal;color:${cfg.accentColor};margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;padding:4px 14px;background:${cfg.accentColor}15;border-radius:100px">📈 ${t.metrics}</p>`:''} 
+            <div style="margin-top:8px"><p style="font-weight:700;font-style:normal;font-size:.95rem">${t.name||''}</p>${t.role ? `<p style="font-size:.85rem;opacity:.6;margin-top:2px">${t.role}</p>`:''}</div>
+          </div>`).join('')}</div></div></section>\n`; break;
       case 'social_proof':
-        html += `<section style="padding:56px 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML}"><div class="container"><div class="grid-4" style="align-items:start;justify-items:center">${(c.items||[]).map((item:any)=>`<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;width:100%;max-width:220px;margin:0 auto"><p style="font-size:clamp(2rem,4vw,3rem);font-weight:bold;margin-bottom:4px;text-align:center;width:100%">${item.number||''}</p><p style="font-size:.95rem;opacity:.8;text-align:center;width:100%;margin:0 auto">${item.label||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(40px,6vw,72px) 24px;text-align:center;background:${cfg.primaryColor};color:${primaryTextHTML};position:relative"><div class="container">
+          <div class="grid-4" style="align-items:start;justify-items:center">${(c.items||[]).map((item:any,i:number)=>`<div class="reveal reveal-delay-${Math.min(i+1,5)}" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:220px;margin:0 auto">
+            <p style="font-size:clamp(2.2rem,5vw,3.2rem);font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,${primaryTextHTML},${cfg.accentColor});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${item.number||''}</p>
+            <p style="font-size:.9rem;opacity:.65;letter-spacing:.03em;text-transform:uppercase">${item.label||''}</p>
+          </div>`).join('')}</div></div></section>\n`; break;
       case 'guarantee':
-        html += `<section style="padding:64px 24px;text-align:center"><div class="container" style="max-width:640px"><div style="padding:48px;border:2px dashed ${cfg.accentColor};border-radius:20px;background:${cardBg}"><span style="font-size:3.5rem;display:block;margin-bottom:16px">${c.icon||'🛡️'}</span><h3 style="font-size:1.8rem;font-weight:700;margin-bottom:12px;color:${cfg.textColor}">${c.title||''}</h3><p style="font-size:1.05rem;color:${subtleText};margin-bottom:12px;line-height:1.7">${c.description||''}</p>${c.duration?`<span style="display:inline-block;padding:6px 16px;background:${altBg};border-radius:24px;font-size:.95rem;font-weight:500;color:${cfg.textColor}">${c.duration}</span>`:''}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px;text-align:center"><div class="container reveal" style="max-width:640px">
+          <div class="card" style="padding:clamp(32px,5vw,56px);border:2px solid ${cfg.accentColor}30;background:linear-gradient(135deg,${cfg.accentColor}08,transparent);box-shadow:0 20px 60px ${cfg.accentColor}10">
+            <span style="font-size:4rem;display:block;margin-bottom:20px;animation:float 3s ease-in-out infinite">${c.icon||'🛡️'}</span>
+            <h3 style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;margin-bottom:16px;color:${cfg.textColor}">${c.title||''}</h3>
+            <p style="font-size:clamp(.95rem,1.3vw,1.1rem);color:${subtleText};margin-bottom:16px;line-height:1.8">${c.description||''}</p>
+            ${c.duration?`<span class="badge" style="background:${cfg.accentColor}15;color:${cfg.accentColor};font-size:.85rem;padding:8px 20px">${c.duration}</span>`:''} 
+          </div></div></section>\n`; break;
       case 'objections':
-        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||''}</h3>${(c.items||[]).map((item:any)=>`<div style="padding:24px;border:1px solid ${cardBrd};border-radius:16px;margin-bottom:16px;text-align:center;background:${cardBg}"><p style="font-weight:600;color:#dc2626;margin-bottom:10px;font-size:1.05rem">❌ "${item.objection||''}"</p><p style="color:${cfg.textColor};line-height:1.7">✅ ${item.response||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px"><div class="container" style="max-width:768px">
+          <h3 class="reveal" style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;text-align:center;margin-bottom:48px;color:${cfg.textColor}">${c.title||''}</h3>
+          ${(c.items||[]).map((item:any,i:number)=>`<div class="card reveal reveal-delay-${Math.min(i+1,5)}" style="padding:clamp(20px,3vw,28px);border:1px solid ${cardBrd};margin-bottom:16px;text-align:center;background:${cardBg}">
+            <p style="font-weight:600;color:#ef4444;margin-bottom:12px;font-size:1.05rem">❌ "${item.objection||''}"</p>
+            <p style="color:${cfg.textColor};line-height:1.7">✅ ${item.response||''}</p>
+          </div>`).join('')}</div></section>\n`; break;
       case 'pricing':
-        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||'Planos'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="padding:36px;border:${item.highlighted?`2px solid ${cfg.primaryColor}`:`1px solid ${cardBrd}`};border-radius:20px;text-align:center;background:${cardBg};${item.highlighted?'box-shadow:0 10px 40px rgba(0,0,0,.15);transform:scale(1.03)':''}"><h4 style="font-weight:600;font-size:1.3rem;margin-bottom:8px;color:${cfg.textColor}">${item.name||''}</h4><p style="font-size:2.2rem;font-weight:700;color:${cfg.primaryColor};margin-bottom:20px">${item.price||''}</p><ul style="list-style:none;text-align:center;font-size:.95rem;color:${cfg.textColor}">${(item.features||[]).map((f:string)=>`<li style="padding:6px 0;border-bottom:1px solid ${cardBrd}">✅ ${f}</li>`).join('')}</ul></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px;background:${isAlt ? altBg : 'transparent'}"><div class="container">
+          <h3 class="reveal" style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;text-align:center;margin-bottom:48px;color:${cfg.textColor}">${c.title||'Planos'}</h3>
+          <div class="grid-3">${(c.items||[]).map((item:any,i:number)=>`<div class="card reveal reveal-delay-${Math.min(i+1,5)}" style="padding:clamp(28px,4vw,44px);border:${item.highlighted?`2px solid ${cfg.accentColor}`:`1px solid ${cardBrd}`};text-align:center;background:${cardBg};${item.highlighted?`box-shadow:0 20px 60px ${cfg.accentColor}20;transform:scale(1.03)`:''};position:relative;overflow:hidden">
+            ${item.highlighted ? `<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,${cfg.accentColor},${cfg.primaryColor})"></div>` : ''}
+            ${item.highlighted ? `<span class="badge" style="background:${cfg.accentColor};color:${accentTextHTML};margin-bottom:16px">⭐ Popular</span>` : ''}
+            <h4 style="font-weight:700;font-size:clamp(1.1rem,1.5vw,1.4rem);margin-bottom:12px;color:${cfg.textColor}">${item.name||''}</h4>
+            <p style="font-size:clamp(2rem,4vw,2.8rem);font-weight:800;background:linear-gradient(135deg,${cfg.primaryColor},${cfg.accentColor});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:24px">${item.price||''}</p>
+            <ul style="list-style:none;text-align:left;font-size:.95rem;color:${cfg.textColor}">${(item.features||[]).map((f:string)=>`<li style="padding:10px 0;border-bottom:1px solid ${cardBrd};display:flex;align-items:center;gap:8px"><span style="color:${cfg.accentColor};font-size:1.1rem">✓</span> ${f}</li>`).join('')}</ul>
+          </div>`).join('')}</div></div></section>\n`; break;
       case 'process_steps':
-        html += `<section style="padding:64px 24px"><div class="container"><h3 style="font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${cfg.textColor}">${c.title||'Como Funciona'}</h3><div class="grid-3">${(c.items||[]).map((item:any)=>`<div style="text-align:center;padding:28px"><div style="width:56px;height:56px;border-radius:50%;background:${cfg.accentColor};color:${accentTextHTML};display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin:0 auto 16px">${item.step||''}</div><h4 style="font-weight:600;font-size:1.15rem;margin-bottom:8px;color:${cfg.textColor}">${item.title||''}</h4><p style="color:${subtleText};line-height:1.6">${item.description||''}</p></div>`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px;background:${isAlt ? altBg : 'transparent'}"><div class="container">
+          <h3 class="reveal" style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;text-align:center;margin-bottom:48px;color:${cfg.textColor}">${c.title||'Como Funciona'}</h3>
+          <div class="grid-3">${(c.items||[]).map((item:any,i:number)=>`<div class="reveal reveal-delay-${Math.min(i+1,5)}" style="text-align:center;padding:clamp(20px,3vw,32px);position:relative">
+            <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,${cfg.accentColor},${cfg.primaryColor});color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;margin:0 auto 20px;box-shadow:0 8px 30px ${cfg.accentColor}30">${item.step||''}</div>
+            <h4 style="font-weight:700;font-size:clamp(1rem,1.4vw,1.15rem);margin-bottom:10px;color:${cfg.textColor}">${item.title||''}</h4>
+            <p style="color:${subtleText};line-height:1.7;font-size:clamp(.85rem,1.2vw,.95rem)">${item.description||''}</p>
+          </div>`).join('')}</div></div></section>\n`; break;
       case 'faq':
-        html += `<section style="padding:64px 24px"><div class="container" style="max-width:768px;text-align:center">${(c.items||[]).map((q:any)=>`<div style="padding:20px 0;border-bottom:1px solid ${cardBrd}"><h4 style="font-weight:600;font-size:1.1rem;margin-bottom:8px;color:${cfg.textColor}">${q.question||''}</h4><p style="color:${subtleText};line-height:1.7">${q.answer||''}</p></div>`).join('')}</div></section>\n`; break;
+        html += `<section style="padding:clamp(48px,8vw,100px) 24px"><div class="container" style="max-width:768px;text-align:center">
+          <div class="divider"></div>
+          ${(c.items||[]).map((q:any,i:number)=>`<div class="reveal reveal-delay-${Math.min(i+1,5)}" style="padding:clamp(16px,2vw,24px) 0;border-bottom:1px solid ${cardBrd}">
+            <h4 style="font-weight:700;font-size:clamp(1rem,1.4vw,1.15rem);margin-bottom:10px;color:${cfg.textColor}">${q.question||''}</h4>
+            <p style="color:${subtleText};line-height:1.7;font-size:clamp(.9rem,1.2vw,.95rem)">${q.answer||''}</p>
+          </div>`).join('')}</div></section>\n`; break;
       case 'gallery':
-        html += `<section style="padding:40px 24px"><div class="container"><div class="grid-3">${(c.images||[]).map((url:string)=>`<img src="${url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px">`).join('')}</div></div></section>\n`; break;
+        html += `<section style="padding:clamp(32px,5vw,64px) 24px"><div class="container"><div class="grid-3">${(c.images||[]).map((url:string,i:number)=>`<img class="reveal reveal-delay-${Math.min(i+1,5)}" src="${url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;transition:transform .4s ease" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">`).join('')}</div></div></section>\n`; break;
       case 'footer': {
         const fn = cfg.empresaNome || c.company || '';
         const fa = cfg.empresaEndereco || '';
@@ -1281,13 +1405,17 @@ section{overflow-x:hidden}
         const fw = cfg.whatsappGlobal || '';
         const fs = cfg.siteGlobal || '';
         let footerInfo = '';
-        if (fa) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:6px">📍 ${fa}</p>`;
+        if (fa) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:8px">📍 ${fa}</p>`;
         let contactParts: string[] = [];
         if (ft) contactParts.push(`📞 ${ft}`);
         if (fw) contactParts.push(`💬 ${fw}`);
-        if (fs) contactParts.push(`<a href="${fs}" target="_blank" rel="noopener noreferrer" style="color:${cfg.primaryColor};text-decoration:underline">🌐 ${fs}</a>`);
-        if (contactParts.length) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:8px">${contactParts.join(' &nbsp;|&nbsp; ')}</p>`;
-        html += `<footer style="padding:40px 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}"><p style="font-weight:600;margin-bottom:8px;color:${cfg.textColor}">${fn}</p>${footerInfo}<p style="color:${subtleText};font-size:.85rem">${c.copyright||''}</p></footer>\n`; break;
+        if (fs) contactParts.push(`<a href="${fs}" target="_blank" rel="noopener noreferrer" style="color:${cfg.accentColor};transition:opacity .3s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">🌐 ${fs}</a>`);
+        if (contactParts.length) footerInfo += `<p style="color:${subtleText};font-size:.85rem;margin-bottom:10px">${contactParts.join(' &nbsp;·&nbsp; ')}</p>`;
+        html += `<footer style="padding:clamp(32px,5vw,56px) 24px;text-align:center;border-top:1px solid ${cardBrd};background:${altBg}">
+          <p style="font-weight:700;margin-bottom:8px;color:${cfg.textColor};font-size:1.05rem">${fn}</p>
+          ${footerInfo}
+          <p style="color:${subtleText};font-size:.8rem;opacity:.6">${c.copyright||''}</p>
+        </footer>\n`; break;
       }
       case 'spacer':
         html += `<div style="height:${c.height||60}px"></div>\n`; break;
@@ -1295,6 +1423,15 @@ section{overflow-x:hidden}
         html += c.code || ''; break;
     }
   }
+  // Scroll-reveal IntersectionObserver
+  html += `<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})
+  },{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+});
+</script>`;
   html += '</body></html>';
   return html;
 }
