@@ -1353,7 +1353,7 @@ const AutoGeneratePage: React.FC<{
 }> = ({ open, onOpenChange, onGenerated, globalConfig: gCfg }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('ft-saas-clean');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('ft-clean-light');
   const [selectedCategory, setSelectedCategory] = useState<string>('landing');
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
