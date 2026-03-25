@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown, Activity, Globe, X } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -188,6 +188,8 @@ export default function Atendimento() {
   const [agentPrivateMessages, setAgentPrivateMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }[]>([]);
   const [agentPrivateInput, setAgentPrivateInput] = useState('');
   const [agentPrivateLoading, setAgentPrivateLoading] = useState(false);
+  const [activeClientAgent, setActiveClientAgent] = useState<ChatAgent | null>(null);
+  const activeClientAgentRef = useRef<ChatAgent | null>(null);
   
   // RadialMenu direct dialogs
   const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
@@ -535,6 +537,16 @@ export default function Atendimento() {
   }, [selectedConversation, selectedTaskId, selectedEmailId, selectedOrcamentoId, conversations]);
   
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
+
+  // Keep activeClientAgentRef in sync
+  useEffect(() => {
+    activeClientAgentRef.current = activeClientAgent;
+  }, [activeClientAgent]);
+
+  // Clear active agent when switching conversations
+  useEffect(() => {
+    setActiveClientAgent(null);
+  }, [selectedConversation]);
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
@@ -2889,6 +2901,31 @@ ${recentMessages}
           if (isRealTimeTranslationActive) {
             translateMessage(newMessage.id, newMessage.text);
           }
+
+          // Auto-reply with active client agent when customer sends a message
+          if (newMessage.sender === 'customer' && activeClientAgentRef.current) {
+            const agentToUse = activeClientAgentRef.current;
+            setTimeout(async () => {
+              setAgentLoading(true);
+              try {
+                const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+                  body: {
+                    agent_id: agentToUse.id,
+                    mensagem_cliente: newMessage.text,
+                    historico_chat: [],
+                    conversation_id: conversationId,
+                  },
+                });
+                if (error) throw error;
+                await handleSendMessage(data.resposta, 'text');
+              } catch (err: any) {
+                console.error("Erro no auto-reply:", err);
+                toast.error("Erro no agente automático");
+              } finally {
+                setAgentLoading(false);
+              }
+            }, 500);
+          }
         }
       )
       .subscribe();
@@ -3621,13 +3658,43 @@ ${recentMessages}
       return;
     }
 
-    // Mode 'cliente' — existing behavior
-    if (!lastUserMessage) {
-      toast.error("Nenhuma mensagem do cliente para processar");
-      return;
+    // Mode 'cliente' — activate agent to auto-respond to customer messages
+    setActiveClientAgent(agent);
+    toast.success(`${agent.icone} ${agent.nome} ativado — respondendo automaticamente ao cliente`);
+
+    // If there's a last message from customer, respond immediately
+    if (lastUserMessage) {
+      setAgentLoading(true);
+      try {
+        const historico = messages.slice(-20).map(m => ({
+          role: m.sender === 'customer' ? 'user' : 'assistant',
+          content: m.text,
+        }));
+
+        const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+          body: {
+            agent_id: agent.id,
+            mensagem_cliente: lastUserMessage,
+            historico_chat: historico,
+            conversation_id: selectedConversation,
+          },
+        });
+
+        if (error) throw error;
+        await handleSendMessage(data.resposta, 'text');
+      } catch (err: any) {
+        console.error("Erro ao executar agente:", err);
+        toast.error(err.message || "Erro ao executar agente");
+      } finally {
+        setAgentLoading(false);
+      }
     }
+  };
+
+  // Auto-reply when new customer message arrives and agent is active
+  const handleAgentAutoReply = async (customerMessage: string) => {
+    if (!activeClientAgent || agentLoading) return;
     setAgentLoading(true);
-    setAgentResponse(null);
     try {
       const historico = messages.slice(-20).map(m => ({
         role: m.sender === 'customer' ? 'user' : 'assistant',
@@ -3636,25 +3703,18 @@ ${recentMessages}
 
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
-          agent_id: agent.id,
-          mensagem_cliente: lastUserMessage,
+          agent_id: activeClientAgent.id,
+          mensagem_cliente: customerMessage,
           historico_chat: historico,
           conversation_id: selectedConversation,
         },
       });
 
       if (error) throw error;
-
-      if (agent.permite_cliente) {
-        await handleSendMessage(data.resposta, 'text');
-        toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
-      } else {
-        setAgentResponse(data);
-        toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
-      }
+      await handleSendMessage(data.resposta, 'text');
     } catch (err: any) {
-      console.error("Erro ao executar agente:", err);
-      toast.error(err.message || "Erro ao executar agente");
+      console.error("Erro no auto-reply do agente:", err);
+      toast.error(err.message || "Erro no agente automático");
     } finally {
       setAgentLoading(false);
     }
@@ -6231,8 +6291,31 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* Agent Chat Panel - Embedded */}
+              {/* Active Agent Banner */}
+              {activeClientAgent && (
+                <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 mb-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-lg">{activeClientAgent.icone}</span>
+                    <span className="font-medium">{activeClientAgent.nome}</span>
+                    <span className="text-muted-foreground">— respondendo automaticamente ao cliente</span>
+                    {agentLoading && <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveClientAgent(null);
+                      toast.info("Agente suspenso — você voltou ao controle");
+                    }}
+                    className="text-xs"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Suspender
+                  </Button>
+                </div>
+              )}
 
+              {/* Agent Chat Panel - Embedded */}
               {/* Summary Panel */}
               {showSummaryPanel && (
                 <Card className="bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl overflow-hidden">
