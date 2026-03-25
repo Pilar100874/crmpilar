@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/lib/toast-config';
 import type { ChatAgent } from '@/hooks/useChatAgents';
+import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 
 interface AgentMessage {
   role: 'user' | 'assistant';
@@ -196,7 +197,9 @@ export function AgentChatPanel({
               )}
             </div>
           ) : (
-            messages.map((msg, idx) => (
+            messages.map((msg, idx) => {
+              const parsed = msg.role === 'assistant' ? parseAgentTableData(msg.content) : null;
+              return (
               <div
                 key={idx}
                 className={cn("group relative flex gap-2", msg.role === 'user' ? 'justify-end' : 'justify-start')}
@@ -212,7 +215,7 @@ export function AgentChatPanel({
 
                 <div
                   className={cn(
-                    "relative max-w-[80%] px-3 py-2 rounded-2xl transition-all",
+                    "relative max-w-[85%] px-3 py-2 rounded-2xl transition-all",
                     msg.role === 'user'
                       ? 'text-white shadow-sm'
                       : 'bg-card border border-border shadow-sm'
@@ -220,8 +223,9 @@ export function AgentChatPanel({
                   style={msg.role === 'user' ? { backgroundColor: agentColor } : undefined}
                 >
                   <p className="whitespace-pre-wrap break-words text-[13px] leading-snug">
-                    {msg.content}
+                    {parsed ? parsed.text : msg.content}
                   </p>
+                  {parsed?.tableData && <AgentTableRenderer data={parsed.tableData} />}
 
                   {msg.role === 'assistant' && (
                     <div className="flex gap-1 mt-2 pt-1 border-t border-border/30">
@@ -276,7 +280,8 @@ export function AgentChatPanel({
                   </div>
                 )}
               </div>
-            ))
+              );
+            })
           )}
           {isLoading && (
             <div className="flex justify-start gap-2">
