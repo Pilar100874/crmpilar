@@ -249,7 +249,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
-                      KB {agent.knowledge_base_type === 'interna' ? 'Interna' : 'Externa'}
+                      KB {agent.knowledge_base_type === 'interna' ? 'Interna' : agent.knowledge_base_type === 'terceiros' ? 'Terceiros' : 'Externa'}
                     </Badge>
                   )}
                   {(agent.api_endpoint_ids || []).length > 0 && (
@@ -419,7 +419,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <SelectContent>
                       <SelectItem value="nenhuma">Nenhuma — Apenas o prompt do sistema</SelectItem>
                       <SelectItem value="interna">Interna — Textos inseridos manualmente</SelectItem>
-                      <SelectItem value="externa">Externa — Upload de arquivos (PDF, TXT, MD, CSV)</SelectItem>
+                      <SelectItem value="externa">Externa — Upload de arquivos ou flags marcados</SelectItem>
+                      <SelectItem value="terceiros">Terceiros — Base de conhecimento do modelo (Gemini, ChatGPT, etc.)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -479,6 +480,25 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         ))}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {formData.knowledge_base_type === 'terceiros' && (
+                  <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium">Base de Conhecimento do Modelo</p>
+                        <p className="text-xs text-muted-foreground">
+                          O agente utilizará o conhecimento pré-treinado do modelo de IA selecionado (ex: Gemini, ChatGPT). 
+                          Não é necessário enviar arquivos — o modelo responde com base no seu treinamento geral.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 flex items-start gap-2">
+                      <span className="mt-0.5">⚠️</span>
+                      <span>O modelo pode não ter informações específicas sobre seu negócio. Para dados exclusivos, use a opção "Interna" ou "Externa".</span>
+                    </div>
                   </div>
                 )}
               </TabsContent>
