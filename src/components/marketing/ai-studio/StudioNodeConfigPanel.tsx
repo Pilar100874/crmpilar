@@ -137,10 +137,13 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
 ];
 
-// Helper to check if a video model supports multiple reference images
+// Helper to check if a model supports multiple reference images
 export const isMultiRefModel = (modelValue: string): boolean => {
-  const model = VIDEO_MODELS.find(m => m.value === modelValue);
-  return model?.supportsMultiRef ?? false;
+  const videoModel = VIDEO_MODELS.find(m => m.value === modelValue);
+  if (videoModel) return videoModel.supportsMultiRef ?? false;
+  const imageModel = IMAGE_MODELS.find(m => m.value === modelValue);
+  if (imageModel) return imageModel.supportsMultiRef ?? false;
+  return false;
 };
 
 // Reference node types that count as distinct visual subjects
