@@ -98,6 +98,7 @@ import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 import Macros from "./pages/Macros";
+import AgentChat from "./pages/AgentChat";
 import WatchDashboard from "./pages/WatchDashboard";
 import WatchDashboardHome from "./pages/watch/WatchDashboardHome";
 import WatchAgenda from "./pages/watch/WatchAgenda";
@@ -198,6 +199,7 @@ const App = () => (
               <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
               <Route path="/atendimento-config" element={<AtendimentoConfig />} />
               <Route path="/chat-interno" element={<ChatInterno />} />
+              <Route path="/agentes-chat" element={<AgentChat />} />
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
               <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
