@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents RENAME COLUMN estoque_formato_tabela TO resposta_formato_tabela;
