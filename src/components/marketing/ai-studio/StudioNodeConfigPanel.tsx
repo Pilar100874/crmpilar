@@ -558,7 +558,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   }, [estabelecimentoId]);
 
   const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
-  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
+  const filteredImageBase = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
   const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders), [configuredProviders]);
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
@@ -580,6 +580,21 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     });
     return subjectTypes.size >= 2;
   }, [node.id, node.data.type, allNodes, allEdges]);
+
+  // When multiple subject refs are connected, filter to only multi-ref capable models
+  const filteredImage = useMemo(() => {
+    if (hasMultipleSubjectRefs) {
+      return filteredImageBase.filter(m => m.supportsMultiRef);
+    }
+    return filteredImageBase;
+  }, [filteredImageBase, hasMultipleSubjectRefs]);
+
+  const filteredVideoFinal = useMemo(() => {
+    if (hasMultipleSubjectRefs) {
+      return filteredVideo.filter(m => m.supportsMultiRef);
+    }
+    return filteredVideo;
+  }, [filteredVideo, hasMultipleSubjectRefs]);
 
   const currentVideoModel = config.videoModel || 'free/gif-animated';
   const currentImageModel = config.model || 'google/gemini-2.5-flash-image';
@@ -797,12 +812,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       case 'productComposite':
         return (
           <div className="space-y-2.5">
-            {hasMultipleSubjectRefs && !isCurrentModelMultiRefCapable && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            {hasMultipleSubjectRefs && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Modelo incompatível com múltiplas referências</strong>
-                  Este modelo não consegue compor produto + influencer juntos de forma confiável pois não aceita múltiplas imagens de referência. Use modelos como <strong>Gemini Flash Image</strong>, <strong>Gemini 3 Pro Image</strong>, <strong>DALL·E 4</strong> ou <strong>AF: GPT Image</strong>, ou conecte apenas uma referência (produto OU influencer).
+                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
+                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
                 </div>
               </div>
             )}
@@ -975,12 +990,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-2.5">
-            {hasMultipleSubjectRefs && !isCurrentModelMultiRefCapable && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            {hasMultipleSubjectRefs && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Modelo incompatível com múltiplas referências</strong>
-                  Este modelo gera vídeos de cena única e não consegue compor produto + influencer juntos de forma confiável. Use o <strong>GIF Animado (Gratuito)</strong> que suporta múltiplas referências visuais, ou conecte apenas uma referência (produto OU influencer).
+                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
+                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
                 </div>
               </div>
             )}
@@ -1046,7 +1061,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {filteredVideo.map((m) => (
+                  {filteredVideoFinal.map((m) => (
                     <ModelSelectItem key={m.value} model={m} disabled={m.disabled} />
                   ))}
                 </SelectContent>
