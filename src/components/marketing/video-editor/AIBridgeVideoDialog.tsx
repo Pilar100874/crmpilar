@@ -629,6 +629,16 @@ const AIBridgeVideoDialog: React.FC<AIBridgeVideoDialogProps> = ({
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) { toast.error('Estabelecimento não encontrado'); return; }
 
+    // ── Validate selected model provider is active ──────────────────────
+    const selectedModelInfo = filteredModels.find(m => m.value === model);
+    if (selectedModelInfo?.disabled) {
+      toast.error(
+        `O modelo "${selectedModelInfo.label}" não está ativo. Vá em Config APIs para ativar o provedor "${selectedModelInfo.provider}", ou selecione outro modelo.`,
+        { duration: 6000 }
+      );
+      return;
+    }
+
     // Use background generation manager if available
     if (onStartBackgroundGeneration) {
       setIsGenerating(true);
