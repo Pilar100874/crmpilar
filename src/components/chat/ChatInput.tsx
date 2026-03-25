@@ -1375,6 +1375,68 @@ export default function ChatInput({
                 </Tooltip>
               </TooltipProvider>
             </div>
+
+            {/* Agent Submenu Button */}
+            {activeAgents.length > 0 && onSelectAgent && (
+              <div ref={agentMenuRef} className="relative">
+                {showAgentMenu && (
+                  <div 
+                    className="absolute bottom-full left-0 mb-2 z-[9999] bg-card/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-3 min-w-[220px] max-w-[280px]"
+                  >
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">💬 Agentes</p>
+                    <div className="space-y-1.5">
+                      {activeAgents.map((agent: any) => {
+                        const agentColor = agent.cor || '#6366f1';
+                        return (
+                          <button
+                            key={agent.id}
+                            onClick={() => {
+                              setShowAgentMenu(false);
+                              onSelectAgent(agent, 'privado');
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-muted/80 transition-all group text-left"
+                          >
+                            <div 
+                              className="h-8 w-8 rounded-full flex items-center justify-center text-base flex-shrink-0"
+                              style={{ backgroundColor: agentColor + '20' }}
+                            >
+                              {agent.icone}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate" style={{ color: agentColor }}>{agent.nome}</p>
+                              {agent.descricao && (
+                                <p className="text-[10px] text-muted-foreground truncate">{agent.descricao}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className={cn(
+                          "relative w-10 h-10 rounded-full cursor-pointer",
+                          "bg-muted/50 hover:bg-muted",
+                          "flex items-center justify-center",
+                          "transition-all duration-300 ease-out",
+                          "text-muted-foreground hover:text-foreground",
+                          showAgentMenu && "bg-primary/15 text-primary shadow-md"
+                        )}
+                        onClick={() => { setShowAgentMenu(!showAgentMenu); setShowToolsMenu(false); }}
+                      >
+                        <Bot className="h-5 w-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Agentes de IA</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
             
             {/* Emoji picker */}
             <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
