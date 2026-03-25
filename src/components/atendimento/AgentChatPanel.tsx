@@ -30,6 +30,7 @@ interface AgentChatPanelProps {
   onActivateClientAgent?: () => void;
   onDeactivateClientAgent?: () => void;
   onInsertToClientChat?: (text: string) => void;
+  onSendFileToClient?: (fileUrl: string, fileName: string) => void;
   lastClientMessage?: string;
 }
 
@@ -45,6 +46,7 @@ export function AgentChatPanel({
   onActivateClientAgent,
   onDeactivateClientAgent,
   onInsertToClientChat,
+  onSendFileToClient,
   lastClientMessage,
 }: AgentChatPanelProps) {
   const [input, setInput] = useState('');
@@ -230,6 +232,7 @@ export function AgentChatPanel({
                       data={parsed.tableData}
                       onSendToClient={agent.permite_cliente ? onSendToClient : undefined}
                       onInsertToClientChat={onInsertToClientChat}
+                      onSendFileToClient={onSendFileToClient}
                     />
                   )}
 
