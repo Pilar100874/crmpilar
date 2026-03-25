@@ -54,6 +54,7 @@ const emptyForm: Partial<ChatAgent> = {
   api_endpoint_ids: [],
   usar_produtos_importados: false,
   usar_estoque_sistema: false,
+  estoque_formato_tabela: false,
   ativo: true,
   ordem: 0,
 };
