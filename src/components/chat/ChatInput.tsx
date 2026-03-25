@@ -1020,7 +1020,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Bot size={18} />
+                  <Bot size={18} style={{ color: '#8b5cf6' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
