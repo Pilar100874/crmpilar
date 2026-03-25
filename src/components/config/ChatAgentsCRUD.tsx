@@ -378,90 +378,99 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="conhecimento" className="mt-0 space-y-4">
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-primary" />
-                      Usar Estoque do Sistema
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      O agente terá acesso aos produtos cadastrados no estoque do sistema (nome, código, preço, estoque disponível, marca, etc.).
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.usar_estoque_sistema || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-primary" />
-                      Usar Produtos Importados de Terceiros
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      O agente terá acesso aos dados de produtos de terceiros ativos e válidos para enriquecer suas respostas com informações de estoque, preços e detalhes dos fornecedores.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.usar_produtos_importados || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })}
-                  />
-                </div>
-
-                <Separator />
-
                 <div>
-                  <Label>Tipo de Base de Conhecimento</Label>
+                  <Label className="text-base font-semibold">Tipo de Base de Conhecimento</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Define como o agente obtém informações para responder.</p>
                   <Select value={formData.knowledge_base_type} onValueChange={v => setFormData({ ...formData, knowledge_base_type: v as any })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="nenhuma">Nenhuma — Apenas o prompt do sistema</SelectItem>
-                      <SelectItem value="interna">Interna — Textos inseridos manualmente</SelectItem>
-                      <SelectItem value="externa">Externa — Upload de arquivos ou flags marcados</SelectItem>
-                      <SelectItem value="terceiros">Terceiros — Base de conhecimento do modelo (Gemini, ChatGPT, etc.)</SelectItem>
+                      <SelectItem value="nenhuma">Somente Prompt — Responde apenas com as instruções do prompt</SelectItem>
+                      <SelectItem value="interna">Interna — Prompt + textos digitados + flags + APIs</SelectItem>
+                      <SelectItem value="externa">Externa — Prompt + upload de arquivos + flags + APIs</SelectItem>
+                      <SelectItem value="terceiros">Terceiros — Usa conhecimento do modelo (Gemini, ChatGPT, etc.)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {formData.knowledge_base_type === 'interna' && (
-                  <div>
-                    <Label>Conteúdo da Base de Conhecimento</Label>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Insira o conteúdo que o agente deve usar como referência. Separe blocos de informação com linhas em branco.
-                    </p>
-                    <Textarea
-                      value={internalKbText}
-                      onChange={e => setInternalKbText(e.target.value)}
-                      placeholder="Ex: Nosso horário de funcionamento é de segunda a sexta, das 8h às 18h..."
-                      rows={10}
-                      className="font-mono text-sm"
-                    />
+                {formData.knowledge_base_type === 'nenhuma' && (
+                  <div className="rounded-lg border p-3 bg-muted/30 text-xs text-muted-foreground">
+                    O agente responderá <strong>apenas</strong> com base no texto do prompt do sistema. Nenhuma fonte de dados adicional será utilizada.
                   </div>
                 )}
 
-                {formData.knowledge_base_type === 'externa' && (
-                  <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                {formData.knowledge_base_type === 'interna' && (
+                  <>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Database className="h-4 w-4 text-primary" />
+                          Usar Estoque do Sistema
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
+                      </div>
+                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          Usar Produtos Importados de Terceiros
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
+                      </div>
+                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                    </div>
+                    <Separator />
                     <div>
+                      <Label>Conteúdo da Base de Conhecimento</Label>
+                      <p className="text-xs text-muted-foreground mb-2">Insira o conteúdo que o agente deve usar como referência.</p>
+                      <Textarea
+                        value={internalKbText}
+                        onChange={e => setInternalKbText(e.target.value)}
+                        placeholder="Ex: Nosso horário de funcionamento é de segunda a sexta, das 8h às 18h..."
+                        rows={10}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {formData.knowledge_base_type === 'externa' && (
+                  <>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Database className="h-4 w-4 text-primary" />
+                          Usar Estoque do Sistema
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
+                      </div>
+                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          Usar Produtos Importados de Terceiros
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
+                      </div>
+                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                    </div>
+                    <Separator />
+                    <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
                       <Label className="flex items-center gap-2 text-base font-semibold">
                         <FileText className="h-5 w-5 text-primary" />
                         Arquivos da Base de Conhecimento
                       </Label>
-                      <p className="text-xs text-muted-foreground mt-1 mb-3">
+                      <p className="text-xs text-muted-foreground">
                         {editingAgent
                           ? 'Envie arquivos PDF, TXT, MD, CSV, XLSX, JSON ou DOCX para o agente usar como referência.'
                           : 'Salve o agente primeiro para poder enviar arquivos.'}
                       </p>
                       {editingAgent ? (
                         <div className="flex gap-2 items-center">
-                          <Input
-                            type="file"
-                            accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx"
-                            onChange={handleUploadKbFile}
-                            disabled={uploading}
-                            className="cursor-pointer"
-                          />
+                          <Input type="file" accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx" onChange={handleUploadKbFile} disabled={uploading} className="cursor-pointer" />
                           {uploading && <span className="text-xs text-muted-foreground animate-pulse">Enviando...</span>}
                         </div>
                       ) : (
@@ -470,26 +479,22 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                           <span>Salve o agente primeiro para habilitar o upload de arquivos.</span>
                         </div>
                       )}
-                    </div>
-                    {kbFiles.length > 0 && (
-                      <div className="space-y-2">
-                        {kbFiles.map(file => (
-                          <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{file.nome_arquivo}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}
-                              </span>
+                      {kbFiles.length > 0 && (
+                        <div className="space-y-2">
+                          {kbFiles.map(file => (
+                            <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="truncate">{file.nome_arquivo}</span>
+                                <span className="text-xs text-muted-foreground">{file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)}><X className="h-3 w-3" /></Button>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
 
                 {formData.knowledge_base_type === 'terceiros' && (
@@ -499,14 +504,13 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <div>
                         <p className="text-sm font-medium">Base de Conhecimento do Modelo</p>
                         <p className="text-xs text-muted-foreground">
-                          O agente utilizará o conhecimento pré-treinado do modelo de IA selecionado (ex: Gemini, ChatGPT). 
-                          Não é necessário enviar arquivos — o modelo responde com base no seu treinamento geral.
+                          O agente utilizará o conhecimento pré-treinado do modelo de IA selecionado. Não é necessário enviar arquivos.
                         </p>
                       </div>
                     </div>
                     <div className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 flex items-start gap-2">
                       <span className="mt-0.5">⚠️</span>
-                      <span>O modelo pode não ter informações específicas sobre seu negócio. Para dados exclusivos, use a opção "Interna" ou "Externa".</span>
+                      <span>O modelo pode não ter informações específicas sobre seu negócio. Para dados exclusivos, use "Interna" ou "Externa".</span>
                     </div>
                   </div>
                 )}
