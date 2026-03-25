@@ -261,7 +261,8 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
       };
 
       setCardData(newCard);
-      onChange(cardDataToPrompt(newCard));
+      setFreeText('');
+      onChange(cardDataToPrompt(newCard, ''));
       toast.success('✨ Prompt gerado com IA! Revise cada etapa antes de salvar.');
       setStep(1); // Go to identity step to review
     } catch (err: any) {
