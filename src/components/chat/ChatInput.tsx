@@ -1307,42 +1307,21 @@ export default function ChatInput({
   if (activeAgents.length > 0 && onSelectAgent) {
     for (const agent of activeAgents) {
       if (agent.permite_cliente) {
-        // Agent supports both modes — show popover with options
+        // Always open private chat on click
         groupAgentes.push(
-          <Popover key={`agent-${agent.id}`}>
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <button className={toolbarBtnClass}>
-                      <span className="text-base leading-none">{agent.icone}</span>
-                    </button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent><p>{agent.nome}</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <PopoverContent className="w-48 p-2 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
-              <div className="space-y-1">
-                <p className="text-xs font-medium truncate px-1">{agent.nome}</p>
-                {agent.descricao && <p className="text-[10px] text-muted-foreground truncate px-1">{agent.descricao}</p>}
+          <TooltipProvider key={`agent-${agent.id}`} delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <button
+                  className={toolbarBtnClass}
                   onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
-                  className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
-                  <Bot className="h-3.5 w-3.5" />
-                  Conversar
+                  <span className="text-base leading-none">{agent.icone}</span>
                 </button>
-                <button
-                  onClick={() => { onSelectAgent(agent, 'cliente'); setShowToolsMenu(false); }}
-                  className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  Enviar ao Cliente
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </TooltipTrigger>
+              <TooltipContent><p>{agent.nome}</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       } else {
         // Agent only supports private mode — open directly on click
