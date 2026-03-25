@@ -442,23 +442,32 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 )}
 
                 {formData.knowledge_base_type === 'externa' && (
-                  <div className="space-y-3">
+                  <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
                     <div>
-                      <Label>Arquivos da Base de Conhecimento</Label>
-                      <p className="text-xs text-muted-foreground mb-2">
+                      <Label className="flex items-center gap-2 text-base font-semibold">
+                        <FileText className="h-5 w-5 text-primary" />
+                        Arquivos da Base de Conhecimento
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">
                         {editingAgent
-                          ? 'Envie arquivos PDF, TXT, MD, CSV, XLSX, JSON ou DOCX.'
+                          ? 'Envie arquivos PDF, TXT, MD, CSV, XLSX, JSON ou DOCX para o agente usar como referência.'
                           : 'Salve o agente primeiro para poder enviar arquivos.'}
                       </p>
-                      {editingAgent && (
-                        <div className="flex gap-2">
+                      {editingAgent ? (
+                        <div className="flex gap-2 items-center">
                           <Input
                             type="file"
                             accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx"
                             onChange={handleUploadKbFile}
                             disabled={uploading}
+                            className="cursor-pointer"
                           />
                           {uploading && <span className="text-xs text-muted-foreground animate-pulse">Enviando...</span>}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 flex items-start gap-2">
+                          <span className="mt-0.5">⚠️</span>
+                          <span>Salve o agente primeiro para habilitar o upload de arquivos.</span>
                         </div>
                       )}
                     </div>
