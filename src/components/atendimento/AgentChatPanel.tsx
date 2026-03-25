@@ -279,6 +279,7 @@ export function AgentChatPanel({
                     <MessageSquare className="h-3.5 w-3.5 text-primary" />
                   </div>
                 )}
+              </div>
               );
             })
           )}
