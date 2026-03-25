@@ -3622,13 +3622,43 @@ ${recentMessages}
       return;
     }
 
-    // Mode 'cliente' — existing behavior
-    if (!lastUserMessage) {
-      toast.error("Nenhuma mensagem do cliente para processar");
-      return;
+    // Mode 'cliente' — activate agent to auto-respond to customer messages
+    setActiveClientAgent(agent);
+    toast.success(`${agent.icone} ${agent.nome} ativado — respondendo automaticamente ao cliente`);
+
+    // If there's a last message from customer, respond immediately
+    if (lastUserMessage) {
+      setAgentLoading(true);
+      try {
+        const historico = messages.slice(-20).map(m => ({
+          role: m.sender === 'customer' ? 'user' : 'assistant',
+          content: m.text,
+        }));
+
+        const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+          body: {
+            agent_id: agent.id,
+            mensagem_cliente: lastUserMessage,
+            historico_chat: historico,
+            conversation_id: selectedConversation,
+          },
+        });
+
+        if (error) throw error;
+        await handleSendMessage(data.resposta, 'text');
+      } catch (err: any) {
+        console.error("Erro ao executar agente:", err);
+        toast.error(err.message || "Erro ao executar agente");
+      } finally {
+        setAgentLoading(false);
+      }
     }
+  };
+
+  // Auto-reply when new customer message arrives and agent is active
+  const handleAgentAutoReply = async (customerMessage: string) => {
+    if (!activeClientAgent || agentLoading) return;
     setAgentLoading(true);
-    setAgentResponse(null);
     try {
       const historico = messages.slice(-20).map(m => ({
         role: m.sender === 'customer' ? 'user' : 'assistant',
@@ -3637,25 +3667,18 @@ ${recentMessages}
 
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
-          agent_id: agent.id,
-          mensagem_cliente: lastUserMessage,
+          agent_id: activeClientAgent.id,
+          mensagem_cliente: customerMessage,
           historico_chat: historico,
           conversation_id: selectedConversation,
         },
       });
 
       if (error) throw error;
-
-      if (agent.permite_cliente) {
-        await handleSendMessage(data.resposta, 'text');
-        toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
-      } else {
-        setAgentResponse(data);
-        toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
-      }
+      await handleSendMessage(data.resposta, 'text');
     } catch (err: any) {
-      console.error("Erro ao executar agente:", err);
-      toast.error(err.message || "Erro ao executar agente");
+      console.error("Erro no auto-reply do agente:", err);
+      toast.error(err.message || "Erro no agente automático");
     } finally {
       setAgentLoading(false);
     }
