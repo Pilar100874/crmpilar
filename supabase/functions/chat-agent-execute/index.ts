@@ -75,6 +75,38 @@ serve(async (req) => {
       }
     }
 
+    // Buscar produtos importados de terceiros se habilitado
+    let produtosImportadosContext = "";
+    if (agent.usar_produtos_importados) {
+      try {
+        const { data: produtosImportados } = await supabase
+          .from("produtos_importados")
+          .select("nome, quantidade, gramatura, largura, comprimento, tipo, embalagem, numero_folhas, obs")
+          .eq("estabelecimento_id", agent.estabelecimento_id)
+          .limit(500);
+
+        if (produtosImportados?.length) {
+          produtosImportadosContext = "\n\n--- PRODUTOS IMPORTADOS DE TERCEIROS ---\n";
+          produtosImportadosContext += "Use estes dados para responder sobre produtos de fornecedores terceiros:\n\n";
+          for (const p of produtosImportados) {
+            const parts = [`Nome: ${p.nome}`];
+            if (p.quantidade) parts.push(`Qtd: ${p.quantidade}`);
+            if (p.tipo) parts.push(`Tipo: ${p.tipo}`);
+            if (p.gramatura) parts.push(`Gramatura: ${p.gramatura}`);
+            if (p.largura) parts.push(`Largura: ${p.largura}`);
+            if (p.comprimento) parts.push(`Comprimento: ${p.comprimento}`);
+            if (p.embalagem) parts.push(`Embalagem: ${p.embalagem}`);
+            if (p.numero_folhas) parts.push(`Folhas: ${p.numero_folhas}`);
+            if (p.obs) parts.push(`Obs: ${p.obs}`);
+            produtosImportadosContext += `• ${parts.join(" | ")}\n`;
+          }
+          produtosImportadosContext += "--- FIM PRODUTOS IMPORTADOS ---\n";
+        }
+      } catch (e) {
+        console.error("Erro ao carregar produtos importados:", e);
+      }
+    }
+
     // Buscar dados das APIs configuradas
     let apiContext = "";
     const apiEndpointIds = agent.api_endpoint_ids || [];
@@ -120,6 +152,7 @@ serve(async (req) => {
     systemPrompt = systemPrompt.replace("{{historico_chat}}", historico_chat || "");
     systemPrompt = systemPrompt.replace("{{mensagem_cliente}}", mensagem_cliente);
     systemPrompt += kbContext;
+    systemPrompt += produtosImportadosContext;
     systemPrompt += apiContext;
 
     // Modo privado: adicionar contexto da conversa com o cliente

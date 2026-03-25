@@ -1753,6 +1753,7 @@ export type Database = {
           permite_cliente: boolean
           system_prompt: string
           updated_at: string
+          usar_produtos_importados: boolean
         }
         Insert: {
           api_endpoint_ids?: string[] | null
@@ -1772,6 +1773,7 @@ export type Database = {
           permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
+          usar_produtos_importados?: boolean
         }
         Update: {
           api_endpoint_ids?: string[] | null
@@ -1791,6 +1793,7 @@ export type Database = {
           permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
+          usar_produtos_importados?: boolean
         }
         Relationships: [
           {

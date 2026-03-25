@@ -13,8 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 
@@ -51,6 +52,7 @@ const emptyForm: Partial<ChatAgent> = {
   knowledge_base_type: 'nenhuma',
   knowledge_base_internal_data: [],
   api_endpoint_ids: [],
+  usar_produtos_importados: false,
   ativo: true,
   ordem: 0,
 };
@@ -255,6 +257,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       {(agent.api_endpoint_ids || []).length} API{(agent.api_endpoint_ids || []).length > 1 ? 's' : ''}
                     </Badge>
                   )}
+                  {agent.usar_produtos_importados && (
+                    <Badge variant="outline" className="text-xs">
+                      <Package className="h-3 w-3 mr-1" />
+                      Prod. Terceiros
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex gap-1 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(agent)}>
@@ -363,6 +371,24 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="conhecimento" className="mt-0 space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      Usar Produtos Importados de Terceiros
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      O agente terá acesso aos dados de produtos de terceiros ativos e válidos para enriquecer suas respostas com informações de estoque, preços e detalhes dos fornecedores.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.usar_produtos_importados || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })}
+                  />
+                </div>
+
+                <Separator />
+
                 <div>
                   <Label>Tipo de Base de Conhecimento</Label>
                   <Select value={formData.knowledge_base_type} onValueChange={v => setFormData({ ...formData, knowledge_base_type: v as any })}>
