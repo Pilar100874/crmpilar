@@ -1384,18 +1384,27 @@ export default function ChatInput({
               {/* All items */}
               {showToolsMenu && (
                 <div 
-                  className="absolute bottom-full left-0 mb-2 z-[9999] bg-card/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-2 max-h-[60vh] overflow-y-auto overflow-x-hidden"
-                  style={{ width: 'max-content', maxWidth: 'calc(100vw - 2rem)' }}
+                  className="absolute bottom-full left-0 mb-2 z-[9999] bg-card/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-3 max-h-[60vh] overflow-y-auto overflow-x-hidden"
+                  style={{ width: 'max-content', maxWidth: 'calc(100vw - 2rem)', minWidth: '280px' }}
                 >
-                  <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
-                    {allItems.map((item, index) => (
-                      <div 
-                        key={`tool-${index}`}
-                        className="flex-shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {item}
-                      </div>
+                  <div className="space-y-2">
+                    {menuGroups.map((group) => (
+                      group.items.length > 0 && (
+                        <div key={group.label}>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">{group.label}</p>
+                          <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
+                            {group.items.map((item, index) => (
+                              <div 
+                                key={`${group.label}-${index}`}
+                                className="flex-shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {item}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
                     ))}
                   </div>
                 </div>
