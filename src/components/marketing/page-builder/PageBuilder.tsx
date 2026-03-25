@@ -2458,19 +2458,23 @@ const AutoGeneratePage: React.FC<{
             )}
 
             {/* Gallery picker */}
-            {showGalleryPicker === 'image' && galleryImages.length > 0 && (
+            {showGalleryPicker === 'image' && (
               <div className="rounded-xl border p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] font-medium">📁 Selecionar da Galeria</Label>
                   <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => setShowGalleryPicker(null)}>Fechar</Button>
                 </div>
-                <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
-                  {galleryImages.map((img, i) => (
-                    <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
-                      <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
+                {galleryImages.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-auto">
+                    {galleryImages.map((img, i) => (
+                      <button key={i} onClick={() => { setGeneratedImageUrl(img.url); setShowGalleryPicker(null); }} className="rounded-lg border-2 border-transparent hover:border-primary overflow-hidden aspect-square">
+                        <img src={img.url} alt={img.titulo} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">Nenhuma imagem na galeria ainda.</p>
+                )}
               </div>
             )}
 
