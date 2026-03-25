@@ -1221,7 +1221,7 @@ export default function ChatInput({
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
-                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
+                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} style={{ color: '#06b6d4' }} />}
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
