@@ -6397,6 +6397,10 @@ ${recentMessages}
                     toast.info("Agente suspenso — você voltou ao controle");
                   }}
                   onInsertToClientChat={(text) => setInjectedChatText(text)}
+                  onSendFileToClient={(fileUrl, fileName) => {
+                    handleSendMessage(fileName, 'file', fileUrl, fileName);
+                    toast.success("Arquivo Excel enviado ao cliente via WhatsApp!");
+                  }}
                   lastClientMessage={messages.filter(m => m.sender === 'customer').slice(-1)[0]?.text}
                 />
               )}
