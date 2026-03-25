@@ -3601,7 +3601,7 @@ ${recentMessages}
     try {
       const historico = messages.slice(-20).map(m => ({
         role: m.sender === 'customer' ? 'user' : 'assistant',
-        content: m.content,
+        content: m.text,
       }));
 
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
@@ -3617,7 +3617,7 @@ ${recentMessages}
 
       if (data?.modo_operacao === 'automatico') {
         // Enviar resposta diretamente
-        await handleSendMessage(data.resposta);
+        await handleSendMessage(data.resposta, 'text');
         toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
       } else {
         // Modo sugestão: mostrar para o atendente
