@@ -531,6 +531,24 @@ export function useStudioExecution() {
       }
 
       case 'imageGen': {
+        // Validate multi-ref compatibility for image models
+        const hasProductImg = inputs.some((i) => i?._referenceRole === 'produto');
+        const hasInfluencerImg = inputs.some((i) => i?._referenceRole === 'influencer');
+        const selectedImageModel = config.model || 'google/gemini-2.5-flash-image';
+        
+        const multiRefImageModels = [
+          'google/gemini-2.5-flash-image', 'google/gemini-3-pro-image-preview',
+          'openai/dall-e-4', 'apiframe/gpt-image',
+        ];
+        
+        if (hasProductImg && hasInfluencerImg && !multiRefImageModels.includes(selectedImageModel)) {
+          throw new Error(
+            '⚠️ O modelo de imagem selecionado não suporta múltiplas referências visuais (produto + influencer). ' +
+            'Modelos como Stable Diffusion, Flux e Midjourney geram apenas a partir de texto e não conseguem compor duas imagens de referência. ' +
+            'Use Gemini Flash Image, Gemini 3 Pro Image, DALL·E 4 ou AF: GPT Image que aceitam múltiplas referências, ou conecte apenas uma (produto OU influencer).'
+          );
+        }
+
         // Check if this is a correction/refinement pass
         const isCorrectionImage = inputs.some(i => i?._isCorrection);
         const correctionInputImage = inputs.find(i => i?._isCorrection);
