@@ -497,6 +497,7 @@ export default function AtendimentoConfig() {
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatAgentsCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
             </TabsContent>
+            <TabsContent value="textos-prontos" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><MessageSquareQuote className="h-4 w-4 sm:h-5 sm:w-5" />Textos Prontos</CardTitle>
