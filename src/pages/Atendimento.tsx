@@ -3587,6 +3587,51 @@ ${recentMessages}
     }
   };
 
+  // Handler para seleção de agente de chat
+  const [agentResponse, setAgentResponse] = useState<{ resposta: string; agent_nome: string; agent_icone: string; modo_operacao: string } | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+
+  const handleSelectAgent = async (agent: ChatAgent) => {
+    if (!lastUserMessage) {
+      toast.error("Nenhuma mensagem do cliente para processar");
+      return;
+    }
+    setAgentLoading(true);
+    setAgentResponse(null);
+    try {
+      const historico = messages.slice(-20).map(m => ({
+        role: m.sender === 'customer' ? 'user' : 'assistant',
+        content: m.content,
+      }));
+
+      const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
+        body: {
+          agent_id: agent.id,
+          mensagem_cliente: lastUserMessage,
+          historico_chat: historico,
+          conversation_id: selectedConversation,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.modo_operacao === 'automatico') {
+        // Enviar resposta diretamente
+        await handleSendMessage(data.resposta);
+        toast.success(`${data.agent_icone} ${data.agent_nome} respondeu automaticamente`);
+      } else {
+        // Modo sugestão: mostrar para o atendente
+        setAgentResponse(data);
+        toast.info(`${data.agent_icone} ${data.agent_nome} sugeriu uma resposta`);
+      }
+    } catch (err: any) {
+      console.error("Erro ao executar agente:", err);
+      toast.error(err.message || "Erro ao executar agente");
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
   // Handlers para os dialogs do RadialMenu
   const handleRadialTranslate = async () => {
     if (!radialTranslateText.trim()) {
