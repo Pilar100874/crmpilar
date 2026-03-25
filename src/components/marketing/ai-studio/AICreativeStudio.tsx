@@ -340,6 +340,73 @@ const AICreativeStudioInner: React.FC = () => {
       return;
     }
 
+    // ── Validate AI model providers are active ──────────────────────────
+    try {
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (estabId) {
+        const { data: activeKeys } = await supabase
+          .from('ai_api_keys')
+          .select('provider, is_active')
+          .eq('estabelecimento_id', estabId)
+          .eq('is_active', true);
+
+        const LOVABLE_PREFIXES = ['google/', 'openai/', 'free/'];
+        const isLovableModel = (m: string) => LOVABLE_PREFIXES.some(p => m.startsWith(p));
+        const UNIFIED_PREFIXES = ['apiframe/', 'aimlapi/', 'polloai/'];
+        const normalizeP = (p: string) => {
+          const c = p.toLowerCase().trim().replace(/[\s._-]/g, '');
+          if (c === 'apiframe' || c === 'apiframeai') return 'apiframe';
+          if (c === 'aimlapi' || c === 'aiml') return 'aimlapi';
+          if (c === 'polloai' || c === 'pollo') return 'polloai';
+          return c;
+        };
+        const activeProviders = (activeKeys || []).map(k => normalizeP(k.provider));
+
+        const MODEL_TYPES_WITH_PROVIDER = ['imageGen', 'imageEdit', 'imageAnalysis', 'imageComposite', 'videoGen', 'textGen', 'audioGen', 'musicGen'];
+        const inactiveModelNodes: string[] = [];
+
+        for (const n of nodes) {
+          const nd = n.data as StudioNodeData;
+          if (nd.config?._paused) continue;
+          if (!MODEL_TYPES_WITH_PROVIDER.includes(nd.type)) continue;
+
+          const modelValue = nd.type === 'videoGen'
+            ? (nd.config?.videoModel || 'free/gif-animated')
+            : (nd.config?.model || '');
+
+          if (!modelValue || modelValue === 'auto') continue;
+          if (isLovableModel(modelValue)) continue;
+
+          // Check unified prefixes
+          const unifiedPrefix = UNIFIED_PREFIXES.find(p => modelValue.startsWith(p));
+          if (unifiedPrefix) {
+            const providerName = normalizeP(unifiedPrefix.replace('/', ''));
+            if (!activeProviders.includes(providerName)) {
+              inactiveModelNodes.push(`${nd.label || nd.type} (${modelValue})`);
+            }
+            continue;
+          }
+
+          // Check by model prefix
+          const prefix = normalizeP(modelValue.split('/')[0] || '');
+          if (prefix && !activeProviders.includes(prefix)) {
+            inactiveModelNodes.push(`${nd.label || nd.type} (${modelValue})`);
+          }
+        }
+
+        if (inactiveModelNodes.length > 0) {
+          toast.error(
+            `Modelos inativos ou sem chave de API configurada: ${inactiveModelNodes.join(', ')}. Vá em Config APIs para ativar os provedores necessários, ou altere o modelo nos blocos.`,
+            { duration: 8000 }
+          );
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('[Studio] Error validating model providers:', e);
+      // Don't block execution on validation error
+    }
+
     try {
       const updatedNodes = await executeWorkflow(
         nodes as StudioNode[],
