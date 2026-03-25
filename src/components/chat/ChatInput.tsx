@@ -124,7 +124,9 @@ export default function ChatInput({
   customerName,
   customerId,
   chatAgents = [],
-  onSelectAgent
+  onSelectAgent,
+  externalText,
+  onExternalTextConsumed,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
