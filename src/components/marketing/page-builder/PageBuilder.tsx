@@ -2478,11 +2478,9 @@ const AutoGeneratePage: React.FC<{
               <Button onClick={handleGenerateImage} disabled={imageLoading} variant={generatedImageUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {imageLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando imagem...</> : <><Wand2 className="h-4 w-4" /> {generatedImageUrl ? 'Regenerar Imagem' : 'Gerar Imagem'}</>}
               </Button>
-              {galleryImages.length > 0 && (
-                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
-                  <FolderOpen className="h-4 w-4" /> Galeria
-                </Button>
-              )}
+              <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'image' ? null : 'image')} className="gap-1">
+                <FolderOpen className="h-4 w-4" /> Galeria
+              </Button>
               <Button onClick={() => setStep('video_script')} disabled={imageLoading} className="flex-1 gap-2">
                 {generatedImageUrl ? 'Próximo: Vídeo →' : 'Pular → Vídeo'} 
               </Button>
@@ -2589,11 +2587,9 @@ const AutoGeneratePage: React.FC<{
               <Button onClick={handleGenerateVideo} disabled={videoLoading || availableVideoModels.length === 0} variant={generatedVideoUrl ? 'outline' : 'default'} className="flex-1 gap-2">
                 {videoLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando vídeo...</> : <><Video className="h-4 w-4" /> {generatedVideoUrl ? 'Regenerar Vídeo' : 'Gerar Vídeo'}</>}
               </Button>
-              {galleryVideos.length > 0 && (
-                <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
-                  <FolderOpen className="h-4 w-4" /> Galeria
-                </Button>
-              )}
+              <Button variant="outline" onClick={() => setShowGalleryPicker(showGalleryPicker === 'video' ? null : 'video')} className="gap-1">
+                <FolderOpen className="h-4 w-4" /> Galeria
+              </Button>
               <Button onClick={() => finalizePage()} disabled={videoLoading || generating} className="flex-1 gap-2">
                 <Zap className="h-4 w-4" /> Finalizar Página
               </Button>
