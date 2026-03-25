@@ -233,6 +233,24 @@ export function AgentChatPanel({
                       >
                         <Copy className="h-3 w-3" /> Copiar
                       </Button>
+                      {onInsertToClientChat && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 text-[10px] px-1.5 gap-1"
+                                style={{ color: agentColor }}
+                                onClick={() => onInsertToClientChat(msg.content)}
+                              >
+                                <ArrowUp className="h-3 w-3" /> Chat
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Inserir no chat do cliente</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       {agent.permite_cliente && (
                         <Button
                           size="sm"
