@@ -1742,7 +1742,6 @@ export type Database = {
           created_at: string
           descricao: string | null
           estabelecimento_id: string
-          estoque_formato_tabela: boolean
           icone: string
           id: string
           knowledge_base_internal_data: Json | null
@@ -1752,6 +1751,7 @@ export type Database = {
           nome: string
           ordem: number
           permite_cliente: boolean
+          resposta_formato_tabela: boolean
           system_prompt: string
           updated_at: string
           usar_estoque_sistema: boolean
@@ -1764,7 +1764,6 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id: string
-          estoque_formato_tabela?: boolean
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null
@@ -1774,6 +1773,7 @@ export type Database = {
           nome: string
           ordem?: number
           permite_cliente?: boolean
+          resposta_formato_tabela?: boolean
           system_prompt?: string
           updated_at?: string
           usar_estoque_sistema?: boolean
@@ -1786,7 +1786,6 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string
-          estoque_formato_tabela?: boolean
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null
@@ -1796,6 +1795,7 @@ export type Database = {
           nome?: string
           ordem?: number
           permite_cliente?: boolean
+          resposta_formato_tabela?: boolean
           system_prompt?: string
           updated_at?: string
           usar_estoque_sistema?: boolean
