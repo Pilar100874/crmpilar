@@ -82,6 +82,9 @@ interface ChatInputProps {
   customerPhone?: string;
   customerName?: string;
   customerId?: string;
+  // Chat agents
+  chatAgents?: any[];
+  onSelectAgent?: (agent: any, mode: 'cliente' | 'privado') => void;
 }
 
 export default function ChatInput({ 
@@ -117,7 +120,9 @@ export default function ChatInput({
   onToolTriggered,
   customerPhone,
   customerName,
-  customerId
+  customerId,
+  chatAgents = [],
+  onSelectAgent
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -1300,7 +1305,52 @@ export default function ChatInput({
     );
   }
 
-  
+  // Chat Agents
+  const activeAgents = chatAgents.filter((a: any) => a.ativo);
+  if (activeAgents.length > 0 && onSelectAgent) {
+    for (const agent of activeAgents) {
+      allItems.push(
+        <Popover key={`agent-${agent.id}`}>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <button className={toolbarBtnClass}>
+                    <span className="text-base leading-none">{agent.icone}</span>
+                  </button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent><p>{agent.nome}</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-48 p-2 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <div className="space-y-1">
+              <p className="text-xs font-medium truncate px-1">{agent.nome}</p>
+              {agent.descricao && <p className="text-[10px] text-muted-foreground truncate px-1">{agent.descricao}</p>}
+              <button
+                onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
+                className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Bot className="h-3.5 w-3.5" />
+                Conversar
+              </button>
+              {agent.permite_cliente && (
+                <button
+                  onClick={() => { onSelectAgent(agent, 'cliente'); setShowToolsMenu(false); }}
+                  className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Enviar ao Cliente
+                </button>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      );
+    }
+  }
+
+
   return (
     <>
       {/* Hidden file inputs */}

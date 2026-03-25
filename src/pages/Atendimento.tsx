@@ -6493,6 +6493,8 @@ ${recentMessages}
                   customerPhone={selectedConv?.customer?.telefone}
                   customerName={selectedConv?.customer?.nome}
                   customerId={selectedConv?.customer?.id}
+                  chatAgents={chatAgents}
+                  onSelectAgent={handleSelectAgent}
                 />
               </div>
             </div>
