@@ -132,8 +132,6 @@ export default function ChatInput({
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [showAgentMenu, setShowAgentMenu] = useState(false);
-  const agentMenuRef = useRef<HTMLDivElement>(null);
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -196,15 +194,12 @@ export default function ChatInput({
       if (menuRef.current && !menuRef.current.contains(target)) {
         setShowToolsMenu(false);
       }
-      if (agentMenuRef.current && !agentMenuRef.current.contains(target)) {
-        setShowAgentMenu(false);
-      }
     };
-    if (showToolsMenu || showAgentMenu) {
+    if (showToolsMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showToolsMenu, showAgentMenu]);
+  }, [showToolsMenu]);
 
   // Handle external tool triggers
   useEffect(() => {
