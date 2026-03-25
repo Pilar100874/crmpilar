@@ -1096,7 +1096,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <UserPlus size={18} />
+                  <UserPlus size={18} style={{ color: '#0ea5e9' }} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
