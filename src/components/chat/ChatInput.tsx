@@ -936,26 +936,30 @@ export default function ChatInput({
     }
   };
 
-  // Build toolbar items - ALL items appear in BOTH menus
-  const allItems: React.ReactNode[] = [];
+  // Build toolbar items by group
+  const groupAnexos: React.ReactNode[] = [];
+  const groupAtendimento: React.ReactNode[] = [];
+  const groupIA: React.ReactNode[] = [];
+  const groupTraducao: React.ReactNode[] = [];
+  const groupAgentes: React.ReactNode[] = [];
 
-  // === BASIC TOOLS ===
-  allItems.push(
+  // === ANEXOS ===
+  groupAnexos.push(
     <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  allItems.push(
+  groupAnexos.push(
     <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  allItems.push(
+  groupAnexos.push(
     <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  allItems.push(
+  groupAnexos.push(
     <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  allItems.push(
+  groupAnexos.push(
     <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  allItems.push(
+  groupAnexos.push(
     <OrcamentoAttachmentSelector 
       key="orcamento-attachment" 
       onSelectLink={(link, title) => { 
@@ -969,7 +973,7 @@ export default function ChatInput({
       disabled={disabled} 
     />
   );
-  allItems.push(
+  groupAnexos.push(
     <CatalogAttachmentSelector 
       key="catalog-attachment" 
       externalOpen={showCatalogPopover}
@@ -983,14 +987,13 @@ export default function ChatInput({
     />
   );
 
-  // Agenda Tracking Tool (Rastreio com Agendamento)
-  allItems.push(
+  // === ATENDIMENTO ===
+  groupAtendimento.push(
     <AgendaTrackingTool
       key="agenda-tracking"
       externalOpen={showAgendaTrackingPopover}
       onExternalOpenChange={setShowAgendaTrackingPopover}
       onInsertLink={(url, text) => {
-        // Enviar apenas a URL para ser clicável no WhatsApp, com texto opcional antes
         setMessage(prev => prev + (prev ? '\n' : '') + `${text}\n${url}`);
         setShowToolsMenu(false);
         setShowAgendaTrackingPopover(false);
@@ -1007,49 +1010,8 @@ export default function ChatInput({
     />
   );
 
-  // Translate
-  allItems.push(
-    <TooltipProvider key="translate" delayDuration={200}>
-      <Tooltip>
-        <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
-                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
-              </button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Traduzir para</Label>
-                <button onClick={() => setShowTranslatePopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
-              </div>
-              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">Inglês</SelectItem>
-                  <SelectItem value="es">Espanhol</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="fr">Francês</SelectItem>
-                  <SelectItem value="de">Alemão</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
-                <Languages className="h-4 w-4 mr-2" /> Traduzir
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <TooltipContent><p>Traduzir</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-
-  // === CHAT/AI TOOLS ===
-  // Bot redirect
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
-    allItems.push(
+    groupAtendimento.push(
       <TooltipProvider key="bot" delayDuration={200}>
         <Tooltip>
           <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
@@ -1086,9 +1048,8 @@ export default function ChatInput({
     );
   }
 
-  // Webhook auto-response
   if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
-    allItems.push(
+    groupAtendimento.push(
       <TooltipProvider key="webhook" delayDuration={200}>
         <Tooltip>
           <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
@@ -1125,9 +1086,8 @@ export default function ChatInput({
     );
   }
 
-  // Transfer to user
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
-    allItems.push(
+    groupAtendimento.push(
       <TooltipProvider key="transfer" delayDuration={200}>
         <Tooltip>
           <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
@@ -1164,8 +1124,7 @@ export default function ChatInput({
     );
   }
 
-  // Import reports - always render to allow external trigger
-  allItems.push(
+  groupAtendimento.push(
     <TooltipProvider key="reports" delayDuration={200}>
       <Tooltip>
         <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
@@ -1210,7 +1169,7 @@ export default function ChatInput({
                         onClick={() => handleImportReportSelect(selectedImportReport, 'pdf')} 
                         disabled={isProcessingReport}
                       >
-                        <FileText className="h-4 w-4 mr-2 text-red-500" />
+                        <FileText className="h-4 w-4 mr-2 text-destructive" />
                         PDF
                       </Button>
                       <Button 
@@ -1220,7 +1179,7 @@ export default function ChatInput({
                         onClick={() => handleImportReportSelect(selectedImportReport, 'excel')} 
                         disabled={isProcessingReport}
                       >
-                        <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                        <FileSpreadsheet className="h-4 w-4 mr-2 text-primary" />
                         Excel
                       </Button>
                     </div>
@@ -1237,26 +1196,62 @@ export default function ChatInput({
     </TooltipProvider>
   );
 
-  // Agent Assist - Context Response (always show, will show toast if no messages)
-  allItems.push(
+  // === IA ===
+  groupIA.push(
     <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
   );
 
-  // Agent Assist - Summary
   if (onSummaryGenerated) {
-    allItems.push(
+    groupIA.push(
       <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
     );
   }
 
-  // Agent Assist - KB Articles (always show, will show toast if no messages)
-  allItems.push(
+  groupIA.push(
     <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
   );
 
-  // Real-time translation with popover
+  // === TRADUÇÃO ===
+  groupTraducao.push(
+    <TooltipProvider key="translate" delayDuration={200}>
+      <Tooltip>
+        <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
+                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Traduzir para</Label>
+                <button onClick={() => setShowTranslatePopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+              </div>
+              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">Inglês</SelectItem>
+                  <SelectItem value="es">Espanhol</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="fr">Francês</SelectItem>
+                  <SelectItem value="de">Alemão</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
+                <Languages className="h-4 w-4 mr-2" /> Traduzir
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <TooltipContent><p>Traduzir</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
   if (onToggleRealTimeTranslation && onTranslationLanguageChange) {
-    allItems.push(
+    groupTraducao.push(
       <TooltipProvider key="realtime-translate" delayDuration={200}>
         <Tooltip>
           <Popover open={showRealTimeTranslatePopover} onOpenChange={setShowRealTimeTranslatePopover}>
@@ -1305,11 +1300,11 @@ export default function ChatInput({
     );
   }
 
-  // Chat Agents
+  // === AGENTES ===
   const activeAgents = chatAgents.filter((a: any) => a.ativo);
   if (activeAgents.length > 0 && onSelectAgent) {
     for (const agent of activeAgents) {
-      allItems.push(
+      groupAgentes.push(
         <Popover key={`agent-${agent.id}`}>
           <TooltipProvider delayDuration={200}>
             <Tooltip>
@@ -1349,6 +1344,15 @@ export default function ChatInput({
       );
     }
   }
+
+  // Build grouped sections for the menu
+  const menuGroups: { label: string; items: React.ReactNode[] }[] = [
+    { label: '📎 Anexos e Envio', items: groupAnexos },
+    { label: '🛠️ Atendimento', items: groupAtendimento },
+    { label: '🤖 Inteligência Artificial', items: groupIA },
+    { label: '🌐 Tradução', items: groupTraducao },
+    ...(groupAgentes.length > 0 ? [{ label: '💬 Agentes de IA', items: groupAgentes }] : []),
+  ];
 
 
   return (
