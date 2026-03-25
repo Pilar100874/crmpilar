@@ -115,6 +115,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       knowledge_base_type: agent.knowledge_base_type,
       knowledge_base_internal_data: agent.knowledge_base_internal_data || [],
       api_endpoint_ids: agent.api_endpoint_ids || [],
+      usar_produtos_importados: agent.usar_produtos_importados ?? false,
+      usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
