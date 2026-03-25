@@ -333,6 +333,18 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <Label>Pode ser direcionado ao cliente</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Se desativado, o agente só conversa com o atendente (chat privado) e não pode responder diretamente ao cliente.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.permite_cliente !== false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, permite_cliente: checked })}
+                  />
+                </div>
                 <div>
                   <Label>Modelo de IA</Label>
                   <Select value={formData.modelo_ia} onValueChange={v => setFormData({ ...formData, modelo_ia: v })}>
