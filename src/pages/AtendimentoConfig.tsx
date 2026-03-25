@@ -27,7 +27,8 @@ import {
   Send,
   FileText,
   Shield,
-  Activity
+  Activity,
+  Bot
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
