@@ -1750,6 +1750,7 @@ export type Database = {
           modo_operacao: string
           nome: string
           ordem: number
+          permite_cliente: boolean
           system_prompt: string
           updated_at: string
         }
@@ -1768,6 +1769,7 @@ export type Database = {
           modo_operacao?: string
           nome: string
           ordem?: number
+          permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
         }
@@ -1786,6 +1788,7 @@ export type Database = {
           modo_operacao?: string
           nome?: string
           ordem?: number
+          permite_cliente?: boolean
           system_prompt?: string
           updated_at?: string
         }
