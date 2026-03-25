@@ -3551,6 +3551,7 @@ ${recentMessages}
           }
         }
         break;
+    }
   };
 
   // Handler para seleção de ferramenta (usado pelo ToolsDropdown e RadialMenu)
