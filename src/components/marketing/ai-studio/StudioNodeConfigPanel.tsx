@@ -1061,7 +1061,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {filteredVideo.map((m) => (
+                  {filteredVideoFinal.map((m) => (
                     <ModelSelectItem key={m.value} model={m} disabled={m.disabled} />
                   ))}
                 </SelectContent>
