@@ -3521,10 +3521,7 @@ ${recentMessages}
       case "tool-agenda-email":
         setTriggerTool('agenda-tracking');
         break;
-      // AI submenu items
-      case "ai-chat":
-        setShowAIChat(!showAIChat);
-        break;
+      // ai-chat removed - replaced by agent chat panel
       case "ai-suggestion":
         setTriggerTool('context');
         break;
@@ -3580,9 +3577,7 @@ ${recentMessages}
       case "tool-agenda-email":
         setTriggerTool('agenda-tracking');
         break;
-      case "ai-chat":
-        setShowAIChat(!showAIChat);
-        break;
+      // ai-chat removed - replaced by agent chat panel
       case "ai-suggestion":
         setTriggerTool('context');
         break;
@@ -6219,177 +6214,7 @@ ${recentMessages}
             </div>
 
             <div className="border-t bg-card flex-shrink-0 p-4">
-              {/* AI Chat Box */}
-              {showAIChat && aiWebhooks.length > 0 && (
-                <Card className="mb-3 bg-gradient-to-br from-primary/5 to-primary-glow/5 border-primary/20 rounded-2xl">
-                  <div className="bg-gradient-to-r from-primary/10 to-primary-glow/10 px-4 py-2.5 border-b border-primary/20 rounded-t-2xl">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                        <span className="text-sm font-semibold">Chat com IA</span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-1 justify-end">
-                        {aiWebhooks.length > 1 && (
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs text-muted-foreground whitespace-nowrap">Webhook:</Label>
-                            <Select
-                              value={selectedAIWebhook || ""}
-                              onValueChange={setSelectedAIWebhook}
-                            >
-                              <SelectTrigger className="h-7 text-xs bg-background/80 border-border/50 rounded-full w-[180px]">
-                                <SelectValue placeholder="Selecione o webhook" />
-                              </SelectTrigger>
-                              <SelectContent className="rounded-2xl">
-                                {aiWebhooks.map(webhook => (
-                                  <SelectItem key={webhook.id} value={webhook.id}>
-                                    {webhook.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setShowContextBox(!showContextBox)}
-                          className="h-7 text-xs gap-1 hover:bg-primary/20 rounded-full flex-shrink-0"
-                        >
-                          <FileText className="h-3 w-3" />
-                          {showContextBox ? "Ocultar contexto" : "Adicionar contexto"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    {/* Context Field - Collapsible */}
-                    {showContextBox && (
-                      <div className="mb-4 p-3 bg-muted/50 rounded-2xl border border-border/50 space-y-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-xs font-medium">Contexto adicional</Label>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={addConversationContext}
-                            className="h-6 text-xs gap-1 rounded-full"
-                            disabled={!selectedConversation}
-                          >
-                            <FileText className="h-3 w-3" />
-                            Carregar da conversa
-                          </Button>
-                        </div>
-                        <Textarea
-                          value={aiContext}
-                          onChange={(e) => setAiContext(e.target.value)}
-                          placeholder="Cole ou digite informações relevantes..."
-                          className="min-h-[70px] text-xs resize-none bg-background rounded-2xl"
-                        />
-                      </div>
-                    )}
-
-                    {/* AI Messages */}
-                    <div
-                      ref={aiScrollRef}
-                      className="max-h-64 overflow-y-auto overscroll-contain mb-4 space-y-2 px-1"
-                    >
-                      {aiMessages.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                          <p className="text-xs">Comece uma conversa com a IA</p>
-                          {showContextBox && aiContext && (
-                            <p className="text-xs mt-2 opacity-70">Contexto adicionado ✓</p>
-                          )}
-                        </div>
-                      ) : (
-                        aiMessages.map((msg, idx) => (
-                          <div
-                            key={idx}
-                            className={`group relative flex gap-2 ${
-                              msg.role === "user" ? "justify-end" : "justify-start"
-                            }`}
-                          >
-                            {msg.role === "assistant" && (
-                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shrink-0 mt-0.5">
-                                <Sparkles className="h-3.5 w-3.5 text-white" />
-                              </div>
-                            )}
-
-                            <div
-                              onClick={() => msg.role === "assistant" && sendAIResponseToChat(msg.content)}
-                              className={`relative max-w-[80%] px-3 py-2 rounded-2xl transition-all ${
-                                msg.role === "user"
-                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm"
-                                  : "bg-card border border-border shadow-sm hover:border-primary/30 cursor-pointer hover:shadow-md"
-                              }`}
-                              title={msg.role === "assistant" ? "Clique para enviar ao cliente" : ""}
-                            >
-                              <p className="whitespace-pre-wrap break-words text-[13px] leading-snug">
-                                {msg.content}
-                              </p>
-                              
-                              {msg.role === "assistant" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="absolute -top-1.5 -right-1.5 h-6 w-6 p-0 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    sendAIResponseToChat(msg.content);
-                                  }}
-                                  title="Enviar para o chat do cliente"
-                                >
-                                  <ArrowUp className="h-3 w-3" />
-                                </Button>
-                              )}
-                              
-                              <span className={`text-[10px] mt-1 block ${msg.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
-                                {format(new Date(), "HH:mm", { locale: ptBR })}
-                              </span>
-                            </div>
-
-                            {msg.role === "user" && (
-                              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                                <User className="h-3.5 w-3.5 text-primary" />
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    {/* AI Input */}
-                    <div className="flex items-center gap-2">
-                      <Textarea
-                        value={aiInput}
-                        onChange={(e) => setAiInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            sendAIMessage();
-                          }
-                        }}
-                        placeholder="Pergunte algo à IA..."
-                        className="flex-1 min-h-[44px] max-h-[120px] text-sm resize-none rounded-full px-4"
-                        style={{ paddingTop: '12px', paddingBottom: '12px' }}
-                        disabled={isAILoading}
-                      />
-                      <Button
-                        onClick={sendAIMessage}
-                        disabled={!aiInput.trim() || isAILoading}
-                        size="icon"
-                        className="h-11 w-11 shrink-0 rounded-full"
-                      >
-                        {isAILoading ? (
-                          <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              )}
+              {/* Agent Chat Panel - Embedded */}
 
               {/* Summary Panel */}
               {showSummaryPanel && (
