@@ -317,6 +317,7 @@ export default function Atendimento() {
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
+  const { agents: chatAgents } = useChatAgents(estabelecimentoId || null);
 
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
