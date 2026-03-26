@@ -1836,6 +1836,7 @@ export type Database = {
           nome: string
           ordem: number
           permite_cliente: boolean
+          regras_busca_personalizada: string | null
           resposta_formato_tabela: boolean
           system_prompt: string
           updated_at: string
@@ -1859,6 +1860,7 @@ export type Database = {
           nome: string
           ordem?: number
           permite_cliente?: boolean
+          regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           system_prompt?: string
           updated_at?: string
@@ -1882,6 +1884,7 @@ export type Database = {
           nome?: string
           ordem?: number
           permite_cliente?: boolean
+          regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           system_prompt?: string
           updated_at?: string
