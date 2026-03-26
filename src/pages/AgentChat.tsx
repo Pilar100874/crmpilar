@@ -15,6 +15,20 @@ import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/Agent
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
+// Extract active filters from last assistant message
+function extractActiveFilters(messages: { role: string; content: string }[]): string[] {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant') {
+      const content = messages[i].content;
+      const match = content.match(/Filtros?\s*ativo[s]?\s*:\s*(.+?)(?:\n|$)/i);
+      if (match) {
+        return match[1].split('|').map(f => f.trim()).filter(f => f.length > 0);
+      }
+    }
+  }
+  return [];
+}
+
 interface AgentMessage {
   id?: string;
   role: 'user' | 'assistant';
