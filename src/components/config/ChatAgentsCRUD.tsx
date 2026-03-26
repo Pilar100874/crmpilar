@@ -232,8 +232,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       } else if (type === 'importados') {
         const { data } = await supabase
           .from('produtos_importados')
-          .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
+          .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
           .eq('estabelecimento_id', estabelecimentoId)
+          .order('created_at', { ascending: false })
           .limit(200);
         const rows = data || [];
         setPreviewData(rows);
