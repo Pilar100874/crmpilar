@@ -12,6 +12,19 @@ import { toast } from '@/lib/toast-config';
 import type { ChatAgent } from '@/hooks/useChatAgents';
 import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 
+// Extract active filters from last assistant message
+function extractActiveFilters(msgs: { role: string; content: string }[]): string[] {
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (msgs[i].role === 'assistant') {
+      const match = msgs[i].content.match(/Filtros?\s*ativo[s]?\s*:\s*(.+?)(?:\n|$)/i);
+      if (match) {
+        return match[1].split('|').map(f => f.trim()).filter(f => f.length > 0);
+      }
+    }
+  }
+  return [];
+}
+
 interface AgentMessage {
   role: 'user' | 'assistant';
   content: string;
