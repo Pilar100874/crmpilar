@@ -587,47 +587,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <div>
                       <Label>Conteúdo da Base de Conhecimento</Label>
 
-                    {previewType && previewTab === 'conhecimento' && (
-                      <div className="mt-4 mb-4 rounded-lg border bg-muted/20 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Eye className="h-4 w-4 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : 'Preview · Produtos Importados de Terceiros'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
-                              <Download className="h-4 w-4 mr-1" /> Excel
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewType(null); setPreviewTab(null); }}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="h-64 overflow-auto">
-                          {previewLoading ? (
-                            <div className="flex items-center justify-center h-full"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-                          ) : previewData.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
-                          ) : (
-                            <div className="h-full overflow-auto">
-                              <UITable className="min-w-max">
-                                <TableHeader><TableRow>{previewColumns.map((col) => (<TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>))}</TableRow></TableHeader>
-                                <TableBody>{previewData.map((row, index) => (<TableRow key={index}>{previewColumns.map((col) => (<TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">{row[col] != null ? String(row[col]) : '-'}</TableCell>))}</TableRow>))}</TableBody>
-                              </UITable>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                      <p className="text-xs text-muted-foreground mb-2">Insira o conteúdo que o agente deve usar como referência.</p>
                       <Textarea
                         value={internalKbText}
                         onChange={e => setInternalKbText(e.target.value)}
@@ -674,47 +633,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <Separator />
                     <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
 
-                    {previewType && previewTab === 'conhecimento' && (
-                      <div className="mt-4 mb-4 rounded-lg border bg-muted/20 overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Eye className="h-4 w-4 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : 'Preview · Produtos Importados de Terceiros'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
-                              <Download className="h-4 w-4 mr-1" /> Excel
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewType(null); setPreviewTab(null); }}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="h-64 overflow-auto">
-                          {previewLoading ? (
-                            <div className="flex items-center justify-center h-full"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-                          ) : previewData.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
-                          ) : (
-                            <div className="h-full overflow-auto">
-                              <UITable className="min-w-max">
-                                <TableHeader><TableRow>{previewColumns.map((col) => (<TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>))}</TableRow></TableHeader>
-                                <TableBody>{previewData.map((row, index) => (<TableRow key={index}>{previewColumns.map((col) => (<TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">{row[col] != null ? String(row[col]) : '-'}</TableCell>))}</TableRow>))}</TableBody>
-                              </UITable>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                      <Label className="flex items-center gap-2 text-base font-semibold">
                         <FileText className="h-5 w-5 text-primary" />
                         Arquivos da Base de Conhecimento
                       </Label>
@@ -806,63 +724,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
-              {previewType && previewTab === 'apis' && (
-                <div className="mt-4 rounded-lg border bg-muted/20 overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Eye className="h-4 w-4 text-primary shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {`Preview · API ${previewApiName}`}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
-                        <Download className="h-4 w-4 mr-1" /> Excel
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewType(null); setPreviewTab(null); }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="h-64 overflow-auto">
-                    {previewLoading ? (
-                      <div className="flex items-center justify-center h-full">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : previewData.length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
-                    ) : (
-                      <div className="h-full overflow-auto">
-                        <UITable className="min-w-max">
-                          <TableHeader>
-                            <TableRow>
-                              {previewColumns.map((col) => (
-                                <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
-                              ))}
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {previewData.map((row, index) => (
-                              <TableRow key={index}>
-                                {previewColumns.map((col) => (
-                                  <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
-                                    {row[col] != null ? String(row[col]) : '-'}
-                                  </TableCell>
-                                ))}
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </UITable>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </Tabs>
 
