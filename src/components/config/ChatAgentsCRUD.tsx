@@ -239,25 +239,30 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         setPreviewData(rows);
         setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
       } else if (type === 'api' && apiId) {
-        const { data: result, error } = await supabase.functions.invoke('execute-dynamic-query', {
-          body: { endpoint_id: apiId }
-        });
-
-        if (error) throw error;
-
-        const rawData = Array.isArray(result)
-          ? result
-          : Array.isArray(result?.data)
-            ? result.data
-            : Array.isArray(result?.items)
-              ? result.items
-              : Array.isArray(result?.produtos)
-                ? result.produtos
-                : [];
-
-        const rows = rawData.slice(0, 200);
-        setPreviewData(rows);
-        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+        // Buscar endpoint_path para montar URL completa (mesma lógica da tela de teste de API)
+        const { data: ep } = await supabase
+          .from('api_endpoints')
+          .select('endpoint_path')
+          .eq('id', apiId)
+          .maybeSingle();
+        if (ep) {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const url = `https://${projectId}.supabase.co/functions/v1/execute-dynamic-query/${ep.endpoint_path}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint_id: apiId }),
+          });
+          const result = await response.json();
+          const rawData = Array.isArray(result)
+            ? result
+            : Array.isArray(result?.data)
+              ? result.data
+              : [];
+          const rows = rawData.slice(0, 200);
+          setPreviewData(rows);
+          setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+        }
       }
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao carregar preview');
