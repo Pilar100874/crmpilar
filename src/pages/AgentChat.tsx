@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +13,7 @@ import { useChatAgents, type ChatAgent } from '@/hooks/useChatAgents';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface AgentMessage {
   id?: string;
@@ -39,6 +41,11 @@ export default function AgentChat() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteAllMode, setDeleteAllMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -107,9 +114,20 @@ export default function AgentChat() {
     setInput('');
     setActiveSessionId(null);
     setSessions([]);
+    setSelectionMode(false);
+    setSelectedSessionIds(new Set());
   };
 
   const handleSelectSession = async (session: ChatSession) => {
+    if (selectionMode) {
+      setSelectedSessionIds(prev => {
+        const next = new Set(prev);
+        if (next.has(session.id)) next.delete(session.id);
+        else next.add(session.id);
+        return next;
+      });
+      return;
+    }
     setActiveSessionId(session.id);
     await loadSessionMessages(session.id);
   };
@@ -130,6 +148,56 @@ export default function AgentChat() {
         setMessages([]);
       }
       toast.success('Conversa excluída');
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(prev => !prev);
+    setSelectedSessionIds(new Set());
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSessionIds.size === sessions.length) {
+      setSelectedSessionIds(new Set());
+    } else {
+      setSelectedSessionIds(new Set(sessions.map(s => s.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSessionIds.size === 0) return;
+    setDeleteAllMode(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteAll = () => {
+    if (sessions.length === 0) return;
+    setDeleteAllMode(true);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const idsToDelete = deleteAllMode ? sessions.map(s => s.id) : Array.from(selectedSessionIds);
+      
+      for (const id of idsToDelete) {
+        await supabase.from('agent_chat_sessions').delete().eq('id', id);
+      }
+
+      setSessions(prev => prev.filter(s => !idsToDelete.includes(s.id)));
+      if (idsToDelete.includes(activeSessionId || '')) {
+        setActiveSessionId(null);
+        setMessages([]);
+      }
+      setSelectionMode(false);
+      setSelectedSessionIds(new Set());
+      toast.success(`${idsToDelete.length} conversa(s) excluída(s)`);
+    } catch {
+      toast.error('Erro ao excluir conversas');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -250,10 +318,37 @@ export default function AgentChat() {
     <div className="flex h-[100dvh] max-h-[100dvh] overflow-hidden bg-background">
       {/* Sidebar - Conversations List */}
       <div className="w-64 border-r flex flex-col bg-muted/30 max-h-full">
-        <div className="p-3 border-b">
+        <div className="p-3 border-b space-y-2">
           <Button onClick={handleNewChat} className="w-full gap-2 rounded-xl" size="sm" style={{ backgroundColor: agentColor }}>
             <Plus className="h-4 w-4" /> Nova conversa
           </Button>
+          {sessions.length > 0 && (
+            <div className="flex gap-1">
+              {selectionMode ? (
+                <>
+                  <Button variant="ghost" size="sm" className="flex-1 gap-1 text-[10px] h-7" onClick={toggleSelectAll}>
+                    <CheckSquare className="h-3 w-3" />
+                    {selectedSessionIds.size === sessions.length ? 'Desmarcar' : 'Selecionar tudo'}
+                  </Button>
+                  <Button variant="destructive" size="sm" className="flex-1 gap-1 text-[10px] h-7" onClick={handleBulkDelete} disabled={selectedSessionIds.size === 0}>
+                    <Trash2 className="h-3 w-3" /> Excluir ({selectedSessionIds.size})
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={toggleSelectionMode}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" className="flex-1 gap-1 text-[10px] h-7 text-muted-foreground" onClick={toggleSelectionMode}>
+                    <CheckSquare className="h-3 w-3" /> Selecionar
+                  </Button>
+                  <Button variant="ghost" size="sm" className="flex-1 gap-1 text-[10px] h-7 text-destructive hover:text-destructive" onClick={handleDeleteAll}>
+                    <Eraser className="h-3 w-3" /> Limpar tudo
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
@@ -267,12 +362,30 @@ export default function AgentChat() {
                 onClick={() => handleSelectSession(session)}
                 className={cn(
                   "w-full text-left rounded-lg px-3 py-2.5 text-sm transition-colors group flex items-start gap-2",
-                  activeSessionId === session.id
-                    ? "bg-primary/10 text-foreground"
-                    : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                  selectionMode && selectedSessionIds.has(session.id)
+                    ? "bg-primary/15 text-foreground"
+                    : activeSessionId === session.id
+                      ? "bg-primary/10 text-foreground"
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
                 )}
               >
-                <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 opacity-50" />
+                {selectionMode ? (
+                  <Checkbox
+                    checked={selectedSessionIds.has(session.id)}
+                    className="mt-0.5 flex-shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() => {
+                      setSelectedSessionIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(session.id)) next.delete(session.id);
+                        else next.add(session.id);
+                        return next;
+                      });
+                    }}
+                  />
+                ) : (
+                  <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0 opacity-50" />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-xs font-medium">{session.titulo}</p>
                   <p className="text-[10px] opacity-60 flex items-center gap-1 mt-0.5">
@@ -280,12 +393,14 @@ export default function AgentChat() {
                     {formatDistanceToNow(new Date(session.updated_at), { addSuffix: true, locale: ptBR })}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => handleDeleteSession(session.id, e)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded"
-                >
-                  <Trash2 className="h-3 w-3 text-destructive" />
-                </button>
+                {!selectionMode && (
+                  <button
+                    onClick={(e) => handleDeleteSession(session.id, e)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded"
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </button>
+                )}
               </button>
             ))}
           </div>
@@ -296,6 +411,18 @@ export default function AgentChat() {
           </Button>
         </div>
       </div>
+
+      <DeleteConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+        title="Limpar conversas"
+        description={deleteAllMode
+          ? `Tem certeza que deseja excluir todas as ${sessions.length} conversas? Esta ação não pode ser desfeita.`
+          : `Tem certeza que deseja excluir ${selectedSessionIds.size} conversa(s) selecionada(s)? Esta ação não pode ser desfeita.`
+        }
+      />
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
