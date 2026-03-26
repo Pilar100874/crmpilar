@@ -633,16 +633,14 @@ export default function AgentChat() {
                 {activeFilters.map((filter, idx) => (
                   <Badge key={idx} variant="secondary" className="text-[11px] gap-1 pl-2 pr-1 py-0.5 cursor-pointer hover:bg-destructive/10 transition-colors group" onClick={() => {
                     const filterName = filter.split('=')[0]?.trim();
-                    setInput(`remover filtro ${filterName}`);
-                    setTimeout(() => handleSend(), 100);
+                    sendQuickMessage(`remover filtro ${filterName}`);
                   }}>
                     {filter}
                     <XCircle className="h-3 w-3 text-muted-foreground group-hover:text-destructive transition-colors" />
                   </Badge>
                 ))}
                 <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
-                  setInput('limpar todos os filtros');
-                  setTimeout(() => handleSend(), 100);
+                  sendQuickMessage('limpar todos os filtros');
                 }}>
                   <Eraser className="h-3 w-3 mr-1" /> Limpar tudo
                 </Button>
