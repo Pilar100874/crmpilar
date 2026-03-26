@@ -137,6 +137,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
       acumular_filtros: (agent as any).acumular_filtros ?? false,
       regras_busca_personalizada: (agent as any).regras_busca_personalizada || '',
+      api_endpoint_config: (agent as any).api_endpoint_config || {},
+      solicitar_cnpj: (agent as any).solicitar_cnpj ?? false,
+      gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
