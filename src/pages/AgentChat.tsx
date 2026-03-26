@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText } from 'lucide-react';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText, Filter, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,6 +14,20 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+
+// Extract active filters from last assistant message
+function extractActiveFilters(messages: { role: string; content: string }[]): string[] {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant') {
+      const content = messages[i].content;
+      const match = content.match(/Filtros?\s*ativo[s]?\s*:\s*(.+?)(?:\n|$)/i);
+      if (match) {
+        return match[1].split('|').map(f => f.trim()).filter(f => f.length > 0);
+      }
+    }
+  }
+  return [];
+}
 
 interface AgentMessage {
   id?: string;
@@ -298,6 +312,21 @@ export default function AgentChat() {
   }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId, cnpjCliente]);
 
   const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copiado!'); };
+
+  // Quick send for filter buttons — directly calls send logic with a given message
+  const pendingQuickMsg = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingQuickMsg.current && input === pendingQuickMsg.current && !isLoading) {
+      pendingQuickMsg.current = null;
+      handleSend();
+    }
+  }, [input, isLoading, handleSend]);
+
+  const sendQuickMessage = (msg: string) => {
+    pendingQuickMsg.current = msg;
+    setInput(msg);
+  };
 
   const handleSavePreOrder = async () => {
     if (!preOrderItems?.length || !estabelecimentoId || !usuarioId) return;
@@ -591,6 +620,34 @@ export default function AgentChat() {
             <span className="text-[10px] text-muted-foreground">CNPJ: {cnpjCliente}</span>
           </div>
         )}
+
+        {/* Active filters bar */}
+        {(() => {
+          const activeFilters = (selectedAgent as any)?.acumular_filtros ? extractActiveFilters(messages) : [];
+          if (activeFilters.length === 0) return null;
+          return (
+            <div className="border-t px-4 py-2 flex-shrink-0 bg-muted/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-[10px] text-muted-foreground font-medium">Filtros:</span>
+                {activeFilters.map((filter, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-[11px] gap-1 pl-2 pr-1 py-0.5 cursor-pointer hover:bg-destructive/10 transition-colors group" onClick={() => {
+                    const filterName = filter.split('=')[0]?.trim();
+                    sendQuickMessage(`remover filtro ${filterName}`);
+                  }}>
+                    {filter}
+                    <XCircle className="h-3 w-3 text-muted-foreground group-hover:text-destructive transition-colors" />
+                  </Badge>
+                ))}
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
+                  sendQuickMessage('limpar todos os filtros');
+                }}>
+                  <Eraser className="h-3 w-3 mr-1" /> Limpar tudo
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">
