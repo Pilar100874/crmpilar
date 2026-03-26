@@ -207,7 +207,7 @@ export default function AgentChat() {
   // Agent selection screen
   if (!selectedAgent) {
     return (
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-[100dvh] max-h-[100dvh] bg-background">
         <div className="border-b px-6 py-4">
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2"><Bot className="h-6 w-6 text-primary" />Agentes de IA</h1>
           <p className="text-sm text-muted-foreground mt-1">Selecione um agente para iniciar uma conversa</p>
@@ -247,7 +247,7 @@ export default function AgentChat() {
   const agentColor = selectedAgent.cor || '#6366f1';
 
   return (
-    <div className="flex h-full max-h-screen overflow-hidden bg-background">
+    <div className="flex h-[100dvh] max-h-[100dvh] overflow-hidden bg-background">
       {/* Sidebar - Conversations List */}
       <div className="w-64 border-r flex flex-col bg-muted/30 max-h-full">
         <div className="p-3 border-b">
