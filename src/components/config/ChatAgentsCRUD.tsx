@@ -476,7 +476,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
                 {formData.knowledge_base_type === 'interna' && (
                   <>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
+                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
@@ -484,7 +484,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
-                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
@@ -494,7 +499,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
-                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      </div>
                     </div>
                     <Separator />
                     <div>
@@ -513,7 +523,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
                 {formData.knowledge_base_type === 'externa' && (
                   <>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
+                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
@@ -521,7 +531,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
-                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
@@ -531,7 +546,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
-                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      </div>
                     </div>
                     <Separator />
                     <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
