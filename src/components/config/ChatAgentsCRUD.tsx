@@ -283,7 +283,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             : Array.isArray(result?.data)
               ? result.data
               : [];
-          const rows = rawData.slice(0, 200);
+          const rows = rawData.slice(0, 200).map((row: any) => ({ origem: apiName || 'API', ...row }));
           setPreviewData(rows);
           setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
         }
