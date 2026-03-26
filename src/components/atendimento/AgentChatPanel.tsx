@@ -4,13 +4,26 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown } from 'lucide-react';
+import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown, Filter, XCircle, Eraser } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/lib/toast-config';
 import type { ChatAgent } from '@/hooks/useChatAgents';
 import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
+
+// Extract active filters from last assistant message
+function extractActiveFilters(msgs: { role: string; content: string }[]): string[] {
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (msgs[i].role === 'assistant') {
+      const match = msgs[i].content.match(/Filtros?\s*ativo[s]?\s*:\s*(.+?)(?:\n|$)/i);
+      if (match) {
+        return match[1].split('|').map(f => f.trim()).filter(f => f.length > 0);
+      }
+    }
+  }
+  return [];
+}
 
 interface AgentMessage {
   role: 'user' | 'assistant';
@@ -307,6 +320,34 @@ export function AgentChatPanel({
             </div>
           )}
         </div>
+
+        {/* Active filters bar */}
+        {(() => {
+          const activeFilters = (agent as any)?.acumular_filtros ? extractActiveFilters(messages) : [];
+          if (activeFilters.length === 0) return null;
+          return (
+            <div className="rounded-xl bg-muted/40 px-3 py-2 mb-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Filter className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                <span className="text-[10px] text-muted-foreground font-medium">Filtros:</span>
+                {activeFilters.map((filter, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-[10px] gap-1 pl-1.5 pr-0.5 py-0 cursor-pointer hover:bg-destructive/10 transition-colors group" onClick={() => {
+                    const filterName = filter.split('=')[0]?.trim();
+                    onSendMessage(`remover filtro ${filterName}`);
+                  }}>
+                    {filter}
+                    <XCircle className="h-2.5 w-2.5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                  </Badge>
+                ))}
+                <button className="text-[10px] text-destructive hover:underline flex items-center gap-0.5" onClick={() => {
+                  onSendMessage('limpar todos os filtros');
+                }}>
+                  <Eraser className="h-2.5 w-2.5" /> Limpar
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Input */}
         <div className="flex items-center gap-1.5">
