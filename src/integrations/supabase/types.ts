@@ -293,6 +293,90 @@ export type Database = {
           },
         ]
       }
+      agent_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_chat_sessions: {
+        Row: {
+          agent_id: string
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          titulo: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_chat_sessions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_chat_sessions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_chat_sessions_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_api_keys: {
         Row: {
           api_key: string | null
