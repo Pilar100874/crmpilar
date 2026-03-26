@@ -14,6 +14,11 @@ interface AgentTableRendererProps {
   onSendFileToClient?: (fileUrl: string, fileName: string) => void;
 }
 
+function stripMarkdownTables(content: string): string {
+  const tableRegex = /(\|[^\n]+\|\n\|[\s:-]+\|[\s:|-]*\n(?:\|[^\n]+\|\n?)+)/g;
+  return content.replace(tableRegex, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function parseMarkdownTable(content: string): { text: string; tableData: any[] | null } {
   const tableRegex = /(\|[^\n]+\|\n\|[\s:-]+\|[\s:|-]*\n(?:\|[^\n]+\|\n?)+)/g;
   const match = tableRegex.exec(content);
@@ -38,10 +43,10 @@ function parseMarkdownTable(content: string): { text: string; tableData: any[] |
 
   if (data.length === 0) return { text: content, tableData: null };
 
-  const textBefore = content.substring(0, match.index).trim();
-  const textAfter = content.substring(match.index + match[0].length).trim();
+  // Remove ALL markdown tables from the text, not just the first one
+  const cleanText = stripMarkdownTables(content);
 
-  return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
+  return { text: cleanText, tableData: data };
 }
 
 export function parseAgentTableData(content: string): { text: string; tableData: any[] | null } {
@@ -58,7 +63,9 @@ export function parseAgentTableData(content: string): { text: string; tableData:
     try {
       const data = JSON.parse(jsonStr);
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-        return { text: [textBefore, textAfter].filter(Boolean).join('\n\n'), tableData: data };
+        // Strip any markdown tables from the text portions too
+        const cleanText = stripMarkdownTables([textBefore, textAfter].filter(Boolean).join('\n\n'));
+        return { text: cleanText, tableData: data };
       }
     } catch {}
   }
