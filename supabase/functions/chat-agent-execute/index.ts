@@ -17,7 +17,7 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { agent_id, mensagem_cliente, historico_chat, conversation_id, modo_privado, contexto_chat_cliente } = await req.json();
+    const { agent_id, mensagem_cliente, historico_chat, conversation_id, modo_privado, contexto_chat_cliente, cnpj_cliente } = await req.json();
 
     if (!agent_id || !mensagem_cliente) {
       return new Response(JSON.stringify({ error: "agent_id e mensagem_cliente são obrigatórios" }), {
@@ -50,7 +50,6 @@ serve(async (req) => {
     }
 
     if (agent.knowledge_base_type === "externa") {
-      // Buscar arquivos KB
       const { data: kbFiles } = await supabase
         .from("chat_agent_kb_files")
         .select("storage_path, nome_arquivo")
@@ -112,7 +111,6 @@ serve(async (req) => {
     let produtosImportadosContext = "";
     if (agent.usar_produtos_importados) {
       try {
-        // Buscar relatórios ativos para obter nomes de origem
         const { data: activeReports } = await supabase
           .from("relatorios_importacao")
           .select("id, nome")
@@ -172,9 +170,12 @@ serve(async (req) => {
       }
     }
 
-    // Buscar dados das APIs configuradas
+    // Buscar dados das APIs configuradas (com classificação)
+    let apiEstoqueContext = "";
+    let apiComprasContext = "";
     let apiContext = "";
     const apiEndpointIds = agent.api_endpoint_ids || [];
+    const apiEndpointConfig = agent.api_endpoint_config || {};
 
     if (apiEndpointIds.length > 0) {
       const { data: endpoints } = await supabase
@@ -184,12 +185,9 @@ serve(async (req) => {
         .eq("active", true);
 
       if (endpoints?.length) {
-        apiContext = "\n\n--- DADOS DE APIs EM TEMPO REAL ---\n";
         for (const ep of endpoints) {
           try {
             let url = ep.custom_url || `${SUPABASE_URL}/rest/v1/${ep.endpoint_path}`;
-            
-            // Se for endpoint do Supabase, adicionar headers
             const headers: Record<string, string> = {};
             if (!ep.is_custom) {
               headers["apikey"] = SUPABASE_SERVICE_ROLE_KEY;
@@ -197,18 +195,95 @@ serve(async (req) => {
               url = `${SUPABASE_URL}/rest/v1/${ep.query}`;
             }
 
+            // Se for API de compras do cliente e temos um CNPJ, filtrar
+            const epConf = apiEndpointConfig[ep.id];
+            const epTipo = epConf?.tipo || 'estoque';
+
+            if (epTipo === 'compras_cliente' && cnpj_cliente) {
+              // Adicionar filtro de CNPJ na URL se possível
+              const separator = url.includes('?') ? '&' : '?';
+              url += `${separator}cnpj=eq.${cnpj_cliente}`;
+            }
+
             const apiResp = await fetch(url, { headers });
             if (apiResp.ok) {
               const data = await apiResp.json();
               const dataStr = JSON.stringify(data).substring(0, 15000);
-              apiContext += `\n[${ep.name}]: ${dataStr}\n`;
+              
+              if (epTipo === 'compras_cliente') {
+                apiComprasContext += `\n[${ep.name}]: ${dataStr}\n`;
+              } else {
+                apiEstoqueContext += `\n[${ep.name}]: ${dataStr}\n`;
+              }
             }
           } catch (e) {
             console.error(`Erro ao consultar API ${ep.name}:`, e);
-            apiContext += `\n[${ep.name}]: Erro ao consultar dados\n`;
           }
         }
-        apiContext += "--- FIM DOS DADOS ---\n";
+      }
+    }
+
+    if (apiEstoqueContext) {
+      apiContext += "\n\n--- DADOS DE ESTOQUE (APIs) ---\n" + apiEstoqueContext + "--- FIM DADOS DE ESTOQUE ---\n";
+    }
+    if (apiComprasContext) {
+      apiContext += "\n\n--- HISTÓRICO DE COMPRAS DO CLIENTE (APIs) ---\n" + apiComprasContext + "--- FIM HISTÓRICO DE COMPRAS ---\n";
+    }
+
+    // Buscar cliente por CNPJ se solicitado
+    let clienteContext = "";
+    if (agent.solicitar_cnpj && cnpj_cliente) {
+      try {
+        const cnpjLimpo = cnpj_cliente.replace(/\D/g, '');
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("id, name, phone, email, cnpj_cpf, empresa_nome")
+          .eq("estabelecimento_id", agent.estabelecimento_id)
+          .or(`cnpj_cpf.eq.${cnpjLimpo},cnpj_cpf.eq.${cnpj_cliente}`)
+          .limit(1)
+          .maybeSingle();
+
+        if (customer) {
+          clienteContext = `\n\n--- CLIENTE IDENTIFICADO ---\nNome: ${customer.name}\nEmpresa: ${customer.empresa_nome || 'N/A'}\nCNPJ: ${cnpj_cliente}\nTelefone: ${customer.phone || 'N/A'}\nEmail: ${customer.email || 'N/A'}\nID: ${customer.id}\n--- FIM CLIENTE ---\n`;
+
+          // Buscar orçamentos anteriores do cliente
+          const { data: orcamentos } = await supabase
+            .from("orcamentos")
+            .select("id, numero, created_at, status, valor_total")
+            .eq("cliente_id", customer.id)
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+          if (orcamentos?.length) {
+            let orcContext = "\n--- ÚLTIMOS ORÇAMENTOS/PEDIDOS DO CLIENTE ---\n";
+            for (const orc of orcamentos) {
+              orcContext += `Orçamento #${orc.numero} | Status: ${orc.status} | Valor: R$ ${orc.valor_total || 0} | Data: ${orc.created_at}\n`;
+              
+              // Buscar itens do orçamento
+              const { data: itens } = await supabase
+                .from("orcamento_itens")
+                .select("produto_nome, quantidade, valor_unitario, largura, comprimento, gramatura")
+                .eq("orcamento_id", orc.id)
+                .limit(20);
+              
+              if (itens?.length) {
+                for (const item of itens) {
+                  orcContext += `  → ${item.produto_nome} | Qtd: ${item.quantidade} | R$ ${item.valor_unitario}`;
+                  if (item.largura) orcContext += ` | Larg: ${item.largura}`;
+                  if (item.comprimento) orcContext += ` | Comp: ${item.comprimento}`;
+                  if (item.gramatura) orcContext += ` | Gram: ${item.gramatura}`;
+                  orcContext += "\n";
+                }
+              }
+            }
+            orcContext += "--- FIM DOS ORÇAMENTOS ---\n";
+            clienteContext += orcContext;
+          }
+        } else {
+          clienteContext = `\n\n--- CLIENTE NÃO ENCONTRADO ---\nCNPJ informado: ${cnpj_cliente}\nNenhum cliente encontrado com este CNPJ na base de dados.\n--- FIM ---\n`;
+        }
+      } catch (e) {
+        console.error("Erro ao buscar cliente por CNPJ:", e);
       }
     }
 
@@ -220,16 +295,73 @@ serve(async (req) => {
     systemPrompt += estoqueSistemaContext;
     systemPrompt += produtosImportadosContext;
     systemPrompt += apiContext;
+    systemPrompt += clienteContext;
+
+    // Instruções de CNPJ e sugestões inteligentes
+    if (agent.solicitar_cnpj) {
+      systemPrompt += `
+
+--- FLUXO DE IDENTIFICAÇÃO DO CLIENTE ---
+REGRA: No INÍCIO da conversa, antes de qualquer consulta de estoque, você DEVE perguntar o CNPJ do cliente para identificá-lo.
+- Pergunte de forma amigável: "Para melhor atendê-lo, poderia informar o CNPJ da empresa?"
+- Quando o cliente informar o CNPJ, use os dados do CLIENTE IDENTIFICADO e HISTÓRICO DE COMPRAS para personalizar o atendimento.
+- Se o CNPJ já foi informado (e aparece nos dados acima), NÃO pergunte novamente.
+- Se o cliente não for encontrado, informe que o CNPJ não está cadastrado mas continue atendendo normalmente.
+--- FIM DO FLUXO ---`;
+    }
+
+    // Instrução de sugestões baseadas em histórico
+    if (agent.solicitar_cnpj && (apiComprasContext || clienteContext.includes('ÚLTIMOS ORÇAMENTOS'))) {
+      systemPrompt += `
+
+--- REGRAS DE SUGESTÃO INTELIGENTE ---
+Após responder à consulta principal do vendedor, analise o HISTÓRICO DE COMPRAS do cliente e SUGIRA produtos adicionais:
+
+1. **Sugestões por Similaridade**: Compare o que o cliente já comprou com o que temos em estoque. Se encontrar materiais similares (mesma gramatura, tipo próximo, largura compatível), sugira como alternativas.
+
+2. **Motivo da Sugestão**: Para CADA sugestão, explique POR QUE está sugerindo:
+   - "O cliente comprou X no passado, temos Y em estoque que é similar"
+   - "Com base no consumo anterior de [material], pode se interessar por [alternativa]"
+   - "Temos [produto] com gramatura próxima ao que costuma comprar"
+
+3. **Formato**: Apresente as sugestões em um BLOCO SEPARADO após a resposta principal, usando o título "📋 **Sugestões baseadas no histórico do cliente:**"
+
+4. **Calcule Perdas**: Se sugerir um material maior que precisa de corte, informe a perda percentual.
+
+5. **NÃO misture**: Mantenha a resposta à consulta do vendedor SEPARADA das sugestões baseadas em histórico.
+--- FIM REGRAS DE SUGESTÃO ---`;
+    }
+
+    // Instrução de pré-orçamento
+    if (agent.gerar_pre_orcamento) {
+      systemPrompt += `
+
+--- REGRAS DE PRÉ-ORÇAMENTO ---
+REGRA IMPORTANTE: Durante a conversa, acompanhe todos os itens que o vendedor/cliente demonstrou INTERESSE (perguntou disponibilidade, pediu preço, solicitou quantidade, etc.).
+
+Quando o vendedor/cliente disser algo como "é isso", "pode fechar", "gerar orçamento", "resumo dos itens", "finalizar", "quero esses", ou quando você perceber que a consulta está sendo concluída, gere um RESUMO DE INTERESSE com os itens identificados usando o seguinte formato especial:
+
+<!--PRE_ORDER_START-->
+[{"produto":"Nome do Produto","quantidade":"10","gramatura":"120","largura":"700","comprimento":"1000","observacao":"Cliente demonstrou interesse, disponível em estoque"}]
+<!--PRE_ORDER_END-->
+
+REGRAS:
+- Inclua APENAS itens pelos quais o cliente/vendedor demonstrou interesse real (perguntou, pediu, confirmou)
+- NÃO inclua itens apenas mencionados como sugestão se o vendedor não demonstrou interesse
+- Preencha os campos que tiver informação, deixe vazio os demais
+- Adicione na observação o motivo (disponível em estoque, corte necessário, etc.)
+- O vendedor deve poder revisar antes de confirmar
+--- FIM PRÉ-ORÇAMENTO ---`;
+    }
 
     // Instrução de busca inteligente com sugestões de alternativas
-    // Usa regras personalizadas se existirem, senão usa as padrão
     const hasCustomRules = agent.regras_busca_personalizada && agent.regras_busca_personalizada.trim().length > 0;
     
     if (hasCustomRules) {
       systemPrompt += "\n\n--- REGRAS DE BUSCA PERSONALIZADAS ---\n" + agent.regras_busca_personalizada + "\n--- FIM DAS REGRAS ---";
     }
 
-    // Modo privado: adicionar contexto da conversa com o cliente
+    // Modo privado
     if (modo_privado && contexto_chat_cliente) {
       systemPrompt += "\n\n--- CONTEXTO DA CONVERSA COM O CLIENTE ---\n" + contexto_chat_cliente + "\n--- FIM DO CONTEXTO ---\n";
       systemPrompt += "\nIMPORTANTE: Você está conversando com o ATENDENTE (não com o cliente). Ajude o atendente a formular respostas, encontrar informações e resolver dúvidas. Seja direto e objetivo.";
@@ -239,7 +371,7 @@ serve(async (req) => {
       systemPrompt += "\n\nIMPORTANTE: Responda EXCLUSIVAMENTE com base nos documentos fornecidos na Base de Conhecimento. Se a informação não estiver disponível nos documentos, informe que não possui essa informação.";
     }
 
-    // Instrução de formato tabela (flag geral do agente)
+    // Instrução de formato tabela
     if (agent.resposta_formato_tabela) {
       systemPrompt += "\n\nREGRA DE FORMATAÇÃO: Sempre que sua resposta contiver dados em formato de lista, tabela, ou múltiplos itens com propriedades (ex: produtos, preços, resultados, comparações, etc.), você DEVE incluir os dados dentro de tags especiais no formato JSON array. Use <!--TABLE_DATA_START--> antes do JSON e <!--TABLE_DATA_END--> depois. Exemplo:\n";
       systemPrompt += "<!--TABLE_DATA_START-->\n[{\"Nome\":\"Item 1\",\"Valor\":\"100\"},{\"Nome\":\"Item 2\",\"Valor\":\"200\"}]\n<!--TABLE_DATA_END-->\n";
@@ -258,7 +390,7 @@ serve(async (req) => {
       systemPrompt += "--- FIM DA REGRA DE FIDELIDADE ---";
     }
 
-    // Filtros progressivos (condicional por agente)
+    // Filtros progressivos
     if (agent.acumular_filtros) {
       systemPrompt += `
 
@@ -286,11 +418,9 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
       { role: "system", content: systemPrompt },
     ];
 
-    // Adicionar histórico completo (já inclui a mensagem atual do usuário)
     if (historico_chat && Array.isArray(historico_chat) && historico_chat.length > 0) {
       messages.push(...historico_chat);
     } else {
-      // Fallback se não houver histórico, adicionar só a mensagem atual
       messages.push({ role: "user", content: mensagem_cliente });
     }
 
@@ -328,11 +458,25 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     const aiData = await aiResponse.json();
     const resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
 
+    // Detectar e extrair pré-orçamento da resposta
+    let preOrderData = null;
+    const preOrderMatch = resposta.match(/<!--PRE_ORDER_START-->\s*([\s\S]*?)\s*<!--PRE_ORDER_END-->/);
+    if (preOrderMatch) {
+      try {
+        preOrderData = JSON.parse(preOrderMatch[1].trim());
+      } catch (e) {
+        console.error("Erro ao parsear pré-orçamento:", e);
+      }
+    }
+
     return new Response(JSON.stringify({
       resposta,
       modo_operacao: agent.modo_operacao,
       agent_nome: agent.nome,
       agent_icone: agent.icone,
+      pre_order_data: preOrderData,
+      solicitar_cnpj: agent.solicitar_cnpj || false,
+      gerar_pre_orcamento: agent.gerar_pre_orcamento || false,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

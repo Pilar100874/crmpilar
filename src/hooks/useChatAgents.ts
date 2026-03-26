@@ -21,6 +21,9 @@ export interface ChatAgent {
   resposta_formato_tabela: boolean;
   acumular_filtros: boolean;
   regras_busca_personalizada: string | null;
+  api_endpoint_config: Record<string, { tipo: 'estoque' | 'compras_cliente' }>;
+  solicitar_cnpj: boolean;
+  gerar_pre_orcamento: boolean;
   ativo: boolean;
   ordem: number;
   created_at: string;

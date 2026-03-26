@@ -1821,12 +1821,14 @@ export type Database = {
       chat_agents: {
         Row: {
           acumular_filtros: boolean
+          api_endpoint_config: Json | null
           api_endpoint_ids: string[] | null
           ativo: boolean
           cor: string
           created_at: string
           descricao: string | null
           estabelecimento_id: string
+          gerar_pre_orcamento: boolean | null
           icone: string
           id: string
           knowledge_base_internal_data: Json | null
@@ -1838,6 +1840,7 @@ export type Database = {
           permite_cliente: boolean
           regras_busca_personalizada: string | null
           resposta_formato_tabela: boolean
+          solicitar_cnpj: boolean | null
           system_prompt: string
           updated_at: string
           usar_estoque_sistema: boolean
@@ -1845,12 +1848,14 @@ export type Database = {
         }
         Insert: {
           acumular_filtros?: boolean
+          api_endpoint_config?: Json | null
           api_endpoint_ids?: string[] | null
           ativo?: boolean
           cor?: string
           created_at?: string
           descricao?: string | null
           estabelecimento_id: string
+          gerar_pre_orcamento?: boolean | null
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null
@@ -1862,6 +1867,7 @@ export type Database = {
           permite_cliente?: boolean
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
+          solicitar_cnpj?: boolean | null
           system_prompt?: string
           updated_at?: string
           usar_estoque_sistema?: boolean
@@ -1869,12 +1875,14 @@ export type Database = {
         }
         Update: {
           acumular_filtros?: boolean
+          api_endpoint_config?: Json | null
           api_endpoint_ids?: string[] | null
           ativo?: boolean
           cor?: string
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string
+          gerar_pre_orcamento?: boolean | null
           icone?: string
           id?: string
           knowledge_base_internal_data?: Json | null
@@ -1886,6 +1894,7 @@ export type Database = {
           permite_cliente?: boolean
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
+          solicitar_cnpj?: boolean | null
           system_prompt?: string
           updated_at?: string
           usar_estoque_sistema?: boolean

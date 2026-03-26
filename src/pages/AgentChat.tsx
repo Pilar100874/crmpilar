@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare } from 'lucide-react';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -46,6 +46,10 @@ export default function AgentChat() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteAllMode, setDeleteAllMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cnpjCliente, setCnpjCliente] = useState<string | null>(null);
+  const [preOrderItems, setPreOrderItems] = useState<any[] | null>(null);
+  const [showPreOrder, setShowPreOrder] = useState(false);
+  const [savingPreOrder, setSavingPreOrder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -105,6 +109,9 @@ export default function AgentChat() {
     setMessages([]);
     setInput('');
     setActiveSessionId(null);
+    setCnpjCliente(null);
+    setPreOrderItems(null);
+    setShowPreOrder(false);
     await loadSessions(agent.id);
   };
 
@@ -116,6 +123,9 @@ export default function AgentChat() {
     setSessions([]);
     setSelectionMode(false);
     setSelectedSessionIds(new Set());
+    setCnpjCliente(null);
+    setPreOrderItems(null);
+    setShowPreOrder(false);
   };
 
   const handleSelectSession = async (session: ChatSession) => {
@@ -242,6 +252,16 @@ export default function AgentChat() {
         content: msg,
       });
 
+      // Try to extract CNPJ from user message
+      let currentCnpj = cnpjCliente;
+      if ((selectedAgent as any).solicitar_cnpj && !currentCnpj) {
+        const cnpjMatch = msg.match(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/);
+        if (cnpjMatch) {
+          currentCnpj = cnpjMatch[0].replace(/\D/g, '');
+          setCnpjCliente(currentCnpj);
+        }
+      }
+
       // Call agent
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
@@ -250,12 +270,19 @@ export default function AgentChat() {
           historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
           modo_privado: true,
           contexto_chat_cliente: '',
+          cnpj_cliente: currentCnpj || undefined,
         },
       });
       if (error) throw error;
 
       const assistantMsg: AgentMessage = { role: 'assistant', content: data.resposta, timestamp: new Date() };
       setMessages([...newMessages, assistantMsg]);
+
+      // Detect pre-order data
+      if (data.pre_order_data && data.pre_order_data.length > 0) {
+        setPreOrderItems(data.pre_order_data);
+        setShowPreOrder(true);
+      }
 
       // Save assistant message
       await supabase.from('agent_chat_messages').insert({
@@ -268,9 +295,64 @@ export default function AgentChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId]);
+  }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId, cnpjCliente]);
 
   const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copiado!'); };
+
+  const handleSavePreOrder = async () => {
+    if (!preOrderItems?.length || !estabelecimentoId || !usuarioId) return;
+    setSavingPreOrder(true);
+    try {
+      // Find customer by CNPJ
+      let clienteId: string | null = null;
+      if (cnpjCliente) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .or(`cnpj_cpf.eq.${cnpjCliente}`)
+          .limit(1)
+          .maybeSingle();
+        clienteId = customer?.id || null;
+      }
+
+      // Create orcamento
+      const { data: orc, error: orcError } = await supabase
+        .from('orcamentos')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          vendedor_id: usuarioId,
+          cliente_id: clienteId,
+          status: 'rascunho',
+          observacao: `Pré-orçamento gerado pelo agente "${selectedAgent?.nome}" via chat`,
+        } as any)
+        .select()
+        .single();
+
+      if (orcError) throw orcError;
+
+      // Insert items
+      for (const item of preOrderItems) {
+        await supabase.from('orcamento_itens').insert({
+          orcamento_id: orc.id,
+          produto_nome: item.produto || 'Item',
+          quantidade: parseFloat(item.quantidade) || 1,
+          valor_unitario: 0,
+          largura: item.largura || null,
+          comprimento: item.comprimento || null,
+          gramatura: item.gramatura || null,
+          observacao: item.observacao || '',
+        } as any);
+      }
+
+      toast.success(`Pré-orçamento criado com ${preOrderItems.length} item(ns)!`);
+      setShowPreOrder(false);
+    } catch (err: any) {
+      toast.error('Erro ao salvar pré-orçamento: ' + (err.message || ''));
+    } finally {
+      setSavingPreOrder(false);
+    }
+  };
 
   // Agent selection screen
   if (!selectedAgent) {
@@ -473,6 +555,42 @@ export default function AgentChat() {
             </div>
           )}
         </div>
+
+        {/* Pre-order banner */}
+        {showPreOrder && preOrderItems && preOrderItems.length > 0 && (
+          <div className="border-t bg-accent/20 p-3 flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">Pré-Orçamento Detectado ({preOrderItems.length} itens)</span>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowPreOrder(false)}>
+                  <X className="h-3 w-3 mr-1" /> Dispensar
+                </Button>
+                <Button size="sm" onClick={handleSavePreOrder} disabled={savingPreOrder} style={{ backgroundColor: agentColor }}>
+                  <FileText className="h-3 w-3 mr-1 text-white" />
+                  <span className="text-white">{savingPreOrder ? 'Salvando...' : 'Salvar como Orçamento'}</span>
+                </Button>
+              </div>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {preOrderItems.map((item: any, i: number) => (
+                <div key={i} className="text-xs bg-background rounded px-2 py-1 flex justify-between">
+                  <span className="font-medium">{item.produto}</span>
+                  <span className="text-muted-foreground">Qtd: {item.quantidade || '1'} {item.gramatura ? `| ${item.gramatura}g` : ''} {item.largura ? `| L:${item.largura}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CNPJ indicator */}
+        {cnpjCliente && (
+          <div className="px-4 py-1 bg-muted/50 border-t flex items-center gap-2 flex-shrink-0">
+            <span className="text-[10px] text-muted-foreground">CNPJ: {cnpjCliente}</span>
+          </div>
+        )}
 
         <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">

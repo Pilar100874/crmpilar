@@ -61,6 +61,9 @@ const emptyForm: Partial<ChatAgent> = {
   resposta_formato_tabela: false,
   acumular_filtros: false,
   regras_busca_personalizada: '',
+  api_endpoint_config: {},
+  solicitar_cnpj: false,
+  gerar_pre_orcamento: false,
   ativo: true,
   ordem: 0,
 };
@@ -134,6 +137,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
       acumular_filtros: (agent as any).acumular_filtros ?? false,
       regras_busca_personalizada: (agent as any).regras_busca_personalizada || '',
+      api_endpoint_config: (agent as any).api_endpoint_config || {},
+      solicitar_cnpj: (agent as any).solicitar_cnpj ?? false,
+      gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -494,6 +500,36 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     onCheckedChange={(checked) => setFormData({ ...formData, acumular_filtros: checked })}
                   />
                 </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Brain className="h-4 w-4 text-primary" />
+                      Solicitar CNPJ do Cliente
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ao iniciar, o agente pergunta o CNPJ para identificar o cliente e buscar histórico de compras.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={(formData as any).solicitar_cnpj || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, solicitar_cnpj: checked } as any)}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      Gerar Pré-Orçamento
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ao final da conversa, salva automaticamente os itens de interesse como rascunho de orçamento.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={(formData as any).gerar_pre_orcamento || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, gerar_pre_orcamento: checked } as any)}
+                  />
+                </div>
                 <div>
                   <Label>Modelo de IA</Label>
                   <Select value={formData.modelo_ia} onValueChange={v => setFormData({ ...formData, modelo_ia: v })}>
@@ -725,21 +761,48 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {apiEndpoints.map(ep => (
-                         <div key={ep.id} className="flex items-center space-x-3 border rounded-lg px-3 py-2">
-                          <Checkbox
-                            checked={(formData.api_endpoint_ids || []).includes(ep.id)}
-                            onCheckedChange={() => toggleEndpoint(ep.id)}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium">{ep.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
+                      {apiEndpoints.map(ep => {
+                        const isChecked = (formData.api_endpoint_ids || []).includes(ep.id);
+                        const epConfig = ((formData as any).api_endpoint_config || {})[ep.id];
+                        const epTipo = epConfig?.tipo || 'estoque';
+                        return (
+                         <div key={ep.id} className="border rounded-lg px-3 py-2 space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleEndpoint(ep.id)}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium">{ep.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name, 'apis')} title="Visualizar dados">
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name, 'apis')} title="Visualizar dados">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                          {isChecked && (
+                            <div className="ml-8">
+                              <Select
+                                value={epTipo}
+                                onValueChange={(v) => {
+                                  const config = { ...((formData as any).api_endpoint_config || {}) };
+                                  config[ep.id] = { tipo: v };
+                                  setFormData({ ...formData, api_endpoint_config: config } as any);
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-56">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="estoque">📦 Dados de Estoque</SelectItem>
+                                  <SelectItem value="compras_cliente">🛒 Compras do Cliente</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                         </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
