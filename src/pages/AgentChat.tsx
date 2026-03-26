@@ -247,9 +247,9 @@ export default function AgentChat() {
   const agentColor = selectedAgent.cor || '#6366f1';
 
   return (
-    <div className="flex h-full bg-background">
+    <div className="flex h-full max-h-screen overflow-hidden bg-background">
       {/* Sidebar - Conversations List */}
-      <div className="w-64 border-r flex flex-col bg-muted/30">
+      <div className="w-64 border-r flex flex-col bg-muted/30 max-h-full">
         <div className="p-3 border-b">
           <Button onClick={handleNewChat} className="w-full gap-2 rounded-xl" size="sm" style={{ backgroundColor: agentColor }}>
             <Plus className="h-4 w-4" /> Nova conversa
