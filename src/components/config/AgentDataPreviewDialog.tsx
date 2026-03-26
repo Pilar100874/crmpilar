@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -84,48 +84,52 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
   const title = type === 'estoque' ? 'Estoque do Sistema' : type === 'importados' ? 'Produtos Importados de Terceiros' : `API: ${apiEndpointName || ''}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]" onPointerDownOutside={(e) => e.preventDefault()} style={{ zIndex: 200 }}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <div className="flex justify-end -mt-2">
-          <Button variant="outline" size="sm" onClick={exportExcel} disabled={!data.length}>
-            <Download className="h-4 w-4 mr-1" /> Exportar Excel
-          </Button>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[90vw] max-w-4xl sm:max-w-4xl p-0 flex flex-col">
+        <SheetHeader className="px-6 pt-6 pb-3 border-b shrink-0">
+          <div className="flex items-center justify-between">
+            <SheetTitle>{title}</SheetTitle>
+            <Button variant="outline" size="sm" onClick={exportExcel} disabled={!data.length}>
+              <Download className="h-4 w-4 mr-1" /> Exportar Excel
+            </Button>
           </div>
-        ) : data.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">Nenhum dado encontrado.</div>
-        ) : (
-          <ScrollArea className="h-[55vh]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {columns.map(col => <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>)}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((row, i) => (
-                  <TableRow key={i}>
-                    {columns.map(col => (
-                      <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
-                        {row[col] != null ? String(row[col]) : '-'}
-                      </TableCell>
+          <p className="text-xs text-muted-foreground">
+            {data.length > 0 ? `${data.length} registros${data.length >= 200 ? ' (máx. 200)' : ''}` : ''}
+          </p>
+        </SheetHeader>
+        <div className="flex-1 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : data.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground text-sm">Nenhum dado encontrado.</div>
+          ) : (
+            <ScrollArea className="h-full">
+              <div className="px-4 pb-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {columns.map(col => <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>)}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.map((row, i) => (
+                      <TableRow key={i}>
+                        {columns.map(col => (
+                          <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                            {row[col] != null ? String(row[col]) : '-'}
+                          </TableCell>
+                        ))}
+                      </TableRow>
                     ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {data.length >= 200 && (
-              <p className="text-xs text-muted-foreground text-center py-2">Mostrando primeiros 200 registros</p>
-            )}
-          </ScrollArea>
-        )}
-      </DialogContent>
-    </Dialog>
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
