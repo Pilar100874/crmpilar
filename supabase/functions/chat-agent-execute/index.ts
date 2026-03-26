@@ -189,6 +189,47 @@ serve(async (req) => {
     systemPrompt += produtosImportadosContext;
     systemPrompt += apiContext;
 
+    // Instrução de busca inteligente com sugestões de alternativas
+    if (agent.usar_estoque_sistema || agent.usar_produtos_importados) {
+      systemPrompt += `
+
+--- REGRAS DE BUSCA INTELIGENTE COM SUGESTÕES DE ALTERNATIVAS ---
+
+Quando o usuário perguntar se tem um produto com especificações (tipo de papel, gramatura, largura, comprimento, etc.), siga este fluxo OBRIGATÓRIO:
+
+**ETAPA 1 - BUSCA EXATA:**
+Procure nos dados disponíveis um produto que corresponda EXATAMENTE a todos os critérios informados (tipo, gramatura, largura, comprimento, etc.).
+
+- Se encontrar: apresente o(s) resultado(s) e informe "✅ Encontrado exatamente o que você pediu!"
+
+**ETAPA 2 - SE NÃO ENCONTRAR EXATO, SUGERIR ALTERNATIVAS:**
+Se NÃO encontrar correspondência exata, faça o seguinte:
+1. Informe: "❌ Não encontrei o produto exato com essas especificações."
+2. Busque e apresente alternativas próximas usando estas variações:
+   - **Gramatura ±10%**: Se pediu 220g, busque entre 198g e 242g
+   - **Largura ±10%**: Se pediu 2160mm, busque entre 1944mm e 2376mm
+   - **Comprimento ±10%**: Se pediu 1000mm, busque entre 900mm e 1100mm
+   - **Mesmo tipo/nome**: Priorize manter o tipo de material (ex: Duplex) e variar as dimensões
+3. Organize as sugestões por proximidade (mais parecido primeiro)
+4. Para cada sugestão, indique a diferença em relação ao pedido original:
+   - Ex: "Duplex 240g (gramatura +9%), largura 2160mm (✅ exata), comprimento 1000mm (✅ exato)"
+
+**ETAPA 3 - SE NÃO HOUVER ALTERNATIVAS PRÓXIMAS:**
+Se nenhuma variação de ±10% retornar resultados:
+1. Amplie a busca para ±20% e depois ±30%
+2. Se ainda não encontrar, mostre os produtos MAIS PRÓXIMOS disponíveis no catálogo, mesmo que sejam diferentes do pedido
+3. Informe: "📌 Os materiais mais próximos disponíveis são:" e liste-os
+
+**FORMATO DE APRESENTAÇÃO:**
+Sempre apresente as alternativas em formato estruturado:
+| Material | Gramatura | Largura | Comprimento | Diferença |
+Onde "Diferença" mostra o quanto cada especificação varia do pedido original (ex: "+10% gram.", "exata", "-5% larg.")
+
+**REGRA ADICIONAL:** Sempre pergunte ao final: "Alguma dessas opções atende? Posso buscar com outros critérios?"
+
+--- FIM DAS REGRAS DE BUSCA INTELIGENTE ---`;
+    }
+
     // Modo privado: adicionar contexto da conversa com o cliente
     if (modo_privado && contexto_chat_cliente) {
       systemPrompt += "\n\n--- CONTEXTO DA CONVERSA COM O CLIENTE ---\n" + contexto_chat_cliente + "\n--- FIM DO CONTEXTO ---\n";
