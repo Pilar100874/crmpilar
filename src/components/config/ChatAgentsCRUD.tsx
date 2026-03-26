@@ -74,6 +74,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [kbFiles, setKbFiles] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [internalKbText, setInternalKbText] = useState('');
+  const [previewType, setPreviewType] = useState<'estoque' | 'importados' | 'api' | null>(null);
+  const [previewApiId, setPreviewApiId] = useState<string>('');
+  const [previewApiName, setPreviewApiName] = useState<string>('');
 
   useEffect(() => {
     loadApiEndpoints();
