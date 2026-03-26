@@ -105,15 +105,19 @@ export function parseAgentTableData(content: string): { text: string; tableData:
     const jsonStr = content.substring(startIdx + startTag.length, endIdx).trim();
     const textBefore = content.substring(0, startIdx).trim();
     const textAfter = content.substring(endIdx + endTag.length).trim();
+    const mergedText = [textBefore, textAfter].filter(Boolean).join('\n\n');
 
     try {
       const data = JSON.parse(jsonStr);
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-        const mergedText = [textBefore, textAfter].filter(Boolean).join('\n\n');
         const { text } = extractMarkdownTable(mergedText);
         return { text: stripMarkdownTableArtifacts(text), tableData: data };
       }
     } catch {}
+
+    // Empty array or invalid JSON — strip tags and return clean text
+    const { text } = extractMarkdownTable(mergedText);
+    return { text: stripMarkdownTableArtifacts(text), tableData: null };
   }
 
   return parseMarkdownTable(content);
