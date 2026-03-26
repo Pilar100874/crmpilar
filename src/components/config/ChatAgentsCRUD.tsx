@@ -430,6 +430,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   onApplyRules={(rules) => setFormData({ ...formData, regras_busca_personalizada: rules } as any)}
                   agentSystemPrompt={formData.system_prompt || ''}
                   agentName={formData.nome || ''}
+                  agentId={editingAgent?.id}
                 />
 
                 <div>
