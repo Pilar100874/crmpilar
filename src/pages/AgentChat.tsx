@@ -46,6 +46,10 @@ export default function AgentChat() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteAllMode, setDeleteAllMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cnpjCliente, setCnpjCliente] = useState<string | null>(null);
+  const [preOrderItems, setPreOrderItems] = useState<any[] | null>(null);
+  const [showPreOrder, setShowPreOrder] = useState(false);
+  const [savingPreOrder, setSavingPreOrder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
