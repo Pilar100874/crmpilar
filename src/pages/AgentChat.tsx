@@ -109,6 +109,9 @@ export default function AgentChat() {
     setMessages([]);
     setInput('');
     setActiveSessionId(null);
+    setCnpjCliente(null);
+    setPreOrderItems(null);
+    setShowPreOrder(false);
     await loadSessions(agent.id);
   };
 
