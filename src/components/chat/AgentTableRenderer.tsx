@@ -14,18 +14,42 @@ interface AgentTableRendererProps {
   onSendFileToClient?: (fileUrl: string, fileName: string) => void;
 }
 
-function stripMarkdownTables(content: string): string {
-  const tableRegex = /(\|[^\n]+\|\n\|[\s:-]+\|[\s:|-]*\n(?:\|[^\n]+\|\n?)+)/g;
-  return content.replace(tableRegex, '').replace(/\n{3,}/g, '\n\n').trim();
+function isMarkdownTableLine(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.startsWith('|') && trimmed.endsWith('|');
+}
+
+function isMarkdownSeparatorLine(line: string): boolean {
+  const trimmed = line.trim();
+  return /^\|[\s:|-]+\|$/.test(trimmed);
+}
+
+function extractMarkdownTable(content: string): { text: string; tableText: string | null } {
+  const lines = content.split('\n');
+
+  for (let i = 0; i < lines.length - 2; i++) {
+    if (!isMarkdownTableLine(lines[i]) || !isMarkdownSeparatorLine(lines[i + 1])) continue;
+
+    let end = i + 2;
+    while (end < lines.length && isMarkdownTableLine(lines[end])) end++;
+
+    const tableLines = lines.slice(i, end);
+    if (tableLines.length < 3) continue;
+
+    const textLines = [...lines.slice(0, i), ...lines.slice(end)];
+    const cleanText = textLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+
+    return { text: cleanText, tableText: tableLines.join('\n') };
+  }
+
+  return { text: content.trim(), tableText: null };
 }
 
 function parseMarkdownTable(content: string): { text: string; tableData: any[] | null } {
-  const tableRegex = /(\|[^\n]+\|\n\|[\s:-]+\|[\s:|-]*\n(?:\|[^\n]+\|\n?)+)/g;
-  const match = tableRegex.exec(content);
-  if (!match) return { text: content, tableData: null };
+  const { text, tableText } = extractMarkdownTable(content);
+  if (!tableText) return { text: content, tableData: null };
 
-  const tableStr = match[1].trim();
-  const lines = tableStr.split('\n').filter(l => l.trim());
+  const lines = tableText.split('\n').filter(l => l.trim());
   if (lines.length < 3) return { text: content, tableData: null };
 
   const parseRow = (line: string) =>
@@ -37,16 +61,15 @@ function parseMarkdownTable(content: string): { text: string; tableData: any[] |
   const data = dataRows.map(line => {
     const cells = parseRow(line);
     const obj: Record<string, string> = {};
-    headers.forEach((h, i) => { obj[h] = cells[i] ?? ''; });
+    headers.forEach((h, i) => {
+      obj[h] = cells[i] ?? '';
+    });
     return obj;
   });
 
   if (data.length === 0) return { text: content, tableData: null };
 
-  // Remove ALL markdown tables from the text, not just the first one
-  const cleanText = stripMarkdownTables(content);
-
-  return { text: cleanText, tableData: data };
+  return { text, tableData: data };
 }
 
 export function parseAgentTableData(content: string): { text: string; tableData: any[] | null } {
@@ -63,9 +86,9 @@ export function parseAgentTableData(content: string): { text: string; tableData:
     try {
       const data = JSON.parse(jsonStr);
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-        // Strip any markdown tables from the text portions too
-        const cleanText = stripMarkdownTables([textBefore, textAfter].filter(Boolean).join('\n\n'));
-        return { text: cleanText, tableData: data };
+        const mergedText = [textBefore, textAfter].filter(Boolean).join('\n\n');
+        const { text } = extractMarkdownTable(mergedText);
+        return { text, tableData: data };
       }
     } catch {}
   }
