@@ -628,15 +628,18 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   ) : (
                     <div className="space-y-2">
                       {apiEndpoints.map(ep => (
-                        <div key={ep.id} className="flex items-center space-x-3 border rounded-lg px-3 py-2">
+                         <div key={ep.id} className="flex items-center space-x-3 border rounded-lg px-3 py-2">
                           <Checkbox
                             checked={(formData.api_endpoint_ids || []).includes(ep.id)}
                             onCheckedChange={() => toggleEndpoint(ep.id)}
                           />
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium">{ep.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
                           </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setPreviewApiId(ep.id); setPreviewApiName(ep.name); setPreviewType('api'); }} title="Visualizar dados">
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -668,6 +671,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AgentDataPreviewDialog
+        open={previewType !== null}
+        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
+        estabelecimentoId={estabelecimentoId}
+        type={previewType || 'estoque'}
+        apiEndpointId={previewApiId}
+        apiEndpointName={previewApiName}
+      />
     </div>
   );
 }
