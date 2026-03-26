@@ -114,9 +114,20 @@ export default function AgentChat() {
     setInput('');
     setActiveSessionId(null);
     setSessions([]);
+    setSelectionMode(false);
+    setSelectedSessionIds(new Set());
   };
 
   const handleSelectSession = async (session: ChatSession) => {
+    if (selectionMode) {
+      setSelectedSessionIds(prev => {
+        const next = new Set(prev);
+        if (next.has(session.id)) next.delete(session.id);
+        else next.add(session.id);
+        return next;
+      });
+      return;
+    }
     setActiveSessionId(session.id);
     await loadSessionMessages(session.id);
   };
@@ -137,6 +148,56 @@ export default function AgentChat() {
         setMessages([]);
       }
       toast.success('Conversa excluída');
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(prev => !prev);
+    setSelectedSessionIds(new Set());
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSessionIds.size === sessions.length) {
+      setSelectedSessionIds(new Set());
+    } else {
+      setSelectedSessionIds(new Set(sessions.map(s => s.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSessionIds.size === 0) return;
+    setDeleteAllMode(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteAll = () => {
+    if (sessions.length === 0) return;
+    setDeleteAllMode(true);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const idsToDelete = deleteAllMode ? sessions.map(s => s.id) : Array.from(selectedSessionIds);
+      
+      for (const id of idsToDelete) {
+        await supabase.from('agent_chat_sessions').delete().eq('id', id);
+      }
+
+      setSessions(prev => prev.filter(s => !idsToDelete.includes(s.id)));
+      if (idsToDelete.includes(activeSessionId || '')) {
+        setActiveSessionId(null);
+        setMessages([]);
+      }
+      setSelectionMode(false);
+      setSelectedSessionIds(new Set());
+      toast.success(`${idsToDelete.length} conversa(s) excluída(s)`);
+    } catch {
+      toast.error('Erro ao excluir conversas');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
