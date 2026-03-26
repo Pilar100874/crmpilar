@@ -606,7 +606,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('importados')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
@@ -696,7 +696,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                             <p className="text-sm font-medium">{ep.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setPreviewApiId(ep.id); setPreviewApiName(ep.name); setPreviewType('api'); }} title="Visualizar dados">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name)} title="Visualizar dados">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
@@ -707,6 +707,64 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
             </div>
           </Tabs>
+
+          {previewType && (
+            <div className="mx-6 mb-4 rounded-lg border bg-muted/20 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : previewType === 'importados' ? 'Preview · Produtos Importados de Terceiros' : `Preview · API ${previewApiName}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
+                    <Download className="h-4 w-4 mr-1" /> Excel
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="h-64">
+                {previewLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : previewData.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
+                ) : (
+                  <ScrollArea className="h-full">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {previewColumns.map((col) => (
+                            <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {previewData.map((row, index) => (
+                          <TableRow key={index}>
+                            {previewColumns.map((col) => (
+                              <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                                {row[col] != null ? String(row[col]) : '-'}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                )}
+              </div>
+            </div>
+          )}
 
           <DialogFooter className="px-6 py-4 border-t shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
@@ -731,14 +789,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AgentDataPreviewDialog
-        open={previewType !== null}
-        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
-        estabelecimentoId={estabelecimentoId}
-        type={previewType || 'estoque'}
-        apiEndpointId={previewApiId}
-        apiEndpointName={previewApiName}
-      />
     </div>
   );
 }
