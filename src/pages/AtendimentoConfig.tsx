@@ -28,7 +28,8 @@ import {
   FileText,
   Shield,
   Activity,
-  Bot
+  Bot,
+  HardDrive
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,6 +66,7 @@ import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplates
 import { CampaignPermissionsCRUD } from '@/components/config/CampaignPermissionsCRUD';
 import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
+import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -104,6 +106,7 @@ const tabItems: TabItem[] = [
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
   { id: 'videochamada', label: 'Videochamada', icon: Video },
+  { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
 ];
 
 // Skills Manager Component (embedded)
