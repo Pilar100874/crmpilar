@@ -45,6 +45,29 @@ function extractMarkdownTable(content: string): { text: string; tableText: strin
   return { text: content.trim(), tableText: null };
 }
 
+function stripMarkdownTableArtifacts(content: string): string {
+  const lines = content.split('\n');
+  const cleanedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const current = lines[i];
+    const trimmed = current.trim();
+    const prev = lines[i - 1]?.trim() ?? '';
+    const next = lines[i + 1]?.trim() ?? '';
+
+    const isTableLike = isMarkdownTableLine(trimmed) || isMarkdownSeparatorLine(trimmed);
+    const isAdjacentToTable = isMarkdownTableLine(prev) || isMarkdownSeparatorLine(prev) || isMarkdownTableLine(next) || isMarkdownSeparatorLine(next);
+
+    if (isTableLike || (trimmed.startsWith('|') && trimmed.includes('|') && isAdjacentToTable)) {
+      continue;
+    }
+
+    cleanedLines.push(current);
+  }
+
+  return cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function parseMarkdownTable(content: string): { text: string; tableData: any[] | null } {
   const { text, tableText } = extractMarkdownTable(content);
   if (!tableText) return { text: content, tableData: null };
@@ -69,7 +92,7 @@ function parseMarkdownTable(content: string): { text: string; tableData: any[] |
 
   if (data.length === 0) return { text: content, tableData: null };
 
-  return { text, tableData: data };
+  return { text: stripMarkdownTableArtifacts(text), tableData: data };
 }
 
 export function parseAgentTableData(content: string): { text: string; tableData: any[] | null } {
@@ -88,7 +111,7 @@ export function parseAgentTableData(content: string): { text: string; tableData:
       if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
         const mergedText = [textBefore, textAfter].filter(Boolean).join('\n\n');
         const { text } = extractMarkdownTable(mergedText);
-        return { text, tableData: data };
+        return { text: stripMarkdownTableArtifacts(text), tableData: data };
       }
     } catch {}
   }
