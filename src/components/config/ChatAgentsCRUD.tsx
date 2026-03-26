@@ -772,7 +772,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                             ))}
                           </TableBody>
                         </UITable>
-                      </ScrollArea>
+                      </div>
                     )}
                   </div>
                 </div>
