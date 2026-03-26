@@ -700,6 +700,16 @@ export default function AtendimentoConfig() {
                 <CardContent className="px-3 sm:px-6"><VideoCall embedded /></CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="retencao-dados" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><HardDrive className="h-4 w-4 sm:h-5 sm:w-5" />Retenção de Dados do Chat</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure o prazo de retenção de conversas e monitore o uso do banco de dados</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatRetencaoCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
           </div>
         </Tabs>
       </div>
