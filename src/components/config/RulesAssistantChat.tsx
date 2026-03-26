@@ -1,60 +1,93 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Loader2, Wand2, Check, RotateCcw, FileText } from 'lucide-react';
+import { Send, Loader2, Wand2, Check, RotateCcw, FileText, Play, AlertTriangle, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 interface RulesAssistantChatProps {
   currentRules: string;
   onApplyRules: (rules: string) => void;
+  agentSystemPrompt?: string;
+  agentName?: string;
 }
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  type?: 'normal' | 'feedback' | 'simulation';
 }
 
-export default function RulesAssistantChat({ currentRules, onApplyRules }: RulesAssistantChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function RulesAssistantChat({ currentRules, onApplyRules, agentSystemPrompt, agentName }: RulesAssistantChatProps) {
+  const [activeTab, setActiveTab] = useState<string>('criar');
+  
+  // Create mode state
+  const [createMessages, setCreateMessages] = useState<ChatMessage[]>([]);
+  const [createInput, setCreateInput] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
   const [extractedRules, setExtractedRules] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Simulate mode state
+  const [simMessages, setSimMessages] = useState<ChatMessage[]>([]);
+  const [simInput, setSimInput] = useState('');
+  const [simLoading, setSimLoading] = useState(false);
+  const [feedbackMode, setFeedbackMode] = useState(false);
+  const [simExtractedRules, setSimExtractedRules] = useState<string | null>(null);
+  
+  const scrollCreateRef = useRef<HTMLDivElement>(null);
+  const scrollSimRef = useRef<HTMLDivElement>(null);
+  const createInputRef = useRef<HTMLInputElement>(null);
+  const simInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (messages.length === 0) {
-      // Initial greeting
-      setMessages([{
+    if (createMessages.length === 0) {
+      setCreateMessages([{
         role: 'assistant',
         content: currentRules
           ? 'Olá! Vejo que já existem regras configuradas. Posso ajudar a **modificar**, **adicionar novas regras** ou **criar do zero**. O que prefere?'
-          : 'Olá! Vou te ajudar a criar as **regras de busca** para este agente. Me conte: qual é o tipo de produto que seus clientes costumam buscar? (ex: papéis, bobinas, tecidos, peças, etc.)'
+          : 'Olá! Vou te ajudar a criar as **regras de busca** para este agente. Me conte: qual é o tipo de produto que seus clientes costumam buscar?'
       }]);
     }
   }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (simMessages.length === 0) {
+      setSimMessages([{
+        role: 'assistant',
+        content: `🧪 **Modo Simulação**\n\nAqui você pode testar o agente${agentName ? ` "${agentName}"` : ''} com as regras atuais.\n\n1. **Simule** uma pergunta como seu cliente faria\n2. Veja a resposta do agente\n3. Se algo não estiver certo, clique em **⚠️ Reportar Problema** e descreva o que deveria mudar\n4. As regras serão atualizadas automaticamente!\n\n💬 Faça uma pergunta para começar...`
+      }]);
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollCreateRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [createMessages]);
+
+  useEffect(() => {
+    scrollSimRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [simMessages]);
 
   const extractRulesFromResponse = (text: string): string | null => {
     const match = text.match(/<!--RULES_START-->([\s\S]*?)<!--RULES_END-->/);
     return match ? match[1].trim() : null;
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  const cleanDisplayContent = (text: string): string => {
+    return text.replace(/<!--RULES_START-->[\s\S]*?<!--RULES_END-->/, '').trim();
+  };
 
-    const userMsg: ChatMessage = { role: 'user', content: input.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput('');
-    setLoading(true);
+  // === CREATE MODE ===
+  const sendCreateMessage = async () => {
+    if (!createInput.trim() || createLoading) return;
+    const userMsg: ChatMessage = { role: 'user', content: createInput.trim() };
+    const newMessages = [...createMessages, userMsg];
+    setCreateMessages(newMessages);
+    setCreateInput('');
+    setCreateLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-agent-search-rules', {
@@ -63,126 +96,273 @@ export default function RulesAssistantChat({ currentRules, onApplyRules }: Rules
           regras_atuais: currentRules || null,
         },
       });
-
       if (error) throw error;
-
       const resposta = data?.resposta || 'Erro ao processar.';
       const rules = extractRulesFromResponse(resposta);
-      
-      if (rules) {
-        setExtractedRules(rules);
-      }
-
-      // Clean the response for display (remove rule tags)
-      const displayContent = resposta
-        .replace(/<!--RULES_START-->[\s\S]*?<!--RULES_END-->/, '')
-        .trim();
-
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: displayContent || 'Regras geradas! Clique em "Aplicar Regras" para salvar.',
-      }]);
-    } catch (err: any) {
+      if (rules) setExtractedRules(rules);
+      const displayContent = cleanDisplayContent(resposta);
+      setCreateMessages(prev => [...prev, { role: 'assistant', content: displayContent || 'Regras geradas! Clique em "Aplicar Regras" para salvar.' }]);
+    } catch (err) {
       console.error('Erro:', err);
       toast.error('Erro ao comunicar com a IA');
     } finally {
-      setLoading(false);
-      inputRef.current?.focus();
+      setCreateLoading(false);
+      createInputRef.current?.focus();
     }
   };
 
-  const handleApplyRules = () => {
-    if (extractedRules) {
-      onApplyRules(extractedRules);
-      toast.success('Regras aplicadas! Não esqueça de salvar o agente.');
-      setExtractedRules(null);
+  // === SIMULATE MODE ===
+  const sendSimMessage = async () => {
+    if (!simInput.trim() || simLoading) return;
+    const inputText = simInput.trim();
+    setSimInput('');
+    setSimLoading(true);
+
+    if (feedbackMode) {
+      // Feedback mode: send problem description to rules generator
+      const feedbackMsg: ChatMessage = { role: 'user', content: `⚠️ **Problema reportado:** ${inputText}`, type: 'feedback' };
+      setSimMessages(prev => [...prev, feedbackMsg]);
+      setFeedbackMode(false);
+
+      try {
+        // Collect last simulation exchange for context
+        const lastSimExchanges = simMessages.filter(m => m.type !== 'feedback').slice(-6);
+        const simulationContext = lastSimExchanges.map(m => `${m.role === 'user' ? 'Cliente' : 'Agente'}: ${m.content}`).join('\n');
+
+        const { data, error } = await supabase.functions.invoke('generate-agent-search-rules', {
+          body: {
+            messages: [{
+              role: 'user',
+              content: `Analise a seguinte simulação de atendimento e o problema reportado. Atualize as regras para corrigir o comportamento.
+
+REGRAS ATUAIS:
+${currentRules || '(nenhuma)'}
+
+SIMULAÇÃO:
+${simulationContext}
+
+PROBLEMA REPORTADO PELO USUÁRIO:
+${inputText}
+
+Gere as regras corrigidas entre <!--RULES_START--> e <!--RULES_END-->. Explique brevemente o que mudou.`
+            }],
+            regras_atuais: currentRules || null,
+            modo: 'refinar',
+          },
+        });
+
+        if (error) throw error;
+        const resposta = data?.resposta || 'Erro ao processar.';
+        const rules = extractRulesFromResponse(resposta);
+        if (rules) setSimExtractedRules(rules);
+        const displayContent = cleanDisplayContent(resposta);
+        setSimMessages(prev => [...prev, {
+          role: 'assistant',
+          content: displayContent || '✅ Regras atualizadas! Clique em "Aplicar Regras" para salvar.',
+          type: 'feedback'
+        }]);
+      } catch (err) {
+        console.error('Erro:', err);
+        toast.error('Erro ao gerar correção das regras');
+      } finally {
+        setSimLoading(false);
+        simInputRef.current?.focus();
+      }
+      return;
+    }
+
+    // Normal simulation: test agent behavior
+    const userMsg: ChatMessage = { role: 'user', content: inputText, type: 'simulation' };
+    const newSimMessages = [...simMessages, userMsg];
+    setSimMessages(newSimMessages);
+
+    try {
+      // Build the simulation prompt using actual agent config
+      const simulationSystemPrompt = `Você é um agente de vendas simulado. Responda como se fosse o agente real.
+
+${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${currentRules ? `REGRAS DE BUSCA:\n${currentRules}\n\n` : ''}IMPORTANTE: Siga as regras exatamente como estão escritas para simular o comportamento real do agente. Use dados fictícios de produtos para demonstrar como as regras funcionam na prática.`;
+
+      const simHistory = newSimMessages
+        .filter(m => m.type === 'simulation' || (!m.type && m.role === 'assistant' && !m.content.startsWith('🧪') && !m.content.startsWith('✅')))
+        .slice(-10);
+
+      const { data, error } = await supabase.functions.invoke('generate-agent-search-rules', {
+        body: {
+          messages: simHistory.map(m => ({ role: m.role, content: m.content })),
+          regras_atuais: currentRules || null,
+          modo: 'simular',
+          system_prompt_override: simulationSystemPrompt,
+        },
+      });
+
+      if (error) throw error;
+      const resposta = data?.resposta || 'Erro ao processar simulação.';
+      setSimMessages(prev => [...prev, { role: 'assistant', content: resposta, type: 'simulation' }]);
+    } catch (err) {
+      console.error('Erro simulação:', err);
+      toast.error('Erro na simulação');
+    } finally {
+      setSimLoading(false);
+      simInputRef.current?.focus();
     }
   };
 
-  const handleReset = () => {
-    setMessages([{
+  const handleApplyRules = (rules: string, setter: (v: string | null) => void) => {
+    onApplyRules(rules);
+    toast.success('Regras aplicadas! Não esqueça de salvar o agente.');
+    setter(null);
+  };
+
+  const handleResetCreate = () => {
+    setCreateMessages([{
       role: 'assistant',
       content: 'Conversa reiniciada. Me conte sobre seu negócio e os produtos que seus clientes buscam.'
     }]);
     setExtractedRules(null);
   };
 
-  return (
-    <div className="flex flex-col h-[400px] border rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
-        <div className="flex items-center gap-2">
-          <Wand2 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Assistente de Regras</span>
-        </div>
-        <div className="flex gap-1">
-          {extractedRules && (
-            <Button size="sm" variant="default" onClick={handleApplyRules} className="h-7 text-xs gap-1">
-              <Check className="h-3 w-3" />
-              Aplicar Regras
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={handleReset} className="h-7 text-xs gap-1">
-            <RotateCcw className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
+  const handleResetSim = () => {
+    setSimMessages([{
+      role: 'assistant',
+      content: `🧪 **Simulação reiniciada**\n\nFaça uma pergunta como seu cliente faria para testar as regras atuais.`
+    }]);
+    setSimExtractedRules(null);
+    setFeedbackMode(false);
+  };
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-3">
-        <div className="space-y-3">
-          {messages.map((msg, i) => (
-            <div key={i} className={cn(
-              "flex",
-              msg.role === 'user' ? 'justify-end' : 'justify-start'
-            )}>
-              <div className={cn(
-                "max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap",
-                msg.role === 'user'
-                  ? 'bg-primary text-primary-foreground'
+  const renderMessages = (messages: ChatMessage[], scrollRef: React.RefObject<HTMLDivElement>, loading: boolean) => (
+    <ScrollArea className="flex-1 p-3">
+      <div className="space-y-3">
+        {messages.map((msg, i) => (
+          <div key={i} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+            <div className={cn(
+              "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+              msg.role === 'user'
+                ? msg.type === 'feedback'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-primary text-primary-foreground'
+                : msg.type === 'feedback'
+                  ? 'bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800'
                   : 'bg-muted'
-              )}>
-                {msg.content}
+            )}>
+              <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
             </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-3 py-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-lg px-3 py-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
             </div>
-          )}
-          <div ref={scrollRef} />
-        </div>
-      </ScrollArea>
+          </div>
+        )}
+        <div ref={scrollRef} />
+      </div>
+    </ScrollArea>
+  );
 
-      {/* Extracted rules preview */}
-      {extractedRules && (
-        <div className="px-3 py-2 border-t bg-green-500/5">
-          <div className="flex items-center gap-2 mb-1">
+  const renderRulesPreview = (rules: string | null, onApply: () => void) => {
+    if (!rules) return null;
+    return (
+      <div className="px-3 py-2 border-t bg-green-500/5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <FileText className="h-3 w-3 text-green-600" />
             <span className="text-xs font-medium text-green-600">Regras prontas para aplicar</span>
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-2">{extractedRules.substring(0, 150)}...</p>
+          <Button size="sm" variant="default" onClick={onApply} className="h-7 text-xs gap-1">
+            <Check className="h-3 w-3" />
+            Aplicar Regras
+          </Button>
         </div>
-      )}
-
-      {/* Input */}
-      <div className="flex gap-2 p-3 border-t">
-        <Input
-          ref={inputRef}
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder="Descreva seu negócio e regras..."
-          disabled={loading}
-          className="text-sm"
-        />
-        <Button size="icon" onClick={sendMessage} disabled={loading || !input.trim()}>
-          <Send className="h-4 w-4" />
-        </Button>
+        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{rules.substring(0, 150)}...</p>
       </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col border rounded-lg overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
+        {/* Header with tabs */}
+        <div className="flex items-center justify-between px-3 py-1 border-b bg-muted/30">
+          <TabsList className="h-8">
+            <TabsTrigger value="criar" className="text-xs gap-1.5 h-7 px-3">
+              <Wand2 className="h-3.5 w-3.5" />
+              Criar Regras
+            </TabsTrigger>
+            <TabsTrigger value="simular" className="text-xs gap-1.5 h-7 px-3">
+              <Play className="h-3.5 w-3.5" />
+              Simular & Refinar
+            </TabsTrigger>
+          </TabsList>
+          <Button size="sm" variant="ghost" onClick={activeTab === 'criar' ? handleResetCreate : handleResetSim} className="h-7 text-xs gap-1">
+            <RotateCcw className="h-3 w-3" />
+          </Button>
+        </div>
+
+        {/* CREATE TAB */}
+        <TabsContent value="criar" className="mt-0 flex flex-col h-[400px]">
+          {renderMessages(createMessages, scrollCreateRef, createLoading)}
+          {renderRulesPreview(extractedRules, () => handleApplyRules(extractedRules!, setExtractedRules))}
+          <div className="flex gap-2 p-3 border-t">
+            <Input
+              ref={createInputRef}
+              value={createInput}
+              onChange={e => setCreateInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendCreateMessage()}
+              placeholder="Descreva seu negócio e regras..."
+              disabled={createLoading}
+              className="text-sm"
+            />
+            <Button size="icon" onClick={sendCreateMessage} disabled={createLoading || !createInput.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* SIMULATE TAB */}
+        <TabsContent value="simular" className="mt-0 flex flex-col h-[400px]">
+          {renderMessages(simMessages, scrollSimRef, simLoading)}
+          {renderRulesPreview(simExtractedRules, () => handleApplyRules(simExtractedRules!, setSimExtractedRules))}
+          
+          <div className="flex gap-2 p-3 border-t">
+            {feedbackMode && (
+              <div className="absolute -mt-8 left-3 right-3">
+                <div className="bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-xs px-3 py-1.5 rounded-t-lg flex items-center gap-1.5">
+                  <AlertTriangle className="h-3 w-3" />
+                  Descreva o que deveria ser diferente na resposta acima
+                  <Button size="sm" variant="ghost" className="h-5 text-xs ml-auto px-2" onClick={() => setFeedbackMode(false)}>✕</Button>
+                </div>
+              </div>
+            )}
+            <Input
+              ref={simInputRef}
+              value={simInput}
+              onChange={e => setSimInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendSimMessage()}
+              placeholder={feedbackMode ? "Ex: Deveria manter os filtros anteriores..." : "Simule uma pergunta do cliente..."}
+              disabled={simLoading}
+              className={cn("text-sm", feedbackMode && "border-orange-300 focus-visible:ring-orange-400")}
+            />
+            {!feedbackMode && simMessages.some(m => m.type === 'simulation' && m.role === 'assistant') && (
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setFeedbackMode(true)}
+                className="shrink-0 text-orange-500 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                title="Reportar problema na resposta"
+              >
+                <AlertTriangle className="h-4 w-4" />
+              </Button>
+            )}
+            <Button size="icon" onClick={sendSimMessage} disabled={simLoading || !simInput.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
