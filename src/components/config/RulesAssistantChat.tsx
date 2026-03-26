@@ -5,15 +5,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Loader2, Wand2, Check, RotateCcw, FileText, Play, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Send, Loader2, Wand2, Check, RotateCcw, FileText, Play, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 
 interface RulesAssistantChatProps {
   currentRules: string;
   onApplyRules: (rules: string) => void;
   agentSystemPrompt?: string;
   agentName?: string;
+  agentId?: string;
 }
 
 interface ChatMessage {
@@ -22,16 +24,14 @@ interface ChatMessage {
   type?: 'normal' | 'feedback' | 'simulation';
 }
 
-export default function RulesAssistantChat({ currentRules, onApplyRules, agentSystemPrompt, agentName }: RulesAssistantChatProps) {
+export default function RulesAssistantChat({ currentRules, onApplyRules, agentSystemPrompt, agentName, agentId }: RulesAssistantChatProps) {
   const [activeTab, setActiveTab] = useState<string>('criar');
   
-  // Create mode state
   const [createMessages, setCreateMessages] = useState<ChatMessage[]>([]);
   const [createInput, setCreateInput] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [extractedRules, setExtractedRules] = useState<string | null>(null);
   
-  // Simulate mode state
   const [simMessages, setSimMessages] = useState<ChatMessage[]>([]);
   const [simInput, setSimInput] = useState('');
   const [simLoading, setSimLoading] = useState(false);
@@ -58,7 +58,7 @@ export default function RulesAssistantChat({ currentRules, onApplyRules, agentSy
     if (simMessages.length === 0) {
       setSimMessages([{
         role: 'assistant',
-        content: `🧪 **Modo Simulação**\n\nAqui você pode testar o agente${agentName ? ` "${agentName}"` : ''} com as regras atuais.\n\n1. **Simule** uma pergunta como seu cliente faria\n2. Veja a resposta do agente\n3. Se algo não estiver certo, clique em **⚠️ Reportar Problema** e descreva o que deveria mudar\n4. As regras serão atualizadas automaticamente!\n\n💬 Faça uma pergunta para começar...`
+        content: `🧪 **Modo Simulação**\n\nAqui você testa o agente${agentName ? ` "${agentName}"` : ''} com dados reais e as regras atuais.\n\n1. **Simule** uma pergunta como seu cliente faria\n2. Veja a resposta com dados reais do estoque/catálogo\n3. Se algo não estiver certo, clique em **⚠️ Reportar Problema**\n4. As regras serão atualizadas automaticamente!\n\n${!agentId ? '⚠️ **Salve o agente primeiro** para poder simular com dados reais.' : '💬 Faça uma pergunta para começar...'}`
       }]);
     }
   }, []);
@@ -119,14 +119,13 @@ export default function RulesAssistantChat({ currentRules, onApplyRules, agentSy
     setSimLoading(true);
 
     if (feedbackMode) {
-      // Feedback mode: send problem description to rules generator
+      // Feedback mode: send problem description to rules generator for correction
       const feedbackMsg: ChatMessage = { role: 'user', content: `⚠️ **Problema reportado:** ${inputText}`, type: 'feedback' };
       setSimMessages(prev => [...prev, feedbackMsg]);
       setFeedbackMode(false);
 
       try {
-        // Collect last simulation exchange for context
-        const lastSimExchanges = simMessages.filter(m => m.type !== 'feedback').slice(-6);
+        const lastSimExchanges = simMessages.filter(m => m.type === 'simulation').slice(-6);
         const simulationContext = lastSimExchanges.map(m => `${m.role === 'user' ? 'Cliente' : 'Agente'}: ${m.content}`).join('\n');
 
         const { data, error } = await supabase.functions.invoke('generate-agent-search-rules', {
@@ -138,13 +137,13 @@ export default function RulesAssistantChat({ currentRules, onApplyRules, agentSy
 REGRAS ATUAIS:
 ${currentRules || '(nenhuma)'}
 
-SIMULAÇÃO:
+SIMULAÇÃO (dados reais do estoque):
 ${simulationContext}
 
 PROBLEMA REPORTADO PELO USUÁRIO:
 ${inputText}
 
-Gere as regras corrigidas entre <!--RULES_START--> e <!--RULES_END-->. Explique brevemente o que mudou.`
+Gere as regras corrigidas COMPLETAS entre <!--RULES_START--> e <!--RULES_END-->. Explique brevemente o que mudou.`
             }],
             regras_atuais: currentRules || null,
             modo: 'refinar',
@@ -171,27 +170,30 @@ Gere as regras corrigidas entre <!--RULES_START--> e <!--RULES_END-->. Explique 
       return;
     }
 
-    // Normal simulation: test agent behavior
+    // Normal simulation: use chat-agent-execute with REAL data
+    if (!agentId) {
+      toast.error('Salve o agente primeiro para simular com dados reais');
+      setSimLoading(false);
+      return;
+    }
+
     const userMsg: ChatMessage = { role: 'user', content: inputText, type: 'simulation' };
     const newSimMessages = [...simMessages, userMsg];
     setSimMessages(newSimMessages);
 
     try {
-      // Build the simulation prompt using actual agent config
-      const simulationSystemPrompt = `Você é um agente de vendas simulado. Responda como se fosse o agente real.
-
-${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${currentRules ? `REGRAS DE BUSCA:\n${currentRules}\n\n` : ''}IMPORTANTE: Siga as regras exatamente como estão escritas para simular o comportamento real do agente. Use dados fictícios de produtos para demonstrar como as regras funcionam na prática.`;
-
+      // Build history for the agent execute function
       const simHistory = newSimMessages
-        .filter(m => m.type === 'simulation' || (!m.type && m.role === 'assistant' && !m.content.startsWith('🧪') && !m.content.startsWith('✅')))
-        .slice(-10);
+        .filter(m => m.type === 'simulation')
+        .slice(-10)
+        .map(m => ({ role: m.role, content: m.content }));
 
-      const { data, error } = await supabase.functions.invoke('generate-agent-search-rules', {
+      const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
-          messages: simHistory.map(m => ({ role: m.role, content: m.content })),
-          regras_atuais: currentRules || null,
-          modo: 'simular',
-          system_prompt_override: simulationSystemPrompt,
+          agent_id: agentId,
+          mensagem_cliente: inputText,
+          historico_chat: simHistory.slice(0, -1), // exclude current message
+          modo_privado: true,
         },
       });
 
@@ -224,10 +226,35 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
   const handleResetSim = () => {
     setSimMessages([{
       role: 'assistant',
-      content: `🧪 **Simulação reiniciada**\n\nFaça uma pergunta como seu cliente faria para testar as regras atuais.`
+      content: `🧪 **Simulação reiniciada**\n\nFaça uma pergunta como seu cliente faria para testar as regras atuais com dados reais.`
     }]);
     setSimExtractedRules(null);
     setFeedbackMode(false);
+  };
+
+  const renderMessageContent = (msg: ChatMessage) => {
+    // For simulation assistant messages, try to parse table data like the real chat
+    if (msg.role === 'assistant' && msg.type === 'simulation') {
+      const parsed = parseAgentTableData(msg.content);
+      if (parsed) {
+        return (
+          <>
+            {parsed.text && (
+              <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
+                <ReactMarkdown>{parsed.text}</ReactMarkdown>
+              </div>
+            )}
+            {parsed.tableData && <AgentTableRenderer data={parsed.tableData} />}
+          </>
+        );
+      }
+    }
+
+    return (
+      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
+        <ReactMarkdown>{msg.content}</ReactMarkdown>
+      </div>
+    );
   };
 
   const renderMessages = (messages: ChatMessage[], scrollRef: React.RefObject<HTMLDivElement>, loading: boolean) => (
@@ -236,7 +263,7 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
         {messages.map((msg, i) => (
           <div key={i} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div className={cn(
-              "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+              "max-w-[90%] rounded-lg px-3 py-2 text-sm",
               msg.role === 'user'
                 ? msg.type === 'feedback'
                   ? 'bg-orange-500 text-white'
@@ -245,9 +272,7 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
                   ? 'bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800'
                   : 'bg-muted'
             )}>
-              <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
-              </div>
+              {renderMessageContent(msg)}
             </div>
           </div>
         ))}
@@ -285,7 +310,6 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-        {/* Header with tabs */}
         <div className="flex items-center justify-between px-3 py-1 border-b bg-muted/30">
           <TabsList className="h-8">
             <TabsTrigger value="criar" className="text-xs gap-1.5 h-7 px-3">
@@ -302,7 +326,6 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
           </Button>
         </div>
 
-        {/* CREATE TAB */}
         <TabsContent value="criar" className="mt-0 flex flex-col h-[400px]">
           {renderMessages(createMessages, scrollCreateRef, createLoading)}
           {renderRulesPreview(extractedRules, () => handleApplyRules(extractedRules!, setExtractedRules))}
@@ -322,14 +345,13 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
           </div>
         </TabsContent>
 
-        {/* SIMULATE TAB */}
-        <TabsContent value="simular" className="mt-0 flex flex-col h-[400px]">
+        <TabsContent value="simular" className="mt-0 flex flex-col h-[450px]">
           {renderMessages(simMessages, scrollSimRef, simLoading)}
           {renderRulesPreview(simExtractedRules, () => handleApplyRules(simExtractedRules!, setSimExtractedRules))}
           
-          <div className="flex gap-2 p-3 border-t">
+          <div className="relative flex gap-2 p-3 border-t">
             {feedbackMode && (
-              <div className="absolute -mt-8 left-3 right-3">
+              <div className="absolute -top-8 left-0 right-0 px-3">
                 <div className="bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-xs px-3 py-1.5 rounded-t-lg flex items-center gap-1.5">
                   <AlertTriangle className="h-3 w-3" />
                   Descreva o que deveria ser diferente na resposta acima
@@ -343,7 +365,7 @@ ${agentSystemPrompt ? `PROMPT DO AGENTE:\n${agentSystemPrompt}\n\n` : ''}${curre
               onChange={e => setSimInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendSimMessage()}
               placeholder={feedbackMode ? "Ex: Deveria manter os filtros anteriores..." : "Simule uma pergunta do cliente..."}
-              disabled={simLoading}
+              disabled={simLoading || (!agentId && !feedbackMode)}
               className={cn("text-sm", feedbackMode && "border-orange-300 focus-visible:ring-orange-400")}
             />
             {!feedbackMode && simMessages.some(m => m.type === 'simulation' && m.role === 'assistant') && (
