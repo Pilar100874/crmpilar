@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,61 +21,55 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
   const [data, setData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      if (type === 'estoque') {
-        const { data: rows } = await supabase
-          .from('produtos')
-          .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
-          .eq('estabelecimento_id', estabelecimentoId)
-          .limit(200);
-        const d = rows || [];
-        setData(d);
-        setColumns(d.length ? Object.keys(d[0]) : []);
-      } else if (type === 'importados') {
-        const { data: rows } = await supabase
-          .from('produtos_importados')
-          .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
-          .eq('estabelecimento_id', estabelecimentoId)
-          .limit(200);
-        const d = rows || [];
-        setData(d);
-        setColumns(d.length ? Object.keys(d[0]) : []);
-      } else if (type === 'api' && apiEndpointId) {
-        const { data: ep } = await supabase
-          .from('api_endpoints')
-          .select('*')
-          .eq('id', apiEndpointId)
-          .single();
-        if (ep) {
-          try {
-            const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
-            const rows = Array.isArray(result) ? result : [];
-            setData(rows.slice(0, 200));
-            setColumns(rows.length ? Object.keys(rows[0]) : []);
-          } catch {
-            toast.error('Erro ao executar query da API');
-            setData([]);
-            setColumns([]);
+  useEffect(() => {
+    if (!open) { setData([]); setColumns([]); return; }
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        if (type === 'estoque') {
+          const { data: rows } = await supabase
+            .from('produtos')
+            .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
+            .eq('estabelecimento_id', estabelecimentoId)
+            .limit(200);
+          const d = rows || [];
+          setData(d);
+          setColumns(d.length ? Object.keys(d[0]) : []);
+        } else if (type === 'importados') {
+          const { data: rows } = await supabase
+            .from('produtos_importados')
+            .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
+            .eq('estabelecimento_id', estabelecimentoId)
+            .limit(200);
+          const d = rows || [];
+          setData(d);
+          setColumns(d.length ? Object.keys(d[0]) : []);
+        } else if (type === 'api' && apiEndpointId) {
+          const { data: ep } = await supabase
+            .from('api_endpoints')
+            .select('*')
+            .eq('id', apiEndpointId)
+            .single();
+          if (ep) {
+            try {
+              const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
+              const rows = Array.isArray(result) ? result : [];
+              setData(rows.slice(0, 200));
+              setColumns(rows.length ? Object.keys(rows[0]) : []);
+            } catch {
+              toast.error('Erro ao executar query da API');
+            }
           }
         }
+      } catch {
+        toast.error('Erro ao carregar dados');
+      } finally {
+        setLoading(false);
       }
-      setLoaded(true);
-    } catch (e) {
-      toast.error('Erro ao carregar dados');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpen = (isOpen: boolean) => {
-    onOpenChange(isOpen);
-    if (isOpen && !loaded) loadData();
-    if (!isOpen) { setLoaded(false); setData([]); setColumns([]); }
-  };
+    };
+    loadData();
+  }, [open, type, apiEndpointId, estabelecimentoId]);
 
   const exportExcel = () => {
     if (!data.length) return;
@@ -90,16 +84,16 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
   const title = type === 'estoque' ? 'Estoque do Sistema' : type === 'importados' ? 'Produtos Importados de Terceiros' : `API: ${apiEndpointName || ''}`;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{title}</span>
-            <Button variant="outline" size="sm" onClick={exportExcel} disabled={!data.length}>
-              <Download className="h-4 w-4 mr-1" /> Excel
-            </Button>
-          </DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+        <div className="flex justify-end -mt-2">
+          <Button variant="outline" size="sm" onClick={exportExcel} disabled={!data.length}>
+            <Download className="h-4 w-4 mr-1" /> Exportar Excel
+          </Button>
+        </div>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
