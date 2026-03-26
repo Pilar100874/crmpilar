@@ -417,6 +417,30 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 />
               </TabsContent>
 
+              <TabsContent value="regras" className="mt-0 space-y-4">
+                <div>
+                  <Label className="text-base font-semibold">Regras de Busca Personalizada</Label>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">
+                    Defina regras de negócio para como o agente deve buscar produtos, sugerir alternativas, calcular cortes e interagir com o cliente.
+                  </p>
+                </div>
+
+                <RulesAssistantChat
+                  currentRules={(formData as any).regras_busca_personalizada || ''}
+                  onApplyRules={(rules) => setFormData({ ...formData, regras_busca_personalizada: rules } as any)}
+                />
+
+                <div>
+                  <Label>Regras atuais (editável)</Label>
+                  <Textarea
+                    value={(formData as any).regras_busca_personalizada || ''}
+                    onChange={e => setFormData({ ...formData, regras_busca_personalizada: e.target.value } as any)}
+                    placeholder="As regras geradas pelo assistente aparecerão aqui. Você também pode editar manualmente."
+                    className="mt-2 min-h-[120px] text-xs font-mono"
+                  />
+                </div>
+              </TabsContent>
+
               <TabsContent value="conhecimento" className="mt-0 space-y-4">
                 <div>
                   <Label className="text-base font-semibold">Tipo de Base de Conhecimento</Label>
