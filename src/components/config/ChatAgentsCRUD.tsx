@@ -392,7 +392,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
       {/* Dialog de Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="max-w-[1180px] w-[calc(100vw-2rem)] max-h-[90vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <span className="text-2xl">{formData.icone || '🤖'}</span>
@@ -401,7 +401,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             <DialogDescription>Configure um agente de IA para auxiliar no atendimento</DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="identidade" className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex overflow-hidden">
+            <Tabs defaultValue="identidade" className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
@@ -739,7 +740,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
-            </div>
+              </div>
             </Tabs>
 
             {previewType && (
@@ -800,6 +801,13 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </div>
             )}
           </div>
+
+          <DialogFooter className="px-6 py-4 border-t shrink-0">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave}>{editingAgent ? 'Atualizar' : 'Criar Agente'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmação de exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
