@@ -347,7 +347,7 @@ export default function AgentChat() {
           )}
         </div>
 
-        <div className="border-t p-4" style={{ background: agentColor + '05' }}>
+        <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">
             <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder={`Pergunte ao ${selectedAgent.nome}...`} className="min-h-[44px] max-h-[120px] resize-none rounded-xl text-sm" disabled={isLoading} />
             <Button onClick={handleSend} disabled={!input.trim() || isLoading} size="icon" className="rounded-full h-10 w-10 flex-shrink-0" style={{ backgroundColor: agentColor }}><Send className="h-4 w-4 text-white" /></Button>
