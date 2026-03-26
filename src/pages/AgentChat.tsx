@@ -298,7 +298,7 @@ export default function AgentChat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="border-b px-4 py-3 flex items-center gap-3" style={{ background: agentColor + '08' }}>
           <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: agentColor + '20' }}>{selectedAgent.icone}</div>
           <div className="flex-1 min-w-0">
