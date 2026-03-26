@@ -112,27 +112,52 @@ serve(async (req) => {
     let produtosImportadosContext = "";
     if (agent.usar_produtos_importados) {
       try {
-        const { data: produtosImportados } = await supabase
-          .from("produtos_importados")
-          .select("nome, quantidade, gramatura, largura, comprimento, tipo, embalagem, numero_folhas, obs")
+        // Buscar relatórios ativos para obter nomes de origem
+        const { data: activeReports } = await supabase
+          .from("relatorios_importacao")
+          .select("id, nome")
           .eq("estabelecimento_id", agent.estabelecimento_id)
-          .limit(500);
+          .eq("ativo", true);
 
-        if (produtosImportados?.length) {
-          produtosImportadosContext = "\n\n--- PRODUTOS IMPORTADOS DE TERCEIROS ---\n";
-          produtosImportadosContext += "Use estes dados para responder sobre produtos de fornecedores terceiros:\n\n";
-          for (const p of produtosImportados) {
-            const parts = [`Nome: ${p.nome}`];
-            if (p.quantidade) parts.push(`Qtd: ${p.quantidade}`);
-            if (p.tipo) parts.push(`Tipo: ${p.tipo}`);
-            if (p.gramatura) parts.push(`Gramatura: ${p.gramatura}`);
-            if (p.largura) parts.push(`Largura: ${p.largura}`);
-            if (p.comprimento) parts.push(`Comprimento: ${p.comprimento}`);
-            if (p.embalagem) parts.push(`Embalagem: ${p.embalagem}`);
-            if (p.numero_folhas) parts.push(`Folhas: ${p.numero_folhas}`);
-            if (p.obs) parts.push(`Obs: ${p.obs}`);
-            produtosImportadosContext += `• ${parts.join(" | ")}\n`;
+        const reportNameMap: Record<string, string> = {};
+        const activeIds: string[] = [];
+        if (activeReports?.length) {
+          for (const r of activeReports) {
+            reportNameMap[r.id] = r.nome || 'Importação';
+            activeIds.push(r.id);
           }
+        }
+
+        let produtosImportados: any[] = [];
+        if (activeIds.length > 0) {
+          const { data } = await supabase
+            .from("produtos_importados")
+            .select("relatorio_importacao_id, nome, quantidade, gramatura, largura, comprimento, tipo, embalagem, numero_folhas, obs")
+            .eq("estabelecimento_id", agent.estabelecimento_id)
+            .in("relatorio_importacao_id", activeIds)
+            .limit(500);
+          produtosImportados = data || [];
+        }
+
+        if (produtosImportados.length) {
+          const tableData = produtosImportados.map((p: any) => ({
+            Origem: reportNameMap[p.relatorio_importacao_id] || 'Desconhecido',
+            Nome: p.nome || '',
+            Qtd: p.quantidade ?? '',
+            Tipo: p.tipo || '',
+            Gramatura: p.gramatura || '',
+            Largura: p.largura || '',
+            Comprimento: p.comprimento || '',
+            Embalagem: p.embalagem || '',
+            Folhas: p.numero_folhas ?? '',
+            Obs: p.obs || '',
+          }));
+          produtosImportadosContext = "\n\n--- PRODUTOS IMPORTADOS DE TERCEIROS (DADOS ESTRUTURADOS) ---\n";
+          produtosImportadosContext += "IMPORTANTE: Quando o usuário pedir dados de produtos importados, listas ou qualquer informação tabular, responda OBRIGATORIAMENTE incluindo um bloco JSON com a tag <!--TABLE_DATA_START--> antes e <!--TABLE_DATA_END--> depois. Exemplo:\n";
+          produtosImportadosContext += '<!--TABLE_DATA_START-->\n[{"Origem":"Fornecedor X","Nome":"Produto","Qtd":"10"}]\n<!--TABLE_DATA_END-->\n';
+          produtosImportadosContext += "A coluna 'Origem' identifica de qual fornecedor/card veio o produto. NUNCA use uma coluna chamada 'secao' ou 'seção'. Use SEMPRE 'Origem' para indicar a procedência.\n";
+          produtosImportadosContext += "Inclua também texto explicativo antes ou depois da tabela. Filtre os dados conforme o pedido do usuário. Se o usuário pedir todos, inclua todos.\n\n";
+          produtosImportadosContext += "Dados disponíveis:\n" + JSON.stringify(tableData) + "\n";
           produtosImportadosContext += "--- FIM PRODUTOS IMPORTADOS ---\n";
         }
       } catch (e) {
