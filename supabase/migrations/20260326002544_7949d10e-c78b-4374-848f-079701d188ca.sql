@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN acumular_filtros boolean NOT NULL DEFAULT false;
