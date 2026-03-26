@@ -15,11 +15,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye } from 'lucide-react';
+import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
-import AgentDataPreviewDialog from '@/components/config/AgentDataPreviewDialog';
+import * as XLSX from 'xlsx';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
@@ -77,6 +78,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [previewType, setPreviewType] = useState<'estoque' | 'importados' | 'api' | null>(null);
   const [previewApiId, setPreviewApiId] = useState<string>('');
   const [previewApiName, setPreviewApiName] = useState<string>('');
+  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [previewColumns, setPreviewColumns] = useState<string[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     loadApiEndpoints();
@@ -206,6 +210,62 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     await deleteAgent(agentToDelete.id);
     setDeleteDialogOpen(false);
     setAgentToDelete(null);
+  };
+
+  const loadPreviewData = async (type: 'estoque' | 'importados' | 'api', apiId?: string, apiName?: string) => {
+    setPreviewType(type);
+    setPreviewApiId(apiId || '');
+    setPreviewApiName(apiName || '');
+    setPreviewLoading(true);
+    setPreviewData([]);
+    setPreviewColumns([]);
+    try {
+      if (type === 'estoque') {
+        const { data } = await supabase
+          .from('produtos')
+          .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .limit(200);
+        const rows = data || [];
+        setPreviewData(rows);
+        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+      } else if (type === 'importados') {
+        const { data } = await supabase
+          .from('produtos_importados')
+          .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .limit(200);
+        const rows = data || [];
+        setPreviewData(rows);
+        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+      } else if (type === 'api' && apiId) {
+        const { data: ep } = await supabase
+          .from('api_endpoints')
+          .select('*')
+          .eq('id', apiId)
+          .maybeSingle();
+        if (ep) {
+          const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
+          const rows = Array.isArray(result) ? result.slice(0, 200) : [];
+          setPreviewData(rows);
+          setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao carregar preview');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const exportPreviewExcel = () => {
+    if (!previewData.length || !previewType) return;
+    const label = previewType === 'estoque' ? 'Estoque_Sistema' : previewType === 'importados' ? 'Produtos_Importados' : `API_${previewApiName || 'dados'}`;
+    const ws = XLSX.utils.json_to_sheet(previewData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, label.substring(0, 31));
+    XLSX.writeFile(wb, `${label}.xlsx`);
+    toast.success('Excel exportado!');
   };
 
   const toggleEndpoint = (endpointId: string) => {
@@ -485,7 +545,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('estoque')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
@@ -500,7 +560,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('importados')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
@@ -532,7 +592,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('estoque')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
@@ -547,7 +607,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('importados')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
@@ -637,7 +697,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                             <p className="text-sm font-medium">{ep.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setPreviewApiId(ep.id); setPreviewApiName(ep.name); setPreviewType('api'); }} title="Visualizar dados">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name)} title="Visualizar dados">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </div>
@@ -648,6 +708,64 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
             </div>
           </Tabs>
+
+          {previewType && (
+            <div className="mx-6 mb-4 rounded-lg border bg-muted/20 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : previewType === 'importados' ? 'Preview · Produtos Importados de Terceiros' : `Preview · API ${previewApiName}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
+                    <Download className="h-4 w-4 mr-1" /> Excel
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="h-64">
+                {previewLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : previewData.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
+                ) : (
+                  <ScrollArea className="h-full">
+                    <UITable>
+                      <TableHeader>
+                        <TableRow>
+                          {previewColumns.map((col) => (
+                            <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {previewData.map((row, index) => (
+                          <TableRow key={index}>
+                            {previewColumns.map((col) => (
+                              <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                                {row[col] != null ? String(row[col]) : '-'}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </UITable>
+                  </ScrollArea>
+                )}
+              </div>
+            </div>
+          )}
 
           <DialogFooter className="px-6 py-4 border-t shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
@@ -672,14 +790,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AgentDataPreviewDialog
-        open={previewType !== null}
-        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
-        estabelecimentoId={estabelecimentoId}
-        type={previewType || 'estoque'}
-        apiEndpointId={previewApiId}
-        apiEndpointName={previewApiName}
-      />
     </div>
   );
 }
