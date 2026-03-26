@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +13,7 @@ import { useChatAgents, type ChatAgent } from '@/hooks/useChatAgents';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { parseAgentTableData, AgentTableRenderer } from '@/components/chat/AgentTableRenderer';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface AgentMessage {
   id?: string;
