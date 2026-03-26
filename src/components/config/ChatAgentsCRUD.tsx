@@ -239,17 +239,25 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         setPreviewData(rows);
         setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
       } else if (type === 'api' && apiId) {
-        const { data: ep } = await supabase
-          .from('api_endpoints')
-          .select('*')
-          .eq('id', apiId)
-          .maybeSingle();
-        if (ep) {
-          const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
-          const rows = Array.isArray(result) ? result.slice(0, 200) : [];
-          setPreviewData(rows);
-          setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
-        }
+        const { data: result, error } = await supabase.functions.invoke('execute-dynamic-query', {
+          body: { endpoint_id: apiId }
+        });
+
+        if (error) throw error;
+
+        const rawData = Array.isArray(result)
+          ? result
+          : Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result?.items)
+              ? result.items
+              : Array.isArray(result?.produtos)
+                ? result.produtos
+                : [];
+
+        const rows = rawData.slice(0, 200);
+        setPreviewData(rows);
+        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
       }
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao carregar preview');
