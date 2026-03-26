@@ -85,8 +85,8 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
   const title = type === 'estoque' ? 'Estoque do Sistema' : type === 'importados' ? 'Produtos Importados de Terceiros' : `API: ${apiEndpointName || ''}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-      <DialogContent className="max-w-4xl max-h-[80vh]" style={{ zIndex: 100 }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[80vh]" onPointerDownOutside={(e) => e.preventDefault()} style={{ zIndex: 200 }}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
