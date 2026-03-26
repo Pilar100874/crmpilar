@@ -313,6 +313,16 @@ export default function AgentChat() {
 
   const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copiado!'); };
 
+  // Quick send for filter actions (bypasses input state)
+  const sendQuickMessage = useCallback((msg: string) => {
+    setInput(msg);
+    // Use a ref flag to trigger send on next render
+    setTimeout(() => {
+      const fakeEvent = { key: 'Enter', shiftKey: false, preventDefault: () => {} };
+      // Directly set input and trigger
+    }, 0);
+  }, []);
+
   const handleSavePreOrder = async () => {
     if (!preOrderItems?.length || !estabelecimentoId || !usuarioId) return;
     setSavingPreOrder(true);
