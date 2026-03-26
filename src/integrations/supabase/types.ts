@@ -12050,6 +12050,7 @@ export type Database = {
       }
       admins_present: { Args: never; Returns: boolean }
       check_catalog_expiration: { Args: never; Returns: undefined }
+      cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
       delete_customer_cascade: {
         Args: { p_customer_id: string }
