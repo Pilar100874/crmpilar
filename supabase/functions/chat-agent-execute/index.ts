@@ -140,23 +140,30 @@ serve(async (req) => {
         }
 
         if (produtosImportados.length) {
+          const cleanVal = (v: any) => {
+            if (v === null || v === undefined) return '';
+            const s = String(v).trim();
+            return (s === '----' || s === '---' || s === '--' || s === '-') ? '' : s;
+          };
           const tableData = produtosImportados.map((p: any) => ({
             Origem: reportNameMap[p.relatorio_importacao_id] || 'Desconhecido',
-            Nome: p.nome || '',
-            Qtd: p.quantidade ?? '',
-            Tipo: p.tipo || '',
-            Gramatura: p.gramatura || '',
-            Largura: p.largura || '',
-            Comprimento: p.comprimento || '',
-            Embalagem: p.embalagem || '',
-            Folhas: p.numero_folhas ?? '',
-            Obs: p.obs || '',
+            Nome: cleanVal(p.nome),
+            Qtd: cleanVal(p.quantidade),
+            Tipo: cleanVal(p.tipo),
+            Gramatura: cleanVal(p.gramatura),
+            Largura: cleanVal(p.largura),
+            Comprimento: cleanVal(p.comprimento),
+            Embalagem: cleanVal(p.embalagem),
+            Folhas: cleanVal(p.numero_folhas),
+            Obs: cleanVal(p.obs),
           }));
           produtosImportadosContext = "\n\n--- PRODUTOS IMPORTADOS DE TERCEIROS (DADOS ESTRUTURADOS) ---\n";
           produtosImportadosContext += "IMPORTANTE: Quando o usuário pedir dados de produtos importados, listas ou qualquer informação tabular, responda OBRIGATORIAMENTE incluindo um bloco JSON com a tag <!--TABLE_DATA_START--> antes e <!--TABLE_DATA_END--> depois. Exemplo:\n";
           produtosImportadosContext += '<!--TABLE_DATA_START-->\n[{"Origem":"Fornecedor X","Nome":"Produto","Qtd":"10"}]\n<!--TABLE_DATA_END-->\n';
           produtosImportadosContext += "A coluna 'Origem' identifica de qual fornecedor/card veio o produto. NUNCA use uma coluna chamada 'secao' ou 'seção'. Use SEMPRE 'Origem' para indicar a procedência.\n";
-          produtosImportadosContext += "Inclua também texto explicativo antes ou depois da tabela. Filtre os dados conforme o pedido do usuário. Se o usuário pedir todos, inclua todos.\n\n";
+          produtosImportadosContext += "REGRA CRÍTICA: Use os nomes dos produtos EXATAMENTE como estão nos dados. NÃO adicione prefixos como 'Papel' antes do nome. Se o nome é 'Duplex', mostre 'Duplex', não 'Papel Duplex'.\n";
+          produtosImportadosContext += "Se um campo estiver vazio, deixe-o vazio na tabela — NÃO invente valores.\n";
+          produtosImportadosContext += "Inclua também texto explicativo antes ou depois da tabela. Filtre os dados conforme o pedido do usuário. Se o usuário pedir todos, inclua TODOS os registros que correspondem, sem resumir ou omitir.\n\n";
           produtosImportadosContext += "Dados disponíveis:\n" + JSON.stringify(tableData) + "\n";
           produtosImportadosContext += "--- FIM PRODUTOS IMPORTADOS ---\n";
         }
