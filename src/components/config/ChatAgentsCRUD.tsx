@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
+import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
@@ -56,6 +57,7 @@ const emptyForm: Partial<ChatAgent> = {
   usar_estoque_sistema: false,
   resposta_formato_tabela: false,
   acumular_filtros: false,
+  regras_busca_personalizada: '',
   ativo: true,
   ordem: 0,
 };
@@ -121,6 +123,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
       resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
       acumular_filtros: (agent as any).acumular_filtros ?? false,
+      regras_busca_personalizada: (agent as any).regras_busca_personalizada || '',
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -304,9 +307,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
           <Tabs defaultValue="identidade" className="flex-1 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                <TabsTrigger value="regras">Regras</TabsTrigger>
                 <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 <TabsTrigger value="apis" disabled={formData.knowledge_base_type === 'nenhuma' || formData.knowledge_base_type === 'terceiros'}>APIs</TabsTrigger>
               </TabsList>
@@ -411,6 +415,30 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
                   agentName={formData.nome}
                 />
+              </TabsContent>
+
+              <TabsContent value="regras" className="mt-0 space-y-4">
+                <div>
+                  <Label className="text-base font-semibold">Regras de Busca Personalizada</Label>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">
+                    Defina regras de negócio para como o agente deve buscar produtos, sugerir alternativas, calcular cortes e interagir com o cliente.
+                  </p>
+                </div>
+
+                <RulesAssistantChat
+                  currentRules={(formData as any).regras_busca_personalizada || ''}
+                  onApplyRules={(rules) => setFormData({ ...formData, regras_busca_personalizada: rules } as any)}
+                />
+
+                <div>
+                  <Label>Regras atuais (editável)</Label>
+                  <Textarea
+                    value={(formData as any).regras_busca_personalizada || ''}
+                    onChange={e => setFormData({ ...formData, regras_busca_personalizada: e.target.value } as any)}
+                    placeholder="As regras geradas pelo assistente aparecerão aqui. Você também pode editar manualmente."
+                    className="mt-2 min-h-[120px] text-xs font-mono"
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="conhecimento" className="mt-0 space-y-4">

@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN regras_busca_personalizada text DEFAULT NULL;

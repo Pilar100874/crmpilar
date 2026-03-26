@@ -20,6 +20,7 @@ export interface ChatAgent {
   usar_estoque_sistema: boolean;
   resposta_formato_tabela: boolean;
   acumular_filtros: boolean;
+  regras_busca_personalizada: string | null;
   ativo: boolean;
   ordem: number;
   created_at: string;
