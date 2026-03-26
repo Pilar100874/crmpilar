@@ -211,11 +211,6 @@ export function AgentTableRenderer({ data, onSendToClient, onInsertToClientChat,
               <ArrowUp className="h-3 w-3" /> Inserir
             </Button>
           )}
-          {hasSelection && onSendToClient && (
-            <Button size="sm" variant="outline" onClick={() => { onSendToClient(formatSelectedAsText(selectedItems)); toast.success(`${selected.size} item(ns) enviado(s) ao cliente`); }} className="h-7 text-xs gap-1">
-              <MessageSquare className="h-3 w-3" /> Texto
-            </Button>
-          )}
           {onSendFileToClient && (
             <Button size="sm" variant="outline" onClick={handleSendExcelToWhatsApp} disabled={sendingExcel} className="h-7 text-xs gap-1">
               <FileSpreadsheet className="h-3 w-3" /> {sendingExcel ? 'Enviando...' : hasSelection ? `Excel WhatsApp (${selected.size})` : 'Excel WhatsApp'}

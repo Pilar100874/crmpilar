@@ -255,7 +255,7 @@ export function AgentChatPanel({
                                 variant="ghost"
                                 className="h-5 text-[10px] px-1.5 gap-1"
                                 style={{ color: agentColor }}
-                                onClick={() => onInsertToClientChat(msg.content)}
+                                onClick={() => onInsertToClientChat(parsed?.text || msg.content)}
                               >
                                 <ArrowUp className="h-3 w-3" /> Chat
                               </Button>
