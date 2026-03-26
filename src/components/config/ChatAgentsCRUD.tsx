@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -392,7 +392,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
       {/* Dialog de Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="max-w-[1180px] w-[calc(100vw-2rem)] max-h-[90vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <span className="text-2xl">{formData.icone || '🤖'}</span>
@@ -401,7 +401,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             <DialogDescription>Configure um agente de IA para auxiliar no atendimento</DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="identidade" className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex overflow-hidden">
+            <Tabs defaultValue="identidade" className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
@@ -739,8 +740,67 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
-            </div>
-          </Tabs>
+              </div>
+            </Tabs>
+
+            {previewType && (
+              <div className="hidden lg:flex w-[420px] border-l bg-muted/20 flex-col shrink-0">
+                <div className="px-4 py-4 border-b bg-background shrink-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-5 w-5 text-primary shrink-0" />
+                        <p className="text-sm font-semibold truncate">
+                          {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : previewType === 'importados' ? 'Preview · Produtos Importados de Terceiros' : `Preview · API ${previewApiName}`}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setPreviewType(null); setPreviewTab(null); }}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
+                      <Download className="h-4 w-4 mr-1" /> Exportar Excel
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0 overflow-auto">
+                  {previewLoading ? (
+                    <div className="flex items-center justify-center h-full"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                  ) : previewData.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-sm text-muted-foreground px-4">Nenhum dado encontrado.</div>
+                  ) : (
+                    <div className="overflow-auto h-full p-4">
+                      <UITable className="min-w-max">
+                        <TableHeader>
+                          <TableRow>
+                            {previewColumns.map((col) => (
+                              <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previewData.map((row, index) => (
+                            <TableRow key={index}>
+                              {previewColumns.map((col) => (
+                                <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                                  {row[col] != null ? String(row[col]) : '-'}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </UITable>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <DialogFooter className="px-6 py-4 border-t shrink-0">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
@@ -764,56 +824,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Sheet lateral para preview de dados */}
-      <Sheet open={!!previewType} onOpenChange={(open) => { if (!open) { setPreviewType(null); setPreviewTab(null); } }}>
-        <SheetContent side="right" className="w-[600px] sm:max-w-[600px] flex flex-col p-0">
-          <SheetHeader className="px-6 py-4 border-b shrink-0">
-            <SheetTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-primary" />
-              {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : previewType === 'importados' ? 'Preview · Produtos Importados de Terceiros' : `Preview · API ${previewApiName}`}
-            </SheetTitle>
-            <p className="text-xs text-muted-foreground">
-              {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
-            </p>
-          </SheetHeader>
-          <div className="px-6 py-2 border-b shrink-0">
-            <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
-              <Download className="h-4 w-4 mr-1" /> Exportar Excel
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto">
-            {previewLoading ? (
-              <div className="flex items-center justify-center h-full"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : previewData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
-            ) : (
-              <div className="overflow-auto h-full">
-                <UITable className="min-w-max">
-                  <TableHeader>
-                    <TableRow>
-                      {previewColumns.map((col) => (
-                        <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {previewData.map((row, index) => (
-                      <TableRow key={index}>
-                        {previewColumns.map((col) => (
-                          <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
-                            {row[col] != null ? String(row[col]) : '-'}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </UITable>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
 
     </div>
   );
