@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare } from 'lucide-react';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -298,6 +298,61 @@ export default function AgentChat() {
   }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId, cnpjCliente]);
 
   const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copiado!'); };
+
+  const handleSavePreOrder = async () => {
+    if (!preOrderItems?.length || !estabelecimentoId || !usuarioId) return;
+    setSavingPreOrder(true);
+    try {
+      // Find customer by CNPJ
+      let clienteId: string | null = null;
+      if (cnpjCliente) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .or(`cnpj_cpf.eq.${cnpjCliente}`)
+          .limit(1)
+          .maybeSingle();
+        clienteId = customer?.id || null;
+      }
+
+      // Create orcamento
+      const { data: orc, error: orcError } = await supabase
+        .from('orcamentos')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          vendedor_id: usuarioId,
+          cliente_id: clienteId,
+          status: 'rascunho',
+          observacao: `Pré-orçamento gerado pelo agente "${selectedAgent?.nome}" via chat`,
+        } as any)
+        .select()
+        .single();
+
+      if (orcError) throw orcError;
+
+      // Insert items
+      for (const item of preOrderItems) {
+        await supabase.from('orcamento_itens').insert({
+          orcamento_id: orc.id,
+          produto_nome: item.produto || 'Item',
+          quantidade: parseFloat(item.quantidade) || 1,
+          valor_unitario: 0,
+          largura: item.largura || null,
+          comprimento: item.comprimento || null,
+          gramatura: item.gramatura || null,
+          observacao: item.observacao || '',
+        } as any);
+      }
+
+      toast.success(`Pré-orçamento criado com ${preOrderItems.length} item(ns)!`);
+      setShowPreOrder(false);
+    } catch (err: any) {
+      toast.error('Erro ao salvar pré-orçamento: ' + (err.message || ''));
+    } finally {
+      setSavingPreOrder(false);
+    }
+  };
 
   // Agent selection screen
   if (!selectedAgent) {
