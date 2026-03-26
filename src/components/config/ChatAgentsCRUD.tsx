@@ -823,7 +823,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
                         <Download className="h-4 w-4 mr-1" /> Excel
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType(null)}>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewType(null); setPreviewTab(null); }}>
                         <X className="h-4 w-4" />
                       </Button>
