@@ -190,7 +190,7 @@ serve(async (req) => {
     systemPrompt += apiContext;
 
     // Instrução de busca inteligente com sugestões de alternativas
-    if (agent.usar_estoque_sistema || agent.usar_produtos_importados) {
+    if (agent.usar_estoque_sistema || agent.usar_produtos_importados || apiEndpointIds.length > 0) {
       systemPrompt += `
 
 --- REGRAS DE BUSCA INTELIGENTE COM SUGESTÕES DE ALTERNATIVAS ---
