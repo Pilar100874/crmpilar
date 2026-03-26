@@ -61,6 +61,9 @@ const emptyForm: Partial<ChatAgent> = {
   resposta_formato_tabela: false,
   acumular_filtros: false,
   regras_busca_personalizada: '',
+  api_endpoint_config: {},
+  solicitar_cnpj: false,
+  gerar_pre_orcamento: false,
   ativo: true,
   ordem: 0,
 };
