@@ -307,9 +307,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
           <Tabs defaultValue="identidade" className="flex-1 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                <TabsTrigger value="regras">Regras</TabsTrigger>
                 <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 <TabsTrigger value="apis" disabled={formData.knowledge_base_type === 'nenhuma' || formData.knowledge_base_type === 'terceiros'}>APIs</TabsTrigger>
               </TabsList>
