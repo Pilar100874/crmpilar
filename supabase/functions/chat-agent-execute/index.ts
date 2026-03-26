@@ -190,7 +190,12 @@ serve(async (req) => {
     systemPrompt += apiContext;
 
     // Instrução de busca inteligente com sugestões de alternativas
-    if (agent.usar_estoque_sistema || agent.usar_produtos_importados || apiEndpointIds.length > 0) {
+    // Usa regras personalizadas se existirem, senão usa as padrão
+    const hasCustomRules = agent.regras_busca_personalizada && agent.regras_busca_personalizada.trim().length > 0;
+    
+    if (hasCustomRules) {
+      systemPrompt += "\n\n--- REGRAS DE BUSCA PERSONALIZADAS ---\n" + agent.regras_busca_personalizada + "\n--- FIM DAS REGRAS ---";
+    } else if (agent.usar_estoque_sistema || agent.usar_produtos_importados || apiEndpointIds.length > 0) {
       systemPrompt += `
 
 --- REGRAS DE BUSCA INTELIGENTE COM SUGESTÕES DE ALTERNATIVAS ---
