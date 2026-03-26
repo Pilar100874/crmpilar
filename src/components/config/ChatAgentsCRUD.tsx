@@ -743,7 +743,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       </Button>
                     </div>
                   </div>
-                  <div className="h-64">
+                  <div className="h-64 overflow-auto">
                     {previewLoading ? (
                       <div className="flex items-center justify-center h-full">
                         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -751,8 +751,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     ) : previewData.length === 0 ? (
                       <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
                     ) : (
-                      <ScrollArea className="h-full">
-                        <UITable>
+                      <div className="h-full overflow-auto">
+                        <UITable className="min-w-max">
                           <TableHeader>
                             <TableRow>
                               {previewColumns.map((col) => (
@@ -772,7 +772,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                             ))}
                           </TableBody>
                         </UITable>
-                      </ScrollArea>
+                      </div>
                     )}
                   </div>
                 </div>
