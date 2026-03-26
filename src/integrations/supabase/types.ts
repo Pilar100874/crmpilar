@@ -1820,6 +1820,7 @@ export type Database = {
       }
       chat_agents: {
         Row: {
+          acumular_filtros: boolean
           api_endpoint_ids: string[] | null
           ativo: boolean
           cor: string
@@ -1842,6 +1843,7 @@ export type Database = {
           usar_produtos_importados: boolean
         }
         Insert: {
+          acumular_filtros?: boolean
           api_endpoint_ids?: string[] | null
           ativo?: boolean
           cor?: string
@@ -1864,6 +1866,7 @@ export type Database = {
           usar_produtos_importados?: boolean
         }
         Update: {
+          acumular_filtros?: boolean
           api_endpoint_ids?: string[] | null
           ativo?: boolean
           cor?: string

@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 
@@ -55,6 +55,7 @@ const emptyForm: Partial<ChatAgent> = {
   usar_produtos_importados: false,
   usar_estoque_sistema: false,
   resposta_formato_tabela: false,
+  acumular_filtros: false,
   ativo: true,
   ordem: 0,
 };
@@ -119,6 +120,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       usar_produtos_importados: agent.usar_produtos_importados ?? false,
       usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
       resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
+      acumular_filtros: (agent as any).acumular_filtros ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -369,6 +371,21 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <Switch
                     checked={formData.resposta_formato_tabela || false}
                     onCheckedChange={(checked) => setFormData({ ...formData, resposta_formato_tabela: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg border">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-primary" />
+                      Acumular Filtros Progressivamente
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Quando ativado, o agente memoriza critérios de busca anteriores e pergunta se deseja acumulá-los com novos filtros.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.acumular_filtros || false}
+                    onCheckedChange={(checked) => setFormData({ ...formData, acumular_filtros: checked })}
                   />
                 </div>
                 <div>
