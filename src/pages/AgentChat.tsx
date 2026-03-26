@@ -247,9 +247,9 @@ export default function AgentChat() {
   const agentColor = selectedAgent.cor || '#6366f1';
 
   return (
-    <div className="flex h-full bg-background">
+    <div className="flex h-full max-h-screen overflow-hidden bg-background">
       {/* Sidebar - Conversations List */}
-      <div className="w-64 border-r flex flex-col bg-muted/30">
+      <div className="w-64 border-r flex flex-col bg-muted/30 max-h-full">
         <div className="p-3 border-b">
           <Button onClick={handleNewChat} className="w-full gap-2 rounded-xl" size="sm" style={{ backgroundColor: agentColor }}>
             <Plus className="h-4 w-4" /> Nova conversa
@@ -298,7 +298,7 @@ export default function AgentChat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="border-b px-4 py-3 flex items-center gap-3" style={{ background: agentColor + '08' }}>
           <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: agentColor + '20' }}>{selectedAgent.icone}</div>
           <div className="flex-1 min-w-0">
@@ -347,7 +347,7 @@ export default function AgentChat() {
           )}
         </div>
 
-        <div className="border-t p-4" style={{ background: agentColor + '05' }}>
+        <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">
             <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder={`Pergunte ao ${selectedAgent.nome}...`} className="min-h-[44px] max-h-[120px] resize-none rounded-xl text-sm" disabled={isLoading} />
             <Button onClick={handleSend} disabled={!input.trim() || isLoading} size="icon" className="rounded-full h-10 w-10 flex-shrink-0" style={{ backgroundColor: agentColor }}><Send className="h-4 w-4 text-white" /></Button>
