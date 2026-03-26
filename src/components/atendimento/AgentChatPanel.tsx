@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown } from 'lucide-react';
+import { Send, X, Copy, MessageSquare, Eye, BotMessageSquare, Pause, ArrowUp, ArrowDown, Filter, XCircle, Eraser } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
