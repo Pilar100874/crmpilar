@@ -237,6 +237,18 @@ serve(async (req) => {
       systemPrompt += "\n\nREGRA DE FORMATAÇÃO: Sempre que sua resposta contiver dados em formato de lista, tabela, ou múltiplos itens com propriedades (ex: produtos, preços, resultados, comparações, etc.), você DEVE incluir os dados dentro de tags especiais no formato JSON array. Use <!--TABLE_DATA_START--> antes do JSON e <!--TABLE_DATA_END--> depois. Exemplo:\n";
       systemPrompt += "<!--TABLE_DATA_START-->\n[{\"Nome\":\"Item 1\",\"Valor\":\"100\"},{\"Nome\":\"Item 2\",\"Valor\":\"200\"}]\n<!--TABLE_DATA_END-->\n";
       systemPrompt += "Inclua texto explicativo antes ou depois da tabela. Sempre use essa formatação para dados tabulares.";
+      systemPrompt += "\nIMPORTANTE: NÃO inclua as tags <!--TABLE_DATA_START--> e <!--TABLE_DATA_END--> quando não houver dados para mostrar (array vazio). Só use as tags quando tiver dados reais para apresentar.";
+    }
+
+    // Regra de fidelidade aos dados
+    if (estoqueSistemaContext || produtosImportadosContext || apiContext) {
+      systemPrompt += "\n\n--- REGRA DE FIDELIDADE AOS DADOS ---\n";
+      systemPrompt += "REGRA CRÍTICA: Você DEVE basear suas respostas, sugestões e menções EXCLUSIVAMENTE nos dados reais fornecidos acima. ";
+      systemPrompt += "NÃO mencione tipos de materiais, categorias, formatos ou produtos que NÃO existam nos dados disponíveis. ";
+      systemPrompt += "Exemplo: só mencione 'bobinas' se existirem bobinas nos dados; só mencione 'pacotes' se existirem pacotes. ";
+      systemPrompt += "Na saudação inicial, NÃO liste tipos de produtos — apenas se apresente e pergunte como pode ajudar. ";
+      systemPrompt += "Descubra os tipos disponíveis analisando os dados fornecidos e use APENAS esses tipos nas suas respostas.\n";
+      systemPrompt += "--- FIM DA REGRA DE FIDELIDADE ---";
     }
 
     // Filtros progressivos (condicional por agente)
