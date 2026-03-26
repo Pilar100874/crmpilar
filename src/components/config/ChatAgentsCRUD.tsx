@@ -741,7 +741,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
                 ) : (
                   <ScrollArea className="h-full">
-                    <Table>
+                    <UITable>
                       <TableHeader>
                         <TableRow>
                           {previewColumns.map((col) => (
@@ -760,7 +760,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
+                    </UITable>
                   </ScrollArea>
                 )}
               </div>
