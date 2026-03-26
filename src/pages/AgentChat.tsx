@@ -123,6 +123,9 @@ export default function AgentChat() {
     setSessions([]);
     setSelectionMode(false);
     setSelectedSessionIds(new Set());
+    setCnpjCliente(null);
+    setPreOrderItems(null);
+    setShowPreOrder(false);
   };
 
   const handleSelectSession = async (session: ChatSession) => {
