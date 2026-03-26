@@ -556,6 +556,42 @@ export default function AgentChat() {
           )}
         </div>
 
+        {/* Pre-order banner */}
+        {showPreOrder && preOrderItems && preOrderItems.length > 0 && (
+          <div className="border-t bg-accent/20 p-3 flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">Pré-Orçamento Detectado ({preOrderItems.length} itens)</span>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowPreOrder(false)}>
+                  <X className="h-3 w-3 mr-1" /> Dispensar
+                </Button>
+                <Button size="sm" onClick={handleSavePreOrder} disabled={savingPreOrder} style={{ backgroundColor: agentColor }}>
+                  <FileText className="h-3 w-3 mr-1 text-white" />
+                  <span className="text-white">{savingPreOrder ? 'Salvando...' : 'Salvar como Orçamento'}</span>
+                </Button>
+              </div>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {preOrderItems.map((item: any, i: number) => (
+                <div key={i} className="text-xs bg-background rounded px-2 py-1 flex justify-between">
+                  <span className="font-medium">{item.produto}</span>
+                  <span className="text-muted-foreground">Qtd: {item.quantidade || '1'} {item.gramatura ? `| ${item.gramatura}g` : ''} {item.largura ? `| L:${item.largura}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CNPJ indicator */}
+        {cnpjCliente && (
+          <div className="px-4 py-1 bg-muted/50 border-t flex items-center gap-2 flex-shrink-0">
+            <span className="text-[10px] text-muted-foreground">CNPJ: {cnpjCliente}</span>
+          </div>
+        )}
+
         <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">
             <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder={`Pergunte ao ${selectedAgent.nome}...`} className="min-h-[44px] max-h-[120px] resize-none rounded-xl text-sm" disabled={isLoading} />
