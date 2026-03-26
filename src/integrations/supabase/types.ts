@@ -2014,6 +2014,41 @@ export type Database = {
           },
         ]
       }
+      chat_retencao_config: {
+        Row: {
+          created_at: string | null
+          data_limpeza_manual: string | null
+          estabelecimento_id: string
+          id: string
+          retencao_dias: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_limpeza_manual?: string | null
+          estabelecimento_id: string
+          id?: string
+          retencao_dias?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_limpeza_manual?: string | null
+          estabelecimento_id?: string
+          id?: string
+          retencao_dias?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_retencao_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_sessions: {
         Row: {
           context: Json | null
@@ -12064,6 +12099,10 @@ export type Database = {
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_auth_user_estabelecimento_id: { Args: never; Returns: string }
+      get_chat_storage_stats: {
+        Args: { p_estabelecimento_id: string }
+        Returns: Json
+      }
       get_current_usuario_id: { Args: never; Returns: string }
       get_current_usuario_id_safe: { Args: never; Returns: string }
       get_user_conversation_ids: {
