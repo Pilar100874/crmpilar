@@ -15,10 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
+import AgentDataPreviewDialog from '@/components/config/AgentDataPreviewDialog';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
@@ -73,6 +74,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [kbFiles, setKbFiles] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [internalKbText, setInternalKbText] = useState('');
+  const [previewType, setPreviewType] = useState<'estoque' | 'importados' | 'api' | null>(null);
+  const [previewApiId, setPreviewApiId] = useState<string>('');
+  const [previewApiName, setPreviewApiName] = useState<string>('');
 
   useEffect(() => {
     loadApiEndpoints();
@@ -472,7 +476,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
                 {formData.knowledge_base_type === 'interna' && (
                   <>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
+                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
@@ -480,7 +484,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
-                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
@@ -490,7 +499,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
-                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      </div>
                     </div>
                     <Separator />
                     <div>
@@ -509,7 +523,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
                 {formData.knowledge_base_type === 'externa' && (
                   <>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
+                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
@@ -517,7 +531,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
-                      <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
@@ -527,7 +546,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
-                      <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
+                      </div>
                     </div>
                     <Separator />
                     <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
@@ -604,15 +628,18 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   ) : (
                     <div className="space-y-2">
                       {apiEndpoints.map(ep => (
-                        <div key={ep.id} className="flex items-center space-x-3 border rounded-lg px-3 py-2">
+                         <div key={ep.id} className="flex items-center space-x-3 border rounded-lg px-3 py-2">
                           <Checkbox
                             checked={(formData.api_endpoint_ids || []).includes(ep.id)}
                             onCheckedChange={() => toggleEndpoint(ep.id)}
                           />
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium">{ep.name}</p>
                             <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
                           </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setPreviewApiId(ep.id); setPreviewApiName(ep.name); setPreviewType('api'); }} title="Visualizar dados">
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -644,6 +671,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AgentDataPreviewDialog
+        open={previewType !== null}
+        onOpenChange={(open) => { if (!open) setPreviewType(null); }}
+        estabelecimentoId={estabelecimentoId}
+        type={previewType || 'estoque'}
+        apiEndpointId={previewApiId}
+        apiEndpointName={previewApiName}
+      />
     </div>
   );
 }
