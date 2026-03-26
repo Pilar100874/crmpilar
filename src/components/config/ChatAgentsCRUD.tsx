@@ -15,10 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
+import AgentDataPreviewDialog from '@/components/config/AgentDataPreviewDialog';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
