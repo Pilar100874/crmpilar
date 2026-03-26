@@ -207,16 +207,17 @@ serve(async (req) => {
     }
 
     // Chamar Lovable AI
-    const messages = [
+    const messages: { role: string; content: string }[] = [
       { role: "system", content: systemPrompt },
     ];
 
-    // Adicionar histórico se disponível
-    if (historico_chat && Array.isArray(historico_chat)) {
+    // Adicionar histórico completo (já inclui a mensagem atual do usuário)
+    if (historico_chat && Array.isArray(historico_chat) && historico_chat.length > 0) {
       messages.push(...historico_chat);
+    } else {
+      // Fallback se não houver histórico, adicionar só a mensagem atual
+      messages.push({ role: "user", content: mensagem_cliente });
     }
-
-    messages.push({ role: "user", content: mensagem_cliente });
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
