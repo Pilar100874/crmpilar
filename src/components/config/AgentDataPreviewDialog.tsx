@@ -24,6 +24,7 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
 
   useEffect(() => {
     if (!open) { setData([]); setColumns([]); return; }
+    console.log('[AgentDataPreview] Loading data:', { type, open, apiEndpointId, estabelecimentoId });
     const loadData = async () => {
       setLoading(true);
       try {
