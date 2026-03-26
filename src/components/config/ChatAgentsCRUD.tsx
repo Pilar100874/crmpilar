@@ -632,7 +632,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     </div>
                     <Separator />
                     <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
-
+                      <Label className="flex items-center gap-2 text-base font-semibold">
                         <FileText className="h-5 w-5 text-primary" />
                         Arquivos da Base de Conhecimento
                       </Label>
@@ -749,6 +749,56 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Sheet lateral para preview de dados */}
+      <Sheet open={!!previewType} onOpenChange={(open) => { if (!open) { setPreviewType(null); setPreviewTab(null); } }}>
+        <SheetContent side="right" className="w-[600px] sm:max-w-[600px] flex flex-col p-0">
+          <SheetHeader className="px-6 py-4 border-b shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              {previewType === 'estoque' ? 'Preview · Estoque do Sistema' : previewType === 'importados' ? 'Preview · Produtos Importados de Terceiros' : `Preview · API ${previewApiName}`}
+            </SheetTitle>
+            <p className="text-xs text-muted-foreground">
+              {previewLoading ? 'Carregando dados...' : `${previewData.length} registros${previewData.length >= 200 ? ' (máx. 200)' : ''}`}
+            </p>
+          </SheetHeader>
+          <div className="px-6 py-2 border-b shrink-0">
+            <Button variant="outline" size="sm" onClick={exportPreviewExcel} disabled={!previewData.length}>
+              <Download className="h-4 w-4 mr-1" /> Exportar Excel
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            {previewLoading ? (
+              <div className="flex items-center justify-center h-full"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : previewData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Nenhum dado encontrado.</div>
+            ) : (
+              <div className="overflow-auto h-full">
+                <UITable className="min-w-max">
+                  <TableHeader>
+                    <TableRow>
+                      {previewColumns.map((col) => (
+                        <TableHead key={col} className="whitespace-nowrap text-xs">{col}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {previewData.map((row, index) => (
+                      <TableRow key={index}>
+                        {previewColumns.map((col) => (
+                          <TableCell key={col} className="text-xs whitespace-nowrap max-w-[200px] truncate">
+                            {row[col] != null ? String(row[col]) : '-'}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </UITable>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
     </div>
   );
