@@ -211,6 +211,62 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setAgentToDelete(null);
   };
 
+  const loadPreviewData = async (type: 'estoque' | 'importados' | 'api', apiId?: string, apiName?: string) => {
+    setPreviewType(type);
+    setPreviewApiId(apiId || '');
+    setPreviewApiName(apiName || '');
+    setPreviewLoading(true);
+    setPreviewData([]);
+    setPreviewColumns([]);
+    try {
+      if (type === 'estoque') {
+        const { data } = await supabase
+          .from('produtos')
+          .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .limit(200);
+        const rows = data || [];
+        setPreviewData(rows);
+        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+      } else if (type === 'importados') {
+        const { data } = await supabase
+          .from('produtos_importados')
+          .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .limit(200);
+        const rows = data || [];
+        setPreviewData(rows);
+        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+      } else if (type === 'api' && apiId) {
+        const { data: ep } = await supabase
+          .from('api_endpoints')
+          .select('*')
+          .eq('id', apiId)
+          .maybeSingle();
+        if (ep) {
+          const { data: result } = await supabase.rpc('execute_sql', { sql_query: ep.query });
+          const rows = Array.isArray(result) ? result.slice(0, 200) : [];
+          setPreviewData(rows);
+          setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao carregar preview');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const exportPreviewExcel = () => {
+    if (!previewData.length || !previewType) return;
+    const label = previewType === 'estoque' ? 'Estoque_Sistema' : previewType === 'importados' ? 'Produtos_Importados' : `API_${previewApiName || 'dados'}`;
+    const ws = XLSX.utils.json_to_sheet(previewData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, label.substring(0, 31));
+    XLSX.writeFile(wb, `${label}.xlsx`);
+    toast.success('Excel exportado!');
+  };
+
   const toggleEndpoint = (endpointId: string) => {
     const current = formData.api_endpoint_ids || [];
     if (current.includes(endpointId)) {
@@ -488,7 +544,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('estoque')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
@@ -503,7 +559,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('importados')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('importados')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
@@ -535,7 +591,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPreviewType('estoque')} title="Visualizar dados">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('estoque')} title="Visualizar dados">
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
