@@ -233,15 +233,30 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         setPreviewData(rows);
         setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
       } else if (type === 'importados') {
-        const { data } = await supabase
-          .from('produtos_importados')
-          .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
+        // Buscar apenas produtos de relatórios ativos (mesma lógica do PDF/Excel da tela de importação)
+        const { data: activeReports } = await supabase
+          .from('relatorios_importacao')
+          .select('id')
           .eq('estabelecimento_id', estabelecimentoId)
-          .order('created_at', { ascending: false })
-          .limit(200);
-        const rows = data || [];
-        setPreviewData(rows);
-        setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+          .eq('ativo', true);
+        
+        const activeIds = (activeReports || []).map(r => r.id);
+        
+        if (activeIds.length === 0) {
+          setPreviewData([]);
+          setPreviewColumns(['nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'obs', 'embalagem', 'numero_folhas', 'diametro']);
+        } else {
+          const { data } = await supabase
+            .from('produtos_importados')
+            .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
+            .eq('estabelecimento_id', estabelecimentoId)
+            .in('relatorio_importacao_id', activeIds)
+            .order('created_at', { ascending: false })
+            .limit(200);
+          const rows = data || [];
+          setPreviewData(rows);
+          setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
+        }
       } else if (type === 'api' && apiId) {
         // Buscar endpoint_path para montar URL completa (mesma lógica da tela de teste de API)
         const { data: ep } = await supabase
