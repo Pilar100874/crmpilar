@@ -85,7 +85,7 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-4xl max-h-[80vh]" onPointerDownOutside={(e) => e.preventDefault()} style={{ zIndex: 200 }}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
