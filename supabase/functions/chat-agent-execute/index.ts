@@ -206,8 +206,9 @@ serve(async (req) => {
       systemPrompt += "Inclua texto explicativo antes ou depois da tabela. Sempre use essa formatação para dados tabulares.";
     }
 
-    // REGRA CRÍTICA: Filtros progressivos e memória contextual
-    systemPrompt += `
+    // Filtros progressivos (condicional por agente)
+    if (agent.acumular_filtros) {
+      systemPrompt += `
 
 --- REGRAS DE FILTRO PROGRESSIVO E MEMÓRIA DE CONVERSA ---
 
@@ -226,6 +227,7 @@ REGRA FUNDAMENTAL: Você DEVE manter um "estado de filtros ativos" mental ao lon
 
 Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou qualquer lista filtrável na conversa.
 --- FIM DAS REGRAS DE FILTRO ---`;
+    }
 
     // Chamar Lovable AI
     const messages: { role: string; content: string }[] = [
