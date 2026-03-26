@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText } from 'lucide-react';
+import { Send, ArrowLeft, Copy, Bot, Sparkles, Plus, MessageSquare, Trash2, Clock, Eraser, X, CheckSquare, ShoppingCart, FileText, Filter, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
