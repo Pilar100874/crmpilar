@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
+import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
@@ -56,6 +57,7 @@ const emptyForm: Partial<ChatAgent> = {
   usar_estoque_sistema: false,
   resposta_formato_tabela: false,
   acumular_filtros: false,
+  regras_busca_personalizada: '',
   ativo: true,
   ordem: 0,
 };
@@ -121,6 +123,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       usar_estoque_sistema: agent.usar_estoque_sistema ?? false,
       resposta_formato_tabela: (agent as any).resposta_formato_tabela ?? false,
       acumular_filtros: (agent as any).acumular_filtros ?? false,
+      regras_busca_personalizada: (agent as any).regras_busca_personalizada || '',
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
