@@ -236,24 +236,29 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         // Buscar apenas produtos de relatórios ativos (mesma lógica do PDF/Excel da tela de importação)
         const { data: activeReports } = await supabase
           .from('relatorios_importacao')
-          .select('id')
+          .select('id, nome')
           .eq('estabelecimento_id', estabelecimentoId)
           .eq('ativo', true);
         
         const activeIds = (activeReports || []).map(r => r.id);
+        const reportNameMap: Record<string, string> = {};
+        (activeReports || []).forEach((r: any) => { reportNameMap[r.id] = r.nome; });
         
         if (activeIds.length === 0) {
           setPreviewData([]);
-          setPreviewColumns(['nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'obs', 'embalagem', 'numero_folhas', 'diametro']);
+          setPreviewColumns(['origem', 'nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'obs', 'embalagem', 'numero_folhas', 'diametro']);
         } else {
           const { data } = await supabase
             .from('produtos_importados')
-            .select('nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
+            .select('relatorio_importacao_id, nome, quantidade, gramatura, largura, comprimento, tipo, obs, embalagem, numero_folhas, diametro')
             .eq('estabelecimento_id', estabelecimentoId)
             .in('relatorio_importacao_id', activeIds)
             .order('created_at', { ascending: false })
             .limit(200);
-          const rows = data || [];
+          const rows = (data || []).map((row: any) => {
+            const { relatorio_importacao_id, ...rest } = row;
+            return { origem: reportNameMap[relatorio_importacao_id] || 'Desconhecido', ...rest };
+          });
           setPreviewData(rows);
           setPreviewColumns(rows.length ? Object.keys(rows[0]) : []);
         }
