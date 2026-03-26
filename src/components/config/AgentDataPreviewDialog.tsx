@@ -29,20 +29,22 @@ export default function AgentDataPreviewDialog({ open, onOpenChange, estabelecim
       setLoading(true);
       try {
         if (type === 'estoque') {
-          const { data: rows } = await supabase
+          const { data: rows, error } = await supabase
             .from('produtos')
             .select('nome, codigo, marca, gramatura, largura, comprimento, estoque, preco_tabela, preco_minimo, material, ativo')
             .eq('estabelecimento_id', estabelecimentoId)
             .limit(200);
+          console.log('[AgentDataPreview] estoque result:', { rows: rows?.length, error });
           const d = rows || [];
           setData(d);
           setColumns(d.length ? Object.keys(d[0]) : []);
         } else if (type === 'importados') {
-          const { data: rows } = await supabase
+          const { data: rows, error } = await supabase
             .from('produtos_importados')
             .select('nome, tipo, gramatura, largura, comprimento, diametro, embalagem, quantidade, obs')
             .eq('estabelecimento_id', estabelecimentoId)
             .limit(200);
+          console.log('[AgentDataPreview] importados result:', { rows: rows?.length, error });
           const d = rows || [];
           setData(d);
           setColumns(d.length ? Object.keys(d[0]) : []);
