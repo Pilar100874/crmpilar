@@ -606,6 +606,36 @@ export default function AgentChat() {
           </div>
         )}
 
+        {/* Active filters bar */}
+        {(() => {
+          const activeFilters = (selectedAgent as any)?.acumular_filtros ? extractActiveFilters(messages) : [];
+          if (activeFilters.length === 0) return null;
+          return (
+            <div className="border-t px-4 py-2 flex-shrink-0 bg-muted/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-[10px] text-muted-foreground font-medium">Filtros:</span>
+                {activeFilters.map((filter, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-[11px] gap-1 pl-2 pr-1 py-0.5 cursor-pointer hover:bg-destructive/10 transition-colors group" onClick={() => {
+                    const filterName = filter.split('=')[0]?.trim();
+                    setInput(`remover filtro ${filterName}`);
+                    setTimeout(() => handleSend(), 100);
+                  }}>
+                    {filter}
+                    <XCircle className="h-3 w-3 text-muted-foreground group-hover:text-destructive transition-colors" />
+                  </Badge>
+                ))}
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
+                  setInput('limpar todos os filtros');
+                  setTimeout(() => handleSend(), 100);
+                }}>
+                  <Eraser className="h-3 w-3 mr-1" /> Limpar tudo
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="border-t p-4 flex-shrink-0" style={{ background: agentColor + '05' }}>
           <div className="flex items-end gap-2">
             <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder={`Pergunte ao ${selectedAgent.nome}...`} className="min-h-[44px] max-h-[120px] resize-none rounded-xl text-sm" disabled={isLoading} />
