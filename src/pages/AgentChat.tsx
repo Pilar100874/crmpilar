@@ -252,6 +252,16 @@ export default function AgentChat() {
         content: msg,
       });
 
+      // Try to extract CNPJ from user message
+      let currentCnpj = cnpjCliente;
+      if ((selectedAgent as any).solicitar_cnpj && !currentCnpj) {
+        const cnpjMatch = msg.match(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/);
+        if (cnpjMatch) {
+          currentCnpj = cnpjMatch[0].replace(/\D/g, '');
+          setCnpjCliente(currentCnpj);
+        }
+      }
+
       // Call agent
       const { data, error } = await supabase.functions.invoke('chat-agent-execute', {
         body: {
@@ -260,12 +270,19 @@ export default function AgentChat() {
           historico_chat: newMessages.map(m => ({ role: m.role, content: m.content })),
           modo_privado: true,
           contexto_chat_cliente: '',
+          cnpj_cliente: currentCnpj || undefined,
         },
       });
       if (error) throw error;
 
       const assistantMsg: AgentMessage = { role: 'assistant', content: data.resposta, timestamp: new Date() };
       setMessages([...newMessages, assistantMsg]);
+
+      // Detect pre-order data
+      if (data.pre_order_data && data.pre_order_data.length > 0) {
+        setPreOrderItems(data.pre_order_data);
+        setShowPreOrder(true);
+      }
 
       // Save assistant message
       await supabase.from('agent_chat_messages').insert({
@@ -278,7 +295,7 @@ export default function AgentChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId]);
+  }, [input, selectedAgent, isLoading, messages, usuarioId, estabelecimentoId, activeSessionId, cnpjCliente]);
 
   const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success('Copiado!'); };
 
