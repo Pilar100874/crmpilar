@@ -112,6 +112,10 @@ import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import TvDashboardVendas from "./pages/TvDashboardVendas";
 import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
 import PublicPage from "./pages/PublicPage";
+import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
+import EcommerceHome from "./pages/ecommerce/EcommerceHome";
+import EcommerceCatalog from "./pages/ecommerce/EcommerceCatalog";
+import EcommerceProduct from "./pages/ecommerce/EcommerceProduct";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 

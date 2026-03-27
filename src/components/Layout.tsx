@@ -138,6 +138,7 @@ const menuItems: MenuItem[] = [
     url: "/logistica"
   },
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
+  { id: "E-commerce", title: "E-commerce", url: "/ecommerce", icon: LucideIcons.ShoppingBag },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { 
