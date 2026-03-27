@@ -1,0 +1,337 @@
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { ChevronRight, Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Share2, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+
+interface Product {
+  id: string;
+  nome: string;
+  tipo: string | null;
+  gramatura: string | null;
+  largura: string | null;
+  comprimento: string | null;
+  embalagem: string | null;
+  quantidade: number | null;
+  diametro: string | null;
+  numero_folhas: number | null;
+  obs: string | null;
+}
+
+export default function EcommerceProduct() {
+  const { id } = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (id) loadProduct(id);
+  }, [id]);
+
+  const loadProduct = async (productId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("produtos_importados")
+      .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
+      .eq("id", productId)
+      .single();
+
+    if (!error && data) {
+      setProduct(data);
+      // Load related products of the same type
+      if (data.tipo) {
+        const { data: related } = await supabase
+          .from("produtos_importados")
+          .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
+          .eq("tipo", data.tipo)
+          .neq("id", productId)
+          .limit(4);
+        if (related) setRelatedProducts(related);
+      }
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-2 gap-10">
+          <div className="aspect-square bg-muted rounded-2xl animate-pulse" />
+          <div className="space-y-4">
+            <div className="h-6 bg-muted rounded w-1/3 animate-pulse" />
+            <div className="h-10 bg-muted rounded w-3/4 animate-pulse" />
+            <div className="h-8 bg-muted rounded w-1/4 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <span className="text-6xl block mb-4">😕</span>
+        <h2 className="text-2xl font-bold">Produto não encontrado</h2>
+        <Link to="/ecommerce/catalogo">
+          <Button className="mt-4 rounded-full">Voltar ao catálogo</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const specs = [
+    { label: "Tipo", value: product.tipo },
+    { label: "Gramatura", value: product.gramatura },
+    { label: "Largura", value: product.largura },
+    { label: "Comprimento", value: product.comprimento },
+    { label: "Diâmetro", value: product.diametro },
+    { label: "Embalagem", value: product.embalagem },
+    { label: "Nº Folhas", value: product.numero_folhas?.toString() },
+  ].filter(s => s.value);
+
+  const inStock = (product.quantidade ?? 0) > 0;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+        <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <Link to="/ecommerce/catalogo" className="hover:text-primary transition-colors">Catálogo</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
+      </nav>
+
+      <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+        {/* Gallery */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <div className="aspect-square bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group">
+            <span className="text-[120px] group-hover:scale-110 transition-transform duration-500">📄</span>
+            {!inStock && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                <Badge variant="destructive" className="text-base px-4 py-2">Indisponível</Badge>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Info */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+          {product.tipo && (
+            <Badge variant="outline" className="text-xs">{product.tipo}</Badge>
+          )}
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.nome}</h1>
+          
+          {/* Rating */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              {[1,2,3,4,5].map(s => (
+                <Star key={s} className={`h-4 w-4 ${s <= 4 ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
+              ))}
+            </div>
+            <span className="text-sm text-muted-foreground">4.0 (12 avaliações)</span>
+          </div>
+
+          {/* Specs badges */}
+          <div className="flex flex-wrap gap-2">
+            {specs.map(s => (
+              <Badge key={s.label} variant="secondary" className="text-xs gap-1">
+                {s.label}: {s.value}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Stock */}
+          <div className="flex items-center gap-2">
+            <div className={`h-2 w-2 rounded-full ${inStock ? "bg-success" : "bg-destructive"}`} />
+            <span className={`text-sm font-medium ${inStock ? "text-success" : "text-destructive"}`}>
+              {inStock ? `Em estoque (${product.quantidade} un.)` : "Indisponível"}
+            </span>
+          </div>
+
+          <Separator />
+
+          {/* Quantity & Add to Cart */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Quantidade:</span>
+              <div className="flex items-center border rounded-full overflow-hidden">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-12 text-center text-sm font-semibold">{quantity}</span>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => setQuantity(quantity + 1)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock}>
+                <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
+              </Button>
+              <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => setWishlisted(!wishlisted)}>
+                <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
+              </Button>
+              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full">
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* B2B pricing hint */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4 flex items-start gap-3">
+              <Package className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Compra em volume?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Cadastre-se como cliente B2B para acessar preços especiais por quantidade.
+                </p>
+                <Link to="/ecommerce/b2b" className="text-xs text-primary font-semibold hover:underline mt-1 inline-block">
+                  Saiba mais →
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Trust signals */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: Truck, text: "Frete grátis acima de R$ 500" },
+              { icon: Shield, text: "Compra 100% segura" },
+              { icon: RotateCcw, text: "Troca em até 30 dias" },
+            ].map((item, i) => (
+              <div key={i} className="text-center p-3 rounded-xl bg-muted/30">
+                <item.icon className="h-5 w-5 mx-auto text-primary mb-1" />
+                <p className="text-[10px] text-muted-foreground leading-tight">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mt-12">
+        <Tabs defaultValue="descricao">
+          <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0">
+            {[
+              { value: "descricao", label: "Descrição" },
+              { value: "especificacoes", label: "Especificações" },
+              { value: "entrega", label: "Entrega" },
+              { value: "avaliacoes", label: "Avaliações (12)" },
+            ].map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-6 py-3">
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value="descricao" className="py-6">
+            <div className="prose prose-sm max-w-none">
+              <p className="text-foreground/80 leading-relaxed">
+                {product.obs || `${product.nome} — produto de alta qualidade para uso profissional e comercial. Ideal para impressão, embalagem e diversas aplicações corporativas.`}
+              </p>
+            </div>
+          </TabsContent>
+          <TabsContent value="especificacoes" className="py-6">
+            <div className="grid sm:grid-cols-2 gap-3 max-w-2xl">
+              {specs.map(s => (
+                <div key={s.label} className="flex justify-between items-center py-2 px-4 rounded-xl bg-muted/30">
+                  <span className="text-sm text-muted-foreground">{s.label}</span>
+                  <span className="text-sm font-semibold">{s.value}</span>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="entrega" className="py-6">
+            <div className="space-y-4 max-w-lg">
+              <p className="text-sm text-foreground/80">Prazo de entrega calculado após informar o CEP no carrinho.</p>
+              <div className="p-4 rounded-xl bg-muted/30">
+                <p className="text-sm font-semibold">Frete grátis para compras acima de R$ 500</p>
+                <p className="text-xs text-muted-foreground mt-1">Válido para todo o Brasil. Prazo estimado: 3 a 7 dias úteis.</p>
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="avaliacoes" className="py-6">
+            <div className="space-y-4">
+              {[
+                { name: "João P.", rating: 5, text: "Excelente qualidade, papel consistente. Compro sempre!", date: "12/03/2026" },
+                { name: "Maria L.", rating: 4, text: "Bom produto, entrega rápida. Recomendo.", date: "08/03/2026" },
+              ].map((review, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                          {review.name.split(" ").map(n => n[0]).join("")}
+                        </div>
+                        <span className="text-sm font-semibold">{review.name}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{review.date}</span>
+                    </div>
+                    <div className="flex gap-0.5 mt-2">
+                      {Array.from({ length: review.rating }).map((_, j) => (
+                        <Star key={j} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-foreground/80 mt-2">{review.text}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <section className="mt-16 mb-8">
+          <h2 className="text-xl font-bold mb-6">Produtos Relacionados</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map(rp => (
+              <Link key={rp.id} to={`/ecommerce/produto/${rp.id}`}>
+                <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
+                  <div className="aspect-square bg-muted/30 flex items-center justify-center">
+                    <span className="text-4xl group-hover:scale-110 transition-transform">📄</span>
+                  </div>
+                  <CardContent className="p-3">
+                    {rp.tipo && <p className="text-xs text-muted-foreground">{rp.tipo}</p>}
+                    <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{rp.nome}</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {rp.gramatura && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{rp.gramatura}</Badge>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Sticky mobile add to cart */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t p-3 md:hidden z-40 safe-area-inset-bottom">
+        <div className="flex gap-3 items-center">
+          <div className="flex items-center border rounded-full overflow-hidden flex-shrink-0">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => setQuantity(quantity + 1)}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock}>
+            <ShoppingCart className="h-4 w-4" /> Adicionar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
