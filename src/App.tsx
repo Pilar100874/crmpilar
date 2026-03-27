@@ -252,6 +252,12 @@ const App = () => (
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/p/:slug" element={<PublicPage />} />
+            {/* E-commerce routes */}
+            <Route path="/ecommerce" element={<EcommerceLayout />}>
+              <Route index element={<EcommerceHome />} />
+              <Route path="catalogo" element={<EcommerceCatalog />} />
+              <Route path="produto/:id" element={<EcommerceProduct />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
