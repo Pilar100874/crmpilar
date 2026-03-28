@@ -116,6 +116,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Teste de Webhooks", title: "Teste de Webhooks", url: "/config/webhooks", icon: LucideIcons.Globe },
       { id: "Teste Campanhas Menu", title: "Teste Campanhas", url: "/config/campanhas", icon: LucideIcons.Megaphone },
       { id: "Gerenciar Atalhos", title: "Gerenciar Atalhos", url: "/gerenciar-atalhos", icon: LucideIcons.Star },
+      { id: "Config Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
     ]
   },
 ];

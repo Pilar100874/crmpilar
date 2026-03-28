@@ -122,6 +122,7 @@ import EcommerceB2B from "./pages/ecommerce/EcommerceB2B";
 import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
 import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
 import { CartProvider } from "./contexts/CartContext";
+import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -258,6 +259,7 @@ const App = () => (
             <Route path="/tv/vendas" element={<TvDashboardVendas />} />
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/p/:slug" element={<PublicPage />} />
+            <Route path="/config/pagamentos" element={<LayoutWrapper><PaymentGatewaysConfig /></LayoutWrapper>} />
             {/* E-commerce routes */}
             <Route path="/ecommerce" element={<CartProvider><EcommerceLayout /></CartProvider>}>
               <Route index element={<EcommerceHome />} />
