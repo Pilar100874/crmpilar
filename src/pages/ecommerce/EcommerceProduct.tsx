@@ -177,7 +177,12 @@ export default function EcommerceProduct() {
             </div>
 
             <div className="flex gap-3">
-              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock}>
+              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock} onClick={() => {
+                if (product) {
+                  addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+                  toast.success("Produto adicionado ao carrinho!");
+                }
+              }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
               <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => setWishlisted(!wishlisted)}>
