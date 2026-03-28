@@ -258,10 +258,9 @@ function EcommerceRulesEditorInner() {
       {noteDialog && (
         <BlockNoteDialog
           open={!!noteDialog}
-          nodeId={noteDialog.nodeId}
+          onOpenChange={(open) => { if (!open) setNoteDialog(null); }}
           currentNote={noteDialog.note}
-          onSave={handleSaveNote}
-          onClose={() => setNoteDialog(null)}
+          onSave={(note: string) => handleSaveNote(noteDialog.nodeId, note)}
         />
       )}
     </WorkflowBuilderLayout>
