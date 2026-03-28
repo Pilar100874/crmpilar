@@ -175,6 +175,9 @@ export function WorkflowBuilderLayout({
             </>
           )}
 
+          {/* AI Generator */}
+          {aiGeneratorContent}
+
           {/* Custom Left Content */}
           {leftContent}
         </div>
