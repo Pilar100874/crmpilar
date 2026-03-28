@@ -3182,6 +3182,59 @@ export type Database = {
           },
         ]
       }
+      ecommerce_rules: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          config_json: Json | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          expires_at: string | null
+          flow_data: Json
+          id: string
+          nome: string
+          prioridade: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria?: string
+          config_json?: Json | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          expires_at?: string | null
+          flow_data?: Json
+          id?: string
+          nome: string
+          prioridade?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          config_json?: Json | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          expires_at?: string | null
+          flow_data?: Json
+          id?: string
+          nome?: string
+          prioridade?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_rules_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_oauth_config: {
         Row: {
           client_id: string | null
