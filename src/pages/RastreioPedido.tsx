@@ -198,7 +198,7 @@ export default function RastreioPedido() {
                         style={{
                           backgroundColor: isCompleted || isCurrent ? status.cor : "#e5e7eb",
                           color: isCompleted || isCurrent ? "#fff" : "#9ca3af",
-                          ringColor: isCurrent ? status.cor + "40" : undefined,
+                          boxShadow: isCurrent ? `0 0 0 4px ${status.cor}40` : undefined,
                         }}
                       >
                         <Icon className="h-5 w-5" />

@@ -435,10 +435,10 @@ export default function PedidoTracking() {
                             className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
                               isCurrent ? "ring-4 ring-offset-2 scale-110" : ""
                             }`}
-                            style={{
+                          style={{
                               backgroundColor: isCompleted || isCurrent ? status.cor : "#f3f4f6",
                               color: isCompleted || isCurrent ? "#fff" : "#9ca3af",
-                              ringColor: isCurrent ? status.cor + "40" : undefined,
+                              boxShadow: isCurrent ? `0 0 0 4px ${status.cor}40` : undefined,
                             }}
                           >
                             <Icon className="h-5 w-5" />
