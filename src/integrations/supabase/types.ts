@@ -7384,6 +7384,186 @@ export type Database = {
           },
         ]
       }
+      pedido_tracking: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          email_cliente: string | null
+          estabelecimento_id: string
+          id: string
+          nome_cliente: string
+          notificar_email: boolean | null
+          notificar_whatsapp: boolean | null
+          numero_pedido: string
+          observacao: string | null
+          orcamento_id: string | null
+          status_atual: string
+          telefone_cliente: string | null
+          token_rastreamento: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          email_cliente?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome_cliente: string
+          notificar_email?: boolean | null
+          notificar_whatsapp?: boolean | null
+          numero_pedido: string
+          observacao?: string | null
+          orcamento_id?: string | null
+          status_atual?: string
+          telefone_cliente?: string | null
+          token_rastreamento?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          email_cliente?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome_cliente?: string
+          notificar_email?: boolean | null
+          notificar_whatsapp?: boolean | null
+          numero_pedido?: string
+          observacao?: string | null
+          orcamento_id?: string | null
+          status_atual?: string
+          telefone_cliente?: string | null
+          token_rastreamento?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_tracking_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_tracking_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_tracking_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_tracking_historico: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          notificado_email: boolean | null
+          notificado_whatsapp: boolean | null
+          observacao: string | null
+          pedido_tracking_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          notificado_email?: boolean | null
+          notificado_whatsapp?: boolean | null
+          observacao?: string | null
+          pedido_tracking_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          notificado_email?: boolean | null
+          notificado_whatsapp?: boolean | null
+          observacao?: string | null
+          pedido_tracking_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_tracking_historico_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_tracking_historico_pedido_tracking_id_fkey"
+            columns: ["pedido_tracking_id"]
+            isOneToOne: false
+            referencedRelation: "pedido_tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_tracking_status_config: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          icone: string | null
+          id: string
+          label: string
+          mensagem_email: string | null
+          mensagem_whatsapp: string | null
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          icone?: string | null
+          id?: string
+          label: string
+          mensagem_email?: string | null
+          mensagem_whatsapp?: string | null
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          icone?: string | null
+          id?: string
+          label?: string
+          mensagem_email?: string | null
+          mensagem_whatsapp?: string | null
+          nome?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_tracking_status_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedidos_marketplace: {
         Row: {
           conta_marketplace_id: string
