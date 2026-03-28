@@ -29,6 +29,7 @@ import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import { toast } from "@/hooks/use-toast";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 
 const nodeTypes = { custom: EcommerceFlowNode };
 
@@ -215,6 +216,17 @@ function EcommerceRulesEditorInner() {
       onZoomOut={() => reactFlowInstance?.zoomOut()}
       onFitView={() => reactFlowInstance?.fitView()}
       onAddBlock={() => setIsLibraryExpanded(!isLibraryExpanded)}
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Regras do E-commerce"
+          blockDefinitions={ECOMMERCE_RULE_BLOCKS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes]);
+            setEdges(eds => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
+      }
       leftContent={
         <EcommerceBlockLibrary
           onDragStart={handleDragStart}

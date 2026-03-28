@@ -36,6 +36,7 @@ import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 
 const nodeTypes = {
   custom: AutomacaoFlowNode,
@@ -605,6 +606,17 @@ function EditorRegrasContent() {
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl="/vendas-config?tab=automacao"
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Automação de Vendas"
+          blockDefinitions={AUTOMACAO_VENDAS_BLOCKS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes]);
+            setEdges(eds => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
+      }
       rightContent={
         selectedEdgeId ? (
           <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>

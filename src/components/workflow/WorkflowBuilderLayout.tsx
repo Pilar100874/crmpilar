@@ -37,6 +37,7 @@ interface WorkflowBuilderLayoutProps {
   leftContent?: ReactNode;
   rightContent?: ReactNode;
   centerContent?: ReactNode;
+  aiGeneratorContent?: ReactNode;
 }
 
 export function WorkflowBuilderLayout({
@@ -62,6 +63,7 @@ export function WorkflowBuilderLayout({
   leftContent,
   rightContent,
   centerContent,
+  aiGeneratorContent,
 }: WorkflowBuilderLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -174,6 +176,9 @@ export function WorkflowBuilderLayout({
               </div>
             </>
           )}
+
+          {/* AI Generator */}
+          {aiGeneratorContent}
 
           {/* Custom Left Content */}
           {leftContent}

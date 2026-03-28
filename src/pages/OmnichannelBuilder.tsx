@@ -33,6 +33,19 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelBlockType, OmnichannelNode, OmnichannelEdge, OmnichannelFlowData } from "@/types/omnichannelFlow";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+
+const OMNICHANNEL_BLOCK_DEFS = [
+  { type: "inicio", label: "Início do Fluxo", description: "Ponto inicial do fluxo omnichannel" },
+  { type: "fila", label: "Fila de Atendimento", description: "Cria uma fila de distribuição de chats", category: "roteamento" },
+  { type: "atendente", label: "Atendente", description: "Define um atendente no fluxo", category: "roteamento" },
+  { type: "skill", label: "Skill Requerida", description: "Adiciona requisito de habilidade", category: "condicao" },
+  { type: "regra_roteamento", label: "Regra de Roteamento", description: "Define condições de distribuição", category: "condicao" },
+  { type: "horario", label: "Horário de Funcionamento", description: "Define horários de atendimento", category: "condicao" },
+  { type: "webhook", label: "Webhook", description: "Integra com sistemas externos", category: "acao" },
+  { type: "aguardar", label: "Aguardar", description: "Adiciona delay no fluxo", category: "acao" },
+  { type: "analytics", label: "Analytics", description: "Visualiza métricas do fluxo", category: "acao" },
+];
 
 const nodeTypes: NodeTypes = {
   custom: FlowNode,
@@ -585,6 +598,14 @@ export default function OmnichannelBuilder() {
             </div>
             
             <div className="flex gap-1 sm:gap-2">
+              <WorkflowAIGenerator
+                workflowType="Omnichannel"
+                blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
+                onGenerated={(newNodes, newEdges) => {
+                  setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
+                  setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
+                }}
+              />
               <Button 
                 variant="outline" 
                 size="sm" 

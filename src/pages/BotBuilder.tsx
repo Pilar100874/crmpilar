@@ -42,6 +42,7 @@ import { ErrorDialog } from "@/components/flow/ErrorDialog";
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "@/lib/toast-config";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 const nodeTypes = {
@@ -1129,6 +1130,16 @@ function BotBuilderContent() {
                 {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
               </Button>
             </div>
+
+            <WorkflowAIGenerator
+              workflowType="Bot Builder"
+              blockDefinitions={BLOCK_DEFINITIONS}
+              onGenerated={(newNodes, newEdges) => {
+                setNodes(nds => [...nds, ...newNodes]);
+                setEdges(eds => [...eds, ...newEdges]);
+                setHasUnsavedChanges(true);
+              }}
+            />
 
             <div className="hidden lg:flex items-center gap-1">
               <VariableManager variables={flowVariables} onVariablesChange={setFlowVariables} globalVariables={globalVariables} />
