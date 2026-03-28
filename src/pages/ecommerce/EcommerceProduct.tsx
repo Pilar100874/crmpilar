@@ -335,7 +335,12 @@ export default function EcommerceProduct() {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock}>
+          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={() => {
+            if (product) {
+              addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+              toast.success("Produto adicionado ao carrinho!");
+            }
+          }}>
             <ShoppingCart className="h-4 w-4" /> Adicionar
           </Button>
         </div>
