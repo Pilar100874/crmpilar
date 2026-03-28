@@ -123,6 +123,8 @@ import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
 import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
 import { CartProvider } from "./contexts/CartContext";
 import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
+import EcommerceRulesPage from "./pages/EcommerceRulesPage";
+import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -171,6 +173,8 @@ const App = () => (
               <Route path="/config/variaveis" element={<GlobalVariables />} />
               <Route path="/config/campanhas" element={<Campanhas />} />
               <Route path="/config/pagamentos" element={<PaymentGatewaysConfig />} />
+              <Route path="/ecommerce-rules" element={<EcommerceRulesPage />} />
+              <Route path="/ecommerce-rules-editor" element={<EcommerceRulesEditor />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
