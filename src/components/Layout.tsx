@@ -138,7 +138,17 @@ const menuItems: MenuItem[] = [
     url: "/logistica"
   },
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
-  { id: "E-commerce", title: "E-commerce", url: "/ecommerce", icon: LucideIcons.ShoppingBag },
+  { 
+    id: "E-commerce",
+    title: "E-commerce", 
+    icon: LucideIcons.ShoppingBag,
+    subItems: [
+      { id: "Ecommerce Site", title: "Abrir Loja Virtual", url: "/ecommerce", icon: LucideIcons.ExternalLink },
+      { id: "Ecommerce Regras", title: "Regras do E-commerce", url: "/ecommerce-rules", icon: LucideIcons.Workflow },
+      { id: "Ecommerce Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
+      { id: "Ecommerce Rastreamento", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
+    ]
+  },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { 
