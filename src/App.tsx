@@ -259,10 +259,21 @@ const App = () => (
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
-            <Route path="/ecommerce" element={<EcommerceLayout />}>
+            <Route path="/ecommerce" element={<CartProvider><EcommerceLayout /></CartProvider>}>
               <Route index element={<EcommerceHome />} />
               <Route path="catalogo" element={<EcommerceCatalog />} />
               <Route path="produto/:id" element={<EcommerceProduct />} />
+              <Route path="carrinho" element={<EcommerceCart />} />
+              <Route path="checkout" element={<EcommerceCheckout />} />
+              <Route path="b2b" element={<EcommerceB2B />} />
+              <Route path="conta" element={<EcommerceAccount />} />
+              <Route path="sobre" element={<EcommerceInstitutional page="sobre" />} />
+              <Route path="contato" element={<EcommerceInstitutional page="contato" />} />
+              <Route path="faq" element={<EcommerceInstitutional page="faq" />} />
+              <Route path="politica-entrega" element={<EcommerceInstitutional page="entrega" />} />
+              <Route path="trocas-devolucoes" element={<EcommerceInstitutional page="trocas" />} />
+              <Route path="politica-privacidade" element={<EcommerceInstitutional page="privacidade" />} />
+              <Route path="termos-uso" element={<EcommerceInstitutional page="termos" />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
