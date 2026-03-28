@@ -37,8 +37,8 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
   const getCardClassName = () => {
     const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
-    return `${baseClass} bg-white border border-slate-300 ${
-      selected ? "ring-2 ring-primary border-primary" : "hover:border-slate-400"
+    return `${baseClass} bg-card border border-border ${
+      selected ? "ring-2 ring-primary border-primary" : "hover:border-primary/40"
     }`;
   };
 
