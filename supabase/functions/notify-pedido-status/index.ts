@@ -6,12 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const BodySchema = z.object({
-  pedidoId: z.string().uuid(),
-  status: z.string().min(1),
-  canal: z.enum(["whatsapp", "email"]),
-});
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,15 +17,14 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const parsed = BodySchema.safeParse(body);
-    if (!parsed.success) {
-      return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
+    const { pedidoId, status, canal } = body;
+
+    if (!pedidoId || !status || !canal || !["whatsapp", "email"].includes(canal)) {
+      return new Response(JSON.stringify({ error: "pedidoId, status e canal (whatsapp|email) são obrigatórios" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const { pedidoId, status, canal } = parsed.data;
 
     // Get pedido data
     const { data: pedido, error: pedidoError } = await supabase
