@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
+import * as Icons from "lucide-react";
 import { Node } from "@xyflow/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
