@@ -36,6 +36,7 @@ import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { AUTOMACAO_VENDAS_BLOCKS } from "@/types/automacaoVendas";
 import { toast } from "@/hooks/use-toast";
 import type { AutomacaoVendasBlockType } from "@/types/automacaoVendas";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 
 const nodeTypes = {
   custom: AutomacaoFlowNode,
