@@ -76,6 +76,17 @@ export const menuStructure: MenuCategory[] = [
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   { 
+    id: "Ecommerce",
+    title: "E-commerce", 
+    icon: LucideIcons.ShoppingBag,
+    subItems: [
+      { id: "Ecommerce Site", title: "Abrir Loja Virtual", url: "/ecommerce", icon: LucideIcons.ExternalLink },
+      { id: "Ecommerce Regras", title: "Regras do E-commerce", url: "/ecommerce-rules", icon: LucideIcons.Workflow },
+      { id: "Ecommerce Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
+      { id: "Ecommerce Rastreamento", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
+    ]
+  },
+  { 
     id: "Configurações",
     title: "Configurações", 
     icon: LucideIcons.Settings,
