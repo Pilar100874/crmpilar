@@ -50,6 +50,7 @@ import { LogisticaSimulator } from "@/components/logistica/automacao/LogisticaSi
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 
 const nodeTypes = {
   custom: LogisticaFlowNode,
@@ -709,6 +710,15 @@ function EditorContent({
         </div>
         
         <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
+          <WorkflowAIGenerator
+            workflowType="Logística"
+            blockDefinitions={LOGISTICA_BLOCKS}
+            onGenerated={(newNodes, newEdges) => {
+              setNodes(nds => [...nds, ...newNodes]);
+              setEdges(eds => [...eds, ...newEdges]);
+              setHasUnsavedChanges(true);
+            }}
+          />
           <Button
             variant="outline" 
             size="sm" 
