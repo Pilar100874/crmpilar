@@ -602,8 +602,8 @@ export default function OmnichannelBuilder() {
                 workflowType="Omnichannel"
                 blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
                 onGenerated={(newNodes, newEdges) => {
-                  setNodes(nds => [...nds, ...newNodes]);
-                  setEdges(eds => [...eds, ...newEdges]);
+                  setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
+                  setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
                 }}
               />
               <Button 
