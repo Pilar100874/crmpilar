@@ -37,8 +37,8 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
   const getCardClassName = () => {
     const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
-    return `${baseClass} bg-white border border-slate-300 ${
-      selected ? "ring-2 ring-primary border-primary" : "hover:border-slate-400"
+    return `${baseClass} bg-card border border-border ${
+      selected ? "ring-2 ring-primary border-primary" : "hover:border-primary/40"
     }`;
   };
 
@@ -56,16 +56,16 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
                 {IconComponent && <IconComponent className="w-4 h-4" style={{ color: blockDef.color }} />}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-sm text-slate-800 block truncate">{label}</span>
-                <span className="text-xs text-slate-500 block truncate">{description}</span>
+                <span className="font-semibold text-sm text-foreground block truncate">{label}</span>
+                <span className="text-xs text-muted-foreground block truncate">{description}</span>
               </div>
             </div>
 
             {!isStartBlock && (
               <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-1 hover:bg-slate-100 rounded transition-colors flex-shrink-0">
-                    <MoreVertical className="w-4 h-4 text-slate-400" />
+                  <button className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
+                    <MoreVertical className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="z-50">
