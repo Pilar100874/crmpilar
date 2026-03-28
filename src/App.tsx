@@ -116,6 +116,12 @@ import EcommerceLayout from "./components/ecommerce/EcommerceLayout";
 import EcommerceHome from "./pages/ecommerce/EcommerceHome";
 import EcommerceCatalog from "./pages/ecommerce/EcommerceCatalog";
 import EcommerceProduct from "./pages/ecommerce/EcommerceProduct";
+import EcommerceCart from "./pages/ecommerce/EcommerceCart";
+import EcommerceCheckout from "./pages/ecommerce/EcommerceCheckout";
+import EcommerceB2B from "./pages/ecommerce/EcommerceB2B";
+import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
+import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
+import { CartProvider } from "./contexts/CartContext";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
