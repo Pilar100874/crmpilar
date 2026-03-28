@@ -19,7 +19,7 @@ const categories = [
 export default function EcommerceLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [cartCount] = useState(3);
+  const { totalItems } = useCart();
   const [wishlistCount] = useState(2);
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
