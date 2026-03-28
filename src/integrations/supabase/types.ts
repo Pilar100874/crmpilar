@@ -7237,6 +7237,59 @@ export type Database = {
           },
         ]
       }
+      payment_gateways: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          config_json: Json | null
+          created_at: string
+          estabelecimento_id: string
+          gateway_id: string
+          gateway_name: string
+          id: string
+          is_active: boolean | null
+          sandbox_mode: boolean | null
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          config_json?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          gateway_id: string
+          gateway_name: string
+          id?: string
+          is_active?: boolean | null
+          sandbox_mode?: boolean | null
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          config_json?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          gateway_id?: string
+          gateway_name?: string
+          id?: string
+          is_active?: boolean | null
+          sandbox_mode?: boolean | null
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_gateways_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedagio_api_config: {
         Row: {
           api_key: string
