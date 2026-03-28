@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { User, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2 } from "lucide-react";
+import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
