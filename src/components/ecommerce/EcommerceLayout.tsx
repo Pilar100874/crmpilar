@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/contexts/CartContext";
 
 const categories = [
   { name: "Papéis", slug: "papeis", subcategories: ["Sulfite", "Couché", "Offset", "Kraft"] },
@@ -18,7 +19,7 @@ const categories = [
 export default function EcommerceLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [cartCount] = useState(3);
+  const { totalItems } = useCart();
   const [wishlistCount] = useState(2);
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
@@ -122,9 +123,9 @@ export default function EcommerceLayout() {
             <Link to="/ecommerce/carrinho">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
+                {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
-                    {cartCount}
+                    {totalItems}
                   </span>
                 )}
               </Button>

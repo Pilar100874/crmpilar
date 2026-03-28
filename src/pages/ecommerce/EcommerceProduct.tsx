@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -25,6 +27,7 @@ interface Product {
 
 export default function EcommerceProduct() {
   const { id } = useParams();
+  const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -174,7 +177,12 @@ export default function EcommerceProduct() {
             </div>
 
             <div className="flex gap-3">
-              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock}>
+              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock} onClick={() => {
+                if (product) {
+                  addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+                  toast.success("Produto adicionado ao carrinho!");
+                }
+              }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
               <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => setWishlisted(!wishlisted)}>
@@ -327,7 +335,12 @@ export default function EcommerceProduct() {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock}>
+          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={() => {
+            if (product) {
+              addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+              toast.success("Produto adicionado ao carrinho!");
+            }
+          }}>
             <ShoppingCart className="h-4 w-4" /> Adicionar
           </Button>
         </div>
