@@ -123,6 +123,8 @@ import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
 import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
 import { CartProvider } from "./contexts/CartContext";
 import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
+import EcommerceRulesPage from "./pages/EcommerceRulesPage";
+import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
