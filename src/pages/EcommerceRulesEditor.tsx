@@ -227,44 +227,63 @@ function EcommerceRulesEditorInner() {
           }}
         />
       }
-      leftContent={
-        <EcommerceBlockLibrary
-          onDragStart={handleDragStart}
-          isExpanded={isLibraryExpanded}
-          onToggleExpanded={setIsLibraryExpanded}
-        />
-      }
-      rightContent={
-        selectedNode ? (
-          <EcommercePropertiesPanel
-            node={selectedNode}
-            onUpdate={handleUpdateNodeData}
-            onDelete={handleDeleteNode}
-            onClose={() => setSelectedNode(null)}
-          />
-        ) : undefined
-      }
     >
-      <div ref={reactFlowWrapper} className="flex-1 h-full">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeClick={handleNodeClick}
-          onPaneClick={() => setSelectedNode(null)}
-          nodeTypes={nodeTypes}
-          fitView
-          deleteKeyCode={["Backspace", "Delete"]}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-          <Controls />
-          <MiniMap zoomable pannable className="!bg-background !border-border" />
-        </ReactFlow>
+      <div className="flex flex-1 h-full overflow-hidden">
+        {/* Block Library - Left Panel */}
+        {isLibraryExpanded && (
+          <EcommerceBlockLibrary
+            onDragStart={handleDragStart}
+            isExpanded={isLibraryExpanded}
+            onToggleExpanded={setIsLibraryExpanded}
+          />
+        )}
+
+        {/* Canvas */}
+        <div ref={reactFlowWrapper} className="flex-1 h-full relative">
+          {!isLibraryExpanded && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsLibraryExpanded(true)}
+              className="absolute left-4 top-4 z-10 shadow-md"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Blocos
+            </Button>
+          )}
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onInit={setReactFlowInstance}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onNodeClick={handleNodeClick}
+            onPaneClick={() => setSelectedNode(null)}
+            nodeTypes={nodeTypes}
+            fitView
+            deleteKeyCode={["Backspace", "Delete"]}
+            className="bg-muted/30"
+          >
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/20" />
+            <Controls className="!bg-card !border-border !shadow-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-accent" />
+            <MiniMap zoomable pannable className="!bg-card !border-border !shadow-lg" />
+          </ReactFlow>
+        </div>
+
+        {/* Properties Panel - Right */}
+        {selectedNode && (
+          <div className="w-80 border-l border-border bg-card overflow-auto">
+            <EcommercePropertiesPanel
+              node={selectedNode}
+              onUpdate={handleUpdateNodeData}
+              onDelete={handleDeleteNode}
+              onClose={() => setSelectedNode(null)}
+            />
+          </div>
+        )}
       </div>
 
       {noteDialog && (
