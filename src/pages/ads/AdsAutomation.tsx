@@ -36,6 +36,7 @@ import { AdsBlockLibrary } from "@/components/ads-automation/AdsBlockLibrary";
 import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPanel";
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
+import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 
 const nodeTypes = {
   custom: AdsFlowNode,
@@ -734,6 +735,15 @@ function AdsAutomationContent() {
             </div>
             
             <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
+              <WorkflowAIGenerator
+                workflowType="Automação de Ads"
+                blockDefinitions={ADS_BLOCK_DEFINITIONS}
+                onGenerated={(newNodes, newEdges) => {
+                  setNodes(nds => [...nds, ...newNodes]);
+                  setEdges(eds => [...eds, ...newEdges]);
+                  setHasUnsavedChanges(true);
+                }}
+              />
               <Button 
                 variant="outline" 
                 size="sm" 
