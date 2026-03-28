@@ -27,6 +27,7 @@ interface Product {
 
 export default function EcommerceProduct() {
   const { id } = useParams();
+  const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
