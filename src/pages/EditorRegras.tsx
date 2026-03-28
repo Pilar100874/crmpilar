@@ -606,6 +606,17 @@ function EditorRegrasContent() {
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl="/vendas-config?tab=automacao"
+      aiGeneratorContent={
+        <WorkflowAIGenerator
+          workflowType="Automação de Vendas"
+          blockDefinitions={AUTOMACAO_VENDAS_BLOCKS}
+          onGenerated={(newNodes, newEdges) => {
+            setNodes(nds => [...nds, ...newNodes]);
+            setEdges(eds => [...eds, ...newEdges]);
+            setHasUnsavedChanges(true);
+          }}
+        />
+      }
       rightContent={
         selectedEdgeId ? (
           <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>
