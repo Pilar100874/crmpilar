@@ -1,28 +1,29 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, Truck, Shield, RotateCcw, Headphones, ChevronRight, Building2, TrendingUp, Users, Package } from "lucide-react";
+import { ArrowRight, Star, Truck, Shield, RotateCcw, Headphones, ChevronRight, Building2, TrendingUp, Users, Package, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
-const featuredProducts = [
-  { id: "1", name: "Papel Sulfite A4 75g", brand: "Chamex", price: 24.90, originalPrice: 29.90, image: "📄", badge: "Mais Vendido", rating: 4.8, reviews: 342 },
-  { id: "2", name: "Bobina Térmica 80x40", brand: "Regispel", price: 8.50, image: "🧻", badge: "Novo", rating: 4.6, reviews: 128 },
-  { id: "3", name: "Caixa Papelão 30x20x15", brand: "PackBox", price: 3.20, originalPrice: 4.00, image: "📦", badge: "-20%", rating: 4.7, reviews: 89 },
-  { id: "4", name: "Papel Couché 170g A3", brand: "Suzano", price: 1.80, image: "🎨", rating: 4.9, reviews: 56 },
-  { id: "5", name: "Envelope Kraft A4", brand: "Foroni", price: 0.45, image: "✉️", badge: "Exclusivo", rating: 4.5, reviews: 201 },
-  { id: "6", name: "Etiqueta Adesiva A4", brand: "Pimaco", price: 32.90, originalPrice: 39.90, image: "🏷️", badge: "-18%", rating: 4.7, reviews: 167 },
-];
+interface ProductWithPrice {
+  id: string;
+  nome: string;
+  tipo: string | null;
+  gramatura: string | null;
+  largura: string | null;
+  quantidade: number | null;
+  embalagem: string | null;
+}
 
-const categories = [
-  { name: "Papéis", icon: "📄", count: 1240, slug: "papeis" },
-  { name: "Embalagens", icon: "📦", count: 856, slug: "embalagens" },
-  { name: "Bobinas", icon: "🧻", count: 312, slug: "bobinas" },
-  { name: "Etiquetas", icon: "🏷️", count: 428, slug: "etiquetas" },
-  { name: "Descartáveis", icon: "🍽️", count: 195, slug: "descartaveis" },
-  { name: "Escritório", icon: "🖊️", count: 673, slug: "escritorio" },
-];
+interface CategoryData {
+  id: string;
+  nome: string;
+  count: number;
+}
 
 const testimonials = [
   { name: "Carlos Silva", company: "Gráfica Express", text: "Fornecedor confiável há 3 anos. Qualidade impecável e entrega sempre no prazo.", rating: 5, avatar: "CS" },
@@ -30,14 +31,121 @@ const testimonials = [
   { name: "Roberto Alves", company: "Alves Distribuição", text: "O programa B2B é excelente. Condições comerciais e atendimento diferenciado.", rating: 5, avatar: "RA" },
 ];
 
-const partners = ["Suzano", "International Paper", "Klabin", "Pimaco", "3M", "Chamex", "Regispel", "Foroni"];
-
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
+const categoryIcons: Record<string, string> = {
+  "duplex": "📄",
+  "papel": "📝",
+  "bobina": "🧻",
+  "embalagem": "📦",
+  "etiqueta": "🏷️",
+  "caixa": "📦",
+  "envelope": "✉️",
+};
+
+function getCategoryIcon(name: string): string {
+  const lower = name.toLowerCase();
+  for (const [key, icon] of Object.entries(categoryIcons)) {
+    if (lower.includes(key)) return icon;
+  }
+  return "📋";
+}
+
 export default function EcommerceHome() {
+  const [products, setProducts] = useState<ProductWithPrice[]>([]);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [priceMap, setPriceMap] = useState<Record<string, { preco_tabela: number; preco_minimo: number }>>({});
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const estabId = localStorage.getItem("estabelecimentoId");
+    if (!estabId) { setLoading(false); return; }
+
+    // Load products, categories, and prices in parallel
+    const [productsRes, categoriesRes, pricesRes, countRes] = await Promise.all([
+      supabase
+        .from("produtos_importados")
+        .select("id, nome, tipo, gramatura, largura, quantidade, embalagem")
+        .eq("estabelecimento_id", estabId)
+        .limit(12),
+      supabase
+        .from("produto_categorias")
+        .select("id, nome")
+        .eq("estabelecimento_id", estabId),
+      supabase
+        .from("tabelas_preco")
+        .select("categoria_id, preco_tabela, preco_minimo")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativo", true),
+      supabase
+        .from("produtos_importados")
+        .select("id", { count: "exact", head: true })
+        .eq("estabelecimento_id", estabId),
+    ]);
+
+    if (productsRes.data) setProducts(productsRes.data);
+    if (countRes.count) setTotalProducts(countRes.count);
+
+    // Build price map by category
+    if (pricesRes.data) {
+      const map: Record<string, { preco_tabela: number; preco_minimo: number }> = {};
+      pricesRes.data.forEach((p: any) => {
+        if (p.categoria_id) {
+          map[p.categoria_id] = { preco_tabela: p.preco_tabela, preco_minimo: p.preco_minimo };
+        }
+      });
+      setPriceMap(map);
+    }
+
+    // Build categories with product counts
+    if (categoriesRes.data) {
+      // Count products per category name (matching by nome)
+      const productNames = productsRes.data?.map(p => p.nome.toLowerCase()) || [];
+      const cats: CategoryData[] = categoriesRes.data.map((cat: any) => ({
+        id: cat.id,
+        nome: cat.nome,
+        count: productNames.filter(n => n.includes(cat.nome.toLowerCase())).length || 
+               (productsRes.data?.length || 0), // fallback
+      }));
+
+      // If no categories in DB, generate from product names
+      if (cats.length === 0 && productsRes.data) {
+        const nameGroups: Record<string, number> = {};
+        productsRes.data.forEach(p => {
+          const base = p.nome.trim();
+          nameGroups[base] = (nameGroups[base] || 0) + 1;
+        });
+        Object.entries(nameGroups).forEach(([name, count]) => {
+          cats.push({ id: name, nome: name, count });
+        });
+      }
+
+      setCategories(cats);
+    }
+
+    setLoading(false);
+  };
+
+  // Get price for a product based on its category match
+  const getProductPrice = (product: ProductWithPrice): { tabela: number | null; minimo: number | null } => {
+    // Try to find matching category price
+    for (const [catId, prices] of Object.entries(priceMap)) {
+      return { tabela: prices.preco_tabela, minimo: prices.preco_minimo };
+    }
+    return { tabela: null, minimo: null };
+  };
+
+  const featuredProducts = products.slice(0, 6);
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -56,8 +164,10 @@ export default function EcommerceHome() {
                 Tudo para sua empresa em um só lugar
               </h1>
               <p className="text-lg text-background/70 max-w-lg leading-relaxed">
-                Papéis, embalagens, descartáveis e mais de 5.000 itens com os melhores preços. 
-                Para você e para sua empresa.
+                {totalProducts > 0 
+                  ? `Mais de ${totalProducts} itens disponíveis com os melhores preços. Para você e para sua empresa.`
+                  : "Papéis, embalagens, descartáveis e muito mais com os melhores preços. Para você e para sua empresa."
+                }
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/ecommerce/catalogo">
@@ -73,13 +183,13 @@ export default function EcommerceHome() {
               </div>
               <div className="flex items-center gap-6 pt-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">5.000+</p>
+                  <p className="text-2xl font-bold text-primary">{totalProducts > 0 ? `${totalProducts}+` : "---"}</p>
                   <p className="text-xs text-background/50">Produtos</p>
                 </div>
                 <div className="w-px h-8 bg-background/20" />
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">2.400+</p>
-                  <p className="text-xs text-background/50">Clientes</p>
+                  <p className="text-2xl font-bold text-primary">{categories.length > 0 ? categories.length : "---"}</p>
+                  <p className="text-xs text-background/50">Categorias</p>
                 </div>
                 <div className="w-px h-8 bg-background/20" />
                 <div className="text-center">
@@ -134,24 +244,39 @@ export default function EcommerceHome() {
             Ver todas <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map((cat, i) => (
-            <motion.div key={cat.slug} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <Link to={`/ecommerce/catalogo?categoria=${cat.slug}`}>
-                <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6 text-center">
-                    <span className="text-4xl block mb-3">{cat.icon}</span>
-                    <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{cat.count} itens</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}><CardContent className="p-6 text-center"><Skeleton className="h-12 w-12 mx-auto mb-3 rounded" /><Skeleton className="h-4 w-20 mx-auto" /></CardContent></Card>
+            ))}
+          </div>
+        ) : categories.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((cat, i) => (
+              <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+                <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
+                  <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                    <CardContent className="p-6 text-center">
+                      <span className="text-4xl block mb-3">{getCategoryIcon(cat.nome)}</span>
+                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.nome}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{cat.count} itens</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Nenhuma categoria cadastrada ainda.</p>
+            <Link to="/ecommerce/catalogo">
+              <Button variant="outline" className="mt-3">Ver todos os produtos</Button>
+            </Link>
+          </div>
+        )}
       </section>
 
-      {/* Featured Products */}
+      {/* Featured Products - Real Data */}
       <section className="bg-muted/30 py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
@@ -163,37 +288,68 @@ export default function EcommerceHome() {
               Ver todos <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {featuredProducts.map((product, i) => (
-              <motion.div key={product.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-                <Link to={`/ecommerce/produto/${product.id}`}>
-                  <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
-                      <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{product.image}</span>
-                      {product.badge && (
-                        <Badge className="absolute top-2 left-2 text-[10px] bg-primary text-primary-foreground border-0">{product.badge}</Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-3">
-                      <p className="text-xs text-muted-foreground">{product.brand}</p>
-                      <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 min-h-[2.5rem]">{product.name}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium">{product.rating}</span>
-                        <span className="text-xs text-muted-foreground">({product.reviews})</span>
-                      </div>
-                      <div className="mt-2">
-                        {product.originalPrice && (
-                          <p className="text-xs text-muted-foreground line-through">R$ {product.originalPrice.toFixed(2)}</p>
-                        )}
-                        <p className="text-lg font-bold text-primary">R$ {product.price.toFixed(2)}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i}><CardContent className="p-4"><Skeleton className="aspect-square rounded-xl mb-3" /><Skeleton className="h-4 w-3/4 mb-2" /><Skeleton className="h-5 w-1/2" /></CardContent></Card>
+              ))}
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {featuredProducts.map((product, i) => {
+                const price = getProductPrice(product);
+                return (
+                  <motion.div key={product.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+                    <Link to={`/ecommerce/produto/${product.id}`}>
+                      <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                        <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+                          <span className="text-5xl group-hover:scale-110 transition-transform duration-300">
+                            {getCategoryIcon(product.nome)}
+                          </span>
+                          {product.quantidade && product.quantidade > 0 && (
+                            <Badge className="absolute top-2 left-2 text-[10px] bg-emerald-500 text-white border-0">Em estoque</Badge>
+                          )}
+                        </div>
+                        <CardContent className="p-3">
+                          {product.tipo && product.tipo !== '----' && (
+                            <p className="text-xs text-muted-foreground">{product.tipo}</p>
+                          )}
+                          <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 min-h-[2.5rem]">{product.nome}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {product.gramatura && product.gramatura !== '----' && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.gramatura}g</Badge>
+                            )}
+                            {product.largura && product.largura !== '----' && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.largura}mm</Badge>
+                            )}
+                          </div>
+                          <div className="mt-2">
+                            {price.tabela ? (
+                              <>
+                                {price.minimo && price.minimo < price.tabela && (
+                                  <p className="text-xs text-muted-foreground line-through">R$ {price.tabela.toFixed(2)}</p>
+                                )}
+                                <p className="text-lg font-bold text-primary">
+                                  R$ {(price.minimo || price.tabela).toFixed(2)}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-sm font-semibold text-primary">Consulte</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <span className="text-5xl block mb-4">📦</span>
+              <p className="text-muted-foreground">Nenhum produto cadastrado ainda.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -243,7 +399,7 @@ export default function EcommerceHome() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">O que nossos clientes dizem</h2>
-            <p className="text-muted-foreground mt-2">Mais de 2.400 empresas confiam em nós</p>
+            <p className="text-muted-foreground mt-2">Empresas que confiam em nós</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((t, i) => (
@@ -268,16 +424,6 @@ export default function EcommerceHome() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Partners */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <p className="text-center text-sm text-muted-foreground mb-6">Marcas que trabalhamos</p>
-        <div className="flex flex-wrap items-center justify-center gap-8">
-          {partners.map(p => (
-            <span key={p} className="text-lg font-bold text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors">{p}</span>
-          ))}
         </div>
       </section>
 
