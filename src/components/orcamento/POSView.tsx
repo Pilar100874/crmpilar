@@ -65,6 +65,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
+import AIOrderAgent from "./AIOrderAgent";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
 import { PedagioDetailsDialog } from "./PedagioDetailsDialog";
 import MobilePOSLayout from "./MobilePOSLayout";
@@ -2568,7 +2569,7 @@ export default function POSView({
           )}
 
           {/* Botões de Ação */}
-          <div className="p-2 grid grid-cols-4 gap-1">
+          <div className="p-2 grid grid-cols-5 gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -2578,6 +2579,25 @@ export default function POSView({
             >
               <Camera className="w-4 h-4" />
             </Button>
+            <AIOrderAgent
+              estabelecimentoId={estabelecimentoId}
+              produtos={produtos}
+              onItemsConfirmed={(items) => {
+                items.forEach(({ produto, quantity }) => {
+                  setCartItems(prev => {
+                    const newCart = new Map(prev);
+                    const existing = newCart.get(produto.id);
+                    if (existing) {
+                      newCart.set(produto.id, { produto, quantity: existing.quantity + quantity, preco: existing.preco });
+                    } else {
+                      newCart.set(produto.id, { produto, quantity, preco: 10 });
+                    }
+                    return newCart;
+                  });
+                });
+                setActiveTab("cart");
+              }}
+            />
             <Button
               variant="outline"
               size="sm"
