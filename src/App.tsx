@@ -125,6 +125,8 @@ import { CartProvider } from "./contexts/CartContext";
 import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
 import EcommerceRulesPage from "./pages/EcommerceRulesPage";
 import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
+import PedidoTracking from "./pages/PedidoTracking";
+import RastreioPedido from "./pages/RastreioPedido";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -175,6 +177,7 @@ const App = () => (
               <Route path="/config/pagamentos" element={<PaymentGatewaysConfig />} />
               <Route path="/ecommerce-rules" element={<EcommerceRulesPage />} />
               <Route path="/ecommerce-rules-editor" element={<EcommerceRulesEditor />} />
+              <Route path="/pedido-tracking" element={<PedidoTracking />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
@@ -248,6 +251,8 @@ const App = () => (
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
+            <Route path="/rastreio" element={<RastreioPedido />} />
+            <Route path="/rastreio/:token" element={<RastreioPedido />} />
             <Route path="/webchat" element={<WebChat />} />
             <Route path="/pilar-rastreador" element={<PilarRastreador />} />
             <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
