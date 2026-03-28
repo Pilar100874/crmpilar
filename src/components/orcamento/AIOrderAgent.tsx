@@ -157,10 +157,10 @@ export default function AIOrderAgent({ estabelecimentoId, produtos, onItemsConfi
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+        className="h-10 bg-muted/50 border-border/50 hover:bg-muted p-1"
+        title="Pedido por IA"
       >
         <Sparkles className="w-4 h-4" />
-        <span className="hidden sm:inline">Pedido por IA</span>
       </Button>
 
       <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
