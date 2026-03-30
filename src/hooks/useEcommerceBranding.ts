@@ -102,13 +102,19 @@ export function useEcommerceBranding() {
   useEffect(() => {
     const load = async () => {
       const estId = await getEstabelecimentoId();
-      let query = supabase.from("ecommerce_config").select("*");
+      let data: any = null;
+
+      // Try with estabelecimento_id first
       if (estId) {
-        query = query.eq("estabelecimento_id", estId);
-      } else {
-        query = query.order("updated_at", { ascending: false }).limit(1);
+        const res = await supabase.from("ecommerce_config").select("*").eq("estabelecimento_id", estId).maybeSingle();
+        data = res.data;
       }
-      const { data } = await query.maybeSingle();
+
+      // Fallback: get most recent config if no match
+      if (!data) {
+        const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        data = res.data;
+      }
       if (data) {
         const d = data as any;
         setBranding({
