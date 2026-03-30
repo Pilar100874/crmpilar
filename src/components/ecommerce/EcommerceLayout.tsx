@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
+import BrandLogo from "@/components/ecommerce/BrandLogo";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -172,7 +173,12 @@ export default function EcommerceLayout() {
           {/* Logo */}
           <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit">
             {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-8 sm:max-h-10 md:max-h-12 max-w-[96px] sm:max-w-[120px] md:max-w-[160px] object-contain" />
+              <BrandLogo
+                src={branding.logo_url}
+                alt={branding.nome_loja}
+                className="h-12 w-[108px] border-border/40 sm:h-14 sm:w-[132px] md:h-16 md:w-[164px]"
+                imageClassName="p-2"
+              />
             ) : (
               <span className="block truncate text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
                 {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
@@ -282,7 +288,12 @@ export default function EcommerceLayout() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               {branding.logo_url ? (
-                <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain mb-4" />
+                <BrandLogo
+                  src={branding.logo_url}
+                  alt={branding.nome_loja}
+                  className="mb-4 h-14 w-[160px] border-background/10"
+                  imageClassName="p-2"
+                />
               ) : (
                 <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
               )}

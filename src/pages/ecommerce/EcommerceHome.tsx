@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import BrandLogo from "@/components/ecommerce/BrandLogo";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
@@ -169,7 +170,12 @@ export default function EcommerceHome() {
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden md:flex justify-center">
                 <div className="relative w-80 h-80">
                   {branding.logo_url ? (
-                    <img src={branding.logo_url} alt={branding.nome_loja} className="w-full h-full object-contain drop-shadow-2xl" />
+                    <BrandLogo
+                      src={branding.logo_url}
+                      alt={branding.nome_loja}
+                      className="h-full w-full rounded-[2rem] border-background/10 bg-card/95 shadow-2xl"
+                      imageClassName="p-8"
+                    />
                   ) : (
                     <>
                       <div className="absolute inset-0 bg-white/20 rounded-3xl rotate-6" />
