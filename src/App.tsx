@@ -286,11 +286,12 @@ const App = () => (
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
-            <Route path="/ecommerce" element={<CartProvider><EcommerceLayout /></CartProvider>}>
+            <Route path="/ecommerce" element={<WishlistProvider><CartProvider><EcommerceLayout /></CartProvider></WishlistProvider>}>
               <Route index element={<EcommerceHome />} />
               <Route path="catalogo" element={<EcommerceCatalog />} />
               <Route path="produto/:id" element={<EcommerceProduct />} />
               <Route path="carrinho" element={<EcommerceCart />} />
+              <Route path="wishlist" element={<EcommerceWishlist />} />
               <Route path="checkout" element={<EcommerceCheckout />} />
               <Route path="b2b" element={<EcommerceB2B />} />
               <Route path="conta" element={<EcommerceAccount />} />

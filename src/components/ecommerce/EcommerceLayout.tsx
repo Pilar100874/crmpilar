@@ -209,7 +209,7 @@ export default function EcommerceLayout() {
               </Button>
             </Link>
             <Link to="/ecommerce/carrinho">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" data-cart-target>
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{totalItems}</span>
