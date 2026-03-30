@@ -74,7 +74,7 @@ export default function EcommerceLayout() {
                     <CollapsibleContent>
                       <div className="ml-4 space-y-0.5">
                         {group.categorias.map(cat => (
-                          <Link key={cat.id} to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`} className="block px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
+                          <Link key={cat.id} to={`/ecommerce/catalogo?grupo=${encodeURIComponent(group.grupo)}&categoria=${encodeURIComponent(cat.nome)}`} className="block px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
                             {cat.nome}
                           </Link>
                         ))}
