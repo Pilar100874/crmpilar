@@ -234,6 +234,11 @@ export default function EcommerceHome() {
         </div>
       </section>
 
+      {/* Home Banner Ads */}
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <EcommerceAdBanner posicao="home_banner" carousel autoPlay interval={5000} />
+      </section>
+
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="flex items-center justify-between mb-8">
