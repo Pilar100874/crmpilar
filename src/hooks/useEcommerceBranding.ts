@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 export interface EcommerceBranding {
   logo_url: string;
@@ -100,10 +101,12 @@ export function useEcommerceBranding() {
 
   useEffect(() => {
     const load = async () => {
-      const estId = localStorage.getItem("estabelecimentoId");
+      const estId = await getEstabelecimentoId();
       let query = supabase.from("ecommerce_config").select("*");
       if (estId) {
         query = query.eq("estabelecimento_id", estId);
+      } else {
+        query = query.order("updated_at", { ascending: false }).limit(1);
       }
       const { data } = await query.maybeSingle();
       if (data) {
