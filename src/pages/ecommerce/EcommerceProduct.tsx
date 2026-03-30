@@ -233,10 +233,20 @@ export default function EcommerceProduct() {
               }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
-              <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => setWishlisted(!wishlisted)}>
+              <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => {
+                setWishlisted(!wishlisted);
+                toast.success(wishlisted ? "Removido dos favoritos" : "Adicionado aos favoritos ❤️");
+              }}>
                 <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
               </Button>
-              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full">
+              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: product?.nome, url: window.location.href }).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link copiado para a área de transferência!");
+                }
+              }}>
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
