@@ -5025,7 +5025,7 @@ ${recentMessages}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
                         {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
                             <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
                               {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                             </span>
@@ -5056,7 +5056,7 @@ ${recentMessages}
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                                <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                                   +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
                                 </Badge>
                               )}
@@ -5127,7 +5127,7 @@ ${recentMessages}
                         <div className="flex items-start gap-3">
                           {/* Tarja lateral com nome do usuário vinculado */}
                           {contact.linkedUsers && contact.linkedUsers.length > 0 && (
-                            <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                            <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
                               <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[50px] truncate">
                                 {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                               </span>
@@ -5150,12 +5150,12 @@ ${recentMessages}
                             {/* Badge de usuários vinculados */}
                             {contact.linkedUsers && contact.linkedUsers.length > 0 && (
                               <div className="flex items-center gap-1 mt-1">
-                                <Badge className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
+                                <Badge className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-orange-100 text-orange-700 border-0">
                                   <User className="w-2.5 h-2.5" />
                                   {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || "Usuário"}
                                 </Badge>
                                 {contact.linkedUsers.length > 1 && (
-                                  <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
+                                  <Badge className="text-[10px] px-1.5 py-0 bg-orange-50 text-orange-600 border-0">
                                     +{contact.linkedUsers.length - 1}
                                   </Badge>
                                 )}
@@ -5190,7 +5190,7 @@ ${recentMessages}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
                         {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
                             <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
                               {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                             </span>
@@ -5221,7 +5221,7 @@ ${recentMessages}
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {/* Badge de usuários vinculados extra */}
                               {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
-                                <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                                <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                                   +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
                                 </Badge>
                               )}
@@ -5632,7 +5632,7 @@ ${recentMessages}
                       {/* Tarja lateral indicando vínculo com nome do usuário */}
                       {task.linkedUsers && task.linkedUsers.length > 0 ? (
                         <div 
-                          className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500"
+                          className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500"
                         >
                           <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
                             {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
@@ -5668,7 +5668,7 @@ ${recentMessages}
                            )}
                            {/* Badge de usuários vinculados adicional */}
                            {task.linkedUsers && task.linkedUsers.length > 1 && (
-                             <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                             <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                                +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                              </Badge>
                            )}
@@ -5981,7 +5981,7 @@ ${recentMessages}
                   >
                     {/* Tarja lateral com nome do usuário vinculado */}
                     {orcLinkedUsers.length > 0 && (
-                      <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                      <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500">
                         <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
                           {orcLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
                         </span>
@@ -6044,7 +6044,7 @@ ${recentMessages}
                           </Badge>
                           {/* Badge de usuários vinculados extra */}
                           {orcLinkedUsers.length > 1 && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                            <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                               +{orcLinkedUsers.length - 1} usuário{orcLinkedUsers.length > 2 ? 's' : ''}
                             </Badge>
                           )}
@@ -7643,7 +7643,7 @@ function MobileListContent({
             {/* Tarja lateral indicando vínculo com nome do usuário */}
             {task.linkedUsers && task.linkedUsers.length > 0 ? (
               <div 
-                className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500"
+                className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-orange-500"
               >
                 <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
                   {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
@@ -7674,7 +7674,7 @@ function MobileListContent({
                   )}
                   {/* Badge de usuários vinculados adicional */}
                   {task.linkedUsers && task.linkedUsers.length > 1 && (
-                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                    <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                       +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                     </Badge>
                   )}
