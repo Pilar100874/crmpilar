@@ -28,6 +28,7 @@ export default function EcommerceLayout() {
   const location = useLocation();
   const { branding } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
+  const isFromSystem = !!localStorage.getItem("estabelecimentoId");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
