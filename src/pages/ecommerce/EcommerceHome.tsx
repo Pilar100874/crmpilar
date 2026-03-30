@@ -62,7 +62,7 @@ export default function EcommerceHome() {
   const [products, setProducts] = useState<ProductWithPrice[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [priceMap, setPriceMap] = useState<Record<string, { preco_tabela: number; preco_minimo: number }>>({});
+  const [loading, setLoading] = useState(true);
   const { branding } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const categories: CategoryData[] = menuGroups.flatMap(g =>
