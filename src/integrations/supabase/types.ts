@@ -7866,6 +7866,158 @@ export type Database = {
           },
         ]
       }
+      pedidos_ecommerce: {
+        Row: {
+          cnpj_cliente: string | null
+          condicao_pagamento_nome: string | null
+          cpf_cliente: string | null
+          created_at: string
+          desconto: number
+          email_cliente: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_estado: string | null
+          endereco_numero: string | null
+          endereco_rua: string | null
+          estabelecimento_id: string
+          frete: number
+          id: string
+          nome_cliente: string
+          numero_pedido: string
+          observacoes: string | null
+          razao_social: string | null
+          status: string
+          subtotal: number
+          telefone_cliente: string | null
+          tipo_cliente: string
+          tipo_pagamento_nome: string | null
+          token_rastreamento: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          cnpj_cliente?: string | null
+          condicao_pagamento_nome?: string | null
+          cpf_cliente?: string | null
+          created_at?: string
+          desconto?: number
+          email_cliente?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
+          estabelecimento_id: string
+          frete?: number
+          id?: string
+          nome_cliente: string
+          numero_pedido: string
+          observacoes?: string | null
+          razao_social?: string | null
+          status?: string
+          subtotal?: number
+          telefone_cliente?: string | null
+          tipo_cliente?: string
+          tipo_pagamento_nome?: string | null
+          token_rastreamento?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Update: {
+          cnpj_cliente?: string | null
+          condicao_pagamento_nome?: string | null
+          cpf_cliente?: string | null
+          created_at?: string
+          desconto?: number
+          email_cliente?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
+          estabelecimento_id?: string
+          frete?: number
+          id?: string
+          nome_cliente?: string
+          numero_pedido?: string
+          observacoes?: string | null
+          razao_social?: string | null
+          status?: string
+          subtotal?: number
+          telefone_cliente?: string | null
+          tipo_cliente?: string
+          tipo_pagamento_nome?: string | null
+          token_rastreamento?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_ecommerce_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_ecommerce_itens: {
+        Row: {
+          created_at: string
+          foto_url: string | null
+          id: string
+          nome_produto: string
+          pedido_id: string
+          preco_unitario: number
+          produto_id: string | null
+          quantidade: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          nome_produto: string
+          pedido_id: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Update: {
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          nome_produto?: string
+          pedido_id?: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_ecommerce_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_ecommerce"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_ecommerce_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedidos_marketplace: {
         Row: {
           conta_marketplace_id: string
