@@ -82,10 +82,10 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
           {["sobre", "entrega", "trocas", "privacidade", "termos"].includes(page) && (
             <div className="space-y-6">
               <h1 className="text-3xl font-black text-center">{pageTitles[page]}</h1>
-              {content?.conteudo_html ? (
+              {content?.conteudo ? (
                 <Card>
                   <CardContent className="p-6 prose prose-sm max-w-none text-foreground/80">
-                    <div dangerouslySetInnerHTML={{ __html: content.conteudo_html }} />
+                    <div dangerouslySetInnerHTML={{ __html: content.conteudo }} />
                   </CardContent>
                 </Card>
               ) : (
@@ -117,10 +117,10 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
                   </Card>
                 ))}
               </div>
-              {content?.conteudo_html && (
+              {content?.conteudo && (
                 <Card>
                   <CardContent className="p-6 prose prose-sm max-w-none text-foreground/80">
-                    <div dangerouslySetInnerHTML={{ __html: content.conteudo_html }} />
+                    <div dangerouslySetInnerHTML={{ __html: content.conteudo }} />
                   </CardContent>
                 </Card>
               )}
@@ -144,9 +144,9 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
           {page === "faq" && (
             <div className="space-y-6">
               <h1 className="text-3xl font-black text-center">Perguntas Frequentes</h1>
-              {content?.conteudo_html && (
+              {content?.conteudo && (
                 <div className="prose prose-sm max-w-none text-center text-muted-foreground mb-4">
-                  <div dangerouslySetInnerHTML={{ __html: content.conteudo_html }} />
+                  <div dangerouslySetInnerHTML={{ __html: content.conteudo }} />
                 </div>
               )}
               <Accordion type="single" collapsible className="space-y-2">
