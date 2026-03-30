@@ -66,7 +66,7 @@ export default function EcommerceHome() {
   const { branding } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const categories: CategoryData[] = menuGroups.flatMap(g =>
-    g.categorias.map(c => ({ id: c.id, nome: c.nome, count: 0 }))
+    g.categorias.map(c => ({ id: c.id, nome: c.nome, count: 0, icone_url: c.icone_url }))
   );
 
   const vis = branding.secoes_visiveis || {};
