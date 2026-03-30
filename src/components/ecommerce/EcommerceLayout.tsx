@@ -98,7 +98,7 @@ export default function EcommerceLayout() {
           {/* Logo */}
           <Link to="/ecommerce" className="flex-shrink-0">
             {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.nome_loja} className="h-8 md:h-10 object-contain" />
+              <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 md:max-h-12 max-w-[120px] md:max-w-[160px] object-contain" />
             ) : (
               <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
                 {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
@@ -197,7 +197,7 @@ export default function EcommerceLayout() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               {branding.logo_url ? (
-                <img src={branding.logo_url} alt={branding.nome_loja} className="h-8 object-contain mb-4" />
+                <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain mb-4" />
               ) : (
                 <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
               )}
