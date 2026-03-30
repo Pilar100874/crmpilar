@@ -74,7 +74,7 @@ export default function EcommerceLayout() {
                     <CollapsibleContent>
                       <div className="ml-4 space-y-0.5">
                         {group.categorias.map(cat => (
-                          <Link key={cat.id} to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`} className="block px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
+                          <Link key={cat.id} to={`/ecommerce/catalogo?grupo=${encodeURIComponent(group.grupo)}&categoria=${encodeURIComponent(cat.nome)}`} className="block px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
                             {cat.nome}
                           </Link>
                         ))}
@@ -168,7 +168,7 @@ export default function EcommerceLayout() {
                   {megaMenuOpen === group.grupo && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }} className="absolute top-full left-0 bg-card rounded-xl shadow-lg border p-4 min-w-[200px] z-50">
                       {group.categorias.map(cat => (
-                        <Link key={cat.id} to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`} className="block px-3 py-2 text-sm rounded-lg hover:bg-accent transition-colors">
+                        <Link key={cat.id} to={`/ecommerce/catalogo?grupo=${encodeURIComponent(group.grupo)}&categoria=${encodeURIComponent(cat.nome)}`} className="block px-3 py-2 text-sm rounded-lg hover:bg-accent transition-colors">
                           {cat.nome}
                         </Link>
                       ))}

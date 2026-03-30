@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Grid3X3, List, Star, Heart, ShoppingCart, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Grid3X3, List, Heart, ShoppingCart, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -17,12 +16,14 @@ import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 interface Product {
   id: string;
   nome: string;
-  tipo: string | null;
-  gramatura: string | null;
-  largura: string | null;
-  comprimento: string | null;
-  embalagem: string | null;
-  quantidade: number | null;
+  descricao: string | null;
+  foto_url: string | null;
+  preco_tabela: number | null;
+  preco_minimo: number | null;
+  estoque: number | null;
+  marca: string | null;
+  categoria_nome: string | null;
+  grupo_nome: string | null;
 }
 
 const SORT_OPTIONS = [
@@ -35,42 +36,62 @@ const SORT_OPTIONS = [
 
 export default function EcommerceCatalog() {
   const [searchParams] = useSearchParams();
+  const categoriaParam = searchParams.get("categoria");
+  const grupoParam = searchParams.get("grupo");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("relevancia");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedGramaturas, setSelectedGramaturas] = useState<string[]>([]);
-  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
-  const [availableGramaturas, setAvailableGramaturas] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
+  const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [categoriaParam, grupoParam]);
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      // Get estabelecimento_id from localStorage
       const estabId = localStorage.getItem("estabelecimentoId");
       if (!estabId) { setLoading(false); return; }
 
-      const { data, error } = await supabase
-        .from("produtos_importados")
-        .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade")
+      let query = supabase
+        .from("produtos")
+        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
         .eq("estabelecimento_id", estabId)
-        .limit(200);
+        .eq("ativo", true);
+
+      const { data, error } = await query.limit(500);
 
       if (!error && data) {
-        setProducts(data);
-        // Extract unique types and gramaturas for filters
-        const types = [...new Set(data.map(p => p.tipo).filter(Boolean))] as string[];
-        const grams = [...new Set(data.map(p => p.gramatura).filter(Boolean))] as string[];
-        setAvailableTypes(types.sort());
-        setAvailableGramaturas(grams.sort());
+        let mapped = data.map((p: any) => ({
+          id: p.id,
+          nome: p.nome,
+          descricao: p.descricao,
+          foto_url: p.foto_url,
+          preco_tabela: p.preco_tabela,
+          preco_minimo: p.preco_minimo,
+          estoque: p.estoque,
+          marca: p.marca,
+          categoria_nome: p.categoria?.nome || null,
+          grupo_nome: p.grupo?.nome || null,
+        }));
+
+        // Filtrar por categoria ou grupo via URL
+        if (categoriaParam) {
+          mapped = mapped.filter(p => p.categoria_nome === categoriaParam);
+        }
+        if (grupoParam) {
+          mapped = mapped.filter(p => p.grupo_nome === grupoParam);
+        }
+
+        setProducts(mapped);
+
+        const marcas = [...new Set(mapped.map(p => p.marca).filter(Boolean))] as string[];
+        setAvailableMarcas(marcas.sort());
       }
     } catch (err) {
       console.error("Error loading products:", err);
@@ -80,14 +101,15 @@ export default function EcommerceCatalog() {
 
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (selectedTypes.length > 0 && (!p.tipo || !selectedTypes.includes(p.tipo))) return false;
-    if (selectedGramaturas.length > 0 && (!p.gramatura || !selectedGramaturas.includes(p.gramatura))) return false;
+    if (selectedMarcas.length > 0 && (!p.marca || !selectedMarcas.includes(p.marca))) return false;
     return true;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "nome-az": return a.nome.localeCompare(b.nome);
+      case "menor-preco": return (a.preco_minimo ?? 0) - (b.preco_minimo ?? 0);
+      case "maior-preco": return (b.preco_minimo ?? 0) - (a.preco_minimo ?? 0);
       default: return 0;
     }
   });
@@ -97,13 +119,17 @@ export default function EcommerceCatalog() {
   };
 
   const clearAllFilters = () => {
-    setSelectedTypes([]);
-    setSelectedGramaturas([]);
+    setSelectedMarcas([]);
     setSearchQuery("");
-    setPriceRange([0, 500]);
   };
 
-  const activeFilterCount = selectedTypes.length + selectedGramaturas.length;
+  const activeFilterCount = selectedMarcas.length;
+
+  const pageTitle = categoriaParam
+    ? categoriaParam
+    : grupoParam
+      ? grupoParam
+      : "Catálogo de Produtos";
 
   const FilterPanel = () => (
     <div className="space-y-6">
@@ -116,37 +142,20 @@ export default function EcommerceCatalog() {
         </div>
       )}
 
-      {/* Type filter */}
-      {availableTypes.length > 0 && (
+      {availableMarcas.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-3">Tipo</h4>
+          <h4 className="text-sm font-semibold mb-3">Marca</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {availableTypes.map(type => (
-              <label key={type} className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
-                <Checkbox checked={selectedTypes.includes(type)} onCheckedChange={() => toggleFilter(type, selectedTypes, setSelectedTypes)} />
-                <span className="text-sm">{type}</span>
+            {availableMarcas.map(m => (
+              <label key={m} className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
+                <Checkbox checked={selectedMarcas.includes(m)} onCheckedChange={() => toggleFilter(m, selectedMarcas, setSelectedMarcas)} />
+                <span className="text-sm">{m}</span>
               </label>
             ))}
           </div>
         </div>
       )}
 
-      {/* Gramatura filter */}
-      {availableGramaturas.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold mb-3">Gramatura</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {availableGramaturas.map(gram => (
-              <label key={gram} className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
-                <Checkbox checked={selectedGramaturas.includes(gram)} onCheckedChange={() => toggleFilter(gram, selectedGramaturas, setSelectedGramaturas)} />
-                <span className="text-sm">{gram}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Availability */}
       <div>
         <h4 className="text-sm font-semibold mb-3">Disponibilidade</h4>
         <label className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
@@ -157,9 +166,13 @@ export default function EcommerceCatalog() {
     </div>
   );
 
+  const formatPrice = (value: number | null) => {
+    if (!value) return null;
+    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Catalog Top Banner */}
       <div className="mb-6">
         <EcommerceAdBanner posicao="catalogo_topo" carousel />
       </div>
@@ -168,13 +181,19 @@ export default function EcommerceCatalog() {
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-medium">Catálogo</span>
+        {grupoParam && (
+          <>
+            <Link to={`/ecommerce/catalogo?grupo=${encodeURIComponent(grupoParam)}`} className="hover:text-primary transition-colors">{grupoParam}</Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </>
+        )}
+        <span className="text-foreground font-medium">{categoriaParam || "Catálogo"}</span>
       </nav>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Catálogo de Produtos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">{pageTitle}</h1>
           <p className="text-sm text-muted-foreground mt-1">{sortedProducts.length} produto(s) encontrado(s)</p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -200,7 +219,6 @@ export default function EcommerceCatalog() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-          {/* Mobile filter button */}
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="lg:hidden relative h-10 w-10">
@@ -223,7 +241,6 @@ export default function EcommerceCatalog() {
       </div>
 
       <div className="flex gap-8">
-        {/* Desktop filters */}
         <aside className="hidden lg:block w-64 flex-shrink-0">
           <div className="sticky top-24">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -233,19 +250,12 @@ export default function EcommerceCatalog() {
           </div>
         </aside>
 
-        {/* Products */}
         <div className="flex-1">
-          {/* Active filter badges */}
           {activeFilterCount > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {selectedTypes.map(t => (
-                <Badge key={t} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleFilter(t, selectedTypes, setSelectedTypes)}>
-                  {t} <X className="h-3 w-3" />
-                </Badge>
-              ))}
-              {selectedGramaturas.map(g => (
-                <Badge key={g} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleFilter(g, selectedGramaturas, setSelectedGramaturas)}>
-                  {g} <X className="h-3 w-3" />
+              {selectedMarcas.map(m => (
+                <Badge key={m} variant="secondary" className="gap-1 cursor-pointer" onClick={() => toggleFilter(m, selectedMarcas, setSelectedMarcas)}>
+                  {m} <X className="h-3 w-3" />
                 </Badge>
               ))}
             </div>
@@ -270,10 +280,14 @@ export default function EcommerceCatalog() {
                 <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
                   <Link to={`/ecommerce/produto/${product.id}`}>
                     <Card className={`group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${viewMode === "list" ? "flex flex-row" : ""}`}>
-                      <div className={`relative ${viewMode === "list" ? "w-32 h-32 flex-shrink-0" : "aspect-square"} bg-muted/30 flex items-center justify-center`}>
-                        <span className="text-4xl">📄</span>
-                        {product.quantidade && product.quantidade > 0 && (
-                          <Badge className="absolute top-2 left-2 text-[10px] bg-success text-success-foreground border-0">Em estoque</Badge>
+                      <div className={`relative ${viewMode === "list" ? "w-32 h-32 flex-shrink-0" : "aspect-square"} bg-muted/30 flex items-center justify-center overflow-hidden`}>
+                        {product.foto_url ? (
+                          <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <span className="text-4xl">📄</span>
+                        )}
+                        {product.estoque && product.estoque > 0 && (
+                          <Badge className="absolute top-2 left-2 text-[10px] bg-green-600 text-white border-0">Em estoque</Badge>
                         )}
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
                           <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); }}>
@@ -283,16 +297,18 @@ export default function EcommerceCatalog() {
                       </div>
                       <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-3`}>
                         <div>
-                          {product.tipo && <p className="text-xs text-muted-foreground">{product.tipo}</p>}
+                          {product.categoria_nome && <p className="text-xs text-muted-foreground">{product.categoria_nome}</p>}
                           <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{product.nome}</p>
-                          <div className="flex flex-wrap gap-1 mt-1.5">
-                            {product.gramatura && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.gramatura}</Badge>}
-                            {product.largura && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.largura}</Badge>}
-                            {product.embalagem && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.embalagem}</Badge>}
+                          <div className="mt-2">
+                            {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo && (
+                              <p className="text-xs text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
+                            )}
+                            {product.preco_minimo ? (
+                              <p className="text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Sob consulta</p>
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1.5">
-                            Qtd: {product.quantidade ?? 0}
-                          </p>
                         </div>
                         {viewMode === "list" && (
                           <Button size="sm" className="gap-1 rounded-full ml-4">
