@@ -1,16 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Heart, ShoppingCart, Trash2, PackageX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function EcommerceWishlist() {
   const { items, removeItem } = useWishlist();
   const { addItem } = useCart();
+  const [stockMap, setStockMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items.map(i => i.productId);
+    supabase.from("produtos").select("id, estoque_atual").in("id", ids).then(({ data }) => {
+      if (data) {
+        const map: Record<string, number> = {};
+        data.forEach(p => { map[p.id] = p.estoque_atual ?? 0; });
+        setStockMap(map);
+      }
+    });
+  }, [items]);
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   if (items.length === 0) {
