@@ -37,6 +37,7 @@ export default function SystemVisualConfig() {
 
       if (data) {
         setSplashVideoUrl(data.splash_video_url || "");
+        setSplashVideoLoop(data.splash_video_loop ?? true);
       }
     } catch (err) {
       console.error("Erro ao carregar config visual:", err);
