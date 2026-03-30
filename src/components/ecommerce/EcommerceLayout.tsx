@@ -28,7 +28,7 @@ export default function EcommerceLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
-  const { branding } = useEcommerceBranding();
+  const { branding, loading: brandingLoading } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
 
