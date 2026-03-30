@@ -232,7 +232,7 @@ export default function EcommerceProduct() {
         <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
       </nav>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 min-w-0">
         {/* Gallery */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <div className="aspect-square max-h-[55vh] md:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
