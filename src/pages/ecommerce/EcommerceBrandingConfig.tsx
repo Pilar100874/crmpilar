@@ -96,7 +96,7 @@ export default function EcommerceBrandingConfig() {
   const handleUpload = async (file: File, type: "logo" | "video") => {
     setUploading(type);
     try {
-      const estId = await getEstabelecimentoId();
+      const estId = configEstId || await getEstabelecimentoId();
       if (!estId) {
         toast.error("Estabelecimento não encontrado");
         setUploading(null);
