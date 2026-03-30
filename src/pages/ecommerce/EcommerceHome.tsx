@@ -74,16 +74,12 @@ export default function EcommerceHome() {
     if (!estabId) { setLoading(false); return; }
 
     // Load products, categories, and prices in parallel
-    const [productsRes, categoriesRes, pricesRes, countRes] = await Promise.all([
+    const [productsRes, pricesRes, countRes] = await Promise.all([
       supabase
         .from("produtos_importados")
         .select("id, nome, tipo, gramatura, largura, quantidade, embalagem")
         .eq("estabelecimento_id", estabId)
         .limit(12),
-      supabase
-        .from("produto_categorias")
-        .select("id, nome")
-        .eq("estabelecimento_id", estabId),
       supabase
         .from("tabelas_preco")
         .select("categoria_id, preco_tabela, preco_minimo")
@@ -107,32 +103,6 @@ export default function EcommerceHome() {
         }
       });
       setPriceMap(map);
-    }
-
-    // Build categories with product counts
-    if (categoriesRes.data) {
-      // Count products per category name (matching by nome)
-      const productNames = productsRes.data?.map(p => p.nome.toLowerCase()) || [];
-      const cats: CategoryData[] = categoriesRes.data.map((cat: any) => ({
-        id: cat.id,
-        nome: cat.nome,
-        count: productNames.filter(n => n.includes(cat.nome.toLowerCase())).length || 
-               (productsRes.data?.length || 0), // fallback
-      }));
-
-      // If no categories in DB, generate from product names
-      if (cats.length === 0 && productsRes.data) {
-        const nameGroups: Record<string, number> = {};
-        productsRes.data.forEach(p => {
-          const base = p.nome.trim();
-          nameGroups[base] = (nameGroups[base] || 0) + 1;
-        });
-        Object.entries(nameGroups).forEach(([name, count]) => {
-          cats.push({ id: name, nome: name, count });
-        });
-      }
-
-      setCategories(cats);
     }
 
     setLoading(false);
