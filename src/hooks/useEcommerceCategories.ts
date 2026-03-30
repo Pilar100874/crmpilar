@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface EcommerceCategory {
   id: string;
   nome: string;
+  icone_url?: string | null;
 }
 
 export interface EcommerceMenuGroup {
