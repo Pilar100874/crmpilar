@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 
 interface Product {
   id: string;
@@ -37,6 +38,7 @@ const formatPrice = (value: number | null) => {
 export default function EcommerceProduct() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { branding } = useEcommerceBranding();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -173,7 +175,7 @@ export default function EcommerceProduct() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+      {branding.feat_breadcrumb && <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <Link to="/ecommerce/catalogo" className="hover:text-primary transition-colors">Catálogo</Link>
@@ -191,7 +193,7 @@ export default function EcommerceProduct() {
         )}
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
-      </nav>
+      </nav>}
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
         {/* Gallery */}
@@ -218,14 +220,14 @@ export default function EcommerceProduct() {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.nome}</h1>
           
           {/* Rating */}
-          <div className="flex items-center gap-2">
+          {branding.feat_rating_estrelas && <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
               {[1,2,3,4,5].map(s => (
                 <Star key={s} className={`h-4 w-4 ${s <= 4 ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
               ))}
             </div>
             <span className="text-sm text-muted-foreground">4.0 (12 avaliações)</span>
-          </div>
+          </div>}
 
           {/* Price */}
           <div>
@@ -249,12 +251,12 @@ export default function EcommerceProduct() {
           </div>
 
           {/* Stock */}
-          <div className="flex items-center gap-2">
+          {branding.feat_estoque_visivel && <div className="flex items-center gap-2">
             <div className={`h-2 w-2 rounded-full ${inStock ? "bg-green-600" : "bg-destructive"}`} />
             <span className={`text-sm font-medium ${inStock ? "text-green-600" : "text-destructive"}`}>
               {inStock ? `Em estoque (${product.estoque} un.)` : "Indisponível"}
             </span>
-          </div>
+          </div>}
 
           <Separator />
 
@@ -282,20 +284,20 @@ export default function EcommerceProduct() {
               }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
-              <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => {
+              {branding.feat_favoritos && <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => {
                 setWishlisted(!wishlisted);
                 toast.success(wishlisted ? "Removido dos favoritos" : "Adicionado aos favoritos ❤️");
               }}>
                 <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
-              </Button>
-              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={handleShareProduct}>
+              </Button>}
+              {branding.feat_compartilhar && <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={handleShareProduct}>
                 <Share2 className="h-5 w-5" />
-              </Button>
+              </Button>}
             </div>
           </div>
 
           {/* B2B pricing hint */}
-          <Card className="border-primary/20 bg-primary/5">
+          {branding.feat_b2b_card && <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-4 flex items-start gap-3">
               <Package className="h-5 w-5 text-primary mt-0.5" />
               <div>
@@ -308,7 +310,7 @@ export default function EcommerceProduct() {
                 </Link>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Trust signals */}
           <div className="grid grid-cols-3 gap-3">
@@ -334,8 +336,8 @@ export default function EcommerceProduct() {
               { value: "descricao", label: "Descrição" },
               { value: "especificacoes", label: "Especificações" },
               { value: "entrega", label: "Entrega" },
-              { value: "avaliacoes", label: "Avaliações (12)" },
-            ].map(tab => (
+              ...(branding.feat_avaliacoes ? [{ value: "avaliacoes", label: "Avaliações (12)" }] : []),
+            ].map((tab: any) => (
               <TabsTrigger key={tab.value} value={tab.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-6 py-3">
                 {tab.label}
               </TabsTrigger>
@@ -399,7 +401,7 @@ export default function EcommerceProduct() {
       </div>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {branding.feat_produtos_relacionados && relatedProducts.length > 0 && (
         <section className="mt-16 mb-8">
           <h2 className="text-xl font-bold mb-6">Produtos Relacionados</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
