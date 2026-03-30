@@ -520,14 +520,14 @@ export default function TvDashboardVendas() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground flex items-center justify-center">
         <RefreshCw className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden p-6">
+    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-hidden p-6">
       {/* Header Minimal - apenas botão voltar */}
       <div className="absolute top-4 right-6 z-10">
         <Button 
@@ -670,8 +670,8 @@ export default function TvDashboardVendas() {
 
         {/* Team List - Full Width Vertical Layout */}
         <div className="flex-1 min-h-0">
-          <Card className="h-full bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-            <CardHeader className="py-2 px-6 border-b border-slate-800/50">
+          <Card className="h-full bg-black/30 backdrop-blur-sm border-border/50 flex flex-col">
+            <CardHeader className="py-2 px-6 border-b border-border/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground/60">
                   <Users className="h-5 w-5 text-blue-400" />
@@ -712,7 +712,7 @@ export default function TvDashboardVendas() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className={`w-1.5 h-1.5 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-muted-foreground/80'}`} />
-                          <span className="font-medium text-[11px] text-slate-200 truncate max-w-[120px]">
+                          <span className="font-medium text-[11px] text-muted-foreground truncate max-w-[120px]">
                             {vendedor.nome}
                           </span>
                         </div>

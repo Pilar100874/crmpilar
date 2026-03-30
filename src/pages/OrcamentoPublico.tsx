@@ -252,7 +252,7 @@ export default function OrcamentoPublico() {
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-3">
               {orcamento.itens?.map((item: any) => (
-                <div key={item.id} className="bg-foreground/80 rounded-lg p-4 border border-border hover:border-slate-600 transition-colors">
+                <div key={item.id} className="bg-foreground/80 rounded-lg p-4 border border-border hover:border-border transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 bg-muted-foreground rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {item.produto?.foto_url ? (
@@ -308,7 +308,7 @@ export default function OrcamentoPublico() {
                           ...precosSugeridos,
                           [item.id]: Number(e.target.value)
                         })}
-                        className="mt-2 bg-muted-foreground border-slate-600 text-white h-11"
+                        className="mt-2 bg-muted-foreground border-border text-white h-11"
                       />
                     </div>
                   )}
@@ -382,7 +382,7 @@ export default function OrcamentoPublico() {
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   rows={4}
-                  className="mt-2 bg-muted-foreground/80 border-slate-500 text-white placeholder:text-muted-foreground"
+                  className="mt-2 bg-muted-foreground/80 border-border text-white placeholder:text-muted-foreground"
                 />
               </div>
             )}
@@ -426,7 +426,7 @@ export default function OrcamentoPublico() {
                 <Button 
                   onClick={() => setEditMode(false)}
                   variant="outline"
-                  className="w-full bg-muted-foreground border-slate-600 text-white hover:bg-muted-foreground/80 h-12"
+                  className="w-full bg-muted-foreground border-border text-white hover:bg-muted-foreground/80 h-12"
                 >
                   Cancelar
                 </Button>
@@ -443,7 +443,7 @@ export default function OrcamentoPublico() {
                 <Button 
                   onClick={() => setEditMode(true)}
                   variant="outline"
-                  className="w-full bg-muted-foreground border-slate-600 text-white hover:bg-muted-foreground/80 h-12"
+                  className="w-full bg-muted-foreground border-border text-white hover:bg-muted-foreground/80 h-12"
                 >
                   <Edit2 className="w-5 h-5 mr-2" />
                   Sugerir Preços
