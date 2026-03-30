@@ -21,6 +21,7 @@ export default function EcommerceBrandingConfig() {
   const [config, setConfig] = useState({
     logo_url: "",
     background_video_url: "",
+    background_image_url: "",
     background_type: "gradient" as string,
     nome_loja: "Minha Loja",
     slogan: "",
@@ -30,6 +31,7 @@ export default function EcommerceBrandingConfig() {
   const [uploading, setUploading] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadConfig();
