@@ -472,5 +472,15 @@ export default function EcommerceProduct() {
         </div>
       </div>
     </div>
+    {flyAnim && (
+      <FlyToAnimation
+        startRect={flyAnim.startRect}
+        targetSelector={flyAnim.target}
+        imageUrl={flyAnim.image}
+        icon={flyAnim.icon}
+        onComplete={() => setFlyAnim(null)}
+      />
+    )}
+    </>
   );
 }
