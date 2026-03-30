@@ -39,7 +39,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const getCardClassName = () => {
     const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
     
-    return `${baseClass} bg-white border border-slate-300 ${
+    return `${baseClass} bg-card dark:bg-card border border-border ${
       selected 
         ? "ring-2 ring-primary border-primary" 
         : "hover:border-slate-400"
@@ -79,7 +79,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                   <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+              <DropdownMenuContent className="w-56 bg-card dark:bg-card border-border shadow-lg">
                 <DropdownMenuItem
                   onClick={() => {
                     (data as any).onAddNote?.(id);

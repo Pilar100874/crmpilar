@@ -146,14 +146,14 @@ export const BotManager = ({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+        <Button variant="outline" size="sm" className="bg-card dark:bg-card border-border text-foreground hover:bg-muted hover:text-foreground">
           <Folder className="w-4 h-4 mr-2" />
           Gerenciar Bots ({savedBots.length})
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] bg-white border-slate-200 text-slate-900">
+      <SheetContent className="w-[400px] sm:w-[540px] bg-card dark:bg-card border-border text-foreground">
         <SheetHeader>
-          <SheetTitle className="text-slate-900">Gerenciamento de Bots</SheetTitle>
+          <SheetTitle className="text-foreground">Gerenciamento de Bots</SheetTitle>
           <SheetDescription className="text-slate-600">
             Crie, edite e gerencie seus bots de atendimento
           </SheetDescription>
@@ -162,7 +162,7 @@ export const BotManager = ({
         <div className="mt-6 space-y-4">
           {/* Current Bot Name */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900 flex items-center gap-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
               Bot Atual
             </label>
             <div className="flex gap-2">
@@ -174,7 +174,7 @@ export const BotManager = ({
                     placeholder="Nome do bot"
                     autoFocus
                     onKeyPress={(e) => e.key === "Enter" && handleNameSave()}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-card dark:bg-card border-border text-foreground"
                   />
                   <Button size="icon" onClick={handleNameSave} className="bg-primary hover:bg-primary/90">
                     <Check className="w-4 h-4" />
@@ -185,7 +185,7 @@ export const BotManager = ({
                   <Input 
                     value={currentBotName} 
                     disabled 
-                    className="flex-1 bg-slate-50 border-slate-200 text-slate-900" 
+                    className="flex-1 bg-slate-50 border-slate-200 text-foreground" 
                   />
                   <Button
                     variant="outline"
@@ -194,7 +194,7 @@ export const BotManager = ({
                       setTempName(currentBotName);
                       setEditingName(true);
                     }}
-                    className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    className="bg-card dark:bg-card border-border text-foreground hover:bg-muted hover:text-foreground"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -210,7 +210,7 @@ export const BotManager = ({
 
           {/* Saved Bots List */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900">Bots Salvos</label>
+            <label className="text-sm font-medium text-foreground">Bots Salvos</label>
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
                 {savedBots.length === 0 ? (
@@ -222,7 +222,7 @@ export const BotManager = ({
                   savedBots.map((bot) => (
                     <Card
                       key={bot.id}
-                      className={`p-3 bg-white border-slate-200 hover:bg-slate-50 transition-colors ${
+                      className={`p-3 bg-card dark:bg-card border-border hover:bg-muted transition-colors ${
                         currentBotId === bot.id ? "border-primary" : ""
                       }`}
                     >

@@ -240,10 +240,10 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
 
   return (
     <>
-      <div className="h-16 border-b bg-white flex items-center justify-between px-6 gap-6 shrink-0">
+      <div className="h-16 border-b bg-card dark:bg-card flex items-center justify-between px-6 gap-6 shrink-0">
         {/* Left section - Title */}
         <div className="flex flex-col">
-          <h1 className="text-lg font-bold text-slate-900">EDITOR DE DESIGN</h1>
+          <h1 className="text-lg font-bold text-foreground">EDITOR DE DESIGN</h1>
           <p className="text-xs text-slate-500">Crie e edite seus designs personalizados</p>
         </div>
 
@@ -253,24 +253,24 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             variant="outline"
             size="icon"
             onClick={() => navigate('/')}
-            className="h-10 w-10 rounded-full bg-white border-slate-300 hover:bg-slate-50"
+            className="h-10 w-10 rounded-full bg-card dark:bg-card border-border hover:bg-muted"
             title="Voltar"
           >
-            <Home className="h-4 w-4 text-slate-700" />
+            <Home className="h-4 w-4 text-foreground" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
             onClick={handleZoomOut}
-            className="h-10 w-10 rounded-full bg-white border-slate-300 hover:bg-slate-50"
+            className="h-10 w-10 rounded-full bg-card dark:bg-card border-border hover:bg-muted"
             title="Diminuir zoom"
           >
-            <ZoomOut className="h-4 w-4 text-slate-700" />
+            <ZoomOut className="h-4 w-4 text-foreground" />
           </Button>
 
-          <div className="flex items-center justify-center min-w-[60px] h-10 px-3 rounded-full border border-slate-300 bg-white">
-            <span className="text-sm font-medium text-slate-900">
+          <div className="flex items-center justify-center min-w-[60px] h-10 px-3 rounded-full border border-border bg-white">
+            <span className="text-sm font-medium text-foreground">
               {Math.round(zoomLevel * 100)}%
             </span>
           </div>
@@ -279,10 +279,10 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             variant="outline"
             size="icon"
             onClick={handleZoomIn}
-            className="h-10 w-10 rounded-full bg-white border-slate-300 hover:bg-slate-50"
+            className="h-10 w-10 rounded-full bg-card dark:bg-card border-border hover:bg-muted"
             title="Aumentar zoom"
           >
-            <ZoomIn className="h-4 w-4 text-slate-700" />
+            <ZoomIn className="h-4 w-4 text-foreground" />
           </Button>
         </div>
 
@@ -295,7 +295,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
                   variant="outline"
                   size="sm"
                   onClick={onChangePlatform}
-                  className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
+                  className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
                 >
                   <MonitorSmartphone className="h-4 w-4 mr-2" />
                   {currentPlatform?.label || 'Plataforma'}
@@ -311,7 +311,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             variant="outline"
             size="sm"
             onClick={handleSaveAs}
-            className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
+            className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
             <Copy className="h-4 w-4 mr-2" />
             Salvar Como
@@ -321,7 +321,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             variant="outline"
             size="sm"
             onClick={shareDesign}
-            className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
+            className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
             <Share2 className="h-4 w-4 mr-2" />
             Compartilhar
@@ -331,7 +331,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             variant="outline"
             size="sm"
             onClick={downloadDesign}
-            className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50 h-9"
+            className="bg-card dark:bg-card border-border text-foreground hover:bg-muted h-9"
           >
             <Download className="h-4 w-4 mr-2" />
             Exportar
@@ -361,9 +361,9 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
       </div>
 
       <Dialog open={showSaveAsDialog} onOpenChange={setShowSaveAsDialog}>
-        <DialogContent className="sm:max-w-[425px] bg-white">
+        <DialogContent className="sm:max-w-[425px] bg-card dark:bg-card">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">Salvar Como</DialogTitle>
+            <DialogTitle className="text-foreground">Salvar Como</DialogTitle>
             <DialogDescription className="text-slate-500">
               Crie uma cópia do projeto com um novo nome.
             </DialogDescription>
@@ -375,11 +375,11 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
               placeholder="Nome do novo projeto"
               onKeyDown={(e) => e.key === 'Enter' && confirmSaveAs()}
               autoFocus
-              className="bg-white border-slate-200 text-slate-900"
+              className="bg-card dark:bg-card border-border text-foreground"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSaveAsDialog(false)} className="bg-white text-slate-900">
+            <Button variant="outline" onClick={() => setShowSaveAsDialog(false)} className="bg-card dark:bg-card text-foreground">
               Cancelar
             </Button>
             <Button onClick={confirmSaveAs} disabled={!newProjectName.trim()}>

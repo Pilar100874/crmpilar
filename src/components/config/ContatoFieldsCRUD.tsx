@@ -92,7 +92,7 @@ const SortableFieldItem = ({ field, onRemove, onToggleRequired, onChanged }: Sor
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 border rounded-md bg-white"
+      className="flex items-center gap-3 p-3 border rounded-md bg-card dark:bg-card"
     >
       <div {...attributes} {...listeners} className="cursor-move">
         <GripVertical className="w-4 h-4 text-muted-foreground" />
