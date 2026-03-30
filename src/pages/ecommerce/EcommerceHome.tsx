@@ -85,21 +85,13 @@ export default function EcommerceHome() {
       supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true),
     ]);
 
-    if (productsRes.data) setProducts(productsRes.data);
+    if (productsRes.data) setProducts(productsRes.data as any);
     if (countRes.count) setTotalProducts(countRes.count);
-    if (pricesRes.data) {
-      const map: Record<string, { preco_tabela: number; preco_minimo: number }> = {};
-      pricesRes.data.forEach((p: any) => { if (p.categoria_id) map[p.categoria_id] = { preco_tabela: p.preco_tabela, preco_minimo: p.preco_minimo }; });
-      setPriceMap(map);
-    }
     setLoading(false);
   };
 
   const getProductPrice = (product: ProductWithPrice): { tabela: number | null; minimo: number | null } => {
-    for (const [, prices] of Object.entries(priceMap)) {
-      return { tabela: prices.preco_tabela, minimo: prices.preco_minimo };
-    }
-    return { tabela: null, minimo: null };
+    return { tabela: product.preco_tabela, minimo: product.preco_minimo };
   };
 
   const featuredProducts = products.slice(0, 6);
