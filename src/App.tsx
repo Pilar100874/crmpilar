@@ -182,6 +182,10 @@ const App = () => (
               <Route path="/ecommerce-rules" element={<EcommerceRulesPage />} />
               <Route path="/ecommerce-rules-editor" element={<EcommerceRulesEditor />} />
               <Route path="/pedido-tracking" element={<PedidoTracking />} />
+              <Route path="/ecommerce-config" element={<EcommerceConfigHub />} />
+              <Route path="/ecommerce-config/branding" element={<EcommerceBrandingConfig />} />
+              <Route path="/ecommerce-config/conteudos" element={<EcommerceContentEditor />} />
+              <Route path="/ecommerce-config/anuncios" element={<EcommerceAdsManager />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
