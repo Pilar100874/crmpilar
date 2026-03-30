@@ -232,7 +232,7 @@ export default function EcommerceHome() {
               ))}
             </div>
           ) : categories.length > 0 ? (
-             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+             <div className="flex flex-wrap gap-5">
               {categories.map((cat, i) => (
                 <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
