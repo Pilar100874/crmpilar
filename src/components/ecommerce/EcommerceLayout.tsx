@@ -139,12 +139,7 @@ export default function EcommerceLayout() {
               <div className="p-6 border-b bg-background">
                 <div className="flex min-h-[72px] flex-col justify-center gap-3">
                   {branding.logo_url ? (
-                    <BrandLogo
-                      src={branding.logo_url}
-                      alt={branding.nome_loja}
-                      className="h-12 w-[140px] border-border/40"
-                      imageClassName="p-2"
-                    />
+                    <img src={branding.logo_url} alt={branding.nome_loja} className="h-12 max-w-[140px] object-contain" />
                   ) : null}
                   <h2 className="text-lg font-bold text-foreground">Menu</h2>
                 </div>
@@ -194,12 +189,7 @@ export default function EcommerceLayout() {
           {/* Logo */}
           <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit">
             {branding.logo_url ? (
-              <BrandLogo
-                src={branding.logo_url}
-                alt={branding.nome_loja}
-                className="h-12 w-[108px] border-border/40 sm:h-14 sm:w-[132px] md:h-16 md:w-[164px]"
-                imageClassName="p-2"
-              />
+              <img src={branding.logo_url} alt={branding.nome_loja} className="h-10 sm:h-12 md:h-14 max-w-[160px] object-contain" />
             ) : (
               <span className="block truncate text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
                 {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
@@ -309,12 +299,7 @@ export default function EcommerceLayout() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               {branding.logo_url ? (
-                <BrandLogo
-                  src={branding.logo_url}
-                  alt={branding.nome_loja}
-                  className="mb-4 h-14 w-[160px] border-background/10"
-                  imageClassName="p-2"
-                />
+                <img src={branding.logo_url} alt={branding.nome_loja} className="mb-4 h-14 max-w-[160px] object-contain brightness-0 invert" />
               ) : (
                 <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
               )}
