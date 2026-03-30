@@ -25,6 +25,34 @@ export default function EcommerceCart() {
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
   const [shippingCalculated, setShippingCalculated] = useState(false);
+  const [crossSellProducts, setCrossSellProducts] = useState<CrossSellProduct[]>([]);
+
+  useEffect(() => {
+    const loadCrossSell = async () => {
+      const estabId = localStorage.getItem("estabelecimentoId");
+      let query = supabase
+        .from("produtos")
+        .select("id, nome, preco_venda, imagem_url, categoria:produto_categorias(nome)")
+        .eq("ativo", true)
+        .limit(6);
+      if (estabId) query = query.eq("estabelecimento_id", estabId);
+
+      const { data } = await query;
+      if (data) {
+        // Exclude items already in cart
+        const cartIds = new Set(items.map(i => i.id));
+        const filtered = data.filter((p: any) => !cartIds.has(p.id)).slice(0, 3);
+        setCrossSellProducts(filtered.map((p: any) => ({
+          id: p.id,
+          name: p.nome || "Produto",
+          type: (p.categoria as any)?.nome || "",
+          price: `R$ ${(p.preco_venda ?? 0).toFixed(2).replace(".", ",")}`,
+          image: p.imagem_url || "",
+        })));
+      }
+    };
+    if (items.length > 0) loadCrossSell();
+  }, [items]);
 
   const handleApplyCoupon = () => {
     if (applyCoupon(couponInput)) {
