@@ -14,16 +14,25 @@ import { toast } from "sonner";
 interface Product {
   id: string;
   nome: string;
-  tipo: string | null;
-  gramatura: string | null;
-  largura: string | null;
-  comprimento: string | null;
-  embalagem: string | null;
-  quantidade: number | null;
-  diametro: string | null;
-  numero_folhas: number | null;
-  obs: string | null;
+  descricao: string | null;
+  foto_url: string | null;
+  preco_tabela: number | null;
+  preco_minimo: number | null;
+  estoque: number | null;
+  marca: string | null;
+  categoria_nome: string | null;
+  grupo_nome: string | null;
+  largura: number | null;
+  gramatura: number | null;
+  comprimento: number | null;
+  cor: string | null;
+  material: string | null;
 }
+
+const formatPrice = (value: number | null) => {
+  if (!value) return null;
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 
 export default function EcommerceProduct() {
   const { id } = useParams();
@@ -38,25 +47,35 @@ export default function EcommerceProduct() {
     if (id) loadProduct(id);
   }, [id]);
 
+  const mapProduct = (r: any): Product => ({
+    id: r.id, nome: r.nome, descricao: r.descricao, foto_url: r.foto_url,
+    preco_tabela: r.preco_tabela, preco_minimo: r.preco_minimo, estoque: r.estoque,
+    marca: r.marca, largura: r.largura, gramatura: r.gramatura, comprimento: r.comprimento,
+    cor: r.cor, material: r.material,
+    categoria_nome: r.categoria?.nome || null, grupo_nome: r.grupo?.nome || null,
+  });
+
   const loadProduct = async (productId: string) => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("produtos_importados")
-      .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
+      .from("produtos")
+      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
       .eq("id", productId)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
-      setProduct(data);
-      // Load related products of the same type
-      if (data.tipo) {
+      setProduct(mapProduct(data));
+
+      const catId = (data.categoria as any)?.id;
+      if (catId) {
         const { data: related } = await supabase
-          .from("produtos_importados")
-          .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
-          .eq("tipo", data.tipo)
+          .from("produtos")
+          .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+          .eq("categoria_id", catId)
+          .eq("ativo", true)
           .neq("id", productId)
           .limit(4);
-        if (related) setRelatedProducts(related);
+        if (related) setRelatedProducts(related.map(mapProduct));
       }
     }
     setLoading(false);
@@ -90,16 +109,17 @@ export default function EcommerceProduct() {
   }
 
   const specs = [
-    { label: "Tipo", value: product.tipo },
-    { label: "Gramatura", value: product.gramatura },
-    { label: "Largura", value: product.largura },
-    { label: "Comprimento", value: product.comprimento },
-    { label: "Diâmetro", value: product.diametro },
-    { label: "Embalagem", value: product.embalagem },
-    { label: "Nº Folhas", value: product.numero_folhas?.toString() },
+    { label: "Categoria", value: product.categoria_nome },
+    { label: "Grupo", value: product.grupo_nome },
+    { label: "Gramatura", value: product.gramatura?.toString() },
+    { label: "Largura", value: product.largura?.toString() },
+    { label: "Comprimento", value: product.comprimento?.toString() },
+    { label: "Cor", value: product.cor },
+    { label: "Material", value: product.material },
+    { label: "Marca", value: product.marca },
   ].filter(s => s.value);
 
-  const inStock = (product.quantidade ?? 0) > 0;
+  const inStock = (product.estoque ?? 0) > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -108,6 +128,18 @@ export default function EcommerceProduct() {
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <Link to="/ecommerce/catalogo" className="hover:text-primary transition-colors">Catálogo</Link>
+        {product.grupo_nome && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link to={`/ecommerce/catalogo?grupo=${encodeURIComponent(product.grupo_nome)}`} className="hover:text-primary transition-colors">{product.grupo_nome}</Link>
+          </>
+        )}
+        {product.categoria_nome && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link to={`/ecommerce/catalogo?grupo=${encodeURIComponent(product.grupo_nome || "")}&categoria=${encodeURIComponent(product.categoria_nome)}`} className="hover:text-primary transition-colors">{product.categoria_nome}</Link>
+          </>
+        )}
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
       </nav>
@@ -116,7 +148,11 @@ export default function EcommerceProduct() {
         {/* Gallery */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <div className="aspect-square bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group">
-            <span className="text-[120px] group-hover:scale-110 transition-transform duration-500">📄</span>
+            {product.foto_url ? (
+              <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            ) : (
+              <span className="text-[120px] group-hover:scale-110 transition-transform duration-500">📄</span>
+            )}
             {!inStock && (
               <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                 <Badge variant="destructive" className="text-base px-4 py-2">Indisponível</Badge>
@@ -127,8 +163,8 @@ export default function EcommerceProduct() {
 
         {/* Info */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
-          {product.tipo && (
-            <Badge variant="outline" className="text-xs">{product.tipo}</Badge>
+          {product.categoria_nome && (
+            <Badge variant="outline" className="text-xs">{product.categoria_nome}</Badge>
           )}
           <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.nome}</h1>
           
@@ -142,6 +178,18 @@ export default function EcommerceProduct() {
             <span className="text-sm text-muted-foreground">4.0 (12 avaliações)</span>
           </div>
 
+          {/* Price */}
+          <div>
+            {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo && (
+              <p className="text-sm text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
+            )}
+            {product.preco_minimo ? (
+              <p className="text-3xl font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+            ) : (
+              <p className="text-lg text-muted-foreground">Sob consulta</p>
+            )}
+          </div>
+
           {/* Specs badges */}
           <div className="flex flex-wrap gap-2">
             {specs.map(s => (
@@ -153,9 +201,9 @@ export default function EcommerceProduct() {
 
           {/* Stock */}
           <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${inStock ? "bg-success" : "bg-destructive"}`} />
-            <span className={`text-sm font-medium ${inStock ? "text-success" : "text-destructive"}`}>
-              {inStock ? `Em estoque (${product.quantidade} un.)` : "Indisponível"}
+            <div className={`h-2 w-2 rounded-full ${inStock ? "bg-green-600" : "bg-destructive"}`} />
+            <span className={`text-sm font-medium ${inStock ? "text-green-600" : "text-destructive"}`}>
+              {inStock ? `Em estoque (${product.estoque} un.)` : "Indisponível"}
             </span>
           </div>
 
@@ -179,7 +227,7 @@ export default function EcommerceProduct() {
             <div className="flex gap-3">
               <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock} onClick={() => {
                 if (product) {
-                  addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999 });
                   toast.success("Produto adicionado ao carrinho!");
                 }
               }}>
@@ -244,7 +292,7 @@ export default function EcommerceProduct() {
           <TabsContent value="descricao" className="py-6">
             <div className="prose prose-sm max-w-none">
               <p className="text-foreground/80 leading-relaxed">
-                {product.obs || `${product.nome} — produto de alta qualidade para uso profissional e comercial. Ideal para impressão, embalagem e diversas aplicações corporativas.`}
+                {product.descricao || `${product.nome} — produto de alta qualidade para uso profissional e comercial.`}
               </p>
             </div>
           </TabsContent>
@@ -306,14 +354,22 @@ export default function EcommerceProduct() {
             {relatedProducts.map(rp => (
               <Link key={rp.id} to={`/ecommerce/produto/${rp.id}`}>
                 <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
-                  <div className="aspect-square bg-muted/30 flex items-center justify-center">
-                    <span className="text-4xl group-hover:scale-110 transition-transform">📄</span>
+                  <div className="aspect-square bg-muted/30 flex items-center justify-center overflow-hidden">
+                    {rp.foto_url ? (
+                      <img src={rp.foto_url} alt={rp.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <span className="text-4xl group-hover:scale-110 transition-transform">📄</span>
+                    )}
                   </div>
                   <CardContent className="p-3">
-                    {rp.tipo && <p className="text-xs text-muted-foreground">{rp.tipo}</p>}
+                    {rp.categoria_nome && <p className="text-xs text-muted-foreground">{rp.categoria_nome}</p>}
                     <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{rp.nome}</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {rp.gramatura && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{rp.gramatura}</Badge>}
+                    <div className="mt-1.5">
+                      {rp.preco_minimo ? (
+                        <p className="text-sm font-bold text-primary">{formatPrice(rp.preco_minimo)}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Sob consulta</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -337,7 +393,7 @@ export default function EcommerceProduct() {
           </div>
           <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={() => {
             if (product) {
-              addItem({ productId: product.id, name: product.nome, type: product.tipo, gramatura: product.gramatura, quantity, maxStock: product.quantidade ?? 999 });
+              addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999 });
               toast.success("Produto adicionado ao carrinho!");
             }
           }}>
