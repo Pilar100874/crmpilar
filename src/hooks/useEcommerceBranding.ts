@@ -5,6 +5,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 export interface EcommerceBranding {
   logo_url: string;
   background_video_url: string;
+  background_image_url: string;
   background_type: string;
   nome_loja: string;
   slogan: string;
