@@ -10,7 +10,6 @@ import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import pilarBrand from "@/assets/pilar-brand.png";
 import fallbackBrand from "@/assets/pilar-brand-fallback.jpg";
-import logoApp from "@/assets/logoapp.jpg";
 
 function usePreloadedImage(primary: string, fallback: string) {
   const [src, setSrc] = useState<string | null>(null);
@@ -157,15 +156,7 @@ export default function Login() {
         </>
       )}
 
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-6">
-
-        {/* Logo 3x3cm */}
-        <img
-          src={logoApp}
-          alt="Logo Pilar"
-          style={{ width: '3cm', height: '3cm', objectFit: 'contain' }}
-          className="rounded-xl shadow-2xl"
-        />
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-8">
 
         {/* Login Card */}
         <Card className="w-full backdrop-blur-xl bg-card/80 border-border/30 shadow-2xl rounded-2xl">
