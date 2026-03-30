@@ -140,28 +140,26 @@ export default function EcommerceBrandingConfig() {
       {/* Logo */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" />Logotipo</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/30 overflow-hidden">
-              {config.logo_url ? (
-                <img src={config.logo_url} alt="Logo" className="w-full h-full object-contain p-2" />
-              ) : (
-                <Image className="h-10 w-10 text-muted-foreground/40" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
-              <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
-                <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : "Enviar Logo"}
-              </Button>
-              {config.logo_url && (
-                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setConfig((c) => ({ ...c, logo_url: "" }))}>
-                  <Trash2 className="h-3 w-3 mr-1" />Remover
-                </Button>
-              )}
-              <p className="text-xs text-muted-foreground">PNG ou SVG transparente, máx 2MB</p>
-            </div>
+        <CardContent className="space-y-4">
+          <div className="w-36 h-36 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/30 overflow-hidden mx-auto">
+            {config.logo_url ? (
+              <img src={config.logo_url} alt="Logo" className="w-full h-full object-contain p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            ) : (
+              <Image className="h-10 w-10 text-muted-foreground/40" />
+            )}
           </div>
+          <div className="flex items-center gap-2 justify-center">
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
+            <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
+              <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : "Enviar Logo"}
+            </Button>
+            {config.logo_url && (
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setConfig((c) => ({ ...c, logo_url: "" }))}>
+                <Trash2 className="h-3 w-3 mr-1" />Remover
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground text-center">PNG ou SVG transparente, máx 2MB</p>
         </CardContent>
       </Card>
 
