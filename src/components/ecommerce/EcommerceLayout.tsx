@@ -196,7 +196,7 @@ export default function EcommerceLayout() {
           </Sheet>
 
           {/* Logo */}
-          <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit">
+          <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit flex items-center justify-start">
             {brandingLoading ? (
               <div className="h-10 sm:h-12 md:h-14 w-[120px]" />
             ) : branding.logo_url ? (
