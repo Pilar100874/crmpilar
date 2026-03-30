@@ -16,6 +16,8 @@ export default function EcommerceBrandingConfig() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [configId, setConfigId] = useState<string | null>(null);
+  const [configEstId, setConfigEstId] = useState<string | null>(null);
   const [config, setConfig] = useState({
     logo_url: "",
     background_video_url: "",
@@ -34,46 +36,56 @@ export default function EcommerceBrandingConfig() {
   }, []);
 
   const loadConfig = async () => {
-    const estId = await getEstabelecimentoId();
-    let data: any = null;
+    try {
+      // Try with user's estabelecimento first
+      const estId = await getEstabelecimentoId();
+      let data: any = null;
 
-    if (estId) {
-      const res = await supabase.from("ecommerce_config").select("*").eq("estabelecimento_id", estId).maybeSingle();
-      data = res.data;
-    }
+      if (estId) {
+        const res = await supabase.from("ecommerce_config").select("*").eq("estabelecimento_id", estId).maybeSingle();
+        data = res.data;
+      }
 
-    // Fallback: get most recent config
-    if (!data) {
-      const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
-      data = res.data;
-    }
+      // Fallback: get any existing config
+      if (!data) {
+        const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        data = res.data;
+      }
 
-    if (data) {
-      setConfig({
-        logo_url: data.logo_url || "",
-        background_video_url: data.background_video_url || "",
-        background_type: data.background_type || "gradient",
-        nome_loja: data.nome_loja || "Minha Loja",
-        slogan: data.slogan || "",
-        cor_primaria: data.cor_primaria || "#000000",
-        cor_secundaria: data.cor_secundaria || "#ffffff",
-      });
+      if (data) {
+        setConfigId(data.id);
+        setConfigEstId(data.estabelecimento_id);
+        setConfig({
+          logo_url: data.logo_url || "",
+          background_video_url: data.background_video_url || "",
+          background_type: data.background_type || "gradient",
+          nome_loja: data.nome_loja || "Minha Loja",
+          slogan: data.slogan || "",
+          cor_primaria: data.cor_primaria || "#000000",
+          cor_secundaria: data.cor_secundaria || "#ffffff",
+        });
+      } else if (estId) {
+        setConfigEstId(estId);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar config:", err);
     }
     setLoading(false);
   };
 
-  const persistConfig = async (nextConfig: typeof config, estId?: string) => {
-    const resolvedEstId = estId || await getEstabelecimentoId();
-    if (!resolvedEstId) {
+  const persistConfig = async (nextConfig: typeof config) => {
+    const estId = configEstId || await getEstabelecimentoId();
+    if (!estId) {
       toast.error("Estabelecimento não encontrado");
       return false;
     }
 
     const { error } = await supabase
       .from("ecommerce_config")
-      .upsert({ estabelecimento_id: resolvedEstId, ...nextConfig }, { onConflict: "estabelecimento_id" });
+      .upsert({ estabelecimento_id: estId, ...nextConfig }, { onConflict: "estabelecimento_id" });
 
     if (error) {
+      console.error("Erro ao salvar:", error);
       toast.error("Erro ao salvar");
       return false;
     }
@@ -84,7 +96,7 @@ export default function EcommerceBrandingConfig() {
   const handleUpload = async (file: File, type: "logo" | "video") => {
     setUploading(type);
     try {
-      const estId = await getEstabelecimentoId();
+      const estId = configEstId || await getEstabelecimentoId();
       if (!estId) {
         toast.error("Estabelecimento não encontrado");
         setUploading(null);
@@ -109,7 +121,7 @@ export default function EcommerceBrandingConfig() {
 
       setConfig(nextConfig);
 
-      const saved = await persistConfig(nextConfig, estId);
+      const saved = await persistConfig(nextConfig);
       if (saved) {
         toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado e salvo com sucesso!`);
       }
