@@ -58,6 +58,7 @@ export default function EcommerceAccount() {
               </div>
               {[
                 { id: "pedidos", icon: Package, label: "Meus Pedidos" },
+                { id: "rastreamento", icon: Truck, label: "Rastreamento" },
                 { id: "perfil", icon: User, label: "Dados Pessoais" },
                 { id: "enderecos", icon: MapPin, label: "Endereços" },
                 { id: "favoritos", icon: Heart, label: "Favoritos" },
