@@ -299,6 +299,9 @@ export default function EcommerceBrandingConfig() {
                 background: `linear-gradient(135deg, ${config.cor_primaria}, ${config.cor_secundaria})`
               } : {}}
             >
+              {config.background_type === "image" && config.background_image_url && (
+                <img src={config.background_image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              )}
               {config.background_type === "video" && config.background_video_url && (
                 <video src={config.background_video_url} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
               )}
