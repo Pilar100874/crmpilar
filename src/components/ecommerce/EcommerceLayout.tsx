@@ -136,6 +136,9 @@ export default function EcommerceLayout() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 overflow-y-auto">
               <div className="p-6 border-b">
+                {branding.logo_url && (
+                  <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain mb-3" />
+                )}
                 <h2 className="text-lg font-bold">Menu</h2>
               </div>
               <nav className="p-4 space-y-1">
