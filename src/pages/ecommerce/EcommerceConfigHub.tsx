@@ -60,6 +60,15 @@ const configSections = [
     color: "text-red-500",
     bg: "bg-red-500/10",
   },
+  {
+    id: "rodape",
+    title: "Rodapé",
+    description: "Edite descrição, contato, pagamentos e links do rodapé",
+    icon: PanelBottom,
+    url: "/ecommerce-config/rodape",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {

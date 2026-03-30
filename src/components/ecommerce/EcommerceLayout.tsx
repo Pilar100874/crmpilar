@@ -202,7 +202,7 @@ export default function EcommerceLayout() {
                 <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
               )}
               <p className="text-sm text-background/60 leading-relaxed">
-                Soluções completas para empresas de todos os portes. Qualidade, variedade e agilidade na entrega.
+                {branding.footer_descricao || "Soluções completas para empresas de todos os portes."}
               </p>
             </div>
             <div>
@@ -212,6 +212,9 @@ export default function EcommerceLayout() {
                 <li><Link to="/ecommerce/contato" className="hover:text-primary transition-colors">Contato</Link></li>
                 <li><Link to="/ecommerce/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
                 <li><Link to="/ecommerce/politica-privacidade" className="hover:text-primary transition-colors">Privacidade</Link></li>
+                {branding.footer_links_extras.map((link, i) => (
+                  <li key={i}><a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">{link.label}</a></li>
+                ))}
               </ul>
             </div>
             <div>
@@ -225,18 +228,24 @@ export default function EcommerceLayout() {
             <div>
               <h4 className="font-semibold text-background mb-4">Contato</h4>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> (11) 4002-8922</li>
-                <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> contato@store.com.br</li>
-                <li className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> Seg-Sex 8h-18h</li>
+                {(branding.footer_telefone || "(11) 4002-8922") && (
+                  <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {branding.footer_telefone || "(11) 4002-8922"}</li>
+                )}
+                {(branding.footer_email || "contato@store.com.br") && (
+                  <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> {branding.footer_email || "contato@store.com.br"}</li>
+                )}
+                {(branding.footer_horario || "Seg-Sex 8h-18h") && (
+                  <li className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {branding.footer_horario || "Seg-Sex 8h-18h"}</li>
+                )}
               </ul>
             </div>
           </div>
           <div className="border-t border-background/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-background/40">© 2026 Store. Todos os direitos reservados.</p>
+            <p className="text-xs text-background/40">{branding.footer_copyright || `© ${new Date().getFullYear()} ${branding.nome_loja}. Todos os direitos reservados.`}</p>
             <div className="flex items-center gap-4">
               <span className="text-xs text-background/40">Pagamentos:</span>
               <div className="flex gap-2">
-                {["Visa", "Master", "Pix", "Boleto"].map(m => (
+                {(branding.footer_pagamentos.length > 0 ? branding.footer_pagamentos : ["Visa", "Master", "Pix", "Boleto"]).map(m => (
                   <span key={m} className="px-2 py-1 rounded bg-background/10 text-[10px] font-medium">{m}</span>
                 ))}
               </div>

@@ -9,6 +9,13 @@ export interface EcommerceBranding {
   slogan: string;
   cor_primaria: string;
   cor_secundaria: string;
+  footer_descricao: string;
+  footer_telefone: string;
+  footer_email: string;
+  footer_horario: string;
+  footer_copyright: string;
+  footer_pagamentos: string[];
+  footer_links_extras: { label: string; url: string }[];
 }
 
 const defaults: EcommerceBranding = {
@@ -19,6 +26,13 @@ const defaults: EcommerceBranding = {
   slogan: "",
   cor_primaria: "#000000",
   cor_secundaria: "#ffffff",
+  footer_descricao: "",
+  footer_telefone: "",
+  footer_email: "",
+  footer_horario: "",
+  footer_copyright: "",
+  footer_pagamentos: ["Visa", "Master", "Pix", "Boleto"],
+  footer_links_extras: [],
 };
 
 export function useEcommerceBranding() {
@@ -43,6 +57,13 @@ export function useEcommerceBranding() {
           slogan: data.slogan || "",
           cor_primaria: data.cor_primaria || "#000000",
           cor_secundaria: data.cor_secundaria || "#ffffff",
+          footer_descricao: (data as any).footer_descricao || "",
+          footer_telefone: (data as any).footer_telefone || "",
+          footer_email: (data as any).footer_email || "",
+          footer_horario: (data as any).footer_horario || "",
+          footer_copyright: (data as any).footer_copyright || "",
+          footer_pagamentos: (data as any).footer_pagamentos || ["Visa", "Master", "Pix", "Boleto"],
+          footer_links_extras: (data as any).footer_links_extras || [],
         });
       }
       setLoading(false);
