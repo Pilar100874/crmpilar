@@ -37,7 +37,7 @@ export function useEcommerceCategories() {
     const { data, error } = await query;
 
     if (!error && data) {
-      const groupMap: Record<string, { id: string; nome: string; categorias: Record<string, { id: string; nome: string }> }> = {};
+      const groupMap: Record<string, { id: string; nome: string; categorias: Record<string, { id: string; nome: string; icone_url?: string | null }> }> = {};
 
       data.forEach((prod: any) => {
         const grp = prod.grupo;
@@ -48,7 +48,7 @@ export function useEcommerceCategories() {
           groupMap[grp.id] = { id: grp.id, nome: grp.nome, categorias: {} };
         }
         if (!groupMap[grp.id].categorias[cat.id]) {
-          groupMap[grp.id].categorias[cat.id] = { id: cat.id, nome: cat.nome };
+          groupMap[grp.id].categorias[cat.id] = { id: cat.id, nome: cat.nome, icone_url: cat.icone_url };
         }
       });
 
