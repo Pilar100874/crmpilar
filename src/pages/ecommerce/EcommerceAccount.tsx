@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2, Truck, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,13 @@ const mockWishlist = [
 ];
 
 export default function EcommerceAccount() {
-  const [activeTab, setActiveTab] = useState("pedidos");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "pedidos");
+
+  useEffect(() => {
+    if (tabFromUrl) setActiveTab(tabFromUrl);
+  }, [tabFromUrl]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
