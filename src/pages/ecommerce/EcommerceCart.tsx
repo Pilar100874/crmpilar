@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
