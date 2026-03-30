@@ -1,0 +1,108 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, Image, Video } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+
+const configSections = [
+  {
+    id: "branding",
+    title: "Identidade Visual",
+    description: "Logo, vídeo de fundo, cores e nome da loja",
+    icon: Palette,
+    url: "/ecommerce-config/branding",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+  },
+  {
+    id: "pagamentos",
+    title: "Gateways de Pagamento",
+    description: "Configure Stripe, Mercado Pago, PIX e mais",
+    icon: CreditCard,
+    url: "/config/pagamentos",
+    color: "text-green-500",
+    bg: "bg-green-500/10",
+  },
+  {
+    id: "regras",
+    title: "Regras do E-commerce",
+    description: "Descontos, promoções, frete e banners automáticos",
+    icon: Workflow,
+    url: "/ecommerce-rules",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
+  {
+    id: "rastreamento",
+    title: "Rastreamento de Pedidos",
+    description: "Status, notificações WhatsApp/E-mail e página pública",
+    icon: Truck,
+    url: "/pedido-tracking",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
+  {
+    id: "conteudos",
+    title: "Conteúdos & Páginas",
+    description: "Sobre nós, Contato, FAQ, Privacidade, Termos e mais",
+    icon: FileText,
+    url: "/ecommerce-config/conteudos",
+    color: "text-purple-500",
+    bg: "bg-purple-500/10",
+  },
+  {
+    id: "anuncios",
+    title: "Anúncios & Banners",
+    description: "Crie banners, popups e promoções visuais para a loja",
+    icon: Megaphone,
+    url: "/ecommerce-config/anuncios",
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+  },
+];
+
+export default function EcommerceConfigHub() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Settings2 className="h-6 w-6" />
+            Configurações do E-commerce
+          </h1>
+          <p className="text-muted-foreground text-sm">Gerencie todas as configurações da sua loja virtual</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {configSections.map((section, i) => (
+          <motion.div
+            key={section.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 group h-full"
+              onClick={() => navigate(section.url)}
+            >
+              <CardHeader className="pb-3">
+                <div className={`w-12 h-12 rounded-xl ${section.bg} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+                  <section.icon className={`h-6 w-6 ${section.color}`} />
+                </div>
+                <CardTitle className="text-lg">{section.title}</CardTitle>
+                <CardDescription>{section.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
