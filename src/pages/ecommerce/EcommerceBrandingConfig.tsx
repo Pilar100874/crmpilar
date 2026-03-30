@@ -165,13 +165,18 @@ export default function EcommerceBrandingConfig() {
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" />Logotipo</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <BrandLogo
-            src={config.logo_url}
-            alt="Logo da loja"
-            fallbackText="Prévia do logotipo"
-            className="mx-auto h-40 w-40 border-dashed border-muted-foreground/30"
-            imageClassName="p-4"
-          />
+          <div className="mx-auto flex items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-4" style={{ width: 200, height: 200 }}>
+            {config.logo_url ? (
+              <img
+                src={config.logo_url}
+                alt="Logo da loja"
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            ) : (
+              <span className="text-sm text-muted-foreground text-center">Nenhum logo enviado</span>
+            )}
+          </div>
           <div className="flex items-center gap-2 justify-center">
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
             <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
