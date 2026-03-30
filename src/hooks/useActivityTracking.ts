@@ -174,18 +174,32 @@ export function useActivityTracking() {
   // Detectar fechamento da aba/navegador
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Usar sendBeacon para garantir que a requisição seja enviada
       const payload = JSON.stringify({
         usuario_id: usuarioIdRef.current,
         estabelecimento_id: estabelecimentoIdRef.current,
         is_online: false,
         last_activity_at: new Date().toISOString(),
       });
-      
-      navigator.sendBeacon(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_activity_tracking?on_conflict=usuario_id,estabelecimento_id`,
-        new Blob([payload], { type: 'application/json' })
-      );
+
+      try {
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_activity_tracking?on_conflict=usuario_id,estabelecimento_id`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': anonKey,
+              'Authorization': `Bearer ${anonKey}`,
+              'Prefer': 'resolution=merge-duplicates',
+            },
+            body: payload,
+            keepalive: true,
+          }
+        );
+      } catch {
+        // silently fail on page unload
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
