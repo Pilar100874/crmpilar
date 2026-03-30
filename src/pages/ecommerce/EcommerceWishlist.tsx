@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,10 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 export default function EcommerceWishlist() {
   const { items, removeItem } = useWishlist();
   const { addItem } = useCart();
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   if (items.length === 0) {
     return (
@@ -24,6 +27,7 @@ export default function EcommerceWishlist() {
   }
 
   return (
+    <>
     <div className="max-w-6xl mx-auto py-6 px-4 space-y-6">
       <h1 className="text-2xl font-bold flex items-center gap-2">
         <Heart className="h-6 w-6 text-red-500 fill-red-500" /> Meus Favoritos ({items.length})
@@ -48,7 +52,9 @@ export default function EcommerceWishlist() {
                 <p className="text-sm font-bold text-primary">R$ {item.price.toFixed(2)}</p>
               )}
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => {
+                <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={(e) => {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: item.image, icon: "cart" });
                   addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: 999, image: item.image });
                   toast.success("Adicionado ao carrinho!");
                 }}>
@@ -66,5 +72,15 @@ export default function EcommerceWishlist() {
         ))}
       </div>
     </div>
+    {flyAnim && (
+      <FlyToAnimation
+        startRect={flyAnim.startRect}
+        targetSelector={flyAnim.target}
+        imageUrl={flyAnim.image}
+        icon={flyAnim.icon}
+        onComplete={() => setFlyAnim(null)}
+      />
+    )}
+    </>
   );
 }
