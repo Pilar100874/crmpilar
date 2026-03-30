@@ -5,7 +5,7 @@ export default function Campanhas() {
   const { openSubmenu } = useLayout();
   
   return (
-    <div className="p-8 bg-white min-h-full">
+    <div className="p-8 bg-background min-h-full">
       <div className="flex items-center gap-4 mb-8">
         <SubMenuHeader 
           title="Configurações"
