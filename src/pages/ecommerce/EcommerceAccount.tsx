@@ -1,43 +1,195 @@
 import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2, Truck, Search as SearchIcon } from "lucide-react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { User, Users, Package, MapPin, Heart, LogOut, ChevronRight, Building2, RotateCcw, Edit, Plus, Trash2, Truck, Search as SearchIcon, Eye, ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
-const mockOrders = [
-  { id: "PED-2026001", date: "25/03/2026", status: "Entregue", total: "R$ 487,50", items: 8, statusColor: "bg-success" },
-  { id: "PED-2026002", date: "20/03/2026", status: "Em trânsito", total: "R$ 1.250,00", items: 15, statusColor: "bg-primary" },
-  { id: "PED-2026003", date: "15/03/2026", status: "Processando", total: "R$ 324,00", items: 4, statusColor: "bg-warning" },
-];
+const formatPrice = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatDate = (d: string) => new Date(d).toLocaleDateString("pt-BR");
 
-const mockAddresses = [
-  { id: "1", label: "Escritório", rua: "Av. Paulista, 1000", complemento: "Sala 1204", bairro: "Bela Vista", cidade: "São Paulo", estado: "SP", cep: "01310-100", default: true },
-  { id: "2", label: "Depósito", rua: "Rua das Indústrias, 500", complemento: "Galpão 3", bairro: "Dist. Industrial", cidade: "Guarulhos", estado: "SP", cep: "07190-000", default: false },
-];
+interface PedidoEcommerce {
+  id: string;
+  numero_pedido: string;
+  status: string;
+  nome_cliente: string;
+  email_cliente: string | null;
+  tipo_cliente: string;
+  tipo_pagamento_nome: string | null;
+  condicao_pagamento_nome: string | null;
+  subtotal: number;
+  desconto: number;
+  frete: number;
+  valor_total: number;
+  token_rastreamento: string;
+  created_at: string;
+  endereco_rua: string | null;
+  endereco_numero: string | null;
+  endereco_complemento: string | null;
+  endereco_bairro: string | null;
+  endereco_cidade: string | null;
+  endereco_estado: string | null;
+  endereco_cep: string | null;
+}
 
-const mockWishlist = [
-  { id: "w1", name: "Papel Sulfite A4 75g", type: "Papéis", image: "📄" },
-  { id: "w2", name: "Caixa Papelão 40x30x20", type: "Embalagens", image: "📦" },
-  { id: "w3", name: "Etiqueta BOPP A4", type: "Etiquetas", image: "🏷️" },
-];
+interface PedidoItem {
+  id: string;
+  produto_id: string | null;
+  nome_produto: string;
+  quantidade: number;
+  preco_unitario: number;
+  subtotal: number;
+  foto_url: string | null;
+}
+
+const statusMap: Record<string, { label: string; color: string }> = {
+  pendente: { label: "Pendente", color: "bg-warning text-warning-foreground" },
+  confirmado: { label: "Confirmado", color: "bg-primary text-primary-foreground" },
+  em_separacao: { label: "Em Separação", color: "bg-primary text-primary-foreground" },
+  enviado: { label: "Enviado", color: "bg-accent text-accent-foreground" },
+  em_transito: { label: "Em Trânsito", color: "bg-primary text-primary-foreground" },
+  entregue: { label: "Entregue", color: "bg-success text-success-foreground" },
+  cancelado: { label: "Cancelado", color: "bg-destructive text-destructive-foreground" },
+};
 
 export default function EcommerceAccount() {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(tabFromUrl || "pedidos");
+  const [orders, setOrders] = useState<PedidoEcommerce[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<PedidoEcommerce | null>(null);
+  const [orderItems, setOrderItems] = useState<PedidoItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
+  const [trackingSearch, setTrackingSearch] = useState("");
+  const { addItem } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (tabFromUrl) setActiveTab(tabFromUrl);
   }, [tabFromUrl]);
 
+  // Load orders from localStorage tokens
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
+    setLoading(true);
+    try {
+      const stored = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
+      if (stored.length === 0) { setOrders([]); setLoading(false); return; }
+
+      const orderIds = stored.map((o: any) => o.id);
+      const { data, error } = await supabase
+        .from("pedidos_ecommerce")
+        .select("*")
+        .in("id", orderIds)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setOrders((data as PedidoEcommerce[]) || []);
+    } catch (err) {
+      console.error("Erro ao carregar pedidos:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDetails = async (order: PedidoEcommerce) => {
+    setSelectedOrder(order);
+    setLoadingItems(true);
+    try {
+      const { data, error } = await supabase
+        .from("pedidos_ecommerce_itens")
+        .select("*")
+        .eq("pedido_id", order.id);
+      if (error) throw error;
+      setOrderItems((data as PedidoItem[]) || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
+  const handleRecomprar = async (order: PedidoEcommerce) => {
+    try {
+      const { data: itens } = await supabase
+        .from("pedidos_ecommerce_itens")
+        .select("*")
+        .eq("pedido_id", order.id);
+
+      if (!itens || itens.length === 0) {
+        toast.error("Nenhum item encontrado neste pedido.");
+        return;
+      }
+
+      for (const item of itens as PedidoItem[]) {
+        addItem({
+          productId: item.produto_id || item.id,
+          name: item.nome_produto,
+          type: null,
+          gramatura: null,
+          quantity: item.quantidade,
+          maxStock: 9999,
+          image: item.foto_url || undefined,
+          price: item.preco_unitario,
+        });
+      }
+
+      toast.success(`${itens.length} item(ns) adicionado(s) ao carrinho!`);
+      navigate("/ecommerce/carrinho");
+    } catch (err) {
+      toast.error("Erro ao recomprar.");
+    }
+  };
+
+  const handleTrackingSearch = async () => {
+    if (!trackingSearch.trim()) return;
+    const search = trackingSearch.trim();
+
+    const { data, error } = await supabase
+      .from("pedidos_ecommerce")
+      .select("*")
+      .or(`numero_pedido.ilike.%${search}%,token_rastreamento.ilike.%${search}%,email_cliente.ilike.%${search}%`)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error || !data || data.length === 0) {
+      toast.error("Nenhum pedido encontrado.");
+      return;
+    }
+
+    setOrders(data as PedidoEcommerce[]);
+    // Save these to local too
+    const stored = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
+    for (const o of data) {
+      if (!stored.find((s: any) => s.id === o.id)) {
+        stored.push({ id: o.id, numero: o.numero_pedido, token: o.token_rastreamento, email: o.email_cliente, date: o.created_at });
+      }
+    }
+    localStorage.setItem("ecommerce_orders", JSON.stringify(stored.slice(0, 50)));
+    toast.success(`${data.length} pedido(s) encontrado(s).`);
+  };
+
+  const getStatusInfo = (status: string) => statusMap[status] || { label: status, color: "bg-muted text-muted-foreground" };
+
+  const menuItems = [
+    { id: "pedidos", icon: Package, label: "Meus Pedidos" },
+    { id: "rastreamento", icon: Truck, label: "Rastreamento" },
+    { id: "perfil", icon: User, label: "Dados Pessoais" },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link to="/ecommerce" className="hover:text-primary">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
@@ -49,30 +201,16 @@ export default function EcommerceAccount() {
         <aside>
           <Card>
             <CardContent className="p-5 space-y-1">
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary font-bold text-lg flex items-center justify-center">JS</div>
-                <div>
-                  <p className="font-semibold">João Silva</p>
-                  <p className="text-xs text-muted-foreground">joao@empresa.com</p>
-                </div>
+              <div className="mb-4 pb-4 border-b">
+                <p className="font-semibold text-sm">Minha Conta</p>
+                <p className="text-xs text-muted-foreground">{orders.length} pedido(s)</p>
               </div>
-              {[
-                { id: "pedidos", icon: Package, label: "Meus Pedidos" },
-                { id: "rastreamento", icon: Truck, label: "Rastreamento" },
-                { id: "perfil", icon: User, label: "Dados Pessoais" },
-                { id: "enderecos", icon: MapPin, label: "Endereços" },
-                { id: "favoritos", icon: Heart, label: "Favoritos" },
-                { id: "empresa", icon: Building2, label: "Minha Empresa" },
-              ].map(item => (
+              {menuItems.map(item => (
                 <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === item.id ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground/70"}`}>
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </button>
               ))}
-              <Separator className="my-2" />
-              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
-                <LogOut className="h-4 w-4" /> Sair
-              </button>
             </CardContent>
           </Card>
         </aside>
@@ -83,28 +221,50 @@ export default function EcommerceAccount() {
           {activeTab === "pedidos" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Meus Pedidos</h2>
-              {mockOrders.map(order => (
-                <Card key={order.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <p className="font-bold">{order.id}</p>
-                          <Badge className={`${order.statusColor} text-primary-foreground border-0 text-[10px]`}>{order.status}</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{order.date} • {order.items} itens</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <p className="font-bold text-lg">{order.total}</p>
-                        <Button variant="outline" size="sm" className="rounded-full gap-1">
-                          <RotateCcw className="h-3.5 w-3.5" /> Recomprar
-                        </Button>
-                        <Button variant="ghost" size="sm" className="rounded-full">Detalhes</Button>
-                      </div>
-                    </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : orders.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center space-y-3">
+                    <Package className="h-10 w-10 text-muted-foreground mx-auto" />
+                    <p className="text-muted-foreground">Nenhum pedido encontrado.</p>
+                    <Link to="/ecommerce/catalogo">
+                      <Button variant="outline" className="rounded-full">Ver Produtos</Button>
+                    </Link>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                orders.map(order => {
+                  const si = getStatusInfo(order.status);
+                  return (
+                    <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <p className="font-bold text-sm">{order.numero_pedido}</p>
+                              <Badge className={`${si.color} border-0 text-[10px]`}>{si.label}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{formatDate(order.created_at)} • {order.nome_cliente}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-lg">{formatPrice(order.valor_total)}</p>
+                            <Button variant="outline" size="sm" className="rounded-full gap-1 text-xs" onClick={() => handleRecomprar(order)}>
+                              <RotateCcw className="h-3.5 w-3.5" /> Recomprar
+                            </Button>
+                            <Button variant="ghost" size="sm" className="rounded-full text-xs gap-1" onClick={() => openDetails(order)}>
+                              <Eye className="h-3.5 w-3.5" /> Detalhes
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           )}
 
@@ -115,172 +275,167 @@ export default function EcommerceAccount() {
               <Card>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-2">
-                    <Input placeholder="Digite o número do pedido ou código de rastreio..." className="flex-1" />
-                    <Button className="rounded-full gap-1.5"><SearchIcon className="h-4 w-4" /> Rastrear</Button>
+                    <Input
+                      placeholder="Nº do pedido, código de rastreio ou e-mail..."
+                      value={trackingSearch}
+                      onChange={(e) => setTrackingSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleTrackingSearch()}
+                      className="flex-1"
+                    />
+                    <Button className="rounded-full gap-1.5" onClick={handleTrackingSearch}>
+                      <SearchIcon className="h-4 w-4" /> Rastrear
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-              {mockOrders.filter(o => o.status !== "Entregue").map(order => (
-                <Card key={order.id}>
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold">{order.id}</p>
-                        <p className="text-sm text-muted-foreground">{order.date}</p>
-                      </div>
-                      <Badge className={`${order.statusColor} text-primary-foreground border-0`}>{order.status}</Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 h-3 w-3 rounded-full bg-primary shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium">Pedido confirmado</p>
-                          <p className="text-xs text-muted-foreground">{order.date} - 10:30</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 h-3 w-3 rounded-full bg-primary shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium">Em separação</p>
-                          <p className="text-xs text-muted-foreground">{order.date} - 14:00</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 h-3 w-3 rounded-full shrink-0 ${order.status === "Em trânsito" ? "bg-primary" : "bg-muted"}`} />
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Em trânsito</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 h-3 w-3 rounded-full bg-muted shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Entregue</p>
-                        </div>
-                      </div>
-                    </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : orders.filter(o => o.status !== "entregue" && o.status !== "cancelado").length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <p className="text-muted-foreground">Nenhum pedido em andamento.</p>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                orders.filter(o => o.status !== "entregue" && o.status !== "cancelado").map(order => {
+                  const si = getStatusInfo(order.status);
+                  const steps = ["pendente", "confirmado", "em_separacao", "enviado", "em_transito", "entregue"];
+                  const currentStep = steps.indexOf(order.status);
+                  return (
+                    <Card key={order.id}>
+                      <CardContent className="p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-bold">{order.numero_pedido}</p>
+                            <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
+                          </div>
+                          <Badge className={`${si.color} border-0`}>{si.label}</Badge>
+                        </div>
+                        <div className="space-y-3">
+                          {steps.map((s, i) => {
+                            const info = getStatusInfo(s);
+                            const isCompleted = i <= currentStep;
+                            return (
+                              <div key={s} className="flex items-start gap-3">
+                                <div className={`mt-0.5 h-3 w-3 rounded-full shrink-0 ${isCompleted ? "bg-primary" : "bg-muted"}`} />
+                                <p className={`text-sm font-medium ${isCompleted ? "" : "text-muted-foreground"}`}>{info.label}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           )}
 
+          {/* Profile placeholder */}
           {activeTab === "perfil" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Dados Pessoais</h2>
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div><Label>Nome completo</Label><Input defaultValue="João Silva" className="mt-1" /></div>
-                    <div><Label>CPF</Label><Input defaultValue="123.456.789-00" className="mt-1" disabled /></div>
-                    <div><Label>E-mail</Label><Input defaultValue="joao@empresa.com" className="mt-1" /></div>
-                    <div><Label>Telefone</Label><Input defaultValue="(11) 99999-9999" className="mt-1" /></div>
-                  </div>
-                  <Button className="rounded-full">Salvar Alterações</Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Addresses */}
-          {activeTab === "enderecos" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Endereços</h2>
-                <Button size="sm" className="rounded-full gap-1"><Plus className="h-4 w-4" /> Novo</Button>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {mockAddresses.map(addr => (
-                  <Card key={addr.id} className={addr.default ? "border-primary/30" : ""}>
-                    <CardContent className="p-5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{addr.label}</p>
-                          {addr.default && <Badge variant="outline" className="text-[10px] border-primary text-primary">Padrão</Badge>}
-                        </div>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Edit className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{addr.rua} {addr.complemento && `- ${addr.complemento}`}</p>
-                      <p className="text-sm text-muted-foreground">{addr.bairro} • {addr.cidade}/{addr.estado} • {addr.cep}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Wishlist */}
-          {activeTab === "favoritos" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold flex items-center gap-2"><Heart className="h-5 w-5 text-primary" /> Favoritos</h2>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {mockWishlist.map(item => (
-                  <Card key={item.id} className="group hover:shadow-md transition-all">
-                    <CardContent className="p-4 text-center space-y-2">
-                      <div className="h-24 bg-muted/30 rounded-xl flex items-center justify-center">
-                        <span className="text-4xl">{item.image}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{item.type}</p>
-                      <p className="text-sm font-semibold">{item.name}</p>
-                      <Button size="sm" className="w-full rounded-full text-xs gap-1">
-                        Adicionar ao Carrinho
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Company (B2B) */}
-          {activeTab === "empresa" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" /> Minha Empresa</h2>
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center gap-3 pb-4 border-b">
-                    <Badge className="bg-success text-success-foreground border-0">Conta B2B Aprovada</Badge>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div><Label>Razão Social</Label><Input defaultValue="Gráfica Express Ltda" className="mt-1" disabled /></div>
-                    <div><Label>CNPJ</Label><Input defaultValue="12.345.678/0001-00" className="mt-1" disabled /></div>
-                    <div><Label>Inscrição Estadual</Label><Input defaultValue="123.456.789.000" className="mt-1" disabled /></div>
-                    <div><Label>Condição de Pagamento</Label><Input defaultValue="30/60/90 dias" className="mt-1" disabled /></div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <h3 className="font-bold flex items-center gap-2"><Users className="h-4 w-4" /> Usuários da Empresa</h3>
-                  <div className="space-y-2">
-                    {[
-                      { name: "João Silva", role: "Administrador", email: "joao@empresa.com" },
-                      { name: "Maria Santos", role: "Comprador", email: "maria@empresa.com" },
-                    ].map((u, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                            {u.name.split(" ").map(n => n[0]).join("")}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{u.name}</p>
-                            <p className="text-xs text-muted-foreground">{u.email}</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[10px]">{u.role}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="outline" size="sm" className="rounded-full gap-1"><Plus className="h-4 w-4" /> Adicionar Usuário</Button>
+                <CardContent className="p-6 text-center space-y-3">
+                  <User className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <p className="text-muted-foreground text-sm">O gerenciamento de perfil estará disponível em breve.</p>
                 </CardContent>
               </Card>
             </div>
           )}
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  Pedido {selectedOrder.numero_pedido}
+                  <Badge className={`${getStatusInfo(selectedOrder.status).color} border-0 text-xs`}>
+                    {getStatusInfo(selectedOrder.status).label}
+                  </Badge>
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">Cliente</p>
+                    <p className="text-sm font-medium">{selectedOrder.nome_cliente}</p>
+                    {selectedOrder.email_cliente && <p className="text-xs text-muted-foreground">{selectedOrder.email_cliente}</p>}
+                  </div>
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">Data</p>
+                    <p className="text-sm font-medium">{formatDate(selectedOrder.created_at)}</p>
+                  </div>
+                </div>
+
+                {selectedOrder.endereco_rua && (
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">Endereço</p>
+                    <p className="text-sm">{selectedOrder.endereco_rua}, {selectedOrder.endereco_numero} {selectedOrder.endereco_complemento && `- ${selectedOrder.endereco_complemento}`}</p>
+                    <p className="text-sm text-muted-foreground">{selectedOrder.endereco_bairro} • {selectedOrder.endereco_cidade}/{selectedOrder.endereco_estado} • {selectedOrder.endereco_cep}</p>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Pagamento</p>
+                  <p className="text-sm">{selectedOrder.tipo_pagamento_nome || "---"} {selectedOrder.condicao_pagamento_nome && `• ${selectedOrder.condicao_pagamento_nome}`}</p>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <p className="font-semibold mb-3">Itens do Pedido</p>
+                  {loadingItems ? (
+                    <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                  ) : (
+                    <div className="space-y-2">
+                      {orderItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
+                          <div className="w-10 h-10 rounded bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
+                            {item.foto_url ? <img src={item.foto_url} alt="" className="w-full h-full object-cover" /> : <Package className="h-4 w-4 text-muted-foreground" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{item.nome_produto}</p>
+                            <p className="text-xs text-muted-foreground">{item.quantidade}x {formatPrice(item.preco_unitario)}</p>
+                          </div>
+                          <p className="text-sm font-semibold shrink-0">{formatPrice(item.subtotal)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(selectedOrder.subtotal)}</span></div>
+                  {selectedOrder.desconto > 0 && <div className="flex justify-between text-success"><span>Desconto</span><span>-{formatPrice(selectedOrder.desconto)}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span>{selectedOrder.frete === 0 ? "Grátis" : formatPrice(selectedOrder.frete)}</span></div>
+                  <Separator />
+                  <div className="flex justify-between font-bold text-base">
+                    <span>Total</span>
+                    <span className="text-primary">{formatPrice(selectedOrder.valor_total)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" className="flex-1 rounded-full gap-1.5" onClick={() => { handleRecomprar(selectedOrder); setSelectedOrder(null); }}>
+                    <ShoppingCart className="h-4 w-4" /> Recomprar
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
