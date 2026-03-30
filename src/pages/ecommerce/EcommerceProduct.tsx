@@ -478,32 +478,13 @@ export default function EcommerceProduct() {
           </TabsContent>
 
           <TabsContent value="avaliacoes" className="mt-4">
-            <div className="space-y-3">
-              {[
-                { name: "João P.", rating: 5, text: "Excelente qualidade, papel consistente. Compro sempre!", date: "12/03/2026" },
-                { name: "Maria L.", rating: 4, text: "Bom produto, entrega rápida. Recomendo.", date: "08/03/2026" },
-              ].map((review, i) => (
-                <Card key={i} className="border-0 shadow-none bg-muted/20">
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                          {review.name.split(" ").map(n => n[0]).join("")}
-                        </div>
-                        <span className="text-sm font-semibold">{review.name}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{review.date}</span>
-                    </div>
-                    <div className="flex gap-0.5 mt-2">
-                      {Array.from({ length: review.rating }).map((_, j) => (
-                        <Star key={j} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-foreground/80 mt-2.5 leading-relaxed">{review.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card className="border-0 shadow-none bg-muted/20">
+              <CardContent className="p-6 text-center space-y-2">
+                <Star className="h-8 w-8 text-muted-foreground mx-auto" />
+                <p className="text-sm text-muted-foreground">Nenhuma avaliação disponível ainda.</p>
+                <p className="text-xs text-muted-foreground">Seja o primeiro a avaliar este produto!</p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
