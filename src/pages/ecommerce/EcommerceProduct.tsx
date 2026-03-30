@@ -235,7 +235,7 @@ export default function EcommerceProduct() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 min-w-0">
         {/* Gallery */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="aspect-square max-h-[55vh] md:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
+          <div className="aspect-square max-h-[55vh] md:max-h-[50vh] lg:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
             {product.foto_url ? (
               <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
             ) : (

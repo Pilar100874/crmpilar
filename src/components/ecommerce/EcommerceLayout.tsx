@@ -106,7 +106,7 @@ export default function EcommerceLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <EcommerceAdBanner posicao="popup" />
       {/* Top bar */}
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
