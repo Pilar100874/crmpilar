@@ -188,7 +188,9 @@ export default function EcommerceLayout() {
 
           {/* Logo */}
           <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit">
-            {branding.logo_url ? (
+            {brandingLoading ? (
+              <div className="h-10 sm:h-12 md:h-14 w-[120px]" />
+            ) : branding.logo_url ? (
               <img src={branding.logo_url} alt={branding.nome_loja} className="h-10 sm:h-12 md:h-14 max-w-[160px] object-contain" />
             ) : (
               <span className="block truncate text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
