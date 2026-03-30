@@ -1234,12 +1234,12 @@ export default function POSView({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
+    <div className="flex flex-col h-full bg-muted dark:bg-background">
       <div className="flex flex-1 overflow-hidden">
         {/* Grade de Produtos - Lado Esquerdo */}
-        <div className="flex-1 flex flex-col bg-gray-100 min-w-0">
+        <div className="flex-1 flex flex-col bg-muted dark:bg-background min-w-0">
         {/* Header de Busca e Filtros - Responsivo */}
-        <div className={`${isCompact ? 'p-2' : 'p-4'} border-b border-border bg-white/80`}>
+        <div className={`${isCompact ? 'p-2' : 'p-4'} border-b border-border bg-card/80 dark:bg-card/80`}>
           {/* Primeira linha: Busca + Botões principais */}
           <div className={`flex items-center gap-2 ${isCompact ? 'flex-wrap' : ''}`}>
             {showPanelToggle && onTogglePanel && (
@@ -1247,7 +1247,7 @@ export default function POSView({
                 size="icon"
                 variant="ghost"
                 onClick={onTogglePanel}
-                className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50 flex-shrink-0`}
+                className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} p-0 rounded-full bg-card/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50 flex-shrink-0`}
                 title="Abrir painel"
               >
                 <PanelLeft className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'}`} />
