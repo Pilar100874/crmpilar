@@ -121,7 +121,7 @@ export default function EcommerceBrandingConfig() {
 
       setConfig(nextConfig);
 
-      const saved = await persistConfig(nextConfig, estId);
+      const saved = await persistConfig(nextConfig);
       if (saved) {
         toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado e salvo com sucesso!`);
       }
