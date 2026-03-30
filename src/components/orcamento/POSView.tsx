@@ -1679,13 +1679,6 @@ export default function POSView({
                         </div>
                       )}
                       
-                      {/* Price overlay bottom-left */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-8 pb-2.5 px-3">
-                        <span className="text-[15px] font-bold text-white drop-shadow-md tracking-tight">
-                          R$ 10,00
-                        </span>
-                      </div>
-                      
                       {/* Quick view */}
                       <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <Button
@@ -1706,6 +1699,9 @@ export default function POSView({
                     
                     {/* Content */}
                     <div className="flex flex-col flex-1 p-3.5 pt-3 gap-2.5">
+                      <span className="text-[15px] font-bold text-primary tracking-tight">
+                        R$ 10,00
+                      </span>
                       <h3 className="font-semibold text-[13px] leading-[1.4] line-clamp-2 min-h-[2.4rem] text-foreground/90">
                         {produto.nome}
                       </h3>
