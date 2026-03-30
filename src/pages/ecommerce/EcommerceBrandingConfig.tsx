@@ -141,9 +141,10 @@ export default function EcommerceBrandingConfig() {
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" />Logotipo</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="w-36 h-36 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/30 overflow-hidden mx-auto">
+          <div className="w-36 h-36 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-white overflow-hidden mx-auto">
             {config.logo_url ? (
-              <img src={config.logo_url} alt="Logo" className="w-full h-full object-contain p-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={config.logo_url} alt="Logo" className="w-full h-full object-contain p-2" />
+
             ) : (
               <Image className="h-10 w-10 text-muted-foreground/40" />
             )}
