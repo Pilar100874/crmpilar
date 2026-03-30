@@ -355,7 +355,7 @@ export function EmailPanel({
                   "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-semibold text-sm shadow-sm transition-all",
                   !email.read 
                     ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
-                    : "bg-gradient-to-br from-muted to-slate-200 dark:from-slate-700 dark:to-foreground/80 text-foreground/70 dark:text-muted-foreground/60"
+                    : "bg-gradient-to-br from-muted to-muted dark:from-muted-foreground dark:to-foreground/80 text-foreground/70 dark:text-muted-foreground/60"
                 )}>
                   {getSenderInitial(email.from_email)}
                 </div>

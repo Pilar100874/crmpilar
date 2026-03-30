@@ -392,7 +392,7 @@ export const VariablePickerDialog = ({
               placeholder="Buscar variável..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-foreground/50 border-slate-700 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-cyan-500/20"
+              className="pl-10 bg-foreground/50 border-border text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-cyan-500/20"
               autoFocus
             />
           </div>
@@ -427,7 +427,7 @@ export const VariablePickerDialog = ({
                       </code>
                       <Badge 
                         variant="secondary" 
-                        className="text-xs bg-foreground/80 text-muted-foreground/60 border-slate-700"
+                        className="text-xs bg-foreground/80 text-muted-foreground/60 border-border"
                       >
                         {item.variable.type}
                       </Badge>
@@ -435,7 +435,7 @@ export const VariablePickerDialog = ({
                     <div className="flex items-center gap-2 text-xs">
                       <Badge 
                         variant="outline" 
-                        className="text-xs border-slate-700 text-muted-foreground"
+                        className="text-xs border-border text-muted-foreground"
                       >
                         {item.blockName}
                       </Badge>
