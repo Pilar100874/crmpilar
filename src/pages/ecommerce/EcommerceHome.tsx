@@ -234,7 +234,7 @@ export default function EcommerceHome() {
           ) : categories.length > 0 ? (
              <div className="flex flex-wrap gap-5">
               {categories.map((cat, i) => (
-                <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+                <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="w-36 sm:w-40 lg:w-44">
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
                     <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                       <CardContent className="p-0 relative flex flex-col items-center justify-end aspect-square">
