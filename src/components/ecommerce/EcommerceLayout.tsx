@@ -195,7 +195,11 @@ export default function EcommerceLayout() {
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
-              <span className="text-xl font-black text-background mb-4 block">STORE<span className="text-primary">.</span></span>
+              {branding.logo_url ? (
+                <img src={branding.logo_url} alt={branding.nome_loja} className="h-8 object-contain mb-4" />
+              ) : (
+                <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
+              )}
               <p className="text-sm text-background/60 leading-relaxed">
                 Soluções em embalagens e papéis para empresas de todos os portes. Qualidade, variedade e agilidade na entrega.
               </p>
