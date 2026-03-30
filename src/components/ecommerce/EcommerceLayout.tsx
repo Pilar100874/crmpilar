@@ -42,14 +42,14 @@ export default function EcommerceLayout() {
     if (searchQuery.trim().length < 2) { setSearchResults([]); setShowResults(false); return; }
     const timer = setTimeout(async () => {
       const estId = localStorage.getItem("estabelecimentoId");
-      if (!estId) return;
-      const { data } = await supabase
+      let query = supabase
         .from("produtos")
         .select("id, nome, foto_url, preco_minimo, marca")
-        .eq("estabelecimento_id", estId)
         .eq("ativo", true)
         .ilike("nome", `%${searchQuery.trim()}%`)
         .limit(8);
+      if (estId) { query = query.eq("estabelecimento_id", estId); }
+      const { data } = await query;
       if (data) { setSearchResults(data); setShowResults(true); }
     }, 300);
     return () => clearTimeout(timer);
