@@ -109,6 +109,10 @@ export default function Config() {
       navigate("/email-config");
       return;
     }
+    if (sectionId === "visual-sistema") {
+      navigate("/config/visual");
+      return;
+    }
     if (sectionId === "macros") {
       setActiveSection(sectionId);
       setSearchParams({ secao: sectionId });
