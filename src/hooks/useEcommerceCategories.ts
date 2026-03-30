@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 export interface EcommerceCategory {
   id: string;
   nome: string;
-  grupo: string;
-  totalProdutos: number;
 }
 
 export interface EcommerceMenuGroup {
+  id: string;
   grupo: string;
   categorias: EcommerceCategory[];
 }
@@ -25,44 +24,35 @@ export function useEcommerceCategories() {
     const estabId = localStorage.getItem("estabelecimentoId");
     if (!estabId) { setLoading(false); return; }
 
-    // Buscar categorias que possuem produtos vinculados via tabelas_preco
-    const { data: precoData } = await supabase
-      .from("tabelas_preco")
-      .select("categoria_id, produto_categorias(id, nome, grupo)")
+    // Buscar produtos ativos com grupo e categoria
+    const { data, error } = await supabase
+      .from("produtos")
+      .select("id, grupo_id, categoria_id, grupo:produto_grupos(id, nome), categoria:produto_categorias(id, nome)")
       .eq("estabelecimento_id", estabId)
       .eq("ativo", true);
 
-    if (precoData) {
-      // Agrupar categorias únicas com contagem de produtos
-      const catMap: Record<string, { id: string; nome: string; grupo: string; count: number }> = {};
+    if (!error && data) {
+      const groupMap: Record<string, { id: string; nome: string; categorias: Record<string, { id: string; nome: string }> }> = {};
 
-      precoData.forEach((item: any) => {
-        const cat = item.produto_categorias;
-        if (!cat) return;
-        if (!catMap[cat.id]) {
-          catMap[cat.id] = { id: cat.id, nome: cat.nome, grupo: cat.grupo || "Geral", count: 0 };
+      data.forEach((prod: any) => {
+        const grp = prod.grupo;
+        const cat = prod.categoria;
+        if (!grp || !cat) return;
+
+        if (!groupMap[grp.id]) {
+          groupMap[grp.id] = { id: grp.id, nome: grp.nome, categorias: {} };
         }
-        catMap[cat.id].count++;
+        if (!groupMap[grp.id].categorias[cat.id]) {
+          groupMap[grp.id].categorias[cat.id] = { id: cat.id, nome: cat.nome };
+        }
       });
 
-      // Montar grupos
-      const groupMap: Record<string, EcommerceCategory[]> = {};
-      Object.values(catMap).forEach((cat) => {
-        if (!groupMap[cat.grupo]) groupMap[cat.grupo] = [];
-        groupMap[cat.grupo].push({
-          id: cat.id,
-          nome: cat.nome,
-          grupo: cat.grupo,
-          totalProdutos: cat.count,
-        });
-      });
-
-      // Ordenar categorias dentro de cada grupo
-      const groups: EcommerceMenuGroup[] = Object.entries(groupMap)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([grupo, categorias]) => ({
-          grupo,
-          categorias: categorias.sort((a, b) => a.nome.localeCompare(b.nome)),
+      const groups: EcommerceMenuGroup[] = Object.values(groupMap)
+        .sort((a, b) => a.nome.localeCompare(b.nome))
+        .map(g => ({
+          id: g.id,
+          grupo: g.nome,
+          categorias: Object.values(g.categorias).sort((a, b) => a.nome.localeCompare(b.nome)),
         }));
 
       setMenuGroups(groups);
