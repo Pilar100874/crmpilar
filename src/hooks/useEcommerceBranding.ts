@@ -101,12 +101,11 @@ export function useEcommerceBranding() {
   useEffect(() => {
     const load = async () => {
       const estId = localStorage.getItem("estabelecimentoId");
-      if (!estId) { setLoading(false); return; }
-      const { data } = await supabase
-        .from("ecommerce_config")
-        .select("*")
-        .eq("estabelecimento_id", estId)
-        .maybeSingle();
+      let query = supabase.from("ecommerce_config").select("*");
+      if (estId) {
+        query = query.eq("estabelecimento_id", estId);
+      }
+      const { data } = await query.maybeSingle();
       if (data) {
         const d = data as any;
         setBranding({
