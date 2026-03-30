@@ -69,7 +69,7 @@ export default function EcommerceCart() {
     if (cep.length >= 8) setShippingCalculated(true);
   };
 
-  const subtotal = items.length * 24.90; // Placeholder pricing
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
   const shipping = shippingCalculated ? (subtotal >= 500 ? 0 : 29.90) : null;
   const total = subtotal - discount + (shipping ?? 0);
