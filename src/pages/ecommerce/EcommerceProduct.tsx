@@ -43,6 +43,55 @@ export default function EcommerceProduct() {
   const [wishlisted, setWishlisted] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
+  const copyProductLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copiado para a área de transferência!");
+      return true;
+    } catch {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = window.location.href;
+        textArea.setAttribute("readonly", "true");
+        textArea.style.position = "absolute";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        toast.success("Link copiado para a área de transferência!");
+        return true;
+      } catch {
+        toast.error("Não foi possível compartilhar este produto agora.");
+        return false;
+      }
+    }
+  };
+
+  const handleShareProduct = async () => {
+    if (!product) return;
+
+    const shareData = {
+      title: product.nome,
+      text: product.descricao || `Confira o produto ${product.nome}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success("Produto compartilhado com sucesso!");
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    await copyProductLink();
+  };
+
   useEffect(() => {
     if (id) loadProduct(id);
   }, [id]);
@@ -239,14 +288,7 @@ export default function EcommerceProduct() {
               }}>
                 <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
               </Button>
-              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: product?.nome, url: window.location.href }).catch(() => {});
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copiado para a área de transferência!");
-                }
-              }}>
+              <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={handleShareProduct}>
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
