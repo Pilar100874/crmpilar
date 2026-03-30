@@ -250,7 +250,7 @@ export default function EcommerceProduct() {
         </motion.div>
 
         {/* Info */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-5">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-5 min-w-0">
           {product.categoria_nome && (
             <Badge variant="outline" className="text-xs">{product.categoria_nome}</Badge>
           )}
