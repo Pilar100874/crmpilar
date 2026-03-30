@@ -8427,6 +8427,7 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           grupo: string | null
+          icone_url: string | null
           id: string
           nome: string
           updated_at: string | null
@@ -8435,6 +8436,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           grupo?: string | null
+          icone_url?: string | null
           id?: string
           nome: string
           updated_at?: string | null
@@ -8443,6 +8445,7 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           grupo?: string | null
+          icone_url?: string | null
           id?: string
           nome?: string
           updated_at?: string | null

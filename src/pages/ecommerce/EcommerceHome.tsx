@@ -29,6 +29,7 @@ interface CategoryData {
   id: string;
   nome: string;
   count: number;
+  icone_url?: string | null;
 }
 
 const fadeUp = {
@@ -66,7 +67,7 @@ export default function EcommerceHome() {
   const { branding } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const categories: CategoryData[] = menuGroups.flatMap(g =>
-    g.categorias.map(c => ({ id: c.id, nome: c.nome, count: 0 }))
+    g.categorias.map(c => ({ id: c.id, nome: c.nome, count: 0, icone_url: c.icone_url }))
   );
 
   const vis = branding.secoes_visiveis || {};
@@ -237,7 +238,11 @@ export default function EcommerceHome() {
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
                     <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
                       <CardContent className="p-6 text-center">
-                        <span className="text-4xl block mb-3">{getCategoryIcon(cat.nome)}</span>
+                        {cat.icone_url ? (
+                          <img src={cat.icone_url} alt={cat.nome} className="w-12 h-12 mx-auto mb-3 rounded-lg object-cover" />
+                        ) : (
+                          <span className="text-4xl block mb-3">{getCategoryIcon(cat.nome)}</span>
+                        )}
                         <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.nome}</p>
                       </CardContent>
                     </Card>
