@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 
 const categories = [
   { name: "Papéis", slug: "papeis", subcategories: ["Sulfite", "Couché", "Offset", "Kraft"] },
