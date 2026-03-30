@@ -400,6 +400,11 @@ export default function EcommerceHome() {
         </Card>
       </section>
 
+      {/* Footer Banner Ads */}
+      <section className="max-w-7xl mx-auto px-4 py-6">
+        <EcommerceAdBanner posicao="footer" />
+      </section>
+
       {/* Testimonials */}
       <section className="bg-muted/30 py-16">
         <div className="max-w-7xl mx-auto px-4">
