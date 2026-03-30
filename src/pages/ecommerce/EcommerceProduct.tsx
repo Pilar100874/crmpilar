@@ -326,21 +326,56 @@ export default function EcommerceProduct() {
             </div>
           </div>
 
-          {/* B2B pricing hint */}
-          {branding.feat_b2b_card && <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Package className="h-5 w-5 text-primary mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Compra em volume?</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Cadastre-se como cliente B2B para acessar preços especiais por quantidade.
-                </p>
-                <Link to="/ecommerce/b2b" className="text-xs text-primary font-semibold hover:underline mt-1 inline-block">
-                  Saiba mais →
+          {/* B2B / Volume Pricing */}
+          {branding.feat_b2b_card && volumeTiers.length > 0 && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Preços por Volume</p>
+                </div>
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <div className="grid grid-cols-3 bg-muted/50 p-2.5 text-[11px] font-semibold text-muted-foreground border-b">
+                    <span>Quantidade</span>
+                    <span>Desconto</span>
+                    <span>Preço Unit.</span>
+                  </div>
+                  {volumeTiers.map((tier: any, i: number) => {
+                    const basePrice = product?.preco_minimo || product?.preco_tabela || 0;
+                    const discountedPrice = basePrice * (1 - Number(tier.percentual_desconto) / 100);
+                    return (
+                      <div key={i} className="grid grid-cols-3 p-2.5 text-sm border-b last:border-0 hover:bg-muted/20">
+                        <span className="font-medium text-xs">
+                          {tier.quantidade_minima}{tier.quantidade_maxima ? `-${tier.quantidade_maxima}` : "+"} un
+                        </span>
+                        <span className="text-primary font-semibold text-xs">{Number(tier.percentual_desconto)}% OFF</span>
+                        <span className="font-semibold text-xs">{formatPrice(discountedPrice)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Link to="/ecommerce/b2b" className="text-xs text-primary font-semibold hover:underline inline-block">
+                  Cadastre-se B2B para mais vantagens →
                 </Link>
-              </div>
-            </CardContent>
-          </Card>}
+              </CardContent>
+            </Card>
+          )}
+          {branding.feat_b2b_card && volumeTiers.length === 0 && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4 flex items-start gap-3">
+                <Package className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Compra em volume?</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Cadastre-se como cliente B2B para acessar preços especiais por quantidade.
+                  </p>
+                  <Link to="/ecommerce/b2b" className="text-xs text-primary font-semibold hover:underline mt-1 inline-block">
+                    Saiba mais →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Trust signals */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
