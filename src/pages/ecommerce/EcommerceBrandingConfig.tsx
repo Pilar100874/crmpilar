@@ -55,7 +55,6 @@ export default function EcommerceBrandingConfig() {
       }
 
       if (data) {
-        console.log("Branding config loaded:", { logo_url: data.logo_url, id: data.id });
         setConfigId(data.id);
         setConfigEstId(data.estabelecimento_id);
         setConfig({
@@ -190,11 +189,13 @@ export default function EcommerceBrandingConfig() {
         </CardHeader>
         <CardContent className="space-y-3">
           {config.logo_url ? (
-            <div className="relative rounded-xl overflow-hidden w-48 h-48 border bg-muted/30 flex items-center justify-center">
-              <img
+            <div className="relative rounded-xl overflow-hidden w-48 h-48 border bg-muted/30 flex items-center justify-center p-3">
+              <BrandLogo
                 src={config.logo_url}
-                alt="Logo"
-                className="max-w-full max-h-full object-contain p-2"
+                alt={config.nome_loja || "Logo do estabelecimento"}
+                fallbackText="Logo do estabelecimento"
+                className="h-full w-full rounded-lg bg-gradient-to-br from-background via-muted/40 to-background"
+                imageClassName="p-3"
               />
               <Button
                 variant="destructive"
@@ -346,8 +347,16 @@ export default function EcommerceBrandingConfig() {
               {config.background_type === "video" && config.background_video_url && (
                 <video src={config.background_video_url} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
               )}
-              <div className="relative z-10 text-center">
-                {config.logo_url && <img src={config.logo_url} alt="" className="h-10 mx-auto mb-1" />}
+              <div className="relative z-10 text-center px-4">
+                {config.logo_url && (
+                  <BrandLogo
+                    src={config.logo_url}
+                    alt={config.nome_loja || "Logo do estabelecimento"}
+                    fallbackText={config.nome_loja || "Logo"}
+                    className="mx-auto mb-2 h-12 w-32 rounded-lg bg-background/70 shadow-sm backdrop-blur-sm"
+                    imageClassName="p-2"
+                  />
+                )}
                 <p className="text-white font-bold text-lg drop-shadow-lg">{config.nome_loja}</p>
                 {config.slogan && <p className="text-white/80 text-sm drop-shadow">{config.slogan}</p>}
               </div>
