@@ -275,6 +275,9 @@ export default function EcommerceLayout() {
         {/* Navigation - Desktop: Groups as main items, categories as dropdowns */}
         <nav className="hidden lg:block border-t">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-0">
+            <Link to="/ecommerce/catalogo" className="px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+              Todos os Produtos
+            </Link>
             {menuGroups.map((group) => (
               <div key={group.grupo} className="relative" onMouseEnter={() => setMegaMenuOpen(group.grupo)} onMouseLeave={() => setMegaMenuOpen(null)}>
                 <button className="flex items-center gap-1 px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
@@ -295,9 +298,6 @@ export default function EcommerceLayout() {
                 </AnimatePresence>
               </div>
             ))}
-            <Link to="/ecommerce/catalogo" className="px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
-              Todos os Produtos
-            </Link>
             <Link to="/ecommerce/b2b" className="px-4 py-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors ml-auto">
               Atacado / B2B →
             </Link>
