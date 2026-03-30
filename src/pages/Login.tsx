@@ -43,10 +43,27 @@ export default function Login() {
   const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
+    // Load splash video config
+    const loadSplashVideo = async () => {
+      try {
+        const { data } = await supabase
+          .from("system_visual_config")
+          .select("splash_video_url")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.splash_video_url) {
+          setSplashVideoUrl(data.splash_video_url);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar splash video:", err);
+      }
+    };
+    loadSplashVideo();
+
     const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Já tem sessão ativa, verificar se o usuário existe no sistema
         const { data: usuario } = await supabase
           .from("usuarios")
           .select("id, estabelecimento_id")
