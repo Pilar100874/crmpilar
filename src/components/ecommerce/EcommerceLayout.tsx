@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -135,13 +135,24 @@ export default function EcommerceLayout() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 overflow-y-auto">
-              <div className="p-6 border-b">
+              <div className="p-6 border-b space-y-3">
                 {branding.logo_url && (
-                  <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain mb-3" />
+                  <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain" />
                 )}
                 <h2 className="text-lg font-bold">Menu</h2>
               </div>
               <nav className="p-4 space-y-1">
+                {/* User account links */}
+                <Link to="/ecommerce/conta" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                  <User className="h-4 w-4" /> Minha Conta
+                </Link>
+                <Link to="/ecommerce/conta?tab=pedidos" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                  <Package className="h-4 w-4" /> Meus Pedidos
+                </Link>
+                <Link to="/ecommerce/conta?tab=rastreamento" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                  <Truck className="h-4 w-4" /> Rastreamento
+                </Link>
+                <hr className="my-3" />
                 {menuGroups.map(group => (
                   <Collapsible key={group.grupo}>
                     <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-accent transition-colors font-semibold text-sm">
@@ -165,7 +176,7 @@ export default function EcommerceLayout() {
                     Todos os Produtos
                   </Link>
                 )}
-                <hr className="my-4" />
+                <hr className="my-3" />
                 <Link to="/ecommerce/b2b" className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-primary">
                   Atacado / B2B
                 </Link>

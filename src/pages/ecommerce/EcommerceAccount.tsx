@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { User, Users, Package, MapPin, Heart, Settings, LogOut, ChevronRight, Building2, FileText, RotateCcw, Shield, Clock, Edit, Plus, Trash2, Truck, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,13 @@ const mockWishlist = [
 ];
 
 export default function EcommerceAccount() {
-  const [activeTab, setActiveTab] = useState("pedidos");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "pedidos");
+
+  useEffect(() => {
+    if (tabFromUrl) setActiveTab(tabFromUrl);
+  }, [tabFromUrl]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -52,6 +58,7 @@ export default function EcommerceAccount() {
               </div>
               {[
                 { id: "pedidos", icon: Package, label: "Meus Pedidos" },
+                { id: "rastreamento", icon: Truck, label: "Rastreamento" },
                 { id: "perfil", icon: User, label: "Dados Pessoais" },
                 { id: "enderecos", icon: MapPin, label: "Endereços" },
                 { id: "favoritos", icon: Heart, label: "Favoritos" },
@@ -101,7 +108,62 @@ export default function EcommerceAccount() {
             </div>
           )}
 
-          {/* Profile */}
+          {/* Rastreamento */}
+          {activeTab === "rastreamento" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold flex items-center gap-2"><Truck className="h-5 w-5 text-primary" /> Rastreamento de Pedidos</h2>
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex gap-2">
+                    <Input placeholder="Digite o número do pedido ou código de rastreio..." className="flex-1" />
+                    <Button className="rounded-full gap-1.5"><SearchIcon className="h-4 w-4" /> Rastrear</Button>
+                  </div>
+                </CardContent>
+              </Card>
+              {mockOrders.filter(o => o.status !== "Entregue").map(order => (
+                <Card key={order.id}>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold">{order.id}</p>
+                        <p className="text-sm text-muted-foreground">{order.date}</p>
+                      </div>
+                      <Badge className={`${order.statusColor} text-primary-foreground border-0`}>{order.status}</Badge>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 h-3 w-3 rounded-full bg-primary shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium">Pedido confirmado</p>
+                          <p className="text-xs text-muted-foreground">{order.date} - 10:30</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 h-3 w-3 rounded-full bg-primary shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium">Em separação</p>
+                          <p className="text-xs text-muted-foreground">{order.date} - 14:00</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 h-3 w-3 rounded-full shrink-0 ${order.status === "Em trânsito" ? "bg-primary" : "bg-muted"}`} />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Em trânsito</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 h-3 w-3 rounded-full bg-muted shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Entregue</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
           {activeTab === "perfil" && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold flex items-center gap-2"><User className="h-5 w-5 text-primary" /> Dados Pessoais</h2>
