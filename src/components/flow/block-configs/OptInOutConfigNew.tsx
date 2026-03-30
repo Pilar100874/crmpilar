@@ -102,7 +102,7 @@ export const OptInOutConfigNew = ({ config, handleConfigChange, inputRefs, openV
               <GripVertical className="h-4 w-4" />
             </Button>
             <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full border-2 border-slate-400"></div>
+              <div className="w-3 h-3 rounded-full border-2 border-border"></div>
             </div>
           </div>
         </div>

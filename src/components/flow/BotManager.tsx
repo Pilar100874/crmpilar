@@ -154,7 +154,7 @@ export const BotManager = ({
       <SheetContent className="w-[400px] sm:w-[540px] bg-card dark:bg-card border-border text-foreground">
         <SheetHeader>
           <SheetTitle className="text-foreground">Gerenciamento de Bots</SheetTitle>
-          <SheetDescription className="text-slate-600">
+          <SheetDescription className="text-foreground/70">
             Crie, edite e gerencie seus bots de atendimento
           </SheetDescription>
         </SheetHeader>
@@ -185,7 +185,7 @@ export const BotManager = ({
                   <Input 
                     value={currentBotName} 
                     disabled 
-                    className="flex-1 bg-slate-50 border-slate-200 text-foreground" 
+                    className="flex-1 bg-muted border-border text-foreground" 
                   />
                   <Button
                     variant="outline"
@@ -214,7 +214,7 @@ export const BotManager = ({
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
                 {savedBots.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     <Folder className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Nenhum bot salvo ainda</p>
                   </div>
@@ -247,7 +247,7 @@ export const BotManager = ({
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted-foreground">
                               Atualizado: {new Date(bot.updated_at).toLocaleString()}
                             </p>
                           </div>

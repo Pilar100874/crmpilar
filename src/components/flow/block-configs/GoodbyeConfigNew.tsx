@@ -61,7 +61,7 @@ export const GoodbyeConfigNew = ({ config, handleConfigChange, inputRefs, openVa
             onChange={(e) => handleConfigChange("message", e.target.value)}
             placeholder="Digite sua mensagem de despedida"
             rows={4}
-            className="resize-none bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="resize-none bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
           <FormattingToolbar 
             onFormat={insertFormatting}

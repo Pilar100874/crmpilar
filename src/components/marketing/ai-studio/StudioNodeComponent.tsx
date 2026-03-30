@@ -94,7 +94,7 @@ const nodeGradientMap: Record<string, string> = {
   imageAnalyze: 'from-teal-500/20 to-cyan-500/20',
   loopOutput: 'from-violet-600/20 to-purple-500/20',
   randomPick: 'from-rose-600/20 to-pink-500/20',
-  output: 'from-slate-500/20 to-zinc-500/20',
+  output: 'from-muted-foreground/20 to-zinc-500/20',
 };
 
 const nodeIconColorMap: Record<string, string> = {
@@ -130,7 +130,7 @@ const nodeIconColorMap: Record<string, string> = {
   imageAnalyze: 'text-teal-400',
   loopOutput: 'text-violet-400',
   randomPick: 'text-rose-400',
-  output: 'text-slate-400',
+  output: 'text-muted-foreground',
 };
 
 const nodeAccentMap: Record<string, string> = {
@@ -740,8 +740,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
-  const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
-  const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
+  const gradient = nodeGradientMap[nodeData.type] || 'from-muted-foreground/20 to-zinc-500/20';
+  const iconColor = nodeIconColorMap[nodeData.type] || 'text-muted-foreground';
   const isPaused = !!nodeData.config?._paused;
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();

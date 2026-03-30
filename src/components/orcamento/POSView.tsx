@@ -2307,7 +2307,7 @@ export default function POSView({
                   </div>
 
                   {/* Distância e Tempo */}
-                  <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/30 rounded-lg p-3 border border-blue-200/50 dark:border-blue-800/50">
+                  <div className="bg-gradient-to-br from-blue-50 to-muted dark:from-blue-950/30 dark:to-foreground/30 rounded-lg p-3 border border-blue-200/50 dark:border-blue-800/50">
                     <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Rota</h4>
                     {(routeAddresses.loading || routeLoading) ? (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -2727,7 +2727,7 @@ export default function POSView({
       </div>
 
       {/* Barra de Total Inferior - Simplificada */}
-      <div className="bg-gradient-to-r from-card via-slate-50/80 to-card border-t border-border/50 px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
+      <div className="bg-gradient-to-r from-card via-muted/80 to-card border-t border-border/50 px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
         {/* Total */}
         <div className="flex items-center gap-3">
           <div className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Total do Pedido</div>

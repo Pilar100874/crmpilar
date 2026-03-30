@@ -72,7 +72,7 @@ const folders = [
   { id: "starred", label: "Favoritos", icon: Star, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
   { id: "sent", label: "Enviados", icon: Send, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
   { id: "drafts", label: "Rascunhos", icon: FileText, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
-  { id: "archive", label: "Arquivo", icon: Archive, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-50 dark:bg-slate-950/30" },
+  { id: "archive", label: "Arquivo", icon: Archive, color: "text-foreground/70 dark:text-muted-foreground", bg: "bg-muted dark:bg-foreground/30" },
   { id: "trash", label: "Lixeira", icon: Trash2, color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950/30" },
 ];
 
@@ -355,7 +355,7 @@ export function EmailPanel({
                   "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-semibold text-sm shadow-sm transition-all",
                   !email.read 
                     ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
-                    : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 text-slate-600 dark:text-slate-300"
+                    : "bg-gradient-to-br from-muted to-muted dark:from-muted-foreground dark:to-foreground/80 text-foreground/70 dark:text-muted-foreground/60"
                 )}>
                   {getSenderInitial(email.from_email)}
                 </div>
@@ -424,7 +424,7 @@ export function EmailPanel({
                     )}
                     
                     {/* Date */}
-                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0 bg-slate-100/80 dark:bg-slate-800/80 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0 bg-muted/80 dark:bg-foreground/80/80 px-2 py-0.5 rounded-full">
                       {formatEmailDate(email.date)}
                     </span>
                   </div>

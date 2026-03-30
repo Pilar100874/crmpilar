@@ -4239,7 +4239,7 @@ ${recentMessages}
     >
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
       {(isMobile || isTablet) ? (
-        <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+        <div className="h-full flex flex-col bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
           {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <div className="flex-shrink-0 px-3 py-2.5 bg-card border-b border-border/50 flex items-center justify-between safe-area-top">
@@ -4850,7 +4850,7 @@ ${recentMessages}
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
-        <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
+        <div className="h-full flex bg-gradient-to-br from-muted/50 to-muted overflow-hidden relative">
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <Button
@@ -4948,7 +4948,7 @@ ${recentMessages}
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
+          <div className="px-3 py-2.5 bg-gradient-to-b from-muted/80 to-background dark:to-card border-b border-border/20">
             <ExpandableTabs
               tabs={[
                 { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
@@ -4990,7 +4990,7 @@ ${recentMessages}
           )}
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-muted/30 to-background dark:to-card">
             {agendaConversations.length === 0 && otherConversations.length === 0 && agendaContactsWithoutConversation.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
@@ -5044,7 +5044,7 @@ ${recentMessages}
                               <span className="font-semibold text-sm truncate">
                                 {conv.customer?.nome || "Cliente"}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                                 {conv.lastMessage?.created_at
                                   ? getTimeAgo(conv.lastMessage.created_at)
                                   : getTimeAgo(conv.updated_at)}
@@ -5174,7 +5174,7 @@ ${recentMessages}
                     <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
                       <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                      <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                      <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
                         {otherConversations.length}
                       </Badge>
                     </div>
@@ -5200,7 +5200,7 @@ ${recentMessages}
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             selectedConversation === conv.id 
                               ? "bg-primary text-primary-foreground" 
-                              : "bg-gradient-to-br from-slate-100 to-slate-200"
+                              : "bg-gradient-to-br from-muted to-muted"
                           }`}>
                             <User className="w-5 h-5" />
                           </div>
@@ -5209,7 +5209,7 @@ ${recentMessages}
                               <span className="font-semibold text-sm truncate">
                                 {conv.customer?.nome || "Cliente"}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                                 {conv.lastMessage?.created_at
                                   ? getTimeAgo(conv.lastMessage.created_at)
                                   : getTimeAgo(conv.updated_at)}
@@ -6001,7 +6001,7 @@ ${recentMessages}
                             {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
                           </p>
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-muted dark:bg-foreground/80 px-1.5 py-0.5 rounded-full">
                               {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
                             </span>
                             <DropdownMenu>
@@ -6060,7 +6060,7 @@ ${recentMessages}
         
         {/* Status do Atendente - Footer - Apenas no Chat */}
         {atendente && activeTab === "chat" && (
-          <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
+          <div className="border-t bg-gradient-to-r from-muted/50 to-background dark:to-card p-3 flex-shrink-0">
             <AtendenteStatusSelector
               atendenteId={atendente.id}
               currentStatus={atendente.status}
@@ -7531,7 +7531,7 @@ function MobileListContent({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
@@ -7576,7 +7576,7 @@ function MobileListContent({
                 <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
                   <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                  <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                  <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
                     {otherConversations.length}
                   </Badge>
                 </div>
@@ -7592,14 +7592,14 @@ function MobileListContent({
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-slate-100 to-slate-200"
+                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-muted to-muted"
                       }`}>
                         <User className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
@@ -7854,7 +7854,7 @@ function MobileListContent({
 
       {/* Footer - Status do Atendente - Apenas no Chat */}
       {atendente && activeTab === "chat" && (
-        <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
+        <div className="border-t bg-gradient-to-r from-muted/50 to-background dark:to-card p-3 flex-shrink-0">
           <AtendenteStatusSelector
             atendenteId={atendente.id}
             currentStatus={atendente.status}

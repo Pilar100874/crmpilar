@@ -176,33 +176,33 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
         <Button
           variant="outline"
           size="icon"
-          className="h-9 w-9 bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+          className="h-9 w-9 bg-white border-border text-foreground/80 hover:bg-muted hover:text-foreground"
           title="Validar campos do cadastro de empresa"
           disabled={!isEmpresaCadastroBlock}
         >
           <Building2 className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[600px] sm:w-[800px] bg-white border-slate-200">
+      <SheetContent className="w-[600px] sm:w-[800px] bg-white border-border">
         <SheetHeader>
-          <SheetTitle className="text-slate-900 flex items-center gap-2">
+          <SheetTitle className="text-foreground flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
             Validação de Campos - Cadastro de Empresa
           </SheetTitle>
-          <SheetDescription className="text-slate-600">
+          <SheetDescription className="text-foreground/70">
             Valores atuais e validação de formato dos campos configurados
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
           {/* Resumo */}
-          <div className="mb-4 p-4 rounded-lg border-2 bg-gradient-to-r from-slate-50 to-blue-50">
+          <div className="mb-4 p-4 rounded-lg border-2 bg-gradient-to-r from-muted to-blue-50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-slate-900">
+                <p className="text-sm font-semibold text-foreground">
                   Total de campos: {validations.length}
                 </p>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-xs text-foreground/70 mt-1">
                   Válidos: {validations.length - invalidFields.length} | 
                   Inválidos: {invalidFields.length}
                 </p>
@@ -222,42 +222,42 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
           </div>
 
           {validations.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
-              <Building2 className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">Nenhum campo configurado</p>
-              <p className="text-sm text-slate-500 mt-1">
+            <div className="bg-muted border border-border rounded-lg p-8 text-center">
+              <Building2 className="h-12 w-12 text-muted-foreground/60 mx-auto mb-3" />
+              <p className="text-foreground/70">Nenhum campo configurado</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 Configure os campos no painel de propriedades do bloco
               </p>
             </div>
           ) : (
             <ScrollArea className="h-[calc(100vh-280px)]">
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+              <div className="bg-white border border-border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-slate-50 bg-primary/5">
-                      <TableHead className="text-slate-900 font-bold w-[180px]">Campo</TableHead>
-                      <TableHead className="text-slate-900 font-bold">Valor Atual</TableHead>
-                      <TableHead className="text-slate-900 font-bold w-[200px]">Formato Esperado</TableHead>
-                      <TableHead className="text-slate-900 font-bold w-[100px] text-center">Status</TableHead>
+                    <TableRow className="border-border hover:bg-muted bg-primary/5">
+                      <TableHead className="text-foreground font-bold w-[180px]">Campo</TableHead>
+                      <TableHead className="text-foreground font-bold">Valor Atual</TableHead>
+                      <TableHead className="text-foreground font-bold w-[200px]">Formato Esperado</TableHead>
+                      <TableHead className="text-foreground font-bold w-[100px] text-center">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {validations.map((validation, index) => (
                       <TableRow 
                         key={index}
-                        className={`border-slate-200 ${validation.isValid ? 'hover:bg-green-50/30' : 'hover:bg-red-50/30 bg-red-50/20'}`}
+                        className={`border-border ${validation.isValid ? 'hover:bg-green-50/30' : 'hover:bg-red-50/30 bg-red-50/20'}`}
                       >
-                        <TableCell className="align-top font-semibold text-slate-900">
+                        <TableCell className="align-top font-semibold text-foreground">
                           {validation.label}
-                          <div className="text-xs text-slate-500 font-normal mt-0.5">
+                          <div className="text-xs text-muted-foreground font-normal mt-0.5">
                             {validation.fieldName}
                           </div>
                         </TableCell>
                         <TableCell className="align-top">
                           <code 
-                            className={`text-sm font-mono ${validation.isValid ? 'text-slate-900 bg-slate-50' : 'text-red-900 bg-red-50'} px-2 py-1 rounded border ${validation.isValid ? 'border-slate-200' : 'border-red-300'} break-all max-w-full inline-block`}
+                            className={`text-sm font-mono ${validation.isValid ? 'text-foreground bg-muted' : 'text-red-900 bg-red-50'} px-2 py-1 rounded border ${validation.isValid ? 'border-border' : 'border-red-300'} break-all max-w-full inline-block`}
                           >
-                            {validation.value || <span className="text-slate-400 italic">(vazio)</span>}
+                            {validation.value || <span className="text-muted-foreground italic">(vazio)</span>}
                           </code>
                           {validation.errorMessage && (
                             <p className="text-xs text-red-600 mt-1 flex items-start gap-1">
@@ -267,7 +267,7 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
                           )}
                         </TableCell>
                         <TableCell className="align-top">
-                          <div className="text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                          <div className="text-xs text-foreground/70 bg-muted px-2 py-1 rounded border border-border">
                             {validation.expectedFormat}
                           </div>
                         </TableCell>

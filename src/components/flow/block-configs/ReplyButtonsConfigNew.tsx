@@ -133,7 +133,7 @@ export const ReplyButtonsConfigNew = ({ config, handleConfigChange, inputRefs, o
           variant="default" 
           size="lg" 
           onClick={addButton}
-          className="w-full bg-slate-700 hover:bg-slate-800 text-white"
+          className="w-full bg-muted-foreground hover:bg-foreground/80 text-white"
           disabled={buttons.length >= 3}
         >
           <Plus className="w-4 h-4 mr-2" />

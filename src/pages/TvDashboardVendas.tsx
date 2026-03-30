@@ -520,21 +520,21 @@ export default function TvDashboardVendas() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground flex items-center justify-center">
         <RefreshCw className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden p-6">
+    <div className="fixed inset-0 bg-gradient-to-br from-foreground via-foreground/90 to-foreground overflow-hidden p-6">
       {/* Header Minimal - apenas botão voltar */}
       <div className="absolute top-4 right-6 z-10">
         <Button 
           variant="ghost" 
           size="icon"
           onClick={() => navigate(-1)}
-          className="h-9 w-9 text-slate-500 hover:text-white hover:bg-slate-800/50"
+          className="h-9 w-9 text-muted-foreground hover:text-white hover:bg-foreground/80/50"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -609,7 +609,7 @@ export default function TvDashboardVendas() {
                 <Target className="h-8 w-8 text-amber-400" />
               </div>
             </div>
-            <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-foreground/80 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000"
                 style={{ width: `${progressoMeta}%` }}
@@ -622,12 +622,12 @@ export default function TvDashboardVendas() {
         {/* Secondary KPIs Row */}
         <div className="grid grid-cols-4 gap-4">
           {/* Ticket Médio */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-orange-500/20">
               <BarChart3 className="h-5 w-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500">Ticket Médio</p>
+              <p className="text-xs text-muted-foreground">Ticket Médio</p>
               <p className="text-xl font-bold text-orange-400">
                 {totalVendasHoje > 0 ? formatCurrencyCompact(totalValorHoje / totalVendasHoje) : 'R$ 0'}
               </p>
@@ -635,50 +635,50 @@ export default function TvDashboardVendas() {
           </div>
 
           {/* Taxa Conversão */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-emerald-500/20">
               <Percent className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500">Taxa Conversão</p>
+              <p className="text-xs text-muted-foreground">Taxa Conversão</p>
               <p className="text-xl font-bold text-emerald-400">{taxaConversao}%</p>
             </div>
           </div>
 
           {/* Tempo Resposta */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-pink-500/20">
               <Timer className="h-5 w-5 text-pink-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500">Tempo Resposta</p>
+              <p className="text-xs text-muted-foreground">Tempo Resposta</p>
               <p className="text-xl font-bold text-pink-400">{tempoMedioResposta} min</p>
             </div>
           </div>
 
           {/* Online */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-border/50 px-5 py-3 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-green-500/20">
               <Users className="h-5 w-5 text-green-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-500">Equipe Online</p>
-              <p className="text-xl font-bold text-green-400">{onlineCount} <span className="text-slate-500 font-normal text-sm">/ {vendedores.length}</span></p>
+              <p className="text-xs text-muted-foreground">Equipe Online</p>
+              <p className="text-xl font-bold text-green-400">{onlineCount} <span className="text-muted-foreground font-normal text-sm">/ {vendedores.length}</span></p>
             </div>
           </div>
         </div>
 
         {/* Team List - Full Width Vertical Layout */}
         <div className="flex-1 min-h-0">
-          <Card className="h-full bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-            <CardHeader className="py-2 px-6 border-b border-slate-800/50">
+          <Card className="h-full bg-black/30 backdrop-blur-sm border-border/50 flex flex-col">
+            <CardHeader className="py-2 px-6 border-b border-border/50">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2 text-muted-foreground/60">
                   <Users className="h-5 w-5 text-blue-400" />
                   <span className="text-base font-semibold">Ranking de Vendas</span>
                 </div>
                 {/* Column Headers */}
-                <div className="flex items-center gap-4 text-[10px] text-slate-500 uppercase tracking-wider">
+                <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-wider">
                   <span className="w-12 text-center">Agenda</span>
                   <span className="w-12 text-center">Chats</span>
                   <span className="w-16 text-center">E-mails</span>
@@ -696,23 +696,23 @@ export default function TvDashboardVendas() {
                       key={vendedor.id}
                       className={`px-3 py-1 rounded transition-all flex items-center justify-between ${
                         vendedor.isOnline 
-                          ? 'bg-slate-800/50 border border-slate-700/40' 
-                          : 'bg-slate-900/30 border border-transparent opacity-60'
+                          ? 'bg-foreground/80/50 border border-border/40' 
+                          : 'bg-foreground/90/30 border border-transparent opacity-60'
                       }`}
                     >
                       {/* Left - Ranking & Name */}
                       <div className="flex items-center gap-2 min-w-[160px]">
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                           index === 0 ? 'bg-amber-500/30 text-amber-400' :
-                          index === 1 ? 'bg-slate-400/30 text-slate-300' :
+                          index === 1 ? 'bg-muted-foreground/40/30 text-muted-foreground/60' :
                           index === 2 ? 'bg-orange-600/30 text-orange-400' :
-                          'bg-slate-800/50 text-slate-500'
+                          'bg-foreground/80/50 text-muted-foreground'
                         }`}>
                           {index + 1}
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
-                          <span className="font-medium text-[11px] text-slate-200 truncate max-w-[120px]">
+                          <div className={`w-1.5 h-1.5 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-muted-foreground/80'}`} />
+                          <span className="font-medium text-[11px] text-muted-foreground truncate max-w-[120px]">
                             {vendedor.nome}
                           </span>
                         </div>
@@ -740,14 +740,14 @@ export default function TvDashboardVendas() {
                         <div className="w-14 text-center">
                           <div className="flex items-center justify-center gap-0.5 text-[9px]">
                             <span className="text-green-400">↑{vendedor.emailsEnviados}</span>
-                            <span className="text-slate-500">/</span>
+                            <span className="text-muted-foreground">/</span>
                             <span className="text-blue-400">↓{vendedor.emailsRecebidos}</span>
                           </div>
                         </div>
 
                         {/* Orçamentos */}
                         <div className="w-28 flex items-center justify-center gap-0.5">
-                          <span className="px-1 py-0.5 rounded text-[8px] bg-slate-700/50 text-slate-400">{vendedor.orcamentosTotal}</span>
+                          <span className="px-1 py-0.5 rounded text-[8px] bg-muted-foreground/50 text-muted-foreground">{vendedor.orcamentosTotal}</span>
                           <span className="px-1 py-0.5 rounded text-[8px] bg-amber-500/20 text-amber-400">{vendedor.orcamentosPendentes}P</span>
                           <span className="px-1 py-0.5 rounded text-[8px] bg-green-500/20 text-green-400">{vendedor.orcamentosAprovados}A</span>
                           <span className="px-1 py-0.5 rounded text-[8px] bg-blue-500/20 text-blue-400">{vendedor.orcamentosFaturados}F</span>

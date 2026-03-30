@@ -349,7 +349,7 @@ const LAYERS: Layer[] = [
     title: 'Formato Criativo',
     emoji: '🎞️',
     icon: Tv,
-    iconColor: 'from-slate-500 to-zinc-600',
+    iconColor: 'from-muted-foreground to-zinc-600',
     description: 'Estrutura criativa do conteúdo',
     options: [
       { id: 'ugc-ad', label: 'Anúncio UGC', emoji: '📱' },

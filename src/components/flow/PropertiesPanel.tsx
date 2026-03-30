@@ -860,14 +860,14 @@ export const PropertiesPanel = ({
   return (
     <div className="w-96 bg-background border-l border-border flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 bg-white">
+      <div className="p-4 border-b border-border bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center">
               <span className="text-xl">⚙️</span>
             </div>
             <div>
-              <h3 className="font-semibold text-base text-slate-900">Propriedades</h3>
+              <h3 className="font-semibold text-base text-foreground">Propriedades</h3>
               {blockDef && (
                 <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary block"></span>
@@ -888,7 +888,7 @@ export const PropertiesPanel = ({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           {/* Nome do Bloco */}
-          <div className="space-y-2 p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <div className="space-y-2 p-3 rounded-lg bg-muted border border-border">
             <Label className="text-foreground text-sm font-medium flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full"></span>
               Nome do Bloco
@@ -897,7 +897,7 @@ export const PropertiesPanel = ({
               value={nodeData.label || ""}
               onChange={(e) => handleLabelChange(e.target.value)}
               placeholder={blockDef?.label}
-              className="bg-white border-slate-200"
+              className="bg-white border-border"
             />
           </div>
 

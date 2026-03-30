@@ -42,7 +42,7 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
             </Badge>
           </div>
           
-          <p className="text-xs text-slate-400 bg-blue-500/5 p-2 rounded border border-blue-500/20">
+          <p className="text-xs text-muted-foreground bg-blue-500/5 p-2 rounded border border-blue-500/20">
             Escolha o campo onde deseja salvar a pontuação final
           </p>
 
@@ -53,7 +53,7 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
                 value={config.scoreField || "score"}
                 onChange={(e) => handleConfigChange("scoreField", e.target.value)}
                 placeholder="score"
-                className="pl-7 bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="pl-7 bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
             </div>
             <Button variant="default" size="sm" className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
@@ -71,7 +71,7 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
       <ConfigSection title="Grupos de Regras">
         <div className="space-y-3">
           {ruleGroups.map((group: any, index: number) => (
-            <div key={group.id || index} className="p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 space-y-3 relative">
+            <div key={group.id || index} className="p-3 border border-cyan-500/30 rounded-lg bg-foreground/50 space-y-3 relative">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold text-white">Grupo de Regras #{index + 1}</h4>
                 <Button 
@@ -84,17 +84,17 @@ export const LeadScoringConfigNew = ({ config, handleConfigChange }: ConfigProps
                 </Button>
               </div>
               
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Escolha um campo para criar regras de pontuação
               </p>
 
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">IF @</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">IF @</span>
                 <Input
                   value={group.field || ""}
                   onChange={(e) => updateRuleGroup(index, "field", e.target.value)}
                   placeholder="Digite ou selecione o campo"
-                  className="pl-16 bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                  className="pl-16 bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                 />
               </div>
             </div>

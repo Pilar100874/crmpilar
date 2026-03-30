@@ -358,8 +358,8 @@ export const VariablePickerDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-3xl max-h-[85vh] bg-slate-900 border-slate-700">
-        <DialogHeader className="border-b border-slate-700 pb-4">
+      <DialogContent className="max-w-3xl max-h-[85vh] bg-foreground/90 border-foreground/70">
+        <DialogHeader className="border-b border-foreground/70 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center">
@@ -369,7 +369,7 @@ export const VariablePickerDialog = ({
                 <DialogTitle className="text-lg font-semibold text-white">
                   Selecionar Variável
                 </DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-muted-foreground">
                   Clique para inserir variáveis no campo
                 </DialogDescription>
               </div>
@@ -378,7 +378,7 @@ export const VariablePickerDialog = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="text-muted-foreground hover:text-white hover:bg-foreground/80"
             >
               Fechar
             </Button>
@@ -387,27 +387,27 @@ export const VariablePickerDialog = ({
 
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar variável..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+              className="pl-10 bg-foreground/50 border-border text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-cyan-500/20"
               autoFocus
             />
           </div>
 
           {filteredVariables.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Database className="w-8 h-8 text-slate-600" />
+              <div className="w-16 h-16 bg-foreground/80/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Database className="w-8 h-8 text-foreground/70" />
               </div>
-              <p className="text-sm text-slate-400 mb-1">
+              <p className="text-sm text-muted-foreground mb-1">
                 {searchQuery 
                   ? "Nenhuma variável encontrada"
                   : "Nenhuma variável disponível"}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {!searchQuery && "Adicione blocos anteriores que geram variáveis"}
               </p>
             </div>
@@ -417,17 +417,17 @@ export const VariablePickerDialog = ({
                 {filteredVariables.map((item, idx) => (
                   <button
                     key={idx}
-                    className="w-full p-4 rounded-lg border border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all text-left group"
+                    className="w-full p-4 rounded-lg border border-foreground/70 bg-foreground/90/30 hover:bg-foreground/80/50 hover:border-cyan-500/50 transition-all text-left group"
                     onClick={() => onSelectVariable(item.variable.name)}
                     onDoubleClick={() => onInsertAtEnd?.(item.variable.name)}
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <code className="text-sm font-mono text-cyan-400 bg-slate-950/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
+                      <code className="text-sm font-mono text-cyan-400 bg-foreground/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
                         {"{{"}{item.variable.name}{"}}"}
                       </code>
                       <Badge 
                         variant="secondary" 
-                        className="text-xs bg-slate-800 text-slate-300 border-slate-700"
+                        className="text-xs bg-foreground/80 text-muted-foreground/60 border-border"
                       >
                         {item.variable.type}
                       </Badge>
@@ -435,11 +435,11 @@ export const VariablePickerDialog = ({
                     <div className="flex items-center gap-2 text-xs">
                       <Badge 
                         variant="outline" 
-                        className="text-xs border-slate-700 text-slate-400"
+                        className="text-xs border-border text-muted-foreground"
                       >
                         {item.blockName}
                       </Badge>
-                      <span className="flex-1 text-slate-500 group-hover:text-slate-400">
+                      <span className="flex-1 text-muted-foreground group-hover:text-muted-foreground">
                         {item.variable.description}
                       </span>
                     </div>
@@ -450,14 +450,14 @@ export const VariablePickerDialog = ({
           )}
         </div>
 
-        <div className="pt-4 border-t border-slate-700">
+        <div className="pt-4 border-t border-foreground/70">
           <div className="flex items-start gap-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
             <div className="text-cyan-500 mt-0.5">💡</div>
             <div className="flex-1">
-              <p className="text-xs text-slate-300 mb-1 font-medium">
+              <p className="text-xs text-muted-foreground/60 mb-1 font-medium">
                 Modo de inserção múltipla ativo
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 <strong>Clique simples:</strong> Insere na posição do cursor<br />
                 <strong>Duplo clique:</strong> Insere no final do texto<br />
                 Use o botão "Fechar" quando terminar.

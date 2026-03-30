@@ -107,7 +107,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
     }
     
     if (isSkipped) {
-      return `${baseClass} bg-white/60 border-2 border-slate-400 opacity-60 ${
+      return `${baseClass} bg-white/60 border-2 border-border opacity-60 ${
         selected ? "ring-2 ring-primary" : ""
       }`;
     }
@@ -116,10 +116,10 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
       return `${baseClass} bg-white border-2 border-green-500 ring-4 ring-green-500 ring-offset-2 shadow-xl scale-105 animate-pulse`;
     }
     
-    return `${baseClass} bg-white border border-slate-300 ${
+    return `${baseClass} bg-white border border-border ${
       selected 
         ? "ring-2 ring-primary border-primary" 
-        : "hover:border-slate-400"
+        : "hover:border-border"
     }`;
   };
 
@@ -139,7 +139,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
             <div className="p-3">
               {/* Cabeçalho com checkbox, ícone, título e menu */}
               <div className="flex items-start gap-2 mb-3">
-                <Checkbox className="mt-0.5 h-4 w-4 border-slate-300" />
+                <Checkbox className="mt-0.5 h-4 w-4 border-border" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {IconComponent && (
@@ -147,27 +147,27 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                         <IconComponent className="w-3.5 h-3.5 text-primary" />
                       </div>
                     )}
-                    <span className="font-semibold text-sm text-slate-900 truncate">
+                    <span className="font-semibold text-sm text-foreground truncate">
                       {label}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 line-clamp-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2">
                     {type.replace(/_/g, ' ')}
                   </p>
                 </div>
                 <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-                      <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+                    <button className="p-1 hover:bg-muted rounded transition-colors">
+                      <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+                  <DropdownMenuContent className="w-56 bg-white border-border shadow-lg">
                     <DropdownMenuItem
                       onClick={() => {
                         data.onSetBreakpoint?.(id);
                         setDropdownOpen(false);
                       }}
-                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                     >
                       <Pause className="w-4 h-4 mr-2 text-orange-500" />
                       {isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
@@ -178,9 +178,9 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                         data.onSetSkip?.(id);
                         setDropdownOpen(false);
                       }}
-                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                     >
-                      <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+                      <SkipForward className="w-4 h-4 mr-2 text-muted-foreground" />
                       {isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
                     </DropdownMenuItem>
                     
@@ -189,7 +189,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                         data.onDuplicate?.(id);
                         setDropdownOpen(false);
                       }}
-                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                     >
                       <Copy className="w-4 h-4 mr-2 text-primary" />
                       Duplicar Bloco
@@ -200,13 +200,13 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                         data.onAddNote?.(id);
                         setDropdownOpen(false);
                       }}
-                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                     >
                       <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
                       {hasNote ? "Editar Nota" : "Adicionar Nota"}
                     </DropdownMenuItem>
                     
-                    <DropdownMenuSeparator className="bg-slate-200" />
+                    <DropdownMenuSeparator className="bg-muted" />
                     
                     <DropdownMenuItem
                       onClick={() => {
@@ -214,13 +214,13 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
                         setDropdownOpen(false);
                       }}
                       disabled={!isBreakpoint && !isSkipped}
-                      className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="w-4 h-4 mr-2 text-red-500" />
                       Liberar Bloco
                     </DropdownMenuItem>
                     
-                    <DropdownMenuSeparator className="bg-slate-200" />
+                    <DropdownMenuSeparator className="bg-muted" />
                     
                     {!isStartBlock && (
                       <DropdownMenuItem
@@ -239,7 +239,7 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
               </div>
 
               {hasNote && (
-                <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500 whitespace-pre-wrap">
+                <div className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground whitespace-pre-wrap">
                   📝 {data.note || data.config?.nota}
                 </div>
               )}
@@ -291,10 +291,10 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
         </ContextMenuTrigger>
 
         {/* Menu de contexto (botão direito) */}
-        <ContextMenuContent className="w-56 bg-white border-slate-200 shadow-lg">
+        <ContextMenuContent className="w-56 bg-white border-border shadow-lg">
           <ContextMenuItem
             onClick={() => data.onSetBreakpoint?.(id)}
-            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+            className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
           >
             <Pause className="w-4 h-4 mr-2 text-orange-500" />
             {isBreakpoint ? "Remover Pausa" : "Pausar Simulação Aqui"}
@@ -302,15 +302,15 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
           
           <ContextMenuItem
             onClick={() => data.onSetSkip?.(id)}
-            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+            className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
           >
-            <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+            <SkipForward className="w-4 h-4 mr-2 text-muted-foreground" />
             {isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
           </ContextMenuItem>
           
           <ContextMenuItem
             onClick={() => data.onDuplicate?.(id)}
-            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+            className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
           >
             <Copy className="w-4 h-4 mr-2 text-primary" />
             Duplicar Bloco
@@ -318,24 +318,24 @@ export const FlowNode = memo(({ id, data, selected }: FlowNodeProps) => {
 
           <ContextMenuItem
             onClick={() => data.onAddNote?.(id)}
-            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+            className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
           >
             <MessageSquare className="w-4 h-4 mr-2 text-amber-500" />
             {hasNote ? "Editar Nota" : "Adicionar Nota"}
           </ContextMenuItem>
           
-          <ContextMenuSeparator className="bg-slate-200" />
+          <ContextMenuSeparator className="bg-muted" />
           
           <ContextMenuItem
             onClick={() => data.onClearDebug?.(id)}
             disabled={!isBreakpoint && !isSkipped}
-            className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4 mr-2 text-red-500" />
             Liberar Bloco
           </ContextMenuItem>
           
-          <ContextMenuSeparator className="bg-slate-200" />
+          <ContextMenuSeparator className="bg-muted" />
           
           {!isStartBlock && (
             <ContextMenuItem

@@ -46,7 +46,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
     <div className="space-y-4">
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
-          <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+          <Label className="text-foreground text-sm font-medium flex items-center gap-2">
             <span className="w-1 h-4 bg-primary rounded-full"></span>
             Texto da Mensagem
           </Label>
@@ -94,7 +94,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
       <ConfigSection title="Botões de Resposta">
         <div className="space-y-3">
           {(config.buttons || []).map((button: any, index: number) => (
-            <div key={index} className="p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 space-y-2 relative">
+            <div key={index} className="p-3 border border-cyan-500/30 rounded-lg bg-foreground/50 space-y-2 relative">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-white">Botão {index + 1}</span>
                 <Button
@@ -111,14 +111,14 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
                 value={button.text || ""}
                 onChange={(e) => updateButton(index, "text", e.target.value)}
                 placeholder="Texto do botão"
-                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <Input
                 value={button.value || ""}
                 onChange={(e) => updateButton(index, "value", e.target.value)}
                 placeholder="Valor armazenado (opcional)"
-                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export const ReplyButtonsConfig = ({ config, handleConfigChange, nodes, edges, s
                   value={button.imageUrl || ""}
                   onChange={(e) => updateButton(index, "imageUrl", e.target.value)}
                   placeholder="URL da imagem do botão (opcional)"
-                  className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium text-xs"
+                  className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium text-xs"
                 />
               </div>
             </div>
@@ -228,7 +228,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
     <div className="space-y-4">
       <ConfigSection title="Mensagem">
         <div className="space-y-2">
-          <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+          <Label className="text-foreground text-sm font-medium flex items-center gap-2">
             <span className="w-1 h-4 bg-primary rounded-full"></span>
             Texto da Mensagem
           </Label>
@@ -256,7 +256,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
       <ConfigSection title="Seções do Menu">
         <div className="space-y-3">
           {(config.sections || []).map((section: any, sectionIndex: number) => (
-            <div key={sectionIndex} className="p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 space-y-3">
+            <div key={sectionIndex} className="p-3 border border-cyan-500/30 rounded-lg bg-foreground/50 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-white">Seção {sectionIndex + 1}</span>
                 <Button
@@ -273,12 +273,12 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
                 value={section.title || ""}
                 onChange={(e) => updateSection(sectionIndex, "title", e.target.value)}
                 placeholder="Título da seção"
-                className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
               />
 
               <div className="pl-3 border-l-2 border-cyan-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Itens</span>
+                  <span className="text-xs text-muted-foreground font-medium">Itens</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -291,7 +291,7 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
                 </div>
 
                 {(section.items || []).map((item: any, itemIndex: number) => (
-                  <div key={itemIndex} className="space-y-1 p-2 bg-slate-800/50 rounded border border-slate-700/50">
+                  <div key={itemIndex} className="space-y-1 p-2 bg-foreground/80/50 rounded border border-muted-foreground/50">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-white font-medium">Item {itemIndex + 1}</span>
                       <Button
@@ -307,13 +307,13 @@ export const ListButtonsConfig = ({ config, handleConfigChange, nodes, edges, se
                       value={item.title || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "title", e.target.value)}
                       placeholder="Título"
-                      className="text-xs bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+                      className="text-xs bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                     <Input
                       value={item.description || ""}
                       onChange={(e) => updateItem(sectionIndex, itemIndex, "description", e.target.value)}
                       placeholder="Descrição (opcional)"
-                      className="text-xs bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+                      className="text-xs bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
                     />
                   </div>
                 ))}

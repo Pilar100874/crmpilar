@@ -42,7 +42,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
     return `${baseClass} bg-card dark:bg-card border border-border ${
       selected 
         ? "ring-2 ring-primary border-primary" 
-        : "hover:border-slate-400"
+        : "hover:border-border"
     }`;
   };
 
@@ -61,7 +61,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
         <div className="p-3">
           {/* Cabeçalho com checkbox, ícone, título e menu */}
           <div className="flex items-start gap-2 mb-3">
-            <Checkbox className="mt-0.5 h-4 w-4 border-slate-300" />
+            <Checkbox className="mt-0.5 h-4 w-4 border-border" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {IconComponent && (
@@ -69,14 +69,14 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                     <IconComponent className="w-3.5 h-3.5 text-primary" />
                   </div>
                 )}
-                <span className="font-semibold text-sm text-slate-900 truncate">{label}</span>
+                <span className="font-semibold text-sm text-foreground truncate">{label}</span>
               </div>
-              <p className="text-xs text-slate-500 line-clamp-2">{description}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{description}</p>
             </div>
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-                  <MoreVertical className="w-3.5 h-3.5 text-slate-400" />
+                <button className="p-1 hover:bg-muted rounded transition-colors">
+                  <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-card dark:bg-card border-border shadow-lg">
@@ -85,7 +85,7 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                     (data as any).onAddNote?.(id);
                     setDropdownOpen(false);
                   }}
-                  className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                 >
                   <StickyNote className="w-4 h-4 mr-2 text-yellow-500" />
                   {note ? "Editar Nota" : "Adicionar Nota"}
@@ -96,13 +96,13 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
                     (data as any).onDuplicate?.(id);
                     setDropdownOpen(false);
                   }}
-                  className="text-slate-700 focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                  className="text-foreground/80 focus:bg-muted focus:text-foreground cursor-pointer"
                 >
                   <Copy className="w-4 h-4 mr-2 text-primary" />
                   Duplicar Bloco
                 </DropdownMenuItem>
                 
-                <DropdownMenuSeparator className="bg-slate-200" />
+                <DropdownMenuSeparator className="bg-muted" />
                 
                 {!isStartBlock && (
                   <DropdownMenuItem
@@ -122,20 +122,20 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
         {/* Nota (se houver) */}
         {note && (
-          <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500 whitespace-pre-wrap">
+          <div className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground whitespace-pre-wrap">
             📝 {String(note)}
           </div>
         )}
 
         {/* Mostrar condições para condicao_se */}
         {(data as any).type === "condicao_se" && (data as any).config?.condicoes && (
-          <div className="mt-2 pt-2 border-t border-slate-200">
-            <div className="text-xs font-medium text-slate-600 mb-1">
+          <div className="mt-2 pt-2 border-t border-border">
+            <div className="text-xs font-medium text-foreground/70 mb-1">
               Lógica: {(data as any).config.logica || "E"}
             </div>
             <div className="space-y-1">
               {((data as any).config.condicoes || []).map((condicao: any, index: number) => (
-                <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
+                <div key={index} className="text-xs text-muted-foreground flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                   {condicao.campo} {condicao.operador} {condicao.valor}
                 </div>
@@ -146,15 +146,15 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
 
         {/* Mostrar faixas para valida_faixa_faturamento */}
         {(data as any).type === "valida_faixa_faturamento" && (data as any).config?.faixas && (
-          <div className="mt-2 pt-2 border-t border-slate-200">
-            <div className="text-xs font-medium text-slate-600 mb-1">Faixas de Valor:</div>
+          <div className="mt-2 pt-2 border-t border-border">
+            <div className="text-xs font-medium text-foreground/70 mb-1">Faixas de Valor:</div>
             <div className="space-y-1">
               {((data as any).config.faixas || []).map((faixa: any, index: number) => {
                 const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
                 const color = colors[index % colors.length];
                 
                 return (
-                  <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
+                  <div key={index} className="text-xs text-muted-foreground flex items-center gap-1">
                     <span 
                       className="w-1.5 h-1.5 rounded-full" 
                       style={{ backgroundColor: color }}
