@@ -58,13 +58,15 @@ export default function EcommerceCatalog() {
     setLoading(true);
     try {
       const estabId = localStorage.getItem("estabelecimentoId");
-      if (!estabId) { setLoading(false); return; }
 
       let query = supabase
         .from("produtos")
         .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
-        .eq("estabelecimento_id", estabId)
         .eq("ativo", true);
+
+      if (estabId) {
+        query = query.eq("estabelecimento_id", estabId);
+      }
 
       const { data, error } = await query.limit(500);
 
