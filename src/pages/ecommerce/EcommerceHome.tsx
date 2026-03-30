@@ -237,7 +237,7 @@ export default function EcommerceHome() {
                 <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
                     <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                      <CardContent className="p-0 relative flex flex-col items-center justify-end h-36 sm:h-40 lg:h-44">
+                      <CardContent className="p-0 relative flex flex-col items-center justify-end aspect-square">
                         {cat.icone_url ? (
                           <img src={cat.icone_url} alt={cat.nome} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
