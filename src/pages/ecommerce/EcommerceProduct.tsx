@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronRight, Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Share2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
+import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 interface Product {
   id: string;
