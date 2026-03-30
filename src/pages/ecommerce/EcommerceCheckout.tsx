@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,29 +10,92 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const STEPS = ["Identificação", "Endereço", "Pagamento", "Confirmação"];
+
+interface TipoPagamento {
+  id: string;
+  nome: string;
+  ativo: boolean;
+}
+
+interface CondicaoPagamento {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  tipo_pagamento_id: string | null;
+  valor_minimo: number | null;
+  valor_maximo: number | null;
+  ativo: boolean;
+}
+
+const formatPrice = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EcommerceCheckout() {
   const { items, couponDiscount, clearCart } = useCart();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [customerType, setCustomerType] = useState<"pf" | "pj">("pf");
-  const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [selectedTipoPagamento, setSelectedTipoPagamento] = useState("");
+  const [selectedCondicao, setSelectedCondicao] = useState("");
+  const [tiposPagamento, setTiposPagamento] = useState<TipoPagamento[]>([]);
+  const [condicoesPagamento, setCondicoesPagamento] = useState<CondicaoPagamento[]>([]);
   const [formData, setFormData] = useState({
     nome: "", email: "", telefone: "", cpf: "",
     cnpj: "", razaoSocial: "", inscricaoEstadual: "", centroCusto: "", observacoes: "",
     cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   });
 
+  const estId = localStorage.getItem("estabelecimentoId");
+
   const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
 
-  const subtotal = items.length * 24.90;
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
   const shipping = subtotal >= 500 ? 0 : 29.90;
   const total = subtotal - discount + shipping;
+
+  useEffect(() => {
+    if (!estId) return;
+    supabase
+      .from("tipos_pagamento")
+      .select("id, nome, ativo")
+      .eq("estabelecimento_id", estId)
+      .eq("ativo", true)
+      .order("nome")
+      .then(({ data }) => {
+        if (data) setTiposPagamento(data);
+      });
+
+    supabase
+      .from("condicoes_pagamento")
+      .select("id, nome, descricao, tipo_pagamento_id, valor_minimo, valor_maximo, ativo")
+      .eq("estabelecimento_id", estId)
+      .eq("ativo", true)
+      .order("nome")
+      .then(({ data }) => {
+        if (data) setCondicoesPagamento(data);
+      });
+  }, [estId]);
+
+  // Filter conditions based on selected payment type and order total
+  const filteredCondicoes = condicoesPagamento.filter(c => {
+    if (c.tipo_pagamento_id !== selectedTipoPagamento) return false;
+    if (c.valor_minimo != null && total < c.valor_minimo) return false;
+    if (c.valor_maximo != null && total > c.valor_maximo) return false;
+    return true;
+  });
+
+  // Reset condição when tipo changes
+  useEffect(() => {
+    setSelectedCondicao("");
+  }, [selectedTipoPagamento]);
+
+  const selectedTipoNome = tiposPagamento.find(t => t.id === selectedTipoPagamento)?.nome || "";
+  const selectedCondicaoNome = condicoesPagamento.find(c => c.id === selectedCondicao)?.nome || "";
 
   const handleFinish = () => {
     toast.success("Pedido realizado com sucesso! 🎉");
@@ -105,7 +168,7 @@ export default function EcommerceCheckout() {
                         <div><Label>Inscrição Estadual</Label><Input value={formData.inscricaoEstadual} onChange={(e) => updateField("inscricaoEstadual", e.target.value)} className="mt-1" /></div>
                         <div><Label>Nome do Responsável *</Label><Input value={formData.nome} onChange={(e) => updateField("nome", e.target.value)} className="mt-1" /></div>
                         <div><Label>E-mail *</Label><Input type="email" value={formData.email} onChange={(e) => updateField("email", e.target.value)} className="mt-1" /></div>
-                        <div><Label>Telefone *</Label><Input value={formData.telefone} onChange={(e) => updateField("telefone", e.target.value)} className="mt-1" /></div>
+                        <div><Label>Telefone *</Label><Input value={formData.telefone} onChange={(e) => updateField("telefone", e.target.value)} className="mt-1" placeholder="(11) 99999-9999" /></div>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div><Label>Centro de Custo</Label><Input value={formData.centroCusto} onChange={(e) => updateField("centroCusto", e.target.value)} className="mt-1" /></div>
@@ -155,36 +218,73 @@ export default function EcommerceCheckout() {
                     <CreditCard className="h-5 w-5 text-primary" />
                     <h2 className="text-lg font-bold">Forma de Pagamento</h2>
                   </div>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                    {[
-                      { value: "pix", label: "PIX", desc: "Aprovação imediata • 5% de desconto", icon: "💠" },
-                      { value: "cartao", label: "Cartão de Crédito", desc: "Até 12x sem juros", icon: "💳" },
-                      { value: "boleto", label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: "📄" },
-                      ...(customerType === "pj" ? [{ value: "faturado", label: "Pagamento Faturado", desc: "30/60/90 dias (sujeito a aprovação)", icon: "🏦" }] : []),
-                    ].map(pm => (
-                      <label key={pm.value} className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === pm.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                        <RadioGroupItem value={pm.value} />
-                        <span className="text-2xl">{pm.icon}</span>
-                        <div>
-                          <p className="font-semibold text-sm">{pm.label}</p>
-                          <p className="text-xs text-muted-foreground">{pm.desc}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </RadioGroup>
 
-                  {paymentMethod === "cartao" && (
-                    <div className="grid sm:grid-cols-2 gap-4 pt-2">
-                      <div className="sm:col-span-2"><Label>Número do Cartão</Label><Input className="mt-1" placeholder="0000 0000 0000 0000" /></div>
-                      <div><Label>Validade</Label><Input className="mt-1" placeholder="MM/AA" /></div>
-                      <div><Label>CVV</Label><Input className="mt-1" placeholder="000" maxLength={4} /></div>
-                      <div className="sm:col-span-2"><Label>Nome no Cartão</Label><Input className="mt-1" /></div>
+                  {/* Tipo de Pagamento */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Tipo de Pagamento</Label>
+                    {tiposPagamento.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum tipo de pagamento configurado.</p>
+                    ) : (
+                      <RadioGroup value={selectedTipoPagamento} onValueChange={setSelectedTipoPagamento} className="space-y-2">
+                        {tiposPagamento.map(tp => (
+                          <label
+                            key={tp.id}
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedTipoPagamento === tp.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
+                          >
+                            <RadioGroupItem value={tp.id} />
+                            <div>
+                              <p className="font-semibold text-sm">{tp.nome}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    )}
+                  </div>
+
+                  {/* Condição de Pagamento */}
+                  {selectedTipoPagamento && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Condição de Pagamento</Label>
+                      {filteredCondicoes.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          Nenhuma condição disponível para este tipo de pagamento
+                          {total > 0 ? ` e valor de ${formatPrice(total)}` : ""}.
+                        </p>
+                      ) : (
+                        <RadioGroup value={selectedCondicao} onValueChange={setSelectedCondicao} className="space-y-2">
+                          {filteredCondicoes.map(cond => (
+                            <label
+                              key={cond.id}
+                              className={`flex items-center gap-4 p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedCondicao === cond.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
+                            >
+                              <RadioGroupItem value={cond.id} />
+                              <div>
+                                <p className="font-semibold text-sm">{cond.nome}</p>
+                                {cond.descricao && <p className="text-xs text-muted-foreground">{cond.descricao}</p>}
+                                {(cond.valor_minimo != null || cond.valor_maximo != null) && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {cond.valor_minimo != null && `Mín: ${formatPrice(cond.valor_minimo)}`}
+                                    {cond.valor_minimo != null && cond.valor_maximo != null && " • "}
+                                    {cond.valor_maximo != null && `Máx: ${formatPrice(cond.valor_maximo)}`}
+                                  </p>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </RadioGroup>
+                      )}
                     </div>
                   )}
 
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(1)} className="rounded-full gap-2"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-                    <Button onClick={() => setStep(3)} className="rounded-full gap-2 px-6">Revisar Pedido <ChevronRight className="h-4 w-4" /></Button>
+                    <Button
+                      onClick={() => setStep(3)}
+                      disabled={!selectedTipoPagamento || (filteredCondicoes.length > 0 && !selectedCondicao)}
+                      className="rounded-full gap-2 px-6"
+                    >
+                      Revisar Pedido <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -211,11 +311,18 @@ export default function EcommerceCheckout() {
                       <p className="text-sm text-muted-foreground">{formData.bairro || "—"} • {formData.cidade || "—"}/{formData.estado || "—"} • CEP: {formData.cep || "—"}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-muted/30">
+                      <p className="text-sm font-semibold mb-2">Pagamento</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTipoNome}
+                        {selectedCondicaoNome && ` • ${selectedCondicaoNome}`}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-muted/30">
                       <p className="text-sm font-semibold mb-2">Itens ({items.length})</p>
                       {items.map(item => (
                         <div key={item.id} className="flex justify-between text-sm py-1">
                           <span className="text-muted-foreground">{item.quantity}x {item.name}</span>
-                          <span className="font-medium">R$ {(24.90 * item.quantity).toFixed(2)}</span>
+                          <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
                         </div>
                       ))}
                     </div>
@@ -242,21 +349,21 @@ export default function EcommerceCheckout() {
                 {items.slice(0, 3).map(item => (
                   <div key={item.id} className="flex justify-between">
                     <span className="text-muted-foreground truncate mr-2">{item.quantity}x {item.name}</span>
-                    <span className="font-medium flex-shrink-0">R$ {(24.90 * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium flex-shrink-0">{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
                 {items.length > 3 && <p className="text-xs text-muted-foreground">+{items.length - 3} item(s)</p>}
               </div>
               <Separator />
               <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>R$ {subtotal.toFixed(2)}</span></div>
-                {discount > 0 && <div className="flex justify-between text-success"><span>Desconto</span><span>-R$ {discount.toFixed(2)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span>{shipping === 0 ? "Grátis" : `R$ ${shipping.toFixed(2)}`}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                {discount > 0 && <div className="flex justify-between text-success"><span>Desconto</span><span>-{formatPrice(discount)}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span>{shipping === 0 ? "Grátis" : formatPrice(shipping)}</span></div>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="font-bold">Total</span>
-                <span className="text-xl font-black text-primary">R$ {total.toFixed(2)}</span>
+                <span className="text-xl font-black text-primary">{formatPrice(total)}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-center pt-2">
                 <Lock className="h-3 w-3" /> Compra 100% segura
