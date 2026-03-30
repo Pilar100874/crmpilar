@@ -131,7 +131,7 @@ export default function EcommerceBrandingConfig() {
 
       const saved = await persistConfig(nextConfig);
       if (saved) {
-        toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado e salvo com sucesso!`);
+        toast.success(`${type === "logo" ? "Logo" : type === "image" ? "Imagem" : "Vídeo"} carregado e salvo com sucesso!`);
       }
     } catch (err) {
       console.error("Upload exception:", err);
