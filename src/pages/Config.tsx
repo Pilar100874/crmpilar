@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail, Zap
+  Settings, Check, Mail, Zap, Paintbrush
 } from "lucide-react";
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
@@ -70,6 +70,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     iconColor: "text-cyan-500",
   },
   {
+    id: "visual-sistema",
+    title: "Visual do Sistema",
+    description: "Splash screen, vídeo de fundo e aparência",
+    icon: Paintbrush,
+    bgColor: "bg-pink-500/10",
+    iconColor: "text-pink-500",
+  },
+  {
     id: "macros",
     title: "Macros",
     description: "Automatize ações repetitivas",
@@ -99,6 +107,10 @@ export default function Config() {
   const handleSectionClick = (sectionId: string) => {
     if (sectionId === "email-config") {
       navigate("/email-config");
+      return;
+    }
+    if (sectionId === "visual-sistema") {
+      navigate("/config/visual");
       return;
     }
     if (sectionId === "macros") {

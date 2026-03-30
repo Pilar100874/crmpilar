@@ -39,13 +39,31 @@ export default function Login() {
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
+  const [splashVideoUrl, setSplashVideoUrl] = useState<string | null>(null);
   const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
+    // Load splash video config
+    const loadSplashVideo = async () => {
+      try {
+        const { data } = await supabase
+          .from("system_visual_config")
+          .select("splash_video_url")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.splash_video_url) {
+          setSplashVideoUrl(data.splash_video_url);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar splash video:", err);
+      }
+    };
+    loadSplashVideo();
+
     const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Já tem sessão ativa, verificar se o usuário existe no sistema
         const { data: usuario } = await supabase
           .from("usuarios")
           .select("id, estabelecimento_id")
@@ -108,9 +126,24 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-8 bg-background relative overflow-y-auto">
+      {/* Splash Video Background */}
+      {splashVideoUrl && (
+        <video
+          src={splashVideoUrl}
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
+      {/* Overlay to ensure readability */}
+      {splashVideoUrl && (
+        <div className="absolute inset-0 bg-black/50 z-[1]" />
+      )}
       <div
-        className="absolute top-0 left-0 right-0 h-80"
-        style={{ background: "var(--gradient-hero)" }}
+        className={`absolute top-0 left-0 right-0 h-80 ${splashVideoUrl ? 'z-[2] opacity-60' : ''}`}
+        style={{ background: splashVideoUrl ? 'transparent' : "var(--gradient-hero)" }}
       />
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
