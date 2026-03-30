@@ -378,7 +378,7 @@ export default function Relatorios() {
   }
 
   return (
-    <div className={showDesigner ? 'h-screen' : 'p-8 space-y-8 animate-fade-in bg-white min-h-full'}>
+    <div className={showDesigner ? 'h-screen' : 'p-8 space-y-8 animate-fade-in bg-background dark:bg-background min-h-full'}>
       {!showDesigner && (
         <>
           <div>

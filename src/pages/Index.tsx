@@ -30,7 +30,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-background dark:bg-background flex flex-col items-center justify-center p-6">
       <div className="max-w-5xl w-full space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">

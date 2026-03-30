@@ -214,8 +214,8 @@ export default function BotTest({ embedded = false }: BotTestProps) {
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col bg-white">
-        <div className="p-3 sm:p-4 border-b border-border bg-white shadow-sm flex-shrink-0">
+    <div className="h-full min-h-0 flex flex-col bg-background dark:bg-card">
+        <div className="p-3 sm:p-4 border-b border-border bg-background dark:bg-card shadow-sm flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
             <div>
               <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
