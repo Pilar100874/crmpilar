@@ -179,6 +179,7 @@ export default function EcommerceProduct() {
   const inStock = (product.estoque ?? 0) > 0;
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Breadcrumb */}
       {branding.feat_breadcrumb && <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
