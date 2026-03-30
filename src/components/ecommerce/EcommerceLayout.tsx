@@ -166,6 +166,9 @@ export default function EcommerceLayout() {
                   <Truck className="h-4 w-4" /> Rastreamento
                 </Link>
                 <hr className="my-3" />
+                <Link to="/ecommerce/catalogo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                  Todos os Produtos
+                </Link>
                 {menuGroups.map(group => (
                   <Collapsible key={group.grupo}>
                     <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-accent transition-colors font-semibold text-sm">
@@ -184,11 +187,6 @@ export default function EcommerceLayout() {
                     </CollapsibleContent>
                   </Collapsible>
                 ))}
-                {menuGroups.length === 0 && (
-                  <Link to="/ecommerce/catalogo" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium">
-                    Todos os Produtos
-                  </Link>
-                )}
                 <hr className="my-3" />
                 <Link to="/ecommerce/b2b" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-primary">
                   Atacado / B2B
@@ -275,6 +273,9 @@ export default function EcommerceLayout() {
         {/* Navigation - Desktop: Groups as main items, categories as dropdowns */}
         <nav className="hidden lg:block border-t">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-0">
+            <Link to="/ecommerce/catalogo" className="px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
+              Todos os Produtos
+            </Link>
             {menuGroups.map((group) => (
               <div key={group.grupo} className="relative" onMouseEnter={() => setMegaMenuOpen(group.grupo)} onMouseLeave={() => setMegaMenuOpen(null)}>
                 <button className="flex items-center gap-1 px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
@@ -295,9 +296,6 @@ export default function EcommerceLayout() {
                 </AnimatePresence>
               </div>
             ))}
-            <Link to="/ecommerce/catalogo" className="px-4 py-3 text-sm font-medium text-foreground/80 hover:text-primary transition-colors">
-              Todos os Produtos
-            </Link>
             <Link to="/ecommerce/b2b" className="px-4 py-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors ml-auto">
               Atacado / B2B →
             </Link>
