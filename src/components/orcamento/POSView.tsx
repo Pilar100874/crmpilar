@@ -1680,7 +1680,7 @@ export default function POSView({
                       )}
                       
                       {/* Price overlay bottom-left */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 via-foreground/25 to-transparent pt-8 pb-2.5 px-3">
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-8 pb-2.5 px-3">
                         <span className="text-[15px] font-bold text-white drop-shadow-md tracking-tight">
                           R$ 10,00
                         </span>
