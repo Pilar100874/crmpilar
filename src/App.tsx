@@ -132,6 +132,7 @@ import EcommerceBrandingConfig from "./pages/ecommerce/EcommerceBrandingConfig";
 import EcommerceContentEditor from "./pages/ecommerce/EcommerceContentEditor";
 import EcommerceAdsManager from "./pages/ecommerce/EcommerceAdsManager";
 import EcommerceFooterEditor from "./pages/ecommerce/EcommerceFooterEditor";
+import EcommerceHomeEditor from "./pages/ecommerce/EcommerceHomeEditor";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
