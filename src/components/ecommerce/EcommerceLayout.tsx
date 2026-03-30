@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -28,6 +28,7 @@ export default function EcommerceLayout() {
   const location = useLocation();
   const { branding } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
+  const isFromSystem = !!localStorage.getItem("estabelecimentoId");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -194,6 +195,11 @@ export default function EcommerceLayout() {
 
           {/* Actions */}
           <div className="flex items-center gap-1 ml-auto">
+            {isFromSystem && (
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="Voltar ao sistema" onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSearchOpen(!searchOpen)}>
               <Search className="h-5 w-5" />
             </Button>
