@@ -28,7 +28,7 @@ const typeConfig = {
   boolean: { icon: ToggleLeft, color: "text-cyan-600", bgColor: "bg-cyan-50", borderColor: "border-cyan-200" },
   object: { icon: Database, color: "text-pink-600", bgColor: "bg-pink-50", borderColor: "border-pink-200" },
   file: { icon: FileText, color: "text-yellow-600", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
-  any: { icon: Variable, color: "text-slate-600", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
+  any: { icon: Variable, color: "text-foreground/70", bgColor: "bg-muted", borderColor: "border-border" },
 };
 
 // Check if variable type is compatible with expected type
@@ -391,20 +391,20 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
 
   if (availableVariables.length === 0) {
     return (
-      <Card className="mt-4 bg-slate-50 border-slate-200">
+      <Card className="mt-4 bg-muted border-border">
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
+          <CardTitle className="text-sm flex items-center gap-2 text-foreground">
             <Database className="w-4 h-4 text-primary" />
             Variáveis Disponíveis
             {expectedType && expectedType !== "any" && (
-              <Badge variant="outline" className="text-xs ml-auto border-slate-200 text-slate-700">
+              <Badge variant="outline" className="text-xs ml-auto border-border text-foreground/80">
                 Tipo: {expectedType}
               </Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-foreground/70">
             {expectedType && expectedType !== "any" 
               ? `Nenhuma variável do tipo "${expectedType}" disponível.`
               : "Nenhuma variável disponível. Crie variáveis ou adicione blocos anteriores."}
@@ -415,9 +415,9 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
   }
 
   return (
-    <Card className="mt-4 bg-slate-50 border-slate-200">
+    <Card className="mt-4 bg-muted border-border">
       <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2 text-slate-900">
+        <CardTitle className="text-sm flex items-center gap-2 text-foreground">
           <Database className="w-4 h-4 text-primary" />
           Variáveis Disponíveis
           {expectedType && expectedType !== "any" && (
@@ -440,14 +440,14 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
                     </Badge>
                   ) : (
                     <>
-                      <Badge variant="outline" className="text-xs border-slate-300 text-slate-700">
+                      <Badge variant="outline" className="text-xs border-border text-foreground/80">
                         {block.blockName}
                       </Badge>
-                      <span className="text-xs text-slate-500">({block.blockType})</span>
+                      <span className="text-xs text-muted-foreground">({block.blockType})</span>
                     </>
                   )}
                 </div>
-                <div className="space-y-1 pl-2 border-l-2 border-slate-200">
+                <div className="space-y-1 pl-2 border-l-2 border-border">
                   {block.variables.map((variable, varIdx) => {
                     const config = typeConfig[variable.type as keyof typeof typeConfig] || typeConfig.any;
                     const Icon = config.icon;
@@ -470,7 +470,7 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
                               {variable.type}
                             </Badge>
                           </div>
-                          <p className="text-xs text-slate-600 mt-1 truncate ml-5">
+                          <p className="text-xs text-foreground/70 mt-1 truncate ml-5">
                             {variable.description}
                           </p>
                         </div>
@@ -482,27 +482,27 @@ export const VariableExplorer = ({ selectedNode, nodes, edges, flowVariables = [
             ))}
           </div>
         </ScrollArea>
-        <div className="mt-3 pt-3 border-t border-slate-200">
+        <div className="mt-3 pt-3 border-t border-border">
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="flex items-center gap-1 text-xs">
               <Type className="w-3 h-3 text-primary" />
-              <span className="text-slate-600">Texto</span>
+              <span className="text-foreground/70">Texto</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
               <Hash className="w-3 h-3 text-green-600" />
-              <span className="text-slate-600">Número</span>
+              <span className="text-foreground/70">Número</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
               <Calendar className="w-3 h-3 text-purple-600" />
-              <span className="text-slate-600">Data</span>
+              <span className="text-foreground/70">Data</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
               <List className="w-3 h-3 text-orange-600" />
-              <span className="text-slate-600">Array</span>
+              <span className="text-foreground/70">Array</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
               <ToggleLeft className="w-3 h-3 text-cyan-600" />
-              <span className="text-slate-600">Booleano</span>
+              <span className="text-foreground/70">Booleano</span>
             </div>
           </div>
         </div>

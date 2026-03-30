@@ -252,10 +252,10 @@ export const WhatsAppQRCode = () => {
                 includeMargin={true}
               />
               <div className="text-center space-y-1">
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-foreground">
                   Escaneie com a câmera do seu celular
                 </p>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-foreground/70">
                   Ou clique no QR code se estiver no celular
                 </p>
               </div>

@@ -43,7 +43,7 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
         
         <div className="space-y-3">
           {conditions.map((condition: any, index: number) => (
-            <div key={index} className="space-y-3 p-3 border border-cyan-500/30 rounded-lg bg-slate-900/50 relative">
+            <div key={index} className="space-y-3 p-3 border border-cyan-500/30 rounded-lg bg-foreground/50 relative">
               <Button
                 variant="ghost"
                 size="icon"
@@ -62,7 +62,7 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                   value={condition.field || ""}
                   onChange={(e) => updateCondition(index, "field", e.target.value)}
                   placeholder="@nome_do_campo"
-                  className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                  className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                 />
               </div>
 
@@ -75,18 +75,18 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                   value={condition.operator || "EQUAL TO"}
                   onValueChange={(v) => updateCondition(index, "operator", v)}
                 >
-                  <SelectTrigger className="bg-slate-900/80 border-slate-700/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
+                  <SelectTrigger className="bg-foreground/90/80 border-slate-700/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700 text-white">
-                    <SelectItem value="EQUAL TO" className="focus:bg-slate-800 focus:text-white">É IGUAL A</SelectItem>
-                    <SelectItem value="NOT EQUAL TO" className="focus:bg-slate-800 focus:text-white">NÃO É IGUAL A</SelectItem>
-                    <SelectItem value="CONTAINS" className="focus:bg-slate-800 focus:text-white">CONTÉM</SelectItem>
-                    <SelectItem value="NOT CONTAINS" className="focus:bg-slate-800 focus:text-white">NÃO CONTÉM</SelectItem>
-                    <SelectItem value="GREATER THAN" className="focus:bg-slate-800 focus:text-white">MAIOR QUE</SelectItem>
-                    <SelectItem value="LESS THAN" className="focus:bg-slate-800 focus:text-white">MENOR QUE</SelectItem>
-                    <SelectItem value="IS SET" className="focus:bg-slate-800 focus:text-white">ESTÁ DEFINIDO</SelectItem>
-                    <SelectItem value="IS NOT SET" className="focus:bg-slate-800 focus:text-white">NÃO ESTÁ DEFINIDO</SelectItem>
+                  <SelectContent className="bg-foreground/90 border-slate-700 text-white">
+                    <SelectItem value="EQUAL TO" className="focus:bg-foreground/80 focus:text-white">É IGUAL A</SelectItem>
+                    <SelectItem value="NOT EQUAL TO" className="focus:bg-foreground/80 focus:text-white">NÃO É IGUAL A</SelectItem>
+                    <SelectItem value="CONTAINS" className="focus:bg-foreground/80 focus:text-white">CONTÉM</SelectItem>
+                    <SelectItem value="NOT CONTAINS" className="focus:bg-foreground/80 focus:text-white">NÃO CONTÉM</SelectItem>
+                    <SelectItem value="GREATER THAN" className="focus:bg-foreground/80 focus:text-white">MAIOR QUE</SelectItem>
+                    <SelectItem value="LESS THAN" className="focus:bg-foreground/80 focus:text-white">MENOR QUE</SelectItem>
+                    <SelectItem value="IS SET" className="focus:bg-foreground/80 focus:text-white">ESTÁ DEFINIDO</SelectItem>
+                    <SelectItem value="IS NOT SET" className="focus:bg-foreground/80 focus:text-white">NÃO ESTÁ DEFINIDO</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -101,7 +101,7 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                     value={condition.value || ""}
                     onChange={(e) => updateCondition(index, "value", e.target.value)}
                     placeholder="Digite um valor ou @campo"
-                    className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                    className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                   />
                   <Button 
                     variant="outline" 

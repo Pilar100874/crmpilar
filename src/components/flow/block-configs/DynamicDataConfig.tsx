@@ -106,9 +106,9 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-slate-900">
+          <Label className="flex items-center gap-2 text-foreground">
             Salvar resposta do usuário no campo
-            <Info className="h-4 w-4 text-slate-500 cursor-help" />
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </Label>
         </div>
         <div className="relative">
@@ -116,7 +116,7 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
             value={config.variable || "resposta_dinamica"}
             onChange={(e) => handleConfigChange("variable", e.target.value)}
             placeholder="resposta_dinamica"
-            className="bg-white border-slate-200 text-slate-900"
+            className="bg-white border-border text-foreground"
           />
           <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary/10 text-primary text-xs px-2 py-1 rounded">
             T
@@ -137,7 +137,7 @@ export const DynamicDataConfig = ({ config, handleConfigChange, inputRefs, openV
 
       <div className="bg-primary/5 rounded-lg p-4 flex gap-3 border border-primary/20">
         <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           Este bloco itera sobre um array e coleta respostas dinâmicas do usuário, salvando cada resposta e opcionalmente seu índice nos campos especificados.
         </p>
       </div>

@@ -247,8 +247,8 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
       <>
         {searchTerm.length < 2 && (
           <div className="py-6 text-center">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 flex items-center justify-center">
-              <UserSearch className="w-5 h-5 text-slate-400" />
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-muted flex items-center justify-center">
+              <UserSearch className="w-5 h-5 text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground">Digite ao menos 2 caracteres</p>
           </div>
@@ -261,8 +261,8 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
         )}
         {searchTerm.length >= 2 && !loading && customers.length === 0 && empresas.length === 0 && (
           <div className="py-6 text-center">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 flex items-center justify-center">
-              <Search className="w-5 h-5 text-slate-400" />
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-muted flex items-center justify-center">
+              <Search className="w-5 h-5 text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground">Nenhum resultado</p>
           </div>

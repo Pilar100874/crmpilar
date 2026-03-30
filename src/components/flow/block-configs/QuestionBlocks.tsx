@@ -45,9 +45,9 @@ export const AskNameConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -55,7 +55,7 @@ export const AskNameConfig = ({ config, handleConfigChange, nodes, edges, select
           value={config.variable || "nome"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="nome"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           T
@@ -65,7 +65,7 @@ export const AskNameConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta o nome do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -145,9 +145,9 @@ export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, se
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-slate-900">
+          <Label className="flex items-center gap-2 text-foreground">
             Salvar resposta do usuário no campo
-            <Info className="h-4 w-4 text-slate-500 cursor-help" />
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </Label>
         </div>
         <div className="relative">
@@ -155,7 +155,7 @@ export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, se
             value={config.variable || "resposta"}
             onChange={(e) => handleConfigChange("variable", e.target.value)}
             placeholder="resposta"
-            className="bg-white border-slate-200 text-slate-900"
+            className="bg-white border-border text-foreground"
           />
           <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
             T
@@ -165,7 +165,7 @@ export const AskQuestionConfig = ({ config, handleConfigChange, nodes, edges, se
 
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           Este bloco coleta uma resposta personalizada e salva no campo especificado para uso posterior no fluxo.
         </p>
       </div>
@@ -212,9 +212,9 @@ export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selec
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -222,7 +222,7 @@ export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selec
           value={config.variable || "email"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="email"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           T
@@ -232,7 +232,7 @@ export const AskEmailConfig = ({ config, handleConfigChange, nodes, edges, selec
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta o e-mail do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -294,9 +294,9 @@ export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, sele
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -304,7 +304,7 @@ export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, sele
           value={config.variable || "numero"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="numero"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           N
@@ -314,7 +314,7 @@ export const AskNumberConfig = ({ config, handleConfigChange, nodes, edges, sele
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta um número do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -370,9 +370,9 @@ export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selec
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -380,7 +380,7 @@ export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selec
           value={config.variable || "telefone"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="telefone"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           T
@@ -390,7 +390,7 @@ export const AskPhoneConfig = ({ config, handleConfigChange, nodes, edges, selec
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta o telefone do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -446,9 +446,9 @@ export const AskDateConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -456,7 +456,7 @@ export const AskDateConfig = ({ config, handleConfigChange, nodes, edges, select
           value={config.variable || "data"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="data"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           D
@@ -466,7 +466,7 @@ export const AskDateConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta uma data do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -518,9 +518,9 @@ export const AskFileConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar URL do arquivo no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -528,7 +528,7 @@ export const AskFileConfig = ({ config, handleConfigChange, nodes, edges, select
           value={config.variable || "arquivo"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="arquivo"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           F
@@ -538,7 +538,7 @@ export const AskFileConfig = ({ config, handleConfigChange, nodes, edges, select
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta um arquivo do usuário e salva a URL no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -567,9 +567,9 @@ export const AskAddressConfig = ({ config, handleConfigChange, nodes, edges, sel
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -577,7 +577,7 @@ export const AskAddressConfig = ({ config, handleConfigChange, nodes, edges, sel
           value={config.variable || "endereco"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="endereco"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           T
@@ -587,7 +587,7 @@ export const AskAddressConfig = ({ config, handleConfigChange, nodes, edges, sel
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta o endereço do usuário e salva no campo especificado. Você pode pedir o endereço completo ou dividir em campos separados (rua, número, cidade, etc).
       </p>
     </div>
@@ -633,9 +633,9 @@ export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selecte
 
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-slate-900">
+        <Label className="flex items-center gap-2 text-foreground">
           Salvar resposta do usuário no campo
-          <Info className="h-4 w-4 text-slate-500 cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
         </Label>
       </div>
       <div className="relative">
@@ -643,7 +643,7 @@ export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selecte
           value={config.variable || "url"}
           onChange={(e) => handleConfigChange("variable", e.target.value)}
           placeholder="url"
-          className="bg-white border-slate-200 text-slate-900"
+          className="bg-white border-border text-foreground"
         />
         <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
           U
@@ -653,7 +653,7 @@ export const AskUrlConfig = ({ config, handleConfigChange, nodes, edges, selecte
 
     <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
       <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <p className="text-sm text-slate-700">
+      <p className="text-sm text-foreground/80">
         Este bloco coleta uma URL do usuário e salva no campo especificado para uso posterior no fluxo.
       </p>
     </div>
@@ -719,22 +719,22 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
       <ConfigSection title="Campos de Dados">
         <div className="space-y-3">
           <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <p className="text-xs text-slate-600 mb-2">
+            <p className="text-xs text-foreground/70 mb-2">
               Configure o nome de cada campo onde os dados serão salvos:
             </p>
           </div>
           
           {cnpjFields.map((field) => (
             <div key={field.key} className="space-y-1">
-              <Label className="text-xs text-slate-600 flex items-center gap-1">
+              <Label className="text-xs text-foreground/70 flex items-center gap-1">
                 {field.label}
-                <span className="text-slate-400">({field.description})</span>
+                <span className="text-muted-foreground">({field.description})</span>
               </Label>
               <Input
                 value={config[field.key] || field.placeholder}
                 onChange={(e) => handleConfigChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
-                className="bg-white border-slate-200 text-slate-900 h-8 text-sm"
+                className="bg-white border-border text-foreground h-8 text-sm"
               />
             </div>
           ))}
@@ -743,7 +743,7 @@ export const AskCNPJConfig = ({ config, handleConfigChange, nodes, edges, select
 
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           Este bloco valida o CNPJ e busca automaticamente todos os dados da empresa na Receita Federal. 
           As informações são salvas nos campos configurados acima.
         </p>
@@ -795,22 +795,22 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
       <ConfigSection title="Campos de Dados">
         <div className="space-y-3">
           <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-            <p className="text-xs text-slate-600 mb-2">
+            <p className="text-xs text-foreground/70 mb-2">
               Configure o nome de cada campo onde os dados serão salvos:
             </p>
           </div>
           
           {cepFields.map((field) => (
             <div key={field.key} className="space-y-1">
-              <Label className="text-xs text-slate-600 flex items-center gap-1">
+              <Label className="text-xs text-foreground/70 flex items-center gap-1">
                 {field.label}
-                <span className="text-slate-400">({field.description})</span>
+                <span className="text-muted-foreground">({field.description})</span>
               </Label>
               <Input
                 value={config[field.key] || field.placeholder}
                 onChange={(e) => handleConfigChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
-                className="bg-white border-slate-200 text-slate-900 h-8 text-sm"
+                className="bg-white border-border text-foreground h-8 text-sm"
               />
             </div>
           ))}
@@ -819,7 +819,7 @@ export const AskCEPConfig = ({ config, handleConfigChange, nodes, edges, selecte
 
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           Este bloco valida o CEP e busca automaticamente todos os dados do endereço via ViaCEP. 
           As informações são salvas nos campos configurados acima.
         </p>

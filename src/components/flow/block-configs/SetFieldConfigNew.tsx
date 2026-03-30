@@ -50,9 +50,9 @@ export const SetFieldConfigNew = ({ config, handleConfigChange, inputRefs, openV
             onChange={(e) => handleConfigChange("field", e.target.value)}
             onVariableRequest={() => openVariablePicker?.(inputRefs?.current['field']!)}
             placeholder="nome_do_campo"
-            className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+            className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
           />
-          <p className="text-xs text-slate-400 flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
+          <p className="text-xs text-muted-foreground flex items-start gap-1.5 bg-blue-500/5 p-2 rounded border border-blue-500/20">
             <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-blue-400" />
             Digite o nome do campo que deseja modificar
           </p>
@@ -71,7 +71,7 @@ export const SetFieldConfigNew = ({ config, handleConfigChange, inputRefs, openV
               onVariableRequest={() => openVariablePicker?.(inputRefs?.current['value']!)}
               placeholder="Digite o valor ou use variáveis"
               rows={3}
-              className="bg-slate-900/80 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner resize-none"
+              className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner resize-none"
             />
             <Button 
               variant="outline" 

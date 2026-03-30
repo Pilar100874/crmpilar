@@ -103,7 +103,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
   };
 
   const getValueColor = (value: any): string => {
-    if (value === undefined || value === null) return "text-slate-500";
+    if (value === undefined || value === null) return "text-muted-foreground";
     return "text-foreground";
   };
 
@@ -132,17 +132,17 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
             <Database className="h-5 w-5 text-primary" />
             Monitor do Bloco
           </SheetTitle>
-          <SheetDescription className="text-slate-600">
+          <SheetDescription className="text-foreground/70">
             Variáveis acessíveis no bloco: <span className="font-semibold text-foreground">{blockLabel}</span>
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6">
           {availableVariables.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
-              <Database className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">Nenhuma variável disponível</p>
-              <p className="text-sm text-slate-500 mt-1">
+            <div className="bg-muted border border-border rounded-lg p-8 text-center">
+              <Database className="h-12 w-12 text-muted-foreground/60 mx-auto mb-3" />
+              <p className="text-foreground/70">Nenhuma variável disponível</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 {selectedNode 
                   ? "Variáveis criadas antes deste bloco aparecerão aqui"
                   : "Selecione um bloco para ver as variáveis disponíveis"}
@@ -150,10 +150,10 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
             </div>
           ) : (
             <ScrollArea className="h-[calc(100vh-200px)]">
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+              <div className="bg-white border border-border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-slate-200 hover:bg-muted bg-primary/5">
+                    <TableRow className="border-border hover:bg-muted bg-primary/5">
                       <TableHead className="text-foreground font-bold">Variável</TableHead>
                       <TableHead className="text-foreground font-bold w-[100px]">Tipo</TableHead>
                       <TableHead className="text-foreground font-bold">Valor</TableHead>
@@ -171,7 +171,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                       return (
                         <TableRow 
                           key={variable.id} 
-                          className="border-slate-200 hover:bg-primary/5"
+                          className="border-border hover:bg-primary/5"
                         >
                           <TableCell className="align-top">
                             <div className="flex items-center gap-2 flex-wrap min-w-0">
@@ -191,7 +191,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                               )}
                             </div>
                             {variable.description && (
-                              <p className="text-xs text-slate-500 ml-6 mt-0.5 break-words">
+                              <p className="text-xs text-muted-foreground ml-6 mt-0.5 break-words">
                                 {variable.description}
                               </p>
                             )}
@@ -199,14 +199,14 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                           <TableCell className="align-top">
                             <Badge 
                               variant="outline" 
-                              className={`${typeColor} border-slate-300 bg-slate-50 whitespace-nowrap`}
+                              className={`${typeColor} border-border bg-muted whitespace-nowrap`}
                             >
                               {variable.type}
                             </Badge>
                           </TableCell>
                           <TableCell className="align-top">
                             <code 
-                              className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-slate-50 px-2 py-1 rounded border border-slate-200 break-all max-w-full inline-block`}
+                              className={`text-sm font-mono ${getValueColor(currentValue !== undefined ? currentValue : variable.defaultValue)} bg-muted px-2 py-1 rounded border border-border break-all max-w-full inline-block`}
                             >
                               {formatValue(currentValue, variable)}
                             </code>
@@ -229,7 +229,7 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
                             ) : (
                               <Badge 
                                 variant="outline" 
-                                className="text-slate-500 border-slate-300 bg-slate-50 text-xs whitespace-nowrap"
+                                className="text-muted-foreground border-border bg-muted text-xs whitespace-nowrap"
                               >
                                 Vazio
                               </Badge>
@@ -243,9 +243,9 @@ export function BlockMonitor({ selectedNode, nodes, edges, context, allVariables
               </div>
 
               {/* Legenda */}
-              <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="mt-4 p-3 bg-muted border border-border rounded-lg">
                 <p className="text-xs font-semibold text-foreground mb-2">Legenda:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                <div className="grid grid-cols-2 gap-2 text-xs text-foreground/70">
                   <div className="flex items-center gap-2">
                     <Type className="h-3 w-3 text-primary" />
                     <span>Texto</span>

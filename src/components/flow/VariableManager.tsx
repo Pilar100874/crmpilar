@@ -171,19 +171,19 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
         <Button
           variant="outline"
           size="icon"
-          className="h-9 w-9 bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+          className="h-9 w-9 bg-white border-border text-foreground/80 hover:bg-muted hover:text-foreground"
           title="Gerenciar variáveis"
         >
           <Variable className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[500px] sm:w-[600px] bg-white border-slate-200">
+      <SheetContent className="w-[500px] sm:w-[600px] bg-white border-border">
         <SheetHeader>
-          <SheetTitle className="text-slate-900 flex items-center gap-2">
+          <SheetTitle className="text-foreground flex items-center gap-2">
             <Variable className="h-5 w-5 text-primary" />
             Gerenciar Variáveis Locais
           </SheetTitle>
-          <SheetDescription className="text-slate-600">
+          <SheetDescription className="text-foreground/70">
             Crie e gerencie variáveis locais do seu bot. Para variáveis compartilhadas entre bots, use o menu "Variáveis Globais".
           </SheetDescription>
         </SheetHeader>
@@ -197,7 +197,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                 {globalVariables.length} variável{globalVariables.length > 1 ? 'is' : ''} global{globalVariables.length > 1 ? 'is' : ''} disponível{globalVariables.length > 1 ? 'is' : ''}
               </span>
             </div>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-foreground/70">
               Variáveis globais estão automaticamente disponíveis em todos os bots:
             </p>
             <div className="mt-2 flex flex-wrap gap-1">
@@ -213,36 +213,36 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
         <div className="mt-6 space-y-6">
           {/* Adicionar nova variável */}
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900">Adicionar Nova Variável Local</h3>
-            <p className="text-xs text-slate-600 -mt-2">Disponível apenas neste bot</p>
+            <h3 className="text-sm font-semibold text-foreground">Adicionar Nova Variável Local</h3>
+            <p className="text-xs text-foreground/70 -mt-2">Disponível apenas neste bot</p>
             
             <div className="space-y-3">
               <div>
-                <Label htmlFor="var-name" className="text-slate-700 font-medium">Nome da Variável</Label>
+                <Label htmlFor="var-name" className="text-foreground/80 font-medium">Nome da Variável</Label>
                 <Input
                   id="var-name"
                   value={newVarName}
                   onChange={(e) => setNewVarName(e.target.value)}
                   placeholder="ex: nome_cliente"
-                  className="mt-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"
+                  className="mt-1 bg-white border-border text-foreground placeholder:text-muted-foreground"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAddVariable();
                   }}
                 />
-                <p className="text-xs text-slate-500 mt-1">Use apenas letras, números e underscore (_)</p>
+                <p className="text-xs text-muted-foreground mt-1">Use apenas letras, números e underscore (_)</p>
               </div>
 
               <div>
-                <Label htmlFor="var-type" className="text-slate-700 font-medium">Tipo</Label>
+                <Label htmlFor="var-type" className="text-foreground/80 font-medium">Tipo</Label>
                 <Select value={newVarType} onValueChange={(value) => setNewVarType(value as VariableType)}>
-                  <SelectTrigger id="var-type" className="mt-1 bg-white border-slate-300 text-slate-900">
+                  <SelectTrigger id="var-type" className="mt-1 bg-white border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
+                  <SelectContent className="bg-white border-border">
                     {Object.entries(variableTypeLabels).map(([value, label]) => {
                       const Icon = variableTypeIcons[value as VariableType];
                       return (
-                        <SelectItem key={value} value={value} className="text-slate-900">
+                        <SelectItem key={value} value={value} className="text-foreground">
                           <div className="flex items-center gap-2">
                             <Icon className="h-4 w-4" />
                             {label}
@@ -255,28 +255,28 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
               </div>
 
               <div>
-                <Label htmlFor="var-description" className="text-slate-700 font-medium">Descrição (opcional)</Label>
+                <Label htmlFor="var-description" className="text-foreground/80 font-medium">Descrição (opcional)</Label>
                 <Input
                   id="var-description"
                   value={newVarDescription}
                   onChange={(e) => setNewVarDescription(e.target.value)}
                   placeholder="ex: Nome completo do cliente"
-                  className="mt-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"
+                  className="mt-1 bg-white border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-white border border-border rounded-lg">
                 <div className="flex items-center gap-2">
                   {newVarIsConstant ? (
                     <Lock className="h-4 w-4 text-amber-600" />
                   ) : (
-                    <Unlock className="h-4 w-4 text-slate-500" />
+                    <Unlock className="h-4 w-4 text-muted-foreground" />
                   )}
                   <div>
-                    <Label htmlFor="var-constant" className="text-slate-700 cursor-pointer font-medium">
+                    <Label htmlFor="var-constant" className="text-foreground/80 cursor-pointer font-medium">
                       Variável Fixa (Constante)
                     </Label>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-foreground/70">
                       {newVarIsConstant 
                         ? "Valor não pode ser alterado após definido"
                         : "Valor pode ser alterado durante o fluxo"}
@@ -293,7 +293,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
               {/* Campo de valor inicial (obrigatório se for constante) */}
               {newVarIsConstant && (
                 <div className="bg-amber-50 border border-amber-300 rounded-lg p-3">
-                  <Label htmlFor="var-default" className="text-slate-700 font-medium flex items-center gap-2">
+                  <Label htmlFor="var-default" className="text-foreground/80 font-medium flex items-center gap-2">
                     <span className="text-amber-600">*</span> Valor Inicial (obrigatório)
                   </Label>
                   <Input
@@ -307,9 +307,9 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                       newVarType === "array" ? 'ex: ["item1", "item2"]' :
                       "ex: 2024-01-01"
                     }
-                    className="mt-2 bg-white border-amber-300 text-slate-900 placeholder:text-slate-400"
+                    className="mt-2 bg-white border-amber-300 text-foreground placeholder:text-muted-foreground"
                   />
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-foreground/70 mt-1">
                     {newVarType === "number" && "Digite um número válido"}
                     {newVarType === "boolean" && "Digite 'true' ou 'false'"}
                     {newVarType === "array" && "Digite um array JSON válido"}
@@ -331,13 +331,13 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
 
           {/* Lista de variáveis */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-900">Variáveis Locais Existentes ({variables.length})</h3>
+            <h3 className="text-sm font-semibold text-foreground">Variáveis Locais Existentes ({variables.length})</h3>
             
             {variables.length === 0 ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
-                <Variable className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600">Nenhuma variável criada ainda</p>
-                <p className="text-sm text-slate-500 mt-1">Adicione variáveis para armazenar dados</p>
+              <div className="bg-muted border border-border rounded-lg p-8 text-center">
+                <Variable className="h-12 w-12 text-muted-foreground/60 mx-auto mb-3" />
+                <p className="text-foreground/70">Nenhuma variável criada ainda</p>
+                <p className="text-sm text-muted-foreground mt-1">Adicione variáveis para armazenar dados</p>
               </div>
             ) : (
               <ScrollArea className="h-[400px] pr-4">
@@ -353,10 +353,10 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <Icon className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span className="font-mono text-sm font-semibold text-slate-900 break-all">
+                              <span className="font-mono text-sm font-semibold text-foreground break-all">
                                 {`{{${variable.name}}}`}
                               </span>
-                              <span className="text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex-shrink-0">
+                              <span className="text-xs text-foreground/80 bg-muted px-2 py-0.5 rounded border border-border flex-shrink-0">
                                 {variableTypeLabels[variable.type]}
                               </span>
                               {variable.scope === "global" && (
@@ -379,7 +379,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                               )}
                             </div>
                             {variable.description && (
-                              <p className="text-xs text-slate-600 mt-1 ml-6 break-words">{variable.description}</p>
+                              <p className="text-xs text-foreground/70 mt-1 ml-6 break-words">{variable.description}</p>
                             )}
                             {variable.isConstant && variable.defaultValue !== undefined && (
                               <div className="text-xs text-amber-700 mt-1 ml-6 flex items-start gap-1">
@@ -396,7 +396,7 @@ export function VariableManager({ variables, onVariablesChange, globalVariables 
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteVariable(variable.id)}
-                            className="h-8 w-8 text-slate-600 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+                            className="h-8 w-8 text-foreground/70 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

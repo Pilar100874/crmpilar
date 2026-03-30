@@ -127,7 +127,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
               </Button>
             </div>
 
-            <div className="bg-slate-700 rounded-lg p-3 space-y-2">
+            <div className="bg-muted-foreground rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-2 text-white">
                 <span className="text-sm">{index + 1}</span>
               </div>
@@ -138,7 +138,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                   value={keyword}
                   onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
                   placeholder="Digite a palavra-chave"
-                  className="bg-slate-600 border-slate-500 text-white placeholder:text-slate-400"
+                  className="bg-muted-foreground/80 border-slate-500 text-white placeholder:text-muted-foreground"
                 />
               ))}
 
@@ -146,7 +146,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                 variant="ghost" 
                 size="sm" 
                 onClick={() => addKeyword(index)}
-                className="w-full text-white hover:bg-slate-600"
+                className="w-full text-white hover:bg-muted-foreground/80"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar palavra-chave
@@ -159,7 +159,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
           variant="default" 
           size="lg" 
           onClick={addButton}
-          className="w-full bg-slate-700 hover:bg-slate-800 text-white"
+          className="w-full bg-muted-foreground hover:bg-foreground/80 text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
           Adicionar outro botão
@@ -176,9 +176,9 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="flex items-center gap-2 text-slate-900">
+          <Label className="flex items-center gap-2 text-foreground">
             Salvar resposta do usuário no campo
-            <Info className="h-4 w-4 text-slate-500 cursor-help" />
+            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
           </Label>
         </div>
         <div className="relative">
@@ -186,7 +186,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
             value={config.variable || "opcao_escolhida"}
             onChange={(e) => handleConfigChange("variable", e.target.value)}
             placeholder="opcao_escolhida"
-            className="bg-white border-slate-200 text-slate-900"
+            className="bg-white border-border text-foreground"
           />
           <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
             T
@@ -196,7 +196,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
 
       <div className="bg-blue-50 rounded-lg p-4 flex gap-3 border border-blue-200">
         <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground/80">
           Este bloco apresenta opções com botões e palavras-chave, salvando a resposta escolhida no campo especificado.
         </p>
       </div>

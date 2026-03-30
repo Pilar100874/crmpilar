@@ -20,11 +20,11 @@ export const ConfigSection = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <div className={cn("space-y-3 p-3 rounded-lg bg-slate-50 border border-slate-200", className)}>
+  <div className={cn("space-y-3 p-3 rounded-lg bg-muted border border-border", className)}>
     {title && (
-      <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-        {icon && <div className="text-slate-700">{icon}</div>}
-        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      <div className="flex items-center gap-2 pb-2 border-b border-border">
+        {icon && <div className="text-foreground/80">{icon}</div>}
+        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
       </div>
     )}
     {children}
@@ -54,7 +54,7 @@ export const ConfigInput = ({
   className?: string;
 }) => (
   <div className="space-y-2">
-    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+    <Label className="text-foreground text-sm font-medium flex items-center gap-2">
       <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
       {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
@@ -71,14 +71,14 @@ export const ConfigInput = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20",
+          "bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20",
           prefix && "pl-7",
           className
         )}
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+      <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
         <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
@@ -109,7 +109,7 @@ export const ConfigTextarea = ({
   monospace?: boolean;
 }) => (
   <div className="space-y-2">
-    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+    <Label className="text-foreground text-sm font-medium flex items-center gap-2">
       <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
       {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
@@ -120,13 +120,13 @@ export const ConfigTextarea = ({
       placeholder={placeholder}
       rows={rows}
       className={cn(
-        "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none",
+        "bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none",
         monospace && "font-mono text-xs",
         className
       )}
     />
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+      <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
         <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
@@ -153,25 +153,25 @@ export const ConfigSelect = ({
   placeholder?: string;
 }) => (
   <div className="space-y-2">
-    <Label className="text-slate-900 text-sm font-medium flex items-center gap-2">
+    <Label className="text-foreground text-sm font-medium flex items-center gap-2">
       <span className="w-1 h-4 bg-primary rounded-full"></span>
       {label}
       {required && <Badge variant="outline" className="ml-1 text-[10px] h-4 border-primary/20 text-primary">obrigatório</Badge>}
     </Label>
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20">
+      <SelectTrigger className="bg-white border-border text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-white border-slate-200 text-slate-900">
+      <SelectContent className="bg-white border-border text-foreground">
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="focus:bg-slate-100 focus:text-slate-900">
+          <SelectItem key={option.value} value={option.value} className="focus:bg-muted focus:text-foreground">
             {option.label}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+      <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
         <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>
@@ -192,8 +192,8 @@ export const ConfigSwitch = ({
   info?: string;
 }) => (
   <div className="space-y-2">
-    <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 hover:border-primary/30 transition-colors">
-      <Label className="text-slate-900 text-sm font-medium flex items-center gap-2 cursor-pointer">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-white border border-border hover:border-primary/30 transition-colors">
+      <Label className="text-foreground text-sm font-medium flex items-center gap-2 cursor-pointer">
         <span className="w-1 h-4 bg-primary rounded-full"></span>
         {label}
       </Label>
@@ -204,7 +204,7 @@ export const ConfigSwitch = ({
       />
     </div>
     {info && (
-      <p className="text-xs text-slate-600 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
+      <p className="text-xs text-foreground/70 flex items-start gap-1.5 bg-primary/5 p-2 rounded border border-primary/20">
         <Info className="w-3 h-3 flex-shrink-0 mt-0.5 text-primary" />
         {info}
       </p>

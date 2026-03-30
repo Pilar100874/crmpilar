@@ -130,7 +130,7 @@ const nodeIconColorMap: Record<string, string> = {
   imageAnalyze: 'text-teal-400',
   loopOutput: 'text-violet-400',
   randomPick: 'text-rose-400',
-  output: 'text-slate-400',
+  output: 'text-muted-foreground',
 };
 
 const nodeAccentMap: Record<string, string> = {
@@ -741,7 +741,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
-  const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
+  const iconColor = nodeIconColorMap[nodeData.type] || 'text-muted-foreground';
   const isPaused = !!nodeData.config?._paused;
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();

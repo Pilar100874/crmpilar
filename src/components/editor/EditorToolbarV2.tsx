@@ -244,7 +244,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
         {/* Left section - Title */}
         <div className="flex flex-col">
           <h1 className="text-lg font-bold text-foreground">EDITOR DE DESIGN</h1>
-          <p className="text-xs text-slate-500">Crie e edite seus designs personalizados</p>
+          <p className="text-xs text-muted-foreground">Crie e edite seus designs personalizados</p>
         </div>
 
         {/* Center section - Icon buttons */}
@@ -364,7 +364,7 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
         <DialogContent className="sm:max-w-[425px] bg-card dark:bg-card">
           <DialogHeader>
             <DialogTitle className="text-foreground">Salvar Como</DialogTitle>
-            <DialogDescription className="text-slate-500">
+            <DialogDescription className="text-muted-foreground">
               Crie uma cópia do projeto com um novo nome.
             </DialogDescription>
           </DialogHeader>
