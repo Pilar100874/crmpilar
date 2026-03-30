@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,16 @@ import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function EcommerceLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { totalItems } = useCart();
   const [wishlistCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -29,8 +35,74 @@ export default function EcommerceLayout() {
   }, []);
 
   useEffect(() => {
-    setMegaMenuOpen(null);
+    setMegaMenuOpen(null); setShowResults(false); setSearchQuery("");
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) { setSearchResults([]); setShowResults(false); return; }
+    const timer = setTimeout(async () => {
+      const estId = localStorage.getItem("estabelecimentoId");
+      if (!estId) return;
+      const { data } = await supabase
+        .from("produtos")
+        .select("id, nome, foto_url, preco_minimo, marca")
+        .eq("estabelecimento_id", estId)
+        .eq("ativo", true)
+        .is("importado_terceiros", null)
+        .ilike("nome", `%${searchQuery.trim()}%`)
+        .limit(8);
+      if (data) { setSearchResults(data); setShowResults(true); }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node) &&
+          (!mobileSearchRef.current || !mobileSearchRef.current.contains(e.target as Node))) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSelectProduct = (id: string) => {
+    setShowResults(false); setSearchQuery(""); navigate(`/ecommerce/produto/${id}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      setShowResults(false);
+      navigate(`/ecommerce/catalogo?busca=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const SearchDropdown = () => (
+    showResults && searchResults.length > 0 ? (
+      <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-xl shadow-xl border z-[60] max-h-[400px] overflow-y-auto">
+        {searchResults.map(p => (
+          <button key={p.id} onClick={() => handleSelectProduct(p.id)} className="flex items-center gap-3 w-full px-4 py-3 hover:bg-accent transition-colors text-left">
+            <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {p.foto_url ? <img src={p.foto_url} alt="" className="w-full h-full object-cover" /> : <span className="text-lg">📄</span>}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{p.nome}</p>
+              {p.marca && <p className="text-xs text-muted-foreground">{p.marca}</p>}
+            </div>
+            {p.preco_minimo && <span className="text-sm font-semibold text-primary whitespace-nowrap">{Number(p.preco_minimo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>}
+          </button>
+        ))}
+        <button onClick={() => { setShowResults(false); navigate(`/ecommerce/catalogo?busca=${encodeURIComponent(searchQuery.trim())}`); }} className="w-full px-4 py-2.5 text-sm text-primary font-medium hover:bg-accent transition-colors border-t text-center">
+          Ver todos os resultados →
+        </button>
+      </div>
+    ) : showResults && searchQuery.trim().length >= 2 ? (
+      <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-xl shadow-xl border z-[60] p-6 text-center">
+        <p className="text-sm text-muted-foreground">Nenhum produto encontrado para "{searchQuery}"</p>
+      </div>
+    ) : null
+  );
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -107,14 +179,17 @@ export default function EcommerceLayout() {
           </Link>
 
           {/* Search - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-auto relative">
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl mx-auto relative">
             <Input
               placeholder="Buscar produtos, marcas, categorias..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
+              onKeyDown={handleSearchKeyDown}
               className="pl-10 pr-4 h-11 rounded-full bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary/30"
             />
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <SearchDropdown />
           </div>
 
           {/* Actions */}
@@ -148,8 +223,9 @@ export default function EcommerceLayout() {
         <AnimatePresence>
           {searchOpen && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden md:hidden border-t">
-              <div className="px-4 py-3">
-                <Input placeholder="Buscar produtos..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-10" autoFocus />
+              <div ref={mobileSearchRef} className="px-4 py-3 relative">
+                <Input placeholder="Buscar produtos..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={handleSearchKeyDown} className="h-10" autoFocus />
+                <SearchDropdown />
               </div>
             </motion.div>
           )}
