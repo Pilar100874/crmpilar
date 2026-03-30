@@ -3250,6 +3250,7 @@ export type Database = {
           b2b_descricao: string | null
           b2b_titulo: string | null
           b2b_vantagens: Json | null
+          background_image_url: string | null
           background_type: string | null
           background_video_url: string | null
           beneficios: Json | null
@@ -3296,6 +3297,7 @@ export type Database = {
           b2b_descricao?: string | null
           b2b_titulo?: string | null
           b2b_vantagens?: Json | null
+          background_image_url?: string | null
           background_type?: string | null
           background_video_url?: string | null
           beneficios?: Json | null
@@ -3342,6 +3344,7 @@ export type Database = {
           b2b_descricao?: string | null
           b2b_titulo?: string | null
           b2b_vantagens?: Json | null
+          background_image_url?: string | null
           background_type?: string | null
           background_video_url?: string | null
           beneficios?: Json | null
