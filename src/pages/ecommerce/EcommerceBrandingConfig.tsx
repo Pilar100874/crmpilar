@@ -181,9 +181,11 @@ export default function EcommerceBrandingConfig() {
             <div className="relative rounded-xl overflow-hidden border max-w-xs mx-auto bg-muted/20 p-6 flex items-center justify-center" style={{ minHeight: 180 }}>
               <img
                 key={config.logo_url}
-                src={config.logo_url}
+                src={config.logo_url + (config.logo_url.includes("?") ? "&" : "?") + "v=" + Date.now()}
                 alt="Logo da loja"
                 className="max-h-40 max-w-full object-contain"
+                onError={(e) => { console.error("Logo failed to load:", config.logo_url); }}
+                crossOrigin="anonymous"
               />
               <Button
                 variant="destructive"
