@@ -354,13 +354,7 @@ export default function EcommerceBrandingConfig() {
               )}
               <div className="relative z-10 text-center px-4">
                 {config.logo_url && (
-                  <BrandLogo
-                    src={config.logo_url}
-                    alt={config.nome_loja || "Logo do estabelecimento"}
-                    fallbackText={config.nome_loja || "Logo"}
-                    className="mx-auto mb-2 h-12 w-32 rounded-lg bg-background/70 shadow-sm backdrop-blur-sm"
-                    imageClassName="p-2"
-                  />
+                  <img src={config.logo_url} alt="" className="h-10 mx-auto mb-1 drop-shadow-lg" />
                 )}
                 <p className="text-white font-bold text-lg drop-shadow-lg">{config.nome_loja}</p>
                 {config.slogan && <p className="text-white/80 text-sm drop-shadow">{config.slogan}</p>}
