@@ -80,14 +80,23 @@ export default function EcommerceHome() {
 
     const [productsRes, countRes] = await Promise.all([
       estabId
-        ? supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12)
-        : supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("ativo", true).limit(12),
+        ? supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12)
+        : supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url, tipo_preco, categoria_id").eq("ativo", true).limit(12),
       estabId
         ? supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true)
         : supabase.from("produtos").select("id", { count: "exact", head: true }).eq("ativo", true),
     ]);
 
-    if (productsRes.data) setProducts(productsRes.data as any);
+    if (productsRes.data) {
+      const rawProducts = productsRes.data as any[];
+      const priceMap = await resolveProductPricesBatch(rawProducts);
+      const enriched = rawProducts.map(p => ({
+        ...p,
+        preco_minimo: priceMap.get(p.id)?.precoMinimo ?? p.preco_minimo,
+        preco_tabela: priceMap.get(p.id)?.precoTabela ?? p.preco_tabela,
+      }));
+      setProducts(enriched);
+    }
     if (countRes.count) setTotalProducts(countRes.count);
     setLoading(false);
   };
