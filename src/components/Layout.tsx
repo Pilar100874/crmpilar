@@ -1115,7 +1115,7 @@ export default function Layout({ children }: LayoutProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => setSidebarVisible(true)}
-                className="rounded-full bg-sidebar/95 backdrop-blur-sm border-sidebar-border hover:bg-sidebar h-5 w-5 sm:h-6 sm:w-6 p-0"
+                className="rounded-full bg-sidebar/95 dark:bg-orange-500 backdrop-blur-sm border-sidebar-border dark:border-orange-600 hover:bg-sidebar dark:hover:bg-orange-400 h-5 w-5 sm:h-6 sm:w-6 p-0 dark:text-white"
               >
                 <ChevronRight className="w-2 h-2 sm:w-3 sm:h-3" />
               </Button>
