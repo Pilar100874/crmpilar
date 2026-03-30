@@ -186,6 +186,7 @@ const App = () => (
               <Route path="/config/variaveis" element={<GlobalVariables />} />
               <Route path="/config/campanhas" element={<Campanhas />} />
               <Route path="/config/pagamentos" element={<PaymentGatewaysConfig />} />
+              <Route path="/config/visual" element={<SystemVisualConfig />} />
               <Route path="/ecommerce-rules" element={<EcommerceRulesPage />} />
               <Route path="/ecommerce-rules-editor" element={<EcommerceRulesEditor />} />
               <Route path="/pedido-tracking" element={<PedidoTracking />} />
