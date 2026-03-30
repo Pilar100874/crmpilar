@@ -15,11 +15,13 @@ import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 interface ProductWithPrice {
   id: string;
   nome: string;
-  tipo: string | null;
-  gramatura: string | null;
-  largura: string | null;
-  quantidade: number | null;
-  embalagem: string | null;
+  marca: string | null;
+  gramatura: number | null;
+  largura: number | null;
+  estoque: number | null;
+  preco_tabela: number | null;
+  preco_minimo: number | null;
+  foto_url: string | null;
 }
 
 interface CategoryData {
