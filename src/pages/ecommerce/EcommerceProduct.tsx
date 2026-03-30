@@ -13,6 +13,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
+import { resolveProductPrice, resolveProductPricesBatch } from "@/hooks/useProductPrice";
 
 interface Product {
   id: string;
