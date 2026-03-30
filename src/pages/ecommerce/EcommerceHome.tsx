@@ -236,17 +236,14 @@ export default function EcommerceHome() {
               {categories.map((cat, i) => (
                 <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
-                    <Card className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 border-0 shadow-md hover:shadow-lg">
-                      <CardContent className="p-0 relative aspect-square flex items-center justify-center">
+                    <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                      <CardContent className="p-6 text-center">
                         {cat.icone_url ? (
-                          <img src={cat.icone_url} alt={cat.nome} className="absolute inset-0 w-full h-full object-cover" />
+                          <img src={cat.icone_url} alt={cat.nome} className="w-12 h-12 mx-auto mb-3 rounded-lg object-cover" />
                         ) : (
-                          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                            <span className="text-5xl">{getCategoryIcon(cat.nome)}</span>
-                          </div>
+                          <span className="text-4xl block mb-3">{getCategoryIcon(cat.nome)}</span>
                         )}
-                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-                        <p className="relative z-10 font-bold text-white text-sm sm:text-base px-2 text-center drop-shadow-lg" style={{ WebkitTextStroke: '0.5px white' }}>{cat.nome}</p>
+                        <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.nome}</p>
                       </CardContent>
                     </Card>
                   </Link>
