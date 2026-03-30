@@ -181,6 +181,46 @@ export default function EcommerceBrandingConfig() {
         </CardContent>
       </Card>
 
+      {/* Logo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" />Logo do Estabelecimento</CardTitle>
+          <CardDescription>Envie o logotipo que será exibido no e-commerce</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {config.logo_url ? (
+            <div className="relative rounded-xl overflow-hidden w-48 h-48 border bg-muted/30 flex items-center justify-center">
+              <img
+                src={config.logo_url}
+                alt="Logo"
+                className="max-w-full max-h-full object-contain p-2"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={async () => {
+                  const next = { ...config, logo_url: "" };
+                  setConfig(next);
+                  await persistConfig(next);
+                  toast.success("Logo removido");
+                }}
+              >
+                <Trash2 className="h-3 w-3 mr-1" />Remover
+              </Button>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed rounded-xl p-8 text-center text-muted-foreground w-48 h-48 flex flex-col items-center justify-center">
+              <Image className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="text-xs">PNG, JPG ou SVG</p>
+            </div>
+          )}
+          <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
+          <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
+            <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : config.logo_url ? "Trocar Logo" : "Enviar Logo"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Background */}
       <Card>
