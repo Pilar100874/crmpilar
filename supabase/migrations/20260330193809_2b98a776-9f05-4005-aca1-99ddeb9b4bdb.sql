@@ -1,0 +1,1 @@
+ALTER TABLE public.system_visual_config ADD COLUMN splash_video_loop boolean NOT NULL DEFAULT true;
