@@ -197,13 +197,13 @@ export default function EcommerceCatalog() {
       </nav>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">{pageTitle}</h1>
           <p className="text-sm text-muted-foreground mt-1">{sortedProducts.length} produto(s) encontrado(s)</p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[180px] max-w-sm">
             <Input placeholder="Buscar no catálogo..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-10" />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
@@ -217,7 +217,7 @@ export default function EcommerceCatalog() {
               ))}
             </SelectContent>
           </Select>
-          <div className="hidden sm:flex border rounded-full overflow-hidden">
+          <div className="hidden md:flex border rounded-full overflow-hidden">
             <Button variant={viewMode === "grid" ? "default" : "ghost"} size="icon" className="h-10 w-10 rounded-none" onClick={() => setViewMode("grid")}>
               <Grid3X3 className="h-4 w-4" />
             </Button>
@@ -247,7 +247,7 @@ export default function EcommerceCatalog() {
       </div>
 
       <div className="flex gap-8">
-        <aside className="hidden lg:block w-64 flex-shrink-0">
+        <aside className="hidden lg:block w-56 flex-shrink-0">
           <div className="sticky top-24">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4" /> Filtros
@@ -281,38 +281,35 @@ export default function EcommerceCatalog() {
               <Button variant="outline" className="mt-4" onClick={clearAllFilters}>Limpar filtros</Button>
             </div>
           ) : (
-            <div className={`grid ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} gap-4`}>
+            <div className={`grid ${viewMode === "grid" ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"} gap-3 md:gap-4`}>
               {sortedProducts.map((product, i) => (
                 <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
                   <Link to={`/ecommerce/produto/${product.id}`}>
                     <Card className={`group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${viewMode === "list" ? "flex flex-row" : ""}`}>
-                      <div className={`relative ${viewMode === "list" ? "w-32 h-32 flex-shrink-0" : "aspect-square"} bg-muted/30 flex items-center justify-center overflow-hidden`}>
+                      <div className={`relative ${viewMode === "list" ? "w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0" : "aspect-[4/5]"} bg-muted/30 flex items-center justify-center overflow-hidden`}>
                         {product.foto_url ? (
-                          <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                         ) : (
-                          <span className="text-4xl">📄</span>
+                          <span className="text-3xl md:text-4xl">📄</span>
                         )}
-                        {product.estoque && product.estoque > 0 && (
-                          <Badge className="absolute top-2 left-2 text-[10px] bg-green-600 text-white border-0">Em estoque</Badge>
-                        )}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                        <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
                           <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); toast.success("Adicionado aos favoritos ❤️"); }}>
                             <Heart className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
-                      <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-3`}>
-                        <div>
-                          {product.categoria_nome && <p className="text-xs text-muted-foreground">{product.categoria_nome}</p>}
-                          <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{product.nome}</p>
-                          <div className="mt-2">
+                      <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-2.5 md:p-3`}>
+                        <div className="min-w-0">
+                          {product.categoria_nome && <p className="text-[10px] md:text-xs text-muted-foreground truncate">{product.categoria_nome}</p>}
+                          <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{product.nome}</p>
+                          <div className="mt-1.5 md:mt-2">
                             {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo && (
-                              <p className="text-xs text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
+                              <p className="text-[10px] md:text-xs text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
                             )}
                             {product.preco_minimo ? (
-                              <p className="text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                              <p className="text-sm md:text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
                             ) : (
-                              <p className="text-xs text-muted-foreground">Sob consulta</p>
+                              <p className="text-[10px] md:text-xs text-muted-foreground">Sob consulta</p>
                             )}
                           </div>
                         </div>
