@@ -177,28 +177,18 @@ export default function EcommerceBrandingConfig() {
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" />Logotipo</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="mx-auto flex items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-4" style={{ width: 200, height: 200 }}>
-            {config.logo_url ? (
+          {config.logo_url ? (
+            <div className="relative rounded-xl overflow-hidden border max-w-xs mx-auto bg-muted/20 p-6 flex items-center justify-center" style={{ minHeight: 180 }}>
               <img
+                key={config.logo_url}
                 src={config.logo_url}
                 alt="Logo da loja"
-                className="max-h-full max-w-full object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                className="max-h-40 max-w-full object-contain"
               />
-            ) : (
-              <span className="text-sm text-muted-foreground text-center">Nenhum logo enviado</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 justify-center">
-            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
-            <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
-              <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : "Enviar Logo"}
-            </Button>
-            {config.logo_url && (
               <Button
-                variant="ghost"
+                variant="destructive"
                 size="sm"
-                className="text-destructive"
+                className="absolute top-2 right-2"
                 onClick={async () => {
                   const nextConfig = { ...config, logo_url: "" };
                   setConfig(nextConfig);
@@ -207,9 +197,19 @@ export default function EcommerceBrandingConfig() {
               >
                 <Trash2 className="h-3 w-3 mr-1" />Remover
               </Button>
-            )}
+            </div>
+          ) : (
+            <div className="border-2 border-dashed rounded-xl p-8 text-center text-muted-foreground max-w-xs mx-auto">
+              <Image className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="text-sm mb-3">Envie seu logotipo (PNG ou SVG, máx 2MB)</p>
+            </div>
+          )}
+          <div className="flex justify-center">
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
+            <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploading === "logo"}>
+              <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : config.logo_url ? "Trocar Logo" : "Enviar Logo"}
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground text-center">PNG ou SVG transparente, máx 2MB</p>
         </CardContent>
       </Card>
 
