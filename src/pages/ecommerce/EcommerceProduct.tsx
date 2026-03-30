@@ -151,7 +151,18 @@ export default function EcommerceProduct() {
         volumePromise,
       ]);
 
-      if (relatedRes?.data) setRelatedProducts(relatedRes.data.map(mapProduct));
+      if (relatedRes?.data) {
+        const relMapped = relatedRes.data.map(mapProduct);
+        const relPriceMap = await resolveProductPricesBatch(relatedRes.data as any[]);
+        for (const rp of relMapped) {
+          const resolved = relPriceMap.get(rp.id);
+          if (resolved) {
+            rp.preco_minimo = resolved.precoMinimo;
+            rp.preco_tabela = resolved.precoTabela;
+          }
+        }
+        setRelatedProducts(relMapped);
+      }
       if (volumeRes.data) setVolumeTiers(volumeRes.data);
     }
     setLoading(false);
