@@ -125,16 +125,35 @@ export default function EcommerceProduct() {
       setProduct(mapProduct(data));
 
       const catId = (data.categoria as any)?.id;
+      const estabId = (data as any).estabelecimento_id;
+
+      // Load related products and volume tiers in parallel
+      const promises: Promise<any>[] = [];
+
       if (catId) {
-        const { data: related } = await supabase
-          .from("produtos")
-          .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
-          .eq("categoria_id", catId)
-          .eq("ativo", true)
-          .neq("id", productId)
-          .limit(4);
-        if (related) setRelatedProducts(related.map(mapProduct));
+        promises.push(
+          supabase
+            .from("produtos")
+            .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+            .eq("categoria_id", catId)
+            .eq("ativo", true)
+            .neq("id", productId)
+            .limit(4)
+            .then(res => { if (res.data) setRelatedProducts(res.data.map(mapProduct)); })
+        );
       }
+
+      // Load volume pricing tiers
+      promises.push(
+        supabase
+          .from("ecommerce_volume_pricing")
+          .select("*")
+          .eq("ativo", true)
+          .order("ordem")
+          .then(res => { if (res.data) setVolumeTiers(res.data); })
+      );
+
+      await Promise.all(promises);
     }
     setLoading(false);
   };
