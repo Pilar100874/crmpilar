@@ -135,11 +135,18 @@ export default function EcommerceLayout() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 overflow-y-auto">
-              <div className="p-6 border-b space-y-3">
-                {branding.logo_url && (
-                  <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain" />
-                )}
-                <h2 className="text-lg font-bold">Menu</h2>
+              <div className="p-6 border-b bg-background">
+                <div className="flex min-h-[72px] flex-col justify-center gap-3">
+                  {branding.logo_url ? (
+                    <BrandLogo
+                      src={branding.logo_url}
+                      alt={branding.nome_loja}
+                      className="h-12 w-[140px] border-border/40"
+                      imageClassName="p-2"
+                    />
+                  ) : null}
+                  <h2 className="text-lg font-bold text-foreground">Menu</h2>
+                </div>
               </div>
               <nav className="p-4 space-y-1">
                 {/* User account links */}
