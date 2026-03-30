@@ -55,12 +55,13 @@ export default function EcommerceBrandingConfig() {
       }
 
       if (data) {
+        console.log("Branding config loaded:", { logo_url: data.logo_url, id: data.id });
         setConfigId(data.id);
         setConfigEstId(data.estabelecimento_id);
         setConfig({
           logo_url: data.logo_url || "",
           background_video_url: data.background_video_url || "",
-          background_image_url: (data as any).background_image_url || "",
+          background_image_url: data.background_image_url || "",
           background_type: data.background_type || "gradient",
           nome_loja: data.nome_loja || "Minha Loja",
           slogan: data.slogan || "",
