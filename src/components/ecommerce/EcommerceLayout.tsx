@@ -22,7 +22,17 @@ export default function EcommerceLayout() {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
+  const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
+  const toggleTheme = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
