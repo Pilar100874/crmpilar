@@ -282,17 +282,27 @@ export default function EcommerceProduct() {
             </div>
 
             <div className="flex gap-2 sm:gap-3">
-              <Button size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={() => {
+              <Button ref={cartBtnRef} size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
                 if (product) {
-                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999 });
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined });
                   toast.success("Produto adicionado ao carrinho!");
                 }
               }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
-              {branding.feat_favoritos && <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => {
-                setWishlisted(!wishlisted);
-                toast.success(wishlisted ? "Removido dos favoritos" : "Adicionado aos favoritos ❤️");
+              {branding.feat_favoritos && <Button ref={heartBtnRef} variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={(e) => {
+                if (product) {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  const added = toggleWishlist({ productId: product.id, name: product.nome, image: product.foto_url || undefined, price: product.preco_tabela || product.preco_minimo || undefined });
+                  if (added) {
+                    setFlyAnim({ startRect: rect, target: "[data-wishlist-target]", image: product.foto_url || undefined, icon: "heart" });
+                    toast.success("Adicionado aos favoritos ❤️");
+                  } else {
+                    toast.success("Removido dos favoritos");
+                  }
+                }
               }}>
                 <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
               </Button>}
