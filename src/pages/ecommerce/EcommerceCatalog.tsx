@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 
