@@ -189,13 +189,18 @@ export default function EcommerceBrandingConfig() {
         </CardHeader>
         <CardContent className="space-y-3">
           {config.logo_url ? (
-            <div className="relative rounded-xl overflow-hidden w-48 h-48 border bg-muted/30 flex items-center justify-center p-3">
-              <BrandLogo
+            <div
+              className="relative rounded-xl overflow-hidden w-48 h-48 border flex items-center justify-center"
+              style={{
+                backgroundImage: "linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)",
+                backgroundSize: "16px 16px",
+                backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+              }}
+            >
+              <img
                 src={config.logo_url}
-                alt={config.nome_loja || "Logo do estabelecimento"}
-                fallbackText="Logo do estabelecimento"
-                className="h-full w-full rounded-lg bg-gradient-to-br from-background via-muted/40 to-background"
-                imageClassName="p-3"
+                alt="Logo"
+                className="max-w-full max-h-full object-contain p-3"
               />
               <Button
                 variant="destructive"
