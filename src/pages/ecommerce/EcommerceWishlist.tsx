@@ -65,6 +65,9 @@ export default function EcommerceWishlist() {
               {item.price != null && (
                 <p className="text-sm font-bold text-primary">R$ {item.price.toFixed(2)}</p>
               )}
+              {item.price == null && (
+                <p className="text-sm font-bold text-muted-foreground">---</p>
+              )}
               <div className="flex items-center gap-1.5">
                 {(stockMap[item.productId] ?? 0) > 0 ? (
                   <Button size="sm" variant="outline" className="flex-1 min-w-0 text-xs gap-1 truncate" onClick={(e) => {
