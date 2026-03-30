@@ -299,12 +299,7 @@ export default function EcommerceLayout() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               {branding.logo_url ? (
-                <BrandLogo
-                  src={branding.logo_url}
-                  alt={branding.nome_loja}
-                  className="mb-4 h-14 w-[160px] border-background/10"
-                  imageClassName="p-2"
-                />
+                <img src={branding.logo_url} alt={branding.nome_loja} className="mb-4 h-14 max-w-[160px] object-contain brightness-0 invert" />
               ) : (
                 <span className="text-xl font-black text-background mb-4 block">{branding.nome_loja || "STORE"}<span className="text-primary">.</span></span>
               )}
