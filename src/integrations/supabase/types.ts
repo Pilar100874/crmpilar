@@ -3499,9 +3499,9 @@ export type Database = {
           nome_faixa: string
           ordem: number
           percentual_desconto: number
-          quantidade_maxima: number | null
-          quantidade_minima: number
           updated_at: string
+          valor_maximo: number | null
+          valor_minimo: number
         }
         Insert: {
           ativo?: boolean
@@ -3511,9 +3511,9 @@ export type Database = {
           nome_faixa: string
           ordem?: number
           percentual_desconto?: number
-          quantidade_maxima?: number | null
-          quantidade_minima: number
           updated_at?: string
+          valor_maximo?: number | null
+          valor_minimo: number
         }
         Update: {
           ativo?: boolean
@@ -3523,9 +3523,9 @@ export type Database = {
           nome_faixa?: string
           ordem?: number
           percentual_desconto?: number
-          quantidade_maxima?: number | null
-          quantidade_minima?: number
           updated_at?: string
+          valor_maximo?: number | null
+          valor_minimo?: number
         }
         Relationships: [
           {

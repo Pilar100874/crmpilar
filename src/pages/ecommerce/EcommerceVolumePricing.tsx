@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, Plus, Trash2, GripVertical, Package, ToggleLeft } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Package, ToggleLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,15 @@ import { toast } from "sonner";
 interface VolumeTier {
   id?: string;
   nome_faixa: string;
-  quantidade_minima: number;
-  quantidade_maxima: number | null;
+  valor_minimo: number;
+  valor_maximo: number | null;
   percentual_desconto: number;
   ativo: boolean;
   ordem: number;
 }
+
+const formatCurrency = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EcommerceVolumePricing() {
   const navigate = useNavigate();
@@ -51,8 +54,8 @@ export default function EcommerceVolumePricing() {
       setTiers(tiersRes.data.map(t => ({
         id: t.id,
         nome_faixa: t.nome_faixa,
-        quantidade_minima: t.quantidade_minima,
-        quantidade_maxima: t.quantidade_maxima,
+        valor_minimo: Number(t.valor_minimo),
+        valor_maximo: t.valor_maximo != null ? Number(t.valor_maximo) : null,
         percentual_desconto: Number(t.percentual_desconto),
         ativo: t.ativo,
         ordem: t.ordem,
@@ -68,11 +71,11 @@ export default function EcommerceVolumePricing() {
 
   const addTier = () => {
     const lastTier = tiers[tiers.length - 1];
-    const nextMin = lastTier ? (lastTier.quantidade_maxima || lastTier.quantidade_minima) + 1 : 10;
+    const nextMin = lastTier ? ((lastTier.valor_maximo || lastTier.valor_minimo) + 0.01) : 0;
     setTiers([...tiers, {
       nome_faixa: `Faixa ${tiers.length + 1}`,
-      quantidade_minima: nextMin,
-      quantidade_maxima: nextMin + 49,
+      valor_minimo: Math.round(nextMin * 100) / 100,
+      valor_maximo: Math.round((nextMin + 9999.99) * 100) / 100,
       percentual_desconto: (tiers.length + 1) * 5,
       ativo: true,
       ordem: tiers.length,
@@ -92,24 +95,21 @@ export default function EcommerceVolumePricing() {
     setSaving(true);
 
     try {
-      // Save toggle
       await supabase
         .from("ecommerce_config")
         .upsert({ estabelecimento_id: estId, feat_b2b_volume: b2bEnabled } as any, { onConflict: "estabelecimento_id" });
 
-      // Delete existing tiers
       await supabase
         .from("ecommerce_volume_pricing")
         .delete()
         .eq("estabelecimento_id", estId);
 
-      // Insert new tiers
       if (tiers.length > 0) {
         const rows = tiers.map((t, i) => ({
           estabelecimento_id: estId,
           nome_faixa: t.nome_faixa,
-          quantidade_minima: t.quantidade_minima,
-          quantidade_maxima: t.quantidade_maxima,
+          valor_minimo: t.valor_minimo,
+          valor_maximo: t.valor_maximo,
           percentual_desconto: t.percentual_desconto,
           ativo: t.ativo,
           ordem: i,
@@ -142,7 +142,7 @@ export default function EcommerceVolumePricing() {
               Preços por Volume / B2B
             </h1>
             <p className="text-muted-foreground text-sm">
-              Configure faixas de desconto para compras em quantidade
+              Configure faixas de desconto baseadas no total do pedido (R$)
             </p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function EcommerceVolumePricing() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Faixas de Desconto</CardTitle>
-              <CardDescription>Defina os descontos para cada faixa de quantidade</CardDescription>
+              <CardDescription>Defina os descontos para cada faixa de valor total do pedido</CardDescription>
             </div>
             <Button onClick={addTier} variant="outline" size="sm" className="gap-1.5">
               <Plus className="h-4 w-4" /> Adicionar Faixa
@@ -191,10 +191,10 @@ export default function EcommerceVolumePricing() {
 
           {/* Header */}
           {tiers.length > 0 && (
-            <div className="grid grid-cols-[1fr_120px_120px_100px_60px_40px] gap-2 text-xs font-semibold text-muted-foreground px-1">
+            <div className="grid grid-cols-[1fr_130px_130px_100px_60px_40px] gap-2 text-xs font-semibold text-muted-foreground px-1">
               <span>Nome</span>
-              <span>Qtd Mínima</span>
-              <span>Qtd Máxima</span>
+              <span>Valor Mín (R$)</span>
+              <span>Valor Máx (R$)</span>
               <span>Desconto %</span>
               <span>Ativo</span>
               <span></span>
@@ -202,27 +202,35 @@ export default function EcommerceVolumePricing() {
           )}
 
           {tiers.map((tier, i) => (
-            <div key={i} className={`grid grid-cols-[1fr_120px_120px_100px_60px_40px] gap-2 items-center p-2 rounded-lg border ${tier.ativo ? "bg-background" : "bg-muted/30 opacity-60"}`}>
+            <div key={i} className={`grid grid-cols-[1fr_130px_130px_100px_60px_40px] gap-2 items-center p-2 rounded-lg border ${tier.ativo ? "bg-background" : "bg-muted/30 opacity-60"}`}>
               <Input
                 value={tier.nome_faixa}
                 onChange={e => updateTier(i, "nome_faixa", e.target.value)}
                 className="h-9 text-sm"
                 placeholder="Ex: Atacado"
               />
-              <Input
-                type="number"
-                value={tier.quantidade_minima}
-                onChange={e => updateTier(i, "quantidade_minima", parseInt(e.target.value) || 0)}
-                className="h-9 text-sm"
-                min={1}
-              />
-              <Input
-                type="number"
-                value={tier.quantidade_maxima ?? ""}
-                onChange={e => updateTier(i, "quantidade_maxima", e.target.value ? parseInt(e.target.value) : null)}
-                className="h-9 text-sm"
-                placeholder="Ilimitado"
-              />
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                <Input
+                  type="number"
+                  value={tier.valor_minimo}
+                  onChange={e => updateTier(i, "valor_minimo", parseFloat(e.target.value) || 0)}
+                  className="h-9 text-sm pl-8"
+                  min={0}
+                  step={100}
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                <Input
+                  type="number"
+                  value={tier.valor_maximo ?? ""}
+                  onChange={e => updateTier(i, "valor_maximo", e.target.value ? parseFloat(e.target.value) : null)}
+                  className="h-9 text-sm pl-8"
+                  placeholder="Ilimitado"
+                  step={100}
+                />
+              </div>
               <div className="relative">
                 <Input
                   type="number"
@@ -251,25 +259,21 @@ export default function EcommerceVolumePricing() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Pré-visualização</CardTitle>
-            <CardDescription>Como a tabela aparecerá para o cliente (exemplo: produto de R$ 100,00)</CardDescription>
+            <CardDescription>Como a tabela aparecerá para o cliente</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-3 bg-muted/50 p-3 text-xs font-semibold text-muted-foreground border-b">
-                <span>Quantidade</span>
+              <div className="grid grid-cols-2 bg-muted/50 p-3 text-xs font-semibold text-muted-foreground border-b">
+                <span>Total do Pedido</span>
                 <span>Desconto</span>
-                <span>Preço Unitário</span>
               </div>
               {tiers.filter(t => t.ativo).map((tier, i) => (
-                <div key={i} className="grid grid-cols-3 p-3 text-sm border-b last:border-0 hover:bg-muted/20">
+                <div key={i} className="grid grid-cols-2 p-3 text-sm border-b last:border-0 hover:bg-muted/20">
                   <span className="font-medium">
-                    {tier.quantidade_minima}
-                    {tier.quantidade_maxima ? ` - ${tier.quantidade_maxima}` : "+"} un
+                    {formatCurrency(tier.valor_minimo)}
+                    {tier.valor_maximo ? ` a ${formatCurrency(tier.valor_maximo)}` : " +"}
                   </span>
                   <span className="text-primary font-semibold">{tier.percentual_desconto}% OFF</span>
-                  <span className="font-semibold">
-                    {(100 * (1 - tier.percentual_desconto / 100)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </span>
                 </div>
               ))}
             </div>

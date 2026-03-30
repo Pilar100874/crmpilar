@@ -354,24 +354,19 @@ export default function EcommerceProduct() {
                   <p className="text-sm font-semibold text-foreground">Preços por Volume</p>
                 </div>
                 <div className="border rounded-lg overflow-hidden bg-background">
-                  <div className="grid grid-cols-3 bg-muted/50 p-2.5 text-[11px] font-semibold text-muted-foreground border-b">
-                    <span>Quantidade</span>
+                  <div className="grid grid-cols-2 bg-muted/50 p-2.5 text-[11px] font-semibold text-muted-foreground border-b">
+                    <span>Total do Pedido</span>
                     <span>Desconto</span>
-                    <span>Preço Unit.</span>
                   </div>
-                  {volumeTiers.map((tier: any, i: number) => {
-                    const basePrice = product?.preco_minimo || product?.preco_tabela || 0;
-                    const discountedPrice = basePrice * (1 - Number(tier.percentual_desconto) / 100);
-                    return (
-                      <div key={i} className="grid grid-cols-3 p-2.5 text-sm border-b last:border-0 hover:bg-muted/20">
-                        <span className="font-medium text-xs">
-                          {tier.quantidade_minima}{tier.quantidade_maxima ? `-${tier.quantidade_maxima}` : "+"} un
-                        </span>
-                        <span className="text-primary font-semibold text-xs">{Number(tier.percentual_desconto)}% OFF</span>
-                        <span className="font-semibold text-xs">{formatPrice(discountedPrice)}</span>
-                      </div>
-                    );
-                  })}
+                  {volumeTiers.map((tier: any, i: number) => (
+                    <div key={i} className="grid grid-cols-2 p-2.5 text-sm border-b last:border-0 hover:bg-muted/20">
+                      <span className="font-medium text-xs">
+                        {Number(tier.valor_minimo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        {tier.valor_maximo ? ` a ${Number(tier.valor_maximo).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` : " +"}
+                      </span>
+                      <span className="text-primary font-semibold text-xs">{Number(tier.percentual_desconto)}% OFF</span>
+                    </div>
+                  ))}
                 </div>
                 <Link to="/ecommerce/b2b" className="text-xs text-primary font-semibold hover:underline inline-block">
                   Cadastre-se B2B para mais vantagens →
