@@ -25,6 +25,7 @@ export default function EcommerceLayout() {
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
   const { branding } = useEcommerceBranding();
@@ -128,7 +129,7 @@ export default function EcommerceLayout() {
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-lg shadow-md" : "bg-background"}`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
           {/* Mobile menu */}
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
@@ -149,14 +150,13 @@ export default function EcommerceLayout() {
                 </div>
               </div>
               <nav className="p-4 space-y-1">
-                {/* User account links */}
-                <Link to="/ecommerce/conta" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                <Link to="/ecommerce/conta" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
                   <User className="h-4 w-4" /> Minha Conta
                 </Link>
-                <Link to="/ecommerce/conta?tab=pedidos" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                <Link to="/ecommerce/conta?tab=pedidos" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
                   <Package className="h-4 w-4" /> Meus Pedidos
                 </Link>
-                <Link to="/ecommerce/conta?tab=rastreamento" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                <Link to="/ecommerce/conta?tab=rastreamento" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
                   <Truck className="h-4 w-4" /> Rastreamento
                 </Link>
                 <hr className="my-3" />
@@ -169,7 +169,7 @@ export default function EcommerceLayout() {
                     <CollapsibleContent>
                       <div className="ml-4 space-y-0.5">
                         {group.categorias.map(cat => (
-                          <Link key={cat.id} to={`/ecommerce/catalogo?grupo=${encodeURIComponent(group.grupo)}&categoria=${encodeURIComponent(cat.nome)}`} className="flex items-center gap-2.5 px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
+                          <Link key={cat.id} to={`/ecommerce/catalogo?grupo=${encodeURIComponent(group.grupo)}&categoria=${encodeURIComponent(cat.nome)}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 rounded-lg hover:bg-accent transition-colors text-sm text-muted-foreground">
                             {cat.icone_url ? <img src={cat.icone_url} alt="" className="w-5 h-5 rounded object-cover flex-shrink-0" /> : null}
                             {cat.nome}
                           </Link>
@@ -179,12 +179,12 @@ export default function EcommerceLayout() {
                   </Collapsible>
                 ))}
                 {menuGroups.length === 0 && (
-                  <Link to="/ecommerce/catalogo" className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium">
+                  <Link to="/ecommerce/catalogo" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium">
                     Todos os Produtos
                   </Link>
                 )}
                 <hr className="my-3" />
-                <Link to="/ecommerce/b2b" className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-primary">
+                <Link to="/ecommerce/b2b" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-primary">
                   Atacado / B2B
                 </Link>
               </nav>
