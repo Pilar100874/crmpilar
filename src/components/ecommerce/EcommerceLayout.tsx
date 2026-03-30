@@ -48,7 +48,6 @@ export default function EcommerceLayout() {
         .select("id, nome, foto_url, preco_minimo, marca")
         .eq("estabelecimento_id", estId)
         .eq("ativo", true)
-        .is("importado_terceiros", null)
         .ilike("nome", `%${searchQuery.trim()}%`)
         .limit(8);
       if (data) { setSearchResults(data); setShowResults(true); }
