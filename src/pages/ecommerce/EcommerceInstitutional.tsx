@@ -41,13 +41,13 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
       if (!estId) { setLoading(false); return; }
       const { data } = await supabase
         .from("ecommerce_conteudos")
-        .select("conteudo_html, dados_json")
+        .select("conteudo, dados_json")
         .eq("estabelecimento_id", estId)
         .eq("tipo", page)
         .maybeSingle();
       if (data) {
         setContent({
-          conteudo_html: data.conteudo_html || "",
+          conteudo: data.conteudo || "",
           dados_json: (data.dados_json as Record<string, any>) || {},
         });
       } else {
