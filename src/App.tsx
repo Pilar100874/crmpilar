@@ -189,6 +189,7 @@ const App = () => (
               <Route path="/ecommerce-config/conteudos" element={<EcommerceContentEditor />} />
               <Route path="/ecommerce-config/anuncios" element={<EcommerceAdsManager />} />
               <Route path="/ecommerce-config/rodape" element={<EcommerceFooterEditor />} />
+              <Route path="/ecommerce-config/homepage" element={<EcommerceHomeEditor />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
