@@ -10,6 +10,7 @@ import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import pilarBrand from "@/assets/pilar-brand.png";
 import fallbackBrand from "@/assets/pilar-brand-fallback.jpg";
+import logoApp from "@/assets/logoapp.jpg";
 
 function usePreloadedImage(primary: string, fallback: string) {
   const [src, setSrc] = useState<string | null>(null);
