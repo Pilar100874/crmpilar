@@ -173,7 +173,7 @@ export default function EcommerceProduct() {
   const inStock = (product.estoque ?? 0) > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Breadcrumb */}
       {branding.feat_breadcrumb && <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
@@ -195,14 +195,14 @@ export default function EcommerceProduct() {
         <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
       </nav>}
 
-      <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
         {/* Gallery */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="aspect-square bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group">
+          <div className="aspect-square max-h-[55vh] md:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
             {product.foto_url ? (
-              <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
             ) : (
-              <span className="text-[120px] group-hover:scale-110 transition-transform duration-500">📄</span>
+              <span className="text-[80px] md:text-[120px] group-hover:scale-110 transition-transform duration-500">📄</span>
             )}
             {!inStock && (
               <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
@@ -213,11 +213,11 @@ export default function EcommerceProduct() {
         </motion.div>
 
         {/* Info */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-5">
           {product.categoria_nome && (
             <Badge variant="outline" className="text-xs">{product.categoria_nome}</Badge>
           )}
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.nome}</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.nome}</h1>
           
           {/* Rating */}
           {branding.feat_rating_estrelas && <div className="flex items-center gap-2">
@@ -235,14 +235,14 @@ export default function EcommerceProduct() {
               <p className="text-sm text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
             )}
             {product.preco_minimo ? (
-              <p className="text-3xl font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
             ) : (
               <p className="text-lg text-muted-foreground">Sob consulta</p>
             )}
           </div>
 
           {/* Specs badges */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 md:gap-2">
             {specs.map(s => (
               <Badge key={s.label} variant="secondary" className="text-xs gap-1">
                 {s.label}: {s.value}
@@ -275,8 +275,8 @@ export default function EcommerceProduct() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button size="lg" className="flex-1 gap-2 rounded-full h-12 text-base" disabled={!inStock} onClick={() => {
+            <div className="flex gap-2 sm:gap-3">
+              <Button size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={() => {
                 if (product) {
                   addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999 });
                   toast.success("Produto adicionado ao carrinho!");
@@ -313,14 +313,14 @@ export default function EcommerceProduct() {
           </Card>}
 
           {/* Trust signals */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[
               { icon: Truck, text: "Frete grátis acima de R$ 500" },
               { icon: Shield, text: "Compra 100% segura" },
               { icon: RotateCcw, text: "Troca em até 30 dias" },
             ].map((item, i) => (
-              <div key={i} className="text-center p-3 rounded-xl bg-muted/30">
-                <item.icon className="h-5 w-5 mx-auto text-primary mb-1" />
+              <div key={i} className="text-center p-2 sm:p-3 rounded-xl bg-muted/30">
+                <item.icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-primary mb-1" />
                 <p className="text-[10px] text-muted-foreground leading-tight">{item.text}</p>
               </div>
             ))}
@@ -329,9 +329,9 @@ export default function EcommerceProduct() {
       </div>
 
       {/* Tabs */}
-      <div className="mt-12">
+      <div className="mt-8 md:mt-12">
         <Tabs defaultValue="descricao">
-          <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0">
+          <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0 overflow-x-auto flex-nowrap">
             {[
               { value: "descricao", label: "Descrição" },
               { value: "especificacoes", label: "Especificações" },
