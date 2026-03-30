@@ -7,6 +7,15 @@ import { motion } from "framer-motion";
 
 const configSections = [
   {
+    id: "homepage",
+    title: "Página Inicial",
+    description: "Edite textos, seções, benefícios, depoimentos e newsletter",
+    icon: Home,
+    url: "/ecommerce-config/homepage",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+  },
+  {
     id: "branding",
     title: "Identidade Visual",
     description: "Logo, vídeo de fundo, cores e nome da loja",
