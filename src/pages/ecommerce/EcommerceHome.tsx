@@ -144,7 +144,7 @@ export default function EcommerceHome() {
                     </Button>
                   </Link>
                   <Link to="/ecommerce/b2b">
-                    <Button size="lg" variant="outline" className="gap-2 border-background/30 text-background hover:bg-background/10 rounded-full px-8 h-12 text-base">
+                    <Button size="lg" className="gap-2 bg-white/15 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/25 hover:border-white/60 rounded-full px-8 h-12 text-base shadow-lg">
                       <Building2 className="h-4 w-4" /> {branding.hero_btn_secundario || "Atacado / B2B"}
                     </Button>
                   </Link>
