@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -86,6 +86,15 @@ const configSections = [
     url: "/ecommerce-config/funcionalidades",
     color: "text-amber-500",
     bg: "bg-amber-500/10",
+  },
+  {
+    id: "volume-pricing",
+    title: "Preços por Volume / B2B",
+    description: "Configure faixas de desconto para compras em quantidade",
+    icon: Package,
+    url: "/ecommerce-config/volume-pricing",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
 ];
 

@@ -136,6 +136,7 @@ import EcommerceAdsManager from "./pages/ecommerce/EcommerceAdsManager";
 import EcommerceFooterEditor from "./pages/ecommerce/EcommerceFooterEditor";
 import EcommerceHomeEditor from "./pages/ecommerce/EcommerceHomeEditor";
 import EcommerceFeaturesEditor from "./pages/ecommerce/EcommerceFeaturesEditor";
+import EcommerceVolumePricing from "./pages/ecommerce/EcommerceVolumePricing";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -194,6 +195,7 @@ const App = () => (
               <Route path="/ecommerce-config/rodape" element={<EcommerceFooterEditor />} />
               <Route path="/ecommerce-config/homepage" element={<EcommerceHomeEditor />} />
               <Route path="/ecommerce-config/funcionalidades" element={<EcommerceFeaturesEditor />} />
+              <Route path="/ecommerce-config/volume-pricing" element={<EcommerceVolumePricing />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
