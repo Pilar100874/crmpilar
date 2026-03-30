@@ -1,0 +1,1 @@
+ALTER TABLE public.ecommerce_config ADD COLUMN IF NOT EXISTS logo_url text;
