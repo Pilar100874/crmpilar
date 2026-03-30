@@ -3246,11 +3246,17 @@ export type Database = {
       }
       ecommerce_config: {
         Row: {
+          b2b_badge: string | null
+          b2b_descricao: string | null
+          b2b_titulo: string | null
+          b2b_vantagens: Json | null
           background_type: string | null
           background_video_url: string | null
+          beneficios: Json | null
           cor_primaria: string | null
           cor_secundaria: string | null
           created_at: string
+          depoimentos: Json | null
           estabelecimento_id: string
           footer_copyright: string | null
           footer_descricao: string | null
@@ -3259,18 +3265,33 @@ export type Database = {
           footer_links_extras: Json | null
           footer_pagamentos: string[] | null
           footer_telefone: string | null
+          hero_badge: string | null
+          hero_btn_primario: string | null
+          hero_btn_secundario: string | null
+          hero_stat_satisfacao: string | null
+          hero_subtitulo: string | null
+          hero_titulo: string | null
           id: string
           logo_url: string | null
+          newsletter_subtitulo: string | null
+          newsletter_titulo: string | null
           nome_loja: string | null
+          secoes_visiveis: Json | null
           slogan: string | null
           updated_at: string
         }
         Insert: {
+          b2b_badge?: string | null
+          b2b_descricao?: string | null
+          b2b_titulo?: string | null
+          b2b_vantagens?: Json | null
           background_type?: string | null
           background_video_url?: string | null
+          beneficios?: Json | null
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          depoimentos?: Json | null
           estabelecimento_id: string
           footer_copyright?: string | null
           footer_descricao?: string | null
@@ -3279,18 +3300,33 @@ export type Database = {
           footer_links_extras?: Json | null
           footer_pagamentos?: string[] | null
           footer_telefone?: string | null
+          hero_badge?: string | null
+          hero_btn_primario?: string | null
+          hero_btn_secundario?: string | null
+          hero_stat_satisfacao?: string | null
+          hero_subtitulo?: string | null
+          hero_titulo?: string | null
           id?: string
           logo_url?: string | null
+          newsletter_subtitulo?: string | null
+          newsletter_titulo?: string | null
           nome_loja?: string | null
+          secoes_visiveis?: Json | null
           slogan?: string | null
           updated_at?: string
         }
         Update: {
+          b2b_badge?: string | null
+          b2b_descricao?: string | null
+          b2b_titulo?: string | null
+          b2b_vantagens?: Json | null
           background_type?: string | null
           background_video_url?: string | null
+          beneficios?: Json | null
           cor_primaria?: string | null
           cor_secundaria?: string | null
           created_at?: string
+          depoimentos?: Json | null
           estabelecimento_id?: string
           footer_copyright?: string | null
           footer_descricao?: string | null
@@ -3299,9 +3335,18 @@ export type Database = {
           footer_links_extras?: Json | null
           footer_pagamentos?: string[] | null
           footer_telefone?: string | null
+          hero_badge?: string | null
+          hero_btn_primario?: string | null
+          hero_btn_secundario?: string | null
+          hero_stat_satisfacao?: string | null
+          hero_subtitulo?: string | null
+          hero_titulo?: string | null
           id?: string
           logo_url?: string | null
+          newsletter_subtitulo?: string | null
+          newsletter_titulo?: string | null
           nome_loja?: string | null
+          secoes_visiveis?: Json | null
           slogan?: string | null
           updated_at?: string
         }

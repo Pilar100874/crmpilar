@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, Image, Video, PanelBottom } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 const configSections = [
+  {
+    id: "homepage",
+    title: "Página Inicial",
+    description: "Edite textos, seções, benefícios, depoimentos e newsletter",
+    icon: Home,
+    url: "/ecommerce-config/homepage",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+  },
   {
     id: "branding",
     title: "Identidade Visual",
