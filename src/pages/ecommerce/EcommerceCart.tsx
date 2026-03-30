@@ -69,7 +69,7 @@ export default function EcommerceCart() {
     if (cep.length >= 8) setShippingCalculated(true);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
   const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
   const shipping = shippingCalculated ? (subtotal >= 500 ? 0 : 29.90) : null;
   const total = subtotal - discount + (shipping ?? 0);
@@ -142,7 +142,7 @@ export default function EcommerceCart() {
                             <Plus className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        <p className="text-base font-bold text-foreground">R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</p>
+                        <p className="text-base font-bold text-foreground">R$ {((item.price || 0) * item.quantity).toFixed(2).replace(".", ",")}</p>
                       </div>
                     </div>
                   </CardContent>
