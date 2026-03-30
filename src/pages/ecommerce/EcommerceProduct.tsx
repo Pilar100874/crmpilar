@@ -300,7 +300,7 @@ export default function EcommerceProduct() {
                 if (product) {
                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                   setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
-                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined });
+                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
                   toast.success("Produto adicionado ao carrinho!");
                 }
               }}>
