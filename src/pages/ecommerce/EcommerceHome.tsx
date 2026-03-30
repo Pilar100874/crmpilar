@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 
 interface ProductWithPrice {
   id: string;
@@ -61,6 +62,7 @@ export default function EcommerceHome() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [priceMap, setPriceMap] = useState<Record<string, { preco_tabela: number; preco_minimo: number }>>({});
+  const { branding } = useEcommerceBranding();
 
   useEffect(() => {
     loadData();
@@ -150,19 +152,21 @@ export default function EcommerceHome() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-foreground via-foreground/95 to-foreground/90 text-background">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/50 rounded-full blur-[100px]" />
-        </div>
+      <section className="relative overflow-hidden text-white" style={{ background: branding.background_type === "gradient" ? `linear-gradient(135deg, ${branding.cor_primaria}, ${branding.cor_secundaria})` : undefined }}>
+        {branding.background_type === "video" && branding.background_video_url && (
+          <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0">
+            <source src={branding.background_video_url} type="video/mp4" />
+          </video>
+        )}
+        <div className="absolute inset-0 bg-black/50 z-[1]" />
         <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
-              <Badge className="bg-primary/20 text-primary border-0 px-4 py-1.5 text-sm font-medium">
+              <Badge className="bg-white/20 text-white border-0 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
                 🔥 Ofertas especiais esta semana
               </Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight">
-                Tudo para sua empresa em um só lugar
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-white">
+                {branding.slogan || "Tudo para sua empresa em um só lugar"}
               </h1>
               <p className="text-lg text-background/70 max-w-lg leading-relaxed">
                 {totalProducts > 0 
@@ -201,11 +205,17 @@ export default function EcommerceHome() {
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden md:flex justify-center">
               <div className="relative w-80 h-80">
-                <div className="absolute inset-0 bg-primary/20 rounded-3xl rotate-6" />
-                <div className="absolute inset-0 bg-primary/10 rounded-3xl -rotate-3" />
-                <div className="relative bg-card rounded-3xl p-8 shadow-2xl flex items-center justify-center">
-                  <span className="text-[120px]">📦</span>
-                </div>
+                {branding.logo_url ? (
+                  <img src={branding.logo_url} alt={branding.nome_loja} className="w-full h-full object-contain drop-shadow-2xl" />
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-white/20 rounded-3xl rotate-6" />
+                    <div className="absolute inset-0 bg-white/10 rounded-3xl -rotate-3" />
+                    <div className="relative bg-card rounded-3xl p-8 shadow-2xl flex items-center justify-center">
+                      <span className="text-[120px]">📦</span>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>

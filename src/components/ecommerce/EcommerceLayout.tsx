@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 
 const categories = [
   { name: "Papéis", slug: "papeis", subcategories: ["Sulfite", "Couché", "Offset", "Kraft"] },
@@ -25,6 +26,7 @@ export default function EcommerceLayout() {
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
+  const { branding } = useEcommerceBranding();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -87,9 +89,13 @@ export default function EcommerceLayout() {
 
           {/* Logo */}
           <Link to="/ecommerce" className="flex-shrink-0">
-            <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
-              STORE<span className="text-primary">.</span>
-            </span>
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt={branding.nome_loja} className="h-8 md:h-10 object-contain" />
+            ) : (
+              <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
+                {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
+              </span>
+            )}
           </Link>
 
           {/* Search - Desktop */}
