@@ -171,7 +171,16 @@ export default function EcommerceBrandingConfig() {
               <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : "Enviar Logo"}
             </Button>
             {config.logo_url && (
-              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setConfig((c) => ({ ...c, logo_url: "" }))}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive"
+                onClick={async () => {
+                  const nextConfig = { ...config, logo_url: "" };
+                  setConfig(nextConfig);
+                  await persistConfig(nextConfig);
+                }}
+              >
                 <Trash2 className="h-3 w-3 mr-1" />Remover
               </Button>
             )}
