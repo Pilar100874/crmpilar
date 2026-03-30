@@ -29,6 +29,7 @@ interface CategoryData {
   id: string;
   nome: string;
   count: number;
+  icone_url?: string | null;
 }
 
 const fadeUp = {
