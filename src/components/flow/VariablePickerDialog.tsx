@@ -358,8 +358,8 @@ export const VariablePickerDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-3xl max-h-[85vh] bg-foreground/90 border-slate-700">
-        <DialogHeader className="border-b border-slate-700 pb-4">
+      <DialogContent className="max-w-3xl max-h-[85vh] bg-foreground/90 border-foreground/70">
+        <DialogHeader className="border-b border-foreground/70 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center">
@@ -417,12 +417,12 @@ export const VariablePickerDialog = ({
                 {filteredVariables.map((item, idx) => (
                   <button
                     key={idx}
-                    className="w-full p-4 rounded-lg border border-slate-700 bg-foreground/90/30 hover:bg-foreground/80/50 hover:border-cyan-500/50 transition-all text-left group"
+                    className="w-full p-4 rounded-lg border border-foreground/70 bg-foreground/90/30 hover:bg-foreground/80/50 hover:border-cyan-500/50 transition-all text-left group"
                     onClick={() => onSelectVariable(item.variable.name)}
                     onDoubleClick={() => onInsertAtEnd?.(item.variable.name)}
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <code className="text-sm font-mono text-cyan-400 bg-slate-950/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
+                      <code className="text-sm font-mono text-cyan-400 bg-foreground/50 px-3 py-1.5 rounded flex-1 group-hover:text-cyan-300">
                         {"{{"}{item.variable.name}{"}}"}
                       </code>
                       <Badge 
@@ -450,7 +450,7 @@ export const VariablePickerDialog = ({
           )}
         </div>
 
-        <div className="pt-4 border-t border-slate-700">
+        <div className="pt-4 border-t border-foreground/70">
           <div className="flex items-start gap-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3">
             <div className="text-cyan-500 mt-0.5">💡</div>
             <div className="flex-1">

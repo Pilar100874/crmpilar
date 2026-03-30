@@ -196,7 +196,7 @@ export function EmpresaFieldValidator({ selectedNode, context }: EmpresaFieldVal
 
         <div className="mt-6">
           {/* Resumo */}
-          <div className="mb-4 p-4 rounded-lg border-2 bg-gradient-to-r from-slate-50 to-blue-50">
+          <div className="mb-4 p-4 rounded-lg border-2 bg-gradient-to-r from-muted to-blue-50">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">

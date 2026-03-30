@@ -68,7 +68,7 @@ export function MobileAtendimentoLayout({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex flex-col h-full bg-gradient-to-br from-muted to-muted">
       {/* Header Mobile */}
       {mobileView !== "list" && (
         <div className="flex-shrink-0 px-3 py-2.5 bg-card border-b border-border/50 flex items-center justify-between">

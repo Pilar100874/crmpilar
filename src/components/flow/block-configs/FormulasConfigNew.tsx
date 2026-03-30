@@ -273,9 +273,9 @@ export const FormulasConfigNew = ({ config, handleConfigChange }: ConfigProps) =
                   onChange={(e) => handleConfigChange("formula", e.target.value)}
                   placeholder="Digite uma fórmula ou clique nos campos à esquerda para inserir..."
                   rows={10}
-                  className="bg-gradient-to-br from-slate-900 to-slate-800 text-white font-mono resize-none border-slate-700 shadow-inner placeholder:text-muted-foreground"
+                  className="bg-gradient-to-br from-slate-900 to-foreground/80 text-white font-mono resize-none border-slate-700 shadow-inner placeholder:text-muted-foreground"
                 />
-                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2 py-1 bg-slate-950/50 rounded border border-slate-700/50 backdrop-blur-sm">
+                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2 py-1 bg-foreground/50 rounded border border-muted-foreground/50 backdrop-blur-sm">
                   <span className="text-xs text-red-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
                     Aguardando validação

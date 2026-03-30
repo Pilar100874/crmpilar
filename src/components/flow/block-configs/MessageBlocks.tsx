@@ -196,13 +196,13 @@ export const SendMessageConfig = ({ config, handleConfigChange, nodes = [], edge
                     type="file"
                     onChange={handleMediaFileUpload}
                     disabled={uploadingMedia}
-                    className="bg-foreground/90/80 border-slate-700/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
+                    className="bg-foreground/90/80 border-muted-foreground/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
                   />
                   {uploadingMedia && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
                 </div>
                 
                 {config.media.url && (
-                  <div className="flex items-center gap-2 p-2 bg-foreground/50 rounded border border-slate-700/50">
+                  <div className="flex items-center gap-2 p-2 bg-foreground/50 rounded border border-muted-foreground/50">
                     <span className="text-xs text-muted-foreground truncate flex-1">{config.media.url}</span>
                     <Button
                       variant="ghost"
@@ -305,13 +305,13 @@ export const MediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
                 type="file"
                 onChange={handleFileUpload}
                 disabled={uploading}
-                className="bg-foreground/90/80 border-slate-700/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
+                className="bg-foreground/90/80 border-muted-foreground/50 text-white file:text-white file:bg-gradient-to-r file:from-cyan-500/20 file:to-blue-500/20 file:border-0 file:mr-4 file:py-2 file:px-4 hover:file:from-cyan-500/30 hover:file:to-blue-500/30 file:rounded"
               />
               {uploading && <Loader2 className="w-5 h-5 animate-spin text-cyan-500" />}
             </div>
             
             {url && (
-              <div className="flex items-center gap-2 p-2 bg-foreground/50 rounded border border-slate-700/50">
+              <div className="flex items-center gap-2 p-2 bg-foreground/50 rounded border border-muted-foreground/50">
                 <span className="text-xs text-muted-foreground truncate flex-1">{url}</span>
                 <Button
                   variant="ghost"

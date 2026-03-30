@@ -138,7 +138,7 @@ export const KeywordOptionsConfig = ({ config, handleConfigChange, inputRefs, op
                   value={keyword}
                   onChange={(e) => updateKeyword(index, kIndex, e.target.value)}
                   placeholder="Digite a palavra-chave"
-                  className="bg-muted-foreground/80 border-slate-500 text-white placeholder:text-muted-foreground"
+                  className="bg-muted-foreground/80 border-muted-foreground text-white placeholder:text-muted-foreground"
                 />
               ))}
 

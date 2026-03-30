@@ -62,7 +62,7 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                   value={condition.field || ""}
                   onChange={(e) => updateCondition(index, "field", e.target.value)}
                   placeholder="@nome_do_campo"
-                  className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                  className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                 />
               </div>
 
@@ -75,10 +75,10 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                   value={condition.operator || "EQUAL TO"}
                   onValueChange={(v) => updateCondition(index, "operator", v)}
                 >
-                  <SelectTrigger className="bg-foreground/90/80 border-slate-700/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
+                  <SelectTrigger className="bg-foreground/90/80 border-muted-foreground/50 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-foreground/90 border-slate-700 text-white">
+                  <SelectContent className="bg-foreground/90 border-foreground/70 text-white">
                     <SelectItem value="EQUAL TO" className="focus:bg-foreground/80 focus:text-white">É IGUAL A</SelectItem>
                     <SelectItem value="NOT EQUAL TO" className="focus:bg-foreground/80 focus:text-white">NÃO É IGUAL A</SelectItem>
                     <SelectItem value="CONTAINS" className="focus:bg-foreground/80 focus:text-white">CONTÉM</SelectItem>
@@ -101,7 +101,7 @@ export const ConditionsConfigNew = ({ config, handleConfigChange }: ConfigProps)
                     value={condition.value || ""}
                     onChange={(e) => updateCondition(index, "value", e.target.value)}
                     placeholder="Digite um valor ou @campo"
-                    className="bg-foreground/90/80 border-slate-700/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
+                    className="bg-foreground/90/80 border-muted-foreground/50 text-white placeholder:text-muted-foreground focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 shadow-inner font-medium"
                   />
                   <Button 
                     variant="outline" 
