@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
@@ -13,6 +15,7 @@ export default function SystemVisualConfig() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [splashVideoUrl, setSplashVideoUrl] = useState("");
+  const [splashVideoLoop, setSplashVideoLoop] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -34,6 +37,7 @@ export default function SystemVisualConfig() {
 
       if (data) {
         setSplashVideoUrl(data.splash_video_url || "");
+        setSplashVideoLoop(data.splash_video_loop ?? true);
       }
     } catch (err) {
       console.error("Erro ao carregar config visual:", err);
@@ -68,7 +72,7 @@ export default function SystemVisualConfig() {
       // Save to DB
       const { error: dbError } = await supabase
         .from("system_visual_config")
-        .upsert({ estabelecimento_id: estId, splash_video_url: publicUrl }, { onConflict: "estabelecimento_id" });
+        .upsert({ estabelecimento_id: estId, splash_video_url: publicUrl, splash_video_loop: splashVideoLoop }, { onConflict: "estabelecimento_id" });
 
       if (dbError) {
         toast.error("Erro ao salvar: " + dbError.message);
@@ -91,6 +95,23 @@ export default function SystemVisualConfig() {
       .from("system_visual_config")
       .upsert({ estabelecimento_id: estId, splash_video_url: null }, { onConflict: "estabelecimento_id" });
     toast.success("Vídeo removido");
+  };
+
+  const handleToggleLoop = async (checked: boolean) => {
+    setSplashVideoLoop(checked);
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.loop = checked;
+    }
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) return;
+      await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, splash_video_loop: checked }, { onConflict: "estabelecimento_id" });
+      toast.success(checked ? "Loop ativado" : "Loop desativado");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const togglePlayPause = () => {
@@ -147,10 +168,23 @@ export default function SystemVisualConfig() {
                 src={splashVideoUrl}
                 className="w-full max-h-[300px] object-cover"
                 autoPlay
-                loop
+                loop={splashVideoLoop}
                 muted
                 playsInline
               />
+              {/* Loop toggle over video */}
+              <div className="absolute top-2 left-2">
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                  <Switch
+                    id="loop-toggle"
+                    checked={splashVideoLoop}
+                    onCheckedChange={handleToggleLoop}
+                  />
+                  <Label htmlFor="loop-toggle" className="text-xs text-white cursor-pointer">
+                    Loop
+                  </Label>
+                </div>
+              </div>
               <div className="absolute bottom-2 right-2 flex gap-2">
                 <Button
                   variant="secondary"
