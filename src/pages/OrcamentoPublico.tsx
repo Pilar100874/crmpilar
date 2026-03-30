@@ -187,7 +187,7 @@ export default function OrcamentoPublico() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-foreground/90 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -195,11 +195,11 @@ export default function OrcamentoPublico() {
 
   if (!orcamento) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 max-w-md text-center">
+      <div className="min-h-screen bg-foreground/90 flex items-center justify-center p-4">
+        <div className="bg-foreground/80 border border-border rounded-lg p-8 max-w-md text-center">
           <XCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
           <h2 className="text-xl font-semibold mb-2 text-white">Orçamento não encontrado</h2>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             O link pode estar inválido ou o orçamento foi removido.
           </p>
         </div>
@@ -211,18 +211,18 @@ export default function OrcamentoPublico() {
   const isRejeitado = orcamento.etapa === 'perdido';
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900">
+    <div className="flex flex-col h-screen bg-foreground/90">
       <div className="flex flex-1 overflow-hidden">
         {/* Lado Esquerdo - Itens */}
-        <div className="flex-1 flex flex-col bg-slate-900">
+        <div className="flex-1 flex flex-col bg-foreground/90">
           {/* Header */}
-          <div className="p-6 border-b border-slate-700">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-white">
                   Orçamento #{orcamento.id.slice(0, 8)}
                 </h1>
-                <div className="flex items-center gap-4 mt-2 text-sm text-slate-400">
+                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {format(new Date(orcamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -252,9 +252,9 @@ export default function OrcamentoPublico() {
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-3">
               {orcamento.itens?.map((item: any) => (
-                <div key={item.id} className="bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-slate-600 transition-colors">
+                <div key={item.id} className="bg-foreground/80 rounded-lg p-4 border border-border hover:border-slate-600 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-slate-700 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className="w-20 h-20 bg-muted-foreground rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {item.produto?.foto_url ? (
                         <img 
                           src={item.produto.foto_url} 
@@ -262,13 +262,13 @@ export default function OrcamentoPublico() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <Package className="w-8 h-8 text-slate-400" />
+                        <Package className="w-8 h-8 text-muted-foreground" />
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-white text-base mb-2">{item.produto?.nome}</h4>
-                      <div className="flex gap-4 text-sm text-slate-400">
+                      <div className="flex gap-4 text-sm text-muted-foreground">
                         <span>Qtd: <span className="text-white font-medium">{item.quantidade}</span></span>
                         <span>
                           Unit: <span className="text-white font-medium">
@@ -282,7 +282,7 @@ export default function OrcamentoPublico() {
                     </div>
 
                     <div className="text-right">
-                      <div className="text-xs text-slate-400 mb-1">Subtotal</div>
+                      <div className="text-xs text-muted-foreground mb-1">Subtotal</div>
                       <div className="text-xl font-bold text-blue-400">
                         {new Intl.NumberFormat('pt-BR', {
                           style: 'currency',
@@ -293,8 +293,8 @@ export default function OrcamentoPublico() {
                   </div>
 
                   {editMode && (
-                    <div className="mt-4 pt-4 border-t border-slate-700">
-                      <Label htmlFor={`preco-${item.id}`} className="text-slate-300 text-sm font-medium">
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <Label htmlFor={`preco-${item.id}`} className="text-muted-foreground/60 text-sm font-medium">
                         Sugerir novo preço unitário
                       </Label>
                       <Input
@@ -308,7 +308,7 @@ export default function OrcamentoPublico() {
                           ...precosSugeridos,
                           [item.id]: Number(e.target.value)
                         })}
-                        className="mt-2 bg-slate-700 border-slate-600 text-white h-11"
+                        className="mt-2 bg-muted-foreground border-slate-600 text-white h-11"
                       />
                     </div>
                   )}
@@ -319,50 +319,50 @@ export default function OrcamentoPublico() {
         </div>
 
         {/* Lado Direito - Informações e Ações */}
-        <div className="w-[420px] bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden">
+        <div className="w-[420px] bg-foreground/80 border-l border-border flex flex-col overflow-hidden">
         {/* Informações do Cliente e Vendedor */}
         <ScrollArea className="flex-1">
           <div className="p-6 space-y-6">
-            <div className="bg-slate-700 rounded-lg p-4">
+            <div className="bg-muted-foreground rounded-lg p-4">
               <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Informações
               </h3>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-slate-400 text-xs">Cliente</Label>
+                  <Label className="text-muted-foreground text-xs">Cliente</Label>
                   <p className="font-semibold text-white text-base mt-1">{orcamento.cliente?.nome}</p>
                   {orcamento.cliente?.email && (
-                    <p className="text-sm text-slate-400">{orcamento.cliente.email}</p>
+                    <p className="text-sm text-muted-foreground">{orcamento.cliente.email}</p>
                   )}
                 </div>
-                <Separator className="bg-slate-600" />
+                <Separator className="bg-muted-foreground/80" />
                 <div>
-                  <Label className="text-slate-400 text-xs">Vendedor</Label>
+                  <Label className="text-muted-foreground text-xs">Vendedor</Label>
                   <p className="font-semibold text-white text-base mt-1">{orcamento.vendedor?.nome}</p>
                   {orcamento.vendedor?.email && (
-                    <p className="text-sm text-slate-400">{orcamento.vendedor.email}</p>
+                    <p className="text-sm text-muted-foreground">{orcamento.vendedor.email}</p>
                   )}
                 </div>
               </div>
             </div>
 
             {orcamento.observacoes && (
-              <div className="bg-slate-700 rounded-lg p-4">
+              <div className="bg-muted-foreground rounded-lg p-4">
                 <h3 className="text-sm font-semibold text-white mb-2">Observações</h3>
-                <p className="text-sm text-slate-300">{orcamento.observacoes}</p>
+                <p className="text-sm text-muted-foreground/60">{orcamento.observacoes}</p>
               </div>
             )}
 
-            <div className="bg-slate-700 rounded-lg p-4">
+            <div className="bg-muted-foreground rounded-lg p-4">
               <h3 className="text-sm font-semibold text-white mb-3">Resumo</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Total de Itens:</span>
+                  <span className="text-muted-foreground">Total de Itens:</span>
                   <span className="text-white font-medium">{orcamento.itens?.length || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Quantidade Total:</span>
+                  <span className="text-muted-foreground">Quantidade Total:</span>
                   <span className="text-white font-medium">
                     {orcamento.itens?.reduce((sum: number, item: any) => sum + item.quantidade, 0) || 0}
                   </span>
@@ -372,7 +372,7 @@ export default function OrcamentoPublico() {
 
             {/* Área de Edição (quando ativo) */}
             {editMode && (
-              <div className="bg-slate-700 rounded-lg p-4">
+              <div className="bg-muted-foreground rounded-lg p-4">
                 <Label htmlFor="observacoes" className="text-white font-semibold text-sm">
                   Observações sobre sua proposta
                 </Label>
@@ -382,7 +382,7 @@ export default function OrcamentoPublico() {
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   rows={4}
-                  className="mt-2 bg-slate-600 border-slate-500 text-white placeholder:text-slate-400"
+                  className="mt-2 bg-muted-foreground/80 border-slate-500 text-white placeholder:text-muted-foreground"
                 />
               </div>
             )}
@@ -392,7 +392,7 @@ export default function OrcamentoPublico() {
               <div className="bg-green-900/20 border border-green-800 rounded-lg p-4 text-center">
                 <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-400" />
                 <h3 className="text-lg font-semibold text-white">Orçamento Confirmado!</h3>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   Obrigado pela confirmação. Em breve entraremos em contato.
                 </p>
               </div>
@@ -403,7 +403,7 @@ export default function OrcamentoPublico() {
               <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-center">
                 <XCircle className="w-12 h-12 mx-auto mb-2 text-red-400" />
                 <h3 className="text-lg font-semibold text-white">Orçamento Rejeitado</h3>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   Obrigado pelo feedback. Ficamos à disposição para futuras cotações.
                 </p>
               </div>
@@ -413,7 +413,7 @@ export default function OrcamentoPublico() {
 
         {/* Botões de Ação Fixos */}
         {!isAprovado && !isRejeitado && (
-          <div className="border-t border-slate-700 p-4 bg-slate-800">
+          <div className="border-t border-border p-4 bg-foreground/80">
             {editMode ? (
               <div className="space-y-2">
                 <Button 
@@ -426,7 +426,7 @@ export default function OrcamentoPublico() {
                 <Button 
                   onClick={() => setEditMode(false)}
                   variant="outline"
-                  className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                  className="w-full bg-muted-foreground border-slate-600 text-white hover:bg-muted-foreground/80 h-12"
                 >
                   Cancelar
                 </Button>
@@ -443,7 +443,7 @@ export default function OrcamentoPublico() {
                 <Button 
                   onClick={() => setEditMode(true)}
                   variant="outline"
-                  className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 h-12"
+                  className="w-full bg-muted-foreground border-slate-600 text-white hover:bg-muted-foreground/80 h-12"
                 >
                   <Edit2 className="w-5 h-5 mr-2" />
                   Sugerir Preços
@@ -464,15 +464,15 @@ export default function OrcamentoPublico() {
       </div>
 
       {/* Barra de Total Inferior */}
-      <div className="bg-slate-800 border-t border-slate-700 px-6 py-4 flex items-center justify-between">
+      <div className="bg-foreground/80 border-t border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-slate-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <User className="w-5 h-5" />
             <span className="text-sm">{orcamento.cliente?.nome}</span>
           </div>
-          <div className="h-8 w-px bg-slate-700" />
+          <div className="h-8 w-px bg-muted-foreground" />
           <div>
-            <div className="text-slate-400 text-xs mb-1">Valor Total</div>
+            <div className="text-muted-foreground text-xs mb-1">Valor Total</div>
             <div className="text-white font-bold text-3xl">
               {new Intl.NumberFormat('pt-BR', {
                 style: 'currency',

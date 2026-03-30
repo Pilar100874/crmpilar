@@ -5044,7 +5044,7 @@ ${recentMessages}
                               <span className="font-semibold text-sm truncate">
                                 {conv.customer?.nome || "Cliente"}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                                 {conv.lastMessage?.created_at
                                   ? getTimeAgo(conv.lastMessage.created_at)
                                   : getTimeAgo(conv.updated_at)}
@@ -5174,7 +5174,7 @@ ${recentMessages}
                     <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
                       <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                      <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                      <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
                         {otherConversations.length}
                       </Badge>
                     </div>
@@ -5209,7 +5209,7 @@ ${recentMessages}
                               <span className="font-semibold text-sm truncate">
                                 {conv.customer?.nome || "Cliente"}
                               </span>
-                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                                 {conv.lastMessage?.created_at
                                   ? getTimeAgo(conv.lastMessage.created_at)
                                   : getTimeAgo(conv.updated_at)}
@@ -6001,7 +6001,7 @@ ${recentMessages}
                             {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
                           </p>
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-muted dark:bg-foreground/80 px-1.5 py-0.5 rounded-full">
                               {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
                             </span>
                             <DropdownMenu>
@@ -7531,7 +7531,7 @@ function MobileListContent({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
@@ -7576,7 +7576,7 @@ function MobileListContent({
                 <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
                   <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
-                  <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                  <Badge className="text-[10px] bg-muted text-foreground/70 border-0 px-1.5">
                     {otherConversations.length}
                   </Badge>
                 </div>
@@ -7599,7 +7599,7 @@ function MobileListContent({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-muted px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
