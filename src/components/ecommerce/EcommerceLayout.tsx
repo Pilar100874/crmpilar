@@ -26,6 +26,7 @@ export default function EcommerceLayout() {
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
+  const { branding } = useEcommerceBranding();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
