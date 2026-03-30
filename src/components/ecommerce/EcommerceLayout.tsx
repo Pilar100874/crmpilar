@@ -139,12 +139,7 @@ export default function EcommerceLayout() {
               <div className="p-6 border-b bg-background">
                 <div className="flex min-h-[72px] flex-col justify-center gap-3">
                   {branding.logo_url ? (
-                    <BrandLogo
-                      src={branding.logo_url}
-                      alt={branding.nome_loja}
-                      className="h-12 w-[140px] border-border/40"
-                      imageClassName="p-2"
-                    />
+                    <img src={branding.logo_url} alt={branding.nome_loja} className="h-12 max-w-[140px] object-contain" />
                   ) : null}
                   <h2 className="text-lg font-bold text-foreground">Menu</h2>
                 </div>
