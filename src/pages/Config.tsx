@@ -70,6 +70,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     iconColor: "text-cyan-500",
   },
   {
+    id: "visual-sistema",
+    title: "Visual do Sistema",
+    description: "Splash screen, vídeo de fundo e aparência",
+    icon: Paintbrush,
+    bgColor: "bg-pink-500/10",
+    iconColor: "text-pink-500",
+  },
+  {
     id: "macros",
     title: "Macros",
     description: "Automatize ações repetitivas",
