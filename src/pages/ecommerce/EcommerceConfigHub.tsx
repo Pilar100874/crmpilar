@@ -87,6 +87,15 @@ const configSections = [
     color: "text-amber-500",
     bg: "bg-amber-500/10",
   },
+  {
+    id: "volume-pricing",
+    title: "Preços por Volume / B2B",
+    description: "Configure faixas de desconto para compras em quantidade",
+    icon: Package,
+    url: "/ecommerce-config/volume-pricing",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {
