@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -32,23 +33,27 @@ export default function EcommerceCart() {
       const estabId = localStorage.getItem("estabelecimentoId");
       let query = supabase
         .from("produtos")
-        .select("id, nome, preco_venda, imagem_url, categoria:produto_categorias(nome)")
+        .select("id, nome, foto_url, preco_minimo, preco_tabela, tipo_preco, categoria_id, categoria:produto_categorias(nome)")
         .eq("ativo", true)
         .limit(6);
       if (estabId) query = query.eq("estabelecimento_id", estabId);
 
       const { data } = await query;
       if (data) {
-        // Exclude items already in cart
+        const priceMap = await resolveProductPricesBatch(data as any[]);
         const cartIds = new Set(items.map(i => i.id));
         const filtered = data.filter((p: any) => !cartIds.has(p.id)).slice(0, 3);
-        setCrossSellProducts(filtered.map((p: any) => ({
-          id: p.id,
-          name: p.nome || "Produto",
-          type: (p.categoria as any)?.nome || "",
-          price: `R$ ${(p.preco_venda ?? 0).toFixed(2).replace(".", ",")}`,
-          image: p.imagem_url || "",
-        })));
+        setCrossSellProducts(filtered.map((p: any) => {
+          const resolved = priceMap.get(p.id);
+          const preco = resolved?.precoMinimo ?? resolved?.precoTabela ?? 0;
+          return {
+            id: p.id,
+            name: p.nome || "Produto",
+            type: (p.categoria as any)?.nome || "",
+            price: `R$ ${preco.toFixed(2).replace(".", ",")}`,
+            image: p.foto_url || "",
+          };
+        }));
       }
     };
     if (items.length > 0) loadCrossSell();

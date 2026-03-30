@@ -80,14 +80,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const syncMissingPrices = async () => {
       const { data, error } = await supabase
         .from("produtos")
-        .select("id, preco_minimo, preco_tabela")
+        .select("id, preco_minimo, preco_tabela, tipo_preco, categoria_id")
         .in("id", missingPriceIds);
 
       if (cancelled || error || !data?.length) return;
 
-      const priceMap = new Map(
-        data.map((product) => [product.id, product.preco_minimo ?? product.preco_tabela ?? 0])
-      );
+      // Resolve category prices if needed
+      const categoryIds = new Set<string>();
+      for (const p of data) {
+        if (p.tipo_preco === "categoria" && p.categoria_id) {
+          categoryIds.add(p.categoria_id);
+        }
+      }
+
+      let categoryPrices = new Map<string, number>();
+      if (categoryIds.size > 0) {
+        const { data: catData } = await supabase
+          .from("tabelas_preco")
+          .select("categoria_id, preco_minimo, preco_tabela")
+          .in("categoria_id", Array.from(categoryIds))
+          .eq("ativo", true);
+
+        if (!cancelled && catData) {
+          for (const row of catData) {
+            categoryPrices.set(row.categoria_id, row.preco_minimo ?? row.preco_tabela ?? 0);
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      const priceMap = new Map<string, number>();
+      for (const p of data) {
+        if (p.tipo_preco === "categoria" && p.categoria_id) {
+          priceMap.set(p.id, categoryPrices.get(p.categoria_id) ?? 0);
+        } else {
+          priceMap.set(p.id, p.preco_minimo ?? p.preco_tabela ?? 0);
+        }
+      }
 
       setItems((prev) => {
         let changed = false;
