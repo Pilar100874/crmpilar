@@ -210,7 +210,7 @@ export default function EcommerceProduct() {
 
   return (
     <>
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 md:pb-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 md:pb-6 overflow-x-hidden">
       {/* Breadcrumb */}
       {branding.feat_breadcrumb && <nav className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-6 overflow-x-auto">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
