@@ -128,32 +128,25 @@ export default function EcommerceProduct() {
       const estabId = (data as any).estabelecimento_id;
 
       // Load related products and volume tiers in parallel
-      const promises: Promise<any>[] = [];
-
-      if (catId) {
-        promises.push(
-          supabase
-            .from("produtos")
+      const relatedPromise = catId
+        ? supabase.from("produtos")
             .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
-            .eq("categoria_id", catId)
-            .eq("ativo", true)
-            .neq("id", productId)
-            .limit(4)
-            .then(res => { if (res.data) setRelatedProducts(res.data.map(mapProduct)); })
-        );
-      }
+            .eq("categoria_id", catId).eq("ativo", true).neq("id", productId).limit(4)
+        : null;
 
-      // Load volume pricing tiers
-      promises.push(
-        supabase
-          .from("ecommerce_volume_pricing")
-          .select("*")
-          .eq("ativo", true)
-          .order("ordem")
-          .then(res => { if (res.data) setVolumeTiers(res.data); })
-      );
+      const volumePromise = supabase
+        .from("ecommerce_volume_pricing")
+        .select("*")
+        .eq("ativo", true)
+        .order("ordem");
 
-      await Promise.all(promises);
+      const [relatedRes, volumeRes] = await Promise.all([
+        relatedPromise,
+        volumePromise,
+      ]);
+
+      if (relatedRes?.data) setRelatedProducts(relatedRes.data.map(mapProduct));
+      if (volumeRes.data) setVolumeTiers(volumeRes.data);
     }
     setLoading(false);
   };
