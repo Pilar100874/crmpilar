@@ -40,6 +40,7 @@ export default function Login() {
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const [splashVideoUrl, setSplashVideoUrl] = useState<string | null>(null);
+  const [splashVideoLoop, setSplashVideoLoop] = useState(true);
   const brandSrc = usePreloadedImage(pilarBrand, fallbackBrand);
 
   useEffect(() => {
@@ -48,12 +49,13 @@ export default function Login() {
       try {
         const { data } = await supabase
           .from("system_visual_config")
-          .select("splash_video_url")
+          .select("splash_video_url, splash_video_loop")
           .order("updated_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (data?.splash_video_url) {
           setSplashVideoUrl(data.splash_video_url);
+          setSplashVideoLoop(data.splash_video_loop ?? true);
         }
       } catch (err) {
         console.error("Erro ao carregar splash video:", err);
