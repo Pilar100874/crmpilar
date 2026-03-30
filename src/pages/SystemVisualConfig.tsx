@@ -97,6 +97,23 @@ export default function SystemVisualConfig() {
     toast.success("Vídeo removido");
   };
 
+  const handleToggleLoop = async (checked: boolean) => {
+    setSplashVideoLoop(checked);
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.loop = checked;
+    }
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) return;
+      await supabase
+        .from("system_visual_config")
+        .upsert({ estabelecimento_id: estId, splash_video_loop: checked }, { onConflict: "estabelecimento_id" });
+      toast.success(checked ? "Loop ativado" : "Loop desativado");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const togglePlayPause = () => {
     if (videoPreviewRef.current) {
       if (videoPreviewRef.current.paused) {
