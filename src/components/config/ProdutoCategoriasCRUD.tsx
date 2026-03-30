@@ -57,16 +57,28 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
   const loadGallery = async () => {
     setGalleryLoading(true);
     try {
-      const { data } = await supabase.storage.from("ecommerce-assets").list(estabelecimentoId, { limit: 100 });
-      if (data) {
-        const urls = data
-          .filter(f => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(f.name))
-          .map(f => {
-            const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(`${estabelecimentoId}/${f.name}`);
-            return urlData.publicUrl;
-          });
-        setGalleryImages(urls);
+      const imageFilter = (f: { name: string }) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(f.name);
+      const allUrls: string[] = [];
+
+      // Load from ecommerce-assets bucket
+      const { data: ecomData } = await supabase.storage.from("ecommerce-assets").list(estabelecimentoId, { limit: 100 });
+      if (ecomData) {
+        ecomData.filter(imageFilter).forEach(f => {
+          const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(`${estabelecimentoId}/${f.name}`);
+          allUrls.push(urlData.publicUrl);
+        });
       }
+
+      // Load from produtos bucket
+      const { data: prodData } = await supabase.storage.from("produtos").list(estabelecimentoId, { limit: 100 });
+      if (prodData) {
+        prodData.filter(imageFilter).forEach(f => {
+          const { data: urlData } = supabase.storage.from("produtos").getPublicUrl(`${estabelecimentoId}/${f.name}`);
+          allUrls.push(urlData.publicUrl);
+        });
+      }
+
+      setGalleryImages(allUrls);
     } catch {
       // ignore
     }
