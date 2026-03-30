@@ -215,7 +215,7 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCategoria ? "Editar Categoria" : "Nova Categoria"}</DialogTitle>
           </DialogHeader>
@@ -227,27 +227,42 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
             </div>
 
             <div className="space-y-3">
-              <Label>Ícone da Categoria</Label>
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Imagem da Categoria (E-commerce)
+              </Label>
               <p className="text-xs text-muted-foreground">
-                Tamanho recomendado: {ICON_SIZE}x{ICON_SIZE}px. Será exibido no menu do e-commerce.
+                Esta imagem será exibida no menu e na listagem de categorias do e-commerce.
               </p>
 
               {/* Preview */}
-              {iconeUrl && (
-                <div className="relative inline-block">
-                  <img
-                    src={iconeUrl}
-                    alt="Ícone"
-                    className="w-16 h-16 rounded-xl object-cover border-2 border-primary/20"
-                  />
-                  <button
-                    onClick={() => setIconeUrl(null)}
-                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {iconeUrl ? (
+                    <div className="relative">
+                      <img
+                        src={iconeUrl}
+                        alt="Imagem da categoria"
+                        className="w-20 h-20 rounded-xl object-cover border-2 border-primary/20"
+                      />
+                      <button
+                        onClick={() => setIconeUrl(null)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/30">
+                      <ImageIcon className="w-6 h-6 text-muted-foreground/40" />
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="text-xs text-muted-foreground">
+                  <p>Formatos: JPG, PNG, WebP, SVG</p>
+                  <p>Tamanho recomendado: {ICON_SIZE}x{ICON_SIZE}px</p>
+                </div>
+              </div>
 
               <Tabs defaultValue="upload" onValueChange={(v) => { if (v === "galeria") loadGallery(); }}>
                 <TabsList className="w-full">
