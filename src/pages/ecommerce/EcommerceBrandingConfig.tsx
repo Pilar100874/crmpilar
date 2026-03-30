@@ -35,12 +35,19 @@ export default function EcommerceBrandingConfig() {
 
   const loadConfig = async () => {
     const estId = await getEstabelecimentoId();
-    if (!estId) return;
-    const { data } = await supabase
-      .from("ecommerce_config")
-      .select("*")
-      .eq("estabelecimento_id", estId)
-      .maybeSingle();
+    let data: any = null;
+
+    if (estId) {
+      const res = await supabase.from("ecommerce_config").select("*").eq("estabelecimento_id", estId).maybeSingle();
+      data = res.data;
+    }
+
+    // Fallback: get most recent config
+    if (!data) {
+      const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      data = res.data;
+    }
+
     if (data) {
       setConfig({
         logo_url: data.logo_url || "",
