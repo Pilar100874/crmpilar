@@ -166,6 +166,9 @@ export default function EcommerceLayout() {
                   <Truck className="h-4 w-4" /> Rastreamento
                 </Link>
                 <hr className="my-3" />
+                <Link to="/ecommerce/catalogo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-sm">
+                  Todos os Produtos
+                </Link>
                 {menuGroups.map(group => (
                   <Collapsible key={group.grupo}>
                     <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-accent transition-colors font-semibold text-sm">
@@ -184,11 +187,6 @@ export default function EcommerceLayout() {
                     </CollapsibleContent>
                   </Collapsible>
                 ))}
-                {menuGroups.length === 0 && (
-                  <Link to="/ecommerce/catalogo" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium">
-                    Todos os Produtos
-                  </Link>
-                )}
                 <hr className="my-3" />
                 <Link to="/ecommerce/b2b" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-accent transition-colors font-medium text-primary">
                   Atacado / B2B
