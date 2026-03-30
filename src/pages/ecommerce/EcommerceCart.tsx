@@ -142,7 +142,7 @@ export default function EcommerceCart() {
                             <Plus className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        <p className="text-base font-bold text-foreground">R$ {(24.90 * item.quantity).toFixed(2)}</p>
+                        <p className="text-base font-bold text-foreground">R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</p>
                       </div>
                     </div>
                   </CardContent>

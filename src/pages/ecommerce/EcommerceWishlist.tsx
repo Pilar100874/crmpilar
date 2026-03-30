@@ -55,7 +55,7 @@ export default function EcommerceWishlist() {
                 <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={(e) => {
                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                   setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: item.image, icon: "cart" });
-                  addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: 999, image: item.image });
+                  addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: 999, image: item.image, price: item.price || 0 });
                   toast.success("Adicionado ao carrinho!");
                 }}>
                   <ShoppingCart className="h-3.5 w-3.5" /> Carrinho
