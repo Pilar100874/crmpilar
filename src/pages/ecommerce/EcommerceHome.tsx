@@ -232,18 +232,20 @@ export default function EcommerceHome() {
               ))}
             </div>
           ) : categories.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
               {categories.map((cat, i) => (
                 <motion.div key={cat.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                   <Link to={`/ecommerce/catalogo?categoria=${encodeURIComponent(cat.nome)}`}>
-                    <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-                      <CardContent className="p-6 text-center">
+                    <Card className="group cursor-pointer hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                      <CardContent className="p-0 relative flex flex-col items-center justify-end h-36 sm:h-40 lg:h-44">
                         {cat.icone_url ? (
-                          <img src={cat.icone_url} alt={cat.nome} className="w-12 h-12 mx-auto mb-3 rounded-lg object-cover" />
+                          <img src={cat.icone_url} alt={cat.nome} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
-                          <span className="text-4xl block mb-3">{getCategoryIcon(cat.nome)}</span>
+                          <span className="text-5xl absolute inset-0 flex items-center justify-center">{getCategoryIcon(cat.nome)}</span>
                         )}
-                        <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{cat.nome}</p>
+                        <div className="relative z-10 w-full bg-gradient-to-t from-black/70 via-black/40 to-transparent pt-8 pb-3 px-2">
+                          <p className="font-semibold text-white text-center text-sm drop-shadow-md group-hover:text-primary transition-colors">{cat.nome}</p>
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
