@@ -56,24 +56,37 @@ export default function EcommerceBrandingConfig() {
 
   const handleUpload = async (file: File, type: "logo" | "video") => {
     setUploading(type);
-    const estId = await getEstabelecimentoId();
-    if (!estId) return;
+    try {
+      const estId = await getEstabelecimentoId();
+      if (!estId) {
+        toast.error("Estabelecimento não encontrado");
+        setUploading(null);
+        return;
+      }
 
-    const ext = file.name.split(".").pop();
-    const path = `${estId}/${type}_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("ecommerce-assets").upload(path, file, { upsert: true });
-    if (error) {
-      toast.error("Erro no upload: " + error.message);
-      setUploading(null);
-      return;
+      const ext = file.name.split(".").pop();
+      const path = `${estId}/${type}_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("ecommerce-assets").upload(path, file, { upsert: true });
+      if (error) {
+        console.error("Upload error:", error);
+        toast.error("Erro no upload: " + error.message);
+        setUploading(null);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      console.log("Upload success, URL:", publicUrl);
+      
+      if (type === "logo") {
+        setConfig((c) => ({ ...c, logo_url: publicUrl }));
+      } else {
+        setConfig((c) => ({ ...c, background_video_url: publicUrl, background_type: "video" }));
+      }
+      toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado com sucesso!`);
+    } catch (err) {
+      console.error("Upload exception:", err);
+      toast.error("Erro inesperado no upload");
     }
-    const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
-    if (type === "logo") {
-      setConfig((c) => ({ ...c, logo_url: urlData.publicUrl }));
-    } else {
-      setConfig((c) => ({ ...c, background_video_url: urlData.publicUrl, background_type: "video" }));
-    }
-    toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado!`);
     setUploading(null);
   };
 
