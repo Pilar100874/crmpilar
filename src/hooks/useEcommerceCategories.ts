@@ -22,14 +22,18 @@ export function useEcommerceCategories() {
 
   const loadCategories = async () => {
     const estabId = localStorage.getItem("estabelecimentoId");
-    if (!estabId) { setLoading(false); return; }
 
     // Buscar produtos ativos com grupo e categoria
-    const { data, error } = await supabase
+    let query = supabase
       .from("produtos")
       .select("id, grupo_id, categoria_id, grupo:produto_grupos(id, nome), categoria:produto_categorias(id, nome)")
-      .eq("estabelecimento_id", estabId)
       .eq("ativo", true);
+
+    if (estabId) {
+      query = query.eq("estabelecimento_id", estabId);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       const groupMap: Record<string, { id: string; nome: string; categorias: Record<string, { id: string; nome: string }> }> = {};
