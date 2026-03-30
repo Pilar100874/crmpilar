@@ -21,6 +21,7 @@ export default function EcommerceBrandingConfig() {
   const [config, setConfig] = useState({
     logo_url: "",
     background_video_url: "",
+    background_image_url: "",
     background_type: "gradient" as string,
     nome_loja: "Minha Loja",
     slogan: "",
@@ -30,6 +31,7 @@ export default function EcommerceBrandingConfig() {
   const [uploading, setUploading] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadConfig();
@@ -58,6 +60,7 @@ export default function EcommerceBrandingConfig() {
         setConfig({
           logo_url: data.logo_url || "",
           background_video_url: data.background_video_url || "",
+          background_image_url: (data as any).background_image_url || "",
           background_type: data.background_type || "gradient",
           nome_loja: data.nome_loja || "Minha Loja",
           slogan: data.slogan || "",
@@ -93,7 +96,7 @@ export default function EcommerceBrandingConfig() {
     return true;
   };
 
-  const handleUpload = async (file: File, type: "logo" | "video") => {
+  const handleUpload = async (file: File, type: "logo" | "video" | "image") => {
     setUploading(type);
     try {
       const estId = configEstId || await getEstabelecimentoId();
@@ -115,9 +118,14 @@ export default function EcommerceBrandingConfig() {
 
       const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
-      const nextConfig = type === "logo"
-        ? { ...config, logo_url: publicUrl }
-        : { ...config, background_video_url: publicUrl, background_type: "video" };
+      let nextConfig: typeof config;
+      if (type === "logo") {
+        nextConfig = { ...config, logo_url: publicUrl };
+      } else if (type === "video") {
+        nextConfig = { ...config, background_video_url: publicUrl, background_type: "video" };
+      } else {
+        nextConfig = { ...config, background_image_url: publicUrl, background_type: "image" };
+      }
 
       setConfig(nextConfig);
 
@@ -178,7 +186,7 @@ export default function EcommerceBrandingConfig() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2"><Video className="h-4 w-4" />Fundo da Tela Inicial</CardTitle>
-          <CardDescription>Escolha entre gradiente ou vídeo em loop para a hero section</CardDescription>
+          <CardDescription>Escolha entre gradiente, imagem ou vídeo em loop para a hero section</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <RadioGroup value={config.background_type} onValueChange={(v) => setConfig((c) => ({ ...c, background_type: v }))}>
@@ -187,10 +195,45 @@ export default function EcommerceBrandingConfig() {
               <Label htmlFor="bg-gradient">Gradiente (cores primária/secundária)</Label>
             </div>
             <div className="flex items-center space-x-2">
+              <RadioGroupItem value="image" id="bg-image" />
+              <Label htmlFor="bg-image">Imagem</Label>
+            </div>
+            <div className="flex items-center space-x-2">
               <RadioGroupItem value="video" id="bg-video" />
               <Label htmlFor="bg-video">Vídeo em Loop</Label>
             </div>
           </RadioGroup>
+
+          {config.background_type === "image" && (
+            <div className="space-y-3">
+              {config.background_image_url ? (
+                <div className="relative rounded-xl overflow-hidden aspect-video max-w-lg border">
+                  <img
+                    src={config.background_image_url}
+                    alt="Fundo"
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => setConfig((c) => ({ ...c, background_image_url: "", background_type: "gradient" }))}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />Remover
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-xl p-8 text-center text-muted-foreground">
+                  <Image className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm mb-3">Envie uma imagem (JPG, PNG ou WEBP)</p>
+                </div>
+              )}
+              <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "image")} />
+              <Button variant="outline" onClick={() => imageInputRef.current?.click()} disabled={uploading === "image"}>
+                <Upload className="h-4 w-4 mr-2" />{uploading === "image" ? "Enviando..." : config.background_image_url ? "Trocar Imagem" : "Enviar Imagem"}
+              </Button>
+            </div>
+          )}
 
           {config.background_type === "video" && (
             <div className="space-y-3">
@@ -256,6 +299,9 @@ export default function EcommerceBrandingConfig() {
                 background: `linear-gradient(135deg, ${config.cor_primaria}, ${config.cor_secundaria})`
               } : {}}
             >
+              {config.background_type === "image" && config.background_image_url && (
+                <img src={config.background_image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              )}
               {config.background_type === "video" && config.background_video_url && (
                 <video src={config.background_video_url} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
               )}
