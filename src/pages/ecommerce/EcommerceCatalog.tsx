@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 
 interface Product {
   id: string;
