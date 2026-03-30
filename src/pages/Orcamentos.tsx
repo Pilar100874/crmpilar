@@ -26,7 +26,7 @@ type ViewMode = 'kanban' | 'list' | 'pos';
 const ETAPAS_CONFIG = [
   { id: 'orcamento', title: 'Orçamento', color: '#3b82f6' },
   { id: 'negociacao', title: 'Negociação', color: '#f59e0b' },
-  { id: 'aprovacao_gerencia', title: 'Aprovação Gerência', color: '#8b5cf6' },
+  { id: 'aprovacao_gerencia', title: 'Aprovação Gerência', color: '#f97316' },
   { id: 'perdido', title: 'Perdido', color: '#ef4444' },
   { id: 'finalizado', title: 'Finalizado', color: '#10b981' },
 ];
