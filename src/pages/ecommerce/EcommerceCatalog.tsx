@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 
@@ -290,7 +291,7 @@ export default function EcommerceCatalog() {
                           <Badge className="absolute top-2 left-2 text-[10px] bg-green-600 text-white border-0">Em estoque</Badge>
                         )}
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); }}>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); toast.success("Adicionado aos favoritos ❤️"); }}>
                             <Heart className="h-3.5 w-3.5" />
                           </Button>
                         </div>
