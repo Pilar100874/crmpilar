@@ -126,9 +126,24 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-8 bg-background relative overflow-y-auto">
+      {/* Splash Video Background */}
+      {splashVideoUrl && (
+        <video
+          src={splashVideoUrl}
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
+      {/* Overlay to ensure readability */}
+      {splashVideoUrl && (
+        <div className="absolute inset-0 bg-black/50 z-[1]" />
+      )}
       <div
-        className="absolute top-0 left-0 right-0 h-80"
-        style={{ background: "var(--gradient-hero)" }}
+        className={`absolute top-0 left-0 right-0 h-80 ${splashVideoUrl ? 'z-[2] opacity-60' : ''}`}
+        style={{ background: splashVideoUrl ? 'transparent' : "var(--gradient-hero)" }}
       />
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
