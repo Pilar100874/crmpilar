@@ -157,32 +157,6 @@ export default function Login() {
       )}
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-8">
-        {/* Logo + branding */}
-        <div className="text-center space-y-4">
-          <div className="relative inline-block">
-            {/* Glow behind logo */}
-            <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-2xl scale-110" />
-            <div className="relative backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl p-5 shadow-2xl">
-              {brandSrc ? (
-                <img
-                  src={brandSrc}
-                  alt="Marca Pilar"
-                  className="h-16 md:h-20 w-auto object-contain drop-shadow-lg"
-                />
-              ) : (
-                <div className="h-16 md:h-20 w-36 animate-pulse rounded-xl bg-white/10" />
-              )}
-            </div>
-          </div>
-          <div>
-            <h1 className={`text-2xl font-bold tracking-tight ${splashVideoUrl ? 'text-white' : 'text-foreground'}`}>
-              Sistema de Gestão
-            </h1>
-            <p className={`text-sm mt-1 ${splashVideoUrl ? 'text-white/60' : 'text-muted-foreground'}`}>
-              Plataforma Omnicanal
-            </p>
-          </div>
-        </div>
 
         {/* Login Card */}
         <Card className="w-full backdrop-blur-xl bg-card/80 border-border/30 shadow-2xl rounded-2xl">
