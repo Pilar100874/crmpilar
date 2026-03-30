@@ -148,7 +148,7 @@ export default function EcommerceLayout() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0 overflow-y-auto">
               <div className="p-6 border-b bg-background">
-                <div className="flex min-h-[72px] flex-col justify-center gap-3">
+                <div className="flex min-h-[72px] flex-col items-center justify-center gap-3">
                   {branding.logo_url ? (
                     <img src={branding.logo_url} alt={branding.nome_loja} className="h-12 max-w-[140px] object-contain" />
                   ) : null}
