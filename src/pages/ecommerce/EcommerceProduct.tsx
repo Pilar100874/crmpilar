@@ -40,11 +40,16 @@ const formatPrice = (value: number | null) => {
 export default function EcommerceProduct() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const { branding } = useEcommerceBranding();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [wishlisted, setWishlisted] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const cartBtnRef = useRef<HTMLButtonElement>(null);
+  const heartBtnRef = useRef<HTMLButtonElement>(null);
+  const wishlisted = product ? isWishlisted(product.id) : false;
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   const copyProductLink = async () => {
