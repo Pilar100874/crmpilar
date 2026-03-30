@@ -89,9 +89,13 @@ export default function EcommerceLayout() {
 
           {/* Logo */}
           <Link to="/ecommerce" className="flex-shrink-0">
-            <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
-              STORE<span className="text-primary">.</span>
-            </span>
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt={branding.nome_loja} className="h-8 md:h-10 object-contain" />
+            ) : (
+              <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
+                {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
+              </span>
+            )}
           </Link>
 
           {/* Search - Desktop */}

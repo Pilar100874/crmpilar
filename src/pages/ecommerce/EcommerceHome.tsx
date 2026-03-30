@@ -205,11 +205,17 @@ export default function EcommerceHome() {
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden md:flex justify-center">
               <div className="relative w-80 h-80">
-                <div className="absolute inset-0 bg-primary/20 rounded-3xl rotate-6" />
-                <div className="absolute inset-0 bg-primary/10 rounded-3xl -rotate-3" />
-                <div className="relative bg-card rounded-3xl p-8 shadow-2xl flex items-center justify-center">
-                  <span className="text-[120px]">📦</span>
-                </div>
+                {branding.logo_url ? (
+                  <img src={branding.logo_url} alt={branding.nome_loja} className="w-full h-full object-contain drop-shadow-2xl" />
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-white/20 rounded-3xl rotate-6" />
+                    <div className="absolute inset-0 bg-white/10 rounded-3xl -rotate-3" />
+                    <div className="relative bg-card rounded-3xl p-8 shadow-2xl flex items-center justify-center">
+                      <span className="text-[120px]">📦</span>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
