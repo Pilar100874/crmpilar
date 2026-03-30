@@ -39,10 +39,11 @@ export default function EcommerceCatalog() {
   const [searchParams] = useSearchParams();
   const categoriaParam = searchParams.get("categoria");
   const grupoParam = searchParams.get("grupo");
+  const buscaParam = searchParams.get("busca");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(buscaParam || "");
   const [sortBy, setSortBy] = useState("relevancia");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -99,6 +100,10 @@ export default function EcommerceCatalog() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (buscaParam) setSearchQuery(buscaParam);
+  }, [buscaParam]);
 
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
