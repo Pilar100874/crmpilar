@@ -210,7 +210,7 @@ export default function EcommerceProduct() {
 
   return (
     <>
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 md:pb-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 md:pb-6 overflow-x-hidden">
       {/* Breadcrumb */}
       {branding.feat_breadcrumb && <nav className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-6 overflow-x-auto">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
@@ -232,10 +232,10 @@ export default function EcommerceProduct() {
         <span className="text-foreground font-medium line-clamp-1">{product.nome}</span>
       </nav>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 min-w-0">
         {/* Gallery */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="aspect-square max-h-[55vh] md:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
+          <div className="aspect-square max-h-[55vh] md:max-h-[50vh] lg:max-h-none bg-muted/30 rounded-2xl flex items-center justify-center border relative overflow-hidden group mx-auto w-full">
             {product.foto_url ? (
               <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
             ) : (
@@ -250,7 +250,7 @@ export default function EcommerceProduct() {
         </motion.div>
 
         {/* Info */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-5">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-5 min-w-0">
           {product.categoria_nome && (
             <Badge variant="outline" className="text-xs">{product.categoria_nome}</Badge>
           )}
