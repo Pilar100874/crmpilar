@@ -198,6 +198,16 @@ export default function Layout({ children }: LayoutProps) {
   const { atalhos } = useAtalhos();
   const { avisosPendentes } = useAvisosSistema();
   
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(prev => !prev);
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
   
