@@ -125,7 +125,7 @@ export default function EcommerceHome() {
           )}
           <div className="absolute inset-0 bg-black/50 z-[1]" />
           <div className="max-w-7xl mx-auto px-4 py-16 md:py-24 relative z-10">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="max-w-2xl">
               <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
                 {branding.hero_badge && (
                   <Badge className="bg-white/20 text-white border-0 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
@@ -167,15 +167,6 @@ export default function EcommerceHome() {
                   <div className="text-center">
                     <p className="text-2xl font-bold text-primary">{branding.hero_stat_satisfacao || "98%"}</p>
                     <p className="text-xs text-background/50">Satisfação</p>
-                  </div>
-                </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden md:flex justify-center">
-                <div className="relative w-80 h-80">
-                  <div className="absolute inset-0 bg-white/20 rounded-3xl rotate-6" />
-                  <div className="absolute inset-0 bg-white/10 rounded-3xl -rotate-3" />
-                  <div className="relative bg-card rounded-3xl p-8 shadow-2xl flex items-center justify-center">
-                    <span className="text-[120px]">📦</span>
                   </div>
                 </div>
               </motion.div>
