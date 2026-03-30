@@ -17,10 +17,10 @@ export default function EcommerceWishlist() {
   useEffect(() => {
     if (items.length === 0) return;
     const ids = items.map(i => i.productId);
-    supabase.from("produtos").select("id, estoque_atual").in("id", ids).then(({ data }) => {
+    supabase.from("produtos").select("id, estoque").in("id", ids).then(({ data }) => {
       if (data) {
         const map: Record<string, number> = {};
-        data.forEach(p => { map[p.id] = p.estoque_atual ?? 0; });
+        data.forEach(p => { map[p.id] = p.estoque ?? 0; });
         setStockMap(map);
       }
     });
