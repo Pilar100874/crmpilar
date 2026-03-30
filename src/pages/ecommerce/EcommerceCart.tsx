@@ -154,25 +154,33 @@ export default function EcommerceCart() {
           </div>
 
           {/* Cross-sell */}
-          <div className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Você também pode gostar</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {crossSellProducts.map(p => (
-                <Card key={p.id} className="group cursor-pointer hover:shadow-md transition-all">
-                  <CardContent className="p-3 flex gap-3 items-center">
-                    <div className="h-14 w-14 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">{p.image}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">{p.type}</p>
-                      <p className="text-sm font-medium line-clamp-1">{p.name}</p>
-                      <p className="text-sm font-bold text-primary mt-0.5">{p.price}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          {crossSellProducts.length > 0 && (
+            <div className="pt-6">
+              <h3 className="text-lg font-semibold mb-4">Você também pode gostar</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {crossSellProducts.map(p => (
+                  <Link key={p.id} to={`/ecommerce/produto/${p.id}`}>
+                    <Card className="group cursor-pointer hover:shadow-md transition-all">
+                      <CardContent className="p-3 flex gap-3 items-center">
+                        <div className="h-14 w-14 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {p.image ? (
+                            <img src={p.image} alt={p.name} className="h-full w-full object-cover rounded-xl" />
+                          ) : (
+                            <Package className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">{p.type}</p>
+                          <p className="text-sm font-medium line-clamp-1">{p.name}</p>
+                          <p className="text-sm font-bold text-primary mt-0.5">{p.price}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Summary */}
