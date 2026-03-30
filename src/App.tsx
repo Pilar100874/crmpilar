@@ -127,6 +127,10 @@ import EcommerceRulesPage from "./pages/EcommerceRulesPage";
 import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
 import PedidoTracking from "./pages/PedidoTracking";
 import RastreioPedido from "./pages/RastreioPedido";
+import EcommerceConfigHub from "./pages/ecommerce/EcommerceConfigHub";
+import EcommerceBrandingConfig from "./pages/ecommerce/EcommerceBrandingConfig";
+import EcommerceContentEditor from "./pages/ecommerce/EcommerceContentEditor";
+import EcommerceAdsManager from "./pages/ecommerce/EcommerceAdsManager";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
