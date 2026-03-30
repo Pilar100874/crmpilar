@@ -270,17 +270,21 @@ export default function EcommerceHome() {
                       <Link to={`/ecommerce/produto/${product.id}`}>
                         <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                           <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
-                            <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{getCategoryIcon(product.nome)}</span>
-                            {product.quantidade && product.quantidade > 0 && (
+                            {product.foto_url ? (
+                              <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{getCategoryIcon(product.nome)}</span>
+                            )}
+                            {product.estoque && product.estoque > 0 && (
                               <Badge className="absolute top-2 left-2 text-[10px] bg-emerald-500 text-white border-0">Em estoque</Badge>
                             )}
                           </div>
                           <CardContent className="p-3">
-                            {product.tipo && product.tipo !== '----' && <p className="text-xs text-muted-foreground">{product.tipo}</p>}
+                            {product.marca && <p className="text-xs text-muted-foreground">{product.marca}</p>}
                             <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 min-h-[2.5rem]">{product.nome}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {product.gramatura && product.gramatura !== '----' && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.gramatura}g</Badge>}
-                              {product.largura && product.largura !== '----' && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.largura}mm</Badge>}
+                              {product.gramatura && product.gramatura > 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.gramatura}g</Badge>}
+                              {product.largura && product.largura > 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.largura}mm</Badge>}
                             </div>
                             <div className="mt-2">
                               {price.tabela ? (
