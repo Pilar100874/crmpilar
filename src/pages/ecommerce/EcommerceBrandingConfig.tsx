@@ -54,6 +54,25 @@ export default function EcommerceBrandingConfig() {
     setLoading(false);
   };
 
+  const persistConfig = async (nextConfig: typeof config, estId?: string) => {
+    const resolvedEstId = estId || await getEstabelecimentoId();
+    if (!resolvedEstId) {
+      toast.error("Estabelecimento não encontrado");
+      return false;
+    }
+
+    const { error } = await supabase
+      .from("ecommerce_config")
+      .upsert({ estabelecimento_id: resolvedEstId, ...nextConfig }, { onConflict: "estabelecimento_id" });
+
+    if (error) {
+      toast.error("Erro ao salvar");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleUpload = async (file: File, type: "logo" | "video") => {
     setUploading(type);
     try {
@@ -73,16 +92,19 @@ export default function EcommerceBrandingConfig() {
         setUploading(null);
         return;
       }
+
       const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
-      console.log("Upload success, URL:", publicUrl);
-      
-      if (type === "logo") {
-        setConfig((c) => ({ ...c, logo_url: publicUrl }));
-      } else {
-        setConfig((c) => ({ ...c, background_video_url: publicUrl, background_type: "video" }));
+      const nextConfig = type === "logo"
+        ? { ...config, logo_url: publicUrl }
+        : { ...config, background_video_url: publicUrl, background_type: "video" };
+
+      setConfig(nextConfig);
+
+      const saved = await persistConfig(nextConfig, estId);
+      if (saved) {
+        toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado e salvo com sucesso!`);
       }
-      toast.success(`${type === "logo" ? "Logo" : "Vídeo"} carregado com sucesso!`);
     } catch (err) {
       console.error("Upload exception:", err);
       toast.error("Erro inesperado no upload");
@@ -92,14 +114,8 @@ export default function EcommerceBrandingConfig() {
 
   const handleSave = async () => {
     setSaving(true);
-    const estId = await getEstabelecimentoId();
-    if (!estId) return;
-
-    const { error } = await supabase
-      .from("ecommerce_config")
-      .upsert({ estabelecimento_id: estId, ...config }, { onConflict: "estabelecimento_id" });
-    if (error) toast.error("Erro ao salvar");
-    else toast.success("Configurações salvas!");
+    const saved = await persistConfig(config);
+    if (saved) toast.success("Configurações salvas!");
     setSaving(false);
   };
 
@@ -155,7 +171,16 @@ export default function EcommerceBrandingConfig() {
               <Upload className="h-4 w-4 mr-2" />{uploading === "logo" ? "Enviando..." : "Enviar Logo"}
             </Button>
             {config.logo_url && (
-              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setConfig((c) => ({ ...c, logo_url: "" }))}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive"
+                onClick={async () => {
+                  const nextConfig = { ...config, logo_url: "" };
+                  setConfig(nextConfig);
+                  await persistConfig(nextConfig);
+                }}
+              >
                 <Trash2 className="h-3 w-3 mr-1" />Remover
               </Button>
             )}
