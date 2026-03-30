@@ -27,7 +27,7 @@ export function useEcommerceCategories() {
     // Buscar produtos ativos com grupo e categoria
     let query = supabase
       .from("produtos")
-      .select("id, grupo_id, categoria_id, grupo:produto_grupos(id, nome), categoria:produto_categorias(id, nome)")
+      .select("id, grupo_id, categoria_id, grupo:produto_grupos(id, nome), categoria:produto_categorias(id, nome, icone_url)")
       .eq("ativo", true);
 
     if (estabId) {
