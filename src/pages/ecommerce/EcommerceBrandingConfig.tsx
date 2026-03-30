@@ -60,6 +60,7 @@ export default function EcommerceBrandingConfig() {
         setConfig({
           logo_url: data.logo_url || "",
           background_video_url: data.background_video_url || "",
+          background_image_url: (data as any).background_image_url || "",
           background_type: data.background_type || "gradient",
           nome_loja: data.nome_loja || "Minha Loja",
           slogan: data.slogan || "",
