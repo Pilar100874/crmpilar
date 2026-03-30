@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const crossSellProducts = [
-  { id: "cs1", name: "Fita Adesiva Transparente 45mm", type: "Fitas", price: "R$ 4,90", image: "📎" },
-  { id: "cs2", name: "Estilete Profissional", type: "Ferramentas", price: "R$ 12,90", image: "🔪" },
-  { id: "cs3", name: "Etiqueta Adesiva A4 - 100 folhas", type: "Etiquetas", price: "R$ 32,90", image: "🏷️" },
-];
+interface CrossSellProduct {
+  id: string;
+  name: string;
+  type: string;
+  price: string;
+  image: string;
+}
 
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
