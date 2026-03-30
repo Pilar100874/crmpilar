@@ -23,6 +23,7 @@ export default function EcommerceLayout() {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
