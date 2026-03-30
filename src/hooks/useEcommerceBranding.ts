@@ -48,6 +48,7 @@ export interface EcommerceBranding {
 const defaults: EcommerceBranding = {
   logo_url: "",
   background_video_url: "",
+  background_image_url: "",
   background_type: "gradient",
   nome_loja: "Minha Loja",
   slogan: "",
