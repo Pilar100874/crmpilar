@@ -125,7 +125,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-8 bg-background relative overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-background relative overflow-hidden">
       {/* Splash Video Background */}
       {splashVideoUrl && (
         <video
@@ -137,84 +137,106 @@ export default function Login() {
           playsInline
         />
       )}
-      {/* Overlay to ensure readability */}
-      {splashVideoUrl && (
-        <div className="absolute inset-0 bg-black/50 z-[1]" />
-      )}
+
+      {/* Gradient overlay */}
       <div
-        className={`absolute top-0 left-0 right-0 h-80 ${splashVideoUrl ? 'z-[2] opacity-60' : ''}`}
-        style={{ background: splashVideoUrl ? 'transparent' : "var(--gradient-hero)" }}
+        className="absolute inset-0 z-[1]"
+        style={{
+          background: splashVideoUrl
+            ? "linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.7) 100%)"
+            : "linear-gradient(135deg, hsl(var(--primary)/0.15) 0%, hsl(var(--background)) 50%, hsl(var(--primary)/0.08) 100%)",
+        }}
       />
 
-      <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
-        <div className="text-center">
-          <div className="inline-flex min-h-28 min-w-60 items-center justify-center rounded-2xl bg-primary-foreground border border-primary-foreground/60 shadow-lg p-3">
-            {brandSrc ? (
-              <img
-                src={brandSrc}
-                alt="Marca Pilar"
-                className="h-20 md:h-24 w-auto object-contain"
-              />
-            ) : (
-              <div className="h-20 md:h-24 w-40 animate-pulse rounded bg-muted" />
-            )}
+      {/* Decorative circles */}
+      {!splashVideoUrl && (
+        <>
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl z-[1]" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl z-[1]" />
+        </>
+      )}
+
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-8">
+        {/* Logo + branding */}
+        <div className="text-center space-y-4">
+          <div className="relative inline-block">
+            {/* Glow behind logo */}
+            <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-2xl scale-110" />
+            <div className="relative backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl p-5 shadow-2xl">
+              {brandSrc ? (
+                <img
+                  src={brandSrc}
+                  alt="Marca Pilar"
+                  className="h-16 md:h-20 w-auto object-contain drop-shadow-lg"
+                />
+              ) : (
+                <div className="h-16 md:h-20 w-36 animate-pulse rounded-xl bg-white/10" />
+              )}
+            </div>
           </div>
-          <h1 className="text-3xl font-semibold text-primary-foreground mt-4">Sistema de Gestão</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1">Plataforma Omnicanal</p>
+          <div>
+            <h1 className={`text-2xl font-bold tracking-tight ${splashVideoUrl ? 'text-white' : 'text-foreground'}`}>
+              Sistema de Gestão
+            </h1>
+            <p className={`text-sm mt-1 ${splashVideoUrl ? 'text-white/60' : 'text-muted-foreground'}`}>
+              Plataforma Omnicanal
+            </p>
+          </div>
         </div>
 
-        <Card className="w-full border-border/50 shadow-lg">
-          <CardContent className="pt-8 pb-8 px-8">
-            <div className="mb-6 text-center">
-              <h2 className="text-xl font-semibold text-foreground">
+        {/* Login Card */}
+        <Card className="w-full backdrop-blur-xl bg-card/80 border-border/30 shadow-2xl rounded-2xl">
+          <CardContent className="pt-7 pb-7 px-7">
+            <div className="mb-5 text-center">
+              <h2 className="text-lg font-semibold text-foreground">
                 Bem-vindo de volta
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Entre com suas credenciais para acessar o sistema
+              <p className="text-xs text-muted-foreground mt-1">
+                Entre com suas credenciais
               </p>
             </div>
 
-            <form onSubmit={handleUserLogin} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="user-email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <form onSubmit={handleUserLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="user-email" className="text-xs font-medium text-muted-foreground">
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                   <Input
                     id="user-email"
                     type="email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="seu@email.com"
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 rounded-xl bg-muted/50 border-border/50 focus:bg-background transition-colors"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="user-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="space-y-1.5">
+                <Label htmlFor="user-password" className="text-xs font-medium text-muted-foreground">
                   Senha
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                   <Input
                     id="user-password"
                     type="password"
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 rounded-xl bg-muted/50 border-border/50 focus:bg-background transition-colors"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
+              <div className="space-y-2 pt-1">
                 <Button
                   type="submit"
-                  className="w-full h-11 text-sm font-semibold"
+                  className="w-full h-11 text-sm font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -230,7 +252,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full text-sm text-muted-foreground hover:text-foreground"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => setShowForgotPasswordDialog(true)}
                 >
                   Esqueci minha senha
@@ -240,7 +262,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/60 mt-1">
+        <p className={`text-center text-[10px] ${splashVideoUrl ? 'text-white/30' : 'text-muted-foreground/40'}`}>
           Plataforma Omnicanal · Todos os direitos reservados
         </p>
       </div>
