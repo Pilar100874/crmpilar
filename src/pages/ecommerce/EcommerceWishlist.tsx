@@ -65,22 +65,22 @@ export default function EcommerceWishlist() {
               {item.price != null && (
                 <p className="text-sm font-bold text-primary">R$ {item.price.toFixed(2)}</p>
               )}
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1.5">
                 {(stockMap[item.productId] ?? 0) > 0 ? (
-                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={(e) => {
+                  <Button size="sm" variant="outline" className="flex-1 min-w-0 text-xs gap-1 truncate" onClick={(e) => {
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                     setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: item.image, icon: "cart" });
                     addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: stockMap[item.productId] ?? 999, image: item.image, price: item.price || 0 });
                     toast.success("Adicionado ao carrinho!");
                   }}>
-                    <ShoppingCart className="h-3.5 w-3.5" /> Carrinho
+                    <ShoppingCart className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Carrinho</span>
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1 opacity-50" disabled>
-                    <PackageX className="h-3.5 w-3.5" /> Sem estoque
+                  <Button size="sm" variant="outline" className="flex-1 min-w-0 text-xs gap-1 opacity-50 truncate" disabled>
+                    <PackageX className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Sem estoque</span>
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2" onClick={() => {
+                <Button size="sm" variant="ghost" className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0" onClick={() => {
                   removeItem(item.productId);
                   toast.success("Removido dos favoritos");
                 }}>
