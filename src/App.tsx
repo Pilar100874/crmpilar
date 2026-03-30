@@ -127,6 +127,10 @@ import EcommerceRulesPage from "./pages/EcommerceRulesPage";
 import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
 import PedidoTracking from "./pages/PedidoTracking";
 import RastreioPedido from "./pages/RastreioPedido";
+import EcommerceConfigHub from "./pages/ecommerce/EcommerceConfigHub";
+import EcommerceBrandingConfig from "./pages/ecommerce/EcommerceBrandingConfig";
+import EcommerceContentEditor from "./pages/ecommerce/EcommerceContentEditor";
+import EcommerceAdsManager from "./pages/ecommerce/EcommerceAdsManager";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -178,6 +182,10 @@ const App = () => (
               <Route path="/ecommerce-rules" element={<EcommerceRulesPage />} />
               <Route path="/ecommerce-rules-editor" element={<EcommerceRulesEditor />} />
               <Route path="/pedido-tracking" element={<PedidoTracking />} />
+              <Route path="/ecommerce-config" element={<EcommerceConfigHub />} />
+              <Route path="/ecommerce-config/branding" element={<EcommerceBrandingConfig />} />
+              <Route path="/ecommerce-config/conteudos" element={<EcommerceContentEditor />} />
+              <Route path="/ecommerce-config/anuncios" element={<EcommerceAdsManager />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />

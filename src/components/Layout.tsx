@@ -144,9 +144,7 @@ const menuItems: MenuItem[] = [
     icon: LucideIcons.ShoppingBag,
     subItems: [
       { id: "Ecommerce Site", title: "Abrir Loja Virtual", url: "/ecommerce", icon: LucideIcons.ExternalLink },
-      { id: "Ecommerce Regras", title: "Regras do E-commerce", url: "/ecommerce-rules", icon: LucideIcons.Workflow },
-      { id: "Ecommerce Pagamentos", title: "Gateways de Pagamento", url: "/config/pagamentos", icon: LucideIcons.CreditCard },
-      { id: "Ecommerce Rastreamento", title: "Rastreamento de Pedidos", url: "/pedido-tracking", icon: LucideIcons.Truck },
+      { id: "Ecommerce Config", title: "Configurações", url: "/ecommerce-config", icon: LucideIcons.Settings },
     ]
   },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },

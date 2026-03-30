@@ -3182,6 +3182,162 @@ export type Database = {
           },
         ]
       }
+      ecommerce_anuncios: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          html_conteudo: string | null
+          id: string
+          imagem_url: string | null
+          link_url: string | null
+          ordem: number | null
+          posicao: string | null
+          tipo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          html_conteudo?: string | null
+          id?: string
+          imagem_url?: string | null
+          link_url?: string | null
+          ordem?: number | null
+          posicao?: string | null
+          tipo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          html_conteudo?: string | null
+          id?: string
+          imagem_url?: string | null
+          link_url?: string | null
+          ordem?: number | null
+          posicao?: string | null
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_anuncios_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecommerce_config: {
+        Row: {
+          background_type: string | null
+          background_video_url: string | null
+          cor_primaria: string | null
+          cor_secundaria: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          logo_url: string | null
+          nome_loja: string | null
+          slogan: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_type?: string | null
+          background_video_url?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          logo_url?: string | null
+          nome_loja?: string | null
+          slogan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_type?: string | null
+          background_video_url?: string | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          logo_url?: string | null
+          nome_loja?: string | null
+          slogan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecommerce_conteudos: {
+        Row: {
+          ativo: boolean | null
+          conteudo: string
+          created_at: string
+          dados_json: Json | null
+          estabelecimento_id: string
+          id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          conteudo?: string
+          created_at?: string
+          dados_json?: Json | null
+          estabelecimento_id: string
+          id?: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          conteudo?: string
+          created_at?: string
+          dados_json?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_conteudos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ecommerce_rules: {
         Row: {
           ativo: boolean | null
