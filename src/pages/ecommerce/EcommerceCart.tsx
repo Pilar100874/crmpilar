@@ -112,8 +112,12 @@ export default function EcommerceCart() {
               <motion.div key={item.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20, height: 0 }}>
                 <Card>
                   <CardContent className="p-4 flex gap-4 items-center">
-                    <div className="h-20 w-20 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-3xl">📄</span>
+                    <div className="h-20 w-20 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="h-full w-full object-cover rounded-xl" />
+                      ) : (
+                        <Package className="h-8 w-8 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
