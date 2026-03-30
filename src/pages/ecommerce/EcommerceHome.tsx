@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 
 interface ProductWithPrice {
   id: string;
