@@ -398,55 +398,84 @@ export default function EcommerceProduct() {
       {/* Tabs */}
       <div className="mt-8 md:mt-12">
         <Tabs defaultValue="descricao">
-            <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0 overflow-x-auto flex-nowrap">
-            {[
-              { value: "descricao", label: "Descrição" },
-              { value: "especificacoes", label: "Especificações" },
-              { value: "entrega", label: "Entrega" },
-              ...(branding.feat_avaliacoes ? [{ value: "avaliacoes", label: "Avaliações (12)" }] : []),
-            ].map((tab: any) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
-                {tab.label}
+          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-4 h-auto rounded-xl bg-muted/50 p-1 gap-1">
+            <TabsTrigger value="descricao" className="rounded-lg text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium">
+              Descrição
+            </TabsTrigger>
+            <TabsTrigger value="especificacoes" className="rounded-lg text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium">
+              Specs
+            </TabsTrigger>
+            <TabsTrigger value="entrega" className="rounded-lg text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium">
+              Entrega
+            </TabsTrigger>
+            {branding.feat_avaliacoes && (
+              <TabsTrigger value="avaliacoes" className="rounded-lg text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium col-span-3 sm:col-span-1">
+                Avaliações
               </TabsTrigger>
-            ))}
+            )}
           </TabsList>
-          <TabsContent value="descricao" className="py-6">
-            <div className="prose prose-sm max-w-none">
-              <p className="text-foreground/80 leading-relaxed">
+
+          <TabsContent value="descricao" className="mt-4">
+            <Card className="border-0 shadow-none bg-muted/20">
+              <CardContent className="p-4 sm:p-6">
+                <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">
                 {product.descricao || `${product.nome} — produto de alta qualidade para uso profissional e comercial.`}
-              </p>
-            </div>
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="especificacoes" className="py-6">
-            <div className="grid sm:grid-cols-2 gap-3 max-w-2xl">
-              {specs.map(s => (
-                <div key={s.label} className="flex justify-between items-center py-2 px-4 rounded-xl bg-muted/30">
-                  <span className="text-sm text-muted-foreground">{s.label}</span>
-                  <span className="text-sm font-semibold">{s.value}</span>
+
+          <TabsContent value="especificacoes" className="mt-4">
+            <Card className="border-0 shadow-none bg-muted/20 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {specs.map((s, i) => (
+                    <div key={s.label} className={`flex justify-between items-center px-4 sm:px-6 py-3 ${i % 2 === 0 ? "bg-muted/30" : ""}`}>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{s.label}</span>
+                      <span className="text-xs sm:text-sm font-semibold text-foreground">{s.value}</span>
+                    </div>
+                  ))}
+                  {specs.length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma especificação disponível.</div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="entrega" className="py-6">
-            <div className="space-y-4 max-w-lg">
-              <p className="text-sm text-foreground/80">Prazo de entrega calculado após informar o CEP no carrinho.</p>
-              <div className="p-4 rounded-xl bg-muted/30">
-                <p className="text-sm font-semibold">Frete grátis para compras acima de R$ 500</p>
-                <p className="text-xs text-muted-foreground mt-1">Válido para todo o Brasil. Prazo estimado: 3 a 7 dias úteis.</p>
-              </div>
-            </div>
+
+          <TabsContent value="entrega" className="mt-4">
+            <Card className="border-0 shadow-none bg-muted/20">
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                <p className="text-sm text-foreground/80">Prazo de entrega calculado após informar o CEP no carrinho.</p>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <Truck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Frete grátis acima de R$ 500</p>
+                    <p className="text-xs text-muted-foreground mt-1">Válido para todo o Brasil. Prazo: 3 a 7 dias úteis.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/40">
+                  <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Envio seguro</p>
+                    <p className="text-xs text-muted-foreground mt-1">Embalagem reforçada e rastreamento completo.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="avaliacoes" className="py-6">
-            <div className="space-y-4">
+
+          <TabsContent value="avaliacoes" className="mt-4">
+            <div className="space-y-3">
               {[
                 { name: "João P.", rating: 5, text: "Excelente qualidade, papel consistente. Compro sempre!", date: "12/03/2026" },
                 { name: "Maria L.", rating: 4, text: "Bom produto, entrega rápida. Recomendo.", date: "08/03/2026" },
               ].map((review, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
+                <Card key={i} className="border-0 shadow-none bg-muted/20">
+                  <CardContent className="p-4 sm:p-5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                           {review.name.split(" ").map(n => n[0]).join("")}
                         </div>
                         <span className="text-sm font-semibold">{review.name}</span>
@@ -455,10 +484,10 @@ export default function EcommerceProduct() {
                     </div>
                     <div className="flex gap-0.5 mt-2">
                       {Array.from({ length: review.rating }).map((_, j) => (
-                        <Star key={j} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                        <Star key={j} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    <p className="text-sm text-foreground/80 mt-2">{review.text}</p>
+                    <p className="text-sm text-foreground/80 mt-2.5 leading-relaxed">{review.text}</p>
                   </CardContent>
                 </Card>
               ))}
