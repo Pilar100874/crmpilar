@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   maxStock: number;
   image?: string;
+  price: number;
 }
 
 interface CartContextType {
