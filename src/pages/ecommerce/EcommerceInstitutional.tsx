@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContentData {
-  conteudo_html: string;
+  conteudo: string;
   dados_json: Record<string, any>;
 }
 
