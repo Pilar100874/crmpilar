@@ -316,7 +316,7 @@ export function ProdutoCategoriasCRUD({ estabelecimentoId }: ProdutoCategoriasCR
                         <button
                           key={i}
                           onClick={() => { setIconeUrl(url); toast.success("Imagem selecionada!"); }}
-                          className={`aspect-square rounded-lg overflow-hidden border-2 transition-all hover:border-primary ${iconeUrl === url ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                          className={`aspect-square rounded-lg overflow-hidden border-2 transition-all hover:border-primary bg-white ${iconeUrl === url ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
                         >
                           <img src={url} alt="" className="w-full h-full object-cover" />
                         </button>
