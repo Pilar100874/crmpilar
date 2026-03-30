@@ -14,15 +14,19 @@ import { toast } from "sonner";
 interface Product {
   id: string;
   nome: string;
-  tipo: string | null;
-  gramatura: string | null;
+  descricao: string | null;
+  foto_url: string | null;
+  preco_tabela: number | null;
+  preco_minimo: number | null;
+  estoque: number | null;
+  marca: string | null;
+  categoria_nome: string | null;
+  grupo_nome: string | null;
   largura: string | null;
+  gramatura: string | null;
   comprimento: string | null;
-  embalagem: string | null;
-  quantidade: number | null;
-  diametro: string | null;
-  numero_folhas: number | null;
-  obs: string | null;
+  cor: string | null;
+  material: string | null;
 }
 
 export default function EcommerceProduct() {
@@ -41,22 +45,50 @@ export default function EcommerceProduct() {
   const loadProduct = async (productId: string) => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("produtos_importados")
-      .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
+      .from("produtos")
+      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
       .eq("id", productId)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
-      setProduct(data);
-      // Load related products of the same type
-      if (data.tipo) {
+      const mapped: Product = {
+        id: data.id,
+        nome: data.nome,
+        descricao: data.descricao,
+        foto_url: data.foto_url,
+        preco_tabela: data.preco_tabela,
+        preco_minimo: data.preco_minimo,
+        estoque: data.estoque,
+        marca: data.marca,
+        largura: data.largura,
+        gramatura: data.gramatura,
+        comprimento: data.comprimento,
+        cor: data.cor,
+        material: data.material,
+        categoria_nome: (data.categoria as any)?.nome || null,
+        grupo_nome: (data.grupo as any)?.nome || null,
+      };
+      setProduct(mapped);
+
+      // Load related products from same category
+      const catId = (data.categoria as any)?.id;
+      if (catId) {
         const { data: related } = await supabase
-          .from("produtos_importados")
-          .select("id, nome, tipo, gramatura, largura, comprimento, embalagem, quantidade, diametro, numero_folhas, obs")
-          .eq("tipo", data.tipo)
+          .from("produtos")
+          .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+          .eq("categoria_id", catId)
+          .eq("ativo", true)
           .neq("id", productId)
           .limit(4);
-        if (related) setRelatedProducts(related);
+        if (related) {
+          setRelatedProducts(related.map((r: any) => ({
+            id: r.id, nome: r.nome, descricao: r.descricao, foto_url: r.foto_url,
+            preco_tabela: r.preco_tabela, preco_minimo: r.preco_minimo, estoque: r.estoque,
+            marca: r.marca, largura: r.largura, gramatura: r.gramatura, comprimento: r.comprimento,
+            cor: r.cor, material: r.material,
+            categoria_nome: r.categoria?.nome || null, grupo_nome: r.grupo?.nome || null,
+          })));
+        }
       }
     }
     setLoading(false);
