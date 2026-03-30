@@ -42,6 +42,8 @@ import {
   Building,
   Brain,
   Clock,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
