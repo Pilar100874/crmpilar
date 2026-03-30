@@ -22,9 +22,9 @@ interface Product {
   marca: string | null;
   categoria_nome: string | null;
   grupo_nome: string | null;
-  largura: string | null;
-  gramatura: string | null;
-  comprimento: string | null;
+  largura: number | null;
+  gramatura: number | null;
+  comprimento: number | null;
   cor: string | null;
   material: string | null;
 }
