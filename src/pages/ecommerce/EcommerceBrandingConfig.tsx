@@ -96,7 +96,7 @@ export default function EcommerceBrandingConfig() {
     return true;
   };
 
-  const handleUpload = async (file: File, type: "logo" | "video") => {
+  const handleUpload = async (file: File, type: "logo" | "video" | "image") => {
     setUploading(type);
     try {
       const estId = configEstId || await getEstabelecimentoId();
@@ -118,9 +118,14 @@ export default function EcommerceBrandingConfig() {
 
       const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
-      const nextConfig = type === "logo"
-        ? { ...config, logo_url: publicUrl }
-        : { ...config, background_video_url: publicUrl, background_type: "video" };
+      let nextConfig: typeof config;
+      if (type === "logo") {
+        nextConfig = { ...config, logo_url: publicUrl };
+      } else if (type === "video") {
+        nextConfig = { ...config, background_video_url: publicUrl, background_type: "video" };
+      } else {
+        nextConfig = { ...config, background_image_url: publicUrl, background_type: "image" };
+      }
 
       setConfig(nextConfig);
 
