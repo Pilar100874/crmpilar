@@ -50,7 +50,6 @@ export default function EcommerceProduct() {
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const heartBtnRef = useRef<HTMLButtonElement>(null);
   const wishlisted = product ? isWishlisted(product.id) : false;
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   const copyProductLink = async () => {
     try {
