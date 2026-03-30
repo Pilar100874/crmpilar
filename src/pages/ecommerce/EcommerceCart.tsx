@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const crossSellProducts = [
-  { id: "cs1", name: "Fita Adesiva Transparente 45mm", type: "Fitas", price: "R$ 4,90", image: "📎" },
-  { id: "cs2", name: "Estilete Profissional", type: "Ferramentas", price: "R$ 12,90", image: "🔪" },
-  { id: "cs3", name: "Etiqueta Adesiva A4 - 100 folhas", type: "Etiquetas", price: "R$ 32,90", image: "🏷️" },
-];
+interface CrossSellProduct {
+  id: string;
+  name: string;
+  type: string;
+  price: string;
+  image: string;
+}
 
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
@@ -22,6 +25,34 @@ export default function EcommerceCart() {
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
   const [shippingCalculated, setShippingCalculated] = useState(false);
+  const [crossSellProducts, setCrossSellProducts] = useState<CrossSellProduct[]>([]);
+
+  useEffect(() => {
+    const loadCrossSell = async () => {
+      const estabId = localStorage.getItem("estabelecimentoId");
+      let query = supabase
+        .from("produtos")
+        .select("id, nome, preco_venda, imagem_url, categoria:produto_categorias(nome)")
+        .eq("ativo", true)
+        .limit(6);
+      if (estabId) query = query.eq("estabelecimento_id", estabId);
+
+      const { data } = await query;
+      if (data) {
+        // Exclude items already in cart
+        const cartIds = new Set(items.map(i => i.id));
+        const filtered = data.filter((p: any) => !cartIds.has(p.id)).slice(0, 3);
+        setCrossSellProducts(filtered.map((p: any) => ({
+          id: p.id,
+          name: p.nome || "Produto",
+          type: (p.categoria as any)?.nome || "",
+          price: `R$ ${(p.preco_venda ?? 0).toFixed(2).replace(".", ",")}`,
+          image: p.imagem_url || "",
+        })));
+      }
+    };
+    if (items.length > 0) loadCrossSell();
+  }, [items]);
 
   const handleApplyCoupon = () => {
     if (applyCoupon(couponInput)) {
@@ -123,25 +154,33 @@ export default function EcommerceCart() {
           </div>
 
           {/* Cross-sell */}
-          <div className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Você também pode gostar</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {crossSellProducts.map(p => (
-                <Card key={p.id} className="group cursor-pointer hover:shadow-md transition-all">
-                  <CardContent className="p-3 flex gap-3 items-center">
-                    <div className="h-14 w-14 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">{p.image}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">{p.type}</p>
-                      <p className="text-sm font-medium line-clamp-1">{p.name}</p>
-                      <p className="text-sm font-bold text-primary mt-0.5">{p.price}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          {crossSellProducts.length > 0 && (
+            <div className="pt-6">
+              <h3 className="text-lg font-semibold mb-4">Você também pode gostar</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {crossSellProducts.map(p => (
+                  <Link key={p.id} to={`/ecommerce/produto/${p.id}`}>
+                    <Card className="group cursor-pointer hover:shadow-md transition-all">
+                      <CardContent className="p-3 flex gap-3 items-center">
+                        <div className="h-14 w-14 bg-muted/30 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {p.image ? (
+                            <img src={p.image} alt={p.name} className="h-full w-full object-cover rounded-xl" />
+                          ) : (
+                            <Package className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">{p.type}</p>
+                          <p className="text-sm font-medium line-clamp-1">{p.name}</p>
+                          <p className="text-sm font-bold text-primary mt-0.5">{p.price}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Summary */}
