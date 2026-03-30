@@ -55,7 +55,6 @@ export default function EcommerceBrandingConfig() {
       }
 
       if (data) {
-        console.log("Branding config loaded:", { logo_url: data.logo_url, id: data.id });
         setConfigId(data.id);
         setConfigEstId(data.estabelecimento_id);
         setConfig({
