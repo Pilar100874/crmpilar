@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import BrandLogo from "@/components/ecommerce/BrandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
@@ -39,7 +38,6 @@ export default function EcommerceBrandingConfig() {
 
   const loadConfig = async () => {
     try {
-      // Try with user's estabelecimento first
       const estId = await getEstabelecimentoId();
       let data: any = null;
 
@@ -48,7 +46,6 @@ export default function EcommerceBrandingConfig() {
         data = res.data;
       }
 
-      // Fallback: get any existing config
       if (!data) {
         const res = await supabase.from("ecommerce_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle();
         data = res.data;
@@ -96,6 +93,96 @@ export default function EcommerceBrandingConfig() {
     return true;
   };
 
+  const prepareLogoFile = async (file: File): Promise<File> => {
+    if (!file.type.startsWith("image/") || file.type.includes("svg")) return file;
+
+    return new Promise((resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new window.Image();
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0);
+          const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          let minX = width;
+          let minY = height;
+          let maxX = -1;
+          let maxY = -1;
+
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const i = (y * width + x) * 4;
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
+              const a = data[i + 3];
+              const visible = a > 16 && !(r > 245 && g > 245 && b > 245);
+              if (visible) {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+              }
+            }
+          }
+
+          if (maxX < minX || maxY < minY) {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+            return;
+          }
+
+          const padding = 8;
+          const cropX = Math.max(0, minX - padding);
+          const cropY = Math.max(0, minY - padding);
+          const cropWidth = Math.min(width - cropX, maxX - minX + 1 + padding * 2);
+          const cropHeight = Math.min(height - cropY, maxY - minY + 1 + padding * 2);
+
+          const trimmedCanvas = document.createElement("canvas");
+          trimmedCanvas.width = cropWidth;
+          trimmedCanvas.height = cropHeight;
+          const trimmedCtx = trimmedCanvas.getContext("2d");
+          if (!trimmedCtx) {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+            return;
+          }
+
+          trimmedCtx.drawImage(canvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+          trimmedCanvas.toBlob((blob) => {
+            URL.revokeObjectURL(objectUrl);
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            const ext = (file.name.split(".").pop() || "png").toLowerCase();
+            resolve(new File([blob], `branding-image.${ext}`, { type: blob.type || file.type }));
+          }, file.type === "image/jpeg" ? "image/jpeg" : "image/png", file.type === "image/jpeg" ? 0.95 : undefined);
+        } catch {
+          URL.revokeObjectURL(objectUrl);
+          resolve(file);
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
   const handleUpload = async (file: File, type: "logo" | "video" | "image") => {
     setUploading(type);
     try {
@@ -106,9 +193,11 @@ export default function EcommerceBrandingConfig() {
         return;
       }
 
-      const ext = file.name.split(".").pop();
-      const path = `${estId}/${type}_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("ecommerce-assets").upload(path, file, { upsert: true });
+      const uploadFile = type === "logo" ? await prepareLogoFile(file) : file;
+      const ext = uploadFile.name.split(".").pop();
+      const filePrefix = type === "logo" ? "branding_image" : type;
+      const path = `${estId}/${filePrefix}_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("ecommerce-assets").upload(path, uploadFile, { upsert: true });
       if (error) {
         console.error("Upload error:", error);
         toast.error("Erro no upload: " + error.message);
@@ -117,7 +206,7 @@ export default function EcommerceBrandingConfig() {
       }
 
       const { data: urlData } = supabase.storage.from("ecommerce-assets").getPublicUrl(path);
-      const publicUrl = urlData.publicUrl;
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       let nextConfig: typeof config;
       if (type === "logo") {
         nextConfig = { ...config, logo_url: publicUrl };
@@ -128,6 +217,7 @@ export default function EcommerceBrandingConfig() {
       }
 
       setConfig(nextConfig);
+
 
       const saved = await persistConfig(nextConfig);
       if (saved) {
