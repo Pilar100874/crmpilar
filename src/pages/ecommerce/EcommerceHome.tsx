@@ -115,6 +115,9 @@ export default function EcommerceHome() {
       {/* Hero */}
       {isVisible("hero") && (
         <section className="relative overflow-hidden text-white" style={{ background: branding.background_type === "gradient" ? `linear-gradient(135deg, ${branding.cor_primaria}, ${branding.cor_secundaria})` : undefined }}>
+          {branding.background_type === "image" && branding.background_image_url && (
+            <img src={branding.background_image_url} alt="" className="absolute inset-0 w-full h-full object-cover z-0" />
+          )}
           {branding.background_type === "video" && branding.background_video_url && (
             <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0">
               <source src={branding.background_video_url} type="video/mp4" />

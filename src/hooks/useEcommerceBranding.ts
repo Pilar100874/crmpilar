@@ -122,6 +122,7 @@ export function useEcommerceBranding() {
         setBranding({
           logo_url: d.logo_url || "",
           background_video_url: d.background_video_url || "",
+          background_image_url: d.background_image_url || "",
           background_type: d.background_type || "gradient",
           nome_loja: d.nome_loja || "Minha Loja",
           slogan: d.slogan || "",
