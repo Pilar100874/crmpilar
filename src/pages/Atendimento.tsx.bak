@@ -4857,14 +4857,14 @@ ${recentMessages}
             size="sm"
             variant="ghost"
             onClick={() => setShowConversationsList(true)}
-            className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-background/90 dark:bg-card/90 shadow-md hover:bg-card dark:hover:bg-card border border-border/50"
+            className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50"
             title="Abrir painel"
           >
             <PanelLeft className="h-4 w-4" />
           </Button>
         )}
         {/* Conversation List */}
-      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-background/80 dark:bg-card/80 backdrop-blur-sm shadow-lg ${
+      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg ${
         isMobile 
           ? 'hidden' 
           : showConversationsList 
@@ -4913,7 +4913,7 @@ ${recentMessages}
                         activeTab === "email" ? "Buscar e-mails..." :
                         "Buscar orçamentos..."
                       }
-                      className="pl-10 h-10 rounded-xl text-sm bg-background/80 dark:bg-card/80 border-border/40 focus:bg-card dark:focus:bg-card focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                      className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -5020,7 +5020,7 @@ ${recentMessages}
                         className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
                             ? "bg-orange-100 border border-orange-200 shadow-sm" 
-                            : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card hover:shadow-sm border border-transparent"
+                            : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                         }`}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
@@ -5069,7 +5069,7 @@ ${recentMessages}
                               {conv.customerCompanies && conv.customerCompanies.length > 0 && (
                                 <>
                                   {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-card/50 dark:bg-card/50">
+                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
                                       <Building2 className="w-2.5 h-2.5" />
                                       {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
                                     </Badge>
@@ -5185,7 +5185,7 @@ ${recentMessages}
                         className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
                             ? "bg-primary/10 border border-primary/30 shadow-sm" 
-                            : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card hover:shadow-sm border border-transparent"
+                            : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                         }`}
                       >
                         {/* Tarja lateral com nome do usuário vinculado */}
@@ -5234,7 +5234,7 @@ ${recentMessages}
                               {conv.customerCompanies && conv.customerCompanies.length > 0 && (
                                 <>
                                   {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-card/50 dark:bg-card/50">
+                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
                                       <Building2 className="w-2.5 h-2.5" />
                                       {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
                                     </Badge>
@@ -5621,7 +5621,7 @@ ${recentMessages}
                      className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                        selectedTaskId === task.id 
                          ? "bg-orange-100 border border-orange-200 shadow-sm" 
-                         : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card hover:shadow-sm border border-transparent"
+                         : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                      }`}
                       onClick={() => {
                         setSelectedTaskId(task.id);
@@ -5662,7 +5662,7 @@ ${recentMessages}
                              </span>
                            )}
                            {task.origem && (
-                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-card/50 dark:bg-card/50">
+                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
                                {task.origem}
                              </Badge>
                            )}
@@ -7214,7 +7214,7 @@ function MobileListContent({
   onShowCustomerSearch,
 }: MobileListContentProps) {
   return (
-    <div className="h-full flex flex-col bg-background/80 dark:bg-card/80">
+    <div className="h-full flex flex-col bg-white/80">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent safe-area-top">
         <div className="flex items-center justify-between mb-3">
@@ -7258,7 +7258,7 @@ function MobileListContent({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar conversas..."
-                className="pl-10 h-10 rounded-xl text-sm bg-background/80 dark:bg-card/80 border-border/40"
+                className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -7311,7 +7311,7 @@ function MobileListContent({
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
                         agendaViewMode === 'fluxo' 
                           ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-background dark:bg-card dark:hover:bg-background"
+                          : "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
                       )}
                     >
                       <Play className="w-3.5 h-3.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
@@ -7324,7 +7324,7 @@ function MobileListContent({
                       }}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all",
-                        "text-muted-foreground hover:text-foreground hover:bg-background dark:bg-card dark:hover:bg-background"
+                        "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
                       )}
                     >
                       <Users className="w-3.5 h-3.5" />
@@ -7454,7 +7454,7 @@ function MobileListContent({
         {activeTab === "orcamento" && (
           <div className="flex gap-2">
             <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="flex-1 h-10 bg-background/70 dark:bg-card/70 rounded-xl">
+              <SelectTrigger className="flex-1 h-10 bg-white/70 rounded-xl">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
@@ -7519,7 +7519,7 @@ function MobileListContent({
                     className={`px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-400 ${
                       selectedConversation === conv.id 
                         ? "bg-primary/10 border-t border-r border-b border-primary/30" 
-                        : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border-t border-r border-b border-transparent"
+                        : "bg-white/60 hover:bg-white border-t border-r border-b border-transparent"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -7587,7 +7587,7 @@ function MobileListContent({
                     className={`px-3 py-3 rounded-xl cursor-pointer transition-all ${
                       selectedConversation === conv.id 
                         ? "bg-primary/10 border border-primary/30" 
-                        : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border border-transparent"
+                        : "bg-white/60 hover:bg-white border border-transparent"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -7637,7 +7637,7 @@ function MobileListContent({
             className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
               selectedTaskId === task.id
                 ? "bg-orange-100 border border-orange-200"
-                : "bg-card/60 dark:bg-card/60 hover:bg-card dark:hover:bg-card border border-transparent"
+                : "bg-white/60 hover:bg-white border border-transparent"
             }`}
           >
             {/* Tarja lateral indicando vínculo com nome do usuário */}
