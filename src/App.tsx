@@ -195,6 +195,7 @@ const App = () => (
               <Route path="/ecommerce-config/rodape" element={<EcommerceFooterEditor />} />
               <Route path="/ecommerce-config/homepage" element={<EcommerceHomeEditor />} />
               <Route path="/ecommerce-config/funcionalidades" element={<EcommerceFeaturesEditor />} />
+              <Route path="/ecommerce-config/volume-pricing" element={<EcommerceVolumePricing />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />
