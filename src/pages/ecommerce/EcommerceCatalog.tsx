@@ -62,7 +62,7 @@ export default function EcommerceCatalog() {
 
       let query = supabase
         .from("produtos")
-        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
         .eq("ativo", true);
 
       if (estabId) {
@@ -72,13 +72,15 @@ export default function EcommerceCatalog() {
       const { data, error } = await query.limit(500);
 
       if (!error && data) {
+        const priceMap = await resolveProductPricesBatch(data as any[]);
+
         let mapped = data.map((p: any) => ({
           id: p.id,
           nome: p.nome,
           descricao: p.descricao,
           foto_url: p.foto_url,
-          preco_tabela: p.preco_tabela,
-          preco_minimo: p.preco_minimo,
+          preco_tabela: priceMap.get(p.id)?.precoTabela ?? p.preco_tabela,
+          preco_minimo: priceMap.get(p.id)?.precoMinimo ?? p.preco_minimo,
           estoque: p.estoque,
           marca: p.marca,
           categoria_nome: p.categoria?.nome || null,
