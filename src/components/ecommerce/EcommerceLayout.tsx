@@ -38,6 +38,8 @@ export default function EcommerceLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Popup Ads */}
+      <EcommerceAdBanner posicao="popup" />
       {/* Top bar */}
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
