@@ -193,9 +193,9 @@ export default function EcommerceProduct() {
 
   return (
     <>
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-28 md:pb-6">
       {/* Breadcrumb */}
-      {branding.feat_breadcrumb && <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+      {branding.feat_breadcrumb && <nav className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground mb-6 overflow-x-auto">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <Link to="/ecommerce/catalogo" className="hover:text-primary transition-colors">Catálogo</Link>
@@ -295,8 +295,8 @@ export default function EcommerceProduct() {
               </div>
             </div>
 
-            <div className="flex gap-2 sm:gap-3">
-              <Button ref={cartBtnRef} size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button ref={cartBtnRef} size="lg" className="w-full flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
                 if (product) {
                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                   setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
@@ -306,23 +306,25 @@ export default function EcommerceProduct() {
               }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
-              {branding.feat_favoritos && <Button ref={heartBtnRef} variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={(e) => {
-                if (product) {
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  const added = toggleWishlist({ productId: product.id, name: product.nome, image: product.foto_url || undefined, price: product.preco_tabela || product.preco_minimo || undefined });
-                  if (added) {
-                    setFlyAnim({ startRect: rect, target: "[data-wishlist-target]", image: product.foto_url || undefined, icon: "heart" });
-                    toast.success("Adicionado aos favoritos ❤️");
-                  } else {
-                    toast.success("Removido dos favoritos");
+              <div className="flex gap-2 sm:gap-3 sm:w-auto">
+                {branding.feat_favoritos && <Button ref={heartBtnRef} variant="outline" size="lg" className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={(e) => {
+                  if (product) {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const added = toggleWishlist({ productId: product.id, name: product.nome, image: product.foto_url || undefined, price: product.preco_tabela || product.preco_minimo || undefined });
+                    if (added) {
+                      setFlyAnim({ startRect: rect, target: "[data-wishlist-target]", image: product.foto_url || undefined, icon: "heart" });
+                      toast.success("Adicionado aos favoritos ❤️");
+                    } else {
+                      toast.success("Removido dos favoritos");
+                    }
                   }
-                }
-              }}>
-                <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
-              </Button>}
-              {branding.feat_compartilhar && <Button variant="outline" size="lg" className="h-12 w-12 rounded-full" onClick={handleShareProduct}>
-                <Share2 className="h-5 w-5" />
-              </Button>}
+                }}>
+                  <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
+                </Button>}
+                {branding.feat_compartilhar && <Button variant="outline" size="lg" className="h-11 w-11 sm:h-12 sm:w-12 rounded-full" onClick={handleShareProduct}>
+                  <Share2 className="h-5 w-5" />
+                </Button>}
+              </div>
             </div>
           </div>
 
@@ -378,15 +380,15 @@ export default function EcommerceProduct() {
           )}
 
           {/* Trust signals */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
             {[
               { icon: Truck, text: "Frete grátis acima de R$ 500" },
               { icon: Shield, text: "Compra 100% segura" },
               { icon: RotateCcw, text: "Troca em até 30 dias" },
             ].map((item, i) => (
-              <div key={i} className="text-center p-2 sm:p-3 rounded-xl bg-muted/30">
-                <item.icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-primary mb-1" />
-                <p className="text-[10px] text-muted-foreground leading-tight">{item.text}</p>
+              <div key={i} className="flex items-center gap-3 sm:block text-left sm:text-center p-3 rounded-xl bg-muted/30">
+                <item.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary sm:mx-auto sm:mb-1 shrink-0" />
+                <p className="text-xs text-muted-foreground leading-tight">{item.text}</p>
               </div>
             ))}
           </div>
@@ -396,14 +398,14 @@ export default function EcommerceProduct() {
       {/* Tabs */}
       <div className="mt-8 md:mt-12">
         <Tabs defaultValue="descricao">
-          <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0 overflow-x-auto flex-nowrap">
+            <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 gap-0 overflow-x-auto flex-nowrap">
             {[
               { value: "descricao", label: "Descrição" },
               { value: "especificacoes", label: "Especificações" },
               { value: "entrega", label: "Entrega" },
               ...(branding.feat_avaliacoes ? [{ value: "avaliacoes", label: "Avaliações (12)" }] : []),
             ].map((tab: any) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-6 py-3">
+              <TabsTrigger key={tab.value} value={tab.value} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm whitespace-nowrap">
                 {tab.label}
               </TabsTrigger>
             ))}

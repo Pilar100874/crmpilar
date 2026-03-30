@@ -125,7 +125,7 @@ export default function EcommerceLayout() {
 
       {/* Header */}
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-lg shadow-md" : "bg-background"}`}>
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
           {/* Mobile menu */}
           <Sheet>
             <SheetTrigger asChild>
@@ -169,11 +169,11 @@ export default function EcommerceLayout() {
           </Sheet>
 
           {/* Logo */}
-          <Link to="/ecommerce" className="flex-shrink-0">
+          <Link to="/ecommerce" className="min-w-0 flex-1 lg:flex-none lg:min-w-fit">
             {branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 md:max-h-12 max-w-[120px] md:max-w-[160px] object-contain" />
+              <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-8 sm:max-h-10 md:max-h-12 max-w-[96px] sm:max-w-[120px] md:max-w-[160px] object-contain" />
             ) : (
-              <span className="text-xl md:text-2xl font-black tracking-tight text-foreground">
+              <span className="block truncate text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
                 {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
               </span>
             )}
@@ -194,7 +194,7 @@ export default function EcommerceLayout() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="flex items-center gap-0.5 sm:gap-1 ml-auto shrink-0">
             {isFromSystem && (
               <Button variant="outline" size="sm" className="gap-1.5 text-xs font-medium rounded-full border-muted-foreground/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 mr-1" title="Voltar ao sistema" onClick={() => navigate("/dashboard")}>
                 <X className="h-3.5 w-3.5" />
@@ -204,11 +204,11 @@ export default function EcommerceLayout() {
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSearchOpen(!searchOpen)}>
               <Search className="h-5 w-5" />
             </Button>
-            <Link to="/ecommerce/conta">
+            <Link to="/ecommerce/conta" className="hidden sm:block">
               <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
             </Link>
             <Link to="/ecommerce/wishlist">
-              <Button variant="ghost" size="icon" className="relative" data-wishlist-target>
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10" data-wishlist-target>
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{wishlistCount}</span>
@@ -216,7 +216,7 @@ export default function EcommerceLayout() {
               </Button>
             </Link>
             <Link to="/ecommerce/carrinho">
-              <Button variant="ghost" size="icon" className="relative" data-cart-target>
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10" data-cart-target>
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{totalItems}</span>
@@ -277,7 +277,7 @@ export default function EcommerceLayout() {
       {/* Footer */}
       <footer className="bg-foreground text-background/80 mt-auto">
         <div className="max-w-7xl mx-auto px-4 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
               {branding.logo_url ? (
                 <img src={branding.logo_url} alt={branding.nome_loja} className="max-h-10 max-w-[140px] object-contain mb-4" />
