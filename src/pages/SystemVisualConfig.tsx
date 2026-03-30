@@ -168,10 +168,23 @@ export default function SystemVisualConfig() {
                 src={splashVideoUrl}
                 className="w-full max-h-[300px] object-cover"
                 autoPlay
-                loop
+                loop={splashVideoLoop}
                 muted
                 playsInline
               />
+              {/* Loop toggle over video */}
+              <div className="absolute top-2 left-2">
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                  <Switch
+                    id="loop-toggle"
+                    checked={splashVideoLoop}
+                    onCheckedChange={handleToggleLoop}
+                  />
+                  <Label htmlFor="loop-toggle" className="text-xs text-white cursor-pointer">
+                    Loop
+                  </Label>
+                </div>
+              </div>
               <div className="absolute bottom-2 right-2 flex gap-2">
                 <Button
                   variant="secondary"
