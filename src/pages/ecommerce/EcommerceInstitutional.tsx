@@ -38,13 +38,9 @@ export default function EcommerceInstitutional({ page }: { page: "sobre" | "cont
     const load = async () => {
       setLoading(true);
       const estId = localStorage.getItem("estabelecimentoId");
-      if (!estId) { setLoading(false); return; }
-      const { data } = await supabase
-        .from("ecommerce_conteudos")
-        .select("conteudo, dados_json")
-        .eq("estabelecimento_id", estId)
-        .eq("tipo", page)
-        .maybeSingle();
+      let query = supabase.from("ecommerce_conteudos").select("conteudo, dados_json").eq("tipo", page);
+      if (estId) { query = query.eq("estabelecimento_id", estId); }
+      const { data } = await query.maybeSingle();
       if (data) {
         setContent({
           conteudo: data.conteudo || "",

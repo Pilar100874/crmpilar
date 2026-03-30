@@ -76,11 +76,14 @@ export default function EcommerceHome() {
   const loadData = async () => {
     setLoading(true);
     const estabId = localStorage.getItem("estabelecimentoId");
-    if (!estabId) { setLoading(false); return; }
 
     const [productsRes, countRes] = await Promise.all([
-      supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12),
-      supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true),
+      estabId
+        ? supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12)
+        : supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("ativo", true).limit(12),
+      estabId
+        ? supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true)
+        : supabase.from("produtos").select("id", { count: "exact", head: true }).eq("ativo", true),
     ]);
 
     if (productsRes.data) setProducts(productsRes.data as any);
