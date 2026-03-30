@@ -177,7 +177,7 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
           <Button
             variant="outline"
             size="sm"
-            className="h-10 w-10 p-0 rounded-xl bg-white/80 hover:bg-white border-border/50 hover:border-primary/30 transition-all flex-shrink-0"
+            className="h-10 w-10 p-0 rounded-xl bg-card/80 dark:bg-card/80 hover:bg-card dark:hover:bg-card border-border/50 hover:border-primary/30 transition-all flex-shrink-0"
           >
             <UserSearch className="h-5 w-5 text-muted-foreground" />
           </Button>
@@ -333,7 +333,7 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
         <Button
           variant="outline"
           size="sm"
-          className="h-10 gap-2 text-xs text-muted-foreground hover:text-foreground justify-start px-3 bg-white/80 hover:bg-white border border-border/50 rounded-xl transition-all hover:shadow-md hover:border-primary/30 w-[calc(100%-16px)] mx-2 sm:w-full sm:mx-0"
+          className="h-10 gap-2 text-xs text-muted-foreground hover:text-foreground justify-start px-3 bg-card/80 dark:bg-card/80 hover:bg-card dark:hover:bg-card border border-border/50 rounded-xl transition-all hover:shadow-md hover:border-primary/30 w-[calc(100%-16px)] mx-2 sm:w-full sm:mx-0"
         >
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/20 flex-shrink-0">
             <UserSearch className="h-4 w-4 text-primary" />
