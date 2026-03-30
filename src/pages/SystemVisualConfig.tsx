@@ -72,7 +72,7 @@ export default function SystemVisualConfig() {
       // Save to DB
       const { error: dbError } = await supabase
         .from("system_visual_config")
-        .upsert({ estabelecimento_id: estId, splash_video_url: publicUrl }, { onConflict: "estabelecimento_id" });
+        .upsert({ estabelecimento_id: estId, splash_video_url: publicUrl, splash_video_loop: splashVideoLoop }, { onConflict: "estabelecimento_id" });
 
       if (dbError) {
         toast.error("Erro ao salvar: " + dbError.message);
