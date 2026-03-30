@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 
 const categories = [
   { name: "Papéis", slug: "papeis", subcategories: ["Sulfite", "Couché", "Offset", "Kraft"] },
@@ -37,6 +38,8 @@ export default function EcommerceLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Popup Ads */}
+      <EcommerceAdBanner posicao="popup" />
       {/* Top bar */}
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">

@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 
 interface Product {
   id: string;
@@ -158,6 +159,11 @@ export default function EcommerceCatalog() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Catalog Top Banner */}
+      <div className="mb-6">
+        <EcommerceAdBanner posicao="catalogo_topo" carousel />
+      </div>
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link to="/ecommerce" className="hover:text-primary transition-colors">Home</Link>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Truck, Shield, RotateCcw, Headphones, ChevronRight, Building2, TrendingUp, Users, Package, ShoppingCart } from "lucide-react";
+import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -233,6 +234,11 @@ export default function EcommerceHome() {
         </div>
       </section>
 
+      {/* Home Banner Ads */}
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <EcommerceAdBanner posicao="home_banner" carousel autoPlay interval={5000} />
+      </section>
+
       {/* Categories */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="flex items-center justify-between mb-8">
@@ -392,6 +398,11 @@ export default function EcommerceHome() {
             </div>
           </div>
         </Card>
+      </section>
+
+      {/* Footer Banner Ads */}
+      <section className="max-w-7xl mx-auto px-4 py-6">
+        <EcommerceAdBanner posicao="footer" />
       </section>
 
       {/* Testimonials */}
