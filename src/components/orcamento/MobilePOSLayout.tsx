@@ -945,7 +945,7 @@ export default function MobilePOSLayout({
                             <Eye className="w-3 h-3" />
                           </Button>
                           {/* Price overlay bottom-left */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 via-foreground/25 to-transparent pt-6 pb-1.5 px-2">
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-6 pb-1.5 px-2">
                             <span className="text-sm font-bold text-white drop-shadow-md">
                               R$ 10,00
                             </span>
