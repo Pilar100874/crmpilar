@@ -42,6 +42,8 @@ import {
   Building,
   Brain,
   Clock,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -184,6 +186,11 @@ export default function Layout({ children }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return document.documentElement.classList.contains("dark");
+  });
   const [openNestedSubmenu, setOpenNestedSubmenu] = useState<string | null>(null);
   const submenuPanelRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -191,6 +198,16 @@ export default function Layout({ children }: LayoutProps) {
   const { atalhos } = useAtalhos();
   const { avisosPendentes } = useAvisosSistema();
   
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(prev => !prev);
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
   
@@ -1042,6 +1059,28 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Toggle Dia/Noite */}
+            {menuLocked ? (
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-12 h-12 flex items-center justify-center rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
+                <span className="text-sm font-medium">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
+              </button>
             )}
 
             {/* Botão Sair - sempre abaixo do menu do usuário */}
