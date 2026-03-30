@@ -78,7 +78,7 @@ export default function EcommerceHome() {
     const estabId = localStorage.getItem("estabelecimentoId");
     if (!estabId) { setLoading(false); return; }
 
-    const [productsRes, pricesRes, countRes] = await Promise.all([
+    const [productsRes, countRes] = await Promise.all([
       supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12),
       supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true),
     ]);
