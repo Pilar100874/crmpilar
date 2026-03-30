@@ -31,6 +31,16 @@ export interface EcommerceBranding {
   newsletter_titulo: string;
   newsletter_subtitulo: string;
   secoes_visiveis: Record<string, boolean>;
+  feat_avaliacoes: boolean;
+  feat_favoritos: boolean;
+  feat_compartilhar: boolean;
+  feat_produtos_relacionados: boolean;
+  feat_b2b_card: boolean;
+  feat_estoque_visivel: boolean;
+  feat_newsletter: boolean;
+  feat_rating_estrelas: boolean;
+  feat_breadcrumb: boolean;
+  feat_zoom_imagem: boolean;
 }
 
 const defaults: EcommerceBranding = {
@@ -72,6 +82,16 @@ const defaults: EcommerceBranding = {
   newsletter_titulo: "Receba ofertas exclusivas",
   newsletter_subtitulo: "Cadastre-se e ganhe 10% de desconto na primeira compra",
   secoes_visiveis: { hero: true, beneficios: true, categorias: true, produtos: true, b2b: true, depoimentos: true, newsletter: true },
+  feat_avaliacoes: true,
+  feat_favoritos: true,
+  feat_compartilhar: true,
+  feat_produtos_relacionados: true,
+  feat_b2b_card: true,
+  feat_estoque_visivel: true,
+  feat_newsletter: true,
+  feat_rating_estrelas: true,
+  feat_breadcrumb: true,
+  feat_zoom_imagem: true,
 };
 
 export function useEcommerceBranding() {
@@ -119,6 +139,16 @@ export function useEcommerceBranding() {
           newsletter_titulo: d.newsletter_titulo || defaults.newsletter_titulo,
           newsletter_subtitulo: d.newsletter_subtitulo || defaults.newsletter_subtitulo,
           secoes_visiveis: d.secoes_visiveis || defaults.secoes_visiveis,
+          feat_avaliacoes: d.feat_avaliacoes ?? true,
+          feat_favoritos: d.feat_favoritos ?? true,
+          feat_compartilhar: d.feat_compartilhar ?? true,
+          feat_produtos_relacionados: d.feat_produtos_relacionados ?? true,
+          feat_b2b_card: d.feat_b2b_card ?? true,
+          feat_estoque_visivel: d.feat_estoque_visivel ?? true,
+          feat_newsletter: d.feat_newsletter ?? true,
+          feat_rating_estrelas: d.feat_rating_estrelas ?? true,
+          feat_breadcrumb: d.feat_breadcrumb ?? true,
+          feat_zoom_imagem: d.feat_zoom_imagem ?? true,
         });
       }
       setLoading(false);

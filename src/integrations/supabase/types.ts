@@ -3258,6 +3258,16 @@ export type Database = {
           created_at: string
           depoimentos: Json | null
           estabelecimento_id: string
+          feat_avaliacoes: boolean | null
+          feat_b2b_card: boolean | null
+          feat_breadcrumb: boolean | null
+          feat_compartilhar: boolean | null
+          feat_estoque_visivel: boolean | null
+          feat_favoritos: boolean | null
+          feat_newsletter: boolean | null
+          feat_produtos_relacionados: boolean | null
+          feat_rating_estrelas: boolean | null
+          feat_zoom_imagem: boolean | null
           footer_copyright: string | null
           footer_descricao: string | null
           footer_email: string | null
@@ -3293,6 +3303,16 @@ export type Database = {
           created_at?: string
           depoimentos?: Json | null
           estabelecimento_id: string
+          feat_avaliacoes?: boolean | null
+          feat_b2b_card?: boolean | null
+          feat_breadcrumb?: boolean | null
+          feat_compartilhar?: boolean | null
+          feat_estoque_visivel?: boolean | null
+          feat_favoritos?: boolean | null
+          feat_newsletter?: boolean | null
+          feat_produtos_relacionados?: boolean | null
+          feat_rating_estrelas?: boolean | null
+          feat_zoom_imagem?: boolean | null
           footer_copyright?: string | null
           footer_descricao?: string | null
           footer_email?: string | null
@@ -3328,6 +3348,16 @@ export type Database = {
           created_at?: string
           depoimentos?: Json | null
           estabelecimento_id?: string
+          feat_avaliacoes?: boolean | null
+          feat_b2b_card?: boolean | null
+          feat_breadcrumb?: boolean | null
+          feat_compartilhar?: boolean | null
+          feat_estoque_visivel?: boolean | null
+          feat_favoritos?: boolean | null
+          feat_newsletter?: boolean | null
+          feat_produtos_relacionados?: boolean | null
+          feat_rating_estrelas?: boolean | null
+          feat_zoom_imagem?: boolean | null
           footer_copyright?: string | null
           footer_descricao?: string | null
           footer_email?: string | null
