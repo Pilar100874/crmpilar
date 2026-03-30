@@ -118,12 +118,17 @@ export default function EcommerceProduct() {
     setLoading(true);
     const { data, error } = await supabase
       .from("produtos")
-      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+      .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
       .eq("id", productId)
       .maybeSingle();
 
     if (!error && data) {
-      setProduct(mapProduct(data));
+      // Resolver preço real
+      const resolvedPrice = await resolveProductPrice(data as any);
+      const mappedProduct = mapProduct(data);
+      mappedProduct.preco_minimo = resolvedPrice.precoMinimo;
+      mappedProduct.preco_tabela = resolvedPrice.precoTabela;
+      setProduct(mappedProduct);
 
       const catId = (data.categoria as any)?.id;
       const estabId = (data as any).estabelecimento_id;
@@ -131,7 +136,7 @@ export default function EcommerceProduct() {
       // Load related products and volume tiers in parallel
       const relatedPromise = catId
         ? supabase.from("produtos")
-            .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+            .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, largura, gramatura, comprimento, cor, material, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
             .eq("categoria_id", catId).eq("ativo", true).neq("id", productId).limit(4)
         : null;
 
