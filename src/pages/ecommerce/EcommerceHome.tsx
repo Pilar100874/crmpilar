@@ -80,7 +80,7 @@ export default function EcommerceHome() {
     if (!estabId) { setLoading(false); return; }
 
     const [productsRes, pricesRes, countRes] = await Promise.all([
-      supabase.from("produtos").select("id, nome, tipo, gramatura, largura, quantidade, embalagem").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12),
+      supabase.from("produtos").select("id, nome, marca, gramatura, largura, estoque, preco_tabela, preco_minimo, foto_url").eq("estabelecimento_id", estabId).eq("ativo", true).limit(12),
       supabase.from("tabelas_preco").select("categoria_id, preco_tabela, preco_minimo").eq("estabelecimento_id", estabId).eq("ativo", true),
       supabase.from("produtos").select("id", { count: "exact", head: true }).eq("estabelecimento_id", estabId).eq("ativo", true),
     ]);
