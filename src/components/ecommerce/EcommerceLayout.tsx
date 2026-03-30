@@ -201,7 +201,7 @@ export default function EcommerceLayout() {
               <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
             </Link>
             <Link to="/ecommerce/wishlist">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" data-wishlist-target>
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{wishlistCount}</span>
