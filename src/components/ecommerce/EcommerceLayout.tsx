@@ -25,6 +25,7 @@ export default function EcommerceLayout() {
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
   const { branding } = useEcommerceBranding();
