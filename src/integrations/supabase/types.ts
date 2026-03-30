@@ -11529,6 +11529,38 @@ export type Database = {
           },
         ]
       }
+      system_visual_config: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          splash_video_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          splash_video_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          splash_video_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_visual_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tabelas_preco: {
         Row: {
           ativo: boolean | null
