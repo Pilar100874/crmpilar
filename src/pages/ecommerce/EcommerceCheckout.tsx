@@ -404,8 +404,8 @@ export default function EcommerceCheckout() {
 
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(2)} className="rounded-full gap-2"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-                    <Button onClick={handleFinish} className="rounded-full gap-2 px-8 h-12 text-base bg-success hover:bg-success/90 text-success-foreground">
-                      <Lock className="h-4 w-4" /> Confirmar e Pagar
+                    <Button onClick={handleFinish} disabled={isSubmitting} className="rounded-full gap-2 px-8 h-12 text-base bg-success hover:bg-success/90 text-success-foreground">
+                      <Lock className="h-4 w-4" /> {isSubmitting ? "Processando..." : "Confirmar e Pagar"}
                     </Button>
                   </div>
                 </CardContent>
