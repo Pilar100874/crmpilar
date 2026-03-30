@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronRight, Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Share2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
+import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 interface Product {
   id: string;
@@ -38,12 +40,16 @@ const formatPrice = (value: number | null) => {
 export default function EcommerceProduct() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const { branding } = useEcommerceBranding();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [wishlisted, setWishlisted] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const cartBtnRef = useRef<HTMLButtonElement>(null);
+  const heartBtnRef = useRef<HTMLButtonElement>(null);
+  const wishlisted = product ? isWishlisted(product.id) : false;
 
   const copyProductLink = async () => {
     try {
@@ -173,6 +179,7 @@ export default function EcommerceProduct() {
   const inStock = (product.estoque ?? 0) > 0;
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Breadcrumb */}
       {branding.feat_breadcrumb && <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
@@ -276,17 +283,27 @@ export default function EcommerceProduct() {
             </div>
 
             <div className="flex gap-2 sm:gap-3">
-              <Button size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={() => {
+              <Button ref={cartBtnRef} size="lg" className="flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
                 if (product) {
-                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999 });
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined });
                   toast.success("Produto adicionado ao carrinho!");
                 }
               }}>
                 <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
               </Button>
-              {branding.feat_favoritos && <Button variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={() => {
-                setWishlisted(!wishlisted);
-                toast.success(wishlisted ? "Removido dos favoritos" : "Adicionado aos favoritos ❤️");
+              {branding.feat_favoritos && <Button ref={heartBtnRef} variant="outline" size="lg" className={`h-12 w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={(e) => {
+                if (product) {
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  const added = toggleWishlist({ productId: product.id, name: product.nome, image: product.foto_url || undefined, price: product.preco_tabela || product.preco_minimo || undefined });
+                  if (added) {
+                    setFlyAnim({ startRect: rect, target: "[data-wishlist-target]", image: product.foto_url || undefined, icon: "heart" });
+                    toast.success("Adicionado aos favoritos ❤️");
+                  } else {
+                    toast.success("Removido dos favoritos");
+                  }
+                }
               }}>
                 <Heart className={`h-5 w-5 ${wishlisted ? "fill-red-500" : ""}`} />
               </Button>}
@@ -456,5 +473,15 @@ export default function EcommerceProduct() {
         </div>
       </div>
     </div>
+    {flyAnim && (
+      <FlyToAnimation
+        startRect={flyAnim.startRect}
+        targetSelector={flyAnim.target}
+        imageUrl={flyAnim.image}
+        icon={flyAnim.icon}
+        onComplete={() => setFlyAnim(null)}
+      />
+    )}
+    </>
   );
 }

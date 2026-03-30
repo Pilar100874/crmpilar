@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
@@ -21,7 +22,7 @@ export default function EcommerceLayout() {
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { totalItems } = useCart();
-  const [wishlistCount] = useState(0);
+  const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const location = useLocation();
@@ -200,7 +201,7 @@ export default function EcommerceLayout() {
               <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
             </Link>
             <Link to="/ecommerce/wishlist">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" data-wishlist-target>
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{wishlistCount}</span>
@@ -208,7 +209,7 @@ export default function EcommerceLayout() {
               </Button>
             </Link>
             <Link to="/ecommerce/carrinho">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" data-cart-target>
                 <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{totalItems}</span>
