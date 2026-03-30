@@ -159,14 +159,13 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-6">
 
-        {/* Logo */}
-        <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ width: '12rem', height: '12rem' }}>
-          <img
-            src={logoApp}
-            alt="Logo"
-            className="w-full h-full object-cover"
-          />
-        </div>
+        {/* Logo 3x3cm */}
+        <img
+          src={logoApp}
+          alt="Logo Pilar"
+          style={{ width: '3cm', height: '3cm', objectFit: 'contain' }}
+          className="rounded-xl shadow-2xl"
+        />
 
         {/* Login Card */}
         <Card className="w-full backdrop-blur-xl bg-card/80 border-border/30 shadow-2xl rounded-2xl">
