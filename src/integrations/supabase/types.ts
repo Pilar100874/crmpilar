@@ -3260,6 +3260,7 @@ export type Database = {
           estabelecimento_id: string
           feat_avaliacoes: boolean | null
           feat_b2b_card: boolean | null
+          feat_b2b_volume: boolean
           feat_breadcrumb: boolean | null
           feat_compartilhar: boolean | null
           feat_estoque_visivel: boolean | null
@@ -3305,6 +3306,7 @@ export type Database = {
           estabelecimento_id: string
           feat_avaliacoes?: boolean | null
           feat_b2b_card?: boolean | null
+          feat_b2b_volume?: boolean
           feat_breadcrumb?: boolean | null
           feat_compartilhar?: boolean | null
           feat_estoque_visivel?: boolean | null
@@ -3350,6 +3352,7 @@ export type Database = {
           estabelecimento_id?: string
           feat_avaliacoes?: boolean | null
           feat_b2b_card?: boolean | null
+          feat_b2b_volume?: boolean
           feat_breadcrumb?: boolean | null
           feat_compartilhar?: boolean | null
           feat_estoque_visivel?: boolean | null
@@ -3480,6 +3483,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ecommerce_rules_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ecommerce_volume_pricing: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome_faixa: string
+          ordem: number
+          percentual_desconto: number
+          quantidade_maxima: number | null
+          quantidade_minima: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome_faixa: string
+          ordem?: number
+          percentual_desconto?: number
+          quantidade_maxima?: number | null
+          quantidade_minima: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome_faixa?: string
+          ordem?: number
+          percentual_desconto?: number
+          quantidade_maxima?: number | null
+          quantidade_minima?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ecommerce_volume_pricing_estabelecimento_id_fkey"
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
