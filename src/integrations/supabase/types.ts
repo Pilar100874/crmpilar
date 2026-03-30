@@ -3252,6 +3252,13 @@ export type Database = {
           cor_secundaria: string | null
           created_at: string
           estabelecimento_id: string
+          footer_copyright: string | null
+          footer_descricao: string | null
+          footer_email: string | null
+          footer_horario: string | null
+          footer_links_extras: Json | null
+          footer_pagamentos: string[] | null
+          footer_telefone: string | null
           id: string
           logo_url: string | null
           nome_loja: string | null
@@ -3265,6 +3272,13 @@ export type Database = {
           cor_secundaria?: string | null
           created_at?: string
           estabelecimento_id: string
+          footer_copyright?: string | null
+          footer_descricao?: string | null
+          footer_email?: string | null
+          footer_horario?: string | null
+          footer_links_extras?: Json | null
+          footer_pagamentos?: string[] | null
+          footer_telefone?: string | null
           id?: string
           logo_url?: string | null
           nome_loja?: string | null
@@ -3278,6 +3292,13 @@ export type Database = {
           cor_secundaria?: string | null
           created_at?: string
           estabelecimento_id?: string
+          footer_copyright?: string | null
+          footer_descricao?: string | null
+          footer_email?: string | null
+          footer_horario?: string | null
+          footer_links_extras?: Json | null
+          footer_pagamentos?: string[] | null
+          footer_telefone?: string | null
           id?: string
           logo_url?: string | null
           nome_loja?: string | null

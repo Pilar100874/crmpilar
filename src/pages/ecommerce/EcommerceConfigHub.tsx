@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, Image, Video } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, Image, Video, PanelBottom } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -59,6 +59,15 @@ const configSections = [
     url: "/ecommerce-config/anuncios",
     color: "text-red-500",
     bg: "bg-red-500/10",
+  },
+  {
+    id: "rodape",
+    title: "Rodapé",
+    description: "Edite descrição, contato, pagamentos e links do rodapé",
+    icon: PanelBottom,
+    url: "/ecommerce-config/rodape",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
   },
 ];
 
