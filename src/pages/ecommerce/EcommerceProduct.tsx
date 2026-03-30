@@ -46,6 +46,8 @@ export default function EcommerceProduct() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [volumeTiers, setVolumeTiers] = useState<any[]>([]);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const heartBtnRef = useRef<HTMLButtonElement>(null);
