@@ -66,15 +66,21 @@ export default function EcommerceWishlist() {
                 <p className="text-sm font-bold text-primary">R$ {item.price.toFixed(2)}</p>
               )}
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={(e) => {
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: item.image, icon: "cart" });
-                  addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: 999, image: item.image, price: item.price || 0 });
-                  toast.success("Adicionado ao carrinho!");
-                }}>
-                  <ShoppingCart className="h-3.5 w-3.5" /> Carrinho
-                </Button>
-                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 px-2" onClick={() => {
+                {(stockMap[item.productId] ?? 0) > 0 ? (
+                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: item.image, icon: "cart" });
+                    addItem({ productId: item.productId, name: item.name, type: null, gramatura: null, quantity: 1, maxStock: stockMap[item.productId] ?? 999, image: item.image, price: item.price || 0 });
+                    toast.success("Adicionado ao carrinho!");
+                  }}>
+                    <ShoppingCart className="h-3.5 w-3.5" /> Carrinho
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" className="flex-1 text-xs gap-1 opacity-50" disabled>
+                    <PackageX className="h-3.5 w-3.5" /> Sem estoque
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2" onClick={() => {
                   removeItem(item.productId);
                   toast.success("Removido dos favoritos");
                 }}>
