@@ -134,7 +134,7 @@ export default function Login() {
           src={splashVideoUrl}
           className="absolute inset-0 w-full h-full object-cover z-0"
           autoPlay
-          loop
+          loop={splashVideoLoop}
           muted
           playsInline
         />

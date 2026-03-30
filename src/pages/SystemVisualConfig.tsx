@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Trash2, Save, Paintbrush, Video, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "sonner";
@@ -13,6 +15,7 @@ export default function SystemVisualConfig() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [splashVideoUrl, setSplashVideoUrl] = useState("");
+  const [splashVideoLoop, setSplashVideoLoop] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
