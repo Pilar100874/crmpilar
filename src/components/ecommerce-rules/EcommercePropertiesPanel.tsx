@@ -901,10 +901,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <Label className="text-xs">Texto do Botão</Label>
               <Input value={config.botaoTexto || "Aproveitar!"} onChange={e => updateConfig("botaoTexto", e.target.value)} />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Link do Botão (opcional)</Label>
-              <Input value={config.botaoLink || ""} onChange={e => updateConfig("botaoLink", e.target.value)} placeholder="/ecommerce/catalogo" />
-            </div>
+            <LinkSelector label="Link do Botão (opcional)" value={config.botaoLink || ""} onChange={v => updateConfig("botaoLink", v)} />
             <div className="space-y-1">
               <Label className="text-xs">Delay (segundos)</Label>
               <Input type="number" value={config.delay || 3} onChange={e => updateConfig("delay", Number(e.target.value))} />
