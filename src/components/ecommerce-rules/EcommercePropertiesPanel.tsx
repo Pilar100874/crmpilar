@@ -1189,32 +1189,53 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
           </div>
         );
 
-      case "acao_destaque_vitrine":
+      case "acao_destaque_vitrine": {
+        const vitrineMode = (config.produtos && config.produtos.length > 0) ? "produtos" : (config.categoriaId ? "categoria" : (config.vitrineModo || "produtos"));
         return (
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-xs">Título da Seção</Label>
               <Input value={config.titulo || "Oferta Especial"} onChange={e => updateConfig("titulo", e.target.value)} />
             </div>
-            <MultiProductSelector
-              value={config.produtos || []}
-              onChange={v => updateConfig("produtos", v)}
-            />
             <div className="space-y-1">
-              <Label className="text-xs">Ou selecionar por Categoria</Label>
+              <Label className="text-xs">Selecionar por</Label>
+              <Select
+                value={vitrineMode}
+                onValueChange={v => {
+                  if (v === "produtos") {
+                    updateConfig("vitrineModo", "produtos", { categoriaId: "", categoriaNome: "" });
+                  } else {
+                    updateConfig("vitrineModo", "categoria", { produtos: [] });
+                  }
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="produtos">Produtos específicos</SelectItem>
+                  <SelectItem value="categoria">Categoria</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {vitrineMode === "produtos" ? (
+              <MultiProductSelector
+                value={config.produtos || []}
+                onChange={v => updateConfig("produtos", v)}
+              />
+            ) : (
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
                   updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
-            </div>
+            )}
             <div className="space-y-1">
               <Label className="text-xs">Máx. produtos exibidos</Label>
               <Input type="number" value={config.maxProdutos || 8} onChange={e => updateConfig("maxProdutos", Number(e.target.value))} min={1} max={50} />
             </div>
           </div>
         );
+      }
 
       case "acao_mensagem_carrinho":
         return (
