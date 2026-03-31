@@ -54,6 +54,8 @@ export function useEcommerceRulesEngine() {
       const banners: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const vitrines: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const fretes: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const descontos: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const pagamentos: (RuleAction & { ruleId: string; ruleName: string })[] = [];
 
       for (const rule of rules) {
         // Check date range
