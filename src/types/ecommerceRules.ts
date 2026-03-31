@@ -365,6 +365,19 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     category: "acao_pagamento",
     defaultData: { percentual: 3 },
   },
+  {
+    type: "acao_regra_pagamento",
+    label: "Regra de Pagamento por Valor",
+    description: "Define tipos e condições de pagamento conforme faixa de valor do pedido",
+    icon: "Wallet",
+    color: "#ef4444",
+    category: "acao_pagamento",
+    defaultData: {
+      faixas: [
+        { valorMin: 0, valorMax: 500, tipoPagamentoIds: [], condicaoPagamentoIds: [] },
+      ],
+    },
+  },
 ];
 
 export interface EcommerceRuleNode {
