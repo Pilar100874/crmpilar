@@ -209,32 +209,19 @@ export default function EcommerceRulesPage() {
                     customContent={
                       <div className="space-y-2">
                         {getCategoryBadge(rule.categoria)}
-                        <div>
-                          <span className="text-xs text-muted-foreground">Vencimento:</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1", !rule.expires_at && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yyyy") : "Indeterminado"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-50" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={rule.expires_at ? new Date(rule.expires_at) : undefined}
-                                onSelect={(date) => handleUpdateExpiration(rule.id, date || null)}
-                                initialFocus
-                                disabled={(date) => date < new Date()}
-                              />
-                              {rule.expires_at && (
-                                <div className="p-3 border-t">
-                                  <Button variant="ghost" size="sm" onClick={() => handleUpdateExpiration(rule.id, null)} className="w-full">
-                                    Remover vencimento
-                                  </Button>
-                                </div>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">Início:</span>
+                            <p className="text-xs font-medium mt-0.5">
+                              {rule.starts_at ? format(new Date(rule.starts_at), "dd/MM/yyyy") : "Imediato"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Fim:</span>
+                            <p className="text-xs font-medium mt-0.5">
+                              {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yyyy") : "Indeterminado"}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     }
