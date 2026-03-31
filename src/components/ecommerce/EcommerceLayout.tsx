@@ -408,6 +408,8 @@ export default function EcommerceLayout() {
           </div>
         </div>
       </footer>
+
+      <EcommerceFloatingChat />
     </div>
   );
 }
