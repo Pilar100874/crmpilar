@@ -116,14 +116,14 @@ function VitrineSection({ action }: { action: { ruleId: string; config: Record<s
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-stretch">
           {products.map((product, i) => {
             const preco = product.preco_minimo || product.preco_tabela;
             return (
-              <motion.div key={product.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-                <Link to={`/ecommerce/produto/${product.id}`}>
-                  <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-primary/10">
-                    <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+              <motion.div key={product.id} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex">
+                <Link to={`/ecommerce/produto/${product.id}`} className="flex w-full">
+                  <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-primary/10 flex flex-col w-full">
+                    <div className="relative aspect-square bg-muted/50 flex items-center justify-center flex-shrink-0">
                       {product.foto_url ? (
                         <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain p-2" loading="lazy" />
                       ) : (
@@ -131,11 +131,11 @@ function VitrineSection({ action }: { action: { ruleId: string; config: Record<s
                       )}
                       <Badge className="absolute top-2 left-2 text-[10px] bg-primary text-primary-foreground">Destaque</Badge>
                     </div>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 flex flex-col flex-1">
                       {product.marca && <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{product.marca}</p>}
-                      <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2">{product.nome}</h3>
+                      <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2 flex-1">{product.nome}</h3>
                       {preco && (
-                        <span className="text-lg font-bold text-primary">
+                        <span className="text-lg font-bold text-primary mt-auto">
                           R$ {preco.toFixed(2)}
                         </span>
                       )}
