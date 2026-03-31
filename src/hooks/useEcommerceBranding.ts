@@ -54,6 +54,8 @@ export interface EcommerceBranding {
   topbar_telefone: string;
   topbar_link_b2b: boolean;
   modo_catalogo: boolean;
+  modo_catalogo_b2c: boolean;
+  modo_catalogo_b2b: boolean;
   mostrar_precos_visitante_b2c: boolean;
   mostrar_precos_visitante_b2b: boolean;
   feat_webchat: boolean;
@@ -119,6 +121,8 @@ const defaults: EcommerceBranding = {
   topbar_telefone: "(11) 4002-8922",
   topbar_link_b2b: true,
   modo_catalogo: false,
+  modo_catalogo_b2c: false,
+  modo_catalogo_b2b: false,
   mostrar_precos_visitante_b2c: true,
   mostrar_precos_visitante_b2b: true,
   feat_webchat: false,
@@ -193,6 +197,8 @@ export function useEcommerceBranding() {
           topbar_telefone: d.topbar_telefone || defaults.topbar_telefone,
           topbar_link_b2b: d.topbar_link_b2b ?? true,
           modo_catalogo: d.modo_catalogo ?? false,
+          modo_catalogo_b2c: d.modo_catalogo_b2c ?? d.modo_catalogo ?? false,
+          modo_catalogo_b2b: d.modo_catalogo_b2b ?? d.modo_catalogo ?? false,
           mostrar_precos_visitante_b2c: d.mostrar_precos_visitante_b2c ?? true,
           mostrar_precos_visitante_b2b: d.mostrar_precos_visitante_b2b ?? true,
           feat_webchat: d.feat_webchat ?? false,

@@ -45,7 +45,8 @@ export default function EcommerceProduct() {
   const { addItem: addQuoteItem } = useQuoteRequest();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { branding } = useEcommerceBranding();
-  const isCatalogMode = branding.modo_catalogo;
+  const isB2BRoute = window.location.pathname.includes("/b2b");
+  const isCatalogMode = isB2BRoute ? branding.modo_catalogo_b2b : branding.modo_catalogo_b2c;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);

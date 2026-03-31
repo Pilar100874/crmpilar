@@ -3361,6 +3361,8 @@ export type Database = {
           id: string
           logo_url: string | null
           modo_catalogo: boolean
+          modo_catalogo_b2b: boolean | null
+          modo_catalogo_b2c: boolean | null
           mostrar_precos_visitante_b2b: boolean
           mostrar_precos_visitante_b2c: boolean
           newsletter_subtitulo: string | null
@@ -3431,6 +3433,8 @@ export type Database = {
           id?: string
           logo_url?: string | null
           modo_catalogo?: boolean
+          modo_catalogo_b2b?: boolean | null
+          modo_catalogo_b2c?: boolean | null
           mostrar_precos_visitante_b2b?: boolean
           mostrar_precos_visitante_b2c?: boolean
           newsletter_subtitulo?: string | null
@@ -3501,6 +3505,8 @@ export type Database = {
           id?: string
           logo_url?: string | null
           modo_catalogo?: boolean
+          modo_catalogo_b2b?: boolean | null
+          modo_catalogo_b2c?: boolean | null
           mostrar_precos_visitante_b2b?: boolean
           mostrar_precos_visitante_b2c?: boolean
           newsletter_subtitulo?: string | null

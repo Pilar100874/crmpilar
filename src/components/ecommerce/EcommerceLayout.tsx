@@ -54,7 +54,8 @@ export default function EcommerceLayout() {
   const { branding, loading: brandingLoading } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
-  const isCatalogMode = branding.modo_catalogo;
+  const isB2BRoute = location.pathname.includes("/b2b");
+  const isCatalogMode = isB2BRoute ? branding.modo_catalogo_b2b : branding.modo_catalogo_b2c;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
