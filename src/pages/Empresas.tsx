@@ -1630,6 +1630,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                           case 'company_type':
                             cellValue = empresa.custom_fields?.company_type || "-";
                             break;
+                          case 'tipo_cliente':
+                            cellValue = (empresa as any).tipo_cliente || "B2B";
+                            break;
                           case 'inscricao':
                             cellValue = empresa.custom_fields?.inscricao || "-";
                             break;
