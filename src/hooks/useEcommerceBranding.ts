@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+export interface TopbarItem {
+  icone: string;
+  texto: string;
+  posicao: "esquerda" | "direita";
+}
+
 export interface EcommerceBranding {
   logo_url: string;
   background_video_url: string;
@@ -43,6 +49,10 @@ export interface EcommerceBranding {
   feat_rating_estrelas: boolean;
   feat_breadcrumb: boolean;
   feat_zoom_imagem: boolean;
+  topbar_ativo: boolean;
+  topbar_items: TopbarItem[];
+  topbar_telefone: string;
+  topbar_link_b2b: boolean;
 }
 
 const defaults: EcommerceBranding = {
