@@ -65,6 +65,7 @@ const tabItems: TabItem[] = [
   { id: 'condicoes', label: 'Condições de Pagamento', icon: Wallet },
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
+  { id: 'frete-terceiros', label: 'Frete de Terceiros', icon: Truck },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
   { id: 'relatorio-orcamento', label: 'Configuração do Relatório', icon: FileText },
   { id: 'importacao-api', label: 'Importação via API', icon: Globe },
