@@ -21,7 +21,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   coupon: string | null;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   couponDiscount: number;
 }
@@ -29,11 +29,6 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null);
 
 const CART_KEY = "ecommerce_cart";
-const VALID_COUPONS: Record<string, number> = {
-  PRIMEIRA10: 10,
-  LOJA20: 20,
-  VIP15: 15,
-};
 
 const hasValidPrice = (price: unknown) => typeof price === "number" && Number.isFinite(price) && price > 0;
 
