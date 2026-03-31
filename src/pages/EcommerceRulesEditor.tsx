@@ -121,6 +121,9 @@ function EcommerceRulesEditorInner() {
         nome: flowName,
         flow_data: { nodes: cleanNodes, edges } as any,
         descricao: `Regra com ${cleanNodes.length} blocos`,
+        ativo: ruleAtivo,
+        starts_at: startsAt?.toISOString() || null,
+        expires_at: expiresAt?.toISOString() || null,
       };
 
       if (ruleId) {
