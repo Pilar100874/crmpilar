@@ -141,7 +141,7 @@ export default function EcommerceFeaturesEditor() {
                 </div>
               </div>
               <Switch
-                checked={toggles[feat.key] ?? (feat.key === "modo_catalogo" ? false : true)}
+                checked={toggles[feat.key] ?? (feat.key.startsWith("mostrar_precos") ? true : false)}
                 onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
               />
             </div>
