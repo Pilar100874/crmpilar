@@ -188,6 +188,9 @@ export function useEcommerceBranding() {
           topbar_items: d.topbar_items || defaults.topbar_items,
           topbar_telefone: d.topbar_telefone || defaults.topbar_telefone,
           topbar_link_b2b: d.topbar_link_b2b ?? true,
+          modo_catalogo: d.modo_catalogo ?? false,
+          mostrar_precos_visitante_b2c: d.mostrar_precos_visitante_b2c ?? true,
+          mostrar_precos_visitante_b2b: d.mostrar_precos_visitante_b2b ?? true,
         });
       }
       setLoading(false);
