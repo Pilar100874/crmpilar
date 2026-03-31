@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
+import EcommerceRulesPopup from "@/components/ecommerce/EcommerceRulesPopup";
 import BrandLogo from "@/components/ecommerce/BrandLogo";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
@@ -121,6 +122,7 @@ export default function EcommerceLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <EcommerceAdBanner posicao="popup" />
+      <EcommerceRulesPopup />
       {/* Top bar */}
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
