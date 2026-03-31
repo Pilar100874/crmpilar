@@ -61,6 +61,9 @@ function EcommerceRulesEditorInner() {
   const [noteDialog, setNoteDialog] = useState<{ nodeId: string; note: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [ruleAtivo, setRuleAtivo] = useState(true);
+  const [startsAt, setStartsAt] = useState<Date | undefined>(undefined);
+  const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (ruleId) loadRule(ruleId);
