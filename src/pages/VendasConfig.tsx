@@ -40,6 +40,7 @@ import { AutomacaoVendasCRUD } from '@/components/config/AutomacaoVendasCRUD';
 import { CustosVeiculosCRUD } from '@/components/config/CustosVeiculosCRUD';
 import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
+import FreteTerceirosConfig from '@/components/config/FreteTerceirosConfig';
 import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
 import { OrcamentoReportConfigContent } from '@/components/config/OrcamentoReportConfigContent';
 import LicitacoesBot from '@/components/vendas/LicitacoesBot';
