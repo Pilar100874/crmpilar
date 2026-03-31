@@ -410,13 +410,14 @@ export default function PedidosRecebidos() {
                         onCheckedChange={c => setSelectedForPrint(c ? filteredPedidos.map(p => p.id) : [])}
                       />
                     </TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Origem</TableHead>
-                    <TableHead>Nº Pedido</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Fulfillment</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                     <TableHead>Data</TableHead>
+                     <TableHead>Origem</TableHead>
+                     <TableHead>Nº Pedido</TableHead>
+                     <TableHead>Cliente</TableHead>
+                     <TableHead className="text-right">Desconto</TableHead>
+                     <TableHead className="text-right">Valor</TableHead>
+                     <TableHead>Fulfillment</TableHead>
+                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
