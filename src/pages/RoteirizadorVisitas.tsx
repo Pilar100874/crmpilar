@@ -407,6 +407,7 @@ const RoteirizadorVisitas: React.FC = () => {
               horaFinal={horaFinal}
               formatDist={formatDist}
               formatDur={formatDur}
+              clearAll={() => { setVisitas([]); setRoute(null); }}
             />
           </ScrollArea>
         </div>
