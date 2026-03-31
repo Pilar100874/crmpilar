@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -52,6 +53,7 @@ export default function EcommerceCuponsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyCupom);
   const [estabId, setEstabId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -137,10 +139,11 @@ export default function EcommerceCuponsPage() {
     if (estabId) loadCupons(estabId);
   };
 
-  const deleteCupom = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cupom?")) return;
-    await supabase.from("cupons_desconto").delete().eq("id", id);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    await supabase.from("cupons_desconto").delete().eq("id", deleteId);
     toast.success("Cupom excluído");
+    setDeleteId(null);
     if (estabId) loadCupons(estabId);
   };
 
@@ -219,7 +222,7 @@ export default function EcommerceCuponsPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteCupom(c.id)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(c.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -341,6 +344,23 @@ export default function EcommerceCuponsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteId} onOpenChange={o => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir cupom?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O cupom será removido permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
