@@ -368,6 +368,23 @@ export default function VendasConfig() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="frete-terceiros" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Frete de Terceiros
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Configure APIs de transportadoras e gateways de frete externo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <FreteTerceirosConfig estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="automacao" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
