@@ -310,16 +310,6 @@ const RoteirizadorVisitas: React.FC = () => {
   const mapBounds = route ? route.coordinates : undefined;
   const currentMarker = currentLocation ? { lat: currentLocation.lat, lng: currentLocation.lng, color: '#22c55e', label: 'Você' } : undefined;
 
-  // Map paradas - convert selected visits to paradas format
-  const paradasMarcadas = visitasSelecionadas.map((v, i) => ({
-    id: v.id,
-    nome: v.empresa.nome_fantasia || v.empresa.nome,
-    endereco: `${v.empresa.endereco || ''}, ${v.empresa.bairro || ''} - ${v.empresa.cidade || ''}`,
-    lat: v.empresa.latitude!,
-    lng: v.empresa.longitude!,
-    ordem: v.ordem || i + 1,
-    tipo: 'entrega' as const,
-  }));
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
