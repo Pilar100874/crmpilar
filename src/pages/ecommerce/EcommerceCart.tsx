@@ -81,8 +81,8 @@ export default function EcommerceCart() {
     if (cep.length >= 8) setShippingCalculated(true);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = rawSubtotal;
+  const totalQuantity = rawTotalQty;
 
   // Calculate rule-based discounts
   let ruleDiscount = 0;
