@@ -144,6 +144,7 @@ export default function EcommerceCatalog() {
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedMarcas.length > 0 && (!p.marca || !selectedMarcas.includes(p.marca))) return false;
+    if (filterInStock && (p.estoque === null || p.estoque === undefined || p.estoque <= 0)) return false;
     return true;
   });
 
