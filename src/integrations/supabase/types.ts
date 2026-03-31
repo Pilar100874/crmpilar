@@ -4479,6 +4479,56 @@ export type Database = {
           },
         ]
       }
+      frete_terceiros_config: {
+        Row: {
+          api_key: string | null
+          api_url: string | null
+          ativo: boolean | null
+          configuracao_extra: Json | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome_display: string
+          provider: string
+          token: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          api_url?: string | null
+          ativo?: boolean | null
+          configuracao_extra?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome_display: string
+          provider: string
+          token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          api_url?: string | null
+          ativo?: boolean | null
+          configuracao_extra?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome_display?: string
+          provider?: string
+          token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frete_terceiros_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funil_deals: {
         Row: {
           cliente_id: string | null
