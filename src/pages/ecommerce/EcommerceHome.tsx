@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Truck, Shield, RotateCcw, Headphones, ChevronRight, Building2, TrendingUp, Users, Package, ShoppingCart, Clock, Check, Gift } from "lucide-react";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
+import EcommerceRulesVitrine from "@/components/ecommerce/EcommerceRulesVitrine";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
