@@ -100,7 +100,7 @@ export default function EcommerceFeaturesEditor() {
               Funcionalidades da Loja
             </h1>
             <p className="text-muted-foreground text-sm">
-              Ative ou desative recursos do e-commerce · {enabledCount}/{features.length} ativos
+              Ative ou desative recursos do e-commerce
             </p>
           </div>
         </div>
@@ -108,6 +108,38 @@ export default function EcommerceFeaturesEditor() {
           <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar"}
         </Button>
       </div>
+
+      {/* Mode settings */}
+      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileText className="h-5 w-5 text-amber-500" />
+            Modo de Operação & Visibilidade de Preços
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Configure como a loja exibe preços e se o visitante compra diretamente ou solicita orçamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          {modeFeatures.map(feat => (
+            <div key={feat.key} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${toggles[feat.key] ? "border-primary/30 bg-primary/5" : "bg-background"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${toggles[feat.key] ? "bg-primary/10" : "bg-muted"}`}>
+                  <feat.icon className={`h-4 w-4 ${toggles[feat.key] ? feat.color : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold cursor-pointer">{feat.label}</Label>
+                  <p className="text-[11px] text-muted-foreground">{feat.description}</p>
+                </div>
+              </div>
+              <Switch
+                checked={toggles[feat.key] ?? (feat.key === "modo_catalogo" ? false : true)}
+                onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3">
         {features.map(feat => (
