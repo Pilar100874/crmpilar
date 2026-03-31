@@ -117,7 +117,7 @@ export default function EcommerceCatalog() {
 
       let query = supabase
         .from("produtos")
-        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
         .eq("ativo", true);
 
       if (estabId) {
@@ -129,7 +129,7 @@ export default function EcommerceCatalog() {
       if (!error && data) {
         const priceMap = await resolveProductPricesBatch(data as any[]);
 
-        let mapped = data.map((p: any) => ({
+        let mapped: Product[] = data.map((p: any) => ({
           id: p.id,
           nome: p.nome,
           descricao: p.descricao,
@@ -140,6 +140,8 @@ export default function EcommerceCatalog() {
           marca: p.marca,
           categoria_nome: p.categoria?.nome || null,
           grupo_nome: p.grupo?.nome || null,
+          grupo_id: p.grupo_id || null,
+          campos_customizados: p.campos_customizados || null,
         }));
 
         // Filtrar por categoria ou grupo via URL
@@ -154,6 +156,13 @@ export default function EcommerceCatalog() {
 
         const marcas = [...new Set(mapped.map(p => p.marca).filter(Boolean))] as string[];
         setAvailableMarcas(marcas.sort());
+
+        // Extract unique groups
+        const gruposMap = new Map<string, string>();
+        data.forEach((p: any) => {
+          if (p.grupo_id && p.grupo?.nome) gruposMap.set(p.grupo_id, p.grupo.nome);
+        });
+        setAvailableGrupos(Array.from(gruposMap.entries()).map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome)));
       }
     } catch (err) {
       console.error("Error loading products:", err);
