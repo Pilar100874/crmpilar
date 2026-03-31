@@ -640,8 +640,6 @@ const PanelContent: React.FC<PanelContentProps> = ({
                 <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={clearAll}>
                   Limpar
                 </Button>
-                  Limpar
-                </Button>
               )}
             </CardTitle>
           </CardHeader>
