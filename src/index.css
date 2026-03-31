@@ -150,10 +150,10 @@ All colors MUST be HSL.
 
   .slide-out-menu-tab {
     position: absolute;
-    right: -20px;
+    right: -24px;
     top: 50%;
     transform: translateY(-50%) scale(1);
-    width: 20px;
+    width: 24px;
     height: 60px;
     background: hsl(var(--sidebar-background));
     border-top-right-radius: 8px;
