@@ -278,8 +278,14 @@ export default function EcommerceCart() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium">R$ {subtotal.toFixed(2)}</span></div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-success"><span>Desconto ({couponDiscount}%)</span><span className="font-medium">- R$ {discount.toFixed(2)}</span></div>
+                {ruleDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span className="flex items-center gap-1"><Percent className="h-3 w-3" /> {ruleDiscountLabel}</span>
+                    <span className="font-medium">- R$ {ruleDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {couponDiscountValue > 0 && (
+                  <div className="flex justify-between text-success"><span>Cupom {coupon} (-{couponDiscount}%)</span><span className="font-medium">- R$ {couponDiscountValue.toFixed(2)}</span></div>
                 )}
                 {shipping !== null && (
                   <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium">{shipping === 0 ? "Grátis" : `R$ ${shipping.toFixed(2)}`}</span></div>
