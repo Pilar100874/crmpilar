@@ -31,7 +31,7 @@ const ECOMMERCE_ROUTES = [
   { path: "/ecommerce/institucional/termos", label: "Termos de Uso", group: "Institucional" },
 ];
 
-type LinkTab = "paginas" | "produtos" | "categorias" | "busca";
+type LinkTab = "paginas" | "produtos" | "categorias" | "anuncios" | "conteudos" | "busca";
 
 function useEstabelecimentoId() {
   const [estabId, setEstabId] = useState<string | null>(null);
