@@ -601,8 +601,22 @@ export default function EcommerceCheckout() {
               <Separator />
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-                {discount > 0 && <div className="flex justify-between text-success"><span>Desconto</span><span>-{formatPrice(discount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span>{shipping === 0 ? "Grátis" : formatPrice(shipping)}</span></div>
+                {ruleDiscountLabels.map((rd, i) => (
+                  <div key={i} className="flex justify-between text-success">
+                    <span className="flex items-center gap-1 truncate mr-2"><Percent className="h-3 w-3" />{rd.label}</span>
+                    <span>-{formatPrice(rd.value)}</span>
+                  </div>
+                ))}
+                {couponDiscountValue > 0 && (
+                  <div className="flex justify-between text-success">
+                    <span className="flex items-center gap-1"><Tag className="h-3 w-3" />Cupom</span>
+                    <span>-{formatPrice(couponDiscountValue)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frete</span>
+                  <span>{shipping === 0 ? <span className="text-success font-medium">Grátis</span> : formatPrice(shipping)}</span>
+                </div>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
