@@ -128,11 +128,20 @@ function EcommerceRulesEditorInner() {
         data: { type: (n.data as any).type, label: (n.data as any).label, config: (n.data as any).config || {}, note: (n.data as any).note },
       }));
 
+      // Auto-detect category from action blocks
+      const actionTypes = cleanNodes.map(n => n.data.type).filter(t => t.startsWith("acao_"));
+      let categoria = "desconto"; // default
+      if (actionTypes.some(t => t.startsWith("acao_propaganda"))) categoria = "propaganda";
+      else if (actionTypes.some(t => t.startsWith("acao_frete"))) categoria = "frete";
+      else if (actionTypes.some(t => t.startsWith("acao_pagamento"))) categoria = "pagamento";
+      else if (actionTypes.some(t => t.startsWith("acao_desconto"))) categoria = "desconto";
+
       const payload = {
         estabelecimento_id: estabelecimentoId,
         nome: flowName,
         flow_data: { nodes: cleanNodes, edges } as any,
         descricao: `Regra com ${cleanNodes.length} blocos`,
+        categoria,
       };
 
       if (ruleId) {
