@@ -68,6 +68,7 @@ export default function EcommerceFeaturesEditor() {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = true; });
       modeFeatures.forEach(f => { t[f.key] = f.key === "modo_catalogo" ? false : true; });
+      chatFeatures.forEach(f => { t[f.key] = false; });
       setToggles(t);
     }
     setLoading(false);
