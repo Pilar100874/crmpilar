@@ -101,7 +101,7 @@ export function useEcommerceRulesEngine() {
     }
   };
 
-  return { popupActions, bannerActions, vitrineActions, loading };
+  return { popupActions, bannerActions, vitrineActions, freteActions, loading };
 }
 
 /**
