@@ -25,6 +25,7 @@ export interface ActiveRule {
 export function useEcommerceRulesEngine() {
   const [popupActions, setPopupActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [bannerActions, setBannerActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [vitrineActions, setVitrineActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
