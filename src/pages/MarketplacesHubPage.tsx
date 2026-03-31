@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Store, 
   Package, 
-  ShoppingCart,
   PanelLeft,
   PanelLeftClose,
   LucideIcon
