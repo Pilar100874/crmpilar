@@ -84,6 +84,8 @@ export function useEcommerceRulesEngine() {
             banners.push(actionEntry);
           } else if (nodeType === "acao_destaque_vitrine") {
             vitrines.push(actionEntry);
+          } else if (nodeType === "acao_frete_gratis" || nodeType === "acao_desconto_frete" || nodeType === "acao_frete_fixo") {
+            fretes.push(actionEntry);
           }
         }
       }
