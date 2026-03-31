@@ -218,7 +218,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const couponDiscount = couponDiscountVal;
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, coupon, applyCoupon, removeCoupon, couponDiscount }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, coupon, applyCoupon, removeCoupon, couponDiscount, couponFixedDiscount }}>
       {children}
     </CartContext.Provider>
   );
