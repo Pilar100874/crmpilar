@@ -534,9 +534,10 @@ export default function EcommerceProduct() {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={() => {
+          <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={(e) => {
             if (product) {
-              setFlyAnim({ startRect: document.querySelector("[data-cart-target]")?.getBoundingClientRect() || new DOMRect(), target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
               addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
               toast.success("Produto adicionado ao carrinho!");
             }
