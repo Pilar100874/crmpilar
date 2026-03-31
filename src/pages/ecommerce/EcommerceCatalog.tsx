@@ -321,8 +321,8 @@ export default function EcommerceCatalog() {
               {sortedProducts.map((product, i) => (
                 <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
                   <Link to={`/ecommerce/produto/${product.id}`}>
-                    <Card className={`group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden ${viewMode === "list" ? "flex flex-row" : ""}`}>
-                      <div className={`relative ${viewMode === "list" ? "w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0" : "aspect-[4/5]"} bg-muted/30 flex items-center justify-center overflow-hidden`}>
+                    <Card className={`group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden h-full flex ${viewMode === "list" ? "flex-row" : "flex-col"}`}>
+                      <div className={`relative ${viewMode === "list" ? "w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0" : "aspect-square"} bg-muted/30 flex items-center justify-center overflow-hidden`}>
                         {product.foto_url ? (
                           <img src={product.foto_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                         ) : (
@@ -337,11 +337,11 @@ export default function EcommerceCatalog() {
                           </Button>
                         </div>
                       </div>
-                      <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-2.5 md:p-3`}>
-                        <div className="min-w-0">
+                      <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : "flex flex-col flex-1"} p-2.5 md:p-3`}>
+                        <div className="min-w-0 flex flex-col flex-1">
                           {product.categoria_nome && <p className="text-[10px] md:text-xs text-muted-foreground truncate">{product.categoria_nome}</p>}
-                          <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-2 mt-0.5">{product.nome}</p>
-                          <div className="mt-1.5 md:mt-2">
+                          <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-2 mt-0.5 flex-1">{product.nome}</p>
+                          <div className="mt-auto pt-1.5 md:pt-2">
                             {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo && (
                               <p className="text-[10px] md:text-xs text-muted-foreground line-through">{formatPrice(product.preco_tabela)}</p>
                             )}
