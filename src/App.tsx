@@ -78,6 +78,7 @@ import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
 import PilarRastreador from "./pages/PilarRastreador";
+import PedidosRecebidos from "./pages/PedidosRecebidos";
 import PilarRastreadorNativo from "./pages/PilarRastreadorNativo";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplacesHubPage from "./pages/MarketplacesHubPage";
