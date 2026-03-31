@@ -305,6 +305,7 @@ const App = () => (
               <Route path="catalogo" element={<EcommerceCatalog />} />
               <Route path="produto/:id" element={<EcommerceProduct />} />
               <Route path="carrinho" element={<EcommerceCart />} />
+              <Route path="orcamento" element={<EcommerceQuoteRequest />} />
               <Route path="wishlist" element={<EcommerceWishlist />} />
               <Route path="checkout" element={<EcommerceCheckout />} />
               <Route path="b2b" element={<EcommerceB2B />} />
