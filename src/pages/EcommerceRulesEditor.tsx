@@ -246,6 +246,56 @@ function EcommerceRulesEditorInner() {
         />
       }
     >
+      {/* Rule Settings Bar */}
+      <div className="flex items-center gap-4 px-4 py-2 border-b bg-card flex-wrap">
+        <div className="flex items-center gap-2">
+          <Switch checked={ruleAtivo} onCheckedChange={setRuleAtivo} id="rule-ativo" />
+          <Label htmlFor="rule-ativo" className="text-sm cursor-pointer">
+            {ruleAtivo ? "Ativa" : "Inativa"}
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Início:</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-8 justify-start text-left font-normal text-xs", !startsAt && "text-muted-foreground")}>
+                <CalendarIcon className="mr-1 h-3 w-3" />
+                {startsAt ? format(startsAt, "dd/MM/yyyy", { locale: ptBR }) : "Imediato"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <Calendar mode="single" selected={startsAt} onSelect={setStartsAt} initialFocus className="p-3 pointer-events-auto" locale={ptBR} />
+              {startsAt && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" onClick={() => setStartsAt(undefined)} className="w-full text-xs">Remover data de início</Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">Fim:</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-8 justify-start text-left font-normal text-xs", !expiresAt && "text-muted-foreground")}>
+                <CalendarIcon className="mr-1 h-3 w-3" />
+                {expiresAt ? format(expiresAt, "dd/MM/yyyy", { locale: ptBR }) : "Indeterminado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <Calendar mode="single" selected={expiresAt} onSelect={setExpiresAt} initialFocus className="p-3 pointer-events-auto" locale={ptBR} disabled={(date) => date < new Date()} />
+              {expiresAt && (
+                <div className="p-2 border-t">
+                  <Button variant="ghost" size="sm" onClick={() => setExpiresAt(undefined)} className="w-full text-xs">Remover vencimento</Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
       <div className="flex flex-1 h-full overflow-hidden">
         {/* Block Library - Left Panel */}
         {isLibraryExpanded && (
