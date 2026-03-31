@@ -90,6 +90,10 @@ export function useEcommerceRulesEngine() {
             vitrines.push(actionEntry);
           } else if (nodeType === "acao_frete_gratis" || nodeType === "acao_desconto_frete" || nodeType === "acao_frete_fixo") {
             fretes.push(actionEntry);
+          } else if (nodeType === "acao_desconto_percentual" || nodeType === "acao_desconto_fixo" || nodeType === "acao_desconto_progressivo" || nodeType === "acao_compre_x_leve_y") {
+            descontos.push(actionEntry);
+          } else if (nodeType === "acao_desconto_pix" || nodeType === "acao_desconto_boleto" || nodeType === "acao_parcelas_extras" || nodeType === "acao_regra_pagamento") {
+            pagamentos.push(actionEntry);
           }
         }
       }
