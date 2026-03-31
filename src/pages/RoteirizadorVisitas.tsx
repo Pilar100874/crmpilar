@@ -370,7 +370,7 @@ const RoteirizadorVisitas: React.FC = () => {
                   tempoTotal={tempoTotal}
                   horaFinal={horaFinal}
                   formatDist={formatDist}
-                  formatDur={formatDur}
+                  clearAll={() => { setVisitas([]); setRoute(null); }}
                 />
               </div>
             </CollapsibleContent>
