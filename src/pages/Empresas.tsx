@@ -127,6 +127,7 @@ export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
       { id: "bairro", label: "Bairro", visible: false, width: 160 },
       { id: "cep", label: "CEP", visible: false, width: 120 },
       { id: "company_type", label: "Tipo", visible: false, width: 140 },
+      { id: "tipo_cliente", label: "Tipo Cliente", visible: true, width: 100 },
       { id: "inscricao", label: "Inscrição", visible: false, width: 160 },
     ];
   });
