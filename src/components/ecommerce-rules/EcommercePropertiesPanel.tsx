@@ -898,10 +898,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <Label className="text-xs">Mensagem</Label>
               <Textarea value={config.mensagem || ""} onChange={e => updateConfig("mensagem", e.target.value)} rows={3} />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">URL da Imagem (opcional)</Label>
-              <Input value={config.imagem || ""} onChange={e => updateConfig("imagem", e.target.value)} placeholder="https://..." />
-            </div>
+            <GalleryImageSelector value={config.imagem || ""} onChange={v => updateConfig("imagem", v)} />
             <div className="space-y-1">
               <Label className="text-xs">Texto do Botão</Label>
               <Input value={config.botaoTexto || "Aproveitar!"} onChange={e => updateConfig("botaoTexto", e.target.value)} />
