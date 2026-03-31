@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft } from "lucide-react";
+import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft, Tag, Percent } from "lucide-react";
+import { useEcommerceRulesEngine } from "@/hooks/useEcommerceRulesEngine";
+import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
