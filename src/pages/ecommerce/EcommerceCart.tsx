@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
+import { useEcommerceRulesEngine } from "@/hooks/useEcommerceRulesEngine";
 import { Link } from "react-router-dom";
-import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 import { Card, CardContent } from "@/components/ui/card";
