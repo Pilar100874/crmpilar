@@ -30,6 +30,7 @@ interface EcommerceRule {
   ativo: boolean;
   prioridade: number;
   flow_data: any;
+  starts_at: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at: string;
