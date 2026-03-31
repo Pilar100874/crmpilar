@@ -59,16 +59,28 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
   const [categories, setCategories] = useState<{ id: string; nome: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
+  // Anúncios
+  const [anuncios, setAnuncios] = useState<{ id: string; titulo: string; tipo: string; posicao: string }[]>([]);
+  const [loadingAnuncios, setLoadingAnuncios] = useState(false);
+
+  // Conteúdos
+  const [conteudos, setConteudos] = useState<{ id: string; titulo: string; tipo: string }[]>([]);
+  const [loadingConteudos, setLoadingConteudos] = useState(false);
+
   useEffect(() => {
     if (!open || !estabId) return;
-    // Fetch products
     setLoadingProducts(true);
     supabase.from("produtos").select("id, nome, marca").eq("estabelecimento_id", estabId).eq("ativo", true).order("nome").limit(200)
       .then(({ data }) => { setProducts(data || []); setLoadingProducts(false); });
-    // Fetch categories
     setLoadingCategories(true);
     supabase.from("produto_categorias").select("id, nome").eq("estabelecimento_id", estabId).order("nome")
       .then(({ data }) => { setCategories(data || []); setLoadingCategories(false); });
+    setLoadingAnuncios(true);
+    supabase.from("ecommerce_anuncios").select("id, titulo, tipo, posicao").eq("estabelecimento_id", estabId).order("titulo")
+      .then(({ data }) => { setAnuncios(data || []); setLoadingAnuncios(false); });
+    setLoadingConteudos(true);
+    supabase.from("ecommerce_conteudos").select("id, titulo, tipo").eq("estabelecimento_id", estabId).order("titulo")
+      .then(({ data }) => { setConteudos(data || []); setLoadingConteudos(false); });
   }, [open, estabId]);
 
   const filteredRoutes = ECOMMERCE_ROUTES.filter(
