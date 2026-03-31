@@ -414,6 +414,7 @@ export default function EcommerceLayout() {
 
       <EcommerceFloatingChat />
       <EcommerceWebchatWidget />
+      <EcommerceWhatsappWidget />
     </div>
   );
 }
