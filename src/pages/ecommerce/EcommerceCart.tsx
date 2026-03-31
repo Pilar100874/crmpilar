@@ -79,7 +79,36 @@ export default function EcommerceCart() {
   };
 
   const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
-  const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Calculate rule-based discounts
+  let ruleDiscount = 0;
+  let ruleDiscountLabel = "";
+  for (const action of discountActions) {
+    if (action.type === "acao_desconto_percentual") {
+      const pct = action.config.percentual || 0;
+      ruleDiscount += subtotal * pct / 100;
+      ruleDiscountLabel = `Desconto ${pct}% (${action.ruleName})`;
+    } else if (action.type === "acao_desconto_fixo") {
+      const valor = action.config.valor || 0;
+      ruleDiscount += valor;
+      ruleDiscountLabel = `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`;
+    } else if (action.type === "acao_desconto_progressivo") {
+      const faixas = action.config.faixas || [];
+      const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
+      for (const faixa of sorted) {
+        if (totalQuantity >= (faixa.quantidade || 0)) {
+          const pct = faixa.percentual || 0;
+          ruleDiscount += subtotal * pct / 100;
+          ruleDiscountLabel = `Desconto Progressivo ${pct}% (${action.ruleName})`;
+          break;
+        }
+      }
+    }
+  }
+
+  const couponDiscountValue = couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0;
+  const discount = ruleDiscount + couponDiscountValue;
   const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
   const shipping = freteResult?.valor ?? null;
   const shippingDescription = freteResult?.descricao || "";
