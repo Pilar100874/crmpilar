@@ -242,6 +242,7 @@ const App = () => (
               
               <Route path="/quality-assurance" element={<QualityAssurance />} />
               <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
+              <Route path="/roteirizador-visitas" element={<RoteirizadorVisitas />} />
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />

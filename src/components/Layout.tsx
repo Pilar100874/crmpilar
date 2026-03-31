@@ -127,6 +127,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: FileBarChart },
       { id: "Pedidos Recebidos", title: "Pedidos Recebidos", url: "/pedidos-recebidos", icon: LucideIcons.Package },
+      { id: "Roteirizador Visitas", title: "Roteirizador de Visitas", url: "/roteirizador-visitas", icon: LucideIcons.MapPin },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
