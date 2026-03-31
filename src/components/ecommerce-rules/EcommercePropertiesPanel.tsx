@@ -877,6 +877,18 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
           </div>
         );
 
+      case "condicao_cliente_especifico":
+        return (
+          <div className="space-y-3">
+            <CustomerSelector
+              value={config.clienteId ? { id: config.clienteId, nome: config.clienteNome || "" } : null}
+              onChange={v => {
+                updateConfig("clienteId", v?.id || "", { clienteNome: v?.nome || "" });
+              }}
+            />
+          </div>
+        );
+
       case "condicao_cliente_recorrente":
         return (
           <div className="space-y-1">
