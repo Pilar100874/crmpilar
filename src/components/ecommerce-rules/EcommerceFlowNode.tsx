@@ -27,6 +27,8 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const isStartBlock = (data as any).type === 'inicio_regra';
+  const isMultiOutput = (data as any).type === 'condicao_valor_pedido';
+  const faixas: { valorMin: number; valorMax: number | null; label: string }[] = isMultiOutput ? ((data as any).config?.faixas || []) : [];
   
   if (!blockDef) return null;
 
@@ -36,7 +38,7 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
   const note = (data as any).note;
 
   const getCardClassName = () => {
-    const baseClass = "min-w-[260px] max-w-[300px] transition-all duration-200 shadow-lg";
+    const baseClass = "min-w-[260px] max-w-[320px] transition-all duration-200 shadow-lg";
     return `${baseClass} bg-card border border-border ${
       selected ? "ring-2 ring-primary border-primary" : "hover:border-primary/40"
     }`;
@@ -92,7 +94,7 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
           )}
 
           {/* Config summary */}
-          {(data as any).config && Object.keys((data as any).config).length > 0 && (
+          {!isMultiOutput && (data as any).config && Object.keys((data as any).config).length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {(data as any).config.percentual !== undefined && (
                 <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
@@ -116,9 +118,44 @@ export const EcommerceFlowNode = memo(({ data, selected, id }: NodeProps) => {
               )}
             </div>
           )}
+
+          {/* Multi-output handles with labels */}
+          {isMultiOutput && faixas.length > 0 && (
+            <div className="mt-3 space-y-1 border-t pt-2">
+              {faixas.map((faixa, idx) => (
+                <div key={idx} className="flex items-center justify-between text-[11px] px-1 py-0.5 rounded hover:bg-accent/30">
+                  <span className="font-medium text-foreground">{faixa.label || `Faixa ${idx + 1}`}</span>
+                  <span className="text-muted-foreground">
+                    R$ {faixa.valorMin} → {faixa.valorMax != null ? `R$ ${faixa.valorMax}` : '∞'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-white" />
+        {/* Single or multi source handles */}
+        {isMultiOutput && faixas.length > 0 ? (
+          <div className="relative pb-3">
+            {faixas.map((faixa, idx) => {
+              const total = faixas.length;
+              const spacing = 100 / (total + 1);
+              const leftPercent = spacing * (idx + 1);
+              return (
+                <Handle
+                  key={`faixa-${idx}`}
+                  type="source"
+                  position={Position.Bottom}
+                  id={`faixa-${idx}`}
+                  className="!bg-violet-500 !w-3 !h-3 !border-2 !border-white"
+                  style={{ left: `${leftPercent}%` }}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <Handle type="source" position={Position.Bottom} className="!bg-primary !w-3 !h-3 !border-2 !border-white" />
+        )}
       </Card>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
