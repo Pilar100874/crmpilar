@@ -125,6 +125,11 @@ export default function EcommerceRulesPage() {
     loadRules();
   };
 
+  const handleUpdateStartsAt = async (id: string, date: Date | null) => {
+    await supabase.from("ecommerce_rules").update({ starts_at: date?.toISOString() || null } as any).eq("id", id);
+    loadRules();
+  };
+
   const filteredRules = activeTab === "todas" ? rules : rules.filter(r => r.categoria === activeTab);
 
   const getCategoryBadge = (cat: string) => {
@@ -207,20 +212,71 @@ export default function EcommerceRulesPage() {
                     onDelete={() => { setOpenMenuId(null); setDeleteId(rule.id); }}
                     onOpenEditor={() => navigate(`/ecommerce-rules-editor?id=${rule.id}`, { state: { from: location.pathname } })}
                     customContent={
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {getCategoryBadge(rule.categoria)}
+                        
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={rule.ativo}
+                            onCheckedChange={() => handleToggleActive(rule.id, rule.ativo)}
+                            id={`ativo-${rule.id}`}
+                          />
+                          <Label htmlFor={`ativo-${rule.id}`} className="text-xs cursor-pointer">
+                            {rule.ativo ? "Ativa" : "Inativa"}
+                          </Label>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <span className="text-xs text-muted-foreground">Início:</span>
-                            <p className="text-xs font-medium mt-0.5">
-                              {rule.starts_at ? format(new Date(rule.starts_at), "dd/MM/yyyy") : "Imediato"}
-                            </p>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1 h-7 text-xs", !rule.starts_at && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-1 h-3 w-3" />
+                                  {rule.starts_at ? format(new Date(rule.starts_at), "dd/MM/yy") : "Imediato"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={rule.starts_at ? new Date(rule.starts_at) : undefined}
+                                  onSelect={(date) => handleUpdateStartsAt(rule.id, date || null)}
+                                  initialFocus
+                                  className="p-3 pointer-events-auto"
+                                />
+                                {rule.starts_at && (
+                                  <div className="p-2 border-t">
+                                    <Button variant="ghost" size="sm" onClick={() => handleUpdateStartsAt(rule.id, null)} className="w-full text-xs">Remover</Button>
+                                  </div>
+                                )}
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <div>
                             <span className="text-xs text-muted-foreground">Fim:</span>
-                            <p className="text-xs font-medium mt-0.5">
-                              {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yyyy") : "Indeterminado"}
-                            </p>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1 h-7 text-xs", !rule.expires_at && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-1 h-3 w-3" />
+                                  {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yy") : "Indeterminado"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={rule.expires_at ? new Date(rule.expires_at) : undefined}
+                                  onSelect={(date) => handleUpdateExpiration(rule.id, date || null)}
+                                  initialFocus
+                                  className="p-3 pointer-events-auto"
+                                  disabled={(date) => date < new Date()}
+                                />
+                                {rule.expires_at && (
+                                  <div className="p-2 border-t">
+                                    <Button variant="ghost" size="sm" onClick={() => handleUpdateExpiration(rule.id, null)} className="w-full text-xs">Remover</Button>
+                                  </div>
+                                )}
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         </div>
                       </div>
