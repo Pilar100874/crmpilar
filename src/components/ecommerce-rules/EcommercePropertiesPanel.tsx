@@ -17,27 +17,78 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const ECOMMERCE_ROUTES = [
-  { path: "/ecommerce", label: "Home da Loja" },
-  { path: "/ecommerce/catalogo", label: "Catálogo" },
-  { path: "/ecommerce/carrinho", label: "Carrinho" },
-  { path: "/ecommerce/checkout", label: "Checkout" },
-  { path: "/ecommerce/b2b", label: "Atacado & B2B" },
-  { path: "/ecommerce/conta", label: "Minha Conta" },
-  { path: "/ecommerce/favoritos", label: "Favoritos" },
-  { path: "/ecommerce/institucional/sobre", label: "Sobre Nós" },
-  { path: "/ecommerce/institucional/contato", label: "Contato" },
-  { path: "/ecommerce/institucional/faq", label: "FAQ" },
-  { path: "/ecommerce/institucional/privacidade", label: "Privacidade" },
-  { path: "/ecommerce/institucional/termos", label: "Termos de Uso" },
+  { path: "/ecommerce", label: "Home da Loja", group: "Páginas" },
+  { path: "/ecommerce/catalogo", label: "Catálogo", group: "Páginas" },
+  { path: "/ecommerce/carrinho", label: "Carrinho", group: "Páginas" },
+  { path: "/ecommerce/checkout", label: "Checkout", group: "Páginas" },
+  { path: "/ecommerce/b2b", label: "Atacado & B2B", group: "Páginas" },
+  { path: "/ecommerce/conta", label: "Minha Conta", group: "Páginas" },
+  { path: "/ecommerce/favoritos", label: "Favoritos", group: "Páginas" },
+  { path: "/ecommerce/institucional/sobre", label: "Sobre Nós", group: "Institucional" },
+  { path: "/ecommerce/institucional/contato", label: "Contato", group: "Institucional" },
+  { path: "/ecommerce/institucional/faq", label: "FAQ", group: "Institucional" },
+  { path: "/ecommerce/institucional/privacidade", label: "Privacidade", group: "Institucional" },
+  { path: "/ecommerce/institucional/termos", label: "Termos de Uso", group: "Institucional" },
 ];
+
+type LinkTab = "paginas" | "produtos" | "categorias" | "busca";
+
+function useEstabelecimentoId() {
+  const [estabId, setEstabId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      supabase.from("usuarios").select("estabelecimento_id").eq("auth_user_id", data.user.id).single()
+        .then(({ data: u }) => { if (u) setEstabId(u.estabelecimento_id); });
+    });
+  }, []);
+  return estabId;
+}
 
 function LinkSelector({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<LinkTab>("paginas");
+  const estabId = useEstabelecimentoId();
 
-  const filtered = ECOMMERCE_ROUTES.filter(
+  // Produtos
+  const [products, setProducts] = useState<{ id: string; nome: string; marca?: string }[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Categorias
+  const [categories, setCategories] = useState<{ id: string; nome: string }[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    if (!open || !estabId) return;
+    // Fetch products
+    setLoadingProducts(true);
+    supabase.from("produtos").select("id, nome, marca").eq("estabelecimento_id", estabId).eq("ativo", true).order("nome").limit(200)
+      .then(({ data }) => { setProducts(data || []); setLoadingProducts(false); });
+    // Fetch categories
+    setLoadingCategories(true);
+    supabase.from("produto_categorias").select("id, nome").eq("estabelecimento_id", estabId).order("nome")
+      .then(({ data }) => { setCategories(data || []); setLoadingCategories(false); });
+  }, [open, estabId]);
+
+  const filteredRoutes = ECOMMERCE_ROUTES.filter(
     r => r.label.toLowerCase().includes(search.toLowerCase()) || r.path.toLowerCase().includes(search.toLowerCase())
   );
+  const filteredProducts = products.filter(
+    p => p.nome.toLowerCase().includes(search.toLowerCase()) || (p.marca || "").toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredCategories = categories.filter(
+    c => c.nome.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectAndClose = (path: string) => { onChange(path); setOpen(false); setSearch(""); };
+
+  const tabs: { key: LinkTab; label: string }[] = [
+    { key: "paginas", label: "Páginas" },
+    { key: "produtos", label: "Produtos" },
+    { key: "categorias", label: "Categorias" },
+    { key: "busca", label: "Busca" },
+  ];
 
   return (
     <div className="space-y-1">
@@ -55,31 +106,120 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
               <Link2 className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-2" align="end">
-            <div className="space-y-2">
+          <PopoverContent className="w-80 p-0" align="end">
+            {/* Tabs */}
+            <div className="flex border-b">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  className={`flex-1 text-[11px] font-medium py-2 transition-colors border-b-2 ${tab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => { setTab(t.key); setSearch(""); }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-2 space-y-2">
               <Input
-                placeholder="Buscar página..."
+                placeholder={tab === "busca" ? "Termo de busca para redirecionar..." : "Filtrar..."}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="h-8 text-xs"
               />
-              <ScrollArea className="h-48">
-                <div className="space-y-0.5">
-                  {filtered.map(route => (
-                    <button
-                      key={route.path}
-                      className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
-                      onClick={() => { onChange(route.path); setOpen(false); setSearch(""); }}
-                    >
-                      <span className="font-medium">{route.label}</span>
-                      <span className="text-muted-foreground text-[10px]">{route.path}</span>
-                    </button>
-                  ))}
-                  {filtered.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-3">Nenhuma página encontrada</p>
+
+              {tab === "paginas" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {Object.entries(
+                      filteredRoutes.reduce((acc, r) => {
+                        (acc[r.group] = acc[r.group] || []).push(r);
+                        return acc;
+                      }, {} as Record<string, typeof filteredRoutes>)
+                    ).map(([group, routes]) => (
+                      <div key={group}>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase px-2 pt-2 pb-1">{group}</p>
+                        {routes.map(route => (
+                          <button
+                            key={route.path}
+                            className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                            onClick={() => selectAndClose(route.path)}
+                          >
+                            <span className="font-medium">{route.label}</span>
+                            <span className="text-muted-foreground text-[10px]">{route.path}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                    {filteredRoutes.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhuma página encontrada</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "produtos" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingProducts ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredProducts.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhum produto encontrado</p>
+                    ) : filteredProducts.map(p => (
+                      <button
+                        key={p.id}
+                        className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                        onClick={() => selectAndClose(`/ecommerce/produto/${p.id}`)}
+                      >
+                        <span className="font-medium truncate">{p.nome}</span>
+                        {p.marca && <span className="text-muted-foreground text-[10px]">{p.marca}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "categorias" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingCategories ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredCategories.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhuma categoria encontrada</p>
+                    ) : filteredCategories.map(c => (
+                      <button
+                        key={c.id}
+                        className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                        onClick={() => selectAndClose(`/ecommerce/catalogo?categoria=${encodeURIComponent(c.nome)}`)}
+                      >
+                        <span className="font-medium">{c.nome}</span>
+                        <span className="text-muted-foreground text-[10px]">/ecommerce/catalogo?categoria={c.nome}</span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "busca" && (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    Digite o termo de busca e clique em aplicar para gerar o link de pesquisa.
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full text-xs"
+                    disabled={!search.trim()}
+                    onClick={() => selectAndClose(`/ecommerce/catalogo?busca=${encodeURIComponent(search.trim())}`)}
+                  >
+                    Aplicar busca: "{search || "..."}"
+                  </Button>
+                  {search.trim() && (
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      → /ecommerce/catalogo?busca={encodeURIComponent(search.trim())}
+                    </p>
                   )}
                 </div>
-              </ScrollArea>
+              )}
             </div>
           </PopoverContent>
         </Popover>
