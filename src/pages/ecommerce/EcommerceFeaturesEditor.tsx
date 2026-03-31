@@ -30,7 +30,8 @@ const features: FeatureToggle[] = [
 ];
 
 const modeFeatures: FeatureToggle[] = [
-  { key: "modo_catalogo", label: "Modo Catálogo (Orçamento)", description: "Desativa o carrinho de compras. Visitantes montam lista de produtos e solicitam orçamento. Permite adicionar itens sem estoque.", icon: FileText, color: "text-amber-500" },
+  { key: "modo_catalogo_b2c", label: "Modo Orçamento (B2C)", description: "Na loja B2C, desativa carrinho e permite solicitar orçamento. Itens sem estoque podem ser adicionados.", icon: FileText, color: "text-amber-500" },
+  { key: "modo_catalogo_b2b", label: "Modo Orçamento (B2B)", description: "Na seção B2B/Atacado, desativa carrinho e permite solicitar orçamento. Itens sem estoque podem ser adicionados.", icon: FileText, color: "text-orange-500" },
   { key: "mostrar_precos_visitante_b2c", label: "Preços visíveis (B2C)", description: "Mostrar preços para visitantes não logados na loja B2C", icon: DollarSign, color: "text-emerald-500" },
   { key: "mostrar_precos_visitante_b2b", label: "Preços visíveis (B2B)", description: "Mostrar preços para visitantes não logados na seção B2B", icon: DollarSign, color: "text-sky-500" },
 ];
