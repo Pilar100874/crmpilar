@@ -21,19 +21,15 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   coupon: string | null;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   couponDiscount: number;
+  couponFixedDiscount: number;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
 
 const CART_KEY = "ecommerce_cart";
-const VALID_COUPONS: Record<string, number> = {
-  PRIMEIRA10: 10,
-  LOJA20: 20,
-  VIP15: 15,
-};
 
 const hasValidPrice = (price: unknown) => typeof price === "number" && Number.isFinite(price) && price > 0;
 
@@ -62,6 +58,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   });
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [couponDiscountVal, setCouponDiscountValue] = useState(0);
+  const [couponFixedDiscount, setCouponFixedDiscount] = useState(0);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
@@ -178,24 +176,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     setItems([]);
     setCoupon(null);
+    setCouponDiscountValue(0);
+    setCouponFixedDiscount(0);
   };
 
-  const applyCoupon = (code: string) => {
+  const applyCoupon = async (code: string): Promise<boolean> => {
     const upper = code.toUpperCase().trim();
-    if (VALID_COUPONS[upper]) {
-      setCoupon(upper);
+    if (!upper) return false;
+
+    const estabId = localStorage.getItem("estabelecimentoId");
+    const now = new Date().toISOString();
+
+    let query = supabase
+      .from("cupons_desconto")
+      .select("id, codigo, tipo_desconto, valor_desconto")
+      .eq("ativo", true)
+      .ilike("codigo", upper)
+      .or(`data_validade_fim.is.null,data_validade_fim.gte.${now}`)
+      .limit(1);
+
+    if (estabId) query = query.eq("estabelecimento_id", estabId);
+
+    const { data } = await query;
+    if (data && data.length > 0) {
+      const c = data[0] as any;
+      setCoupon(c.codigo);
+      setCouponDiscountValue(c.tipo_desconto === "percentual" ? c.valor_desconto : 0);
+      setCouponFixedDiscount(c.tipo_desconto === "fixo" ? c.valor_desconto : 0);
       return true;
     }
     return false;
   };
 
-  const removeCoupon = () => setCoupon(null);
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponDiscountValue(0);
+    setCouponFixedDiscount(0);
+  };
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const couponDiscount = coupon ? VALID_COUPONS[coupon] || 0 : 0;
+  const couponDiscount = couponDiscountVal;
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, coupon, applyCoupon, removeCoupon, couponDiscount }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, coupon, applyCoupon, removeCoupon, couponDiscount, couponFixedDiscount }}>
       {children}
     </CartContext.Provider>
   );

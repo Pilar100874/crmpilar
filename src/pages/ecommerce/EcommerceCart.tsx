@@ -23,7 +23,7 @@ interface CrossSellProduct {
 }
 
 export default function EcommerceCart() {
-  const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount, couponFixedDiscount } = useCart();
   const { calcularFrete } = useEcommerceFreteRules();
 
   const rawSubtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
@@ -66,8 +66,9 @@ export default function EcommerceCart() {
     if (items.length > 0) loadCrossSell();
   }, [items]);
 
-  const handleApplyCoupon = () => {
-    if (applyCoupon(couponInput)) {
+  const handleApplyCoupon = async () => {
+    const result = await applyCoupon(couponInput);
+    if (result) {
       toast.success("Cupom aplicado com sucesso!");
       setCouponError(false);
       setCouponInput("");
@@ -112,7 +113,7 @@ export default function EcommerceCart() {
     }
   }
 
-  const couponDiscountValue = couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0;
+  const couponDiscountValue = (couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0) + (couponFixedDiscount || 0);
   const discount = ruleDiscount + couponDiscountValue;
   const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
   const shipping = freteResult?.valor ?? null;
