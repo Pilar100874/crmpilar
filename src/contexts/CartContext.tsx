@@ -192,7 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .select("id, codigo, tipo_desconto, valor_desconto")
       .eq("ativo", true)
       .ilike("codigo", upper)
-      .or(`data_validade_fim.is.null,data_validade_fim.gte.${now}`)
+      .or(`data_fim.is.null,data_fim.gte.${now}`)
       .limit(1);
 
     if (estabId) query = query.eq("estabelecimento_id", estabId);
