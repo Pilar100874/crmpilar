@@ -187,7 +187,7 @@ All colors MUST be HSL.
     position: fixed;
     right: 0;
     bottom: 15%;
-    width: 20px;
+    width: 24px;
     height: 60px;
     background: hsl(25 95% 53%);
     border-radius: 8px 0 0 8px;
