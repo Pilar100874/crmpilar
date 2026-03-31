@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Grid3X3, List, Heart, ShoppingCart, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Grid3X3, List, Heart, ShoppingCart, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
