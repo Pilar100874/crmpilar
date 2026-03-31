@@ -53,6 +53,7 @@ export default function EcommerceCuponsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyCupom);
   const [estabId, setEstabId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
