@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useFreteCalculation } from "@/hooks/useFreteCalculation";
+import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
