@@ -25,7 +25,10 @@ interface CrossSellProduct {
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
   const { calcularFrete } = useEcommerceFreteRules();
-  const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine();
+
+  const rawSubtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+  const rawTotalQty = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { discountActions, paymentActions, loading: rulesLoading } = useEcommerceRulesEngine({ subtotal: rawSubtotal, totalQuantity: rawTotalQty });
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
