@@ -69,7 +69,7 @@ export default function EcommerceCatalog() {
   const { addItem } = useCart();
   const { addItem: addQuoteItem } = useQuoteRequest();
   const { branding } = useEcommerceBranding();
-  const isCatalogMode = branding.modo_catalogo;
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   
   useEffect(() => {
