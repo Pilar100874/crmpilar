@@ -120,8 +120,15 @@ function getReachableActions(nodes: any[], edges: any[], cartContext?: CartConte
   const startNode = nodes.find(n => n.data?.type === "inicio_regra");
   if (!startNode) return [];
 
+  // Also find nodes that have no incoming edges (orphan roots) to handle disconnected flows
+  const nodesWithIncoming = new Set(edges.map((e: any) => e.target));
+  const rootNodes = nodes.filter(n => 
+    n.id === startNode.id || 
+    (!nodesWithIncoming.has(n.id) && n.data?.type !== "inicio_regra")
+  );
+
   const visited = new Set<string>();
-  const queue = [startNode.id];
+  const queue = rootNodes.map((n: any) => n.id);
   const actionNodes: any[] = [];
 
   while (queue.length > 0) {
@@ -145,8 +152,8 @@ function getReachableActions(nodes: any[], edges: any[], cartContext?: CartConte
         let matchedHandleId: string | null = null;
         for (let i = 0; i < faixas.length; i++) {
           const faixa = faixas[i];
-          const min = parseFloat(faixa.valorMinimo || "0") || 0;
-          const max = parseFloat(faixa.valorMaximo || "999999999") || 999999999;
+          const min = parseFloat(faixa.valorMin ?? faixa.valorMinimo ?? "0") || 0;
+          const max = parseFloat(faixa.valorMax ?? faixa.valorMaximo ?? "999999999") || 999999999;
           if (valor >= min && valor <= max) {
             matchedHandleId = `faixa-${i}`;
             break;
