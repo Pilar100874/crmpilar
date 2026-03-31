@@ -587,9 +587,41 @@ export default function PedidosRecebidos() {
                     </div>
                   </div>
 
-                  <Separator />
+                  {/* Resumo Financeiro com Descontos */}
+                  {(Number(selectedPedido.valor_desconto) > 0 || Number(selectedPedido.valor_frete) > 0) && (
+                    <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                      <Label className="text-xs text-muted-foreground font-semibold block">Resumo Financeiro</Label>
+                      {Number(selectedPedido.valor_desconto) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-emerald-500 flex items-center gap-1">
+                            <Tag className="h-3 w-3" /> Desconto aplicado
+                          </span>
+                          <span className="text-emerald-500 font-medium">- R$ {Number(selectedPedido.valor_desconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                      {Number(selectedPedido.valor_frete) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Truck className="h-3 w-3" /> Frete
+                          </span>
+                          <span className="font-medium">R$ {Number(selectedPedido.valor_frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                      {selectedPedido.forma_pagamento && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Pagamento</span>
+                          <span className="font-medium">{selectedPedido.forma_pagamento}</span>
+                        </div>
+                      )}
+                      <Separator className="my-1" />
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>Total</span>
+                        <span>R$ {Number(selectedPedido.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Fulfillment Status */}
+                  <Separator />
                   <div>
                     <Label className="text-xs text-muted-foreground mb-2 block">Status Fulfillment</Label>
                     <div className="flex gap-1">
