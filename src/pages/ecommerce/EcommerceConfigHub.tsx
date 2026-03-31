@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -104,6 +104,15 @@ const configSections = [
     url: "/ecommerce-config/cupons",
     color: "text-violet-500",
     bg: "bg-violet-500/10",
+  },
+  {
+    id: "b2b-editor",
+    title: "Página B2B / Atacado",
+    description: "Edite textos, vantagens, depoimentos e seções da página B2B",
+    icon: Building2,
+    url: "/ecommerce-config/b2b",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
   },
 ];
 
