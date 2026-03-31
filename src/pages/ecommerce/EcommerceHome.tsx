@@ -399,14 +399,14 @@ export default function EcommerceHome() {
                     ))}
                   </div>
                 ) : featuredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-stretch">
                     {featuredProducts.map((product, i) => {
                       const price = { tabela: product.preco_tabela, minimo: product.preco_minimo };
                       return (
                         <StaggerItem key={product.id} index={i}>
-                          <Link to={`/ecommerce/produto/${product.id}`}>
-                            <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                              <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+                          <Link to={`/ecommerce/produto/${product.id}`} className="flex h-full">
+                            <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col w-full">
+                              <div className="relative aspect-square bg-muted/50 flex items-center justify-center flex-shrink-0">
                                 {product.foto_url ? (
                                   <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 ) : (
@@ -416,21 +416,28 @@ export default function EcommerceHome() {
                                   <Badge className="absolute top-2 left-2 text-[10px] bg-emerald-500 text-white border-0">Em estoque</Badge>
                                 )}
                               </div>
-                              <CardContent className="p-3">
+                              <CardContent className="p-3 flex flex-col flex-1">
                                 {product.marca && <p className="text-xs text-muted-foreground">{product.marca}</p>}
                                 <p className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 min-h-[2.5rem]">{product.nome}</p>
-                                <div className="flex flex-wrap gap-1 mt-1">
+                                <div className="flex flex-wrap gap-1 mt-1 min-h-[1.25rem]">
                                   {product.gramatura && product.gramatura > 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.gramatura}g</Badge>}
                                   {product.largura && product.largura > 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.largura}mm</Badge>}
                                 </div>
-                                <div className="mt-2">
+                                <div className="mt-auto pt-2">
                                   {price.tabela ? (
                                     <>
-                                      {price.minimo && price.minimo < price.tabela && <p className="text-xs text-muted-foreground line-through">R$ {price.tabela.toFixed(2)}</p>}
+                                      {price.minimo && price.minimo < price.tabela ? (
+                                        <p className="text-xs text-muted-foreground line-through">R$ {price.tabela.toFixed(2)}</p>
+                                      ) : (
+                                        <p className="text-xs text-muted-foreground line-through invisible">-</p>
+                                      )}
                                       <p className="text-lg font-bold text-primary">R$ {(price.minimo || price.tabela).toFixed(2)}</p>
                                     </>
                                   ) : (
-                                    <p className="text-sm font-semibold text-primary">Consulte</p>
+                                    <>
+                                      <p className="text-xs text-muted-foreground line-through invisible">-</p>
+                                      <p className="text-sm font-semibold text-primary">Consulte</p>
+                                    </>
                                   )}
                                 </div>
                               </CardContent>
