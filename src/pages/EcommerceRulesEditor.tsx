@@ -86,6 +86,9 @@ function EcommerceRulesEditorInner() {
     const { data, error } = await supabase.from("ecommerce_rules").select("*").eq("id", id).single();
     if (error || !data) { toast({ title: "Erro", description: "Regra não encontrada", variant: "destructive" }); return; }
     setFlowName(data.nome);
+    setRuleAtivo(data.ativo ?? true);
+    setStartsAt(data.starts_at ? new Date(data.starts_at) : undefined);
+    setExpiresAt(data.expires_at ? new Date(data.expires_at) : undefined);
     const flowData = data.flow_data as any;
     if (flowData?.nodes) {
       setNodes(flowData.nodes.map((n: any) => ({
