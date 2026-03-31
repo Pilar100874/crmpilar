@@ -84,26 +84,28 @@ export default function EcommerceCart() {
   const subtotal = rawSubtotal;
   const totalQuantity = rawTotalQty;
 
-  // Calculate rule-based discounts
+  // Calculate rule-based discounts (stacking: all matching discounts are summed)
   let ruleDiscount = 0;
-  let ruleDiscountLabel = "";
+  const ruleDiscountLabels: { label: string; value: number }[] = [];
   for (const action of discountActions) {
     if (action.type === "acao_desconto_percentual") {
       const pct = action.config.percentual || 0;
-      ruleDiscount += subtotal * pct / 100;
-      ruleDiscountLabel = `Desconto ${pct}% (${action.ruleName})`;
+      const val = subtotal * pct / 100;
+      ruleDiscount += val;
+      ruleDiscountLabels.push({ label: `Desconto ${pct}% (${action.ruleName})`, value: val });
     } else if (action.type === "acao_desconto_fixo") {
       const valor = action.config.valor || 0;
       ruleDiscount += valor;
-      ruleDiscountLabel = `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`;
+      ruleDiscountLabels.push({ label: `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`, value: valor });
     } else if (action.type === "acao_desconto_progressivo") {
       const faixas = action.config.faixas || [];
       const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
       for (const faixa of sorted) {
         if (totalQuantity >= (faixa.quantidade || 0)) {
           const pct = faixa.percentual || 0;
-          ruleDiscount += subtotal * pct / 100;
-          ruleDiscountLabel = `Desconto Progressivo ${pct}% (${action.ruleName})`;
+          const val = subtotal * pct / 100;
+          ruleDiscount += val;
+          ruleDiscountLabels.push({ label: `Progressivo ${pct}% (${action.ruleName})`, value: val });
           break;
         }
       }
