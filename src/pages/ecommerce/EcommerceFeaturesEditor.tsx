@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag, ShoppingCart, DollarSign, FileText } from "lucide-react";
+import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag, ShoppingCart, DollarSign, FileText, MessageCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -35,6 +35,11 @@ const modeFeatures: FeatureToggle[] = [
   { key: "mostrar_precos_visitante_b2b", label: "Preços visíveis (B2B)", description: "Mostrar preços para visitantes não logados na seção B2B", icon: DollarSign, color: "text-sky-500" },
 ];
 
+const chatFeatures: FeatureToggle[] = [
+  { key: "feat_webchat", label: "Webchat na Loja", description: "Exibir ícone de chat ao vivo (webchat) na loja virtual", icon: MessageCircle, color: "text-blue-500" },
+  { key: "feat_whatsapp", label: "WhatsApp Business", description: "Exibir ícone do WhatsApp Business na loja virtual", icon: Phone, color: "text-green-500" },
+];
+
 export default function EcommerceFeaturesEditor() {
   const navigate = useNavigate();
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
@@ -50,18 +55,20 @@ export default function EcommerceFeaturesEditor() {
     if (!estId) { setLoading(false); return; }
     const { data } = await supabase
       .from("ecommerce_config")
-      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem, modo_catalogo, mostrar_precos_visitante_b2c, mostrar_precos_visitante_b2b")
+      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem, modo_catalogo, mostrar_precos_visitante_b2c, mostrar_precos_visitante_b2b, feat_webchat, feat_whatsapp")
       .eq("estabelecimento_id", estId)
       .maybeSingle();
     if (data) {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = (data as any)[f.key] ?? true; });
       modeFeatures.forEach(f => { t[f.key] = (data as any)[f.key] ?? (f.key === "modo_catalogo" ? false : true); });
+      chatFeatures.forEach(f => { t[f.key] = (data as any)[f.key] ?? false; });
       setToggles(t);
     } else {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = true; });
       modeFeatures.forEach(f => { t[f.key] = f.key === "modo_catalogo" ? false : true; });
+      chatFeatures.forEach(f => { t[f.key] = false; });
       setToggles(t);
     }
     setLoading(false);
@@ -134,6 +141,38 @@ export default function EcommerceFeaturesEditor() {
               </div>
               <Switch
                 checked={toggles[feat.key] ?? (feat.key === "modo_catalogo" ? false : true)}
+                onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Chat features */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-blue-500" />
+            Chat & Atendimento na Loja
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Habilite ícones flutuantes de atendimento na loja virtual. Ao clicar, o visitante escolhe qual bot utilizar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          {chatFeatures.map(feat => (
+            <div key={feat.key} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${toggles[feat.key] ? "border-primary/30 bg-primary/5" : "bg-background"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${toggles[feat.key] ? "bg-primary/10" : "bg-muted"}`}>
+                  <feat.icon className={`h-4 w-4 ${toggles[feat.key] ? feat.color : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold cursor-pointer">{feat.label}</Label>
+                  <p className="text-[11px] text-muted-foreground">{feat.description}</p>
+                </div>
+              </div>
+              <Switch
+                checked={toggles[feat.key] ?? false}
                 onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
               />
             </div>

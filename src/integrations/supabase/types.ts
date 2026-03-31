@@ -3342,6 +3342,8 @@ export type Database = {
           feat_newsletter: boolean | null
           feat_produtos_relacionados: boolean | null
           feat_rating_estrelas: boolean | null
+          feat_webchat: boolean | null
+          feat_whatsapp: boolean | null
           feat_zoom_imagem: boolean | null
           footer_copyright: string | null
           footer_descricao: string | null
@@ -3410,6 +3412,8 @@ export type Database = {
           feat_newsletter?: boolean | null
           feat_produtos_relacionados?: boolean | null
           feat_rating_estrelas?: boolean | null
+          feat_webchat?: boolean | null
+          feat_whatsapp?: boolean | null
           feat_zoom_imagem?: boolean | null
           footer_copyright?: string | null
           footer_descricao?: string | null
@@ -3478,6 +3482,8 @@ export type Database = {
           feat_newsletter?: boolean | null
           feat_produtos_relacionados?: boolean | null
           feat_rating_estrelas?: boolean | null
+          feat_webchat?: boolean | null
+          feat_whatsapp?: boolean | null
           feat_zoom_imagem?: boolean | null
           footer_copyright?: string | null
           footer_descricao?: string | null

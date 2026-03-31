@@ -19,6 +19,7 @@ import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import EcommerceRulesPopup from "@/components/ecommerce/EcommerceRulesPopup";
 import EcommerceRulesBanner from "@/components/ecommerce/EcommerceRulesBanner";
 import BrandLogo from "@/components/ecommerce/BrandLogo";
+import EcommerceFloatingChat from "@/components/ecommerce/EcommerceFloatingChat";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -132,8 +133,8 @@ export default function EcommerceLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
-      <EcommerceAdBanner posicao="popup" />
-      <EcommerceRulesPopup />
+      {!isCatalogMode && <EcommerceAdBanner posicao="popup" />}
+      {!isCatalogMode && <EcommerceRulesPopup />}
       {/* Top bar */}
       {branding.topbar_ativo && (
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
@@ -337,13 +338,13 @@ export default function EcommerceLayout() {
         </nav>
       </header>
 
-      <EcommerceRulesBanner posicao="topo" />
+      {!isCatalogMode && <EcommerceRulesBanner posicao="topo" />}
 
       <main className="flex-1">
         <Outlet />
       </main>
 
-      <EcommerceRulesBanner posicao="rodape" />
+      {!isCatalogMode && <EcommerceRulesBanner posicao="rodape" />}
 
       {/* Footer */}
       <footer className="bg-foreground text-background/80 mt-auto">
@@ -407,6 +408,8 @@ export default function EcommerceLayout() {
           </div>
         </div>
       </footer>
+
+      <EcommerceFloatingChat />
     </div>
   );
 }
