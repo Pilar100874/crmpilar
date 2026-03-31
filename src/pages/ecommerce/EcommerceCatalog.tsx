@@ -203,7 +203,7 @@ export default function EcommerceCatalog() {
       <div>
         <h4 className="text-sm font-semibold mb-3">Disponibilidade</h4>
         <label className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
-          <Checkbox />
+          <Checkbox checked={filterInStock} onCheckedChange={(v) => setFilterInStock(!!v)} />
           <span className="text-sm">Em estoque</span>
         </label>
       </div>
