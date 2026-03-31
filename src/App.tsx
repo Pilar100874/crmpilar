@@ -126,6 +126,7 @@ import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
 import EcommerceWishlist from "./pages/ecommerce/EcommerceWishlist";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
+import { QuoteRequestProvider } from "./contexts/QuoteRequestContext";
 import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
 import EcommerceRulesPage from "./pages/EcommerceRulesPage";
 import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
