@@ -53,13 +53,21 @@ export default function EcommerceCatalog() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
-  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
+    if (product.estoque !== null && product.estoque !== undefined && product.estoque <= 0) {
+      toast.error("Produto sem estoque disponível");
+      return;
+    }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+    // Capture target position BEFORE state change causes re-render
+    const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+    const cartRect = cartTarget?.getBoundingClientRect();
+    const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+    setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
     addItem({
       productId: product.id,
       name: product.nome,
@@ -363,6 +371,7 @@ export default function EcommerceCatalog() {
       <FlyToAnimation
         startRect={flyAnim.startRect}
         targetSelector={flyAnim.target}
+        targetPos={flyAnim.targetPos}
         imageUrl={flyAnim.image}
         icon={flyAnim.icon}
         onComplete={() => setFlyAnim(null)}

@@ -5,55 +5,56 @@ import { motion } from "framer-motion";
 interface FlyToAnimationProps {
   startRect: DOMRect;
   targetSelector: string;
+  targetPos?: { x: number; y: number };
   imageUrl?: string;
   icon?: "heart" | "cart";
   onComplete: () => void;
 }
 
-export default function FlyToAnimation({ startRect, targetSelector, imageUrl, icon, onComplete }: FlyToAnimationProps) {
-  const [targetPos, setTargetPos] = useState<{ x: number; y: number } | null>(null);
+export default function FlyToAnimation({ startRect, targetSelector, targetPos: initialTargetPos, imageUrl, icon, onComplete }: FlyToAnimationProps) {
+  const [targetPos, setTargetPos] = useState<{ x: number; y: number } | null>(initialTargetPos || null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    const target = document.querySelector<HTMLElement>(targetSelector);
+    if (initialTargetPos) return; // Already have position
 
-    if (!target) {
-      onCompleteRef.current();
-      return;
-    }
-
-    const updateTargetPos = () => {
+    const findTarget = () => {
+      const target = document.querySelector<HTMLElement>(targetSelector);
+      if (!target) return null;
       const rect = target.getBoundingClientRect();
-      setTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     };
 
-    updateTargetPos();
-
-    window.addEventListener("resize", updateTargetPos);
-    window.addEventListener("scroll", updateTargetPos, true);
-
-    return () => {
-      window.removeEventListener("resize", updateTargetPos);
-      window.removeEventListener("scroll", updateTargetPos, true);
-    };
-  }, [targetSelector]);
+    const pos = findTarget();
+    if (pos) {
+      setTargetPos(pos);
+    } else {
+      // Retry a few times in case of re-render
+      let attempts = 0;
+      const interval = setInterval(() => {
+        const p = findTarget();
+        if (p || attempts > 5) {
+          clearInterval(interval);
+          if (p) setTargetPos(p);
+          else onCompleteRef.current();
+        }
+        attempts++;
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [targetSelector, initialTargetPos]);
 
   const handleComplete = useCallback(() => {
     const target = document.querySelector<HTMLElement>(targetSelector);
-
     target?.animate(
       [
         { transform: "scale(1)", filter: "brightness(1)" },
         { transform: "scale(1.18)", filter: "brightness(1.12)" },
         { transform: "scale(1)", filter: "brightness(1)" },
       ],
-      {
-        duration: 280,
-        easing: "ease-out",
-      }
+      { duration: 280, easing: "ease-out" }
     );
-
     onCompleteRef.current();
   }, [targetSelector]);
 

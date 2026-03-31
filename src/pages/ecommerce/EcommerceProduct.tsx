@@ -48,7 +48,7 @@ export default function EcommerceProduct() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [volumeTiers, setVolumeTiers] = useState<any[]>([]);
-  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const heartBtnRef = useRef<HTMLButtonElement>(null);
   const wishlisted = product ? isWishlisted(product.id) : false;
@@ -340,7 +340,10 @@ export default function EcommerceProduct() {
               <Button ref={cartBtnRef} size="lg" className="w-full flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
                 if (product) {
                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+                  const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+                  const cartRect = cartTarget?.getBoundingClientRect();
+                  const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
                   addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
                   toast.success("Produto adicionado ao carrinho!");
                 }
@@ -561,7 +564,10 @@ export default function EcommerceProduct() {
           <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={(e) => {
             if (product) {
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+              const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+              const cartRect = cartTarget?.getBoundingClientRect();
+              const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+              setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
               addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
               toast.success("Produto adicionado ao carrinho!");
             }
@@ -575,6 +581,7 @@ export default function EcommerceProduct() {
       <FlyToAnimation
         startRect={flyAnim.startRect}
         targetSelector={flyAnim.target}
+        targetPos={flyAnim.targetPos}
         imageUrl={flyAnim.image}
         icon={flyAnim.icon}
         onComplete={() => setFlyAnim(null)}
