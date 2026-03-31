@@ -637,10 +637,9 @@ const PanelContent: React.FC<PanelContentProps> = ({
             <CardTitle className="text-sm flex items-center justify-between">
               <span>Visitas Planejadas ({visitasSelecionadas.length}/{visitas.length})</span>
               {visitas.length > 0 && (
-                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => {
-                  setVisitas([]);
-                  setRoute(null);
-                }}>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={clearAll}>
+                  Limpar
+                </Button>
                   Limpar
                 </Button>
               )}
