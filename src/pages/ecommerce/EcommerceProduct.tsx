@@ -48,7 +48,7 @@ export default function EcommerceProduct() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [volumeTiers, setVolumeTiers] = useState<any[]>([]);
-  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const heartBtnRef = useRef<HTMLButtonElement>(null);
   const wishlisted = product ? isWishlisted(product.id) : false;
