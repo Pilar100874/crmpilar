@@ -309,6 +309,33 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       if (formData.company_type) customFieldsData.company_type = formData.company_type;
       if (formData.inscricao) customFieldsData.inscricao = formData.inscricao;
 
+      // Geocodificar endereço para obter latitude/longitude
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      
+      const addressParts = [
+        formData.endereco?.trim(),
+        formData.numero?.trim(),
+        formData.bairro?.trim(),
+        formData.cidade?.trim(),
+        formData.estado?.trim(),
+        "Brasil"
+      ].filter(Boolean);
+      
+      if (addressParts.length >= 3) {
+        try {
+          const query = encodeURIComponent(addressParts.join(", "));
+          const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+          const geoData = await geoResponse.json();
+          if (geoData && geoData.length > 0) {
+            latitude = parseFloat(geoData[0].lat);
+            longitude = parseFloat(geoData[0].lon);
+          }
+        } catch (geoError) {
+          console.warn("Erro ao geocodificar endereço:", geoError);
+        }
+      }
+
       // Criar empresa
       const { data: newEmpresa, error } = await supabase
         .from("empresas")
@@ -326,6 +353,8 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           estabelecimento_id: estabelecimentoId,
           segmento_id: formData.segmento_id || null,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
+          latitude,
+          longitude,
         })
         .select()
         .single();
