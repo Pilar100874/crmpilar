@@ -130,10 +130,12 @@ export function QuoteRequestProvider({ children }: { children: ReactNode }) {
           .from("customers")
           .insert({
             estabelecimento_id: estabelecimentoId,
+            nome: user.user_metadata?.nome || user.email?.split("@")[0] || "Cliente E-commerce",
             name: user.user_metadata?.nome || user.email?.split("@")[0] || "Cliente E-commerce",
-            email: user.email,
+            email: user.email || "",
+            telefone: "",
             canal: "ecommerce",
-          })
+          } as any)
           .select("id")
           .single();
         if (custError || !newCustomer) {
