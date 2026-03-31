@@ -564,7 +564,10 @@ export default function EcommerceProduct() {
           <Button size="lg" className="flex-1 gap-2 rounded-full h-11" disabled={!inStock} onClick={(e) => {
             if (product) {
               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+              const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+              const cartRect = cartTarget?.getBoundingClientRect();
+              const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+              setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
               addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
               toast.success("Produto adicionado ao carrinho!");
             }
