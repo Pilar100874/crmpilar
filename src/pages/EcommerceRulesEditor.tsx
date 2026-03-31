@@ -111,9 +111,11 @@ function EcommerceRulesEditorInner() {
       };
 
       if (ruleId) {
-        await supabase.from("ecommerce_rules").update(payload).eq("id", ruleId);
+        const { error } = await supabase.from("ecommerce_rules").update(payload).eq("id", ruleId);
+        if (error) throw new Error(error.message);
       } else {
-        const { data } = await supabase.from("ecommerce_rules").insert(payload).select().single();
+        const { data, error } = await supabase.from("ecommerce_rules").insert(payload).select().single();
+        if (error) throw new Error(error.message);
         if (data) navigate(`/ecommerce-rules-editor?id=${data.id}`, { replace: true });
       }
       toast({ title: "Salvo!", description: "Regra salva com sucesso." });
