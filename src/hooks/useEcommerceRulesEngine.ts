@@ -40,13 +40,15 @@ export function useEcommerceRulesEngine(cartContext?: CartContext) {
       const estabId = localStorage.getItem("estabelecimentoId");
       if (!estabId) { setLoading(false); return; }
 
-      // Check if modo_catalogo is active — skip all rules
+      // Check if modo_catalogo is active for current context — skip all rules
       const { data: configData } = await supabase
         .from("ecommerce_config")
-        .select("modo_catalogo")
+        .select("modo_catalogo_b2c, modo_catalogo_b2b")
         .eq("estabelecimento_id", estabId)
         .maybeSingle();
-      if (configData?.modo_catalogo) { setLoading(false); return; }
+      const isB2B = window.location.pathname.includes("/b2b");
+      const catalogActive = isB2B ? configData?.modo_catalogo_b2b : configData?.modo_catalogo_b2c;
+      if (catalogActive) { setLoading(false); return; }
 
       const { data: rules, error } = await supabase
         .from("ecommerce_rules")
