@@ -55,7 +55,7 @@ export default function EcommerceRulesBanner({ posicao }: { posicao?: "topo" | "
 
   if (filtered.length === 0) return null;
 
-  const renderBannerContent = (banner: RuleAction) => {
+  const renderBannerContent = (banner: RuleAction & { ruleId: string; ruleName: string }) => {
     const { titulo, imagem, link } = banner.config || {};
     const content = (
       <div className="relative w-full group">
