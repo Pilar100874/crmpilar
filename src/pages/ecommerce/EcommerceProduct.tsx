@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
