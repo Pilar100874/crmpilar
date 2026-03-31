@@ -638,13 +638,19 @@ export default function EcommerceCatalog() {
                           {product.categoria_nome && <p className="text-[10px] md:text-xs text-muted-foreground truncate">{product.categoria_nome}</p>}
                           <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-2 mt-0.5 flex-1">{product.nome}</p>
                           <div className="mt-auto pt-1.5 md:pt-2 min-h-[2.75rem]">
-                            <p className={`text-[10px] md:text-xs text-muted-foreground line-through ${product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? "visible" : "invisible"}`}>
-                              {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? formatPrice(product.preco_tabela) : "\u00A0"}
-                            </p>
-                            {product.preco_minimo ? (
-                              <p className="text-sm md:text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                            {showPrices ? (
+                              <>
+                                <p className={`text-[10px] md:text-xs text-muted-foreground line-through ${product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? "visible" : "invisible"}`}>
+                                  {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? formatPrice(product.preco_tabela) : "\u00A0"}
+                                </p>
+                                {product.preco_minimo ? (
+                                  <p className="text-sm md:text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                                ) : (
+                                  <p className="text-sm md:text-base font-bold text-muted-foreground">Sob consulta</p>
+                                )}
+                              </>
                             ) : (
-                              <p className="text-sm md:text-base font-bold text-muted-foreground">Sob consulta</p>
+                              <p className="text-xs md:text-sm font-medium text-primary">Faça login para ver preços</p>
                             )}
                           </div>
                         </div>
