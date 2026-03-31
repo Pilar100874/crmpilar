@@ -329,6 +329,14 @@ export default function POSView({
   // Hook para cálculo de pedágio (manual - só quando clicar no botão)
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
 
+  // Hook para regras promocionais de frete (mesmas regras do e-commerce)
+  const fretePromoTotal = Array.from(cartItems.values()).reduce((s, i) => s + i.quantity * i.preco, 0);
+  const fretePromoRules = useOrcamentoFreteRules(
+    fretePromoTotal,
+    routeAddresses.destinoCep,
+    freteResult?.custoTotal || 0
+  );
+
   // Reset pedágio e contato quando trocar empresa (exceto quando carregando orçamento)
   useEffect(() => {
     if (isLoadingOrcamentoRef.current) return;
