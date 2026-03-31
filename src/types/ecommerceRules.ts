@@ -11,6 +11,7 @@ export type EcommerceRuleBlockType =
   | "condicao_grupo_produto"
   // Condições - Cliente
   | "condicao_tipo_cliente"
+  | "condicao_cliente_especifico"
   | "condicao_primeira_compra"
   | "condicao_cliente_recorrente"
   | "condicao_regiao_entrega"
