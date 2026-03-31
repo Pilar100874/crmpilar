@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Search, Plus, Trash2, ImageIcon, Upload } from "lucide-react";
+import { X, Search, Plus, Trash2, ImageIcon, Upload, Link2, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BlockPreviewTester, isTestableBlock } from "./BlockPreviewTester";
 import * as Icons from "lucide-react";
@@ -14,6 +14,79 @@ import { ECOMMERCE_RULE_BLOCKS } from "@/types/ecommerceRules";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const ECOMMERCE_ROUTES = [
+  { path: "/ecommerce", label: "Home da Loja" },
+  { path: "/ecommerce/catalogo", label: "Catálogo" },
+  { path: "/ecommerce/carrinho", label: "Carrinho" },
+  { path: "/ecommerce/checkout", label: "Checkout" },
+  { path: "/ecommerce/b2b", label: "Atacado & B2B" },
+  { path: "/ecommerce/conta", label: "Minha Conta" },
+  { path: "/ecommerce/favoritos", label: "Favoritos" },
+  { path: "/ecommerce/institucional/sobre", label: "Sobre Nós" },
+  { path: "/ecommerce/institucional/contato", label: "Contato" },
+  { path: "/ecommerce/institucional/faq", label: "FAQ" },
+  { path: "/ecommerce/institucional/privacidade", label: "Privacidade" },
+  { path: "/ecommerce/institucional/termos", label: "Termos de Uso" },
+];
+
+function LinkSelector({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = ECOMMERCE_ROUTES.filter(
+    r => r.label.toLowerCase().includes(search.toLowerCase()) || r.path.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex gap-1">
+        <Input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Digite ou selecione um caminho"
+          className="flex-1"
+        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="shrink-0 h-10 w-10">
+              <Link2 className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-2" align="end">
+            <div className="space-y-2">
+              <Input
+                placeholder="Buscar página..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="h-8 text-xs"
+              />
+              <ScrollArea className="h-48">
+                <div className="space-y-0.5">
+                  {filtered.map(route => (
+                    <button
+                      key={route.path}
+                      className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                      onClick={() => { onChange(route.path); setOpen(false); setSearch(""); }}
+                    >
+                      <span className="font-medium">{route.label}</span>
+                      <span className="text-muted-foreground text-[10px]">{route.path}</span>
+                    </button>
+                  ))}
+                  {filtered.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-3">Nenhuma página encontrada</p>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
 
 interface EcommercePropertiesPanelProps {
   node: Node;
@@ -865,10 +938,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <Input value={config.titulo || ""} onChange={e => updateConfig("titulo", e.target.value)} />
             </div>
             <GalleryImageSelector value={config.imagem || ""} onChange={v => updateConfig("imagem", v)} />
-            <div className="space-y-1">
-              <Label className="text-xs">Link de destino</Label>
-              <Input value={config.link || ""} onChange={e => updateConfig("link", e.target.value)} placeholder="/ecommerce/catalogo" />
-            </div>
+            <LinkSelector label="Link de destino" value={config.link || ""} onChange={v => updateConfig("link", v)} />
             <div className="space-y-1">
               <Label className="text-xs">Posição</Label>
               <Select value={config.posicao || "topo"} onValueChange={v => updateConfig("posicao", v)}>
@@ -904,10 +974,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <Label className="text-xs">Texto do Botão</Label>
               <Input value={config.botaoTexto || "Aproveitar!"} onChange={e => updateConfig("botaoTexto", e.target.value)} />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Link do Botão (opcional)</Label>
-              <Input value={config.botaoLink || ""} onChange={e => updateConfig("botaoLink", e.target.value)} placeholder="/ecommerce/catalogo" />
-            </div>
+            <LinkSelector label="Link do Botão (opcional)" value={config.botaoLink || ""} onChange={v => updateConfig("botaoLink", v)} />
             <div className="space-y-1">
               <Label className="text-xs">Delay (segundos)</Label>
               <Input type="number" value={config.delay || 3} onChange={e => updateConfig("delay", Number(e.target.value))} />
