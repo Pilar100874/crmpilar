@@ -3752,6 +3752,7 @@ export type Database = {
           nome_fantasia: string | null
           segmento_id: string | null
           telefone: string | null
+          tipo_cliente: string
           updated_at: string | null
           whatsapps_vinculados: string[] | null
         }
@@ -3777,6 +3778,7 @@ export type Database = {
           nome_fantasia?: string | null
           segmento_id?: string | null
           telefone?: string | null
+          tipo_cliente?: string
           updated_at?: string | null
           whatsapps_vinculados?: string[] | null
         }
@@ -3802,6 +3804,7 @@ export type Database = {
           nome_fantasia?: string | null
           segmento_id?: string | null
           telefone?: string | null
+          tipo_cliente?: string
           updated_at?: string | null
           whatsapps_vinculados?: string[] | null
         }
