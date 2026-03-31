@@ -338,7 +338,7 @@ export default function EcommerceLayout() {
         </nav>
       </header>
 
-      <EcommerceRulesBanner posicao="topo" />
+      {!isCatalogMode && <EcommerceRulesBanner posicao="topo" />}
 
       <main className="flex-1">
         <Outlet />
