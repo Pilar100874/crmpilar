@@ -46,7 +46,6 @@ export default function EcommerceLayout() {
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
   const { totalItems: quoteCount } = useQuoteRequest();
-  const isCatalogMode = branding.modo_catalogo;
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
@@ -54,6 +53,7 @@ export default function EcommerceLayout() {
   const { branding, loading: brandingLoading } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
+  const isCatalogMode = branding.modo_catalogo;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
