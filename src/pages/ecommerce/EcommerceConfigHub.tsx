@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -95,6 +95,15 @@ const configSections = [
     url: "/ecommerce-config/volume-pricing",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
+  },
+  {
+    id: "cupons",
+    title: "Cupons de Desconto",
+    description: "Crie e gerencie cupons promocionais com validade e limites de uso",
+    icon: Ticket,
+    url: "/ecommerce-config/cupons",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
 ];
 
