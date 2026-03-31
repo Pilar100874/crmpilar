@@ -51,6 +51,7 @@ export function useEcommerceRulesEngine() {
       const popups: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const banners: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const vitrines: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const fretes: (RuleAction & { ruleId: string; ruleName: string })[] = [];
 
       for (const rule of rules) {
         // Check date range
