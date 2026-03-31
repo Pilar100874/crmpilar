@@ -19,6 +19,7 @@ import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import EcommerceRulesPopup from "@/components/ecommerce/EcommerceRulesPopup";
 import EcommerceRulesBanner from "@/components/ecommerce/EcommerceRulesBanner";
 import BrandLogo from "@/components/ecommerce/BrandLogo";
+import EcommerceFloatingChat from "@/components/ecommerce/EcommerceFloatingChat";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
