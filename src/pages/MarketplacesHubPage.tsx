@@ -29,7 +29,6 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'produtos', label: 'Produtos x Canais', icon: Package, description: 'Gerenciar produtos vinculados aos marketplaces' },
-  { id: 'pedidos', label: 'Pedidos', icon: ShoppingCart, description: 'Acompanhar pedidos dos marketplaces' },
 ];
 
 const MarketplacesHubPage: React.FC = () => {
