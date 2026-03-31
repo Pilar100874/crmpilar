@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Store, 
   Package, 
-  ShoppingCart,
   PanelLeft,
   PanelLeftClose,
   LucideIcon
@@ -19,7 +18,7 @@ import { toast } from 'sonner';
 // Import existing components
 import MarketplaceHub from './MarketplaceHub';
 import MarketplaceProdutos from './MarketplaceProdutos';
-import MarketplacePedidos from './MarketplacePedidos';
+
 
 interface TabItem {
   id: string;
@@ -30,7 +29,6 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'produtos', label: 'Produtos x Canais', icon: Package, description: 'Gerenciar produtos vinculados aos marketplaces' },
-  { id: 'pedidos', label: 'Pedidos', icon: ShoppingCart, description: 'Acompanhar pedidos dos marketplaces' },
 ];
 
 const MarketplacesHubPage: React.FC = () => {
@@ -82,8 +80,6 @@ const MarketplacesHubPage: React.FC = () => {
         return <MarketplaceHub />;
       case 'produtos':
         return <MarketplaceProdutos />;
-      case 'pedidos':
-        return <MarketplacePedidos />;
       default:
         return <MarketplaceHub />;
     }
