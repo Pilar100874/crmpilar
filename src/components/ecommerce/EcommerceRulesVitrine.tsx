@@ -42,7 +42,6 @@ export default function EcommerceRulesVitrine() {
 
 function VitrineSection({ action }: { action: { ruleId: string; config: Record<string, any>; label: string } }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [prices, setPrices] = useState<Record<string, { finalPrice: number; originalPrice: number | null }>>({});
   const [loading, setLoading] = useState(true);
 
   const config = action.config || {};
