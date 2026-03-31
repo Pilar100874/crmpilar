@@ -50,16 +50,18 @@ export default function EcommerceFeaturesEditor() {
     if (!estId) { setLoading(false); return; }
     const { data } = await supabase
       .from("ecommerce_config")
-      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem")
+      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem, modo_catalogo, mostrar_precos_visitante_b2c, mostrar_precos_visitante_b2b")
       .eq("estabelecimento_id", estId)
       .maybeSingle();
     if (data) {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = (data as any)[f.key] ?? true; });
+      modeFeatures.forEach(f => { t[f.key] = (data as any)[f.key] ?? (f.key === "modo_catalogo" ? false : true); });
       setToggles(t);
     } else {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = true; });
+      modeFeatures.forEach(f => { t[f.key] = f.key === "modo_catalogo" ? false : true; });
       setToggles(t);
     }
     setLoading(false);
