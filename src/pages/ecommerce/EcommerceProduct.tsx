@@ -42,8 +42,10 @@ const formatPrice = (value: number | null) => {
 export default function EcommerceProduct() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { addItem: addQuoteItem } = useQuoteRequest();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { branding } = useEcommerceBranding();
+  const isCatalogMode = branding.modo_catalogo;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
