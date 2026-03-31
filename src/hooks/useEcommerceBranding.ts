@@ -53,6 +53,9 @@ export interface EcommerceBranding {
   topbar_items: TopbarItem[];
   topbar_telefone: string;
   topbar_link_b2b: boolean;
+  modo_catalogo: boolean;
+  mostrar_precos_visitante_b2c: boolean;
+  mostrar_precos_visitante_b2b: boolean;
 }
 
 const defaults: EcommerceBranding = {
