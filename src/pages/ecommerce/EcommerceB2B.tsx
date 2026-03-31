@@ -55,7 +55,7 @@ export default function EcommerceB2B() {
               <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 rounded-full px-8 h-12 text-base shadow-lg shadow-primary/30">
                 Solicitar Cadastro B2B <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="gap-2 border-background/30 text-background hover:bg-background/10 rounded-full px-8 h-12 text-base">
+              <Button size="lg" variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/10 rounded-full px-8 h-12 text-base">
                 Falar com Consultor
               </Button>
             </div>
