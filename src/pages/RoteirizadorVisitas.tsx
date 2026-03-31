@@ -456,6 +456,7 @@ interface PanelContentProps {
   horaFinal: string;
   formatDist: (m: number) => string;
   formatDur: (s: number) => string;
+  clearAll: () => void;
 }
 
 const PanelContent: React.FC<PanelContentProps> = ({
