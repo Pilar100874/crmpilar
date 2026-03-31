@@ -153,7 +153,7 @@ export default function EcommerceHome() {
 
   const videoUrl = branding.background_type === "video" && branding.background_video_url
     ? branding.background_video_url
-    : PLACEHOLDER_VIDEO;
+    : null;
 
   const scrollToContent = () => {
     const el = document.getElementById("home-content");
