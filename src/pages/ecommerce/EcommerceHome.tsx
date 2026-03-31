@@ -203,6 +203,9 @@ export default function EcommerceHome() {
         <EcommerceAdBanner posicao="home_banner" carousel autoPlay interval={5000} />
       </section>
 
+      {/* Destaques da Vitrine (regras do e-commerce) */}
+      <EcommerceRulesVitrine />
+
       {/* Categories */}
       {isVisible("categorias") && (
         <section className="max-w-7xl mx-auto px-4 py-16">
