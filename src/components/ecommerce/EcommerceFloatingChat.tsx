@@ -50,13 +50,8 @@ export default function EcommerceFloatingChat() {
   const startChat = (channel: "webchat" | "whatsapp", bot: BotFlow) => {
     setShowSelector(false);
     setSelectedChannel(null);
-    if (channel === "whatsapp") {
-      // Open WhatsApp with bot context - placeholder number
-      window.open(`https://wa.me/?text=${encodeURIComponent(`Olá! Gostaria de falar com ${bot.name}`)}`, "_blank");
-    } else {
-      // Webchat - dispatch custom event for webchat widget
-      window.dispatchEvent(new CustomEvent("ecommerce-webchat-open", { detail: { botId: bot.id, botName: bot.name } }));
-    }
+    const eventName = channel === "whatsapp" ? "ecommerce-whatsapp-open" : "ecommerce-webchat-open";
+    window.dispatchEvent(new CustomEvent(eventName, { detail: { botId: bot.id, botName: bot.name } }));
   };
 
   const filteredBots = selectedChannel
