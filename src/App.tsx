@@ -139,6 +139,7 @@ import EcommerceFooterEditor from "./pages/ecommerce/EcommerceFooterEditor";
 import EcommerceHomeEditor from "./pages/ecommerce/EcommerceHomeEditor";
 import EcommerceFeaturesEditor from "./pages/ecommerce/EcommerceFeaturesEditor";
 import EcommerceVolumePricing from "./pages/ecommerce/EcommerceVolumePricing";
+import EcommerceCuponsPage from "./pages/ecommerce/EcommerceCuponsPage";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
