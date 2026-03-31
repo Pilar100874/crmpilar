@@ -152,8 +152,8 @@ function getReachableActions(nodes: any[], edges: any[], cartContext?: CartConte
         let matchedHandleId: string | null = null;
         for (let i = 0; i < faixas.length; i++) {
           const faixa = faixas[i];
-          const min = parseFloat(faixa.valorMinimo || "0") || 0;
-          const max = parseFloat(faixa.valorMaximo || "999999999") || 999999999;
+          const min = parseFloat(faixa.valorMin ?? faixa.valorMinimo ?? "0") || 0;
+          const max = parseFloat(faixa.valorMax ?? faixa.valorMaximo ?? "999999999") || 999999999;
           if (valor >= min && valor <= max) {
             matchedHandleId = `faixa-${i}`;
             break;
