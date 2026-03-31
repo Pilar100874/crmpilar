@@ -53,7 +53,7 @@ export default function EcommerceCatalog() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
-  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
