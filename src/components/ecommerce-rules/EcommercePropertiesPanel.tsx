@@ -378,6 +378,89 @@ function useGroups() {
   return { groups };
 }
 
+// ── Hook para buscar clientes ───────────────────────────────────
+
+function useCustomers() {
+  const [customers, setCustomers] = useState<{ id: string; nome: string; tipo: string; documento?: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const estabId = localStorage.getItem("estabelecimentoId");
+      let query = supabase.from("customers").select("id, nome, email, empresa_id").order("nome");
+      if (estabId) query = query.eq("estabelecimento_id", estabId);
+      const { data } = await query.limit(500);
+      setCustomers((data || []).map(c => ({ id: c.id, nome: c.nome, tipo: c.empresa_id ? "B2B" : "B2C", documento: c.email || "" })));
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  return { customers, loading };
+}
+
+// ── Seletor de Cliente ──────────────────────────────────────────
+
+function CustomerSelector({ value, onChange }: { value: { id: string; nome: string } | null; onChange: (v: { id: string; nome: string } | null) => void }) {
+  const { customers, loading } = useCustomers();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = customers.filter(c =>
+    c.nome.toLowerCase().includes(search.toLowerCase()) ||
+    (c.documento || "").includes(search)
+  );
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">Cliente</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-between text-xs h-9">
+            {value ? value.nome : "Selecionar cliente..."}
+            <ChevronDown className="h-3 w-3 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-2" align="start">
+          <div className="flex items-center gap-2 mb-2">
+            <Search className="h-3 w-3 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou documento..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="h-7 text-xs"
+            />
+          </div>
+          <ScrollArea className="h-48">
+            {loading ? (
+              <p className="text-xs text-muted-foreground p-2">Carregando...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-2">Nenhum cliente encontrado</p>
+            ) : (
+              filtered.map(c => (
+                <button
+                  key={c.id}
+                  className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-accent flex items-center justify-between"
+                  onClick={() => { onChange({ id: c.id, nome: c.nome }); setOpen(false); setSearch(""); }}
+                >
+                  <span className="truncate">{c.nome}</span>
+                  {c.tipo && <Badge variant="outline" className="text-[10px] ml-2 shrink-0">{c.tipo}</Badge>}
+                </button>
+              ))
+            )}
+          </ScrollArea>
+          {value && (
+            <Button variant="ghost" size="sm" className="w-full mt-1 text-xs h-7" onClick={() => { onChange(null); setOpen(false); }}>
+              Limpar seleção
+            </Button>
+          )}
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 // ── Hook para buscar imagens da galeria ─────────────────────────
 
 function useGalleryImages() {
@@ -791,6 +874,18 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
                 <SelectItem value="ambos">Ambos</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        );
+
+      case "condicao_cliente_especifico":
+        return (
+          <div className="space-y-3">
+            <CustomerSelector
+              value={config.clienteId ? { id: config.clienteId, nome: config.clienteNome || "" } : null}
+              onChange={v => {
+                updateConfig("clienteId", v?.id || "", { clienteNome: v?.nome || "" });
+              }}
+            />
           </div>
         );
 

@@ -11,6 +11,7 @@ export type EcommerceRuleBlockType =
   | "condicao_grupo_produto"
   // Condições - Cliente
   | "condicao_tipo_cliente"
+  | "condicao_cliente_especifico"
   | "condicao_primeira_compra"
   | "condicao_cliente_recorrente"
   | "condicao_regiao_entrega"
@@ -120,6 +121,15 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     color: "#8b5cf6",
     category: "condicao_cliente",
     defaultData: { tipo: "b2c" },
+  },
+  {
+    type: "condicao_cliente_especifico",
+    label: "Cliente Específico",
+    description: "Aplica regra para um cliente selecionado",
+    icon: "UserCheck",
+    color: "#8b5cf6",
+    category: "condicao_cliente",
+    defaultData: { clienteId: "", clienteNome: "", clienteTipo: "" },
   },
   {
     type: "condicao_primeira_compra",
