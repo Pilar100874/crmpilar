@@ -66,6 +66,7 @@ import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 import QualityAssurance from "./pages/QualityAssurance";
 import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
+import RoteirizadorVisitas from "./pages/RoteirizadorVisitas";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
 import LogisticaHub from "./pages/LogisticaHub";
