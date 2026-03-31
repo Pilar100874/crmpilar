@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 // Import existing components
 import MarketplaceHub from './MarketplaceHub';
 import MarketplaceProdutos from './MarketplaceProdutos';
-import MarketplacePedidos from './MarketplacePedidos';
+
 
 interface TabItem {
   id: string;
