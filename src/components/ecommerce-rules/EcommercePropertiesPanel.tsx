@@ -684,10 +684,12 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
     setConfig(nodeData.config || {});
   }, [node.id]);
 
-  const updateConfig = (key: string, value: any) => {
-    const newConfig = { ...config, [key]: value };
-    setConfig(newConfig);
-    onUpdate(node.id, { ...nodeData, config: newConfig });
+  const updateConfig = (key: string, value: any, extraUpdates?: Record<string, any>) => {
+    setConfig(prev => {
+      const newConfig = { ...prev, [key]: value, ...extraUpdates };
+      onUpdate(node.id, { ...nodeData, config: newConfig });
+      return newConfig;
+    });
   };
 
   const saveLabel = () => {
@@ -734,8 +736,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
             <ProductSelector
               value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
               onChange={v => {
-                updateConfig("produtoId", v?.id || "");
-                updateConfig("produtoNome", v?.nome || "");
+                updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
               }}
             />
             <div className="space-y-1">
@@ -751,8 +752,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
             <CategorySelector
               value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
               onChange={v => {
-                updateConfig("categoriaId", v?.id || "");
-                updateConfig("categoriaNome", v?.nome || "");
+                updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
               }}
             />
             <div className="space-y-1">
@@ -768,8 +768,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
             <GroupSelector
               value={config.grupoId ? { id: config.grupoId, nome: config.grupoNome || "" } : null}
               onChange={v => {
-                updateConfig("grupoId", v?.id || "");
-                updateConfig("grupoNome", v?.nome || "");
+                updateConfig("grupoId", v?.id || "", { grupoNome: v?.nome || "" });
               }}
             />
             <div className="space-y-1">
@@ -915,8 +914,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <ProductSelector
                 value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
                 onChange={v => {
-                  updateConfig("produtoId", v?.id || "");
-                  updateConfig("produtoNome", v?.nome || "");
+                  updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
                 }}
               />
             )}
@@ -924,8 +922,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
-                  updateConfig("categoriaId", v?.id || "");
-                  updateConfig("categoriaNome", v?.nome || "");
+                  updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
             )}
@@ -933,8 +930,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <GroupSelector
                 value={config.grupoId ? { id: config.grupoId, nome: config.grupoNome || "" } : null}
                 onChange={v => {
-                  updateConfig("grupoId", v?.id || "");
-                  updateConfig("grupoNome", v?.nome || "");
+                  updateConfig("grupoId", v?.id || "", { grupoNome: v?.nome || "" });
                 }}
               />
             )}
@@ -979,8 +975,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <ProductSelector
                 value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
                 onChange={v => {
-                  updateConfig("produtoId", v?.id || "");
-                  updateConfig("produtoNome", v?.nome || "");
+                  updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
                 }}
               />
             )}
@@ -1017,8 +1012,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <ProductSelector
                 value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
                 onChange={v => {
-                  updateConfig("produtoId", v?.id || "");
-                  updateConfig("produtoNome", v?.nome || "");
+                  updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
                 }}
               />
             )}
@@ -1026,8 +1020,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
-                  updateConfig("categoriaId", v?.id || "");
-                  updateConfig("categoriaNome", v?.nome || "");
+                  updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
             )}
@@ -1060,8 +1053,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <ProductSelector
                 value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
                 onChange={v => {
-                  updateConfig("produtoId", v?.id || "");
-                  updateConfig("produtoNome", v?.nome || "");
+                  updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
                 }}
               />
             )}
@@ -1069,8 +1061,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
-                  updateConfig("categoriaId", v?.id || "");
-                  updateConfig("categoriaNome", v?.nome || "");
+                  updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
             )}
@@ -1214,8 +1205,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
-                  updateConfig("categoriaId", v?.id || "");
-                  updateConfig("categoriaNome", v?.nome || "");
+                  updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
             </div>
@@ -1255,8 +1245,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               label="Produto Brinde"
               value={config.produtoId ? { id: config.produtoId, nome: config.produtoNome || "" } : null}
               onChange={v => {
-                updateConfig("produtoId", v?.id || "");
-                updateConfig("produtoNome", v?.nome || "");
+                updateConfig("produtoId", v?.id || "", { produtoNome: v?.nome || "" });
               }}
             />
             <div className="space-y-1">
