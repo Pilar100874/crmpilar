@@ -57,6 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   });
   const [coupon, setCoupon] = useState<string | null>(null);
+  const [couponDiscountVal, setCouponDiscountValue] = useState(0);
+  const [couponFixedDiscount, setCouponFixedDiscount] = useState(0);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
