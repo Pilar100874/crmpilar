@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon, Star, Headphones, Gift, Check, type LucideIcon } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon, Star, Headphones, Gift, Check, FileText, type LucideIcon } from "lucide-react";
 
 const topbarIconMap: Record<string, LucideIcon> = {
   truck: Truck, shield: Shield, "rotate-ccw": RotateCcw, rotate: RotateCcw,
@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import EcommerceRulesPopup from "@/components/ecommerce/EcommerceRulesPopup";
 import EcommerceRulesBanner from "@/components/ecommerce/EcommerceRulesBanner";
