@@ -7,6 +7,7 @@ import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { useRouteCalculation } from "@/hooks/useRouteCalculation";
 import { useRouteAddresses } from "@/hooks/useRouteAddresses";
 import { calculateFreteCost, VeiculoConfig, ViagemInput, FreteResult } from "@/hooks/useFreteCalculation";
+import { useOrcamentoFreteRules } from "@/hooks/useOrcamentoFreteRules";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -327,6 +328,14 @@ export default function POSView({
   
   // Hook para cálculo de pedágio (manual - só quando clicar no botão)
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
+
+  // Hook para regras promocionais de frete (mesmas regras do e-commerce)
+  const fretePromoTotal = Array.from(cartItems.values()).reduce((s, i) => s + i.quantity * i.preco, 0);
+  const fretePromoRules = useOrcamentoFreteRules(
+    fretePromoTotal,
+    routeAddresses.destinoCep,
+    freteResult?.custoTotal || 0
+  );
 
   // Reset pedágio e contato quando trocar empresa (exceto quando carregando orçamento)
   useEffect(() => {
@@ -2389,6 +2398,71 @@ export default function POSView({
                       >
                         Ver composição detalhada
                       </Button>
+                    </div>
+                  )}
+
+                  {/* Regras Promocionais de Frete (E-commerce) */}
+                  {fretePromoRules.hasRules && (
+                    <div className="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-950/30 dark:to-teal-950/30 rounded-lg p-3 border border-cyan-200/50 dark:border-cyan-800/50">
+                      <h4 className="text-xs font-semibold text-cyan-700 dark:text-cyan-300 mb-2 flex items-center gap-2">
+                        <Truck className="w-3.5 h-3.5" />
+                        Regras Promocionais de Frete
+                      </h4>
+                      <div className="space-y-2">
+                        {fretePromoRules.freteActions.map((action, idx) => {
+                          const isActive = fretePromoRules.resultado.ruleId === action.ruleId;
+                          return (
+                            <div
+                              key={idx}
+                              className={`rounded-md p-2 text-xs border ${
+                                isActive
+                                  ? 'bg-cyan-100 dark:bg-cyan-900/40 border-cyan-300 dark:border-cyan-700'
+                                  : 'bg-muted/50 border-border/50 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">
+                                  {action.type === 'acao_frete_gratis' && '🎉 Frete Grátis'}
+                                  {action.type === 'acao_frete_fixo' && `📌 Frete Fixo: R$ ${(action.config.valor || 9.90).toFixed(2)}`}
+                                  {action.type === 'acao_desconto_frete' && `💰 ${action.config.percentual || 50}% Desconto no Frete`}
+                                </span>
+                                {isActive && (
+                                  <span className="text-[10px] bg-cyan-600 text-white dark:bg-cyan-700 px-1.5 py-0.5 rounded-full">
+                                    Ativa
+                                  </span>
+                                )}
+                              </div>
+                              {action.type === 'acao_frete_gratis' && action.config.valorMinimo > 0 && (
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                  Pedido mínimo: R$ {action.config.valorMinimo.toFixed(2)}
+                                  {fretePromoTotal < action.config.valorMinimo && (
+                                    <span className="text-destructive ml-1">
+                                      (faltam R$ {(action.config.valorMinimo - fretePromoTotal).toFixed(2)})
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {fretePromoRules.resultado.tipo !== 'nenhuma' && (
+                          <div className="mt-2 pt-2 border-t border-cyan-200/50 dark:border-cyan-700/50">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Frete com promoção</span>
+                              <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+                                {fretePromoRules.resultado.tipo === 'gratis'
+                                  ? 'GRÁTIS'
+                                  : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fretePromoRules.resultado.valor)
+                                }
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-cyan-600 dark:text-cyan-400 mt-0.5">
+                              {fretePromoRules.resultado.descricao}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
