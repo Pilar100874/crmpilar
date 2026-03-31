@@ -119,6 +119,7 @@ import EcommerceHome from "./pages/ecommerce/EcommerceHome";
 import EcommerceCatalog from "./pages/ecommerce/EcommerceCatalog";
 import EcommerceProduct from "./pages/ecommerce/EcommerceProduct";
 import EcommerceCart from "./pages/ecommerce/EcommerceCart";
+import EcommerceQuoteRequest from "./pages/ecommerce/EcommerceQuoteRequest";
 import EcommerceCheckout from "./pages/ecommerce/EcommerceCheckout";
 import EcommerceB2B from "./pages/ecommerce/EcommerceB2B";
 import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
