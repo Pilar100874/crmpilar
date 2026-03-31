@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Search, Plus, Trash2, ImageIcon, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { BlockPreviewTester, isTestableBlock } from "./BlockPreviewTester";
 import * as Icons from "lucide-react";
 import { Node } from "@xyflow/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
