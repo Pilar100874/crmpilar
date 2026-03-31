@@ -96,7 +96,7 @@ export function useEcommerceRulesEngine() {
     }
   };
 
-  return { popupActions, bannerActions, loading };
+  return { popupActions, bannerActions, vitrineActions, loading };
 }
 
 /**
