@@ -13,16 +13,16 @@ export interface ActiveRule {
   actions: RuleAction[];
 }
 
+export interface CartContext {
+  subtotal: number;
+  totalQuantity: number;
+}
+
 /**
  * Motor de regras do e-commerce.
- * Lê regras ativas da tabela ecommerce_rules, interpreta o fluxo (nodes/edges)
- * e retorna as ações que devem ser disparadas.
- * 
- * Por enquanto, avalia apenas ações que não dependem de carrinho/cliente
- * (popup, banner, mensagem, destaque) — ou seja, ações "incondicionais"
- * ou condicionadas apenas por período/horário/dia da semana.
+ * Aceita contexto do carrinho para avaliar condições de valor/quantidade.
  */
-export function useEcommerceRulesEngine() {
+export function useEcommerceRulesEngine(cartContext?: CartContext) {
   const [popupActions, setPopupActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [bannerActions, setBannerActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [vitrineActions, setVitrineActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
@@ -33,14 +33,12 @@ export function useEcommerceRulesEngine() {
 
   useEffect(() => {
     loadAndProcessRules();
-  }, []);
+  }, [cartContext?.subtotal, cartContext?.totalQuantity]);
 
   const loadAndProcessRules = async () => {
     try {
       const estabId = localStorage.getItem("estabelecimentoId");
       if (!estabId) { setLoading(false); return; }
-
-      const now = new Date().toISOString();
 
       const { data: rules, error } = await supabase
         .from("ecommerce_rules")
@@ -68,8 +66,8 @@ export function useEcommerceRulesEngine() {
         const nodes = flowData.nodes as any[];
         const edges = flowData.edges as any[];
 
-        // Find all action nodes reachable from start
-        const actionNodes = getReachableActions(nodes, edges);
+        // Find all action nodes reachable from start, respecting conditional routing
+        const actionNodes = getReachableActions(nodes, edges, cartContext);
 
         for (const actionNode of actionNodes) {
           const nodeType = actionNode.data?.type;
@@ -78,7 +76,7 @@ export function useEcommerceRulesEngine() {
 
           // Check if any temporal conditions block this rule
           const conditionNodes = getConditionNodesForAction(actionNode, nodes, edges);
-          if (!evaluateConditions(conditionNodes)) continue;
+          if (!evaluateConditions(conditionNodes, cartContext)) continue;
 
           const actionEntry = { type: nodeType, config, label, ruleId: rule.id, ruleName: rule.nome };
 
@@ -115,9 +113,10 @@ export function useEcommerceRulesEngine() {
 }
 
 /**
- * Encontra todos os nós de ação alcançáveis a partir do nó "inicio_regra"
+ * Encontra todos os nós de ação alcançáveis a partir do nó "inicio_regra",
+ * respeitando blocos condicionais com múltiplas saídas (faixa de valor).
  */
-function getReachableActions(nodes: any[], edges: any[]): any[] {
+function getReachableActions(nodes: any[], edges: any[], cartContext?: CartContext): any[] {
   const startNode = nodes.find(n => n.data?.type === "inicio_regra");
   if (!startNode) return [];
 
@@ -136,9 +135,37 @@ function getReachableActions(nodes: any[], edges: any[]): any[] {
       if (type.startsWith("acao_")) {
         actionNodes.push(node);
       }
+
+      // Handle multi-output conditional nodes (faixa de valor)
+      if (type === "condicao_valor_pedido" && cartContext) {
+        const faixas = node.data?.config?.faixas || [];
+        const valor = cartContext.subtotal;
+        
+        // Find which faixa matches
+        let matchedHandleId: string | null = null;
+        for (let i = 0; i < faixas.length; i++) {
+          const faixa = faixas[i];
+          const min = parseFloat(faixa.valorMinimo || "0") || 0;
+          const max = parseFloat(faixa.valorMaximo || "999999999") || 999999999;
+          if (valor >= min && valor <= max) {
+            matchedHandleId = `faixa-${i}`;
+            break;
+          }
+        }
+
+        if (matchedHandleId) {
+          // Only follow edges from the matched handle
+          const matchedEdges = edges.filter(e => e.source === current && e.sourceHandle === matchedHandleId);
+          for (const edge of matchedEdges) {
+            queue.push(edge.target);
+          }
+        }
+        // Don't follow default edges for this node
+        continue;
+      }
     }
 
-    // Follow edges from current
+    // Follow all edges from current node (default behavior)
     const outEdges = edges.filter(e => e.source === current);
     for (const edge of outEdges) {
       queue.push(edge.target);
@@ -152,7 +179,6 @@ function getReachableActions(nodes: any[], edges: any[]): any[] {
  * Encontra os nós de condição que estão no caminho para uma ação
  */
 function getConditionNodesForAction(actionNode: any, nodes: any[], edges: any[]): any[] {
-  // Walk backwards from the action to find condition nodes
   const conditions: any[] = [];
   const visited = new Set<string>();
   const queue = [actionNode.id];
@@ -167,7 +193,7 @@ function getConditionNodesForAction(actionNode: any, nodes: any[], edges: any[])
       const sourceNode = nodes.find(n => n.id === edge.source);
       if (sourceNode) {
         const type = sourceNode.data?.type || "";
-        if (type.startsWith("condicao_")) {
+        if (type.startsWith("condicao_") && type !== "condicao_valor_pedido") {
           conditions.push(sourceNode);
         }
         queue.push(sourceNode.id);
@@ -179,10 +205,9 @@ function getConditionNodesForAction(actionNode: any, nodes: any[], edges: any[])
 }
 
 /**
- * Avalia condições temporais (período, dia da semana, horário).
- * Condições de carrinho/cliente são ignoradas neste contexto (seriam avaliadas no checkout).
+ * Avalia condições temporais e de carrinho.
  */
-function evaluateConditions(conditionNodes: any[]): boolean {
+function evaluateConditions(conditionNodes: any[], cartContext?: CartContext): boolean {
   const now = new Date();
 
   for (const node of conditionNodes) {
@@ -211,7 +236,22 @@ function evaluateConditions(conditionNodes: any[]): boolean {
         if (currentTime < horaInicio || currentTime > horaFim) return false;
         break;
       }
-      // Condições de carrinho/cliente são ignoradas aqui (passam automaticamente)
+      case "condicao_valor_carrinho": {
+        if (cartContext) {
+          const min = parseFloat(config.valorMinimo || "0") || 0;
+          const max = parseFloat(config.valorMaximo || "999999999") || 999999999;
+          if (cartContext.subtotal < min || cartContext.subtotal > max) return false;
+        }
+        break;
+      }
+      case "condicao_quantidade_itens": {
+        if (cartContext) {
+          const min = parseInt(config.quantidadeMinima || "0") || 0;
+          const max = parseInt(config.quantidadeMaxima || "999999") || 999999;
+          if (cartContext.totalQuantity < min || cartContext.totalQuantity > max) return false;
+        }
+        break;
+      }
       default:
         break;
     }
