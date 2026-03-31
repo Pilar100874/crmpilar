@@ -546,18 +546,9 @@ export default function EcommerceHome() {
         )}
 
         {/* Newsletter */}
-        {isVisible("newsletter") && (
+        {isVisible("newsletter") && branding.feat_newsletter && (
           <RevealSection>
-            <section className="bg-primary text-primary-foreground py-14">
-              <div className="max-w-2xl mx-auto px-4 text-center space-y-4">
-                <h2 className="text-2xl md:text-3xl font-bold">{branding.newsletter_titulo || "Receba ofertas exclusivas"}</h2>
-                <p className="text-primary-foreground/80">{branding.newsletter_subtitulo || "Cadastre-se e ganhe 10% de desconto na primeira compra"}</p>
-                <div className="flex gap-2 max-w-md mx-auto">
-                  <Input placeholder="Seu melhor e-mail" className="bg-background/20 border-background/30 text-primary-foreground placeholder:text-primary-foreground/50 rounded-full" />
-                  <Button variant="secondary" className="rounded-full px-6 font-semibold transition-transform hover:scale-105">Cadastrar</Button>
-                </div>
-              </div>
-            </section>
+            <NewsletterSection branding={branding} />
           </RevealSection>
         )}
       </div>
