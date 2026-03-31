@@ -1155,8 +1155,8 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
           </div>
         );
 
-      case "acao_regra_pagamento":
-        return <RegraPagamentoEditor config={config} updateConfig={updateConfig} />;
+      case "condicao_valor_pedido":
+        return <FaixaValorPedidoEditor config={config} updateConfig={updateConfig} />;
 
       case "acao_desconto_frete":
         return (
