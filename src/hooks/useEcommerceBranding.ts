@@ -116,6 +116,9 @@ const defaults: EcommerceBranding = {
   ],
   topbar_telefone: "(11) 4002-8922",
   topbar_link_b2b: true,
+  modo_catalogo: false,
+  mostrar_precos_visitante_b2c: true,
+  mostrar_precos_visitante_b2b: true,
 };
 
 export function useEcommerceBranding() {
