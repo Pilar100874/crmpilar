@@ -427,7 +427,6 @@ const RoteirizadorVisitas: React.FC = () => {
             className="h-full w-full"
             routes={mapRoutes}
             fullRouteBounds={mapBounds}
-            paradasMarcadas={paradasMarcadas}
             currentMarker={currentMarker}
             center={currentLocation ? [currentLocation.lat, currentLocation.lng] : [-23.55, -46.63]}
             zoom={currentLocation ? 13 : 10}
