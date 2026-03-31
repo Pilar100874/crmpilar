@@ -27,6 +27,8 @@ export function useEcommerceRulesEngine() {
   const [bannerActions, setBannerActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [vitrineActions, setVitrineActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [freteActions, setFreteActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [discountActions, setDiscountActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [paymentActions, setPaymentActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,6 +54,8 @@ export function useEcommerceRulesEngine() {
       const banners: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const vitrines: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const fretes: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const descontos: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const pagamentos: (RuleAction & { ruleId: string; ruleName: string })[] = [];
 
       for (const rule of rules) {
         // Check date range
@@ -86,6 +90,10 @@ export function useEcommerceRulesEngine() {
             vitrines.push(actionEntry);
           } else if (nodeType === "acao_frete_gratis" || nodeType === "acao_desconto_frete" || nodeType === "acao_frete_fixo") {
             fretes.push(actionEntry);
+          } else if (nodeType === "acao_desconto_percentual" || nodeType === "acao_desconto_fixo" || nodeType === "acao_desconto_progressivo" || nodeType === "acao_compre_x_leve_y") {
+            descontos.push(actionEntry);
+          } else if (nodeType === "acao_desconto_pix" || nodeType === "acao_desconto_boleto" || nodeType === "acao_parcelas_extras" || nodeType === "acao_regra_pagamento") {
+            pagamentos.push(actionEntry);
           }
         }
       }
@@ -94,6 +102,8 @@ export function useEcommerceRulesEngine() {
       setBannerActions(banners);
       setVitrineActions(vitrines);
       setFreteActions(fretes);
+      setDiscountActions(descontos);
+      setPaymentActions(pagamentos);
     } catch (err) {
       console.error("[RulesEngine] Erro:", err);
     } finally {
@@ -101,7 +111,7 @@ export function useEcommerceRulesEngine() {
     }
   };
 
-  return { popupActions, bannerActions, vitrineActions, freteActions, loading };
+  return { popupActions, bannerActions, vitrineActions, freteActions, discountActions, paymentActions, loading };
 }
 
 /**

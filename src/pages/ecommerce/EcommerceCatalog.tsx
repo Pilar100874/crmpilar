@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
+import { useCart } from "@/contexts/CartContext";
+import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 interface Product {
   id: string;
@@ -42,6 +44,7 @@ export default function EcommerceCatalog() {
   const grupoParam = searchParams.get("grupo");
   const buscaParam = searchParams.get("busca");
 
+  const { addItem } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(buscaParam || "");
@@ -50,6 +53,25 @@ export default function EcommerceCatalog() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+
+  const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+    addItem({
+      productId: product.id,
+      name: product.nome,
+      type: product.categoria_nome,
+      gramatura: null,
+      quantity: 1,
+      maxStock: product.estoque ?? 999,
+      image: product.foto_url || undefined,
+      price: product.preco_minimo || product.preco_tabela || 0,
+    });
+    toast.success("Produto adicionado ao carrinho!");
+  };
 
   useEffect(() => {
     loadProducts();
@@ -183,6 +205,7 @@ export default function EcommerceCatalog() {
   };
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
         <EcommerceAdBanner posicao="catalogo_topo" carousel />
@@ -301,6 +324,9 @@ export default function EcommerceCatalog() {
                           <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); toast.success("Adicionado aos favoritos ❤️"); }}>
                             <Heart className="h-3.5 w-3.5" />
                           </Button>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => handleQuickAddToCart(e, product)}>
+                            <ShoppingCart className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </div>
                       <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-2.5 md:p-3`}>
@@ -319,7 +345,7 @@ export default function EcommerceCatalog() {
                           </div>
                         </div>
                         {viewMode === "list" && (
-                          <Button size="sm" className="gap-1 rounded-full ml-4">
+                          <Button size="sm" className="gap-1 rounded-full ml-4" onClick={(e) => handleQuickAddToCart(e, product)}>
                             <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
                           </Button>
                         )}
@@ -333,5 +359,15 @@ export default function EcommerceCatalog() {
         </div>
       </div>
     </div>
+    {flyAnim && (
+      <FlyToAnimation
+        startRect={flyAnim.startRect}
+        targetSelector={flyAnim.target}
+        imageUrl={flyAnim.image}
+        icon={flyAnim.icon}
+        onComplete={() => setFlyAnim(null)}
+      />
+    )}
+    </>
   );
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
+import { useEcommerceRulesEngine } from "@/hooks/useEcommerceRulesEngine";
 import { Link } from "react-router-dom";
-import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ interface CrossSellProduct {
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
   const { calcularFrete } = useEcommerceFreteRules();
+  const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
@@ -77,7 +79,36 @@ export default function EcommerceCart() {
   };
 
   const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
-  const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Calculate rule-based discounts
+  let ruleDiscount = 0;
+  let ruleDiscountLabel = "";
+  for (const action of discountActions) {
+    if (action.type === "acao_desconto_percentual") {
+      const pct = action.config.percentual || 0;
+      ruleDiscount += subtotal * pct / 100;
+      ruleDiscountLabel = `Desconto ${pct}% (${action.ruleName})`;
+    } else if (action.type === "acao_desconto_fixo") {
+      const valor = action.config.valor || 0;
+      ruleDiscount += valor;
+      ruleDiscountLabel = `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`;
+    } else if (action.type === "acao_desconto_progressivo") {
+      const faixas = action.config.faixas || [];
+      const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
+      for (const faixa of sorted) {
+        if (totalQuantity >= (faixa.quantidade || 0)) {
+          const pct = faixa.percentual || 0;
+          ruleDiscount += subtotal * pct / 100;
+          ruleDiscountLabel = `Desconto Progressivo ${pct}% (${action.ruleName})`;
+          break;
+        }
+      }
+    }
+  }
+
+  const couponDiscountValue = couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0;
+  const discount = ruleDiscount + couponDiscountValue;
   const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
   const shipping = freteResult?.valor ?? null;
   const shippingDescription = freteResult?.descricao || "";
@@ -247,8 +278,14 @@ export default function EcommerceCart() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium">R$ {subtotal.toFixed(2)}</span></div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-success"><span>Desconto ({couponDiscount}%)</span><span className="font-medium">- R$ {discount.toFixed(2)}</span></div>
+                {ruleDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span className="flex items-center gap-1"><Percent className="h-3 w-3" /> {ruleDiscountLabel}</span>
+                    <span className="font-medium">- R$ {ruleDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {couponDiscountValue > 0 && (
+                  <div className="flex justify-between text-success"><span>Cupom {coupon} (-{couponDiscount}%)</span><span className="font-medium">- R$ {couponDiscountValue.toFixed(2)}</span></div>
                 )}
                 {shipping !== null && (
                   <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span className="font-medium">{shipping === 0 ? "Grátis" : `R$ ${shipping.toFixed(2)}`}</span></div>
