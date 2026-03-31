@@ -40,6 +40,7 @@ import { AutomacaoVendasCRUD } from '@/components/config/AutomacaoVendasCRUD';
 import { CustosVeiculosCRUD } from '@/components/config/CustosVeiculosCRUD';
 import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
+import FreteTerceirosConfig from '@/components/config/FreteTerceirosConfig';
 import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
 import { OrcamentoReportConfigContent } from '@/components/config/OrcamentoReportConfigContent';
 import LicitacoesBot from '@/components/vendas/LicitacoesBot';
@@ -64,6 +65,7 @@ const tabItems: TabItem[] = [
   { id: 'condicoes', label: 'Condições de Pagamento', icon: Wallet },
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
+  { id: 'frete-terceiros', label: 'Frete de Terceiros', icon: Truck },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
   { id: 'relatorio-orcamento', label: 'Configuração do Relatório', icon: FileText },
   { id: 'importacao-api', label: 'Importação via API', icon: Globe },
@@ -362,6 +364,23 @@ export default function VendasConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   {estabelecimentoId && <PedagioAPIConfigCRUD estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="frete-terceiros" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Frete de Terceiros
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Configure APIs de transportadoras e gateways de frete externo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <FreteTerceirosConfig estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>

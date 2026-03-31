@@ -26,6 +26,7 @@ export function useEcommerceRulesEngine() {
   const [popupActions, setPopupActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [bannerActions, setBannerActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [vitrineActions, setVitrineActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [freteActions, setFreteActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function useEcommerceRulesEngine() {
       const popups: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const banners: (RuleAction & { ruleId: string; ruleName: string })[] = [];
       const vitrines: (RuleAction & { ruleId: string; ruleName: string })[] = [];
+      const fretes: (RuleAction & { ruleId: string; ruleName: string })[] = [];
 
       for (const rule of rules) {
         // Check date range
@@ -82,6 +84,8 @@ export function useEcommerceRulesEngine() {
             banners.push(actionEntry);
           } else if (nodeType === "acao_destaque_vitrine") {
             vitrines.push(actionEntry);
+          } else if (nodeType === "acao_frete_gratis" || nodeType === "acao_desconto_frete" || nodeType === "acao_frete_fixo") {
+            fretes.push(actionEntry);
           }
         }
       }
@@ -89,6 +93,7 @@ export function useEcommerceRulesEngine() {
       setPopupActions(popups);
       setBannerActions(banners);
       setVitrineActions(vitrines);
+      setFreteActions(fretes);
     } catch (err) {
       console.error("[RulesEngine] Erro:", err);
     } finally {
@@ -96,7 +101,7 @@ export function useEcommerceRulesEngine() {
     }
   };
 
-  return { popupActions, bannerActions, vitrineActions, loading };
+  return { popupActions, bannerActions, vitrineActions, freteActions, loading };
 }
 
 /**

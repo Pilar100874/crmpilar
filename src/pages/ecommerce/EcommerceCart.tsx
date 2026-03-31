@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingCart, Tag, ChevronRight, ArrowRight, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ interface CrossSellProduct {
 
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
+  const { calcularFrete } = useEcommerceFreteRules();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
@@ -76,7 +78,9 @@ export default function EcommerceCart() {
 
   const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
   const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
-  const shipping = shippingCalculated ? (subtotal >= 500 ? 0 : 29.90) : null;
+  const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
+  const shipping = freteResult?.valor ?? null;
+  const shippingDescription = freteResult?.descricao || "";
   const total = subtotal - discount + (shipping ?? 0);
 
   if (items.length === 0) {
@@ -223,14 +227,16 @@ export default function EcommerceCart() {
                   <Input placeholder="CEP" value={cep} onChange={(e) => setCep(e.target.value.replace(/\D/g, "").slice(0, 8))} className="h-9 text-sm" maxLength={9} />
                   <Button variant="outline" size="sm" className="h-9 px-4" onClick={handleCalcShipping}>Calcular</Button>
                 </div>
-                {shippingCalculated && (
+                {shippingCalculated && freteResult && (
                   <div className="mt-2 p-2 rounded-lg bg-muted/50 text-sm">
-                    {subtotal >= 500 ? (
-                      <p className="text-success font-medium">🎉 Frete grátis!</p>
+                    {freteResult.valor === 0 ? (
+                      <p className="text-success font-medium">{freteResult.descricao}</p>
                     ) : (
                       <div className="space-y-1">
-                        <div className="flex justify-between"><span>Sedex (3-5 dias)</span><span className="font-semibold">R$ 29,90</span></div>
-                        <div className="flex justify-between"><span>PAC (5-8 dias)</span><span className="font-semibold">R$ 19,90</span></div>
+                        <div className="flex justify-between">
+                          <span>{freteResult.descricao}</span>
+                          <span className="font-semibold">R$ {freteResult.valor.toFixed(2)}</span>
+                        </div>
                       </div>
                     )}
                   </div>
