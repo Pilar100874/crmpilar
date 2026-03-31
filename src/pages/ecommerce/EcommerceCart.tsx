@@ -227,14 +227,16 @@ export default function EcommerceCart() {
                   <Input placeholder="CEP" value={cep} onChange={(e) => setCep(e.target.value.replace(/\D/g, "").slice(0, 8))} className="h-9 text-sm" maxLength={9} />
                   <Button variant="outline" size="sm" className="h-9 px-4" onClick={handleCalcShipping}>Calcular</Button>
                 </div>
-                {shippingCalculated && (
+                {shippingCalculated && freteResult && (
                   <div className="mt-2 p-2 rounded-lg bg-muted/50 text-sm">
-                    {subtotal >= 500 ? (
-                      <p className="text-success font-medium">🎉 Frete grátis!</p>
+                    {freteResult.valor === 0 ? (
+                      <p className="text-success font-medium">{freteResult.descricao}</p>
                     ) : (
                       <div className="space-y-1">
-                        <div className="flex justify-between"><span>Sedex (3-5 dias)</span><span className="font-semibold">R$ 29,90</span></div>
-                        <div className="flex justify-between"><span>PAC (5-8 dias)</span><span className="font-semibold">R$ 19,90</span></div>
+                        <div className="flex justify-between">
+                          <span>{freteResult.descricao}</span>
+                          <span className="font-semibold">R$ {freteResult.valor.toFixed(2)}</span>
+                        </div>
                       </div>
                     )}
                   </div>
