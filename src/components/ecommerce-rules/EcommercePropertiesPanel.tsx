@@ -1037,10 +1037,10 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Configurações</h4>
             {renderConfigFields()}
             
-            {blockType && isTestableBlock(blockType) && (
+            {nodeData.type && isTestableBlock(nodeData.type) && (
               <div className="mt-4 pt-3 border-t">
                 <BlockPreviewTester
-                  blockType={blockType}
+                  blockType={nodeData.type}
                   config={config}
                   onConfigUpdate={updateConfig}
                 />
