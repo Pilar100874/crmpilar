@@ -144,6 +144,7 @@ function EcommerceRulesEditorInner() {
         if (data) navigate(`/ecommerce-rules-editor?id=${data.id}`, { replace: true });
       }
       toast({ title: "Salvo!", description: "Regra salva com sucesso." });
+      savedSnapshotRef.current = buildDataSnapshot(nodes, edges);
       setHasUnsavedChanges(false);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
