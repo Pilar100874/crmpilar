@@ -66,6 +66,7 @@ import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 import QualityAssurance from "./pages/QualityAssurance";
 import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
+import RoteirizadorVisitas from "./pages/RoteirizadorVisitas";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
 import LogisticaHub from "./pages/LogisticaHub";
@@ -241,6 +242,7 @@ const App = () => (
               
               <Route path="/quality-assurance" element={<QualityAssurance />} />
               <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
+              <Route path="/roteirizador-visitas" element={<RoteirizadorVisitas />} />
               <Route path="/editor-regras" element={<EditorRegras />} />
               <Route path="/editor-regras/:id" element={<EditorRegras />} />
               <Route path="/vendas-config" element={<VendasConfig />} />
