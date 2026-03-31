@@ -28,7 +28,27 @@ interface Product {
   marca: string | null;
   categoria_nome: string | null;
   grupo_nome: string | null;
+  grupo_id: string | null;
+  campos_customizados: Record<string, any> | null;
 }
+
+interface CampoCustomizado {
+  id: string;
+  campo_key: string;
+  nome: string;
+  tipo: string;
+  unidade?: string;
+  opcoes?: any;
+  pesquisa_faixa?: boolean;
+}
+
+type CustomFieldFilters = {
+  range: Record<string, { min: string; max: string }>;
+  text: Record<string, string>;
+  select: Record<string, string>;
+  checkbox: Record<string, boolean | null>;
+  number: Record<string, string>;
+};
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevância" },
@@ -54,6 +74,10 @@ export default function EcommerceCatalog() {
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [filterInStock, setFilterInStock] = useState(false);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
+  const [availableGrupos, setAvailableGrupos] = useState<{ id: string; nome: string }[]>([]);
+  const [selectedGrupo, setSelectedGrupo] = useState<string>("");
+  const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  const [customFieldFilters, setCustomFieldFilters] = useState<CustomFieldFilters>({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -93,7 +117,7 @@ export default function EcommerceCatalog() {
 
       let query = supabase
         .from("produtos")
-        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
+        .select("id, nome, descricao, foto_url, preco_tabela, preco_minimo, estoque, marca, tipo_preco, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)")
         .eq("ativo", true);
 
       if (estabId) {
@@ -105,7 +129,7 @@ export default function EcommerceCatalog() {
       if (!error && data) {
         const priceMap = await resolveProductPricesBatch(data as any[]);
 
-        let mapped = data.map((p: any) => ({
+        let mapped: Product[] = data.map((p: any) => ({
           id: p.id,
           nome: p.nome,
           descricao: p.descricao,
@@ -116,6 +140,8 @@ export default function EcommerceCatalog() {
           marca: p.marca,
           categoria_nome: p.categoria?.nome || null,
           grupo_nome: p.grupo?.nome || null,
+          grupo_id: p.grupo_id || null,
+          campos_customizados: p.campos_customizados || null,
         }));
 
         // Filtrar por categoria ou grupo via URL
@@ -130,6 +156,13 @@ export default function EcommerceCatalog() {
 
         const marcas = [...new Set(mapped.map(p => p.marca).filter(Boolean))] as string[];
         setAvailableMarcas(marcas.sort());
+
+        // Extract unique groups
+        const gruposMap = new Map<string, string>();
+        data.forEach((p: any) => {
+          if (p.grupo_id && p.grupo?.nome) gruposMap.set(p.grupo_id, p.grupo.nome);
+        });
+        setAvailableGrupos(Array.from(gruposMap.entries()).map(([id, nome]) => ({ id, nome })).sort((a, b) => a.nome.localeCompare(b.nome)));
       }
     } catch (err) {
       console.error("Error loading products:", err);
@@ -141,10 +174,103 @@ export default function EcommerceCatalog() {
     if (buscaParam) setSearchQuery(buscaParam);
   }, [buscaParam]);
 
+  // Load custom fields when group changes
+  useEffect(() => {
+    if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all") {
+      loadCamposCustomizados(selectedGrupo);
+    } else {
+      setCamposCustomizados([]);
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+    }
+  }, [selectedGrupo]);
+
+  const loadCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+      if (error) throw error;
+      setCamposCustomizados(data || []);
+      const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
+      (data || []).forEach((campo: any) => {
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
+      });
+      setCustomFieldFilters(newFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos customizados:', error);
+    }
+  };
+
+  const updateCustomFilter = (type: keyof CustomFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({ ...prev, [type]: { ...prev[type], [campoKey]: value } }));
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: { ...prev.range, [campoKey]: { ...prev.range[campoKey], [field]: value } }
+    }));
+  };
+
+  const hasCustomFilters = Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v && v !== "all") ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
+
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedMarcas.length > 0 && (!p.marca || !selectedMarcas.includes(p.marca))) return false;
     if (filterInStock && (p.estoque === null || p.estoque === undefined || p.estoque <= 0)) return false;
+    if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all" && p.grupo_id !== selectedGrupo) return false;
+
+    // Custom field filters
+    const cf = p.campos_customizados || {};
+    for (const [key, range] of Object.entries(customFieldFilters.range)) {
+      if (range?.min || range?.max) {
+        const value = cf[key];
+        if (range.min && (value === undefined || value === null || Number(value) < Number(range.min))) return false;
+        if (range.max && (value === undefined || value === null || Number(value) > Number(range.max))) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.number)) {
+      if (filterValue) {
+        const value = cf[key];
+        if (value !== undefined && value !== null && Number(value) !== Number(filterValue)) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.text)) {
+      if (filterValue) {
+        const value = cf[key];
+        if (!value || !String(value).toLowerCase().includes(filterValue.toLowerCase())) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.select)) {
+      if (filterValue && filterValue !== "all") {
+        const value = cf[key];
+        if (String(value) !== filterValue) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.checkbox)) {
+      if (filterValue !== null && filterValue !== undefined) {
+        const value = cf[key];
+        if (Boolean(value) !== filterValue) return false;
+      }
+    }
+
     return true;
   });
 
@@ -164,10 +290,13 @@ export default function EcommerceCatalog() {
   const clearAllFilters = () => {
     setSelectedMarcas([]);
     setFilterInStock(false);
+    setSelectedGrupo("");
+    setCamposCustomizados([]);
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
     setSearchQuery("");
   };
 
-  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0);
+  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0) + (selectedGrupo && selectedGrupo !== "all" ? 1 : 0) + (hasCustomFilters ? 1 : 0);
 
   const pageTitle = categoriaParam
     ? categoriaParam
@@ -183,6 +312,136 @@ export default function EcommerceCatalog() {
           <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-destructive hover:text-destructive">
             <X className="h-3 w-3 mr-1" /> Limpar
           </Button>
+        </div>
+      )}
+
+      {/* Group filter */}
+      {availableGrupos.length > 1 && (
+        <div>
+          <h4 className="text-sm font-semibold mb-3">Grupo</h4>
+          <Select value={selectedGrupo || "all"} onValueChange={(v) => setSelectedGrupo(v === "all" ? "" : v)}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Todos os grupos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {availableGrupos.map(g => (
+                <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Dynamic custom field filters */}
+      {camposCustomizados.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold">Especificações</h4>
+          {camposCustomizados.map(campo => {
+            const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+
+            if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {campo.nome} {campo.unidade && <span>({campo.unidade})</span>}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      className="h-8 text-sm"
+                      value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                      onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                    />
+                    <span className="text-muted-foreground text-xs">—</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      className="h-8 text-sm"
+                      value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                      onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'numero') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {campo.nome} {campo.unidade && <span>({campo.unidade})</span>}
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                    className="h-8 text-sm"
+                    value={customFieldFilters.number[campo.campo_key] || ""}
+                    onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                  />
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'texto') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Input
+                    type="text"
+                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                    className="h-8 text-sm"
+                    value={customFieldFilters.text[campo.campo_key] || ""}
+                    onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                  />
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'selecao') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Select value={customFieldFilters.select[campo.campo_key] || "all"} onValueChange={(v) => updateCustomFilter('select', campo.campo_key, v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={`Selecione`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {opcoes.map((opt: any, idx: number) => {
+                        const val = typeof opt === 'string' ? opt : opt.valor || opt.label || String(opt);
+                        return <SelectItem key={idx} value={val}>{val}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'checkbox') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Select
+                    value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"}
+                    onValueChange={(v) => updateCustomFilter('checkbox', campo.campo_key, v === "all" ? null : v === "true")}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="true">Sim</SelectItem>
+                      <SelectItem value="false">Não</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            }
+
+            return null;
+          })}
         </div>
       )}
 
