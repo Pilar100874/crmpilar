@@ -315,6 +315,136 @@ export default function EcommerceCatalog() {
         </div>
       )}
 
+      {/* Group filter */}
+      {availableGrupos.length > 1 && (
+        <div>
+          <h4 className="text-sm font-semibold mb-3">Grupo</h4>
+          <Select value={selectedGrupo || "all"} onValueChange={(v) => setSelectedGrupo(v === "all" ? "" : v)}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Todos os grupos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {availableGrupos.map(g => (
+                <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Dynamic custom field filters */}
+      {camposCustomizados.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold">Especificações</h4>
+          {camposCustomizados.map(campo => {
+            const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+
+            if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {campo.nome} {campo.unidade && <span>({campo.unidade})</span>}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      className="h-8 text-sm"
+                      value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                      onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                    />
+                    <span className="text-muted-foreground text-xs">—</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      className="h-8 text-sm"
+                      value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                      onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'numero') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {campo.nome} {campo.unidade && <span>({campo.unidade})</span>}
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                    className="h-8 text-sm"
+                    value={customFieldFilters.number[campo.campo_key] || ""}
+                    onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                  />
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'texto') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Input
+                    type="text"
+                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                    className="h-8 text-sm"
+                    value={customFieldFilters.text[campo.campo_key] || ""}
+                    onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                  />
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'selecao') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Select value={customFieldFilters.select[campo.campo_key] || "all"} onValueChange={(v) => updateCustomFilter('select', campo.campo_key, v)}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder={`Selecione`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {opcoes.map((opt: any, idx: number) => {
+                        const val = typeof opt === 'string' ? opt : opt.valor || opt.label || String(opt);
+                        return <SelectItem key={idx} value={val}>{val}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            }
+
+            if (campo.tipo === 'checkbox') {
+              return (
+                <div key={campo.id} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{campo.nome}</label>
+                  <Select
+                    value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"}
+                    onValueChange={(v) => updateCustomFilter('checkbox', campo.campo_key, v === "all" ? null : v === "true")}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="true">Sim</SelectItem>
+                      <SelectItem value="false">Não</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            }
+
+            return null;
+          })}
+        </div>
+      )}
+
       {availableMarcas.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold mb-3">Marca</h4>
