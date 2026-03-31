@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { ChevronRight, ShoppingCart } from "lucide-react";
-import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 
 interface Product {
   id: string;
