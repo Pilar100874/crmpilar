@@ -3349,6 +3349,10 @@ export type Database = {
           nome_loja: string | null
           secoes_visiveis: Json | null
           slogan: string | null
+          topbar_ativo: boolean | null
+          topbar_items: Json | null
+          topbar_link_b2b: boolean | null
+          topbar_telefone: string | null
           updated_at: string
         }
         Insert: {
@@ -3396,6 +3400,10 @@ export type Database = {
           nome_loja?: string | null
           secoes_visiveis?: Json | null
           slogan?: string | null
+          topbar_ativo?: boolean | null
+          topbar_items?: Json | null
+          topbar_link_b2b?: boolean | null
+          topbar_telefone?: string | null
           updated_at?: string
         }
         Update: {
@@ -3443,6 +3451,10 @@ export type Database = {
           nome_loja?: string | null
           secoes_visiveis?: Json | null
           slogan?: string | null
+          topbar_ativo?: boolean | null
+          topbar_items?: Json | null
+          topbar_link_b2b?: boolean | null
+          topbar_telefone?: string | null
           updated_at?: string
         }
         Relationships: [

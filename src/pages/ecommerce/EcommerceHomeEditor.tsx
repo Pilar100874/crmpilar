@@ -35,6 +35,12 @@ interface SecoesVisiveis {
   newsletter: boolean;
 }
 
+interface TopbarItem {
+  icone: string;
+  texto: string;
+  posicao: "esquerda" | "direita";
+}
+
 interface HomeConfig {
   hero_badge: string;
   hero_titulo: string;
@@ -51,7 +57,17 @@ interface HomeConfig {
   newsletter_titulo: string;
   newsletter_subtitulo: string;
   secoes_visiveis: SecoesVisiveis;
+  topbar_ativo: boolean;
+  topbar_items: TopbarItem[];
+  topbar_telefone: string;
+  topbar_link_b2b: boolean;
 }
+
+const defaultTopbarItems: TopbarItem[] = [
+  { icone: "truck", texto: "Frete grátis acima de R$ 500", posicao: "esquerda" },
+  { icone: "shield", texto: "Compra 100% segura", posicao: "esquerda" },
+  { icone: "rotate-ccw", texto: "Troca facilitada", posicao: "esquerda" },
+];
 
 const defaultBeneficios: Beneficio[] = [
   { icone: "truck", titulo: "Frete grátis acima de R$ 500", subtitulo: "Para todo o Brasil" },
@@ -82,17 +98,25 @@ const defaults: HomeConfig = {
   newsletter_titulo: "Receba ofertas exclusivas",
   newsletter_subtitulo: "Cadastre-se e ganhe 10% de desconto na primeira compra",
   secoes_visiveis: { hero: true, beneficios: true, categorias: true, produtos: true, b2b: true, depoimentos: true, newsletter: true },
+  topbar_ativo: true,
+  topbar_items: defaultTopbarItems,
+  topbar_telefone: "(11) 4002-8922",
+  topbar_link_b2b: true,
 };
 
 const iconeOptions = [
   { value: "truck", label: "🚚 Caminhão" },
   { value: "shield", label: "🛡️ Escudo" },
-  { value: "rotate", label: "🔄 Troca" },
+  { value: "rotate-ccw", label: "🔄 Troca" },
+  { value: "rotate", label: "🔄 Troca (alt)" },
   { value: "headphones", label: "🎧 Suporte" },
   { value: "star", label: "⭐ Estrela" },
   { value: "clock", label: "⏰ Relógio" },
   { value: "check", label: "✅ Check" },
   { value: "gift", label: "🎁 Presente" },
+  { value: "phone", label: "📞 Telefone" },
+  { value: "mail", label: "✉️ Email" },
+  { value: "package", label: "📦 Pacote" },
 ];
 
 export default function EcommerceHomeEditor() {
@@ -106,7 +130,7 @@ export default function EcommerceHomeEditor() {
       if (!estId) return;
       const { data } = await supabase
         .from("ecommerce_config")
-        .select("hero_badge, hero_titulo, hero_subtitulo, hero_btn_primario, hero_btn_secundario, hero_stat_satisfacao, beneficios, b2b_badge, b2b_titulo, b2b_descricao, b2b_vantagens, depoimentos, newsletter_titulo, newsletter_subtitulo, secoes_visiveis")
+        .select("hero_badge, hero_titulo, hero_subtitulo, hero_btn_primario, hero_btn_secundario, hero_stat_satisfacao, beneficios, b2b_badge, b2b_titulo, b2b_descricao, b2b_vantagens, depoimentos, newsletter_titulo, newsletter_subtitulo, secoes_visiveis, topbar_ativo, topbar_items, topbar_telefone, topbar_link_b2b")
         .eq("estabelecimento_id", estId)
         .maybeSingle();
       if (data) {
@@ -127,6 +151,10 @@ export default function EcommerceHomeEditor() {
           newsletter_titulo: d.newsletter_titulo || defaults.newsletter_titulo,
           newsletter_subtitulo: d.newsletter_subtitulo || defaults.newsletter_subtitulo,
           secoes_visiveis: d.secoes_visiveis || defaults.secoes_visiveis,
+          topbar_ativo: d.topbar_ativo ?? true,
+          topbar_items: d.topbar_items || defaults.topbar_items,
+          topbar_telefone: d.topbar_telefone || defaults.topbar_telefone,
+          topbar_link_b2b: d.topbar_link_b2b ?? true,
         });
       }
     };
@@ -181,6 +209,16 @@ export default function EcommerceHomeEditor() {
   const addVantagem = () => setConfig(c => ({ ...c, b2b_vantagens: [...c.b2b_vantagens, ""] }));
   const removeVantagem = (i: number) => setConfig(c => ({ ...c, b2b_vantagens: c.b2b_vantagens.filter((_, idx) => idx !== i) }));
 
+  const updateTopbarItem = (i: number, field: keyof TopbarItem, value: string) => {
+    setConfig(c => {
+      const items = [...c.topbar_items];
+      items[i] = { ...items[i], [field]: value };
+      return { ...c, topbar_items: items };
+    });
+  };
+  const addTopbarItem = () => setConfig(c => ({ ...c, topbar_items: [...c.topbar_items, { icone: "check", texto: "", posicao: "esquerda" as const }] }));
+  const removeTopbarItem = (i: number) => setConfig(c => ({ ...c, topbar_items: c.topbar_items.filter((_, idx) => idx !== i) }));
+
   const toggleSecao = (key: keyof SecoesVisiveis) => {
     setConfig(c => ({ ...c, secoes_visiveis: { ...c.secoes_visiveis, [key]: !c.secoes_visiveis[key] } }));
   };
@@ -230,7 +268,75 @@ export default function EcommerceHomeEditor() {
         </CardContent>
       </Card>
 
-      <Accordion type="multiple" defaultValue={["hero"]} className="space-y-3">
+      <Accordion type="multiple" defaultValue={["topbar"]} className="space-y-3">
+        {/* Top Bar */}
+        <AccordionItem value="topbar" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold">📢 Barra Superior (Header)</AccordionTrigger>
+          <AccordionContent className="space-y-4 pb-4">
+            <div className="flex items-center justify-between p-3 rounded-lg border">
+              <div>
+                <span className="text-sm font-medium">Barra Superior Ativa</span>
+                <p className="text-xs text-muted-foreground">Exibe informações acima do cabeçalho</p>
+              </div>
+              <Switch checked={config.topbar_ativo} onCheckedChange={v => setConfig(c => ({ ...c, topbar_ativo: v }))} />
+            </div>
+
+            {config.topbar_ativo && (
+              <>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input value={config.topbar_telefone} onChange={e => setConfig(c => ({ ...c, topbar_telefone: e.target.value }))} placeholder="(11) 4002-8922" />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border">
+                  <span className="text-sm font-medium">Exibir link Atacado / B2B</span>
+                  <Switch checked={config.topbar_link_b2b} onCheckedChange={v => setConfig(c => ({ ...c, topbar_link_b2b: v }))} />
+                </div>
+
+                <div>
+                  <Label>Itens da Barra</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Adicione mensagens com ícone que aparecem na barra superior</p>
+                  {config.topbar_items.map((item, i) => (
+                    <div key={i} className="grid grid-cols-[auto_auto_1fr_auto] gap-2 items-end mt-2">
+                      <div>
+                        <Label className="text-xs">Ícone</Label>
+                        <select
+                          value={item.icone}
+                          onChange={e => updateTopbarItem(i, "icone", e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        >
+                          {iconeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Posição</Label>
+                        <select
+                          value={item.posicao}
+                          onChange={e => updateTopbarItem(i, "posicao", e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        >
+                          <option value="esquerda">Esquerda</option>
+                          <option value="direita">Direita</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Texto</Label>
+                        <Input value={item.texto} onChange={e => updateTopbarItem(i, "texto", e.target.value)} className="h-9" />
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => removeTopbarItem(i)} className="text-destructive h-9 w-9">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={addTopbarItem} className="mt-3">
+                    <Plus className="h-4 w-4 mr-1" /> Adicionar Item
+                  </Button>
+                </div>
+              </>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Hero Section */}
         <AccordionItem value="hero" className="border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">🎯 Banner Principal (Hero)</AccordionTrigger>
