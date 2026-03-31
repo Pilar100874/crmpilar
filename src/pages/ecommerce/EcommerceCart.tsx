@@ -66,8 +66,9 @@ export default function EcommerceCart() {
     if (items.length > 0) loadCrossSell();
   }, [items]);
 
-  const handleApplyCoupon = () => {
-    if (applyCoupon(couponInput)) {
+  const handleApplyCoupon = async () => {
+    const result = await applyCoupon(couponInput);
+    if (result) {
       toast.success("Cupom aplicado com sucesso!");
       setCouponError(false);
       setCouponInput("");
