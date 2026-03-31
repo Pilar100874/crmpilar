@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2 } from "lucide-react";
+import { ArrowLeft, Palette, CreditCard, Workflow, Truck, FileText, Megaphone, Settings2, PanelBottom, Home, ToggleLeft, Package, Ticket, Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -113,6 +113,15 @@ const configSections = [
     url: "/ecommerce-config/b2b",
     color: "text-indigo-500",
     bg: "bg-indigo-500/10",
+  },
+  {
+    id: "newsletter",
+    title: "Newsletter",
+    description: "Visualize e gerencie os inscritos na newsletter da loja",
+    icon: Mail,
+    url: "/ecommerce-config/newsletter",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
   },
 ];
 
