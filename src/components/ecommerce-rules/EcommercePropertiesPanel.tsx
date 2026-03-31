@@ -272,6 +272,7 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
                 </ScrollArea>
               )}
 
+              {tab === "busca" && (
                 <div className="space-y-2">
                   <p className="text-[11px] text-muted-foreground">
                     Digite o termo de busca e clique em aplicar para gerar o link de pesquisa.
