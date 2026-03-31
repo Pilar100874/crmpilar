@@ -281,11 +281,11 @@ export default function EcommerceLayout() {
                 )}
               </Button>
             </Link>
-            <Link to="/ecommerce/carrinho">
+            <Link to={isCatalogMode ? "/ecommerce/orcamento" : "/ecommerce/carrinho"}>
               <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10" data-cart-target>
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{totalItems}</span>
+                {isCatalogMode ? <FileText className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+                {(isCatalogMode ? quoteCount : totalItems) > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{isCatalogMode ? quoteCount : totalItems}</span>
                 )}
               </Button>
             </Link>
