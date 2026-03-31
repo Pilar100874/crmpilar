@@ -92,6 +92,12 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
   const filteredCategories = categories.filter(
     c => c.nome.toLowerCase().includes(search.toLowerCase())
   );
+  const filteredAnuncios = anuncios.filter(
+    a => a.titulo.toLowerCase().includes(search.toLowerCase()) || a.tipo.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredConteudos = conteudos.filter(
+    c => c.titulo.toLowerCase().includes(search.toLowerCase()) || c.tipo.toLowerCase().includes(search.toLowerCase())
+  );
 
   const selectAndClose = (path: string) => { onChange(path); setOpen(false); setSearch(""); };
 
@@ -99,6 +105,8 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
     { key: "paginas", label: "Páginas" },
     { key: "produtos", label: "Produtos" },
     { key: "categorias", label: "Categorias" },
+    { key: "anuncios", label: "Anúncios" },
+    { key: "conteudos", label: "Conteúdos" },
     { key: "busca", label: "Busca" },
   ];
 
