@@ -461,6 +461,59 @@ function CustomerSelector({ value, onChange }: { value: { id: string; nome: stri
   );
 }
 
+// ── Seletor de Cupom ────────────────────────────────────────────
+
+function CupomSelector({ config, updateConfig }: { config: Record<string, any>; updateConfig: (key: string, value: any, extra?: Record<string, any>) => void }) {
+  const [cupons, setCupons] = useState<{ id: string; codigo: string; descricao: string | null; tipo_desconto: string; valor_desconto: number }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const estabId = localStorage.getItem("estabelecimentoId");
+      let query = supabase.from("cupons_desconto").select("id, codigo, descricao, tipo_desconto, valor_desconto").eq("ativo", true).order("codigo");
+      if (estabId) query = query.eq("estabelecimento_id", estabId);
+      const { data } = await query;
+      setCupons((data as any[]) || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">Cupom</Label>
+      <Select value={config.cupomId || ""} onValueChange={v => {
+        const cupom = cupons.find(c => c.id === v);
+        updateConfig("cupomId", v, { codigo: cupom?.codigo || "", cupomNome: cupom?.codigo || "" });
+      }}>
+        <SelectTrigger className="text-xs"><SelectValue placeholder="Selecionar cupom..." /></SelectTrigger>
+        <SelectContent>
+          {loading ? (
+            <SelectItem value="_loading" disabled>Carregando...</SelectItem>
+          ) : cupons.length === 0 ? (
+            <SelectItem value="_empty" disabled>Nenhum cupom ativo</SelectItem>
+          ) : (
+            cupons.map(c => (
+              <SelectItem key={c.id} value={c.id}>
+                <span className="font-mono">{c.codigo}</span>
+                <span className="text-muted-foreground ml-2">
+                  ({c.tipo_desconto === "percentual" ? `${c.valor_desconto}%` : `R$ ${c.valor_desconto}`})
+                </span>
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+      {config.cupomId && (
+        <p className="text-[10px] text-muted-foreground">
+          Código: <span className="font-mono font-medium">{config.codigo}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ── Hook para buscar imagens da galeria ─────────────────────────
 
 function useGalleryImages() {
