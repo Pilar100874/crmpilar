@@ -140,6 +140,7 @@ import EcommerceHomeEditor from "./pages/ecommerce/EcommerceHomeEditor";
 import EcommerceFeaturesEditor from "./pages/ecommerce/EcommerceFeaturesEditor";
 import EcommerceVolumePricing from "./pages/ecommerce/EcommerceVolumePricing";
 import EcommerceCuponsPage from "./pages/ecommerce/EcommerceCuponsPage";
+import EcommerceB2BEditor from "./pages/ecommerce/EcommerceB2BEditor";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
