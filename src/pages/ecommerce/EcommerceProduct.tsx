@@ -581,6 +581,7 @@ export default function EcommerceProduct() {
       <FlyToAnimation
         startRect={flyAnim.startRect}
         targetSelector={flyAnim.target}
+        targetPos={flyAnim.targetPos}
         imageUrl={flyAnim.image}
         icon={flyAnim.icon}
         onComplete={() => setFlyAnim(null)}
