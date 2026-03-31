@@ -128,13 +128,16 @@ function EcommerceRulesEditorInner() {
         data: { type: (n.data as any).type, label: (n.data as any).label, config: (n.data as any).config || {}, note: (n.data as any).note },
       }));
 
-      // Auto-detect category from action blocks
+      // Auto-detect category from action blocks using block definitions
       const actionTypes = cleanNodes.map(n => n.data.type).filter(t => t.startsWith("acao_"));
+      const blockCategoryMap: Record<string, string> = {};
+      ECOMMERCE_RULE_BLOCKS.forEach(b => { blockCategoryMap[b.type] = b.category; });
+      const actionCategories = actionTypes.map(t => blockCategoryMap[t]).filter(Boolean);
       let categoria = "desconto"; // default
-      if (actionTypes.some(t => t.startsWith("acao_propaganda"))) categoria = "propaganda";
-      else if (actionTypes.some(t => t.startsWith("acao_frete"))) categoria = "frete";
-      else if (actionTypes.some(t => t.startsWith("acao_pagamento"))) categoria = "pagamento";
-      else if (actionTypes.some(t => t.startsWith("acao_desconto"))) categoria = "desconto";
+      if (actionCategories.includes("acao_propaganda")) categoria = "propaganda";
+      else if (actionCategories.includes("acao_frete")) categoria = "frete";
+      else if (actionCategories.includes("acao_pagamento")) categoria = "pagamento";
+      else if (actionCategories.includes("acao_desconto")) categoria = "desconto";
 
       const payload = {
         estabelecimento_id: estabelecimentoId,
