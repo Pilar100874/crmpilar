@@ -599,6 +599,16 @@ export default function EcommerceCatalog() {
             </div>
           )}
 
+          {isCatalogMode && (
+            <div className="mb-4 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+              <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-semibold text-foreground">Modo Catálogo</p>
+                <p className="text-xs text-muted-foreground">Adicione produtos à sua lista e solicite um orçamento personalizado. É necessário estar logado para enviar a solicitação.</p>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className={`grid ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} gap-4`}>
               {Array.from({ length: 8 }).map((_, i) => (
