@@ -44,6 +44,7 @@ export default function EcommerceCatalog() {
   const grupoParam = searchParams.get("grupo");
   const buscaParam = searchParams.get("busca");
 
+  const { addItem } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(buscaParam || "");
@@ -52,6 +53,25 @@ export default function EcommerceCatalog() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
+  const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; image?: string; icon?: "heart" | "cart" } | null>(null);
+
+  const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+    addItem({
+      productId: product.id,
+      name: product.nome,
+      type: product.categoria_nome,
+      gramatura: null,
+      quantity: 1,
+      maxStock: product.estoque ?? 999,
+      image: product.foto_url || undefined,
+      price: product.preco_minimo || product.preco_tabela || 0,
+    });
+    toast.success("Produto adicionado ao carrinho!");
+  };
 
   useEffect(() => {
     loadProducts();
