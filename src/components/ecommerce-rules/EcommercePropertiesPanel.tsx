@@ -472,16 +472,17 @@ interface FaixaPagamento {
 
 function RegraPagamentoEditor({ config, updateConfig }: { config: Record<string, any>; updateConfig: (key: string, value: any, extra?: Record<string, any>) => void }) {
   const [tiposPgto, setTiposPgto] = useState<{ id: string; nome: string }[]>([]);
-  const [condicoesPgto, setCondicoesPgto] = useState<{ id: string; nome: string; tipo_pagamento_id?: string }[]>([]);
+  const [condicoesPgto, setCondicoesPgto] = useState<{ id: string; nome: string; tipo_pagamento_id?: string; valor_minimo?: number; valor_maximo?: number }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const modo = config.modo || "config_vendas";
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const estabId = localStorage.getItem("estabelecimentoId");
       const [tp, cp] = await Promise.all([
         supabase.from("tipos_pagamento").select("id, nome").eq("ativo", true).order("nome").then(r => r.data || []),
-        supabase.from("condicoes_pagamento").select("id, nome, tipo_pagamento_id").eq("ativo", true).order("nome").then(r => r.data || []),
+        supabase.from("condicoes_pagamento").select("id, nome, tipo_pagamento_id, valor_minimo, valor_maximo").eq("ativo", true).order("nome").then(r => r.data || []),
       ]);
       setTiposPgto(tp);
       setCondicoesPgto(cp);
@@ -517,66 +518,105 @@ function RegraPagamentoEditor({ config, updateConfig }: { config: Record<string,
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">Configure faixas de valor e quais tipos/condições de pagamento ficam disponíveis em cada faixa.</p>
-      {faixas.map((faixa, idx) => (
-        <div key={idx} className="border rounded-lg p-3 space-y-3 bg-accent/10">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold">Faixa {idx + 1}</span>
-            {faixas.length > 1 && (
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFaixa(idx)}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label className="text-[11px]">Valor Mín (R$)</Label>
-              <Input type="number" value={faixa.valorMin} onChange={e => updateFaixa(idx, "valorMin", Number(e.target.value))} className="h-8 text-xs" step="0.01" min={0} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[11px]">Valor Máx (R$)</Label>
-              <Input type="number" value={faixa.valorMax ?? ""} onChange={e => updateFaixa(idx, "valorMax", e.target.value ? Number(e.target.value) : null)} className="h-8 text-xs" step="0.01" placeholder="Sem limite" />
-            </div>
-          </div>
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Modo de Regra</Label>
+        <Select value={modo} onValueChange={v => updateConfig("modo", v)}>
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="config_vendas">Usar regras da Config. de Vendas</SelectItem>
+            <SelectItem value="manual">Configurar manualmente</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium">Tipos de Pagamento</Label>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {tiposPgto.map(tp => (
-                <label key={tp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
-                  <Checkbox
-                    checked={faixa.tipoPagamentoIds.includes(tp.id)}
-                    onCheckedChange={() => updateFaixa(idx, "tipoPagamentoIds", toggleInArray(faixa.tipoPagamentoIds, tp.id))}
-                  />
-                  {tp.nome}
-                </label>
-              ))}
-              {tiposPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhum tipo cadastrado</p>}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-[11px] font-medium">Condições de Pagamento</Label>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {condicoesPgto
-                .filter(cp => faixa.tipoPagamentoIds.length === 0 || (cp.tipo_pagamento_id && faixa.tipoPagamentoIds.includes(cp.tipo_pagamento_id)))
-                .map(cp => (
-                  <label key={cp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
-                    <Checkbox
-                      checked={faixa.condicaoPagamentoIds.includes(cp.id)}
-                      onCheckedChange={() => updateFaixa(idx, "condicaoPagamentoIds", toggleInArray(faixa.condicaoPagamentoIds, cp.id))}
-                    />
-                    {cp.nome}
-                  </label>
-                ))}
-              {condicoesPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhuma condição cadastrada</p>}
-            </div>
+      {modo === "config_vendas" ? (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Será utilizado automaticamente o valor mínimo e máximo já configurado em cada condição de pagamento na Configuração de Vendas.
+          </p>
+          <div className="border rounded-lg divide-y bg-accent/10">
+            {condicoesPgto.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3">Nenhuma condição cadastrada na Config. de Vendas.</p>
+            ) : condicoesPgto.map(cp => {
+              const tipo = tiposPgto.find(t => t.id === cp.tipo_pagamento_id);
+              return (
+                <div key={cp.id} className="px-3 py-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium">{cp.nome}</p>
+                    {tipo && <p className="text-[10px] text-muted-foreground">{tipo.nome}</p>}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground text-right">
+                    {cp.valor_minimo != null ? `R$ ${Number(cp.valor_minimo).toFixed(2)}` : "Sem mín."} → {cp.valor_maximo != null ? `R$ ${Number(cp.valor_maximo).toFixed(2)}` : "Sem máx."}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs" onClick={addFaixa}>
-        <Plus className="h-3 w-3 mr-1" /> Adicionar Faixa
-      </Button>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">Configure faixas de valor e quais tipos/condições de pagamento ficam disponíveis em cada faixa.</p>
+          {faixas.map((faixa, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-3 bg-accent/10">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold">Faixa {idx + 1}</span>
+                {faixas.length > 1 && (
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFaixa(idx)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Valor Mín (R$)</Label>
+                  <Input type="number" value={faixa.valorMin} onChange={e => updateFaixa(idx, "valorMin", Number(e.target.value))} className="h-8 text-xs" step="0.01" min={0} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Valor Máx (R$)</Label>
+                  <Input type="number" value={faixa.valorMax ?? ""} onChange={e => updateFaixa(idx, "valorMax", e.target.value ? Number(e.target.value) : null)} className="h-8 text-xs" step="0.01" placeholder="Sem limite" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium">Tipos de Pagamento</Label>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {tiposPgto.map(tp => (
+                    <label key={tp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
+                      <Checkbox
+                        checked={faixa.tipoPagamentoIds.includes(tp.id)}
+                        onCheckedChange={() => updateFaixa(idx, "tipoPagamentoIds", toggleInArray(faixa.tipoPagamentoIds, tp.id))}
+                      />
+                      {tp.nome}
+                    </label>
+                  ))}
+                  {tiposPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhum tipo cadastrado</p>}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium">Condições de Pagamento</Label>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {condicoesPgto
+                    .filter(cp => faixa.tipoPagamentoIds.length === 0 || (cp.tipo_pagamento_id && faixa.tipoPagamentoIds.includes(cp.tipo_pagamento_id)))
+                    .map(cp => (
+                      <label key={cp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
+                        <Checkbox
+                          checked={faixa.condicaoPagamentoIds.includes(cp.id)}
+                          onCheckedChange={() => updateFaixa(idx, "condicaoPagamentoIds", toggleInArray(faixa.condicaoPagamentoIds, cp.id))}
+                        />
+                        {cp.nome}
+                      </label>
+                    ))}
+                  {condicoesPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhuma condição cadastrada</p>}
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="w-full text-xs" onClick={addFaixa}>
+            <Plus className="h-3 w-3 mr-1" /> Adicionar Faixa
+          </Button>
+        </>
+      )}
     </div>
   );
 }
