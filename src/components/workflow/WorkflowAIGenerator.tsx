@@ -114,6 +114,9 @@ export function WorkflowAIGenerator({
         console.warn("Blocos inválidos removidos:", invalidNodes.map((n: any) => n.data?.type));
       }
 
+      // Detect start/initial block types
+      const startTypes = new Set(["inicio", "inicio_regra", "start", "trigger"]);
+
       const validNodes = aiNodes
         .filter((n: any) => validTypes.has(n.data?.type))
         .map((n: any) => {
@@ -124,13 +127,31 @@ export function WorkflowAIGenerator({
           };
         });
 
+      // Remove AI-generated start nodes to avoid duplicates (canvas already has one)
+      const filteredNodes = validNodes.filter((n: any) => !startTypes.has(n.data?.type));
+
+      // If AI only generated start nodes, keep them (empty canvas scenario handled by caller)
+      const finalNodes = filteredNodes.length > 0 ? filteredNodes : validNodes;
+
       // Filter edges to only reference valid nodes
-      const validNodeIds = new Set(validNodes.map((n: any) => n.id));
+      const finalNodeIds = new Set(finalNodes.map((n: any) => n.id));
       const validEdges = (aiEdges || []).filter(
-        (e: any) => validNodeIds.has(e.source) && validNodeIds.has(e.target)
+        (e: any) => finalNodeIds.has(e.source) && finalNodeIds.has(e.target)
       );
 
-      onGenerated(validNodes, validEdges);
+      // Re-link edges that pointed FROM start node to first non-start node
+      const removedStartIds = new Set(
+        validNodes.filter((n: any) => startTypes.has(n.data?.type) && !finalNodeIds.has(n.id)).map((n: any) => n.id)
+      );
+      if (removedStartIds.size > 0) {
+        // Find edges from removed start nodes and repoint them from "start_node" (the existing canvas start)
+        const relinkedEdges = (aiEdges || [])
+          .filter((e: any) => removedStartIds.has(e.source) && finalNodeIds.has(e.target))
+          .map((e: any) => ({ ...e, source: "start_node" }));
+        validEdges.push(...relinkedEdges);
+      }
+
+      onGenerated(finalNodes, validEdges);
       setOpen(false);
       setPrompt("");
 
