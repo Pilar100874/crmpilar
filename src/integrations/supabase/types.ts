@@ -2837,6 +2837,65 @@ export type Database = {
           },
         ]
       }
+      cupons_desconto: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          tipo_desconto: string
+          updated_at: string
+          usos_atuais: number
+          usos_maximos: number | null
+          valor_desconto: number
+          valor_minimo_pedido: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          tipo_desconto?: string
+          updated_at?: string
+          usos_atuais?: number
+          usos_maximos?: number | null
+          valor_desconto?: number
+          valor_minimo_pedido?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          tipo_desconto?: string
+          updated_at?: string
+          usos_atuais?: number
+          usos_maximos?: number | null
+          valor_desconto?: number
+          valor_minimo_pedido?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cupons_desconto_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_canal_preferences: {
         Row: {
           ativo: boolean | null
