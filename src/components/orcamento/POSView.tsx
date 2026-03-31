@@ -2830,6 +2830,71 @@ export default function POSView({
                 {Array.from(tempCartItems.values())
                   .filter(({ produto }) => 
                     produto.nome.toLowerCase().includes(cartSearchQuery.toLowerCase())
+                  )}
+
+                  {/* Regras Promocionais de Frete (E-commerce) */}
+                  {fretePromoRules.hasRules && (
+                    <div className="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-950/30 dark:to-teal-950/30 rounded-lg p-3 border border-cyan-200/50 dark:border-cyan-800/50">
+                      <h4 className="text-xs font-semibold text-cyan-700 dark:text-cyan-300 mb-2 flex items-center gap-2">
+                        <Truck className="w-3.5 h-3.5" />
+                        Regras Promocionais de Frete
+                      </h4>
+                      <div className="space-y-2">
+                        {fretePromoRules.freteActions.map((action, idx) => {
+                          const isActive = fretePromoRules.resultado.ruleId === action.ruleId;
+                          return (
+                            <div
+                              key={idx}
+                              className={`rounded-md p-2 text-xs border ${
+                                isActive
+                                  ? 'bg-cyan-100 dark:bg-cyan-900/40 border-cyan-300 dark:border-cyan-700'
+                                  : 'bg-muted/50 border-border/50 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">
+                                  {action.type === 'acao_frete_gratis' && '🎉 Frete Grátis'}
+                                  {action.type === 'acao_frete_fixo' && `📌 Frete Fixo: R$ ${(action.config.valor || 9.90).toFixed(2)}`}
+                                  {action.type === 'acao_desconto_frete' && `💰 ${action.config.percentual || 50}% Desconto no Frete`}
+                                </span>
+                                {isActive && (
+                                  <span className="text-[10px] bg-cyan-600 text-white px-1.5 py-0.5 rounded-full">
+                                    Ativa
+                                  </span>
+                                )}
+                              </div>
+                              {action.type === 'acao_frete_gratis' && action.config.valorMinimo > 0 && (
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                  Pedido mínimo: R$ {action.config.valorMinimo.toFixed(2)}
+                                  {fretePromoTotal < action.config.valorMinimo && (
+                                    <span className="text-destructive ml-1">
+                                      (faltam R$ {(action.config.valorMinimo - fretePromoTotal).toFixed(2)})
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {fretePromoRules.resultado.tipo !== 'nenhuma' && (
+                          <div className="mt-2 pt-2 border-t border-cyan-200/50 dark:border-cyan-700/50">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Frete com promoção</span>
+                              <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+                                {fretePromoRules.resultado.tipo === 'gratis'
+                                  ? 'GRÁTIS'
+                                  : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(fretePromoRules.resultado.valor)
+                                }
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-cyan-600 dark:text-cyan-400 mt-0.5">
+                              {fretePromoRules.resultado.descricao}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )
                   .sort((a, b) => {
                     switch (cartSortBy) {
