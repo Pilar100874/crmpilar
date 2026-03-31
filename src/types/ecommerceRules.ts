@@ -43,7 +43,8 @@ export type EcommerceRuleBlockType =
   | "acao_parcelas_extras"
   | "acao_desconto_pix"
   | "acao_desconto_boleto"
-  | "acao_regra_pagamento";
+  // Condicionais com múltiplas saídas
+  | "condicao_valor_pedido";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
