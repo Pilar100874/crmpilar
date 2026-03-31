@@ -107,12 +107,16 @@ const defaults: HomeConfig = {
 const iconeOptions = [
   { value: "truck", label: "🚚 Caminhão" },
   { value: "shield", label: "🛡️ Escudo" },
-  { value: "rotate", label: "🔄 Troca" },
+  { value: "rotate-ccw", label: "🔄 Troca" },
+  { value: "rotate", label: "🔄 Troca (alt)" },
   { value: "headphones", label: "🎧 Suporte" },
   { value: "star", label: "⭐ Estrela" },
   { value: "clock", label: "⏰ Relógio" },
   { value: "check", label: "✅ Check" },
   { value: "gift", label: "🎁 Presente" },
+  { value: "phone", label: "📞 Telefone" },
+  { value: "mail", label: "✉️ Email" },
+  { value: "package", label: "📦 Pacote" },
 ];
 
 export default function EcommerceHomeEditor() {
