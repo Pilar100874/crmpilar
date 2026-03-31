@@ -39,11 +39,59 @@ const formatPrice = (v: number) => v.toLocaleString("pt-BR", { style: "currency"
 export default function EcommerceCheckout() {
   const { items, couponDiscount, couponFixedDiscount, clearCart } = useCart();
   const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+  const [customerType, setCustomerType] = useState<"pf" | "pj">("pf");
+  const [selectedTipoPagamento, setSelectedTipoPagamento] = useState("");
+  const [selectedCondicao, setSelectedCondicao] = useState("");
+  const [tiposPagamento, setTiposPagamento] = useState<TipoPagamento[]>([]);
+  const [condicoesPagamento, setCondicoesPagamento] = useState<CondicaoPagamento[]>([]);
+  const [formData, setFormData] = useState({
+    nome: "", email: "", telefone: "", cpf: "",
+    cnpj: "", razaoSocial: "", inscricaoEstadual: "", centroCusto: "", observacoes: "",
+    cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
+  });
+
+  const estId = localStorage.getItem("estabelecimentoId");
+  const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine({ subtotal, totalQuantity });
   const { calcularFrete } = useEcommerceFreteRules();
+
+  // Calculate rule-based discounts (same logic as cart)
+  let ruleDiscount = 0;
+  const ruleDiscountLabels: { label: string; value: number }[] = [];
+  for (const action of discountActions) {
+    if (action.type === "acao_desconto_percentual") {
+      const pct = action.config.percentual || 0;
+      const val = subtotal * pct / 100;
+      ruleDiscount += val;
+      ruleDiscountLabels.push({ label: `Desconto ${pct}% (${action.ruleName})`, value: val });
+    } else if (action.type === "acao_desconto_fixo") {
+      const valor = action.config.valor || 0;
+      ruleDiscount += valor;
+      ruleDiscountLabels.push({ label: `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`, value: valor });
+    } else if (action.type === "acao_desconto_progressivo") {
+      const faixas = action.config.faixas || [];
+      const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
+      for (const faixa of sorted) {
+        if (totalQuantity >= (faixa.quantidade || 0)) {
+          const pct = faixa.percentual || 0;
+          const val = subtotal * pct / 100;
+          ruleDiscount += val;
+          ruleDiscountLabels.push({ label: `Progressivo ${pct}% (${action.ruleName})`, value: val });
+          break;
+        }
+      }
+    }
+  }
+
+  const couponDiscountValue = (couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0) + (couponFixedDiscount || 0);
+  const discount = ruleDiscount + couponDiscountValue;
+  const freteResult = calcularFrete(subtotal - discount, formData.cep || "");
+  const shipping = freteResult.valor;
+  const total = subtotal - discount + shipping;
 
   useEffect(() => {
     if (!estId) return;
