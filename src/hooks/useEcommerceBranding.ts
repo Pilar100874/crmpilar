@@ -121,6 +121,8 @@ const defaults: EcommerceBranding = {
   modo_catalogo: false,
   mostrar_precos_visitante_b2c: true,
   mostrar_precos_visitante_b2b: true,
+  feat_webchat: false,
+  feat_whatsapp: false,
 };
 
 export function useEcommerceBranding() {
