@@ -80,6 +80,8 @@ export function useEcommerceRulesEngine() {
             popups.push(actionEntry);
           } else if (nodeType === "acao_banner_promocional") {
             banners.push(actionEntry);
+          } else if (nodeType === "acao_destaque_vitrine") {
+            vitrines.push(actionEntry);
           }
         }
       }
