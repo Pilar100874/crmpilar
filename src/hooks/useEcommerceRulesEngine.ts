@@ -102,6 +102,8 @@ export function useEcommerceRulesEngine() {
       setBannerActions(banners);
       setVitrineActions(vitrines);
       setFreteActions(fretes);
+      setDiscountActions(descontos);
+      setPaymentActions(pagamentos);
     } catch (err) {
       console.error("[RulesEngine] Erro:", err);
     } finally {
