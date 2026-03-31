@@ -126,7 +126,7 @@ export default function EcommerceHomeEditor() {
       if (!estId) return;
       const { data } = await supabase
         .from("ecommerce_config")
-        .select("hero_badge, hero_titulo, hero_subtitulo, hero_btn_primario, hero_btn_secundario, hero_stat_satisfacao, beneficios, b2b_badge, b2b_titulo, b2b_descricao, b2b_vantagens, depoimentos, newsletter_titulo, newsletter_subtitulo, secoes_visiveis")
+        .select("hero_badge, hero_titulo, hero_subtitulo, hero_btn_primario, hero_btn_secundario, hero_stat_satisfacao, beneficios, b2b_badge, b2b_titulo, b2b_descricao, b2b_vantagens, depoimentos, newsletter_titulo, newsletter_subtitulo, secoes_visiveis, topbar_ativo, topbar_items, topbar_telefone, topbar_link_b2b")
         .eq("estabelecimento_id", estId)
         .maybeSingle();
       if (data) {
@@ -147,6 +147,10 @@ export default function EcommerceHomeEditor() {
           newsletter_titulo: d.newsletter_titulo || defaults.newsletter_titulo,
           newsletter_subtitulo: d.newsletter_subtitulo || defaults.newsletter_subtitulo,
           secoes_visiveis: d.secoes_visiveis || defaults.secoes_visiveis,
+          topbar_ativo: d.topbar_ativo ?? true,
+          topbar_items: d.topbar_items || defaults.topbar_items,
+          topbar_telefone: d.topbar_telefone || defaults.topbar_telefone,
+          topbar_link_b2b: d.topbar_link_b2b ?? true,
         });
       }
     };

@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon, Star, Headphones, Gift, Check, type LucideIcon } from "lucide-react";
+
+const topbarIconMap: Record<string, LucideIcon> = {
+  truck: Truck, shield: Shield, "rotate-ccw": RotateCcw, rotate: RotateCcw,
+  phone: Phone, mail: Mail, clock: Clock, star: Star, headphones: Headphones,
+  gift: Gift, check: Check, package: Package,
+};
+const getTopbarIcon = (name: string) => topbarIconMap[name] || null;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
