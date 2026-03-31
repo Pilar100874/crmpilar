@@ -145,6 +145,7 @@ export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
+    { id: "tipo_cliente", label: "Tipo de Cliente", type: "select", category: "company", options: ["B2B", "B2C", "B2G"], required: true, locked: false },
     { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: false },
     { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
     { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
