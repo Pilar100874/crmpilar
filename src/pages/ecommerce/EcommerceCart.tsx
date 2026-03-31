@@ -78,7 +78,9 @@ export default function EcommerceCart() {
 
   const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
   const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
-  const shipping = shippingCalculated ? (subtotal >= 500 ? 0 : 29.90) : null;
+  const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
+  const shipping = freteResult?.valor ?? null;
+  const shippingDescription = freteResult?.descricao || "";
   const total = subtotal - discount + (shipping ?? 0);
 
   if (items.length === 0) {
