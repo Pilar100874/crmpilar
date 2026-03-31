@@ -70,7 +70,6 @@ export default function EcommerceCatalog() {
   const { addItem: addQuoteItem } = useQuoteRequest();
   const { branding } = useEcommerceBranding();
   const isCatalogMode = branding.modo_catalogo;
-  const showPrices = isLoggedIn || branding.mostrar_precos_visitante_b2c;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   
@@ -81,6 +80,8 @@ export default function EcommerceCatalog() {
     };
     checkAuth();
   }, []);
+  
+  const showPrices = isLoggedIn || branding.mostrar_precos_visitante_b2c;
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(buscaParam || "");
   const [sortBy, setSortBy] = useState("relevancia");
