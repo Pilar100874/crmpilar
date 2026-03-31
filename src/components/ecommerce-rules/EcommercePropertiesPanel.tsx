@@ -461,6 +461,126 @@ function CustomerSelector({ value, onChange }: { value: { id: string; nome: stri
   );
 }
 
+// ── Editor de Regra de Pagamento por Valor ──────────────────────
+
+interface FaixaPagamento {
+  valorMin: number;
+  valorMax: number | null;
+  tipoPagamentoIds: string[];
+  condicaoPagamentoIds: string[];
+}
+
+function RegraPagamentoEditor({ config, updateConfig }: { config: Record<string, any>; updateConfig: (key: string, value: any, extra?: Record<string, any>) => void }) {
+  const [tiposPgto, setTiposPgto] = useState<{ id: string; nome: string }[]>([]);
+  const [condicoesPgto, setCondicoesPgto] = useState<{ id: string; nome: string; tipo_pagamento_id?: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const estabId = localStorage.getItem("estabelecimentoId");
+      const [tp, cp] = await Promise.all([
+        supabase.from("tipos_pagamento").select("id, nome").eq("ativo", true).order("nome").then(r => r.data || []),
+        supabase.from("condicoes_pagamento").select("id, nome, tipo_pagamento_id").eq("ativo", true).order("nome").then(r => r.data || []),
+      ]);
+      setTiposPgto(tp);
+      setCondicoesPgto(cp);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const faixas: FaixaPagamento[] = config.faixas || [{ valorMin: 0, valorMax: 500, tipoPagamentoIds: [], condicaoPagamentoIds: [] }];
+
+  const setFaixas = (newFaixas: FaixaPagamento[]) => updateConfig("faixas", newFaixas);
+
+  const updateFaixa = (idx: number, field: keyof FaixaPagamento, value: any) => {
+    const nf = [...faixas];
+    nf[idx] = { ...nf[idx], [field]: value };
+    setFaixas(nf);
+  };
+
+  const addFaixa = () => {
+    const last = faixas[faixas.length - 1];
+    setFaixas([...faixas, { valorMin: (last?.valorMax || 0), valorMax: null, tipoPagamentoIds: [], condicaoPagamentoIds: [] }]);
+  };
+
+  const removeFaixa = (idx: number) => {
+    if (faixas.length <= 1) return;
+    setFaixas(faixas.filter((_, i) => i !== idx));
+  };
+
+  const toggleInArray = (arr: string[], id: string) =>
+    arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+
+  if (loading) return <p className="text-xs text-muted-foreground">Carregando...</p>;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">Configure faixas de valor e quais tipos/condições de pagamento ficam disponíveis em cada faixa.</p>
+      {faixas.map((faixa, idx) => (
+        <div key={idx} className="border rounded-lg p-3 space-y-3 bg-accent/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold">Faixa {idx + 1}</span>
+            {faixas.length > 1 && (
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFaixa(idx)}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px]">Valor Mín (R$)</Label>
+              <Input type="number" value={faixa.valorMin} onChange={e => updateFaixa(idx, "valorMin", Number(e.target.value))} className="h-8 text-xs" step="0.01" min={0} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Valor Máx (R$)</Label>
+              <Input type="number" value={faixa.valorMax ?? ""} onChange={e => updateFaixa(idx, "valorMax", e.target.value ? Number(e.target.value) : null)} className="h-8 text-xs" step="0.01" placeholder="Sem limite" />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-[11px] font-medium">Tipos de Pagamento</Label>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {tiposPgto.map(tp => (
+                <label key={tp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
+                  <Checkbox
+                    checked={faixa.tipoPagamentoIds.includes(tp.id)}
+                    onCheckedChange={() => updateFaixa(idx, "tipoPagamentoIds", toggleInArray(faixa.tipoPagamentoIds, tp.id))}
+                  />
+                  {tp.nome}
+                </label>
+              ))}
+              {tiposPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhum tipo cadastrado</p>}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-[11px] font-medium">Condições de Pagamento</Label>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {condicoesPgto
+                .filter(cp => faixa.tipoPagamentoIds.length === 0 || (cp.tipo_pagamento_id && faixa.tipoPagamentoIds.includes(cp.tipo_pagamento_id)))
+                .map(cp => (
+                  <label key={cp.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
+                    <Checkbox
+                      checked={faixa.condicaoPagamentoIds.includes(cp.id)}
+                      onCheckedChange={() => updateFaixa(idx, "condicaoPagamentoIds", toggleInArray(faixa.condicaoPagamentoIds, cp.id))}
+                    />
+                    {cp.nome}
+                  </label>
+                ))}
+              {condicoesPgto.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhuma condição cadastrada</p>}
+            </div>
+          </div>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" className="w-full text-xs" onClick={addFaixa}>
+        <Plus className="h-3 w-3 mr-1" /> Adicionar Faixa
+      </Button>
+    </div>
+  );
+}
+
 // ── Seletor de Cupom ────────────────────────────────────────────
 
 function CupomSelector({ config, updateConfig }: { config: Record<string, any>; updateConfig: (key: string, value: any, extra?: Record<string, any>) => void }) {
@@ -1082,6 +1202,9 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
             <Input type="number" value={config.percentual || 0} onChange={e => updateConfig("percentual", Number(e.target.value))} min={0} max={100} />
           </div>
         );
+
+      case "acao_regra_pagamento":
+        return <RegraPagamentoEditor config={config} updateConfig={updateConfig} />;
 
       case "acao_desconto_frete":
         return (

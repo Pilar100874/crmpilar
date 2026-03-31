@@ -42,7 +42,8 @@ export type EcommerceRuleBlockType =
   // Ações - Pagamento
   | "acao_parcelas_extras"
   | "acao_desconto_pix"
-  | "acao_desconto_boleto";
+  | "acao_desconto_boleto"
+  | "acao_regra_pagamento";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
@@ -363,6 +364,19 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     color: "#ef4444",
     category: "acao_pagamento",
     defaultData: { percentual: 3 },
+  },
+  {
+    type: "acao_regra_pagamento",
+    label: "Regra de Pagamento por Valor",
+    description: "Define tipos e condições de pagamento conforme faixa de valor do pedido",
+    icon: "Wallet",
+    color: "#ef4444",
+    category: "acao_pagamento",
+    defaultData: {
+      faixas: [
+        { valorMin: 0, valorMax: 500, tipoPagamentoIds: [], condicaoPagamentoIds: [] },
+      ],
+    },
   },
 ];
 
