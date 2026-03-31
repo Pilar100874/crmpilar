@@ -148,6 +148,38 @@ export default function EcommerceFeaturesEditor() {
         </CardContent>
       </Card>
 
+      {/* Chat features */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-blue-500" />
+            Chat & Atendimento na Loja
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Habilite ícones flutuantes de atendimento na loja virtual. Ao clicar, o visitante escolhe qual bot utilizar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          {chatFeatures.map(feat => (
+            <div key={feat.key} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${toggles[feat.key] ? "border-primary/30 bg-primary/5" : "bg-background"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${toggles[feat.key] ? "bg-primary/10" : "bg-muted"}`}>
+                  <feat.icon className={`h-4 w-4 ${toggles[feat.key] ? feat.color : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold cursor-pointer">{feat.label}</Label>
+                  <p className="text-[11px] text-muted-foreground">{feat.description}</p>
+                </div>
+              </div>
+              <Switch
+                checked={toggles[feat.key] ?? false}
+                onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3">
         {features.map(feat => (
           <Card key={feat.key} className={`transition-all ${toggles[feat.key] ? "border-primary/30 bg-primary/5" : "opacity-70"}`}>
