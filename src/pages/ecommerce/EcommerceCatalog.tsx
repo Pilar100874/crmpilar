@@ -63,7 +63,11 @@ export default function EcommerceCatalog() {
       return;
     }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setFlyAnim({ startRect: rect, target: "[data-cart-target]", image: product.foto_url || undefined, icon: "cart" });
+    // Capture target position BEFORE state change causes re-render
+    const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+    const cartRect = cartTarget?.getBoundingClientRect();
+    const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+    setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
     addItem({
       productId: product.id,
       name: product.nome,
