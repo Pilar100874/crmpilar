@@ -96,6 +96,15 @@ const configSections = [
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
   },
+  {
+    id: "cupons",
+    title: "Cupons de Desconto",
+    description: "Crie e gerencie cupons promocionais com validade e limites de uso",
+    icon: Ticket,
+    url: "/ecommerce-config/cupons",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {
