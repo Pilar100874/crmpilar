@@ -445,6 +445,13 @@ export default function PedidosRecebidos() {
                         </TableCell>
                         <TableCell className="font-mono text-sm">{pedido.numero_pedido}</TableCell>
                         <TableCell className="text-sm">{pedido.nome_cliente}</TableCell>
+                        <TableCell className="text-right text-sm">
+                          {Number(pedido.valor_desconto) > 0 ? (
+                            <span className="text-emerald-500 font-medium">- R$ {Number(pedido.valor_desconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right font-mono text-sm">
                           R$ {Number(pedido.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
