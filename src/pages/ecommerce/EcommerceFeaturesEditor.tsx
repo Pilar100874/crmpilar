@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag, ShoppingCart, DollarSign, FileText } from "lucide-react";
+import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag, ShoppingCart, DollarSign, FileText, MessageCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
