@@ -7,6 +7,7 @@ import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { useRouteCalculation } from "@/hooks/useRouteCalculation";
 import { useRouteAddresses } from "@/hooks/useRouteAddresses";
 import { calculateFreteCost, VeiculoConfig, ViagemInput, FreteResult } from "@/hooks/useFreteCalculation";
+import { useOrcamentoFreteRules } from "@/hooks/useOrcamentoFreteRules";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
