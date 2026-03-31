@@ -27,6 +27,8 @@ export function useEcommerceRulesEngine() {
   const [bannerActions, setBannerActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [vitrineActions, setVitrineActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [freteActions, setFreteActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [discountActions, setDiscountActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
+  const [paymentActions, setPaymentActions] = useState<(RuleAction & { ruleId: string; ruleName: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
