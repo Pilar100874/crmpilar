@@ -684,10 +684,12 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
     setConfig(nodeData.config || {});
   }, [node.id]);
 
-  const updateConfig = (key: string, value: any) => {
-    const newConfig = { ...config, [key]: value };
-    setConfig(newConfig);
-    onUpdate(node.id, { ...nodeData, config: newConfig });
+  const updateConfig = (key: string, value: any, extraUpdates?: Record<string, any>) => {
+    setConfig(prev => {
+      const newConfig = { ...prev, [key]: value, ...extraUpdates };
+      onUpdate(node.id, { ...nodeData, config: newConfig });
+      return newConfig;
+    });
   };
 
   const saveLabel = () => {
