@@ -52,6 +52,7 @@ export default function EcommerceCatalog() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
+  const [filterInStock, setFilterInStock] = useState(false);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
@@ -143,6 +144,7 @@ export default function EcommerceCatalog() {
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedMarcas.length > 0 && (!p.marca || !selectedMarcas.includes(p.marca))) return false;
+    if (filterInStock && (p.estoque === null || p.estoque === undefined || p.estoque <= 0)) return false;
     return true;
   });
 
@@ -161,10 +163,11 @@ export default function EcommerceCatalog() {
 
   const clearAllFilters = () => {
     setSelectedMarcas([]);
+    setFilterInStock(false);
     setSearchQuery("");
   };
 
-  const activeFilterCount = selectedMarcas.length;
+  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0);
 
   const pageTitle = categoriaParam
     ? categoriaParam
@@ -200,7 +203,7 @@ export default function EcommerceCatalog() {
       <div>
         <h4 className="text-sm font-semibold mb-3">Disponibilidade</h4>
         <label className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-lg px-2 py-1.5 transition-colors">
-          <Checkbox />
+          <Checkbox checked={filterInStock} onCheckedChange={(v) => setFilterInStock(!!v)} />
           <span className="text-sm">Em estoque</span>
         </label>
       </div>
