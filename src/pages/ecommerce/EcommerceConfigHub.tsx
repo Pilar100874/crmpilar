@@ -114,6 +114,15 @@ const configSections = [
     color: "text-indigo-500",
     bg: "bg-indigo-500/10",
   },
+  {
+    id: "newsletter",
+    title: "Newsletter",
+    description: "Visualize e gerencie os inscritos na newsletter da loja",
+    icon: Mail,
+    url: "/ecommerce-config/newsletter",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {
