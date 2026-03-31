@@ -268,7 +268,75 @@ export default function EcommerceHomeEditor() {
         </CardContent>
       </Card>
 
-      <Accordion type="multiple" defaultValue={["hero"]} className="space-y-3">
+      <Accordion type="multiple" defaultValue={["topbar"]} className="space-y-3">
+        {/* Top Bar */}
+        <AccordionItem value="topbar" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold">📢 Barra Superior (Header)</AccordionTrigger>
+          <AccordionContent className="space-y-4 pb-4">
+            <div className="flex items-center justify-between p-3 rounded-lg border">
+              <div>
+                <span className="text-sm font-medium">Barra Superior Ativa</span>
+                <p className="text-xs text-muted-foreground">Exibe informações acima do cabeçalho</p>
+              </div>
+              <Switch checked={config.topbar_ativo} onCheckedChange={v => setConfig(c => ({ ...c, topbar_ativo: v }))} />
+            </div>
+
+            {config.topbar_ativo && (
+              <>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input value={config.topbar_telefone} onChange={e => setConfig(c => ({ ...c, topbar_telefone: e.target.value }))} placeholder="(11) 4002-8922" />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border">
+                  <span className="text-sm font-medium">Exibir link Atacado / B2B</span>
+                  <Switch checked={config.topbar_link_b2b} onCheckedChange={v => setConfig(c => ({ ...c, topbar_link_b2b: v }))} />
+                </div>
+
+                <div>
+                  <Label>Itens da Barra</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Adicione mensagens com ícone que aparecem na barra superior</p>
+                  {config.topbar_items.map((item, i) => (
+                    <div key={i} className="grid grid-cols-[auto_auto_1fr_auto] gap-2 items-end mt-2">
+                      <div>
+                        <Label className="text-xs">Ícone</Label>
+                        <select
+                          value={item.icone}
+                          onChange={e => updateTopbarItem(i, "icone", e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        >
+                          {iconeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Posição</Label>
+                        <select
+                          value={item.posicao}
+                          onChange={e => updateTopbarItem(i, "posicao", e.target.value)}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        >
+                          <option value="esquerda">Esquerda</option>
+                          <option value="direita">Direita</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Texto</Label>
+                        <Input value={item.texto} onChange={e => updateTopbarItem(i, "texto", e.target.value)} className="h-9" />
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => removeTopbarItem(i)} className="text-destructive h-9 w-9">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={addTopbarItem} className="mt-3">
+                    <Plus className="h-4 w-4 mr-1" /> Adicionar Item
+                  </Button>
+                </div>
+              </>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Hero Section */}
         <AccordionItem value="hero" className="border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">🎯 Banner Principal (Hero)</AccordionTrigger>
