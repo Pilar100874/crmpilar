@@ -461,14 +461,7 @@ function CustomerSelector({ value, onChange }: { value: { id: string; nome: stri
   );
 }
 
-// ── Editor de Regra de Pagamento por Valor ──────────────────────
-
-interface FaixaPagamento {
-  valorMin: number;
-  valorMax: number | null;
-  tipoPagamentoIds: string[];
-  condicaoPagamentoIds: string[];
-}
+// ── Editor de Faixa de Valor do Pedido (múltiplas saídas) ──────────────
 
 function FaixaValorPedidoEditor({ config, updateConfig }: { config: Record<string, any>; updateConfig: (key: string, value: any, extra?: Record<string, any>) => void }) {
   const faixas: { valorMin: number; valorMax: number | null; label: string }[] = config.faixas || [
