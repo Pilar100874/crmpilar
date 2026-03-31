@@ -4168,6 +4168,53 @@ export type Database = {
         }
         Relationships: []
       }
+      etiqueta_config: {
+        Row: {
+          altura_mm: number | null
+          ativo: boolean | null
+          campos_visiveis: Json
+          created_at: string
+          estabelecimento_id: string
+          formato: string
+          id: string
+          largura_mm: number | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          altura_mm?: number | null
+          ativo?: boolean | null
+          campos_visiveis?: Json
+          created_at?: string
+          estabelecimento_id: string
+          formato?: string
+          id?: string
+          largura_mm?: number | null
+          nome?: string
+          updated_at?: string
+        }
+        Update: {
+          altura_mm?: number | null
+          ativo?: boolean | null
+          campos_visiveis?: Json
+          created_at?: string
+          estabelecimento_id?: string
+          formato?: string
+          id?: string
+          largura_mm?: number | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etiqueta_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ferramentas_atendimento: {
         Row: {
           aba_agenda: boolean | null
@@ -8204,6 +8251,140 @@ export type Database = {
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_recebidos: {
+        Row: {
+          codigo_rastreio: string | null
+          created_at: string
+          data_despacho: string | null
+          data_embalagem: string | null
+          data_entrega: string | null
+          data_pedido: string
+          data_separacao: string | null
+          documento_cliente: string | null
+          email_cliente: string | null
+          endereco_bairro: string | null
+          endereco_cep: string | null
+          endereco_cidade: string | null
+          endereco_complemento: string | null
+          endereco_estado: string | null
+          endereco_numero: string | null
+          endereco_rua: string | null
+          estabelecimento_id: string
+          forma_pagamento: string | null
+          id: string
+          itens_json: Json | null
+          metadata: Json | null
+          nome_cliente: string
+          numero_pedido: string
+          observacoes: string | null
+          origem: string
+          origem_detalhes: string | null
+          origem_id: string | null
+          peso_total: number | null
+          rota_id: string | null
+          status: string
+          status_fulfillment: string
+          telefone_cliente: string | null
+          transportadora: string | null
+          updated_at: string
+          valor_desconto: number | null
+          valor_frete: number | null
+          valor_total: number
+          veiculo_id: string | null
+          volumes: number | null
+        }
+        Insert: {
+          codigo_rastreio?: string | null
+          created_at?: string
+          data_despacho?: string | null
+          data_embalagem?: string | null
+          data_entrega?: string | null
+          data_pedido?: string
+          data_separacao?: string | null
+          documento_cliente?: string | null
+          email_cliente?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
+          estabelecimento_id: string
+          forma_pagamento?: string | null
+          id?: string
+          itens_json?: Json | null
+          metadata?: Json | null
+          nome_cliente: string
+          numero_pedido: string
+          observacoes?: string | null
+          origem: string
+          origem_detalhes?: string | null
+          origem_id?: string | null
+          peso_total?: number | null
+          rota_id?: string | null
+          status?: string
+          status_fulfillment?: string
+          telefone_cliente?: string | null
+          transportadora?: string | null
+          updated_at?: string
+          valor_desconto?: number | null
+          valor_frete?: number | null
+          valor_total?: number
+          veiculo_id?: string | null
+          volumes?: number | null
+        }
+        Update: {
+          codigo_rastreio?: string | null
+          created_at?: string
+          data_despacho?: string | null
+          data_embalagem?: string | null
+          data_entrega?: string | null
+          data_pedido?: string
+          data_separacao?: string | null
+          documento_cliente?: string | null
+          email_cliente?: string | null
+          endereco_bairro?: string | null
+          endereco_cep?: string | null
+          endereco_cidade?: string | null
+          endereco_complemento?: string | null
+          endereco_estado?: string | null
+          endereco_numero?: string | null
+          endereco_rua?: string | null
+          estabelecimento_id?: string
+          forma_pagamento?: string | null
+          id?: string
+          itens_json?: Json | null
+          metadata?: Json | null
+          nome_cliente?: string
+          numero_pedido?: string
+          observacoes?: string | null
+          origem?: string
+          origem_detalhes?: string | null
+          origem_id?: string | null
+          peso_total?: number | null
+          rota_id?: string | null
+          status?: string
+          status_fulfillment?: string
+          telefone_cliente?: string | null
+          transportadora?: string | null
+          updated_at?: string
+          valor_desconto?: number | null
+          valor_frete?: number | null
+          valor_total?: number
+          veiculo_id?: string | null
+          volumes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_recebidos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
