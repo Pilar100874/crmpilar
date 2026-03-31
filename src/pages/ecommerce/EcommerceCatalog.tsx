@@ -52,6 +52,7 @@ export default function EcommerceCatalog() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
+  const [filterInStock, setFilterInStock] = useState(false);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
