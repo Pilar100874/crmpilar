@@ -37,28 +37,13 @@ interface CondicaoPagamento {
 const formatPrice = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EcommerceCheckout() {
-  const { items, couponDiscount, clearCart } = useCart();
+  const { items, couponDiscount, couponFixedDiscount, clearCart } = useCart();
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [customerType, setCustomerType] = useState<"pf" | "pj">("pf");
-  const [selectedTipoPagamento, setSelectedTipoPagamento] = useState("");
-  const [selectedCondicao, setSelectedCondicao] = useState("");
-  const [tiposPagamento, setTiposPagamento] = useState<TipoPagamento[]>([]);
-  const [condicoesPagamento, setCondicoesPagamento] = useState<CondicaoPagamento[]>([]);
-  const [formData, setFormData] = useState({
-    nome: "", email: "", telefone: "", cpf: "",
-    cnpj: "", razaoSocial: "", inscricaoEstadual: "", centroCusto: "", observacoes: "",
-    cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  });
-
-  const estId = localStorage.getItem("estabelecimentoId");
-
-  const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
-  const shipping = subtotal >= 500 ? 0 : 29.90;
-  const total = subtotal - discount + shipping;
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine({ subtotal, totalQuantity });
+  const { calcularFrete } = useEcommerceFreteRules();
 
   useEffect(() => {
     if (!estId) return;
