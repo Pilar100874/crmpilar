@@ -323,6 +323,9 @@ export default function EcommerceCatalog() {
                           <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); toast.success("Adicionado aos favoritos ❤️"); }}>
                             <Heart className="h-3.5 w-3.5" />
                           </Button>
+                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => handleQuickAddToCart(e, product)}>
+                            <ShoppingCart className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </div>
                       <CardContent className={`${viewMode === "list" ? "flex-1 flex items-center justify-between" : ""} p-2.5 md:p-3`}>
