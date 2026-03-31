@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
+import { useCart } from "@/contexts/CartContext";
+import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 interface Product {
   id: string;
