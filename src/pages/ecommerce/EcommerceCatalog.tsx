@@ -656,7 +656,8 @@ export default function EcommerceCatalog() {
                         </div>
                         {viewMode === "list" && (
                           <Button size="sm" className="gap-1 rounded-full ml-4" onClick={(e) => handleQuickAddToCart(e, product)}>
-                            <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
+                            {isCatalogMode ? <FileText className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+                            {isCatalogMode ? "Orçamento" : "Adicionar"}
                           </Button>
                         )}
                       </CardContent>
