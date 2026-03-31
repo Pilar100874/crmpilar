@@ -84,26 +84,28 @@ export default function EcommerceCart() {
   const subtotal = rawSubtotal;
   const totalQuantity = rawTotalQty;
 
-  // Calculate rule-based discounts
+  // Calculate rule-based discounts (stacking: all matching discounts are summed)
   let ruleDiscount = 0;
-  let ruleDiscountLabel = "";
+  const ruleDiscountLabels: { label: string; value: number }[] = [];
   for (const action of discountActions) {
     if (action.type === "acao_desconto_percentual") {
       const pct = action.config.percentual || 0;
-      ruleDiscount += subtotal * pct / 100;
-      ruleDiscountLabel = `Desconto ${pct}% (${action.ruleName})`;
+      const val = subtotal * pct / 100;
+      ruleDiscount += val;
+      ruleDiscountLabels.push({ label: `Desconto ${pct}% (${action.ruleName})`, value: val });
     } else if (action.type === "acao_desconto_fixo") {
       const valor = action.config.valor || 0;
       ruleDiscount += valor;
-      ruleDiscountLabel = `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`;
+      ruleDiscountLabels.push({ label: `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`, value: valor });
     } else if (action.type === "acao_desconto_progressivo") {
       const faixas = action.config.faixas || [];
       const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
       for (const faixa of sorted) {
         if (totalQuantity >= (faixa.quantidade || 0)) {
           const pct = faixa.percentual || 0;
-          ruleDiscount += subtotal * pct / 100;
-          ruleDiscountLabel = `Desconto Progressivo ${pct}% (${action.ruleName})`;
+          const val = subtotal * pct / 100;
+          ruleDiscount += val;
+          ruleDiscountLabels.push({ label: `Progressivo ${pct}% (${action.ruleName})`, value: val });
           break;
         }
       }
@@ -281,12 +283,12 @@ export default function EcommerceCart() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-medium">R$ {subtotal.toFixed(2)}</span></div>
-                {ruleDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span className="flex items-center gap-1"><Percent className="h-3 w-3" /> {ruleDiscountLabel}</span>
-                    <span className="font-medium">- R$ {ruleDiscount.toFixed(2)}</span>
+                {ruleDiscountLabels.map((rd, idx) => (
+                  <div key={idx} className="flex justify-between text-emerald-600">
+                    <span className="flex items-center gap-1"><Percent className="h-3 w-3" /> {rd.label}</span>
+                    <span className="font-medium">- R$ {rd.value.toFixed(2)}</span>
                   </div>
-                )}
+                ))}
                 {couponDiscountValue > 0 && (
                   <div className="flex justify-between text-success"><span>Cupom {coupon} (-{couponDiscount}%)</span><span className="font-medium">- R$ {couponDiscountValue.toFixed(2)}</span></div>
                 )}
