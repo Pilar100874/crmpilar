@@ -388,10 +388,10 @@ function useCustomers() {
     const load = async () => {
       setLoading(true);
       const estabId = localStorage.getItem("estabelecimentoId");
-      let query = supabase.from("customers").select("id, nome, tipo_cliente, documento").order("nome");
+      let query = supabase.from("customers").select("id, nome, email, empresa_id").order("nome");
       if (estabId) query = query.eq("estabelecimento_id", estabId);
       const { data } = await query.limit(500);
-      setCustomers((data || []).map(c => ({ id: c.id, nome: c.nome, tipo: c.tipo_cliente || "", documento: c.documento || "" })));
+      setCustomers((data || []).map(c => ({ id: c.id, nome: c.nome, tipo: c.empresa_id ? "B2B" : "B2C", documento: c.email || "" })));
       setLoading(false);
     };
     load();
