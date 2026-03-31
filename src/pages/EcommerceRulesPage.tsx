@@ -30,6 +30,7 @@ interface EcommerceRule {
   ativo: boolean;
   prioridade: number;
   flow_data: any;
+  starts_at: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at: string;
@@ -117,6 +118,11 @@ export default function EcommerceRulesPage() {
     loadRules();
     setIsRenaming(false);
     toast.success("Regra renomeada!");
+  };
+
+  const handleUpdateStartDate = async (id: string, date: Date | null) => {
+    await supabase.from("ecommerce_rules").update({ starts_at: date?.toISOString() || null }).eq("id", id);
+    loadRules();
   };
 
   const handleUpdateExpiration = async (id: string, date: Date | null) => {
@@ -208,32 +214,62 @@ export default function EcommerceRulesPage() {
                     customContent={
                       <div className="space-y-2">
                         {getCategoryBadge(rule.categoria)}
-                        <div>
-                          <span className="text-xs text-muted-foreground">Vencimento:</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1", !rule.expires_at && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yyyy") : "Indeterminado"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-50" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={rule.expires_at ? new Date(rule.expires_at) : undefined}
-                                onSelect={(date) => handleUpdateExpiration(rule.id, date || null)}
-                                initialFocus
-                                disabled={(date) => date < new Date()}
-                              />
-                              {rule.expires_at && (
-                                <div className="p-3 border-t">
-                                  <Button variant="ghost" size="sm" onClick={() => handleUpdateExpiration(rule.id, null)} className="w-full">
-                                    Remover vencimento
-                                  </Button>
-                                </div>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">Início:</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1 text-xs px-2", !rule.starts_at && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
+                                  {rule.starts_at ? format(new Date(rule.starts_at), "dd/MM/yy") : "Imediato"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={rule.starts_at ? new Date(rule.starts_at) : undefined}
+                                  onSelect={(date) => handleUpdateStartDate(rule.id, date || null)}
+                                  initialFocus
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                                {rule.starts_at && (
+                                  <div className="p-3 border-t">
+                                    <Button variant="ghost" size="sm" onClick={() => handleUpdateStartDate(rule.id, null)} className="w-full text-xs">
+                                      Remover data início
+                                    </Button>
+                                  </div>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Fim:</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("w-full justify-start text-left font-normal mt-1 text-xs px-2", !rule.expires_at && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-1 h-3 w-3 shrink-0" />
+                                  {rule.expires_at ? format(new Date(rule.expires_at), "dd/MM/yy") : "Sem fim"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={rule.expires_at ? new Date(rule.expires_at) : undefined}
+                                  onSelect={(date) => handleUpdateExpiration(rule.id, date || null)}
+                                  initialFocus
+                                  disabled={(date) => date < new Date()}
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                                {rule.expires_at && (
+                                  <div className="p-3 border-t">
+                                    <Button variant="ghost" size="sm" onClick={() => handleUpdateExpiration(rule.id, null)} className="w-full text-xs">
+                                      Remover vencimento
+                                    </Button>
+                                  </div>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         </div>
                       </div>
                     }
