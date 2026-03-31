@@ -113,7 +113,7 @@ export default function EcommerceCart() {
     }
   }
 
-  const couponDiscountValue = couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0;
+  const couponDiscountValue = (couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0) + (couponFixedDiscount || 0);
   const discount = ruleDiscount + couponDiscountValue;
   const freteResult = shippingCalculated ? calcularFrete(subtotal - discount, cep) : null;
   const shipping = freteResult?.valor ?? null;
