@@ -54,22 +54,44 @@ function EcommerceRulesEditorInner() {
   const [noteDialog, setNoteDialog] = useState<{ nodeId: string; note: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const savedSnapshotRef = useRef<string>("");
+
+  // Build a snapshot of meaningful data (excludes positions and callbacks)
+  const buildDataSnapshot = useCallback((n: Node[], e: Edge[]) => {
+    const nodesData = n.map(nd => ({
+      id: nd.id,
+      type: (nd.data as any).type,
+      label: (nd.data as any).label,
+      config: (nd.data as any).config,
+      note: (nd.data as any).note,
+    }));
+    const edgesData = e.map(ed => ({ source: ed.source, target: ed.target, sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle }));
+    return JSON.stringify({ nodes: nodesData, edges: edgesData });
+  }, []);
+
+  // Compare current data against saved snapshot
+  useEffect(() => {
+    if (!savedSnapshotRef.current) return; // skip until first load/save
+    const current = buildDataSnapshot(nodes, edges);
+    setHasUnsavedChanges(current !== savedSnapshotRef.current);
+  }, [nodes, edges, buildDataSnapshot]);
 
   useEffect(() => {
     if (ruleId) loadRule(ruleId);
     else createStartNode();
   }, [ruleId]);
 
-  useEffect(() => { setHasUnsavedChanges(true); }, [nodes, edges]);
-
   const createStartNode = () => {
     const startBlock = ECOMMERCE_RULE_BLOCKS.find(b => b.type === "inicio_regra")!;
-    setNodes([{
+    const initialNodes = [{
       id: "start_node",
       type: "custom",
       position: { x: 400, y: 50 },
       data: { type: "inicio_regra", label: startBlock.label, config: {} },
-    }]);
+    }];
+    setNodes(initialNodes);
+    // Set snapshot after a tick so state is settled
+    setTimeout(() => { savedSnapshotRef.current = buildDataSnapshot(initialNodes, []); }, 0);
   };
 
   const loadRule = async (id: string) => {
@@ -78,7 +100,7 @@ function EcommerceRulesEditorInner() {
     setFlowName(data.nome);
     const flowData = data.flow_data as any;
     if (flowData?.nodes) {
-      setNodes(flowData.nodes.map((n: any) => ({
+      const loadedNodes = flowData.nodes.map((n: any) => ({
         ...n,
         data: {
           ...n.data,
@@ -86,8 +108,11 @@ function EcommerceRulesEditorInner() {
           onDuplicate: handleDuplicateNode,
           onAddNote: handleOpenNoteDialog,
         },
-      })));
-      setEdges(flowData.edges || []);
+      }));
+      const loadedEdges = flowData.edges || [];
+      setNodes(loadedNodes);
+      setEdges(loadedEdges);
+      setTimeout(() => { savedSnapshotRef.current = buildDataSnapshot(loadedNodes, loadedEdges); }, 0);
     }
     setHasUnsavedChanges(false);
   };
@@ -119,6 +144,7 @@ function EcommerceRulesEditorInner() {
         if (data) navigate(`/ecommerce-rules-editor?id=${data.id}`, { replace: true });
       }
       toast({ title: "Salvo!", description: "Regra salva com sucesso." });
+      savedSnapshotRef.current = buildDataSnapshot(nodes, edges);
       setHasUnsavedChanges(false);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
