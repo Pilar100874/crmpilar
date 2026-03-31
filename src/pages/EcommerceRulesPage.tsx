@@ -125,6 +125,11 @@ export default function EcommerceRulesPage() {
     loadRules();
   };
 
+  const handleUpdateStartsAt = async (id: string, date: Date | null) => {
+    await supabase.from("ecommerce_rules").update({ starts_at: date?.toISOString() || null } as any).eq("id", id);
+    loadRules();
+  };
+
   const filteredRules = activeTab === "todas" ? rules : rules.filter(r => r.categoria === activeTab);
 
   const getCategoryBadge = (cat: string) => {
