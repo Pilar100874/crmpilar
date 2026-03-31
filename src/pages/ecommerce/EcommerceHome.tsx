@@ -473,12 +473,13 @@ export default function EcommerceHome() {
                       {branding.b2b_descricao || "Preços especiais por volume, pagamento faturado, atendimento dedicado e logística personalizada para sua empresa."}
                     </p>
                     <div className="grid grid-cols-2 gap-4 pt-2">
-                      {branding.b2b_vantagens.map((v, i) => {
-                        const Icon = b2bIconMap[v] || (i === 0 ? TrendingUp : i === 1 ? Package : i === 2 ? Users : Shield);
+                      {branding.b2b_vantagens.map((v: any, i: number) => {
+                        const label = typeof v === "string" ? v : v?.title || "";
+                        const Icon = (typeof v === "string" ? b2bIconMap[v] : null) || (i === 0 ? TrendingUp : i === 1 ? Package : i === 2 ? Users : Shield);
                         return (
                           <div key={i} className="flex items-center gap-2">
                             <Icon className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-background/80">{v}</span>
+                            <span className="text-sm text-background/80">{label}</span>
                           </div>
                         );
                       })}
