@@ -76,14 +76,22 @@ function EcommerceRulesEditorInner() {
     setHasUnsavedChanges(current !== savedSnapshotRef.current);
   }, [nodes, edges, buildDataSnapshot]);
 
+  useEffect(() => {
+    if (ruleId) loadRule(ruleId);
+    else createStartNode();
+  }, [ruleId]);
+
   const createStartNode = () => {
     const startBlock = ECOMMERCE_RULE_BLOCKS.find(b => b.type === "inicio_regra")!;
-    setNodes([{
+    const initialNodes = [{
       id: "start_node",
       type: "custom",
       position: { x: 400, y: 50 },
       data: { type: "inicio_regra", label: startBlock.label, config: {} },
-    }]);
+    }];
+    setNodes(initialNodes);
+    // Set snapshot after a tick so state is settled
+    setTimeout(() => { savedSnapshotRef.current = buildDataSnapshot(initialNodes, []); }, 0);
   };
 
   const loadRule = async (id: string) => {
@@ -92,7 +100,7 @@ function EcommerceRulesEditorInner() {
     setFlowName(data.nome);
     const flowData = data.flow_data as any;
     if (flowData?.nodes) {
-      setNodes(flowData.nodes.map((n: any) => ({
+      const loadedNodes = flowData.nodes.map((n: any) => ({
         ...n,
         data: {
           ...n.data,
@@ -100,8 +108,11 @@ function EcommerceRulesEditorInner() {
           onDuplicate: handleDuplicateNode,
           onAddNote: handleOpenNoteDialog,
         },
-      })));
-      setEdges(flowData.edges || []);
+      }));
+      const loadedEdges = flowData.edges || [];
+      setNodes(loadedNodes);
+      setEdges(loadedEdges);
+      setTimeout(() => { savedSnapshotRef.current = buildDataSnapshot(loadedNodes, loadedEdges); }, 0);
     }
     setHasUnsavedChanges(false);
   };
