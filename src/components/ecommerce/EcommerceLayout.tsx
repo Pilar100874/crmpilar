@@ -125,19 +125,40 @@ export default function EcommerceLayout() {
       <EcommerceAdBanner posicao="popup" />
       <EcommerceRulesPopup />
       {/* Top bar */}
+      {branding.topbar_ativo && (
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5"><Truck className="h-3.5 w-3.5" /> Frete grátis acima de R$ 500</span>
-            <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" /> Compra 100% segura</span>
-            <span className="flex items-center gap-1.5"><RotateCcw className="h-3.5 w-3.5" /> Troca facilitada</span>
+            {branding.topbar_items.filter(item => item.posicao === "esquerda").map((item, i) => {
+              const Icon = getTopbarIcon(item.icone);
+              return (
+                <span key={i} className="flex items-center gap-1.5">
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  {item.texto}
+                </span>
+              );
+            })}
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/ecommerce/b2b" className="hover:text-primary transition-colors font-medium">Atacado / B2B</Link>
-            <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> (11) 4002-8922</span>
+            {branding.topbar_items.filter(item => item.posicao === "direita").map((item, i) => {
+              const Icon = getTopbarIcon(item.icone);
+              return (
+                <span key={i} className="flex items-center gap-1.5">
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  {item.texto}
+                </span>
+              );
+            })}
+            {branding.topbar_link_b2b && (
+              <Link to="/ecommerce/b2b" className="hover:text-primary transition-colors font-medium">Atacado / B2B</Link>
+            )}
+            {branding.topbar_telefone && (
+              <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> {branding.topbar_telefone}</span>
+            )}
           </div>
         </div>
       </div>
+      )}
 
       {/* Header */}
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/95 backdrop-blur-lg shadow-md" : "bg-background"}`}>

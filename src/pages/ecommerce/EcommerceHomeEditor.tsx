@@ -35,6 +35,12 @@ interface SecoesVisiveis {
   newsletter: boolean;
 }
 
+interface TopbarItem {
+  icone: string;
+  texto: string;
+  posicao: "esquerda" | "direita";
+}
+
 interface HomeConfig {
   hero_badge: string;
   hero_titulo: string;
@@ -51,7 +57,17 @@ interface HomeConfig {
   newsletter_titulo: string;
   newsletter_subtitulo: string;
   secoes_visiveis: SecoesVisiveis;
+  topbar_ativo: boolean;
+  topbar_items: TopbarItem[];
+  topbar_telefone: string;
+  topbar_link_b2b: boolean;
 }
+
+const defaultTopbarItems: TopbarItem[] = [
+  { icone: "truck", texto: "Frete grátis acima de R$ 500", posicao: "esquerda" },
+  { icone: "shield", texto: "Compra 100% segura", posicao: "esquerda" },
+  { icone: "rotate-ccw", texto: "Troca facilitada", posicao: "esquerda" },
+];
 
 const defaultBeneficios: Beneficio[] = [
   { icone: "truck", titulo: "Frete grátis acima de R$ 500", subtitulo: "Para todo o Brasil" },
@@ -82,6 +98,10 @@ const defaults: HomeConfig = {
   newsletter_titulo: "Receba ofertas exclusivas",
   newsletter_subtitulo: "Cadastre-se e ganhe 10% de desconto na primeira compra",
   secoes_visiveis: { hero: true, beneficios: true, categorias: true, produtos: true, b2b: true, depoimentos: true, newsletter: true },
+  topbar_ativo: true,
+  topbar_items: defaultTopbarItems,
+  topbar_telefone: "(11) 4002-8922",
+  topbar_link_b2b: true,
 };
 
 const iconeOptions = [
