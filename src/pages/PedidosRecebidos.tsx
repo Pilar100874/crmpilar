@@ -410,13 +410,14 @@ export default function PedidosRecebidos() {
                         onCheckedChange={c => setSelectedForPrint(c ? filteredPedidos.map(p => p.id) : [])}
                       />
                     </TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Origem</TableHead>
-                    <TableHead>Nº Pedido</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Fulfillment</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                     <TableHead>Data</TableHead>
+                     <TableHead>Origem</TableHead>
+                     <TableHead>Nº Pedido</TableHead>
+                     <TableHead>Cliente</TableHead>
+                     <TableHead className="text-right">Desconto</TableHead>
+                     <TableHead className="text-right">Valor</TableHead>
+                     <TableHead>Fulfillment</TableHead>
+                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -444,6 +445,13 @@ export default function PedidosRecebidos() {
                         </TableCell>
                         <TableCell className="font-mono text-sm">{pedido.numero_pedido}</TableCell>
                         <TableCell className="text-sm">{pedido.nome_cliente}</TableCell>
+                        <TableCell className="text-right text-sm">
+                          {Number(pedido.valor_desconto) > 0 ? (
+                            <span className="text-emerald-500 font-medium">- R$ {Number(pedido.valor_desconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right font-mono text-sm">
                           R$ {Number(pedido.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </TableCell>
@@ -472,7 +480,7 @@ export default function PedidosRecebidos() {
                   })}
                   {filteredPedidos.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                       <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                         Nenhum pedido encontrado
                       </TableCell>
                     </TableRow>
@@ -579,9 +587,41 @@ export default function PedidosRecebidos() {
                     </div>
                   </div>
 
-                  <Separator />
+                  {/* Resumo Financeiro com Descontos */}
+                  {(Number(selectedPedido.valor_desconto) > 0 || Number(selectedPedido.valor_frete) > 0) && (
+                    <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                      <Label className="text-xs text-muted-foreground font-semibold block">Resumo Financeiro</Label>
+                      {Number(selectedPedido.valor_desconto) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-emerald-500 flex items-center gap-1">
+                            <Tag className="h-3 w-3" /> Desconto aplicado
+                          </span>
+                          <span className="text-emerald-500 font-medium">- R$ {Number(selectedPedido.valor_desconto).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                      {Number(selectedPedido.valor_frete) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Truck className="h-3 w-3" /> Frete
+                          </span>
+                          <span className="font-medium">R$ {Number(selectedPedido.valor_frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                      {selectedPedido.forma_pagamento && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Pagamento</span>
+                          <span className="font-medium">{selectedPedido.forma_pagamento}</span>
+                        </div>
+                      )}
+                      <Separator className="my-1" />
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>Total</span>
+                        <span>R$ {Number(selectedPedido.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Fulfillment Status */}
+                  <Separator />
                   <div>
                     <Label className="text-xs text-muted-foreground mb-2 block">Status Fulfillment</Label>
                     <div className="flex gap-1">
