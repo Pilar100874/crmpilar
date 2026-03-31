@@ -40,6 +40,14 @@ export function useEcommerceRulesEngine(cartContext?: CartContext) {
       const estabId = localStorage.getItem("estabelecimentoId");
       if (!estabId) { setLoading(false); return; }
 
+      // Check if modo_catalogo is active — skip all rules
+      const { data: configData } = await supabase
+        .from("ecommerce_config")
+        .select("modo_catalogo")
+        .eq("estabelecimento_id", estabId)
+        .maybeSingle();
+      if (configData?.modo_catalogo) { setLoading(false); return; }
+
       const { data: rules, error } = await supabase
         .from("ecommerce_rules")
         .select("*")

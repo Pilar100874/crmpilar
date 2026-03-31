@@ -195,6 +195,8 @@ export function useEcommerceBranding() {
           modo_catalogo: d.modo_catalogo ?? false,
           mostrar_precos_visitante_b2c: d.mostrar_precos_visitante_b2c ?? true,
           mostrar_precos_visitante_b2b: d.mostrar_precos_visitante_b2b ?? true,
+          feat_webchat: d.feat_webchat ?? false,
+          feat_whatsapp: d.feat_whatsapp ?? false,
         });
       }
       setLoading(false);
