@@ -480,7 +480,7 @@ export default function PedidosRecebidos() {
                   })}
                   {filteredPedidos.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                       <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                         Nenhum pedido encontrado
                       </TableCell>
                     </TableRow>
