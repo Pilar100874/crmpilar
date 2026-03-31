@@ -42,7 +42,8 @@ export type EcommerceRuleBlockType =
   // Ações - Pagamento
   | "acao_parcelas_extras"
   | "acao_desconto_pix"
-  | "acao_desconto_boleto";
+  | "acao_desconto_boleto"
+  | "acao_regra_pagamento";
 
 export interface EcommerceBlockDefinition {
   type: EcommerceRuleBlockType;
