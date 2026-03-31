@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft } from "lucide-react";
+import { ChevronRight, Lock, CreditCard, Building2, User, MapPin, FileText, Check, ArrowLeft, Tag, Percent } from "lucide-react";
+import { useEcommerceRulesEngine } from "@/hooks/useEcommerceRulesEngine";
+import { useEcommerceFreteRules } from "@/hooks/useEcommerceFreteRules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,7 +37,7 @@ interface CondicaoPagamento {
 const formatPrice = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EcommerceCheckout() {
-  const { items, couponDiscount, clearCart } = useCart();
+  const { items, couponDiscount, couponFixedDiscount, clearCart } = useCart();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [customerType, setCustomerType] = useState<"pf" | "pj">("pf");
@@ -50,12 +52,45 @@ export default function EcommerceCheckout() {
   });
 
   const estId = localStorage.getItem("estabelecimentoId");
-
   const updateField = (field: string, value: string) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discount = couponDiscount > 0 ? (subtotal * couponDiscount / 100) : 0;
-  const shipping = subtotal >= 500 ? 0 : 29.90;
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine({ subtotal, totalQuantity });
+  const { calcularFrete } = useEcommerceFreteRules();
+
+  // Calculate rule-based discounts (same logic as cart)
+  let ruleDiscount = 0;
+  const ruleDiscountLabels: { label: string; value: number }[] = [];
+  for (const action of discountActions) {
+    if (action.type === "acao_desconto_percentual") {
+      const pct = action.config.percentual || 0;
+      const val = subtotal * pct / 100;
+      ruleDiscount += val;
+      ruleDiscountLabels.push({ label: `Desconto ${pct}% (${action.ruleName})`, value: val });
+    } else if (action.type === "acao_desconto_fixo") {
+      const valor = action.config.valor || 0;
+      ruleDiscount += valor;
+      ruleDiscountLabels.push({ label: `Desconto R$ ${valor.toFixed(2)} (${action.ruleName})`, value: valor });
+    } else if (action.type === "acao_desconto_progressivo") {
+      const faixas = action.config.faixas || [];
+      const sorted = [...faixas].sort((a: any, b: any) => (b.quantidade || 0) - (a.quantidade || 0));
+      for (const faixa of sorted) {
+        if (totalQuantity >= (faixa.quantidade || 0)) {
+          const pct = faixa.percentual || 0;
+          const val = subtotal * pct / 100;
+          ruleDiscount += val;
+          ruleDiscountLabels.push({ label: `Progressivo ${pct}% (${action.ruleName})`, value: val });
+          break;
+        }
+      }
+    }
+  }
+
+  const couponDiscountValue = (couponDiscount > 0 ? ((subtotal - ruleDiscount) * couponDiscount / 100) : 0) + (couponFixedDiscount || 0);
+  const discount = ruleDiscount + couponDiscountValue;
+  const freteResult = calcularFrete(subtotal - discount, formData.cep || "");
+  const shipping = freteResult.valor;
   const total = subtotal - discount + shipping;
 
   useEffect(() => {
@@ -566,8 +601,22 @@ export default function EcommerceCheckout() {
               <Separator />
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-                {discount > 0 && <div className="flex justify-between text-success"><span>Desconto</span><span>-{formatPrice(discount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Frete</span><span>{shipping === 0 ? "Grátis" : formatPrice(shipping)}</span></div>
+                {ruleDiscountLabels.map((rd, i) => (
+                  <div key={i} className="flex justify-between text-success">
+                    <span className="flex items-center gap-1 truncate mr-2"><Percent className="h-3 w-3" />{rd.label}</span>
+                    <span>-{formatPrice(rd.value)}</span>
+                  </div>
+                ))}
+                {couponDiscountValue > 0 && (
+                  <div className="flex justify-between text-success">
+                    <span className="flex items-center gap-1"><Tag className="h-3 w-3" />Cupom</span>
+                    <span>-{formatPrice(couponDiscountValue)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frete</span>
+                  <span>{shipping === 0 ? <span className="text-success font-medium">Grátis</span> : formatPrice(shipping)}</span>
+                </div>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
