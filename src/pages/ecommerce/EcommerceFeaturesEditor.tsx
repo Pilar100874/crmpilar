@@ -35,6 +35,11 @@ const modeFeatures: FeatureToggle[] = [
   { key: "mostrar_precos_visitante_b2b", label: "Preços visíveis (B2B)", description: "Mostrar preços para visitantes não logados na seção B2B", icon: DollarSign, color: "text-sky-500" },
 ];
 
+const chatFeatures: FeatureToggle[] = [
+  { key: "feat_webchat", label: "Webchat na Loja", description: "Exibir ícone de chat ao vivo (webchat) na loja virtual", icon: MessageCircle, color: "text-blue-500" },
+  { key: "feat_whatsapp", label: "WhatsApp Business", description: "Exibir ícone do WhatsApp Business na loja virtual", icon: Phone, color: "text-green-500" },
+];
+
 export default function EcommerceFeaturesEditor() {
   const navigate = useNavigate();
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
