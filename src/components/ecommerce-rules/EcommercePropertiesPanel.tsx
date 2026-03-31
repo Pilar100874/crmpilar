@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Search, Plus, Trash2, ImageIcon, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { BlockPreviewTester, isTestableBlock } from "./BlockPreviewTester";
 import * as Icons from "lucide-react";
 import { Node } from "@xyflow/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1035,6 +1036,16 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
           <div className="border-t pt-4">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Configurações</h4>
             {renderConfigFields()}
+            
+            {nodeData.type && isTestableBlock(nodeData.type) && (
+              <div className="mt-4 pt-3 border-t">
+                <BlockPreviewTester
+                  blockType={nodeData.type}
+                  config={config}
+                  onConfigUpdate={updateConfig}
+                />
+              </div>
+            )}
           </div>
 
           <div className="border-t pt-4">
