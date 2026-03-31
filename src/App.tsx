@@ -78,6 +78,7 @@ import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
 import PilarRastreador from "./pages/PilarRastreador";
+import PedidosRecebidos from "./pages/PedidosRecebidos";
 import PilarRastreadorNativo from "./pages/PilarRastreadorNativo";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplacesHubPage from "./pages/MarketplacesHubPage";
@@ -254,6 +255,7 @@ const App = () => (
               <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
               <Route path="/logistica/config" element={<LogisticaConfig />} />
               <Route path="/marketplaces" element={<MarketplacesHubPage />} />
+              <Route path="/pedidos-recebidos" element={<PedidosRecebidos />} />
               <Route path="/robo-precos" element={<RoboPrecos />} />
               <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
               <Route path="/macros" element={<Macros />} />
