@@ -105,6 +105,14 @@ const defaults: EcommerceBranding = {
   feat_rating_estrelas: true,
   feat_breadcrumb: true,
   feat_zoom_imagem: true,
+  topbar_ativo: true,
+  topbar_items: [
+    { icone: "truck", texto: "Frete grátis acima de R$ 500", posicao: "esquerda" },
+    { icone: "shield", texto: "Compra 100% segura", posicao: "esquerda" },
+    { icone: "rotate-ccw", texto: "Troca facilitada", posicao: "esquerda" },
+  ],
+  topbar_telefone: "(11) 4002-8922",
+  topbar_link_b2b: true,
 };
 
 export function useEcommerceBranding() {
