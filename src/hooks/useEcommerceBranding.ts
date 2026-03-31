@@ -54,6 +54,8 @@ export interface EcommerceBranding {
   topbar_telefone: string;
   topbar_link_b2b: boolean;
   modo_catalogo: boolean;
+  modo_catalogo_b2c: boolean;
+  modo_catalogo_b2b: boolean;
   mostrar_precos_visitante_b2c: boolean;
   mostrar_precos_visitante_b2b: boolean;
   feat_webchat: boolean;
