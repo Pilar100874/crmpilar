@@ -174,10 +174,103 @@ export default function EcommerceCatalog() {
     if (buscaParam) setSearchQuery(buscaParam);
   }, [buscaParam]);
 
+  // Load custom fields when group changes
+  useEffect(() => {
+    if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all") {
+      loadCamposCustomizados(selectedGrupo);
+    } else {
+      setCamposCustomizados([]);
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+    }
+  }, [selectedGrupo]);
+
+  const loadCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+      if (error) throw error;
+      setCamposCustomizados(data || []);
+      const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
+      (data || []).forEach((campo: any) => {
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
+      });
+      setCustomFieldFilters(newFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos customizados:', error);
+    }
+  };
+
+  const updateCustomFilter = (type: keyof CustomFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({ ...prev, [type]: { ...prev[type], [campoKey]: value } }));
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: { ...prev.range, [campoKey]: { ...prev.range[campoKey], [field]: value } }
+    }));
+  };
+
+  const hasCustomFilters = Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v && v !== "all") ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
+
   const filteredProducts = products.filter(p => {
     if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedMarcas.length > 0 && (!p.marca || !selectedMarcas.includes(p.marca))) return false;
     if (filterInStock && (p.estoque === null || p.estoque === undefined || p.estoque <= 0)) return false;
+    if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all" && p.grupo_id !== selectedGrupo) return false;
+
+    // Custom field filters
+    const cf = p.campos_customizados || {};
+    for (const [key, range] of Object.entries(customFieldFilters.range)) {
+      if (range?.min || range?.max) {
+        const value = cf[key];
+        if (range.min && (value === undefined || value === null || Number(value) < Number(range.min))) return false;
+        if (range.max && (value === undefined || value === null || Number(value) > Number(range.max))) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.number)) {
+      if (filterValue) {
+        const value = cf[key];
+        if (value !== undefined && value !== null && Number(value) !== Number(filterValue)) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.text)) {
+      if (filterValue) {
+        const value = cf[key];
+        if (!value || !String(value).toLowerCase().includes(filterValue.toLowerCase())) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.select)) {
+      if (filterValue && filterValue !== "all") {
+        const value = cf[key];
+        if (String(value) !== filterValue) return false;
+      }
+    }
+    for (const [key, filterValue] of Object.entries(customFieldFilters.checkbox)) {
+      if (filterValue !== null && filterValue !== undefined) {
+        const value = cf[key];
+        if (Boolean(value) !== filterValue) return false;
+      }
+    }
+
     return true;
   });
 
@@ -197,10 +290,13 @@ export default function EcommerceCatalog() {
   const clearAllFilters = () => {
     setSelectedMarcas([]);
     setFilterInStock(false);
+    setSelectedGrupo("");
+    setCamposCustomizados([]);
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
     setSearchQuery("");
   };
 
-  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0);
+  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0) + (selectedGrupo && selectedGrupo !== "all" ? 1 : 0) + (hasCustomFilters ? 1 : 0);
 
   const pageTitle = categoriaParam
     ? categoriaParam
