@@ -178,6 +178,10 @@ export function useEcommerceBranding() {
           feat_rating_estrelas: d.feat_rating_estrelas ?? true,
           feat_breadcrumb: d.feat_breadcrumb ?? true,
           feat_zoom_imagem: d.feat_zoom_imagem ?? true,
+          topbar_ativo: d.topbar_ativo ?? true,
+          topbar_items: d.topbar_items || defaults.topbar_items,
+          topbar_telefone: d.topbar_telefone || defaults.topbar_telefone,
+          topbar_link_b2b: d.topbar_link_b2b ?? true,
         });
       }
       setLoading(false);
