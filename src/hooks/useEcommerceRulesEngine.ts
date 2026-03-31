@@ -93,6 +93,7 @@ export function useEcommerceRulesEngine() {
       setPopupActions(popups);
       setBannerActions(banners);
       setVitrineActions(vitrines);
+      setFreteActions(fretes);
     } catch (err) {
       console.error("[RulesEngine] Erro:", err);
     } finally {
