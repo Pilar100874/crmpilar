@@ -70,28 +70,16 @@ function VitrineSection({ action }: { action: { ruleId: string; config: Record<s
           .limit(maxProdutos);
         data = prods || [];
       } else if (categoriaId) {
-        const { data: relations } = await supabase
-          .from("produto_categoria_relacao")
-          .select("produto_id")
+        const { data: prods } = await supabase
+          .from("produtos")
+          .select("id, nome, foto_url, preco_tabela, preco_minimo, marca")
           .eq("categoria_id", categoriaId)
+          .eq("estabelecimento_id", estabId)
           .limit(maxProdutos);
-
-        if (relations && relations.length > 0) {
-          const ids = relations.map(r => r.produto_id);
-          const { data: prods } = await supabase
-            .from("produtos")
-            .select("id, nome, foto_url, preco_tabela, preco_minimo, marca")
-            .in("id", ids);
-          data = prods || [];
-        }
+        data = prods || [];
       }
 
       setProducts(data);
-
-      if (data.length > 0) {
-        const priceMap = await resolveProductPricesBatch(data, estabId);
-        setPrices(priceMap);
-      }
     } catch (err) {
       console.error("[Vitrine] Erro:", err);
     } finally {
