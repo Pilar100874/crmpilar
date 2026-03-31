@@ -24,6 +24,7 @@ interface CartContextType {
   applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   couponDiscount: number;
+  couponFixedDiscount: number;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
