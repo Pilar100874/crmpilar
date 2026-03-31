@@ -133,8 +133,8 @@ export default function EcommerceLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
-      <EcommerceAdBanner posicao="popup" />
-      <EcommerceRulesPopup />
+      {!isCatalogMode && <EcommerceAdBanner posicao="popup" />}
+      {!isCatalogMode && <EcommerceRulesPopup />}
       {/* Top bar */}
       {branding.topbar_ativo && (
       <div className="bg-foreground text-background text-xs py-2 hidden md:block">
