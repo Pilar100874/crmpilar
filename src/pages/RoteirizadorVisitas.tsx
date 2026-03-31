@@ -466,7 +466,7 @@ const PanelContent: React.FC<PanelContentProps> = ({
   toggleVisita, toggleVisitaSelecionada, removeVisita, addFromTarefa,
   tempoVisitaPadrao, setTempoVisitaPadrao, loading, currentLocation, gettingLocation,
   getLocation, calculating, calcularRota, route, tempoDeslocamento, tempoTotalVisitas,
-  tempoTotal, horaFinal, formatDist, formatDur,
+  tempoTotal, horaFinal, formatDist, formatDur, clearAll,
 }) => {
   const visitasSelecionadas = visitas.filter(v => v.selecionada);
 
