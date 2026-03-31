@@ -209,6 +209,16 @@ export default function EcommerceHomeEditor() {
   const addVantagem = () => setConfig(c => ({ ...c, b2b_vantagens: [...c.b2b_vantagens, ""] }));
   const removeVantagem = (i: number) => setConfig(c => ({ ...c, b2b_vantagens: c.b2b_vantagens.filter((_, idx) => idx !== i) }));
 
+  const updateTopbarItem = (i: number, field: keyof TopbarItem, value: string) => {
+    setConfig(c => {
+      const items = [...c.topbar_items];
+      items[i] = { ...items[i], [field]: value };
+      return { ...c, topbar_items: items };
+    });
+  };
+  const addTopbarItem = () => setConfig(c => ({ ...c, topbar_items: [...c.topbar_items, { icone: "check", texto: "", posicao: "esquerda" as const }] }));
+  const removeTopbarItem = (i: number) => setConfig(c => ({ ...c, topbar_items: c.topbar_items.filter((_, idx) => idx !== i) }));
+
   const toggleSecao = (key: keyof SecoesVisiveis) => {
     setConfig(c => ({ ...c, secoes_visiveis: { ...c.secoes_visiveis, [key]: !c.secoes_visiveis[key] } }));
   };
