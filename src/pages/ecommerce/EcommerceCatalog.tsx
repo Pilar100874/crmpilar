@@ -69,6 +69,8 @@ export default function EcommerceCatalog() {
   const { addItem } = useCart();
   const { addItem: addQuoteItem } = useQuoteRequest();
   const { branding } = useEcommerceBranding();
+  const isCatalogMode = branding.modo_catalogo;
+  const showPrices = isLoggedIn || branding.mostrar_precos_visitante_b2c;
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   
