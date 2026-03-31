@@ -67,7 +67,18 @@ export default function EcommerceCatalog() {
   const buscaParam = searchParams.get("busca");
 
   const { addItem } = useCart();
-  const [products, setProducts] = useState<Product[]>([]);
+  const { addItem: addQuoteItem } = useQuoteRequest();
+  const { branding } = useEcommerceBranding();
+  const isCatalogMode = branding.modo_catalogo;
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+  }, []);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(buscaParam || "");
   const [sortBy, setSortBy] = useState("relevancia");
