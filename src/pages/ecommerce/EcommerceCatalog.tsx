@@ -163,10 +163,11 @@ export default function EcommerceCatalog() {
 
   const clearAllFilters = () => {
     setSelectedMarcas([]);
+    setFilterInStock(false);
     setSearchQuery("");
   };
 
-  const activeFilterCount = selectedMarcas.length;
+  const activeFilterCount = selectedMarcas.length + (filterInStock ? 1 : 0);
 
   const pageTitle = categoriaParam
     ? categoriaParam
