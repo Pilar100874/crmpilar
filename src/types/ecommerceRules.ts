@@ -195,7 +195,7 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     icon: "Ticket",
     color: "#f59e0b",
     category: "condicao_cupom",
-    defaultData: { codigo: "", usosMaximos: 100 },
+    defaultData: { cupomId: "", codigo: "" },
   },
 
   // ─── Lógica ─────────────────────────────────────────────────
