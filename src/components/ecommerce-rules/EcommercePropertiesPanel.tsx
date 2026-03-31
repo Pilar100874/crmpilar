@@ -31,7 +31,7 @@ const ECOMMERCE_ROUTES = [
   { path: "/ecommerce/institucional/termos", label: "Termos de Uso", group: "Institucional" },
 ];
 
-type LinkTab = "paginas" | "produtos" | "categorias" | "busca";
+type LinkTab = "paginas" | "produtos" | "categorias" | "anuncios" | "conteudos" | "busca";
 
 function useEstabelecimentoId() {
   const [estabId, setEstabId] = useState<string | null>(null);
@@ -59,16 +59,28 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
   const [categories, setCategories] = useState<{ id: string; nome: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
+  // Anúncios
+  const [anuncios, setAnuncios] = useState<{ id: string; titulo: string; tipo: string; posicao: string }[]>([]);
+  const [loadingAnuncios, setLoadingAnuncios] = useState(false);
+
+  // Conteúdos
+  const [conteudos, setConteudos] = useState<{ id: string; titulo: string; tipo: string }[]>([]);
+  const [loadingConteudos, setLoadingConteudos] = useState(false);
+
   useEffect(() => {
     if (!open || !estabId) return;
-    // Fetch products
     setLoadingProducts(true);
     supabase.from("produtos").select("id, nome, marca").eq("estabelecimento_id", estabId).eq("ativo", true).order("nome").limit(200)
       .then(({ data }) => { setProducts(data || []); setLoadingProducts(false); });
-    // Fetch categories
     setLoadingCategories(true);
     supabase.from("produto_categorias").select("id, nome").eq("estabelecimento_id", estabId).order("nome")
       .then(({ data }) => { setCategories(data || []); setLoadingCategories(false); });
+    setLoadingAnuncios(true);
+    supabase.from("ecommerce_anuncios").select("id, titulo, tipo, posicao").eq("estabelecimento_id", estabId).order("titulo")
+      .then(({ data }) => { setAnuncios(data || []); setLoadingAnuncios(false); });
+    setLoadingConteudos(true);
+    supabase.from("ecommerce_conteudos").select("id, titulo, tipo").eq("estabelecimento_id", estabId).order("titulo")
+      .then(({ data }) => { setConteudos(data || []); setLoadingConteudos(false); });
   }, [open, estabId]);
 
   const filteredRoutes = ECOMMERCE_ROUTES.filter(
@@ -80,6 +92,12 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
   const filteredCategories = categories.filter(
     c => c.nome.toLowerCase().includes(search.toLowerCase())
   );
+  const filteredAnuncios = anuncios.filter(
+    a => a.titulo.toLowerCase().includes(search.toLowerCase()) || a.tipo.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredConteudos = conteudos.filter(
+    c => c.titulo.toLowerCase().includes(search.toLowerCase()) || c.tipo.toLowerCase().includes(search.toLowerCase())
+  );
 
   const selectAndClose = (path: string) => { onChange(path); setOpen(false); setSearch(""); };
 
@@ -87,6 +105,8 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
     { key: "paginas", label: "Páginas" },
     { key: "produtos", label: "Produtos" },
     { key: "categorias", label: "Categorias" },
+    { key: "anuncios", label: "Anúncios" },
+    { key: "conteudos", label: "Conteúdos" },
     { key: "busca", label: "Busca" },
   ];
 
@@ -196,6 +216,58 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
                         <span className="text-muted-foreground text-[10px]">/ecommerce/catalogo?categoria={c.nome}</span>
                       </button>
                     ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "anuncios" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingAnuncios ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredAnuncios.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhum anúncio encontrado</p>
+                    ) : filteredAnuncios.map(a => (
+                      <button
+                        key={a.id}
+                        className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                        onClick={() => selectAndClose(`/ecommerce?anuncio=${a.id}`)}
+                      >
+                        <span className="font-medium truncate">{a.titulo}</span>
+                        <span className="text-muted-foreground text-[10px]">{a.tipo} • {a.posicao}</span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "conteudos" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingConteudos ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredConteudos.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhum conteúdo encontrado</p>
+                    ) : filteredConteudos.map(c => {
+                      const tipoToPath: Record<string, string> = {
+                        sobre: "/ecommerce/institucional/sobre",
+                        contato: "/ecommerce/institucional/contato",
+                        faq: "/ecommerce/institucional/faq",
+                        privacidade: "/ecommerce/institucional/privacidade",
+                        termos: "/ecommerce/institucional/termos",
+                      };
+                      const path = tipoToPath[c.tipo] || `/ecommerce/institucional/${c.tipo}`;
+                      return (
+                        <button
+                          key={c.id}
+                          className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                          onClick={() => selectAndClose(path)}
+                        >
+                          <span className="font-medium truncate">{c.titulo}</span>
+                          <span className="text-muted-foreground text-[10px]">{c.tipo} → {path}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               )}
