@@ -175,6 +175,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     setItems([]);
     setCoupon(null);
+    setCouponDiscountValue(0);
+    setCouponFixedDiscount(0);
   };
 
   const applyCoupon = async (code: string): Promise<boolean> => {
