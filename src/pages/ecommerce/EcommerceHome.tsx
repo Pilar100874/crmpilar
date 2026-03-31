@@ -14,6 +14,7 @@ import BrandLogo from "@/components/ecommerce/BrandLogo";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import { useEcommerceCategories } from "@/hooks/useEcommerceCategories";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
+import NewsletterSection from "@/components/ecommerce/NewsletterSection";
 
 /* ─── Types ─── */
 interface ProductWithPrice {
