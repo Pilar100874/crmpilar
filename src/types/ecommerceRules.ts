@@ -366,16 +366,18 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
     category: "acao_pagamento",
     defaultData: { percentual: 3 },
   },
+  // ─── Condicionais com múltiplas saídas ────────────────────────
   {
-    type: "acao_regra_pagamento",
-    label: "Regra de Pagamento por Valor",
-    description: "Define tipos e condições de pagamento conforme faixa de valor do pedido",
-    icon: "Wallet",
-    color: "#ef4444",
-    category: "acao_pagamento",
+    type: "condicao_valor_pedido",
+    label: "Faixa de Valor do Pedido",
+    description: "Direciona fluxo conforme o valor do pedido — cada faixa gera uma saída",
+    icon: "GitBranch",
+    color: "#8b5cf6",
+    category: "condicao_carrinho",
     defaultData: {
       faixas: [
-        { valorMin: 0, valorMax: 500, tipoPagamentoIds: [], condicaoPagamentoIds: [] },
+        { valorMin: 0, valorMax: 500, label: "Até R$ 500" },
+        { valorMin: 500, valorMax: null, label: "Acima de R$ 500" },
       ],
     },
   },
