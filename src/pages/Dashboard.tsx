@@ -1,7 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Users, TrendingUp, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Users, TrendingUp, Clock, Settings2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { useAtalhos } from "@/hooks/useAtalhos";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { atalhos, loading: atalhosLoading } = useAtalhos();
+
   const stats = [
     {
       title: "Conversas Ativas",
@@ -47,6 +54,40 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Atalhos Rápidos */}
+      {!atalhosLoading && atalhos.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Atalhos Rápidos</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => navigate("/gerenciar-atalhos")}
+            >
+              <Settings2 className="w-3.5 h-3.5 mr-1" />
+              Gerenciar
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {atalhos.map((atalho) => {
+              const IconComponent = (LucideIcons as any)[atalho.icone] || LucideIcons.Star;
+              return (
+                <Button
+                  key={atalho.id}
+                  variant="outline"
+                  className="h-auto py-2.5 px-4 gap-2.5 bg-card hover:bg-primary/5 hover:border-primary/40 border-border/60 transition-all shadow-sm"
+                  onClick={() => navigate(atalho.path)}
+                >
+                  <IconComponent className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">{atalho.titulo}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => {
