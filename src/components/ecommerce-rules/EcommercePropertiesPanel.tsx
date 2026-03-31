@@ -972,18 +972,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
 
       // ── Condição - Cupom ────────────────────────────────────
       case "condicao_cupom":
-        return (
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Código do Cupom</Label>
-              <Input value={config.codigo || ""} onChange={e => updateConfig("codigo", e.target.value.toUpperCase())} placeholder="EX: PROMO10" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Usos Máximos</Label>
-              <Input type="number" value={config.usosMaximos || 100} onChange={e => updateConfig("usosMaximos", Number(e.target.value))} />
-            </div>
-          </div>
-        );
+        return <CupomSelector config={config} updateConfig={updateConfig} />;
 
       // ── Ações - Desconto ────────────────────────────────────
       case "acao_desconto_percentual":
