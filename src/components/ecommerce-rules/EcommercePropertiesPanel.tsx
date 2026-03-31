@@ -220,7 +220,58 @@ function LinkSelector({ label, value, onChange }: { label: string; value: string
                 </ScrollArea>
               )}
 
-              {tab === "busca" && (
+              {tab === "anuncios" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingAnuncios ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredAnuncios.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhum anúncio encontrado</p>
+                    ) : filteredAnuncios.map(a => (
+                      <button
+                        key={a.id}
+                        className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                        onClick={() => selectAndClose(`/ecommerce?anuncio=${a.id}`)}
+                      >
+                        <span className="font-medium truncate">{a.titulo}</span>
+                        <span className="text-muted-foreground text-[10px]">{a.tipo} • {a.posicao}</span>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {tab === "conteudos" && (
+                <ScrollArea className="h-52">
+                  <div className="space-y-0.5">
+                    {loadingConteudos ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Carregando...</p>
+                    ) : filteredConteudos.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nenhum conteúdo encontrado</p>
+                    ) : filteredConteudos.map(c => {
+                      const tipoToPath: Record<string, string> = {
+                        sobre: "/ecommerce/institucional/sobre",
+                        contato: "/ecommerce/institucional/contato",
+                        faq: "/ecommerce/institucional/faq",
+                        privacidade: "/ecommerce/institucional/privacidade",
+                        termos: "/ecommerce/institucional/termos",
+                      };
+                      const path = tipoToPath[c.tipo] || `/ecommerce/institucional/${c.tipo}`;
+                      return (
+                        <button
+                          key={c.id}
+                          className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-accent transition-colors flex flex-col"
+                          onClick={() => selectAndClose(path)}
+                        >
+                          <span className="font-medium truncate">{c.titulo}</span>
+                          <span className="text-muted-foreground text-[10px]">{c.tipo} → {path}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+
                 <div className="space-y-2">
                   <p className="text-[11px] text-muted-foreground">
                     Digite o termo de busca e clique em aplicar para gerar o link de pesquisa.
