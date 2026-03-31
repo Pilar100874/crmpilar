@@ -160,24 +160,24 @@ export default function PedidosRecebidos() {
 
       const mkpToInsert = (mkpPedidos || [])
         .filter(p => !existingKeys.has(`marketplace:${p.id}`))
-        .map(p => ({
-          estabelecimento_id: estabelecimentoId,
-          origem: "marketplace",
-          origem_id: p.id,
-          origem_detalhes: p.marketplace?.nome_display,
-          numero_pedido: p.id_pedido_marketplace,
-          nome_cliente: p.nome_cliente || "Cliente",
-          telefone_cliente: p.telefone_cliente,
-          email_cliente: p.email_cliente,
-          valor_total: p.valor_total || 0,
-          valor_frete: p.valor_frete || 0,
-          endereco_rua: p.endereco_rua,
-          endereco_cidade: p.endereco_cidade,
-          endereco_estado: p.endereco_estado,
-          endereco_cep: p.endereco_cep,
-          data_pedido: p.data_pedido,
-          status: p.status || "novo",
-        }));
+        .map(p => {
+          const endereco = p.endereco_entrega as any;
+          return {
+            estabelecimento_id: estabelecimentoId,
+            origem: "marketplace",
+            origem_id: p.id,
+            origem_detalhes: (p.marketplace as any)?.nome_display,
+            numero_pedido: p.id_pedido_marketplace,
+            nome_cliente: p.nome_cliente || "Cliente",
+            valor_total: p.valor_total || 0,
+            endereco_rua: endereco?.rua || endereco?.logradouro,
+            endereco_cidade: endereco?.cidade,
+            endereco_estado: endereco?.estado || endereco?.uf,
+            endereco_cep: endereco?.cep,
+            data_pedido: p.data_pedido,
+            status: p.status || "novo",
+          };
+        });
 
       const allToInsert = [...ecomToInsert, ...orcToInsert, ...mkpToInsert];
       if (allToInsert.length > 0) {
