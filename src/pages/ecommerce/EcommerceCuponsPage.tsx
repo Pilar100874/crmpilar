@@ -138,10 +138,11 @@ export default function EcommerceCuponsPage() {
     if (estabId) loadCupons(estabId);
   };
 
-  const deleteCupom = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cupom?")) return;
-    await supabase.from("cupons_desconto").delete().eq("id", id);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    await supabase.from("cupons_desconto").delete().eq("id", deleteId);
     toast.success("Cupom excluído");
+    setDeleteId(null);
     if (estabId) loadCupons(estabId);
   };
 
