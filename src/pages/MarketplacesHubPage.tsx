@@ -80,8 +80,6 @@ const MarketplacesHubPage: React.FC = () => {
         return <MarketplaceHub />;
       case 'produtos':
         return <MarketplaceProdutos />;
-      case 'pedidos':
-        return <MarketplacePedidos />;
       default:
         return <MarketplaceHub />;
     }
