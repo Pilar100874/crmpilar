@@ -54,13 +54,27 @@ function EcommerceRulesEditorInner() {
   const [noteDialog, setNoteDialog] = useState<{ nodeId: string; note: string } | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const savedSnapshotRef = useRef<string>("");
 
+  // Build a snapshot of meaningful data (excludes positions and callbacks)
+  const buildDataSnapshot = useCallback((n: Node[], e: Edge[]) => {
+    const nodesData = n.map(nd => ({
+      id: nd.id,
+      type: (nd.data as any).type,
+      label: (nd.data as any).label,
+      config: (nd.data as any).config,
+      note: (nd.data as any).note,
+    }));
+    const edgesData = e.map(ed => ({ source: ed.source, target: ed.target, sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle }));
+    return JSON.stringify({ nodes: nodesData, edges: edgesData });
+  }, []);
+
+  // Compare current data against saved snapshot
   useEffect(() => {
-    if (ruleId) loadRule(ruleId);
-    else createStartNode();
-  }, [ruleId]);
-
-  useEffect(() => { setHasUnsavedChanges(true); }, [nodes, edges]);
+    if (!savedSnapshotRef.current) return; // skip until first load/save
+    const current = buildDataSnapshot(nodes, edges);
+    setHasUnsavedChanges(current !== savedSnapshotRef.current);
+  }, [nodes, edges, buildDataSnapshot]);
 
   const createStartNode = () => {
     const startBlock = ECOMMERCE_RULE_BLOCKS.find(b => b.type === "inicio_regra")!;
