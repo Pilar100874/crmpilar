@@ -785,7 +785,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -811,6 +811,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
+        tipo_cliente: formData.tipo_cliente || "B2B",
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
         whatsapps_vinculados: whatsappsVinculados
