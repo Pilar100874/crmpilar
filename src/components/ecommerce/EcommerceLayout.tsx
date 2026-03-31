@@ -306,9 +306,13 @@ export default function EcommerceLayout() {
         </nav>
       </header>
 
+      <EcommerceRulesBanner posicao="topo" />
+
       <main className="flex-1">
         <Outlet />
       </main>
+
+      <EcommerceRulesBanner posicao="rodape" />
 
       {/* Footer */}
       <footer className="bg-foreground text-background/80 mt-auto">
