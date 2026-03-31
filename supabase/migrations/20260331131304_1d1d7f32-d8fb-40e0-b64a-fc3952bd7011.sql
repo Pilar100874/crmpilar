@@ -1,0 +1,1 @@
+ALTER TABLE public.ecommerce_rules ADD COLUMN starts_at timestamptz DEFAULT NULL;
