@@ -127,6 +127,7 @@ export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
       { id: "bairro", label: "Bairro", visible: false, width: 160 },
       { id: "cep", label: "CEP", visible: false, width: 120 },
       { id: "company_type", label: "Tipo", visible: false, width: 140 },
+      { id: "tipo_cliente", label: "Tipo Cliente", visible: true, width: 100 },
       { id: "inscricao", label: "Inscrição", visible: false, width: 160 },
     ];
   });
@@ -145,6 +146,7 @@ export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
   // Campos obrigatórios fixos de empresa
   const [companyFields, setCompanyFields] = useState<CustomField[]>([
     { id: "company_type", label: "Tipo", type: "select", category: "company", options: ["Pessoa Física", "Pessoa Jurídica"], required: true, locked: false },
+    { id: "tipo_cliente", label: "Tipo de Cliente", type: "select", category: "company", options: ["B2B", "B2C", "B2G"], required: true, locked: false },
     { id: "cpf_cnpj", label: "CPF/CNPJ", type: "text", category: "company", required: true, locked: false },
     { id: "company_name", label: "Nome", type: "text", category: "company", required: true, locked: true },
     { id: "company_fantasia", label: "Nome Fantasia", type: "text", category: "company", required: true, locked: true },
@@ -474,6 +476,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     // Carregar dados da empresa no formulário
     const data: Record<string, any> = {
       company_type: empresa.custom_fields?.company_type || "Pessoa Jurídica",
+      tipo_cliente: (empresa as any).tipo_cliente || "B2B",
       cpf_cnpj: empresa.cnpj || "",
       company_name: empresa.nome || "",
       company_fantasia: empresa.nome_fantasia || "",
@@ -783,7 +786,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       }
 
       // Separar campos padrão de campos customizados
-      const standardFields = ['company_type', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
+      const standardFields = ['company_type', 'tipo_cliente', 'cpf_cnpj', 'company_name', 'company_fantasia', 'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao', 'telefone', 'email'];
       const customFieldsData: any = {
         company_type: formData.company_type,
         neighborhood: formData.neighborhood,
@@ -809,6 +812,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
+        tipo_cliente: formData.tipo_cliente || "B2B",
         custom_fields: customFieldsData,
         emails_vinculados: emailsVinculados,
         whatsapps_vinculados: whatsappsVinculados
@@ -1625,6 +1629,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                             break;
                           case 'company_type':
                             cellValue = empresa.custom_fields?.company_type || "-";
+                            break;
+                          case 'tipo_cliente':
+                            cellValue = (empresa as any).tipo_cliente || "B2B";
                             break;
                           case 'inscricao':
                             cellValue = empresa.custom_fields?.inscricao || "-";

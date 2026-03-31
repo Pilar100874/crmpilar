@@ -155,6 +155,141 @@ export default function EcommerceCheckout() {
 
       if (itensError) throw itensError;
 
+      // Sincronizar com cadastro de empresas e contatos
+      if (estIdValue) {
+        try {
+          const nomeCliente = formData.nome || formData.razaoSocial || "Cliente";
+          const emailCliente = formData.email || "";
+          const telefoneCliente = formData.telefone || "";
+
+          // Verificar se contato já existe por email ou telefone
+          let customerId: string | null = null;
+          if (emailCliente) {
+            const { data: existingByEmail } = await supabase
+              .from("customers")
+              .select("id")
+              .eq("estabelecimento_id", estIdValue)
+              .ilike("email", emailCliente)
+              .maybeSingle();
+            if (existingByEmail) customerId = existingByEmail.id;
+          }
+          if (!customerId && telefoneCliente) {
+            const cleanPhone = telefoneCliente.replace(/\D/g, "");
+            const { data: existingByPhone } = await supabase
+              .from("customers")
+              .select("id")
+              .eq("estabelecimento_id", estIdValue)
+              .filter("telefone", "ilike", `%${cleanPhone.slice(-8)}%`)
+              .maybeSingle();
+            if (existingByPhone) customerId = existingByPhone.id;
+          }
+
+          // Criar contato se não existir
+          if (!customerId) {
+            const { data: newCustomer } = await supabase
+              .from("customers")
+              .insert({
+                estabelecimento_id: estIdValue,
+                nome: nomeCliente,
+                email: emailCliente,
+                telefone: telefoneCliente,
+              })
+              .select("id")
+              .maybeSingle();
+            if (newCustomer) customerId = newCustomer.id;
+          }
+
+          // Sincronizar com empresa (PJ) 
+          if (customerType === "pj" && formData.cnpj) {
+            const cleanCnpj = formData.cnpj.replace(/\D/g, "");
+            const { data: existingEmpresa } = await supabase
+              .from("empresas")
+              .select("id")
+              .eq("estabelecimento_id", estIdValue)
+              .eq("cnpj", cleanCnpj)
+              .maybeSingle();
+
+            let empresaId: string | null = existingEmpresa?.id || null;
+
+            if (!empresaId) {
+              const { data: newEmpresa } = await supabase
+                .from("empresas")
+                .insert({
+                  estabelecimento_id: estIdValue,
+                  nome_fantasia: formData.razaoSocial || nomeCliente,
+                  nome: formData.razaoSocial || nomeCliente,
+                  cnpj: cleanCnpj,
+                  email: emailCliente || null,
+                  telefone: telefoneCliente || null,
+                  cep: formData.cep || null,
+                  endereco: formData.rua ? `${formData.rua}, ${formData.numero}` : null,
+                  cidade: formData.cidade || null,
+                  estado: formData.estado || null,
+                  bairro: formData.bairro || null,
+                  tipo_cliente: "B2B",
+                  custom_fields: { company_type: "Pessoa Jurídica", inscricao: formData.inscricaoEstadual || "" },
+                })
+                .select("id")
+                .maybeSingle();
+              if (newEmpresa) empresaId = newEmpresa.id;
+            }
+
+            // Vincular contato à empresa
+            if (customerId && empresaId) {
+              await supabase
+                .from("customers")
+                .update({ empresa_id: empresaId })
+                .eq("id", customerId);
+            }
+          } else if (customerType === "pf") {
+            // PF - criar como empresa individual (B2C)
+            const { data: existingEmpresaPf } = await supabase
+              .from("empresas")
+              .select("id")
+              .eq("estabelecimento_id", estIdValue)
+              .eq("nome_fantasia", nomeCliente)
+              .eq("tipo_cliente", "B2C")
+              .maybeSingle();
+
+            if (!existingEmpresaPf && customerId) {
+              const { data: newEmpresaPf } = await supabase
+                .from("empresas")
+                .insert({
+                  estabelecimento_id: estIdValue,
+                  nome_fantasia: nomeCliente,
+                  nome: nomeCliente,
+                  email: emailCliente || null,
+                  telefone: telefoneCliente || null,
+                  cep: formData.cep || null,
+                  endereco: formData.rua ? `${formData.rua}, ${formData.numero}` : null,
+                  cidade: formData.cidade || null,
+                  estado: formData.estado || null,
+                  bairro: formData.bairro || null,
+                  tipo_cliente: "B2C",
+                  custom_fields: { company_type: "Pessoa Física" },
+                })
+                .select("id")
+                .maybeSingle();
+
+              if (newEmpresaPf) {
+                await supabase
+                  .from("customers")
+                  .update({ empresa_id: newEmpresaPf.id })
+                  .eq("id", customerId);
+              }
+            } else if (existingEmpresaPf && customerId) {
+              await supabase
+                .from("customers")
+                .update({ empresa_id: existingEmpresaPf.id })
+                .eq("id", customerId);
+            }
+          }
+        } catch (syncError) {
+          console.error("Erro ao sincronizar cadastro:", syncError);
+          // Não bloquear o pedido por erro de sync
+        }
+      }
+
       // Save order info in localStorage for tracking
       const recentOrders = JSON.parse(localStorage.getItem("ecommerce_orders") || "[]");
       recentOrders.unshift({
