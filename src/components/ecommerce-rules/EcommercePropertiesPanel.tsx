@@ -92,6 +92,101 @@ function useGroups() {
   return { groups };
 }
 
+// ── Hook para buscar imagens da galeria ─────────────────────────
+
+function useGalleryImages() {
+  const [images, setImages] = useState<{ id: string; public_url: string; nome: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const estabId = localStorage.getItem("estabelecimentoId");
+      
+      // Busca media_gallery (imagens)
+      let q1 = supabase.from("media_gallery").select("id, public_url, nome").eq("tipo", "image").order("created_at", { ascending: false });
+      if (estabId) q1 = q1.eq("estabelecimento_id", estabId);
+      const { data: galleryData } = await q1.limit(200);
+
+      // Busca catalog_ai_images
+      let q2 = supabase.from("catalog_ai_images").select("id, public_url, prompt").order("created_at", { ascending: false });
+      if (estabId) q2 = q2.eq("estabelecimento_id", estabId);
+      const { data: aiData } = await q2.limit(100);
+
+      const combined = [
+        ...(galleryData || []).map(i => ({ id: i.id, public_url: i.public_url, nome: i.nome || "Imagem" })),
+        ...(aiData || []).map(i => ({ id: i.id, public_url: i.public_url, nome: i.prompt || "Imagem IA" })),
+      ];
+      setImages(combined);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  return { images, loading };
+}
+
+// ── Seletor de imagem da galeria ────────────────────────────────
+
+function GalleryImageSelector({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const { images, loading } = useGalleryImages();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = images.filter(i => i.nome.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">Imagem</Label>
+      {value && (
+        <div className="relative rounded-md overflow-hidden border border-border">
+          <img src={value} alt="Preview" className="w-full h-24 object-cover" />
+          <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => onChange("")}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="flex-1 text-xs">
+              <ImageIcon className="h-3 w-3 mr-1" /> Galeria
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[70vh]">
+            <DialogHeader>
+              <DialogTitle>Selecionar da Galeria</DialogTitle>
+            </DialogHeader>
+            <div className="relative mb-3">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar imagem..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8" />
+            </div>
+            {loading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma imagem encontrada</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 max-h-[40vh] overflow-y-auto">
+                {filtered.map(img => (
+                  <button
+                    key={img.id}
+                    onClick={() => { onChange(img.public_url); setOpen(false); }}
+                    className="relative rounded-md overflow-hidden border border-border hover:ring-2 hover:ring-primary transition-all aspect-square"
+                  >
+                    <img src={img.public_url} alt={img.nome} className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 truncate">{img.nome}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        <Input value={value || ""} onChange={e => onChange(e.target.value)} placeholder="Ou cole uma URL..." className="flex-1 text-xs" />
+      </div>
+    </div>
+  );
+}
+
 // ── Componente de seletor de produto ────────────────────────────
 
 function ProductSelector({ value, onChange, label: fieldLabel }: { value: { id: string; nome: string } | null; onChange: (v: { id: string; nome: string } | null) => void; label?: string }) {
