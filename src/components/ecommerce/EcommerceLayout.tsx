@@ -153,7 +153,7 @@ export default function EcommerceLayout() {
               <div className="p-6 border-b bg-background">
                 <div className="flex min-h-[72px] flex-col items-center justify-center gap-3">
                   {branding.logo_url ? (
-                    <img src={branding.logo_url} alt={branding.nome_loja} className="h-12 max-w-[140px] object-contain" />
+                    <img src={branding.logo_url} alt={branding.nome_loja} className="h-12 max-w-[140px] object-contain dark:brightness-0 dark:invert" />
                   ) : null}
                   <h2 className="text-lg font-bold text-foreground">Menu</h2>
                 </div>
@@ -203,7 +203,7 @@ export default function EcommerceLayout() {
             {brandingLoading ? (
               <div className="h-10 sm:h-12 md:h-14 w-[120px]" />
             ) : branding.logo_url ? (
-              <img src={branding.logo_url} alt={branding.nome_loja} className="h-10 sm:h-12 md:h-14 max-w-[160px] object-contain" />
+              <img src={branding.logo_url} alt={branding.nome_loja} className="h-10 sm:h-12 md:h-14 max-w-[160px] object-contain dark:brightness-0 dark:invert" />
             ) : (
               <span className="block truncate text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground">
                 {branding.nome_loja || "STORE"}<span className="text-primary">.</span>
