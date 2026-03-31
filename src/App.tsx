@@ -119,6 +119,7 @@ import EcommerceHome from "./pages/ecommerce/EcommerceHome";
 import EcommerceCatalog from "./pages/ecommerce/EcommerceCatalog";
 import EcommerceProduct from "./pages/ecommerce/EcommerceProduct";
 import EcommerceCart from "./pages/ecommerce/EcommerceCart";
+import EcommerceQuoteRequest from "./pages/ecommerce/EcommerceQuoteRequest";
 import EcommerceCheckout from "./pages/ecommerce/EcommerceCheckout";
 import EcommerceB2B from "./pages/ecommerce/EcommerceB2B";
 import EcommerceAccount from "./pages/ecommerce/EcommerceAccount";
@@ -126,6 +127,7 @@ import EcommerceInstitutional from "./pages/ecommerce/EcommerceInstitutional";
 import EcommerceWishlist from "./pages/ecommerce/EcommerceWishlist";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
+import { QuoteRequestProvider } from "./contexts/QuoteRequestContext";
 import PaymentGatewaysConfig from "./pages/PaymentGatewaysConfig";
 import EcommerceRulesPage from "./pages/EcommerceRulesPage";
 import EcommerceRulesEditor from "./pages/EcommerceRulesEditor";
@@ -298,11 +300,12 @@ const App = () => (
             <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             <Route path="/p/:slug" element={<PublicPage />} />
             {/* E-commerce routes */}
-            <Route path="/ecommerce" element={<WishlistProvider><CartProvider><EcommerceLayout /></CartProvider></WishlistProvider>}>
+            <Route path="/ecommerce" element={<WishlistProvider><CartProvider><QuoteRequestProvider><EcommerceLayout /></QuoteRequestProvider></CartProvider></WishlistProvider>}>
               <Route index element={<EcommerceHome />} />
               <Route path="catalogo" element={<EcommerceCatalog />} />
               <Route path="produto/:id" element={<EcommerceProduct />} />
               <Route path="carrinho" element={<EcommerceCart />} />
+              <Route path="orcamento" element={<EcommerceQuoteRequest />} />
               <Route path="wishlist" element={<EcommerceWishlist />} />
               <Route path="checkout" element={<EcommerceCheckout />} />
               <Route path="b2b" element={<EcommerceB2B />} />

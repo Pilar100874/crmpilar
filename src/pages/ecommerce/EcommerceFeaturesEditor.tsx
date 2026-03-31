@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Save, ToggleLeft, Star, Heart, Share2, Package, Eye, Mail, Navigation, ZoomIn, ShoppingBag, ShoppingCart, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +29,12 @@ const features: FeatureToggle[] = [
   { key: "feat_zoom_imagem", label: "Zoom na Imagem", description: "Efeito de zoom ao passar o mouse na foto", icon: ZoomIn, color: "text-cyan-500" },
 ];
 
+const modeFeatures: FeatureToggle[] = [
+  { key: "modo_catalogo", label: "Modo Catálogo (Orçamento)", description: "Desativa o carrinho de compras. Visitantes montam lista de produtos e solicitam orçamento. Permite adicionar itens sem estoque.", icon: FileText, color: "text-amber-500" },
+  { key: "mostrar_precos_visitante_b2c", label: "Preços visíveis (B2C)", description: "Mostrar preços para visitantes não logados na loja B2C", icon: DollarSign, color: "text-emerald-500" },
+  { key: "mostrar_precos_visitante_b2b", label: "Preços visíveis (B2B)", description: "Mostrar preços para visitantes não logados na seção B2B", icon: DollarSign, color: "text-sky-500" },
+];
+
 export default function EcommerceFeaturesEditor() {
   const navigate = useNavigate();
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
@@ -44,16 +50,18 @@ export default function EcommerceFeaturesEditor() {
     if (!estId) { setLoading(false); return; }
     const { data } = await supabase
       .from("ecommerce_config")
-      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem")
+      .select("feat_avaliacoes, feat_favoritos, feat_compartilhar, feat_produtos_relacionados, feat_b2b_card, feat_estoque_visivel, feat_newsletter, feat_rating_estrelas, feat_breadcrumb, feat_zoom_imagem, modo_catalogo, mostrar_precos_visitante_b2c, mostrar_precos_visitante_b2b")
       .eq("estabelecimento_id", estId)
       .maybeSingle();
     if (data) {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = (data as any)[f.key] ?? true; });
+      modeFeatures.forEach(f => { t[f.key] = (data as any)[f.key] ?? (f.key === "modo_catalogo" ? false : true); });
       setToggles(t);
     } else {
       const t: Record<string, boolean> = {};
       features.forEach(f => { t[f.key] = true; });
+      modeFeatures.forEach(f => { t[f.key] = f.key === "modo_catalogo" ? false : true; });
       setToggles(t);
     }
     setLoading(false);
@@ -92,7 +100,7 @@ export default function EcommerceFeaturesEditor() {
               Funcionalidades da Loja
             </h1>
             <p className="text-muted-foreground text-sm">
-              Ative ou desative recursos do e-commerce · {enabledCount}/{features.length} ativos
+              Ative ou desative recursos do e-commerce
             </p>
           </div>
         </div>
@@ -100,6 +108,38 @@ export default function EcommerceFeaturesEditor() {
           <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar"}
         </Button>
       </div>
+
+      {/* Mode settings */}
+      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileText className="h-5 w-5 text-amber-500" />
+            Modo de Operação & Visibilidade de Preços
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Configure como a loja exibe preços e se o visitante compra diretamente ou solicita orçamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          {modeFeatures.map(feat => (
+            <div key={feat.key} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${toggles[feat.key] ? "border-primary/30 bg-primary/5" : "bg-background"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${toggles[feat.key] ? "bg-primary/10" : "bg-muted"}`}>
+                  <feat.icon className={`h-4 w-4 ${toggles[feat.key] ? feat.color : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold cursor-pointer">{feat.label}</Label>
+                  <p className="text-[11px] text-muted-foreground">{feat.description}</p>
+                </div>
+              </div>
+              <Switch
+                checked={toggles[feat.key] ?? (feat.key === "modo_catalogo" ? false : true)}
+                onCheckedChange={(v) => setToggles(prev => ({ ...prev, [feat.key]: v }))}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3">
         {features.map(feat => (

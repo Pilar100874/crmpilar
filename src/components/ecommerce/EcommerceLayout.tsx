@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon, Star, Headphones, Gift, Check, type LucideIcon } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Phone, Mail, Clock, Truck, Shield, RotateCcw, Package, Sun, Moon, Star, Headphones, Gift, Check, FileText, type LucideIcon } from "lucide-react";
 
 const topbarIconMap: Record<string, LucideIcon> = {
   truck: Truck, shield: Shield, "rotate-ccw": RotateCcw, rotate: RotateCcw,
@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import EcommerceRulesPopup from "@/components/ecommerce/EcommerceRulesPopup";
 import EcommerceRulesBanner from "@/components/ecommerce/EcommerceRulesBanner";
@@ -44,6 +45,7 @@ export default function EcommerceLayout() {
   };
   const { totalItems } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
+  const { totalItems: quoteCount } = useQuoteRequest();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function EcommerceLayout() {
   const { branding, loading: brandingLoading } = useEcommerceBranding();
   const { menuGroups } = useEcommerceCategories();
   const [isFromSystem] = useState(() => !!localStorage.getItem("estabelecimentoId"));
+  const isCatalogMode = branding.modo_catalogo;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -278,11 +281,11 @@ export default function EcommerceLayout() {
                 )}
               </Button>
             </Link>
-            <Link to="/ecommerce/carrinho">
+            <Link to={isCatalogMode ? "/ecommerce/orcamento" : "/ecommerce/carrinho"}>
               <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10" data-cart-target>
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{totalItems}</span>
+                {isCatalogMode ? <FileText className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+                {(isCatalogMode ? quoteCount : totalItems) > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">{isCatalogMode ? quoteCount : totalItems}</span>
                 )}
               </Button>
             </Link>

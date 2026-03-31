@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Share2, Package } from "lucide-react";
+import { ChevronRight, Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Share2, Package, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { toast } from "sonner";
 import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
@@ -41,8 +42,10 @@ const formatPrice = (value: number | null) => {
 export default function EcommerceProduct() {
   const { id } = useParams();
   const { addItem } = useCart();
+  const { addItem: addQuoteItem } = useQuoteRequest();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { branding } = useEcommerceBranding();
+  const isCatalogMode = branding.modo_catalogo;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -300,6 +303,11 @@ export default function EcommerceProduct() {
             ) : (
               <p className="text-lg text-muted-foreground">Sob consulta</p>
             )}
+            {isCatalogMode && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Os preços finais serão informados no orçamento
+              </p>
+            )}
           </div>
 
           {/* Specs badges */}
@@ -312,7 +320,7 @@ export default function EcommerceProduct() {
           </div>
 
           {/* Stock */}
-          {branding.feat_estoque_visivel && <div className="flex items-center gap-2">
+          {branding.feat_estoque_visivel && !isCatalogMode && <div className="flex items-center gap-2">
             <div className={`h-2 w-2 rounded-full ${inStock ? "bg-green-600" : "bg-destructive"}`} />
             <span className={`text-sm font-medium ${inStock ? "text-green-600" : "text-destructive"}`}>
               {inStock ? `Em estoque (${product.estoque} un.)` : "Indisponível"}
@@ -321,7 +329,7 @@ export default function EcommerceProduct() {
 
           <Separator />
 
-          {/* Quantity & Add to Cart */}
+          {/* Quantity & Add to Cart/Quote */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">Quantidade:</span>
@@ -337,19 +345,35 @@ export default function EcommerceProduct() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Button ref={cartBtnRef} size="lg" className="w-full flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
-                if (product) {
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
-                  const cartRect = cartTarget?.getBoundingClientRect();
-                  const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
-                  setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
-                  addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
-                  toast.success("Produto adicionado ao carrinho!");
-                }
-              }}>
-                <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
-              </Button>
+              {isCatalogMode ? (
+                <Button ref={cartBtnRef} size="lg" className="w-full flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" onClick={(e) => {
+                  if (product) {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+                    const cartRect = cartTarget?.getBoundingClientRect();
+                    const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+                    setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
+                    addQuoteItem({ productId: product.id, name: product.nome, type: product.categoria_nome, quantity, image: product.foto_url || undefined });
+                    toast.success("Produto adicionado à lista de orçamento!");
+                  }
+                }}>
+                  <FileText className="h-5 w-5" /> Adicionar ao Orçamento
+                </Button>
+              ) : (
+                <Button ref={cartBtnRef} size="lg" className="w-full flex-1 gap-2 rounded-full h-11 sm:h-12 text-sm sm:text-base" disabled={!inStock} onClick={(e) => {
+                  if (product) {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+                    const cartRect = cartTarget?.getBoundingClientRect();
+                    const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+                    setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
+                    addItem({ productId: product.id, name: product.nome, type: product.categoria_nome, gramatura: product.gramatura?.toString() || null, quantity, maxStock: product.estoque ?? 999, image: product.foto_url || undefined, price: product.preco_minimo || product.preco_tabela || 0 });
+                    toast.success("Produto adicionado ao carrinho!");
+                  }
+                }}>
+                  <ShoppingCart className="h-5 w-5" /> Adicionar ao Carrinho
+                </Button>
+              )}
               <div className="flex gap-2 sm:gap-3 sm:w-auto">
                 {branding.feat_favoritos && <Button ref={heartBtnRef} variant="outline" size="lg" className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full ${wishlisted ? "text-red-500 border-red-200 bg-red-50" : ""}`} onClick={(e) => {
                   if (product) {

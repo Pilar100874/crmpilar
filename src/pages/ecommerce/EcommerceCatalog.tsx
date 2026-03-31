@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Grid3X3, List, Heart, ShoppingCart, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Grid3X3, List, Heart, ShoppingCart, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import { motion } from "framer-motion";
 import EcommerceAdBanner from "@/components/ecommerce/EcommerceAdBanner";
 import { resolveProductPricesBatch } from "@/hooks/useProductPrice";
 import { useCart } from "@/contexts/CartContext";
+import { useQuoteRequest } from "@/contexts/QuoteRequestContext";
+import { useEcommerceBranding } from "@/hooks/useEcommerceBranding";
 import FlyToAnimation from "@/components/ecommerce/FlyToAnimation";
 
 interface Product {
@@ -65,7 +67,21 @@ export default function EcommerceCatalog() {
   const buscaParam = searchParams.get("busca");
 
   const { addItem } = useCart();
+  const { addItem: addQuoteItem } = useQuoteRequest();
+  const { branding } = useEcommerceBranding();
+  const isCatalogMode = branding.modo_catalogo;
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+  }, []);
+  
+  const showPrices = isLoggedIn || branding.mostrar_precos_visitante_b2c;
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(buscaParam || "");
   const [sortBy, setSortBy] = useState("relevancia");
@@ -83,12 +99,30 @@ export default function EcommerceCatalog() {
   const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (isCatalogMode) {
+      // In catalog mode, add to quote request (no stock check needed)
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
+      const cartRect = cartTarget?.getBoundingClientRect();
+      const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
+      setFlyAnim({ startRect: rect, target: "[data-cart-target]", targetPos, image: product.foto_url || undefined, icon: "cart" });
+      addQuoteItem({
+        productId: product.id,
+        name: product.nome,
+        type: product.categoria_nome,
+        quantity: 1,
+        image: product.foto_url || undefined,
+      });
+      toast.success("Produto adicionado à lista de orçamento!");
+      return;
+    }
+    
     if (product.estoque !== null && product.estoque !== undefined && product.estoque <= 0) {
       toast.error("Produto sem estoque disponível");
       return;
     }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    // Capture target position BEFORE state change causes re-render
     const cartTarget = document.querySelector<HTMLElement>("[data-cart-target]");
     const cartRect = cartTarget?.getBoundingClientRect();
     const targetPos = cartRect ? { x: cartRect.left + cartRect.width / 2, y: cartRect.top + cartRect.height / 2 } : undefined;
@@ -565,6 +599,16 @@ export default function EcommerceCatalog() {
             </div>
           )}
 
+          {isCatalogMode && (
+            <div className="mb-4 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+              <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-semibold text-foreground">Modo Catálogo</p>
+                <p className="text-xs text-muted-foreground">Adicione produtos à sua lista e solicite um orçamento personalizado. É necessário estar logado para enviar a solicitação.</p>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className={`grid ${viewMode === "grid" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} gap-4`}>
               {Array.from({ length: 8 }).map((_, i) => (
@@ -594,8 +638,8 @@ export default function EcommerceCatalog() {
                           <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => { e.preventDefault(); toast.success("Adicionado aos favoritos ❤️"); }}>
                             <Heart className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => handleQuickAddToCart(e, product)}>
-                            <ShoppingCart className="h-3.5 w-3.5" />
+                          <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow" onClick={(e) => handleQuickAddToCart(e, product)} title={isCatalogMode ? "Adicionar ao orçamento" : "Adicionar ao carrinho"}>
+                            {isCatalogMode ? <FileText className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
                           </Button>
                         </div>
                       </div>
@@ -604,19 +648,26 @@ export default function EcommerceCatalog() {
                           {product.categoria_nome && <p className="text-[10px] md:text-xs text-muted-foreground truncate">{product.categoria_nome}</p>}
                           <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-2 mt-0.5 flex-1">{product.nome}</p>
                           <div className="mt-auto pt-1.5 md:pt-2 min-h-[2.75rem]">
-                            <p className={`text-[10px] md:text-xs text-muted-foreground line-through ${product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? "visible" : "invisible"}`}>
-                              {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? formatPrice(product.preco_tabela) : "\u00A0"}
-                            </p>
-                            {product.preco_minimo ? (
-                              <p className="text-sm md:text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                            {showPrices ? (
+                              <>
+                                <p className={`text-[10px] md:text-xs text-muted-foreground line-through ${product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? "visible" : "invisible"}`}>
+                                  {product.preco_tabela && product.preco_minimo && product.preco_tabela > product.preco_minimo ? formatPrice(product.preco_tabela) : "\u00A0"}
+                                </p>
+                                {product.preco_minimo ? (
+                                  <p className="text-sm md:text-base font-bold text-primary">{formatPrice(product.preco_minimo)}</p>
+                                ) : (
+                                  <p className="text-sm md:text-base font-bold text-muted-foreground">Sob consulta</p>
+                                )}
+                              </>
                             ) : (
-                              <p className="text-sm md:text-base font-bold text-muted-foreground">Sob consulta</p>
+                              <p className="text-xs md:text-sm font-medium text-primary">Faça login para ver preços</p>
                             )}
                           </div>
                         </div>
                         {viewMode === "list" && (
                           <Button size="sm" className="gap-1 rounded-full ml-4" onClick={(e) => handleQuickAddToCart(e, product)}>
-                            <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
+                            {isCatalogMode ? <FileText className="h-3.5 w-3.5" /> : <ShoppingCart className="h-3.5 w-3.5" />}
+                            {isCatalogMode ? "Orçamento" : "Adicionar"}
                           </Button>
                         )}
                       </CardContent>

@@ -3358,6 +3358,9 @@ export type Database = {
           hero_titulo: string | null
           id: string
           logo_url: string | null
+          modo_catalogo: boolean
+          mostrar_precos_visitante_b2b: boolean
+          mostrar_precos_visitante_b2c: boolean
           newsletter_subtitulo: string | null
           newsletter_titulo: string | null
           nome_loja: string | null
@@ -3423,6 +3426,9 @@ export type Database = {
           hero_titulo?: string | null
           id?: string
           logo_url?: string | null
+          modo_catalogo?: boolean
+          mostrar_precos_visitante_b2b?: boolean
+          mostrar_precos_visitante_b2c?: boolean
           newsletter_subtitulo?: string | null
           newsletter_titulo?: string | null
           nome_loja?: string | null
@@ -3488,6 +3494,9 @@ export type Database = {
           hero_titulo?: string | null
           id?: string
           logo_url?: string | null
+          modo_catalogo?: boolean
+          mostrar_precos_visitante_b2b?: boolean
+          mostrar_precos_visitante_b2c?: boolean
           newsletter_subtitulo?: string | null
           newsletter_titulo?: string | null
           nome_loja?: string | null
@@ -7742,6 +7751,7 @@ export type Database = {
           motivo_perda: string | null
           observacoes: string | null
           orcamento_origem_id: string | null
+          origem: string | null
           percentual_desconto: number | null
           status: string
           token_compartilhamento: string | null
@@ -7765,6 +7775,7 @@ export type Database = {
           motivo_perda?: string | null
           observacoes?: string | null
           orcamento_origem_id?: string | null
+          origem?: string | null
           percentual_desconto?: number | null
           status?: string
           token_compartilhamento?: string | null
@@ -7788,6 +7799,7 @@ export type Database = {
           motivo_perda?: string | null
           observacoes?: string | null
           orcamento_origem_id?: string | null
+          origem?: string | null
           percentual_desconto?: number | null
           status?: string
           token_compartilhamento?: string | null
