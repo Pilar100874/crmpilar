@@ -28,7 +28,27 @@ interface Product {
   marca: string | null;
   categoria_nome: string | null;
   grupo_nome: string | null;
+  grupo_id: string | null;
+  campos_customizados: Record<string, any> | null;
 }
+
+interface CampoCustomizado {
+  id: string;
+  campo_key: string;
+  nome: string;
+  tipo: string;
+  unidade?: string;
+  opcoes?: any;
+  pesquisa_faixa?: boolean;
+}
+
+type CustomFieldFilters = {
+  range: Record<string, { min: string; max: string }>;
+  text: Record<string, string>;
+  select: Record<string, string>;
+  checkbox: Record<string, boolean | null>;
+  number: Record<string, string>;
+};
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevância" },
