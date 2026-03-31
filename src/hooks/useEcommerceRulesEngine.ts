@@ -120,8 +120,15 @@ function getReachableActions(nodes: any[], edges: any[], cartContext?: CartConte
   const startNode = nodes.find(n => n.data?.type === "inicio_regra");
   if (!startNode) return [];
 
+  // Also find nodes that have no incoming edges (orphan roots) to handle disconnected flows
+  const nodesWithIncoming = new Set(edges.map((e: any) => e.target));
+  const rootNodes = nodes.filter(n => 
+    n.id === startNode.id || 
+    (!nodesWithIncoming.has(n.id) && n.data?.type !== "inicio_regra")
+  );
+
   const visited = new Set<string>();
-  const queue = [startNode.id];
+  const queue = rootNodes.map((n: any) => n.id);
   const actionNodes: any[] = [];
 
   while (queue.length > 0) {
