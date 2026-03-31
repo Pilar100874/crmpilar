@@ -475,6 +475,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     // Carregar dados da empresa no formulário
     const data: Record<string, any> = {
       company_type: empresa.custom_fields?.company_type || "Pessoa Jurídica",
+      tipo_cliente: (empresa as any).tipo_cliente || "B2B",
       cpf_cnpj: empresa.cnpj || "",
       company_name: empresa.nome || "",
       company_fantasia: empresa.nome_fantasia || "",
