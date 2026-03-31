@@ -1216,8 +1216,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <CategorySelector
                 value={config.categoriaId ? { id: config.categoriaId, nome: config.categoriaNome || "" } : null}
                 onChange={v => {
-                  updateConfig("categoriaId", v?.id || "");
-                  updateConfig("categoriaNome", v?.nome || "");
+                  updateConfig("categoriaId", v?.id || "", { categoriaNome: v?.nome || "" });
                 }}
               />
             </div>
