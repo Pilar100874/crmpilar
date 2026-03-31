@@ -344,7 +344,7 @@ export default function EcommerceLayout() {
         <Outlet />
       </main>
 
-      <EcommerceRulesBanner posicao="rodape" />
+      {!isCatalogMode && <EcommerceRulesBanner posicao="rodape" />}
 
       {/* Footer */}
       <footer className="bg-foreground text-background/80 mt-auto">
