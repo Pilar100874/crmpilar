@@ -202,6 +202,7 @@ const App = () => (
               <Route path="/ecommerce-config/funcionalidades" element={<EcommerceFeaturesEditor />} />
               <Route path="/ecommerce-config/volume-pricing" element={<EcommerceVolumePricing />} />
               <Route path="/ecommerce-config/cupons" element={<EcommerceCuponsPage />} />
+              <Route path="/ecommerce-config/b2b" element={<EcommerceB2BEditor />} />
               <Route path="/global-variables" element={<GlobalVariables />} />
               <Route path="/desenho" element={<Desenho />} />
               <Route path="/marketing" element={<MarketingHub />} />

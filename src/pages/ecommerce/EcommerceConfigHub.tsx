@@ -105,6 +105,15 @@ const configSections = [
     color: "text-violet-500",
     bg: "bg-violet-500/10",
   },
+  {
+    id: "b2b-editor",
+    title: "Página B2B / Atacado",
+    description: "Edite textos, vantagens, depoimentos e seções da página B2B",
+    icon: Building2,
+    url: "/ecommerce-config/b2b",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+  },
 ];
 
 export default function EcommerceConfigHub() {
