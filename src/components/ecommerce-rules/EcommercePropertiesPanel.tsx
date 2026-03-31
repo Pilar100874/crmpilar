@@ -865,10 +865,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
               <Input value={config.titulo || ""} onChange={e => updateConfig("titulo", e.target.value)} />
             </div>
             <GalleryImageSelector value={config.imagem || ""} onChange={v => updateConfig("imagem", v)} />
-            <div className="space-y-1">
-              <Label className="text-xs">Link de destino</Label>
-              <Input value={config.link || ""} onChange={e => updateConfig("link", e.target.value)} placeholder="/ecommerce/catalogo" />
-            </div>
+            <LinkSelector label="Link de destino" value={config.link || ""} onChange={v => updateConfig("link", v)} />
             <div className="space-y-1">
               <Label className="text-xs">Posição</Label>
               <Select value={config.posicao || "topo"} onValueChange={v => updateConfig("posicao", v)}>
