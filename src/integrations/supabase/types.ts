@@ -3306,9 +3306,23 @@ export type Database = {
       ecommerce_config: {
         Row: {
           b2b_badge: string | null
+          b2b_btn_primario: string | null
+          b2b_btn_secundario: string | null
+          b2b_como_funciona: Json | null
+          b2b_cta_botao: string | null
+          b2b_cta_subtitulo: string | null
+          b2b_cta_titulo: string | null
+          b2b_depoimentos: Json | null
           b2b_descricao: string | null
+          b2b_form_subtitulo: string | null
+          b2b_form_titulo: string | null
+          b2b_hero_subtitulo: string | null
+          b2b_secao_vantagens_subtitulo: string | null
+          b2b_secao_vantagens_titulo: string | null
+          b2b_secoes_visiveis: Json | null
           b2b_titulo: string | null
           b2b_vantagens: Json | null
+          b2b_volume_table: Json | null
           background_image_url: string | null
           background_type: string | null
           background_video_url: string | null
@@ -3357,9 +3371,23 @@ export type Database = {
         }
         Insert: {
           b2b_badge?: string | null
+          b2b_btn_primario?: string | null
+          b2b_btn_secundario?: string | null
+          b2b_como_funciona?: Json | null
+          b2b_cta_botao?: string | null
+          b2b_cta_subtitulo?: string | null
+          b2b_cta_titulo?: string | null
+          b2b_depoimentos?: Json | null
           b2b_descricao?: string | null
+          b2b_form_subtitulo?: string | null
+          b2b_form_titulo?: string | null
+          b2b_hero_subtitulo?: string | null
+          b2b_secao_vantagens_subtitulo?: string | null
+          b2b_secao_vantagens_titulo?: string | null
+          b2b_secoes_visiveis?: Json | null
           b2b_titulo?: string | null
           b2b_vantagens?: Json | null
+          b2b_volume_table?: Json | null
           background_image_url?: string | null
           background_type?: string | null
           background_video_url?: string | null
@@ -3408,9 +3436,23 @@ export type Database = {
         }
         Update: {
           b2b_badge?: string | null
+          b2b_btn_primario?: string | null
+          b2b_btn_secundario?: string | null
+          b2b_como_funciona?: Json | null
+          b2b_cta_botao?: string | null
+          b2b_cta_subtitulo?: string | null
+          b2b_cta_titulo?: string | null
+          b2b_depoimentos?: Json | null
           b2b_descricao?: string | null
+          b2b_form_subtitulo?: string | null
+          b2b_form_titulo?: string | null
+          b2b_hero_subtitulo?: string | null
+          b2b_secao_vantagens_subtitulo?: string | null
+          b2b_secao_vantagens_titulo?: string | null
+          b2b_secoes_visiveis?: Json | null
           b2b_titulo?: string | null
           b2b_vantagens?: Json | null
+          b2b_volume_table?: Json | null
           background_image_url?: string | null
           background_type?: string | null
           background_video_url?: string | null
