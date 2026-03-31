@@ -120,6 +120,11 @@ export default function EcommerceRulesPage() {
     toast.success("Regra renomeada!");
   };
 
+  const handleUpdateStartDate = async (id: string, date: Date | null) => {
+    await supabase.from("ecommerce_rules").update({ starts_at: date?.toISOString() || null }).eq("id", id);
+    loadRules();
+  };
+
   const handleUpdateExpiration = async (id: string, date: Date | null) => {
     await supabase.from("ecommerce_rules").update({ expires_at: date?.toISOString() || null }).eq("id", id);
     loadRules();
