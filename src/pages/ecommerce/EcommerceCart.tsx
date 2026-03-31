@@ -25,6 +25,7 @@ interface CrossSellProduct {
 export default function EcommerceCart() {
   const { items, removeItem, updateQuantity, clearCart, coupon, applyCoupon, removeCoupon, couponDiscount } = useCart();
   const { calcularFrete } = useEcommerceFreteRules();
+  const { discountActions, loading: rulesLoading } = useEcommerceRulesEngine();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState(false);
   const [cep, setCep] = useState("");
