@@ -169,14 +169,16 @@ export default function EcommerceHome() {
           <motion.div className="absolute inset-0 z-0" style={{ scale: heroScale }}>
             {branding.background_type === "image" && branding.background_image_url ? (
               <img src={branding.background_image_url} alt="" className="w-full h-full object-cover" />
-            ) : (
+            ) : videoUrl ? (
               <video
+                key={videoUrl}
                 autoPlay loop muted playsInline
                 className="w-full h-full object-cover"
-                poster=""
               >
                 <source src={videoUrl} type="video/mp4" />
               </video>
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-foreground/90 to-foreground/70" />
             )}
           </motion.div>
 
