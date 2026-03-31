@@ -47,7 +47,9 @@ function VitrineSection({ action }: { action: { ruleId: string; config: Record<s
   const config = action.config || {};
   const titulo = config.titulo || "Oferta Especial";
   const maxProdutos = config.maxProdutos || 8;
-  const productIds: string[] = config.produtos || [];
+  // produtos can be string[] or {id, nome}[]
+  const rawProdutos: any[] = config.produtos || [];
+  const productIds: string[] = rawProdutos.map((p: any) => typeof p === "string" ? p : p?.id).filter(Boolean);
   const categoriaId: string = config.categoriaId || "";
 
   useEffect(() => {
