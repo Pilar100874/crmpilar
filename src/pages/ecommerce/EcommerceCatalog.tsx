@@ -74,6 +74,10 @@ export default function EcommerceCatalog() {
   const [selectedMarcas, setSelectedMarcas] = useState<string[]>([]);
   const [filterInStock, setFilterInStock] = useState(false);
   const [availableMarcas, setAvailableMarcas] = useState<string[]>([]);
+  const [availableGrupos, setAvailableGrupos] = useState<{ id: string; nome: string }[]>([]);
+  const [selectedGrupo, setSelectedGrupo] = useState<string>("");
+  const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  const [customFieldFilters, setCustomFieldFilters] = useState<CustomFieldFilters>({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   const [flyAnim, setFlyAnim] = useState<{ startRect: DOMRect; target: string; targetPos?: { x: number; y: number }; image?: string; icon?: "heart" | "cart" } | null>(null);
 
   const handleQuickAddToCart = (e: React.MouseEvent, product: Product) => {
