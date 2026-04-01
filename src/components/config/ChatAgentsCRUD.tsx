@@ -23,8 +23,7 @@ import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
-import AgentKnowledgeBaseManager from '@/components/config/agents/AgentKnowledgeBaseManager';
-import AgentBusinessRules from '@/components/config/agents/AgentBusinessRules';
+import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
 
