@@ -82,6 +82,12 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
       api_endpoint_ids: agent.api_endpoint_ids || [],
       usar_produtos_importados: agent.usar_produtos_importados || false,
       usar_estoque_sistema: agent.usar_estoque_sistema || false,
+      resposta_formato_tabela: agent.resposta_formato_tabela || false,
+      acumular_filtros: agent.acumular_filtros || false,
+      solicitar_cnpj: agent.solicitar_cnpj || false,
+      gerar_pre_orcamento: agent.gerar_pre_orcamento || false,
+      tipo_agente: agent.tipo_agente || 'especifico',
+      sub_agent_ids: agent.sub_agent_ids || [],
       ativo: agent.ativo !== undefined ? agent.ativo : true,
       ordem: agent.ordem || 0,
     };
