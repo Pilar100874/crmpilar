@@ -17,10 +17,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Shield, BookOpen, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
+import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
+import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
+import AgentKnowledgeBaseManager from '@/components/config/agents/AgentKnowledgeBaseManager';
+import AgentBusinessRules from '@/components/config/agents/AgentBusinessRules';
+import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
 
 const MODELOS_IA = [
@@ -71,7 +76,7 @@ const emptyForm: Partial<ChatAgent> = {
 };
 
 export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
-  const { agents, loading, createAgent, updateAgent, deleteAgent } = useChatAgents(estabelecimentoId);
+  const { agents, loading, createAgent, updateAgent, deleteAgent, refetch } = useChatAgents(estabelecimentoId);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<ChatAgent | null>(null);
@@ -88,6 +93,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [previewColumns, setPreviewColumns] = useState<string[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewTab, setPreviewTab] = useState<'conhecimento' | 'apis' | null>(null);
+  const [mainTab, setMainTab] = useState('agentes');
+  const [showSetup, setShowSetup] = useState(false);
 
   useEffect(() => {
     loadApiEndpoints();
@@ -326,22 +333,54 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
   if (loading) return <div className="text-center py-8 text-muted-foreground">Carregando...</div>;
 
+  if (showSetup) {
+    return <AgentTemplateSetup estabelecimentoId={estabelecimentoId} onComplete={() => { setShowSetup(false); refetch(); }} />;
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <Tabs value={mainTab} onValueChange={setMainTab}>
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
+            <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
+            <TabsTrigger value="conhecimento" className="gap-1"><BookOpen className="h-4 w-4" /> Bases de Conhecimento</TabsTrigger>
+            <TabsTrigger value="regras" className="gap-1"><Shield className="h-4 w-4" /> Regras e Objeções</TabsTrigger>
+            <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            {agents.length === 0 && (
+              <Button variant="outline" onClick={() => setShowSetup(true)}>
+                <Sparkles className="h-4 w-4 mr-2" /> Configuração Rápida
+              </Button>
+            )}
+            {mainTab === 'agentes' && (
+              <Button onClick={handleOpenCreate}>
+                <Plus className="h-4 w-4 mr-2" /> Novo Agente
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <TabsContent value="agentes" className="mt-0">
+      <div className="flex justify-between items-center mb-3">
         <p className="text-sm text-muted-foreground">
           {agents.length} agente{agents.length !== 1 ? 's' : ''} configurado{agents.length !== 1 ? 's' : ''}
         </p>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Agente
-        </Button>
+        {agents.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => setShowSetup(true)}>
+            <Sparkles className="h-4 w-4 mr-1" /> Adicionar Templates
+          </Button>
+        )}
       </div>
 
       {agents.length === 0 ? (
         <div className="text-center py-12 border rounded-lg border-dashed">
           <Bot className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
           <p className="text-muted-foreground">Nenhum agente criado ainda</p>
-          <p className="text-xs text-muted-foreground mt-1">Crie agentes de IA para auxiliar no atendimento</p>
+          <Button variant="link" size="sm" onClick={() => setShowSetup(true)}>
+            <Sparkles className="h-4 w-4 mr-1" /> Usar Configuração Rápida
+          </Button>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -964,6 +1003,24 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
+        </TabsContent>
+
+        <TabsContent value="orquestrador" className="mt-0">
+          <AgentOrchestratorView agents={agents} />
+        </TabsContent>
+
+        <TabsContent value="conhecimento" className="mt-0">
+          <AgentKnowledgeBaseManager estabelecimentoId={estabelecimentoId} />
+        </TabsContent>
+
+        <TabsContent value="regras" className="mt-0">
+          <AgentBusinessRules estabelecimentoId={estabelecimentoId} />
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-0">
+          <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
