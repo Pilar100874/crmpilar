@@ -76,7 +76,7 @@ const emptyForm: Partial<ChatAgent> = {
 };
 
 export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
-  const { agents, loading, createAgent, updateAgent, deleteAgent } = useChatAgents(estabelecimentoId);
+  const { agents, loading, createAgent, updateAgent, deleteAgent, refetch } = useChatAgents(estabelecimentoId);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<ChatAgent | null>(null);
@@ -93,6 +93,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [previewColumns, setPreviewColumns] = useState<string[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewTab, setPreviewTab] = useState<'conhecimento' | 'apis' | null>(null);
+  const [mainTab, setMainTab] = useState('agentes');
+  const [showSetup, setShowSetup] = useState(false);
 
   useEffect(() => {
     loadApiEndpoints();
