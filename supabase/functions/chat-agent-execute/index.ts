@@ -332,6 +332,24 @@ serve(async (req) => {
 
     // Montar prompt final
     let systemPrompt = agent.system_prompt || "Você é um assistente útil de atendimento ao cliente.";
+
+    // Se for orquestrador, injetar capacidades dos sub-agentes
+    if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0) {
+      systemPrompt += "\n\n--- VOCÊ É UM AGENTE ORQUESTRADOR ---\n";
+      systemPrompt += "Você combina as capacidades de múltiplos agentes especializados. Analise a pergunta do usuário e use a capacidade mais adequada para responder. Você pode combinar conhecimentos de diferentes áreas na mesma resposta.\n\n";
+      systemPrompt += "CAPACIDADES DISPONÍVEIS:\n";
+      for (const sub of subAgents) {
+        systemPrompt += `\n### ${sub.icone} ${sub.nome}${sub.descricao ? ` — ${sub.descricao}` : ''}\n`;
+        if (sub.system_prompt) {
+          // Extrair apenas as instruções essenciais do sub-agente (limitar tamanho)
+          const subPrompt = sub.system_prompt.substring(0, 2000);
+          systemPrompt += `Instruções: ${subPrompt}\n`;
+        }
+      }
+      systemPrompt += "\n--- FIM DAS CAPACIDADES ---\n";
+      systemPrompt += "REGRA: Identifique qual(is) capacidade(s) são relevantes para cada pergunta e responda com base nelas. Se a pergunta envolve múltiplas áreas, combine as respostas de forma coerente.\n";
+    }
+
     systemPrompt = systemPrompt.replace("{{historico_chat}}", historico_chat || "");
     systemPrompt = systemPrompt.replace("{{mensagem_cliente}}", mensagem_cliente);
     systemPrompt += kbContext;
