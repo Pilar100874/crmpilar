@@ -222,6 +222,8 @@ Você é o Agente de Inteligência do Cliente. Seu objetivo é fornecer uma comp
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Recompra e Oportunidade',
