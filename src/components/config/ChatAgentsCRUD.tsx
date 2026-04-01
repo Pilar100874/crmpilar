@@ -435,7 +435,66 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <Input value={formData.nome || ''} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: Consultor de Estoque" />
                 </div>
                 <div>
-                  <Label>Descrição</Label>
+                  <Label>Tipo de Agente</Label>
+                  <Select value={(formData as any).tipo_agente || 'especifico'} onValueChange={v => setFormData({ ...formData, tipo_agente: v as any })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="especifico">
+                        <span className="flex items-center gap-2"><Bot className="h-4 w-4" /> Específico — Foca em uma única tarefa</span>
+                      </SelectItem>
+                      <SelectItem value="orquestrador">
+                        <span className="flex items-center gap-2"><Network className="h-4 w-4" /> Orquestrador — Combina capacidades de vários agentes</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(formData as any).tipo_agente === 'orquestrador' && (
+                  <div className="rounded-lg border p-4 space-y-3 bg-primary/5 border-primary/20">
+                    <Label className="flex items-center gap-2 text-base font-semibold">
+                      <Layers className="h-5 w-5 text-primary" />
+                      Sub-Agentes (Capacidades)
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Selecione quais agentes específicos compõem este orquestrador. O prompt e as fontes de dados de cada sub-agente serão combinados automaticamente.
+                    </p>
+                    {agents.filter(a => (a as any).tipo_agente !== 'orquestrador' && a.id !== editingAgent?.id).length === 0 ? (
+                      <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
+                        ⚠️ Crie agentes específicos primeiro para poder combiná-los.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {agents.filter(a => (a as any).tipo_agente !== 'orquestrador' && a.id !== editingAgent?.id).map(a => {
+                          const isSelected = ((formData as any).sub_agent_ids || []).includes(a.id);
+                          return (
+                            <div key={a.id} className={`flex items-center space-x-3 rounded-lg border px-3 py-2 cursor-pointer transition-all ${isSelected ? 'bg-primary/10 border-primary/30' : 'hover:bg-muted/50'}`}
+                              onClick={() => {
+                                const current = (formData as any).sub_agent_ids || [];
+                                const next = isSelected ? current.filter((id: string) => id !== a.id) : [...current, a.id];
+                                setFormData({ ...formData, sub_agent_ids: next } as any);
+                              }}>
+                              <Checkbox checked={isSelected} />
+                              <span className="text-lg">{a.icone}</span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium">{a.nome}</p>
+                                <p className="text-xs text-muted-foreground truncate">{a.descricao || 'Sem descrição'}</p>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {a.usar_estoque_sistema && <Badge variant="outline" className="text-[10px]">Estoque</Badge>}
+                                {a.usar_produtos_importados && <Badge variant="outline" className="text-[10px]">Prod. Terceiros</Badge>}
+                                {(a.api_endpoint_ids || []).length > 0 && <Badge variant="outline" className="text-[10px]">{(a.api_endpoint_ids || []).length} API(s)</Badge>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {((formData as any).sub_agent_ids || []).length > 0 && (
+                      <p className="text-xs text-primary font-medium">
+                        ✓ {((formData as any).sub_agent_ids || []).length} sub-agente(s) selecionado(s)
+                      </p>
+                    )}
+                  </div>
+                )}
                   <Input value={formData.descricao || ''} onChange={e => setFormData({ ...formData, descricao: e.target.value })} placeholder="Ex: Ajuda a encontrar produtos no estoque" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
