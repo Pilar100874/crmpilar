@@ -471,6 +471,75 @@ export type Database = {
           },
         ]
       }
+      agent_data_bindings: {
+        Row: {
+          agent_template_key: string
+          api_endpoint_id: string | null
+          campo: string
+          campo_api: string | null
+          coluna_sistema: string | null
+          configurado: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          fonte_tipo: string
+          id: string
+          label: string
+          tabela_sistema: string | null
+          updated_at: string | null
+          valor_manual: string | null
+        }
+        Insert: {
+          agent_template_key: string
+          api_endpoint_id?: string | null
+          campo: string
+          campo_api?: string | null
+          coluna_sistema?: string | null
+          configurado?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          fonte_tipo?: string
+          id?: string
+          label: string
+          tabela_sistema?: string | null
+          updated_at?: string | null
+          valor_manual?: string | null
+        }
+        Update: {
+          agent_template_key?: string
+          api_endpoint_id?: string | null
+          campo?: string
+          campo_api?: string | null
+          coluna_sistema?: string | null
+          configurado?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          fonte_tipo?: string
+          id?: string
+          label?: string
+          tabela_sistema?: string | null
+          updated_at?: string | null
+          valor_manual?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_data_bindings_api_endpoint_id_fkey"
+            columns: ["api_endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "api_endpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_data_bindings_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_decision_logs: {
         Row: {
           agentes_acionados: string[] | null

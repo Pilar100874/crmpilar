@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
+import AgentDataWizard from '@/components/config/agents/AgentDataWizard';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
@@ -341,6 +342,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
+            <TabsTrigger value="dados" className="gap-1"><Database className="h-4 w-4" /> Dados</TabsTrigger>
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
           </TabsList>
@@ -999,6 +1001,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
+        </TabsContent>
+
+        <TabsContent value="dados" className="mt-0">
+          <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
         </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
