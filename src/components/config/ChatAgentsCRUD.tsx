@@ -1003,6 +1003,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
         </TabsContent>
 
+        <TabsContent value="dados" className="mt-0">
+          <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
+        </TabsContent>
+
         <TabsContent value="orquestrador" className="mt-0">
           <AgentOrchestratorView agents={agents} />
         </TabsContent>
