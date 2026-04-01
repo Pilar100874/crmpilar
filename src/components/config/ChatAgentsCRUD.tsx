@@ -333,23 +333,46 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
   if (loading) return <div className="text-center py-8 text-muted-foreground">Carregando...</div>;
 
+  if (showSetup) {
+    return <AgentTemplateSetup estabelecimentoId={estabelecimentoId} onComplete={() => { setShowSetup(false); refetch(); }} />;
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <Tabs value={mainTab} onValueChange={setMainTab}>
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
+            <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
+            <TabsTrigger value="conhecimento" className="gap-1"><BookOpen className="h-4 w-4" /> Bases de Conhecimento</TabsTrigger>
+            <TabsTrigger value="regras" className="gap-1"><Shield className="h-4 w-4" /> Regras e Objeções</TabsTrigger>
+            <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            {agents.length === 0 && (
+              <Button variant="outline" onClick={() => setShowSetup(true)}>
+                <Sparkles className="h-4 w-4 mr-2" /> Configuração Rápida
+              </Button>
+            )}
+            {mainTab === 'agentes' && (
+              <Button onClick={handleOpenCreate}>
+                <Plus className="h-4 w-4 mr-2" /> Novo Agente
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <TabsContent value="agentes" className="mt-0">
+      <div className="flex justify-between items-center mb-3">
         <p className="text-sm text-muted-foreground">
           {agents.length} agente{agents.length !== 1 ? 's' : ''} configurado{agents.length !== 1 ? 's' : ''}
         </p>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Agente
-        </Button>
+        {agents.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => setShowSetup(true)}>
+            <Sparkles className="h-4 w-4 mr-1" /> Adicionar Templates
+          </Button>
+        )}
       </div>
-
-      {agents.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg border-dashed">
-          <Bot className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-          <p className="text-muted-foreground">Nenhum agente criado ainda</p>
-          <p className="text-xs text-muted-foreground mt-1">Crie agentes de IA para auxiliar no atendimento</p>
-        </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {agents.map(agent => (
