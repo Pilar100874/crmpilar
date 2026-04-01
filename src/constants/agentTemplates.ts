@@ -712,6 +712,8 @@ Você é o Agente de Margem e Estratégia Comercial. Seu objetivo é proteger a 
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Objeções e Persuasão',
