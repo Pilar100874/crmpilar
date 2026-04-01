@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
+import AgentDataWizard from '@/components/config/agents/AgentDataWizard';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
