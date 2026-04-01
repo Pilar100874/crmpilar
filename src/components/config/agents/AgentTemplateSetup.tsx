@@ -37,22 +37,24 @@ export default function AgentTemplateSetup({ estabelecimentoId, onComplete }: Pr
         const t = AGENT_TEMPLATES[idx];
         if (existingNames.includes(t.nome)) continue;
         const result = await createAgent({
-          nome: t.nome,
-          descricao: t.descricao,
-          icone: t.icone,
-          cor: t.cor,
-          system_prompt: t.system_prompt,
-          knowledge_base_type: t.knowledge_base_type,
-          usar_estoque_sistema: t.usar_estoque_sistema,
-          usar_produtos_importados: t.usar_produtos_importados,
-          solicitar_cnpj: t.solicitar_cnpj,
-          gerar_pre_orcamento: t.gerar_pre_orcamento,
-          resposta_formato_tabela: t.resposta_formato_tabela,
-          acumular_filtros: t.acumular_filtros,
-          permite_cliente: t.permite_cliente,
-          tipo_agente: t.tipo_agente,
-          ordem: idx,
-        });
+40:           nome: t.nome,
+41:           descricao: t.descricao,
+42:           icone: t.icone,
+43:           cor: t.cor,
+44:           system_prompt: t.system_prompt,
+45:           knowledge_base_type: t.knowledge_base_type,
+46:           usar_estoque_sistema: t.usar_estoque_sistema,
+47:           usar_produtos_importados: t.usar_produtos_importados,
+48:           solicitar_cnpj: t.solicitar_cnpj,
+49:           gerar_pre_orcamento: t.gerar_pre_orcamento,
+50:           resposta_formato_tabela: t.resposta_formato_tabela,
+51:           acumular_filtros: t.acumular_filtros,
+52:           permite_cliente: t.permite_cliente,
+53:           tipo_agente: t.tipo_agente,
+54:           modo_operacao: t.modo_operacao,
+55:           modelo_ia: t.modelo_ia,
+56:           ordem: idx,
+57:         });
         if (result) createdIds.push(result.id);
       }
 
