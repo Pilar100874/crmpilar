@@ -74,6 +74,8 @@ export default function AgentTemplateSetup({ estabelecimentoId, onComplete }: Pr
           acumular_filtros: ORCHESTRATOR_TEMPLATE.acumular_filtros,
           permite_cliente: ORCHESTRATOR_TEMPLATE.permite_cliente,
           tipo_agente: ORCHESTRATOR_TEMPLATE.tipo_agente,
+          modo_operacao: ORCHESTRATOR_TEMPLATE.modo_operacao,
+          modelo_ia: ORCHESTRATOR_TEMPLATE.modelo_ia,
           sub_agent_ids: createdIds,
           ordem: 99,
         });
