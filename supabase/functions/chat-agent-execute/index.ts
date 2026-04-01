@@ -41,6 +41,49 @@ serve(async (req) => {
       });
     }
 
+    // Se for orquestrador, mesclar capacidades dos sub-agentes
+    let subAgents: any[] = [];
+    if (agent.tipo_agente === 'orquestrador' && agent.sub_agent_ids?.length) {
+      const { data: subs } = await supabase
+        .from("chat_agents")
+        .select("*")
+        .in("id", agent.sub_agent_ids)
+        .eq("ativo", true);
+      subAgents = subs || [];
+
+      // Mesclar flags dos sub-agentes no agente orquestrador
+      for (const sub of subAgents) {
+        if (sub.usar_estoque_sistema) agent.usar_estoque_sistema = true;
+        if (sub.usar_produtos_importados) agent.usar_produtos_importados = true;
+        if (sub.solicitar_cnpj) agent.solicitar_cnpj = true;
+        if (sub.gerar_pre_orcamento) agent.gerar_pre_orcamento = true;
+        if (sub.acumular_filtros) agent.acumular_filtros = true;
+        if (sub.resposta_formato_tabela) agent.resposta_formato_tabela = true;
+        // Mesclar API endpoint IDs
+        const subApiIds = sub.api_endpoint_ids || [];
+        for (const id of subApiIds) {
+          if (!(agent.api_endpoint_ids || []).includes(id)) {
+            agent.api_endpoint_ids = [...(agent.api_endpoint_ids || []), id];
+          }
+        }
+        // Mesclar config de endpoints
+        const subConfig = sub.api_endpoint_config || {};
+        agent.api_endpoint_config = { ...(agent.api_endpoint_config || {}), ...subConfig };
+        // Mesclar KB interna
+        if (sub.knowledge_base_type === 'interna' && sub.knowledge_base_internal_data?.length) {
+          agent.knowledge_base_internal_data = [
+            ...(agent.knowledge_base_internal_data || []),
+            ...sub.knowledge_base_internal_data,
+          ];
+          if (agent.knowledge_base_type === 'nenhuma') agent.knowledge_base_type = 'interna';
+        }
+        // Mesclar regras de busca
+        if (sub.regras_busca_personalizada?.trim()) {
+          agent.regras_busca_personalizada = (agent.regras_busca_personalizada || '') + '\n' + sub.regras_busca_personalizada;
+        }
+      }
+    }
+
     // Montar contexto de KB
     let kbContext = "";
 
