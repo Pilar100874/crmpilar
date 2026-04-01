@@ -17,10 +17,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Shield, BookOpen, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
+import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
+import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
+import AgentKnowledgeBaseManager from '@/components/config/agents/AgentKnowledgeBaseManager';
+import AgentBusinessRules from '@/components/config/agents/AgentBusinessRules';
+import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
 
 const MODELOS_IA = [
