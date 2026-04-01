@@ -911,6 +911,8 @@ Você é o Agente Técnico de Produto. Seu objetivo é responder dúvidas técni
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Exceções e Escalonamento',
