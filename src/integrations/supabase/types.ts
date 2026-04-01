@@ -293,6 +293,56 @@ export type Database = {
           },
         ]
       }
+      agent_business_rules: {
+        Row: {
+          acao: string
+          ativo: boolean
+          categoria: string
+          condicao: string
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          prioridade: number
+          updated_at: string
+        }
+        Insert: {
+          acao: string
+          ativo?: boolean
+          categoria: string
+          condicao: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          prioridade?: number
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          ativo?: boolean
+          categoria?: string
+          condicao?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          prioridade?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_business_rules_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_chat_messages: {
         Row: {
           content: string
@@ -373,6 +423,383 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_cross_sell_rules: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          motivo: string | null
+          prioridade: number
+          produto_origem: string
+          produto_sugerido: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          motivo?: string | null
+          prioridade?: number
+          produto_origem: string
+          produto_sugerido: string
+          tipo?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string | null
+          prioridade?: number
+          produto_origem?: string
+          produto_sugerido?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_cross_sell_rules_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_decision_logs: {
+        Row: {
+          agentes_acionados: string[] | null
+          confianca: number | null
+          contexto_resumido: string | null
+          conversation_id: string | null
+          created_at: string
+          decisao: string | null
+          escalonado_humano: boolean | null
+          estabelecimento_id: string
+          id: string
+          intencao_detectada: string | null
+          motivo_escalonamento: string | null
+          orquestrador_id: string | null
+          session_id: string | null
+          tempo_resposta_ms: number | null
+        }
+        Insert: {
+          agentes_acionados?: string[] | null
+          confianca?: number | null
+          contexto_resumido?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          decisao?: string | null
+          escalonado_humano?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          intencao_detectada?: string | null
+          motivo_escalonamento?: string | null
+          orquestrador_id?: string | null
+          session_id?: string | null
+          tempo_resposta_ms?: number | null
+        }
+        Update: {
+          agentes_acionados?: string[] | null
+          confianca?: number | null
+          contexto_resumido?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          decisao?: string | null
+          escalonado_humano?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          intencao_detectada?: string | null
+          motivo_escalonamento?: string | null
+          orquestrador_id?: string | null
+          session_id?: string | null
+          tempo_resposta_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_decision_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_decision_logs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_decision_logs_orquestrador_id_fkey"
+            columns: ["orquestrador_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_decision_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_escalation_events: {
+        Row: {
+          agent_id: string | null
+          categoria: string
+          conversation_id: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          motivo: string
+          notas: string | null
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
+          session_id: string | null
+          severidade: string
+        }
+        Insert: {
+          agent_id?: string | null
+          categoria?: string
+          conversation_id?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          motivo: string
+          notas?: string | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          session_id?: string | null
+          severidade?: string
+        }
+        Update: {
+          agent_id?: string | null
+          categoria?: string
+          conversation_id?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          motivo?: string
+          notas?: string | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          session_id?: string | null
+          severidade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_escalation_events_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_escalation_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_escalation_events_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_escalation_events_resolvido_por_fkey"
+            columns: ["resolvido_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_escalation_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_knowledge_bases: {
+        Row: {
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          dominio: string
+          estabelecimento_id: string
+          id: string
+          ordem: number
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          dominio: string
+          estabelecimento_id: string
+          id?: string
+          ordem?: number
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          dominio?: string
+          estabelecimento_id?: string
+          id?: string
+          ordem?: number
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_knowledge_bases_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_objections: {
+        Row: {
+          argumentos: string | null
+          ativo: boolean
+          categoria: string
+          created_at: string
+          eficacia_percentual: number | null
+          estabelecimento_id: string
+          gatilhos_mentais: string | null
+          id: string
+          objecao: string
+          resposta_sugerida: string
+          updated_at: string
+          vezes_usada: number | null
+        }
+        Insert: {
+          argumentos?: string | null
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          eficacia_percentual?: number | null
+          estabelecimento_id: string
+          gatilhos_mentais?: string | null
+          id?: string
+          objecao: string
+          resposta_sugerida: string
+          updated_at?: string
+          vezes_usada?: number | null
+        }
+        Update: {
+          argumentos?: string | null
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          eficacia_percentual?: number | null
+          estabelecimento_id?: string
+          gatilhos_mentais?: string | null
+          id?: string
+          objecao?: string
+          resposta_sugerida?: string
+          updated_at?: string
+          vezes_usada?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_objections_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_performance_metrics: {
+        Row: {
+          agent_id: string
+          created_at: string
+          cross_sell_gerado: number | null
+          estabelecimento_id: string
+          id: string
+          objecoes_recuperadas: number | null
+          periodo_fim: string
+          periodo_inicio: string
+          satisfacao_media: number | null
+          taxa_conversao: number | null
+          tempo_medio_resposta_ms: number | null
+          ticket_medio: number | null
+          total_escalonamentos: number | null
+          total_interacoes: number | null
+          total_resolvido_sem_humano: number | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          cross_sell_gerado?: number | null
+          estabelecimento_id: string
+          id?: string
+          objecoes_recuperadas?: number | null
+          periodo_fim: string
+          periodo_inicio: string
+          satisfacao_media?: number | null
+          taxa_conversao?: number | null
+          tempo_medio_resposta_ms?: number | null
+          ticket_medio?: number | null
+          total_escalonamentos?: number | null
+          total_interacoes?: number | null
+          total_resolvido_sem_humano?: number | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          cross_sell_gerado?: number | null
+          estabelecimento_id?: string
+          id?: string
+          objecoes_recuperadas?: number | null
+          periodo_fim?: string
+          periodo_inicio?: string
+          satisfacao_media?: number | null
+          taxa_conversao?: number | null
+          tempo_medio_resposta_ms?: number | null
+          ticket_medio?: number | null
+          total_escalonamentos?: number | null
+          total_interacoes?: number | null
+          total_resolvido_sem_humano?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_performance_metrics_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_performance_metrics_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
