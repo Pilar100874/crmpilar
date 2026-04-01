@@ -24,6 +24,8 @@ export interface ChatAgent {
   api_endpoint_config: Record<string, { tipo: 'estoque' | 'compras_cliente' }>;
   solicitar_cnpj: boolean;
   gerar_pre_orcamento: boolean;
+  tipo_agente: 'especifico' | 'orquestrador';
+  sub_agent_ids: string[];
   ativo: boolean;
   ordem: number;
   created_at: string;

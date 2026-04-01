@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
@@ -64,6 +64,8 @@ const emptyForm: Partial<ChatAgent> = {
   api_endpoint_config: {},
   solicitar_cnpj: false,
   gerar_pre_orcamento: false,
+  tipo_agente: 'especifico',
+  sub_agent_ids: [],
   ativo: true,
   ordem: 0,
 };
@@ -140,6 +142,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       api_endpoint_config: (agent as any).api_endpoint_config || {},
       solicitar_cnpj: (agent as any).solicitar_cnpj ?? false,
       gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
+      tipo_agente: (agent as any).tipo_agente || 'especifico',
+      sub_agent_ids: (agent as any).sub_agent_ids || [],
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -362,6 +366,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     {agent.permite_cliente ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
                     {agent.permite_cliente ? 'Atende cliente' : 'Somente interno'}
                   </Badge>
+                  {(agent as any).tipo_agente === 'orquestrador' && (
+                    <Badge className="text-xs bg-primary/20 text-primary border-primary/30">
+                      <Network className="h-3 w-3 mr-1" />
+                      Orquestrador · {((agent as any).sub_agent_ids || []).length} agentes
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
@@ -430,6 +440,67 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <Label>Nome *</Label>
                   <Input value={formData.nome || ''} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: Consultor de Estoque" />
                 </div>
+                <div>
+                  <Label>Tipo de Agente</Label>
+                  <Select value={(formData as any).tipo_agente || 'especifico'} onValueChange={v => setFormData({ ...formData, tipo_agente: v as any })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="especifico">
+                        <span className="flex items-center gap-2"><Bot className="h-4 w-4" /> Específico — Foca em uma única tarefa</span>
+                      </SelectItem>
+                      <SelectItem value="orquestrador">
+                        <span className="flex items-center gap-2"><Network className="h-4 w-4" /> Orquestrador — Combina capacidades de vários agentes</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(formData as any).tipo_agente === 'orquestrador' && (
+                  <div className="rounded-lg border p-4 space-y-3 bg-primary/5 border-primary/20">
+                    <Label className="flex items-center gap-2 text-base font-semibold">
+                      <Layers className="h-5 w-5 text-primary" />
+                      Sub-Agentes (Capacidades)
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Selecione quais agentes específicos compõem este orquestrador. O prompt e as fontes de dados de cada sub-agente serão combinados automaticamente.
+                    </p>
+                    {agents.filter(a => (a as any).tipo_agente !== 'orquestrador' && a.id !== editingAgent?.id).length === 0 ? (
+                      <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
+                        ⚠️ Crie agentes específicos primeiro para poder combiná-los.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {agents.filter(a => (a as any).tipo_agente !== 'orquestrador' && a.id !== editingAgent?.id).map(a => {
+                          const isSelected = ((formData as any).sub_agent_ids || []).includes(a.id);
+                          return (
+                            <div key={a.id} className={`flex items-center space-x-3 rounded-lg border px-3 py-2 cursor-pointer transition-all ${isSelected ? 'bg-primary/10 border-primary/30' : 'hover:bg-muted/50'}`}
+                              onClick={() => {
+                                const current = (formData as any).sub_agent_ids || [];
+                                const next = isSelected ? current.filter((id: string) => id !== a.id) : [...current, a.id];
+                                setFormData({ ...formData, sub_agent_ids: next } as any);
+                              }}>
+                              <Checkbox checked={isSelected} />
+                              <span className="text-lg">{a.icone}</span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium">{a.nome}</p>
+                                <p className="text-xs text-muted-foreground truncate">{a.descricao || 'Sem descrição'}</p>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {a.usar_estoque_sistema && <Badge variant="outline" className="text-[10px]">Estoque</Badge>}
+                                {a.usar_produtos_importados && <Badge variant="outline" className="text-[10px]">Prod. Terceiros</Badge>}
+                                {(a.api_endpoint_ids || []).length > 0 && <Badge variant="outline" className="text-[10px]">{(a.api_endpoint_ids || []).length} API(s)</Badge>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {((formData as any).sub_agent_ids || []).length > 0 && (
+                      <p className="text-xs text-primary font-medium">
+                        ✓ {((formData as any).sub_agent_ids || []).length} sub-agente(s) selecionado(s)
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <Label>Descrição</Label>
                   <Input value={formData.descricao || ''} onChange={e => setFormData({ ...formData, descricao: e.target.value })} placeholder="Ex: Ajuda a encontrar produtos no estoque" />
