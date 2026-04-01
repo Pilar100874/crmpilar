@@ -125,22 +125,20 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     try {
       let result: any;
       if (useCustomUrl && customUrl) {
-        const response = await fetch(customUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        result = await response.json();
+        // Route through edge function to avoid CORS
+        const { data, error } = await supabase.functions.invoke('execute-dynamic-query', { 
+          body: { custom_url: customUrl } 
+        });
+        if (error) throw error;
+        result = data;
       } else if (selectedApiId) {
-        const ep = apiEndpoints.find(a => a.id === selectedApiId);
-        if (ep?.custom_url) {
-          const response = await fetch(ep.custom_url);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          result = await response.json();
-        } else if (ep) {
-          const { data, error } = await supabase.functions.invoke('execute-dynamic-query', { body: { endpoint_id: ep.id } });
-          if (error) throw error;
-          result = data;
-        }
+        const { data, error } = await supabase.functions.invoke('execute-dynamic-query', { 
+          body: { endpoint_id: selectedApiId } 
+        });
+        if (error) throw error;
+        result = data;
       }
-      if (!result) { stopProgress(false); toast.error('Não foi possível obter dados'); return; }
+      if (!result) { stopProgress(false); toast.error('Não foi possível obter dados. Verifique se o endpoint está configurado corretamente.'); return; }
 
       let data: any[] = [];
       if (Array.isArray(result)) data = result;
