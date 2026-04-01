@@ -501,6 +501,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     )}
                   </div>
                 )}
+                <div>
+                  <Label>Descrição</Label>
                   <Input value={formData.descricao || ''} onChange={e => setFormData({ ...formData, descricao: e.target.value })} placeholder="Ex: Ajuda a encontrar produtos no estoque" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
