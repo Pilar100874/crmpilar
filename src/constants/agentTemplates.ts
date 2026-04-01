@@ -324,6 +324,8 @@ Você é o Agente de Recompra e Oportunidade. Seu objetivo é prever necessidade
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Mix e Cross-sell',
