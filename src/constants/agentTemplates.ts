@@ -417,6 +417,8 @@ Você é o Agente de Mix, Similaridade e Cross-sell. Seu objetivo é maximizar o
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Agente Financeiro',
