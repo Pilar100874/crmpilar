@@ -1007,13 +1007,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentOrchestratorView agents={agents} />
         </TabsContent>
 
-        <TabsContent value="conhecimento" className="mt-0">
-          <AgentKnowledgeBaseManager estabelecimentoId={estabelecimentoId} />
-        </TabsContent>
 
-        <TabsContent value="regras" className="mt-0">
-          <AgentBusinessRules estabelecimentoId={estabelecimentoId} />
-        </TabsContent>
 
         <TabsContent value="dashboard" className="mt-0">
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
