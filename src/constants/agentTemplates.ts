@@ -1336,6 +1336,8 @@ Mantenha e consulte o contexto acumulado da conversa:
   acumular_filtros: true,
   permite_cliente: true,
   tipo_agente: 'orquestrador',
+  modo_operacao: 'automatico',
+  modelo_ia: 'google/gemini-2.5-pro',
 };
 
 export const KNOWLEDGE_BASE_DOMAINS = [
