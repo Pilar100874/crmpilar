@@ -1016,6 +1016,8 @@ Você é o Agente de Exceções e Escalonamento, o guardião de qualidade do ate
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Performance e Aprendizado',
