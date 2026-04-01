@@ -373,6 +373,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </Button>
         )}
       </div>
+
+      {agents.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg border-dashed">
+          <Bot className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">Nenhum agente criado ainda</p>
+          <Button variant="link" size="sm" onClick={() => setShowSetup(true)}>
+            <Sparkles className="h-4 w-4 mr-1" /> Usar Configuração Rápida
+          </Button>
+        </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {agents.map(agent => (
