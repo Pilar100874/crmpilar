@@ -142,6 +142,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       api_endpoint_config: (agent as any).api_endpoint_config || {},
       solicitar_cnpj: (agent as any).solicitar_cnpj ?? false,
       gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
+      tipo_agente: (agent as any).tipo_agente || 'especifico',
+      sub_agent_ids: (agent as any).sub_agent_ids || [],
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
