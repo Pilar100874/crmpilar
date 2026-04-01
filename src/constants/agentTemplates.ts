@@ -15,6 +15,8 @@ export interface AgentTemplate {
   acumular_filtros: boolean;
   permite_cliente: boolean;
   tipo_agente: 'especifico' | 'orquestrador';
+  modo_operacao: 'sugerir' | 'automatico';
+  modelo_ia: string;
 }
 
 export const AGENT_TEMPLATES: AgentTemplate[] = [
