@@ -1122,6 +1122,8 @@ Você é o Agente de Performance e Aprendizado. Seu objetivo é analisar os resu
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
 ];
 
