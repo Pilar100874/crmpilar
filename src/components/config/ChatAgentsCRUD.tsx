@@ -17,14 +17,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Shield, BookOpen, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
 import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
-import AgentKnowledgeBaseManager from '@/components/config/agents/AgentKnowledgeBaseManager';
-import AgentBusinessRules from '@/components/config/agents/AgentBusinessRules';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import * as XLSX from 'xlsx';
 
@@ -344,8 +342,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
-            <TabsTrigger value="conhecimento" className="gap-1"><BookOpen className="h-4 w-4" /> Bases de Conhecimento</TabsTrigger>
-            <TabsTrigger value="regras" className="gap-1"><Shield className="h-4 w-4" /> Regras e Objeções</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
@@ -1009,13 +1005,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentOrchestratorView agents={agents} />
         </TabsContent>
 
-        <TabsContent value="conhecimento" className="mt-0">
-          <AgentKnowledgeBaseManager estabelecimentoId={estabelecimentoId} />
-        </TabsContent>
 
-        <TabsContent value="regras" className="mt-0">
-          <AgentBusinessRules estabelecimentoId={estabelecimentoId} />
-        </TabsContent>
 
         <TabsContent value="dashboard" className="mt-0">
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
