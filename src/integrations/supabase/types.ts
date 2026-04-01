@@ -1841,7 +1841,9 @@ export type Database = {
           regras_busca_personalizada: string | null
           resposta_formato_tabela: boolean
           solicitar_cnpj: boolean | null
+          sub_agent_ids: string[] | null
           system_prompt: string
+          tipo_agente: string
           updated_at: string
           usar_estoque_sistema: boolean
           usar_produtos_importados: boolean
@@ -1868,7 +1870,9 @@ export type Database = {
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           solicitar_cnpj?: boolean | null
+          sub_agent_ids?: string[] | null
           system_prompt?: string
+          tipo_agente?: string
           updated_at?: string
           usar_estoque_sistema?: boolean
           usar_produtos_importados?: boolean
@@ -1895,7 +1899,9 @@ export type Database = {
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           solicitar_cnpj?: boolean | null
+          sub_agent_ids?: string[] | null
           system_prompt?: string
+          tipo_agente?: string
           updated_at?: string
           usar_estoque_sistema?: boolean
           usar_produtos_importados?: boolean
