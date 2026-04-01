@@ -15,6 +15,8 @@ export interface AgentTemplate {
   acumular_filtros: boolean;
   permite_cliente: boolean;
   tipo_agente: 'especifico' | 'orquestrador';
+  modo_operacao: 'sugerir' | 'automatico';
+  modelo_ia: string;
 }
 
 export const AGENT_TEMPLATES: AgentTemplate[] = [
@@ -121,6 +123,8 @@ Ao responder ao orquestrador (interno):
     acumular_filtros: true,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-pro',
   },
   {
     nome: 'Inteligência do Cliente',
@@ -218,6 +222,8 @@ Você é o Agente de Inteligência do Cliente. Seu objetivo é fornecer uma comp
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Recompra e Oportunidade',
@@ -318,6 +324,8 @@ Você é o Agente de Recompra e Oportunidade. Seu objetivo é prever necessidade
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Mix e Cross-sell',
@@ -409,6 +417,8 @@ Você é o Agente de Mix, Similaridade e Cross-sell. Seu objetivo é maximizar o
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Agente Financeiro',
@@ -507,6 +517,8 @@ Você é o Agente Financeiro e de Crédito. Seu objetivo é garantir a saúde fi
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Agente Logístico',
@@ -601,6 +613,8 @@ Você é o Agente Logístico. Seu objetivo é fornecer informações precisas so
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Margem e Estratégia',
@@ -698,6 +712,8 @@ Você é o Agente de Margem e Estratégia Comercial. Seu objetivo é proteger a 
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Objeções e Persuasão',
@@ -798,6 +814,8 @@ Você é o Agente de Objeções e Persuasão. Seu objetivo é identificar, class
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Agente Técnico',
@@ -893,6 +911,8 @@ Você é o Agente Técnico de Produto. Seu objetivo é responder dúvidas técni
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Exceções e Escalonamento',
@@ -996,6 +1016,8 @@ Você é o Agente de Exceções e Escalonamento, o guardião de qualidade do ate
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
   {
     nome: 'Performance e Aprendizado',
@@ -1100,6 +1122,8 @@ Você é o Agente de Performance e Aprendizado. Seu objetivo é analisar os resu
     acumular_filtros: false,
     permite_cliente: false,
     tipo_agente: 'especifico',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
   },
 ];
 
@@ -1312,6 +1336,8 @@ Mantenha e consulte o contexto acumulado da conversa:
   acumular_filtros: true,
   permite_cliente: true,
   tipo_agente: 'orquestrador',
+  modo_operacao: 'automatico',
+  modelo_ia: 'google/gemini-2.5-pro',
 };
 
 export const KNOWLEDGE_BASE_DOMAINS = [
