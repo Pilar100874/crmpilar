@@ -123,6 +123,8 @@ Ao responder ao orquestrador (interno):
     acumular_filtros: true,
     permite_cliente: true,
     tipo_agente: 'especifico',
+    modo_operacao: 'sugerir',
+    modelo_ia: 'google/gemini-2.5-pro',
   },
   {
     nome: 'Inteligência do Cliente',
