@@ -344,8 +344,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
-            <TabsTrigger value="conhecimento" className="gap-1"><BookOpen className="h-4 w-4" /> Bases de Conhecimento</TabsTrigger>
-            <TabsTrigger value="regras" className="gap-1"><Shield className="h-4 w-4" /> Regras e Objeções</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
