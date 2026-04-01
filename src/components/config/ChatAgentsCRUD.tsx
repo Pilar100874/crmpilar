@@ -366,6 +366,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     {agent.permite_cliente ? <Zap className="h-3 w-3 mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
                     {agent.permite_cliente ? 'Atende cliente' : 'Somente interno'}
                   </Badge>
+                  {(agent as any).tipo_agente === 'orquestrador' && (
+                    <Badge className="text-xs bg-primary/20 text-primary border-primary/30">
+                      <Network className="h-3 w-3 mr-1" />
+                      Orquestrador · {((agent as any).sub_agent_ids || []).length} agentes
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
