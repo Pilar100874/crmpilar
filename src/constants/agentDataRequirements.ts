@@ -18,8 +18,8 @@ export interface AgentDataRequirement {
   campos: AgentDataField[];
 }
 
-// ========== AGENTE ORQUESTRADOR ==========
-const orquestradorCampos: AgentDataField[] = [
+// ========== CONFIGURAÇÕES GLOBAIS (compartilhadas por todos os agentes) ==========
+export const GLOBAL_AGENT_SETTINGS: AgentDataField[] = [
   // Empresa
   { campo: 'empresa_nome', label: 'Nome da Empresa', descricao: 'Razão social ou nome fantasia', tipo: 'texto', obrigatorio: true, categoria: 'Empresa', exemplo: 'Distribuidora ABC Ltda' },
   { campo: 'empresa_segmento_atuacao', label: 'Segmento de Atuação', descricao: 'Ramo da empresa (atacado, varejo, indústria)', tipo: 'texto', obrigatorio: true, categoria: 'Empresa', exemplo: 'Distribuição de materiais elétricos' },
@@ -27,16 +27,26 @@ const orquestradorCampos: AgentDataField[] = [
   { campo: 'empresa_telefone', label: 'Telefone da Empresa', descricao: 'Telefone principal para contato', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: '(11) 3333-4444' },
   { campo: 'empresa_email', label: 'E-mail da Empresa', descricao: 'E-mail principal de contato', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'contato@abc.com.br' },
   { campo: 'empresa_site', label: 'Site/URL', descricao: 'Site da empresa', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'www.abc.com.br' },
-  // Configuração de Roteamento
-  { campo: 'tempo_max_resposta_segundos', label: 'Tempo Máximo Resposta (seg)', descricao: 'Tempo limite para responder ao cliente', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '30' },
-  { campo: 'confianca_minima_resposta', label: 'Confiança Mínima (%)', descricao: 'Score mínimo para responder sem escalar', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '70' },
-  { campo: 'max_agentes_simultaneos', label: 'Máx. Agentes Simultâneos', descricao: 'Quantos agentes podem ser consultados por vez', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
-  { campo: 'escalar_humano_apos_tentativas', label: 'Escalar Após N Tentativas', descricao: 'Após quantas tentativas escalar para humano', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
-  // Saudação
+  // Comunicação (padrão para todos os agentes)
   { campo: 'saudacao_inicial', label: 'Saudação Inicial', descricao: 'Mensagem de boas-vindas ao cliente', tipo: 'texto', obrigatorio: true, categoria: 'Comunicação', exemplo: 'Olá! Sou o assistente da ABC. Como posso ajudar?' },
   { campo: 'saudacao_fora_horario', label: 'Mensagem Fora do Horário', descricao: 'Resposta quando fora do expediente', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Nosso horário é de seg a sex, 8h às 18h.' },
   { campo: 'mensagem_espera', label: 'Mensagem de Espera', descricao: 'Quando precisa de mais tempo para responder', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Só um momento, estou consultando isso para você...' },
   { campo: 'mensagem_escalacao', label: 'Mensagem de Escalação', descricao: 'Quando transfere para humano', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Vou transferir você para um especialista.' },
+  // Roteamento
+  { campo: 'tempo_max_resposta_segundos', label: 'Tempo Máximo Resposta (seg)', descricao: 'Tempo limite para responder ao cliente', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '30' },
+  { campo: 'confianca_minima_resposta', label: 'Confiança Mínima (%)', descricao: 'Score mínimo para responder sem escalar', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '70' },
+  { campo: 'max_agentes_simultaneos', label: 'Máx. Agentes Simultâneos', descricao: 'Quantos agentes podem ser consultados por vez', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
+  { campo: 'escalar_humano_apos_tentativas', label: 'Escalar Após N Tentativas', descricao: 'Após quantas tentativas escalar para humano', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
+  // Diferenciais (usados por vários agentes)
+  { campo: 'diferenciais_empresa', label: 'Diferenciais da Empresa', descricao: 'Principais diferenciais competitivos', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'Entrega em 24h, estoque próprio, suporte técnico' },
+  { campo: 'politica_devolucao', label: 'Política de Devolução', descricao: 'Regras gerais de devolução', tipo: 'texto', obrigatorio: false, categoria: 'Políticas', exemplo: 'Até 7 dias, com NF, produto lacrado' },
+  { campo: 'formas_pagamento', label: 'Formas de Pagamento Aceitas', descricao: 'Formas de pagamento da empresa', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: 'Boleto, PIX, Cartão, Cheque' },
+  { campo: 'prazos_pagamento', label: 'Prazos de Pagamento', descricao: 'Condições de prazo padrão', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: '30/60/90 dias, À vista' },
+];
+
+// ========== AGENTE ORQUESTRADOR ==========
+const orquestradorCampos: AgentDataField[] = [
+  // Campos específicos do orquestrador (empresa/comunicação/roteamento agora são globais)
 ];
 
 // ========== AGENTE COMERCIAL ==========
