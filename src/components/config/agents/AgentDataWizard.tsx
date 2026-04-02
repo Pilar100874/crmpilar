@@ -530,7 +530,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         if (data.length === 0) { toast.warning('Nenhum dado encontrado'); return; }
         
         // Map Excel column labels back to field campo keys
-        const fields = selectedAgent.campos;
+        const fields = activeFields;
         const labelTocampo: Record<string, string> = {};
         fields.forEach(f => { labelTocampo[f.label] = f.campo; });
         
