@@ -74,6 +74,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   // Saving
   const [saving, setSaving] = useState(false);
+  const [goToRow, setGoToRow] = useState('');
 
   const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
 
