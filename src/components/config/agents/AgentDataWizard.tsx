@@ -82,6 +82,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
 
+  // Active fields = all agent fields minus disabled ones
+  const activeFields = useMemo(() => {
+    if (!selectedAgent) return [];
+    return selectedAgent.campos.filter(f => !disabledFields.has(f.campo));
+  }, [selectedAgent, disabledFields]);
+
   const STEP_LABELS = ['Agente', 'Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
