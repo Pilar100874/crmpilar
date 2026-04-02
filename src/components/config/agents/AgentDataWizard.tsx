@@ -260,6 +260,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     setSelectedTable('');
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
+    setDisabledFields(new Set());
   };
 
   const canGoNext = (): boolean => {
