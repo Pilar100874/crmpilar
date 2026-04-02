@@ -371,8 +371,25 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   );
 
   // ========== STEP 2: Data Input ==========
+  // Group fields by categoria
+  const getGroupedFields = () => {
+    if (!selectedAgent) return [];
+    const groups: { categoria: string; fields: AgentDataField[] }[] = [];
+    const seen = new Set<string>();
+    for (const field of selectedAgent.campos) {
+      const cat = field.categoria || 'Geral';
+      if (!seen.has(cat)) {
+        seen.add(cat);
+        groups.push({ categoria: cat, fields: [] });
+      }
+      groups.find(g => g.categoria === cat)!.fields.push(field);
+    }
+    return groups;
+  };
+
   const renderStep2 = () => {
     if (dataSource === 'manual') {
+      const groups = getGroupedFields();
       return (
         <div className="space-y-4">
           <div className="text-center">
@@ -381,24 +398,36 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
           </div>
 
           <ScrollArea className="max-h-[500px]">
-            <div className="space-y-4 pr-4">
-              {selectedAgent?.campos.map(field => (
-                <Card key={field.campo} className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label className="font-medium">{field.label}</Label>
-                      {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{field.descricao}</p>
-                    <Textarea
-                      value={manualValues[field.campo] || ''}
-                      onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
-                      placeholder={`Ex: ${field.descricao}`}
-                      rows={field.tipo === 'texto' ? 4 : 2}
-                      className="text-sm"
-                    />
+            <div className="space-y-6 pr-4">
+              {groups.map(group => (
+                <div key={group.categoria}>
+                  <div className="flex items-center gap-2 mb-3 sticky top-0 bg-background z-10 py-1">
+                    <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-[10px] text-muted-foreground">{group.fields.length} campos</span>
                   </div>
-                </Card>
+                  <div className="space-y-3">
+                    {group.fields.map(field => (
+                      <Card key={field.campo} className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Label className="font-medium">{field.label}</Label>
+                            {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{field.descricao}</p>
+                          {field.exemplo && <p className="text-[10px] text-primary/70">💡 Ex: {field.exemplo}</p>}
+                          <Textarea
+                            value={manualValues[field.campo] || ''}
+                            onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
+                            placeholder={field.exemplo || field.descricao}
+                            rows={field.tipo === 'texto' ? 3 : 1}
+                            className="text-sm"
+                          />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </ScrollArea>
@@ -564,72 +593,84 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         </div>
 
         <ScrollArea className="max-h-[500px]">
-          <div className="space-y-3 pr-4">
-            {selectedAgent?.campos.map(field => {
-              const mapping = fieldMappings[field.campo];
-              const mappingType = mapping?.type || 'field';
+          <div className="space-y-6 pr-4">
+            {getGroupedFields().map(group => (
+              <div key={group.categoria}>
+                <div className="flex items-center gap-2 mb-3 sticky top-0 bg-background z-10 py-1">
+                  <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[10px] text-muted-foreground">{group.fields.length} campos</span>
+                </div>
+                <div className="space-y-3">
+                  {group.fields.map(field => {
+                    const mapping = fieldMappings[field.campo];
+                    const mappingType = mapping?.type || 'field';
 
-              return (
-                <Card key={field.campo} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <Label className="flex items-center gap-2">
-                          {field.label}
-                          {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
-                        </Label>
-                        <p className="text-xs text-muted-foreground mt-0.5">{field.descricao}</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <div className="flex-1">
-                        <RadioGroup
-                          value={mappingType}
-                          onValueChange={v => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: v as 'field' | 'fixed', value: '' } }))}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="field" id={`${field.campo}-field`} />
-                            <Label htmlFor={`${field.campo}-field`} className="font-normal cursor-pointer text-sm">Mapear</Label>
+                    return (
+                      <Card key={field.campo} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <Label className="flex items-center gap-2">
+                                {field.label}
+                                {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
+                              </Label>
+                              <p className="text-xs text-muted-foreground mt-0.5">{field.descricao}</p>
+                              {field.exemplo && <p className="text-[10px] text-primary/70 mt-0.5">💡 Ex: {field.exemplo}</p>}
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex-1">
+                              <RadioGroup
+                                value={mappingType}
+                                onValueChange={v => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: v as 'field' | 'fixed', value: '' } }))}
+                                className="flex gap-4"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="field" id={`${field.campo}-field`} />
+                                  <Label htmlFor={`${field.campo}-field`} className="font-normal cursor-pointer text-sm">Mapear</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="fixed" id={`${field.campo}-fixed`} />
+                                  <Label htmlFor={`${field.campo}-fixed`} className="font-normal cursor-pointer text-sm">Fixo</Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="fixed" id={`${field.campo}-fixed`} />
-                            <Label htmlFor={`${field.campo}-fixed`} className="font-normal cursor-pointer text-sm">Fixo</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
 
-                    <div>
-                      {mappingType === 'field' ? (
-                        <Select
-                          value={mapping?.value || 'none'}
-                          onValueChange={v => setFieldMappings(prev => ({
-                            ...prev,
-                            [field.campo]: { type: 'field', value: v === 'none' ? '' : v }
-                          }))}
-                        >
-                          <SelectTrigger><SelectValue placeholder="Selecione um campo..." /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none"><span className="text-muted-foreground">(Não mapear)</span></SelectItem>
-                            {availableColumns.map(c => (
-                              <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Textarea
-                          value={mapping?.value || ''}
-                          onChange={e => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: 'fixed', value: e.target.value } }))}
-                          placeholder="Digite o valor fixo..."
-                          rows={2}
-                          className="text-sm"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+                          <div>
+                            {mappingType === 'field' ? (
+                              <Select
+                                value={mapping?.value || 'none'}
+                                onValueChange={v => setFieldMappings(prev => ({
+                                  ...prev,
+                                  [field.campo]: { type: 'field', value: v === 'none' ? '' : v }
+                                }))}
+                              >
+                                <SelectTrigger><SelectValue placeholder="Selecione um campo..." /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none"><span className="text-muted-foreground">(Não mapear)</span></SelectItem>
+                                  {availableColumns.map(c => (
+                                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Textarea
+                                value={mapping?.value || ''}
+                                onChange={e => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: 'fixed', value: e.target.value } }))}
+                                placeholder="Digite o valor fixo..."
+                                rows={2}
+                                className="text-sm"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </ScrollArea>
       </div>
