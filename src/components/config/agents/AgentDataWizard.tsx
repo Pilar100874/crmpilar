@@ -539,9 +539,6 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         setScrollTop(e.currentTarget.scrollTop);
       };
 
-      // Navigate to row input
-      const [goToRow, setGoToRow] = useState('');
-
       return (
         <div className="space-y-3">
           <div className="text-center">
