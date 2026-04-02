@@ -58,6 +58,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   const [fetchingData, setFetchingData] = useState(false);
   const [fetchProgress, setFetchProgress] = useState(0);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   // Sistema state
   const [selectedTable, setSelectedTable] = useState('');
