@@ -673,56 +673,55 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
         <div className="bg-muted/50 rounded-lg p-3 mb-2">
           <p className="text-xs text-muted-foreground">
-            💡 Para cada campo do agente, selecione o campo correspondente da fonte de dados ou insira um valor fixo.
+            💡 Para cada campo, selecione o campo correspondente da fonte de dados ou insira um valor fixo.
           </p>
         </div>
 
-        <ScrollArea className="max-h-[500px]">
-          <div className="space-y-6 pr-4">
-            {getGroupedFields().map(group => (
-              <div key={group.categoria}>
-                <div className="flex items-center gap-2 mb-3 sticky top-0 bg-background z-10 py-1">
-                  <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-[10px] text-muted-foreground">{group.fields.length} campos</span>
-                </div>
-                <div className="space-y-3">
-                  {group.fields.map(field => {
-                    const mapping = fieldMappings[field.campo];
-                    const mappingType = mapping?.type || 'field';
+        <ScrollArea className="h-[500px]">
+          {getGroupedFields().map(group => (
+            <div key={group.categoria} className="mb-4">
+              <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background z-10 py-1">
+                <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Campo do Agente</TableHead>
+                      <TableHead className="w-[100px]">Tipo</TableHead>
+                      <TableHead>Mapeamento / Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.fields.map(field => {
+                      const mapping = fieldMappings[field.campo];
+                      const mappingType = mapping?.type || 'field';
 
-                    return (
-                      <Card key={field.campo} className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                              <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
-                              </Label>
-                              <p className="text-xs text-muted-foreground mt-0.5">{field.descricao}</p>
-                              {field.exemplo && <p className="text-[10px] text-primary/70 mt-0.5">💡 Ex: {field.exemplo}</p>}
+                      return (
+                        <TableRow key={field.campo}>
+                          <TableCell className="align-top">
+                            <div>
+                              <span className="font-medium text-sm">{field.label}</span>
+                              {field.obrigatorio && <Badge variant="destructive" className="text-[10px] ml-1">*</Badge>}
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{field.descricao}</p>
                             </div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="flex-1">
-                              <RadioGroup
-                                value={mappingType}
-                                onValueChange={v => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: v as 'field' | 'fixed', value: '' } }))}
-                                className="flex gap-4"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="field" id={`${field.campo}-field`} />
-                                  <Label htmlFor={`${field.campo}-field`} className="font-normal cursor-pointer text-sm">Mapear</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="fixed" id={`${field.campo}-fixed`} />
-                                  <Label htmlFor={`${field.campo}-fixed`} className="font-normal cursor-pointer text-sm">Fixo</Label>
-                                </div>
-                              </RadioGroup>
-                            </div>
-                          </div>
-
-                          <div>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <Select
+                              value={mappingType}
+                              onValueChange={v => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: v as 'field' | 'fixed', value: '' } }))}
+                            >
+                              <SelectTrigger className="h-8 text-xs w-[90px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="field">Mapear</SelectItem>
+                                <SelectItem value="fixed">Fixo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="align-top">
                             {mappingType === 'field' ? (
                               <Select
                                 value={mapping?.value || 'none'}
@@ -731,7 +730,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                                   [field.campo]: { type: 'field', value: v === 'none' ? '' : v }
                                 }))}
                               >
-                                <SelectTrigger><SelectValue placeholder="Selecione um campo..." /></SelectTrigger>
+                                <SelectTrigger className="h-8 text-sm">
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="none"><span className="text-muted-foreground">(Não mapear)</span></SelectItem>
                                   {availableColumns.map(c => (
@@ -740,23 +741,22 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                                 </SelectContent>
                               </Select>
                             ) : (
-                              <Textarea
+                              <Input
                                 value={mapping?.value || ''}
                                 onChange={e => setFieldMappings(prev => ({ ...prev, [field.campo]: { type: 'fixed', value: e.target.value } }))}
-                                placeholder="Digite o valor fixo..."
-                                rows={2}
-                                className="text-sm"
+                                placeholder={field.exemplo || 'Valor fixo...'}
+                                className="text-sm h-8"
                               />
                             )}
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </ScrollArea>
       </div>
     );
