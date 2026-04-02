@@ -196,7 +196,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     if (!selectedAgent) return;
     setSaving(true);
     try {
-      for (const field of selectedAgent.campos) {
+      for (const field of activeFields) {
         if (dataSource === 'manual') {
           // For manual, save all rows as JSON array in valor_manual
           const allValues = manualRows.filter(row => Object.values(row).some(v => v?.trim()));
