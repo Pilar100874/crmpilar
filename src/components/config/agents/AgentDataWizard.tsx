@@ -398,18 +398,50 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Excel template download
   const downloadExcelTemplate = () => {
     if (!selectedAgent) return;
-    // Create template with fields as columns, empty rows for user to fill
     const fields = selectedAgent.campos;
-    const headerRow: Record<string, string> = {};
-    fields.forEach(f => { headerRow[f.label] = ''; });
-    // Add 10 empty rows as template
-    const rows = Array.from({ length: 10 }, () => ({ ...headerRow }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = fields.map(() => ({ wch: 20 }));
+    // Example row with orientation hints
+    const exampleRow: Record<string, string> = {};
+    fields.forEach(f => {
+      const hints: Record<string, string> = {
+        'codigo_cliente': 'Ex: CLI001',
+        'cnpj_cpf': 'Ex: 12.345.678/0001-90',
+        'razao_social': 'Ex: Empresa ABC Ltda',
+        'nome_fantasia': 'Ex: ABC',
+        'segmento': 'Ex: Varejo',
+        'cidade': 'Ex: São Paulo',
+        'estado': 'Ex: SP',
+        'email': 'Ex: contato@empresa.com',
+        'telefone': 'Ex: (11) 99999-0000',
+        'vendedor_responsavel': 'Ex: João Silva',
+        'limite_credito': 'Ex: 50000',
+        'numero_pedido': 'Ex: PED001',
+        'data_pedido': 'Ex: 2024-01-15',
+        'codigo_produto': 'Ex: PROD001',
+        'nome_produto': 'Ex: Produto X',
+        'quantidade': 'Ex: 10',
+        'valor_unitario': 'Ex: 29.90',
+        'valor_total': 'Ex: 299.00',
+        'status_pedido': 'Ex: Faturado',
+        'ticket_medio': 'Ex: 1500.00',
+        'frequencia_compra': 'Ex: Mensal',
+        'score': 'Ex: 85',
+        'tipo': 'Ex: Recorrente',
+        'data_vencimento': 'Ex: 2024-02-15',
+        'valor': 'Ex: 1500.00',
+        'status': 'Ex: Ativo',
+        'descricao': 'Ex: Descrição do item',
+        'categoria': 'Ex: Categoria A',
+        'preco': 'Ex: 49.90',
+        'estoque': 'Ex: 100',
+      };
+      exampleRow[f.label] = hints[f.campo] || `Ex: valor de ${f.label}`;
+    });
+    const ws = XLSX.utils.json_to_sheet([exampleRow]);
+    ws['!cols'] = fields.map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
     XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
-    toast.success('Modelo Excel baixado!');
+    toast.success('Modelo Excel baixado com exemplo de orientação!');
   };
 
   // Excel import
