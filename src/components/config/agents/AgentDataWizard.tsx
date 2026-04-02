@@ -411,6 +411,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   // Excel import
   const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedAgent) return;
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -419,18 +420,26 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         const wb = XLSX.read(evt.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data: any[] = XLSX.utils.sheet_to_json(ws);
-        const newValues: Record<string, string> = { ...manualValues };
-        let count = 0;
-        data.forEach(row => {
-          const campo = row['Campo'] || row['campo'];
-          const valor = row['Valor'] || row['valor'] || '';
-          if (campo && String(valor).trim()) {
-            newValues[campo] = String(valor);
-            count++;
-          }
-        });
-        setManualValues(newValues);
-        toast.success(`${count} campos importados do Excel!`);
+        if (data.length === 0) { toast.warning('Nenhum dado encontrado'); return; }
+        
+        // Map Excel column labels back to field campo keys
+        const fields = selectedAgent.campos;
+        const labelTocampo: Record<string, string> = {};
+        fields.forEach(f => { labelTocampo[f.label] = f.campo; });
+        
+        const newRows: Record<string, string>[] = data.map(row => {
+          const mapped: Record<string, string> = {};
+          Object.entries(row).forEach(([key, val]) => {
+            const campo = labelTocampo[key] || key;
+            if (val !== undefined && val !== null && String(val).trim()) {
+              mapped[campo] = String(val);
+            }
+          });
+          return mapped;
+        }).filter(row => Object.keys(row).length > 0);
+        
+        setManualRows(prev => [...prev.filter(r => Object.values(r).some(v => v?.trim())), ...newRows]);
+        toast.success(`${newRows.length} registros importados do Excel!`);
       } catch {
         toast.error('Erro ao ler o arquivo Excel');
       }
