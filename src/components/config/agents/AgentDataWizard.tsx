@@ -559,7 +559,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   const renderStep2 = () => {
     if (dataSource === 'manual') {
-      const fields = selectedAgent?.campos || [];
+      const fields = activeFields;
       const groups = getGroupedFields();
       
       const addRow = () => setManualRows(prev => [...prev, {}]);
