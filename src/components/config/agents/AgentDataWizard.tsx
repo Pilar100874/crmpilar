@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2
 } from 'lucide-react';
 
 interface Props {
@@ -66,8 +66,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Field mapping state (for API and Sistema)
   const [fieldMappings, setFieldMappings] = useState<Record<string, FieldMappingEntry>>({});
 
-  // Manual values state
+  // Manual values state - now supports multiple rows
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
+  const [manualRows, setManualRows] = useState<Record<string, string>[]>([{}]);
 
   // Saving
   const [saving, setSaving] = useState(false);
@@ -184,7 +185,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     try {
       for (const field of selectedAgent.campos) {
         if (dataSource === 'manual') {
-          const val = manualValues[field.campo] || '';
+          // For manual, save all rows as JSON array in valor_manual
+          const allValues = manualRows.filter(row => Object.values(row).some(v => v?.trim()));
+          const val = allValues.length > 0 ? JSON.stringify(allValues.map(row => row[field.campo] || '')) : (manualValues[field.campo] || '');
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
             agent_template_key: selectedAgent.template_key,
@@ -243,7 +246,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     setApiHeaders([]);
     setSelectedTable('');
     setFieldMappings({});
-    setManualValues({});
+    setManualRows([{}]);
   };
 
   const canGoNext = (): boolean => {
@@ -251,7 +254,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
       case 0: return !!selectedAgentKey;
       case 1: return true;
       case 2:
-        if (dataSource === 'manual') return Object.values(manualValues).some(v => v.trim().length > 0);
+        if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return !!selectedTable;
         return false;
@@ -392,23 +395,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Excel template download
   const downloadExcelTemplate = () => {
     if (!selectedAgent) return;
-    const groups = getGroupedFields();
-    const rows: any[] = [];
-    groups.forEach(g => {
-      g.fields.forEach(f => {
-        rows.push({
-          'Campo': f.campo,
-          'Label': f.label,
-          'Categoria': f.categoria || 'Geral',
-          'Obrigatório': f.obrigatorio ? 'Sim' : 'Não',
-          'Descrição': f.descricao || '',
-          'Exemplo': f.exemplo || '',
-          'Valor': manualValues[f.campo] || '',
-        });
-      });
-    });
+    // Create template with fields as columns, empty rows for user to fill
+    const fields = selectedAgent.campos;
+    const headerRow: Record<string, string> = {};
+    fields.forEach(f => { headerRow[f.label] = ''; });
+    // Add 10 empty rows as template
+    const rows = Array.from({ length: 10 }, () => ({ ...headerRow }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 30 }, { wch: 40 }];
+    ws['!cols'] = fields.map(() => ({ wch: 20 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
     XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
@@ -417,6 +411,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   // Excel import
   const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedAgent) return;
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -425,18 +420,26 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         const wb = XLSX.read(evt.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data: any[] = XLSX.utils.sheet_to_json(ws);
-        const newValues: Record<string, string> = { ...manualValues };
-        let count = 0;
-        data.forEach(row => {
-          const campo = row['Campo'] || row['campo'];
-          const valor = row['Valor'] || row['valor'] || '';
-          if (campo && String(valor).trim()) {
-            newValues[campo] = String(valor);
-            count++;
-          }
-        });
-        setManualValues(newValues);
-        toast.success(`${count} campos importados do Excel!`);
+        if (data.length === 0) { toast.warning('Nenhum dado encontrado'); return; }
+        
+        // Map Excel column labels back to field campo keys
+        const fields = selectedAgent.campos;
+        const labelTocampo: Record<string, string> = {};
+        fields.forEach(f => { labelTocampo[f.label] = f.campo; });
+        
+        const newRows: Record<string, string>[] = data.map(row => {
+          const mapped: Record<string, string> = {};
+          Object.entries(row).forEach(([key, val]) => {
+            const campo = labelTocampo[key] || key;
+            if (val !== undefined && val !== null && String(val).trim()) {
+              mapped[campo] = String(val);
+            }
+          });
+          return mapped;
+        }).filter(row => Object.keys(row).length > 0);
+        
+        setManualRows(prev => [...prev.filter(r => Object.values(r).some(v => v?.trim())), ...newRows]);
+        toast.success(`${newRows.length} registros importados do Excel!`);
       } catch {
         toast.error('Erro ao ler o arquivo Excel');
       }
@@ -449,73 +452,114 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   const renderStep2 = () => {
     if (dataSource === 'manual') {
+      const fields = selectedAgent?.campos || [];
       const groups = getGroupedFields();
+      
+      const addRow = () => setManualRows(prev => [...prev, {}]);
+      const removeRow = (idx: number) => setManualRows(prev => prev.length <= 1 ? [{}] : prev.filter((_, i) => i !== idx));
+      const updateRowField = (rowIdx: number, campo: string, value: string) => {
+        setManualRows(prev => prev.map((row, i) => i === rowIdx ? { ...row, [campo]: value } : row));
+      };
+      const duplicateRow = (idx: number) => setManualRows(prev => [...prev.slice(0, idx + 1), { ...prev[idx] }, ...prev.slice(idx + 1)]);
+      const clearAllRows = () => setManualRows([{}]);
+
       return (
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Inserir Dados Manualmente</h3>
-            <p className="text-sm text-muted-foreground">Preencha a tabela ou importe do Excel</p>
+            <p className="text-sm text-muted-foreground">
+              Preencha a planilha abaixo — cada linha é um registro. Use os botões para adicionar ou importar do Excel.
+            </p>
           </div>
 
-          <div className="flex gap-2 justify-end">
-            <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
-            <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
-              <Download className="h-4 w-4 mr-1" /> Baixar Modelo
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
-              <Upload className="h-4 w-4 mr-1" /> Importar Excel
-            </Button>
+          <div className="flex gap-2 justify-between flex-wrap">
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" onClick={addRow}>
+                + Adicionar Linha
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 5 }, () => ({}))])}>
+                + 5 Linhas
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearAllRows}>
+                Limpar Tudo
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
+              <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
+                <Download className="h-4 w-4 mr-1" /> Baixar Modelo
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> Importar Excel
+              </Button>
+            </div>
           </div>
 
-          <ScrollArea className="h-[500px]">
-            {groups.map(group => (
-              <div key={group.categoria} className="mb-4">
-                <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background z-10 py-1">
-                  <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <div className="border rounded-lg overflow-hidden">
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <Badge variant="outline">{manualRows.length} registro(s)</Badge>
+            <span>•</span>
+            <span>{fields.length} campos por registro</span>
+          </div>
+
+          {groups.map(group => (
+            <div key={group.categoria} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <ScrollArea className="w-full">
+                <div className="border rounded-lg overflow-hidden min-w-[600px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[200px]">Campo</TableHead>
-                        <TableHead className="w-[80px]">Obrig.</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead className="w-[200px]">Exemplo</TableHead>
+                        <TableHead className="w-[50px] text-center">#</TableHead>
+                        {group.fields.map(f => (
+                          <TableHead key={f.campo} className="min-w-[150px]" title={f.descricao}>
+                            <div className="flex items-center gap-1">
+                              <span className="truncate">{f.label}</span>
+                              {f.obrigatorio && <span className="text-destructive">*</span>}
+                            </div>
+                          </TableHead>
+                        ))}
+                        <TableHead className="w-[80px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {group.fields.map(field => (
-                        <TableRow key={field.campo}>
-                          <TableCell className="font-medium text-sm" title={field.descricao}>
-                            {field.label}
-                          </TableCell>
-                          <TableCell>
-                            {field.obrigatorio ? (
-                              <Badge variant="destructive" className="text-[10px]">Sim</Badge>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Não</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={manualValues[field.campo] || ''}
-                              onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
-                              placeholder={field.descricao}
-                              className="text-sm h-8"
-                            />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground truncate max-w-[200px]" title={field.exemplo}>
-                            {field.exemplo || '—'}
+                      {manualRows.map((row, rowIdx) => (
+                        <TableRow key={rowIdx}>
+                          <TableCell className="text-center text-xs text-muted-foreground font-mono">{rowIdx + 1}</TableCell>
+                          {group.fields.map(f => (
+                            <TableCell key={f.campo} className="p-1">
+                              <Input
+                                value={row[f.campo] || ''}
+                                onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
+                                placeholder={f.exemplo || f.descricao || ''}
+                                className="text-sm h-8 rounded-md"
+                              />
+                            </TableCell>
+                          ))}
+                          <TableCell className="p-1">
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateRow(rowIdx)} title="Duplicar">
+                                <RefreshCw className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
+                                ×
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-              </div>
-            ))}
-          </ScrollArea>
+              </ScrollArea>
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={addRow} className="w-full border-dashed">
+            + Adicionar mais uma linha
+          </Button>
         </div>
       );
     }
