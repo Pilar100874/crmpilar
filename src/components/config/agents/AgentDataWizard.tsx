@@ -395,7 +395,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     if (!selectedAgent) return [];
     const groups: { categoria: string; fields: AgentDataField[] }[] = [];
     const seen = new Set<string>();
-    for (const field of selectedAgent.campos) {
+    for (const field of activeFields) {
       const cat = field.categoria || 'Geral';
       if (!seen.has(cat)) {
         seen.add(cat);
