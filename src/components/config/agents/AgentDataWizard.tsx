@@ -347,7 +347,20 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   );
 
   // ========== STEP 1: Select Data Source ==========
-  const renderStep1 = () => (
+  const renderStep1 = () => {
+    const toggleField = (campo: string) => {
+      setDisabledFields(prev => {
+        const next = new Set(prev);
+        if (next.has(campo)) next.delete(campo);
+        else next.add(campo);
+        return next;
+      });
+    };
+
+    const allCampos = selectedAgent?.campos || [];
+    const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
+
+    return (
     <div className="space-y-4">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Origem dos Dados</h3>
@@ -386,8 +399,56 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
           ))}
         </RadioGroup>
       </Card>
+
+      {/* Field selection - allow user to disable unused fields */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Campos a utilizar</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">{activeFields.length}/{allCampos.length} ativos</Badge>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setDisabledFields(new Set())}>
+              Ativar todos
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">Desmarque os campos que você não utilizará neste agente.</p>
+        <ScrollArea className="max-h-[250px]">
+          <div className="space-y-3">
+            {categorias.map(cat => {
+              const catFields = allCampos.filter(f => (f.categoria || 'Geral') === cat);
+              return (
+                <div key={cat}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Badge variant="secondary" className="text-[10px]">{cat}</Badge>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1">
+                    {catFields.map(f => (
+                      <label
+                        key={f.campo}
+                        className={`flex items-center gap-2 p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-muted/50 ${disabledFields.has(f.campo) ? 'opacity-50' : ''}`}
+                      >
+                        <Checkbox
+                          checked={!disabledFields.has(f.campo)}
+                          onCheckedChange={() => toggleField(f.campo)}
+                          disabled={f.obrigatorio}
+                        />
+                        <span className="truncate">{f.label}</span>
+                        {f.obrigatorio && <span className="text-destructive text-[10px]">*</span>}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </Card>
     </div>
-  );
+  )};
 
   // ========== STEP 2: Data Input ==========
   // Group fields by categoria
