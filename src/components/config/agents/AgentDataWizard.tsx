@@ -452,73 +452,114 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   const renderStep2 = () => {
     if (dataSource === 'manual') {
+      const fields = selectedAgent?.campos || [];
       const groups = getGroupedFields();
+      
+      const addRow = () => setManualRows(prev => [...prev, {}]);
+      const removeRow = (idx: number) => setManualRows(prev => prev.length <= 1 ? [{}] : prev.filter((_, i) => i !== idx));
+      const updateRowField = (rowIdx: number, campo: string, value: string) => {
+        setManualRows(prev => prev.map((row, i) => i === rowIdx ? { ...row, [campo]: value } : row));
+      };
+      const duplicateRow = (idx: number) => setManualRows(prev => [...prev.slice(0, idx + 1), { ...prev[idx] }, ...prev.slice(idx + 1)]);
+      const clearAllRows = () => setManualRows([{}]);
+
       return (
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Inserir Dados Manualmente</h3>
-            <p className="text-sm text-muted-foreground">Preencha a tabela ou importe do Excel</p>
+            <p className="text-sm text-muted-foreground">
+              Preencha a planilha abaixo — cada linha é um registro. Use os botões para adicionar ou importar do Excel.
+            </p>
           </div>
 
-          <div className="flex gap-2 justify-end">
-            <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
-            <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
-              <Download className="h-4 w-4 mr-1" /> Baixar Modelo
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
-              <Upload className="h-4 w-4 mr-1" /> Importar Excel
-            </Button>
+          <div className="flex gap-2 justify-between flex-wrap">
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" onClick={addRow}>
+                + Adicionar Linha
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 5 }, () => ({}))])}>
+                + 5 Linhas
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearAllRows}>
+                Limpar Tudo
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
+              <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
+                <Download className="h-4 w-4 mr-1" /> Baixar Modelo
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-1" /> Importar Excel
+              </Button>
+            </div>
           </div>
 
-          <ScrollArea className="h-[500px]">
-            {groups.map(group => (
-              <div key={group.categoria} className="mb-4">
-                <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background z-10 py-1">
-                  <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <div className="border rounded-lg overflow-hidden">
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <Badge variant="outline">{manualRows.length} registro(s)</Badge>
+            <span>•</span>
+            <span>{fields.length} campos por registro</span>
+          </div>
+
+          {groups.map(group => (
+            <div key={group.categoria} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <ScrollArea className="w-full">
+                <div className="border rounded-lg overflow-hidden min-w-[600px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[200px]">Campo</TableHead>
-                        <TableHead className="w-[80px]">Obrig.</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead className="w-[200px]">Exemplo</TableHead>
+                        <TableHead className="w-[50px] text-center">#</TableHead>
+                        {group.fields.map(f => (
+                          <TableHead key={f.campo} className="min-w-[150px]" title={f.descricao}>
+                            <div className="flex items-center gap-1">
+                              <span className="truncate">{f.label}</span>
+                              {f.obrigatorio && <span className="text-destructive">*</span>}
+                            </div>
+                          </TableHead>
+                        ))}
+                        <TableHead className="w-[80px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {group.fields.map(field => (
-                        <TableRow key={field.campo}>
-                          <TableCell className="font-medium text-sm" title={field.descricao}>
-                            {field.label}
-                          </TableCell>
-                          <TableCell>
-                            {field.obrigatorio ? (
-                              <Badge variant="destructive" className="text-[10px]">Sim</Badge>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Não</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={manualValues[field.campo] || ''}
-                              onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
-                              placeholder={field.descricao}
-                              className="text-sm h-8"
-                            />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground truncate max-w-[200px]" title={field.exemplo}>
-                            {field.exemplo || '—'}
+                      {manualRows.map((row, rowIdx) => (
+                        <TableRow key={rowIdx}>
+                          <TableCell className="text-center text-xs text-muted-foreground font-mono">{rowIdx + 1}</TableCell>
+                          {group.fields.map(f => (
+                            <TableCell key={f.campo} className="p-1">
+                              <Input
+                                value={row[f.campo] || ''}
+                                onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
+                                placeholder={f.exemplo || f.descricao || ''}
+                                className="text-sm h-8 rounded-md"
+                              />
+                            </TableCell>
+                          ))}
+                          <TableCell className="p-1">
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateRow(rowIdx)} title="Duplicar">
+                                <RefreshCw className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
+                                ×
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-              </div>
-            ))}
-          </ScrollArea>
+              </ScrollArea>
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={addRow} className="w-full border-dashed">
+            + Adicionar mais uma linha
+          </Button>
         </div>
       );
     }
