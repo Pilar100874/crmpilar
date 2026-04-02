@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AGENT_DATA_REQUIREMENTS, SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
 import { useAgentDataBindings } from '@/hooks/useAgentDataBindings';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +59,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   const [fetchProgress, setFetchProgress] = useState(0);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
 
   // Sistema state
   const [selectedTable, setSelectedTable] = useState('');
@@ -68,10 +70,11 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   // Manual values state - now supports multiple rows
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
-  const [manualRows, setManualRows] = useState<Record<string, string>[]>([{}]);
+  const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
   // Saving
   const [saving, setSaving] = useState(false);
+  const [goToRow, setGoToRow] = useState('');
 
   const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
 
@@ -246,7 +249,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     setApiHeaders([]);
     setSelectedTable('');
     setFieldMappings({});
-    setManualRows([{}]);
+    setManualRows(Array.from({ length: 50 }, () => ({})));
   };
 
   const canGoNext = (): boolean => {
@@ -461,7 +464,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         setManualRows(prev => prev.map((row, i) => i === rowIdx ? { ...row, [campo]: value } : row));
       };
       const duplicateRow = (idx: number) => setManualRows(prev => [...prev.slice(0, idx + 1), { ...prev[idx] }, ...prev.slice(idx + 1)]);
-      const clearAllRows = () => setManualRows([{}]);
+      const clearAllRows = () => setManualRows(Array.from({ length: 50 }, () => ({})));
 
       // Handle paste from clipboard (Excel/Sheets copy)
       const handlePaste = (e: React.ClipboardEvent, groupFields: AgentDataField[], startRowIdx: number, startFieldIdx: number) => {
@@ -522,31 +525,57 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         }
       };
 
-      // Initialize with 50 empty rows if only 1 empty row exists
-      if (manualRows.length <= 1 && !Object.values(manualRows[0] || {}).some(v => v?.trim())) {
-        setTimeout(() => setManualRows(Array.from({ length: 50 }, () => ({}))), 0);
-      }
+      const ROW_HEIGHT = 32;
+      const VISIBLE_ROWS = 20;
+      const OVERSCAN = 5;
+      const containerHeight = VISIBLE_ROWS * ROW_HEIGHT;
+      const totalHeight = manualRows.length * ROW_HEIGHT;
+      const startIdx = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+      const endIdx = Math.min(manualRows.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + OVERSCAN);
+      const visibleRows = manualRows.slice(startIdx, endIdx);
+      const filledCount = manualRows.filter(r => Object.values(r).some(v => v?.trim())).length;
+
+      const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        setScrollTop(e.currentTarget.scrollTop);
+      };
 
       return (
         <div className="space-y-3">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-1">Inserir Dados Manualmente</h3>
             <p className="text-sm text-muted-foreground">
-              Preencha como uma planilha. <strong>Cole dados do Excel (Ctrl+V)</strong> em qualquer célula.
+              Preencha como uma planilha. <strong>Cole até 10.000+ registros do Excel (Ctrl+V)</strong>.
             </p>
           </div>
 
           <div className="flex gap-2 justify-between flex-wrap">
-            <div className="flex gap-2">
-              <Button variant="default" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 10 }, () => ({}))])}>
-                + 10 Linhas
+            <div className="flex gap-2 items-center">
+              <Button variant="default" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 100 }, () => ({}))])}>
+                + 100 Linhas
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 50 }, () => ({}))])}>
-                + 50 Linhas
+              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 1000 }, () => ({}))])}>
+                + 1.000
               </Button>
               <Button variant="ghost" size="sm" onClick={clearAllRows}>
-                Limpar Tudo
+                Limpar
               </Button>
+              <div className="flex items-center gap-1 ml-2">
+                <Input
+                  placeholder="Ir p/ linha"
+                  value={goToRow}
+                  onChange={e => setGoToRow(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const row = parseInt(goToRow) - 1;
+                      if (row >= 0 && row < manualRows.length && scrollContainerRef.current) {
+                        scrollContainerRef.current.scrollTop = row * ROW_HEIGHT;
+                        setGoToRow('');
+                      }
+                    }
+                  }}
+                  className="w-24 h-7 text-xs"
+                />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={handleGlobalPaste} title="Colar dados do Excel">
@@ -563,61 +592,80 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
           </div>
 
           <div className="text-xs text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 rounded-md">
-            <Badge variant="outline">{manualRows.length} linhas</Badge>
+            <Badge variant="outline">{manualRows.length.toLocaleString()} linhas</Badge>
+            <span>•</span>
+            <Badge variant="secondary">{filledCount.toLocaleString()} preenchidas</Badge>
             <span>•</span>
             <span>{fields.length} colunas</span>
             <span>•</span>
-            <span className="text-primary font-medium">💡 Ctrl+V em qualquer célula para colar do Excel</span>
+            <span className="text-primary font-medium">💡 Ctrl+V para colar milhares de registros do Excel</span>
           </div>
 
-          <ScrollArea className="h-[500px] w-full">
-            <div className="border rounded-lg overflow-hidden" style={{ minWidth: `${fields.length * 140 + 100}px` }}>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[40px] text-center sticky left-0 bg-muted/80 z-10 text-xs">#</TableHead>
-                    {fields.map(f => (
-                      <TableHead key={f.campo} className="min-w-[130px] text-xs px-1" title={`${f.descricao} (${f.categoria})`}>
-                        <div className="flex items-center gap-0.5">
-                          <span className="truncate">{f.label}</span>
-                          {f.obrigatorio && <span className="text-destructive">*</span>}
-                        </div>
-                      </TableHead>
-                    ))}
-                    <TableHead className="w-[60px] text-xs">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {manualRows.map((row, rowIdx) => (
-                    <TableRow key={rowIdx} className="h-8">
-                      <TableCell className="text-center text-[10px] text-muted-foreground font-mono p-0 sticky left-0 bg-background z-10">{rowIdx + 1}</TableCell>
-                      {fields.map((f, fIdx) => (
-                        <TableCell key={f.campo} className="p-0.5">
-                          <Input
-                            value={row[f.campo] || ''}
-                            onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
-                            onPaste={e => handlePaste(e, fields, rowIdx, fIdx)}
-                            placeholder={f.exemplo || ''}
-                            className="text-xs h-7 rounded-sm border-transparent focus:border-primary px-1"
-                          />
-                        </TableCell>
+          <div className="border rounded-lg overflow-hidden">
+            {/* Sticky header */}
+            <div className="overflow-x-auto">
+              <div style={{ minWidth: `${fields.length * 140 + 100}px` }}>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="w-[45px] text-center text-xs">#</TableHead>
+                      {fields.map(f => (
+                        <TableHead key={f.campo} className="min-w-[130px] text-xs px-1" title={`${f.descricao} (${f.categoria})`}>
+                          <div className="flex items-center gap-0.5">
+                            <span className="truncate">{f.label}</span>
+                            {f.obrigatorio && <span className="text-destructive">*</span>}
+                          </div>
+                        </TableHead>
                       ))}
-                      <TableCell className="p-0.5">
-                        <div className="flex gap-0.5">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => duplicateRow(rowIdx)} title="Duplicar">
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
-                            ×
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <TableHead className="w-[50px] text-xs">×</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                </Table>
+              </div>
             </div>
-          </ScrollArea>
+            {/* Virtualized body */}
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="overflow-auto"
+              style={{ height: `${containerHeight}px` }}
+            >
+              <div className="overflow-x-auto">
+                <div style={{ minWidth: `${fields.length * 140 + 100}px`, height: `${totalHeight}px`, position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: `${startIdx * ROW_HEIGHT}px`, width: '100%' }}>
+                    <Table>
+                      <TableBody>
+                        {visibleRows.map((row, vIdx) => {
+                          const rowIdx = startIdx + vIdx;
+                          return (
+                            <TableRow key={rowIdx} style={{ height: `${ROW_HEIGHT}px` }}>
+                              <TableCell className="text-center text-[10px] text-muted-foreground font-mono p-0 w-[45px]">{rowIdx + 1}</TableCell>
+                              {fields.map((f, fIdx) => (
+                                <TableCell key={f.campo} className="p-0.5 min-w-[130px]">
+                                  <Input
+                                    value={row[f.campo] || ''}
+                                    onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
+                                    onPaste={e => handlePaste(e, fields, rowIdx, fIdx)}
+                                    placeholder={f.exemplo || ''}
+                                    className="text-xs h-7 rounded-sm border-transparent focus:border-primary px-1"
+                                  />
+                                </TableCell>
+                              ))}
+                              <TableCell className="p-0.5 w-[50px]">
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
+                                  ×
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
