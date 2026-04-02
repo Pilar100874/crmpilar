@@ -66,8 +66,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Field mapping state (for API and Sistema)
   const [fieldMappings, setFieldMappings] = useState<Record<string, FieldMappingEntry>>({});
 
-  // Manual values state
+  // Manual values state - now supports multiple rows
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
+  const [manualRows, setManualRows] = useState<Record<string, string>[]>([{}]);
 
   // Saving
   const [saving, setSaving] = useState(false);
