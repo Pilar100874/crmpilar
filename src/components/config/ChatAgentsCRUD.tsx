@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
@@ -25,6 +25,7 @@ import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
 import AgentDataWizard from '@/components/config/agents/AgentDataWizard';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
+import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings';
 import * as XLSX from 'xlsx';
 
 const MODELOS_IA = [
@@ -342,6 +343,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
+            <TabsTrigger value="geral" className="gap-1"><Settings className="h-4 w-4" /> Geral</TabsTrigger>
             <TabsTrigger value="dados" className="gap-1"><Database className="h-4 w-4" /> Dados</TabsTrigger>
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
@@ -1001,6 +1003,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
+        </TabsContent>
+
+        <TabsContent value="geral" className="mt-0">
+          <AgentGlobalSettings estabelecimentoId={estabelecimentoId} />
         </TabsContent>
 
         <TabsContent value="dados" className="mt-0">

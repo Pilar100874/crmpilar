@@ -18,8 +18,8 @@ export interface AgentDataRequirement {
   campos: AgentDataField[];
 }
 
-// ========== AGENTE ORQUESTRADOR ==========
-const orquestradorCampos: AgentDataField[] = [
+// ========== CONFIGURAÇÕES GLOBAIS (compartilhadas por todos os agentes) ==========
+export const GLOBAL_AGENT_SETTINGS: AgentDataField[] = [
   // Empresa
   { campo: 'empresa_nome', label: 'Nome da Empresa', descricao: 'Razão social ou nome fantasia', tipo: 'texto', obrigatorio: true, categoria: 'Empresa', exemplo: 'Distribuidora ABC Ltda' },
   { campo: 'empresa_segmento_atuacao', label: 'Segmento de Atuação', descricao: 'Ramo da empresa (atacado, varejo, indústria)', tipo: 'texto', obrigatorio: true, categoria: 'Empresa', exemplo: 'Distribuição de materiais elétricos' },
@@ -27,16 +27,26 @@ const orquestradorCampos: AgentDataField[] = [
   { campo: 'empresa_telefone', label: 'Telefone da Empresa', descricao: 'Telefone principal para contato', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: '(11) 3333-4444' },
   { campo: 'empresa_email', label: 'E-mail da Empresa', descricao: 'E-mail principal de contato', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'contato@abc.com.br' },
   { campo: 'empresa_site', label: 'Site/URL', descricao: 'Site da empresa', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'www.abc.com.br' },
-  // Configuração de Roteamento
-  { campo: 'tempo_max_resposta_segundos', label: 'Tempo Máximo Resposta (seg)', descricao: 'Tempo limite para responder ao cliente', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '30' },
-  { campo: 'confianca_minima_resposta', label: 'Confiança Mínima (%)', descricao: 'Score mínimo para responder sem escalar', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '70' },
-  { campo: 'max_agentes_simultaneos', label: 'Máx. Agentes Simultâneos', descricao: 'Quantos agentes podem ser consultados por vez', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
-  { campo: 'escalar_humano_apos_tentativas', label: 'Escalar Após N Tentativas', descricao: 'Após quantas tentativas escalar para humano', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
-  // Saudação
+  // Comunicação (padrão para todos os agentes)
   { campo: 'saudacao_inicial', label: 'Saudação Inicial', descricao: 'Mensagem de boas-vindas ao cliente', tipo: 'texto', obrigatorio: true, categoria: 'Comunicação', exemplo: 'Olá! Sou o assistente da ABC. Como posso ajudar?' },
   { campo: 'saudacao_fora_horario', label: 'Mensagem Fora do Horário', descricao: 'Resposta quando fora do expediente', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Nosso horário é de seg a sex, 8h às 18h.' },
   { campo: 'mensagem_espera', label: 'Mensagem de Espera', descricao: 'Quando precisa de mais tempo para responder', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Só um momento, estou consultando isso para você...' },
   { campo: 'mensagem_escalacao', label: 'Mensagem de Escalação', descricao: 'Quando transfere para humano', tipo: 'texto', obrigatorio: false, categoria: 'Comunicação', exemplo: 'Vou transferir você para um especialista.' },
+  // Roteamento
+  { campo: 'tempo_max_resposta_segundos', label: 'Tempo Máximo Resposta (seg)', descricao: 'Tempo limite para responder ao cliente', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '30' },
+  { campo: 'confianca_minima_resposta', label: 'Confiança Mínima (%)', descricao: 'Score mínimo para responder sem escalar', tipo: 'numero', obrigatorio: true, categoria: 'Roteamento', exemplo: '70' },
+  { campo: 'max_agentes_simultaneos', label: 'Máx. Agentes Simultâneos', descricao: 'Quantos agentes podem ser consultados por vez', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
+  { campo: 'escalar_humano_apos_tentativas', label: 'Escalar Após N Tentativas', descricao: 'Após quantas tentativas escalar para humano', tipo: 'numero', obrigatorio: false, categoria: 'Roteamento', exemplo: '3' },
+  // Diferenciais (usados por vários agentes)
+  { campo: 'diferenciais_empresa', label: 'Diferenciais da Empresa', descricao: 'Principais diferenciais competitivos', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'Entrega em 24h, estoque próprio, suporte técnico' },
+  { campo: 'politica_devolucao', label: 'Política de Devolução', descricao: 'Regras gerais de devolução', tipo: 'texto', obrigatorio: false, categoria: 'Políticas', exemplo: 'Até 7 dias, com NF, produto lacrado' },
+  { campo: 'formas_pagamento', label: 'Formas de Pagamento Aceitas', descricao: 'Formas de pagamento da empresa', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: 'Boleto, PIX, Cartão, Cheque' },
+  { campo: 'prazos_pagamento', label: 'Prazos de Pagamento', descricao: 'Condições de prazo padrão', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: '30/60/90 dias, À vista' },
+];
+
+// ========== AGENTE ORQUESTRADOR ==========
+const orquestradorCampos: AgentDataField[] = [
+  // Campos específicos do orquestrador (empresa/comunicação/roteamento agora são globais)
 ];
 
 // ========== AGENTE COMERCIAL ==========
@@ -64,7 +74,6 @@ const comercialCampos: AgentDataField[] = [
   { campo: 'desconto_por_pagamento', label: 'Desconto por Forma de Pgto', descricao: 'Desconto por tipo de pagamento', tipo: 'texto', obrigatorio: false, categoria: 'Descontos', exemplo: 'PIX: 3% | Boleto à vista: 2%' },
   { campo: 'desconto_primeira_compra', label: 'Desconto 1ª Compra (%)', descricao: 'Desconto especial para novos clientes', tipo: 'numero', obrigatorio: false, categoria: 'Descontos', exemplo: '5' },
   // Argumentação
-  { campo: 'diferenciais_empresa', label: 'Diferenciais da Empresa', descricao: 'Principais diferenciais competitivos', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Entrega em 24h, estoque próprio, suporte técnico' },
   { campo: 'campanhas_ativas', label: 'Campanhas Ativas', descricao: 'Promoções vigentes', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Semana do Construtor: 10% em ferramentas até 30/04' },
   { campo: 'condicoes_especiais', label: 'Condições Especiais', descricao: 'Condições especiais por segmento ou porte', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Construtoras: prazo estendido 120 dias' },
 ];
@@ -166,8 +175,7 @@ const financeiroCampos: AgentDataField[] = [
   { campo: 'titulo_valor_pago', label: 'Valor Pago (R$)', descricao: 'Quanto já foi pago', tipo: 'numero', obrigatorio: false, categoria: 'Títulos' },
   { campo: 'titulo_nf', label: 'Nº Nota Fiscal', descricao: 'NF vinculada ao título', tipo: 'tabela', obrigatorio: false, categoria: 'Títulos' },
   // Condições
-  { campo: 'formas_pagamento', label: 'Formas de Pagamento', descricao: 'Formas aceitas', tipo: 'texto', obrigatorio: true, categoria: 'Condições', exemplo: 'Boleto, PIX, Cartão, Cheque' },
-  { campo: 'prazos_pagamento', label: 'Prazos Disponíveis', descricao: 'Condições de prazo', tipo: 'texto', obrigatorio: true, categoria: 'Condições', exemplo: '30/60/90 dias, À vista' },
+  // formas_pagamento e prazos_pagamento agora são globais
   { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
   { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
   { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Condições', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
@@ -322,7 +330,7 @@ const posVendaCampos: AgentDataField[] = [
   { campo: 'ocorrencia_motivo', label: 'Motivo', descricao: 'Motivo da ocorrência', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências', exemplo: 'Produto com defeito' },
   { campo: 'ocorrencia_status', label: 'Status da Ocorrência', descricao: 'Aberta, em análise, resolvida', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências' },
   { campo: 'prazo_troca_dias', label: 'Prazo para Troca (dias)', descricao: 'Dias permitidos para troca', tipo: 'numero', obrigatorio: false, categoria: 'Ocorrências', exemplo: '7' },
-  { campo: 'politica_devolucao', label: 'Política de Devolução', descricao: 'Regras de devolução da empresa', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências', exemplo: 'Até 7 dias, com NF, produto lacrado' },
+  // politica_devolucao agora é global
   // Follow-up
   { campo: 'dias_pos_entrega_contato', label: 'Contato Após (dias)', descricao: 'Quantos dias após entrega fazer contato', tipo: 'numero', obrigatorio: false, categoria: 'Follow-up', exemplo: '3' },
   { campo: 'mensagem_followup', label: 'Mensagem de Follow-up', descricao: 'Mensagem padrão de acompanhamento', tipo: 'texto', obrigatorio: false, categoria: 'Follow-up', exemplo: 'Olá! Seu pedido chegou bem? Precisa de algo?' },
