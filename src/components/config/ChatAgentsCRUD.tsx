@@ -25,6 +25,7 @@ import AgentTemplateSetup from '@/components/config/agents/AgentTemplateSetup';
 import AgentDataWizard from '@/components/config/agents/AgentDataWizard';
 import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorView';
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
+import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings';
 import * as XLSX from 'xlsx';
 
 const MODELOS_IA = [
