@@ -73,6 +73,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
+  // Disabled fields - user can exclude fields they won't use
+  const [disabledFields, setDisabledFields] = useState<Set<string>>(new Set());
+
   // Saving
   const [saving, setSaving] = useState(false);
   const [goToRow, setGoToRow] = useState('');
