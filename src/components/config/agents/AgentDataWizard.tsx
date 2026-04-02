@@ -15,9 +15,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff
 } from 'lucide-react';
 
 interface Props {
