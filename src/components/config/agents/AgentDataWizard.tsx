@@ -246,7 +246,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     setApiHeaders([]);
     setSelectedTable('');
     setFieldMappings({});
-    setManualValues({});
+    setManualRows([{}]);
   };
 
   const canGoNext = (): boolean => {
