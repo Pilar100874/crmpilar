@@ -633,7 +633,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
             <span className="text-primary font-medium">💡 Ctrl+V para colar milhares de registros do Excel</span>
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-hidden [&_::-webkit-scrollbar]:h-2 [&_::-webkit-scrollbar]:w-2 [&_::-webkit-scrollbar-track]:bg-muted/20 [&_::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&_::-webkit-scrollbar-thumb]:rounded-full">
             <div
               ref={scrollContainerRef}
               onScroll={handleScroll}
