@@ -254,7 +254,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
       case 0: return !!selectedAgentKey;
       case 1: return true;
       case 2:
-        if (dataSource === 'manual') return Object.values(manualValues).some(v => v.trim().length > 0);
+        if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return !!selectedTable;
         return false;
