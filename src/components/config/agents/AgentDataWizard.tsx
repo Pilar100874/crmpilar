@@ -633,32 +633,30 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
             <span className="text-primary font-medium">💡 Ctrl+V para colar milhares de registros do Excel</span>
           </div>
 
-          <div className="border rounded-lg overflow-x-auto" style={{ maxHeight: `${containerHeight + 40}px` }}>
-            <div style={{ minWidth: `${fields.length * 140 + 100}px` }}>
-              {/* Sticky header */}
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 sticky top-0 z-20">
-                    <TableHead className="w-[45px] text-center text-xs">#</TableHead>
-                    {fields.map(f => (
-                      <TableHead key={f.campo} className="min-w-[130px] text-xs px-1" title={`${f.descricao} (${f.categoria})`}>
-                        <div className="flex items-center gap-0.5">
-                          <span className="truncate">{f.label}</span>
-                          {f.obrigatorio && <span className="text-destructive">*</span>}
-                        </div>
-                      </TableHead>
-                    ))}
-                    <TableHead className="w-[50px] text-xs">×</TableHead>
-                  </TableRow>
-                </TableHeader>
-              </Table>
-              {/* Virtualized body */}
-              <div
-                ref={scrollContainerRef}
-                onScroll={handleScroll}
-                className="overflow-y-auto"
-                style={{ height: `${containerHeight}px` }}
-              >
+          <div className="border rounded-lg overflow-hidden">
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="overflow-auto"
+              style={{ height: `${containerHeight + 40}px` }}
+            >
+              <div style={{ minWidth: `${fields.length * 140 + 100}px` }}>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 sticky top-0 z-20">
+                      <TableHead className="w-[45px] text-center text-xs">#</TableHead>
+                      {fields.map(f => (
+                        <TableHead key={f.campo} className="min-w-[130px] text-xs px-1" title={`${f.descricao} (${f.categoria})`}>
+                          <div className="flex items-center gap-0.5">
+                            <span className="truncate">{f.label}</span>
+                            {f.obrigatorio && <span className="text-destructive">*</span>}
+                          </div>
+                        </TableHead>
+                      ))}
+                      <TableHead className="w-[50px] text-xs">×</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
                 <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
                   <div style={{ position: 'absolute', top: `${startIdx * ROW_HEIGHT}px`, width: '100%' }}>
                     <Table>
