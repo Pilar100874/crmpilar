@@ -464,7 +464,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         setManualRows(prev => prev.map((row, i) => i === rowIdx ? { ...row, [campo]: value } : row));
       };
       const duplicateRow = (idx: number) => setManualRows(prev => [...prev.slice(0, idx + 1), { ...prev[idx] }, ...prev.slice(idx + 1)]);
-      const clearAllRows = () => setManualRows([{}]);
+      const clearAllRows = () => setManualRows(Array.from({ length: 50 }, () => ({})));
 
       // Handle paste from clipboard (Excel/Sheets copy)
       const handlePaste = (e: React.ClipboardEvent, groupFields: AgentDataField[], startRowIdx: number, startFieldIdx: number) => {
