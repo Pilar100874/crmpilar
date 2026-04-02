@@ -444,7 +444,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     e.target.value = '';
   };
 
-  const excelInputRef = useRef<HTMLInputElement>(null);
+  // moved excelInputRef to top-level hooks area
 
   const renderStep2 = () => {
     if (dataSource === 'manual') {
