@@ -395,23 +395,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Excel template download
   const downloadExcelTemplate = () => {
     if (!selectedAgent) return;
-    const groups = getGroupedFields();
-    const rows: any[] = [];
-    groups.forEach(g => {
-      g.fields.forEach(f => {
-        rows.push({
-          'Campo': f.campo,
-          'Label': f.label,
-          'Categoria': f.categoria || 'Geral',
-          'Obrigatório': f.obrigatorio ? 'Sim' : 'Não',
-          'Descrição': f.descricao || '',
-          'Exemplo': f.exemplo || '',
-          'Valor': manualValues[f.campo] || '',
-        });
-      });
-    });
+    // Create template with fields as columns, empty rows for user to fill
+    const fields = selectedAgent.campos;
+    const headerRow: Record<string, string> = {};
+    fields.forEach(f => { headerRow[f.label] = ''; });
+    // Add 10 empty rows as template
+    const rows = Array.from({ length: 10 }, () => ({ ...headerRow }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 30 }, { wch: 40 }];
+    ws['!cols'] = fields.map(() => ({ wch: 20 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
     XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
