@@ -330,7 +330,7 @@ const posVendaCampos: AgentDataField[] = [
   { campo: 'ocorrencia_motivo', label: 'Motivo', descricao: 'Motivo da ocorrência', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências', exemplo: 'Produto com defeito' },
   { campo: 'ocorrencia_status', label: 'Status da Ocorrência', descricao: 'Aberta, em análise, resolvida', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências' },
   { campo: 'prazo_troca_dias', label: 'Prazo para Troca (dias)', descricao: 'Dias permitidos para troca', tipo: 'numero', obrigatorio: false, categoria: 'Ocorrências', exemplo: '7' },
-  { campo: 'politica_devolucao', label: 'Política de Devolução', descricao: 'Regras de devolução da empresa', tipo: 'texto', obrigatorio: false, categoria: 'Ocorrências', exemplo: 'Até 7 dias, com NF, produto lacrado' },
+  // politica_devolucao agora é global
   // Follow-up
   { campo: 'dias_pos_entrega_contato', label: 'Contato Após (dias)', descricao: 'Quantos dias após entrega fazer contato', tipo: 'numero', obrigatorio: false, categoria: 'Follow-up', exemplo: '3' },
   { campo: 'mensagem_followup', label: 'Mensagem de Follow-up', descricao: 'Mensagem padrão de acompanhamento', tipo: 'texto', obrigatorio: false, categoria: 'Follow-up', exemplo: 'Olá! Seu pedido chegou bem? Precisa de algo?' },
