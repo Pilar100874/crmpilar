@@ -70,7 +70,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   // Manual values state - now supports multiple rows
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
-  const [manualRows, setManualRows] = useState<Record<string, string>[]>([{}]);
+  const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
   // Saving
   const [saving, setSaving] = useState(false);
