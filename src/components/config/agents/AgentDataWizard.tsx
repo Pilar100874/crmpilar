@@ -1042,7 +1042,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
           <div>
             <Label className="text-xs text-muted-foreground">Campos configurados</Label>
-            <p className="font-medium text-lg">{getMappedCount()} de {selectedAgent?.campos.length}</p>
+            <p className="font-medium text-lg">{getMappedCount()} de {activeFields.length}</p>
           </div>
 
           {/* Field summary table */}
