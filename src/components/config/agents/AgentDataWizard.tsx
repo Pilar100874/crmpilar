@@ -674,7 +674,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                                     value={row[f.campo] || ''}
                                     onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
                                     onPaste={e => handlePaste(e, fields, rowIdx, fIdx)}
-                                    placeholder={f.exemplo || ''}
+                                    placeholder={rowIdx === 0 ? (f.exemplo || '') : ''}
                                     className="text-xs h-7 rounded-sm border-transparent focus:border-primary px-1"
                                   />
                                 </TableCell>
