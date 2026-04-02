@@ -388,6 +388,64 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     return groups;
   };
 
+  // Excel template download
+  const downloadExcelTemplate = () => {
+    if (!selectedAgent) return;
+    const groups = getGroupedFields();
+    const rows: any[] = [];
+    groups.forEach(g => {
+      g.fields.forEach(f => {
+        rows.push({
+          'Campo': f.campo,
+          'Label': f.label,
+          'Categoria': f.categoria || 'Geral',
+          'Obrigatório': f.obrigatorio ? 'Sim' : 'Não',
+          'Descrição': f.descricao || '',
+          'Exemplo': f.exemplo || '',
+          'Valor': manualValues[f.campo] || '',
+        });
+      });
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 30 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
+    XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
+    toast.success('Modelo Excel baixado!');
+  };
+
+  // Excel import
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target?.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data: any[] = XLSX.utils.sheet_to_json(ws);
+        const newValues: Record<string, string> = { ...manualValues };
+        let count = 0;
+        data.forEach(row => {
+          const campo = row['Campo'] || row['campo'];
+          const valor = row['Valor'] || row['valor'] || '';
+          if (campo && String(valor).trim()) {
+            newValues[campo] = String(valor);
+            count++;
+          }
+        });
+        setManualValues(newValues);
+        toast.success(`${count} campos importados do Excel!`);
+      } catch {
+        toast.error('Erro ao ler o arquivo Excel');
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
+  };
+
+  const excelInputRef = useRef<HTMLInputElement>(null);
+
   const renderStep2 = () => {
     if (dataSource === 'manual') {
       const groups = getGroupedFields();
@@ -395,42 +453,67 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Inserir Dados Manualmente</h3>
-            <p className="text-sm text-muted-foreground">Preencha cada campo do agente <strong>{selectedAgent?.nome}</strong></p>
+            <p className="text-sm text-muted-foreground">Preencha a tabela ou importe do Excel</p>
           </div>
 
-          <ScrollArea className="max-h-[500px]">
-            <div className="space-y-6 pr-4">
-              {groups.map(group => (
-                <div key={group.categoria}>
-                  <div className="flex items-center gap-2 mb-3 sticky top-0 bg-background z-10 py-1">
-                    <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-[10px] text-muted-foreground">{group.fields.length} campos</span>
-                  </div>
-                  <div className="space-y-3">
-                    {group.fields.map(field => (
-                      <Card key={field.campo} className="p-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Label className="font-medium">{field.label}</Label>
-                            {field.obrigatorio && <Badge variant="destructive" className="text-[10px]">Obrigatório</Badge>}
-                          </div>
-                          <p className="text-xs text-muted-foreground">{field.descricao}</p>
-                          {field.exemplo && <p className="text-[10px] text-primary/70">💡 Ex: {field.exemplo}</p>}
-                          <Textarea
-                            value={manualValues[field.campo] || ''}
-                            onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
-                            placeholder={field.exemplo || field.descricao}
-                            rows={field.tipo === 'texto' ? 3 : 1}
-                            className="text-sm"
-                          />
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+          <div className="flex gap-2 justify-end">
+            <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
+            <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
+              <Download className="h-4 w-4 mr-1" /> Baixar Modelo
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-1" /> Importar Excel
+            </Button>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            {groups.map(group => (
+              <div key={group.categoria} className="mb-4">
+                <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background z-10 py-1">
+                  <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
-              ))}
-            </div>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[200px]">Campo</TableHead>
+                        <TableHead className="w-[80px]">Obrig.</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead className="w-[200px]">Exemplo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.fields.map(field => (
+                        <TableRow key={field.campo}>
+                          <TableCell className="font-medium text-sm" title={field.descricao}>
+                            {field.label}
+                          </TableCell>
+                          <TableCell>
+                            {field.obrigatorio ? (
+                              <Badge variant="destructive" className="text-[10px]">Sim</Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Não</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={manualValues[field.campo] || ''}
+                              onChange={e => setManualValues(prev => ({ ...prev, [field.campo]: e.target.value }))}
+                              placeholder={field.descricao}
+                              className="text-sm h-8"
+                            />
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground truncate max-w-[200px]" title={field.exemplo}>
+                            {field.exemplo || '—'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ))}
           </ScrollArea>
         </div>
       );
