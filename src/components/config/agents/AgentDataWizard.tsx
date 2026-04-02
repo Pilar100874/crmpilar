@@ -1056,7 +1056,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {selectedAgent?.campos.map(field => {
+                {activeFields.map(field => {
                   let valueDisplay = '';
                   let configured = false;
 
