@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2
 } from 'lucide-react';
 
 interface Props {
