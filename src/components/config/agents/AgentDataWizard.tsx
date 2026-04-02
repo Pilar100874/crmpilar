@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AGENT_DATA_REQUIREMENTS, SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
 import { useAgentDataBindings } from '@/hooks/useAgentDataBindings';
 import { supabase } from '@/integrations/supabase/client';
