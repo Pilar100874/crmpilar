@@ -185,7 +185,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     try {
       for (const field of selectedAgent.campos) {
         if (dataSource === 'manual') {
-          const val = manualValues[field.campo] || '';
+          // For manual, save all rows as JSON array in valor_manual
+          const allValues = manualRows.filter(row => Object.values(row).some(v => v?.trim()));
+          const val = allValues.length > 0 ? JSON.stringify(allValues.map(row => row[field.campo] || '')) : (manualValues[field.campo] || '');
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
             agent_template_key: selectedAgent.template_key,
