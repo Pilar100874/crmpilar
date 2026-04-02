@@ -15,9 +15,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff
 } from 'lucide-react';
 
 interface Props {
@@ -72,11 +73,20 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
+  // Disabled fields - user can exclude fields they won't use
+  const [disabledFields, setDisabledFields] = useState<Set<string>>(new Set());
+
   // Saving
   const [saving, setSaving] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
   const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
+
+  // Active fields = all agent fields minus disabled ones
+  const activeFields = useMemo(() => {
+    if (!selectedAgent) return [];
+    return selectedAgent.campos.filter(f => !disabledFields.has(f.campo));
+  }, [selectedAgent, disabledFields]);
 
   const STEP_LABELS = ['Agente', 'Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
@@ -186,7 +196,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     if (!selectedAgent) return;
     setSaving(true);
     try {
-      for (const field of selectedAgent.campos) {
+      for (const field of activeFields) {
         if (dataSource === 'manual') {
           // For manual, save all rows as JSON array in valor_manual
           const allValues = manualRows.filter(row => Object.values(row).some(v => v?.trim()));
@@ -250,6 +260,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     setSelectedTable('');
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
+    setDisabledFields(new Set());
   };
 
   const canGoNext = (): boolean => {
@@ -336,7 +347,20 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   );
 
   // ========== STEP 1: Select Data Source ==========
-  const renderStep1 = () => (
+  const renderStep1 = () => {
+    const toggleField = (campo: string) => {
+      setDisabledFields(prev => {
+        const next = new Set(prev);
+        if (next.has(campo)) next.delete(campo);
+        else next.add(campo);
+        return next;
+      });
+    };
+
+    const allCampos = selectedAgent?.campos || [];
+    const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
+
+    return (
     <div className="space-y-4">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Origem dos Dados</h3>
@@ -375,8 +399,56 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
           ))}
         </RadioGroup>
       </Card>
+
+      {/* Field selection - allow user to disable unused fields */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Campos a utilizar</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">{activeFields.length}/{allCampos.length} ativos</Badge>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setDisabledFields(new Set())}>
+              Ativar todos
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">Desmarque os campos que você não utilizará neste agente.</p>
+        <ScrollArea className="max-h-[250px]">
+          <div className="space-y-3">
+            {categorias.map(cat => {
+              const catFields = allCampos.filter(f => (f.categoria || 'Geral') === cat);
+              return (
+                <div key={cat}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Badge variant="secondary" className="text-[10px]">{cat}</Badge>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1">
+                    {catFields.map(f => (
+                      <label
+                        key={f.campo}
+                        className={`flex items-center gap-2 p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-muted/50 ${disabledFields.has(f.campo) ? 'opacity-50' : ''}`}
+                      >
+                        <Checkbox
+                          checked={!disabledFields.has(f.campo)}
+                          onCheckedChange={() => toggleField(f.campo)}
+                          disabled={f.obrigatorio}
+                        />
+                        <span className="truncate">{f.label}</span>
+                        {f.obrigatorio && <span className="text-destructive text-[10px]">*</span>}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </Card>
     </div>
-  );
+  )};
 
   // ========== STEP 2: Data Input ==========
   // Group fields by categoria
@@ -384,7 +456,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
     if (!selectedAgent) return [];
     const groups: { categoria: string; fields: AgentDataField[] }[] = [];
     const seen = new Set<string>();
-    for (const field of selectedAgent.campos) {
+    for (const field of activeFields) {
       const cat = field.categoria || 'Geral';
       if (!seen.has(cat)) {
         seen.add(cat);
@@ -398,7 +470,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Excel template download
   const downloadExcelTemplate = () => {
     if (!selectedAgent) return;
-    const fields = selectedAgent.campos;
+    const fields = activeFields;
     // Example row with orientation hints
     const exampleRow: Record<string, string> = {};
     fields.forEach(f => {
@@ -458,7 +530,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         if (data.length === 0) { toast.warning('Nenhum dado encontrado'); return; }
         
         // Map Excel column labels back to field campo keys
-        const fields = selectedAgent.campos;
+        const fields = activeFields;
         const labelTocampo: Record<string, string> = {};
         fields.forEach(f => { labelTocampo[f.label] = f.campo; });
         
@@ -487,7 +559,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
   const renderStep2 = () => {
     if (dataSource === 'manual') {
-      const fields = selectedAgent?.campos || [];
+      const fields = activeFields;
       const groups = getGroupedFields();
       
       const addRow = () => setManualRows(prev => [...prev, {}]);
@@ -698,7 +770,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
     if (dataSource === 'sistema') {
       const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
-      const suggestedTables = selectedAgent?.campos.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
+      const suggestedTables = activeFields.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
 
       return (
         <div className="space-y-4">
@@ -970,7 +1042,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
           <div>
             <Label className="text-xs text-muted-foreground">Campos configurados</Label>
-            <p className="font-medium text-lg">{getMappedCount()} de {selectedAgent?.campos.length}</p>
+            <p className="font-medium text-lg">{getMappedCount()} de {activeFields.length}</p>
           </div>
 
           {/* Field summary table */}
@@ -984,7 +1056,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {selectedAgent?.campos.map(field => {
+                {activeFields.map(field => {
                   let valueDisplay = '';
                   let configured = false;
 
