@@ -522,22 +522,27 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         }
       };
 
+      // Initialize with 50 empty rows if only 1 empty row exists
+      if (manualRows.length <= 1 && !Object.values(manualRows[0] || {}).some(v => v?.trim())) {
+        setTimeout(() => setManualRows(Array.from({ length: 50 }, () => ({}))), 0);
+      }
+
       return (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">Inserir Dados Manualmente</h3>
+            <h3 className="text-lg font-semibold mb-1">Inserir Dados Manualmente</h3>
             <p className="text-sm text-muted-foreground">
-              Preencha a planilha abaixo, importe do Excel ou <strong>cole dados diretamente do Excel (Ctrl+V)</strong>.
+              Preencha como uma planilha. <strong>Cole dados do Excel (Ctrl+V)</strong> em qualquer célula.
             </p>
           </div>
 
           <div className="flex gap-2 justify-between flex-wrap">
             <div className="flex gap-2">
-              <Button variant="default" size="sm" onClick={addRow}>
-                + Adicionar Linha
+              <Button variant="default" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 10 }, () => ({}))])}>
+                + 10 Linhas
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 5 }, () => ({}))])}>
-                + 5 Linhas
+              <Button variant="outline" size="sm" onClick={() => setManualRows(prev => [...prev, ...Array.from({ length: 50 }, () => ({}))])}>
+                + 50 Linhas
               </Button>
               <Button variant="ghost" size="sm" onClick={clearAllRows}>
                 Limpar Tudo
@@ -558,73 +563,61 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
           </div>
 
           <div className="text-xs text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 rounded-md">
-            <Badge variant="outline">{manualRows.length} registro(s)</Badge>
+            <Badge variant="outline">{manualRows.length} linhas</Badge>
             <span>•</span>
-            <span>{fields.length} campos</span>
+            <span>{fields.length} colunas</span>
             <span>•</span>
-            <span className="text-primary font-medium">💡 Dica: Copie do Excel e clique "Colar do Excel" ou use Ctrl+V em qualquer célula</span>
+            <span className="text-primary font-medium">💡 Ctrl+V em qualquer célula para colar do Excel</span>
           </div>
 
-          {groups.map(group => (
-            <div key={group.categoria} className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs font-semibold">{group.categoria}</Badge>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <ScrollArea className="w-full">
-                <div className="border rounded-lg overflow-hidden min-w-[600px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50px] text-center">#</TableHead>
-                        {group.fields.map(f => (
-                          <TableHead key={f.campo} className="min-w-[150px]" title={f.descricao}>
-                            <div className="flex items-center gap-1">
-                              <span className="truncate">{f.label}</span>
-                              {f.obrigatorio && <span className="text-destructive">*</span>}
-                            </div>
-                          </TableHead>
-                        ))}
-                        <TableHead className="w-[80px]">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {manualRows.map((row, rowIdx) => (
-                        <TableRow key={rowIdx}>
-                          <TableCell className="text-center text-xs text-muted-foreground font-mono">{rowIdx + 1}</TableCell>
-                          {group.fields.map((f, fIdx) => (
-                            <TableCell key={f.campo} className="p-1">
-                              <Input
-                                value={row[f.campo] || ''}
-                                onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
-                                onPaste={e => handlePaste(e, group.fields, rowIdx, fIdx)}
-                                placeholder={f.exemplo || f.descricao || ''}
-                                className="text-sm h-8 rounded-md"
-                              />
-                            </TableCell>
-                          ))}
-                          <TableCell className="p-1">
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateRow(rowIdx)} title="Duplicar">
-                                <RefreshCw className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
-                                ×
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+          <ScrollArea className="h-[500px] w-full">
+            <div className="border rounded-lg overflow-hidden" style={{ minWidth: `${fields.length * 140 + 100}px` }}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="w-[40px] text-center sticky left-0 bg-muted/80 z-10 text-xs">#</TableHead>
+                    {fields.map(f => (
+                      <TableHead key={f.campo} className="min-w-[130px] text-xs px-1" title={`${f.descricao} (${f.categoria})`}>
+                        <div className="flex items-center gap-0.5">
+                          <span className="truncate">{f.label}</span>
+                          {f.obrigatorio && <span className="text-destructive">*</span>}
+                        </div>
+                      </TableHead>
+                    ))}
+                    <TableHead className="w-[60px] text-xs">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {manualRows.map((row, rowIdx) => (
+                    <TableRow key={rowIdx} className="h-8">
+                      <TableCell className="text-center text-[10px] text-muted-foreground font-mono p-0 sticky left-0 bg-background z-10">{rowIdx + 1}</TableCell>
+                      {fields.map((f, fIdx) => (
+                        <TableCell key={f.campo} className="p-0.5">
+                          <Input
+                            value={row[f.campo] || ''}
+                            onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
+                            onPaste={e => handlePaste(e, fields, rowIdx, fIdx)}
+                            placeholder={f.exemplo || ''}
+                            className="text-xs h-7 rounded-sm border-transparent focus:border-primary px-1"
+                          />
+                        </TableCell>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
+                      <TableCell className="p-0.5">
+                        <div className="flex gap-0.5">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => duplicateRow(rowIdx)} title="Duplicar">
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeRow(rowIdx)} title="Remover">
+                            ×
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          ))}
-
-          <Button variant="outline" size="sm" onClick={addRow} className="w-full border-dashed">
-            + Adicionar mais uma linha
-          </Button>
+          </ScrollArea>
         </div>
       );
     }
