@@ -367,19 +367,19 @@ export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'satisfacao', nome: 'Agente Satisfação', icone: '⭐', campos: satisfacaoCampos },
 ];
 
-// Tabelas disponíveis do sistema para mapeamento
+// Tabelas disponíveis do sistema para mapeamento (baseado nas colunas reais do banco)
 export const SYSTEM_TABLES = [
-  { value: 'produtos', label: 'Produtos', colunas: ['id', 'nome', 'codigo', 'descricao', 'preco_venda', 'preco_custo', 'estoque', 'categoria', 'marca', 'grupo', 'subgrupo', 'unidade', 'ncm', 'peso'] },
-  { value: 'produtos_importados', label: 'Produtos Importados', colunas: ['id', 'nome', 'codigo', 'descricao', 'preco_venda', 'preco_custo', 'estoque', 'categoria', 'marca'] },
-  { value: 'customers', label: 'Clientes/Contatos', colunas: ['id', 'name', 'phone', 'email', 'tags', 'score', 'cpf'] },
-  { value: 'empresas', label: 'Empresas', colunas: ['id', 'nome', 'nome_fantasia', 'cnpj', 'tipo_cliente', 'email', 'telefone', 'endereco', 'cidade', 'estado', 'cep', 'segmento', 'latitude', 'longitude'] },
-  { value: 'orcamentos', label: 'Orçamentos', colunas: ['id', 'numero', 'cliente_id', 'valor_total', 'status', 'data_criacao', 'vendedor_id', 'desconto_total', 'forma_pagamento', 'condicao_pagamento'] },
-  { value: 'orcamento_itens', label: 'Itens do Orçamento', colunas: ['id', 'orcamento_id', 'produto_id', 'nome_produto', 'quantidade', 'preco_unitario', 'desconto', 'subtotal'] },
-  { value: 'pedidos_ecommerce', label: 'Pedidos E-commerce', colunas: ['id', 'numero_pedido', 'customer_id', 'valor_total', 'status', 'created_at', 'desconto_total', 'frete'] },
+  { value: 'produtos', label: 'Produtos', colunas: ['id', 'nome', 'codigo', 'descricao', 'marca', 'estoque', 'preco_tabela', 'preco_minimo', 'tipo_preco', 'preco_ativo', 'ncm', 'ean_13', 'peso_unitario', 'largura', 'comprimento', 'altura', 'cor', 'tamanho', 'material', 'condicao', 'origem', 'garantia', 'ativo'] },
+  { value: 'produtos_importados', label: 'Produtos Importados', colunas: ['id', 'nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'embalagem', 'numero_folhas', 'diametro', 'obs'] },
+  { value: 'customers', label: 'Clientes/Contatos', colunas: ['id', 'nome', 'telefone', 'email', 'tags', 'tipo_operador', 'tel', 'empresa_id'] },
+  { value: 'empresas', label: 'Empresas', colunas: ['id', 'nome', 'nome_fantasia', 'cnpj', 'tipo_cliente', 'email', 'telefone', 'endereco', 'bairro', 'cidade', 'estado', 'cep', 'latitude', 'longitude', 'cnae_principal', 'cnae_descricao', 'segmento_id'] },
+  { value: 'orcamentos', label: 'Orçamentos', colunas: ['id', 'cliente_id', 'empresa_id', 'vendedor_id', 'unidade_id', 'condicao_pagamento_id', 'etapa', 'status', 'valor_total', 'valor_desconto', 'percentual_desconto', 'observacoes', 'motivo_perda', 'origem', 'data_envio', 'created_at'] },
+  { value: 'orcamento_itens', label: 'Itens do Orçamento', colunas: ['id', 'orcamento_id', 'produto_id', 'quantidade', 'preco_unitario', 'preco_original', 'desconto', 'subtotal'] },
+  { value: 'pedidos_ecommerce', label: 'Pedidos E-commerce', colunas: ['id', 'numero_pedido', 'status', 'nome_cliente', 'email_cliente', 'telefone_cliente', 'cpf_cliente', 'cnpj_cliente', 'razao_social', 'tipo_cliente', 'endereco_cidade', 'endereco_estado', 'tipo_pagamento_nome', 'condicao_pagamento_nome', 'subtotal', 'desconto', 'frete', 'valor_total', 'created_at'] },
   { value: 'pedidos_ecommerce_itens', label: 'Itens Pedido E-commerce', colunas: ['id', 'pedido_id', 'produto_id', 'nome_produto', 'quantidade', 'preco_unitario', 'subtotal'] },
-  { value: 'agent_cross_sell_rules', label: 'Regras Cross-sell', colunas: ['id', 'produto_origem', 'produto_sugerido', 'tipo', 'motivo', 'prioridade'] },
-  { value: 'agent_objections', label: 'Objeções', colunas: ['id', 'objecao', 'resposta_sugerida', 'categoria', 'argumentos', 'gatilhos_mentais', 'eficacia_percentual'] },
-  { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'role'] },
-  { value: 'customer_segmentos', label: 'Segmentos de Clientes', colunas: ['id', 'customer_id', 'segmento', 'valor'] },
-  { value: 'pesquisas_respostas', label: 'Respostas de Pesquisas', colunas: ['id', 'pesquisa_id', 'customer_id', 'nota', 'comentario', 'classificacao'] },
+  { value: 'agent_cross_sell_rules', label: 'Regras Cross-sell', colunas: ['id', 'produto_origem', 'produto_sugerido', 'tipo', 'motivo', 'prioridade', 'ativo'] },
+  { value: 'agent_objections', label: 'Objeções', colunas: ['id', 'categoria', 'objecao', 'resposta_sugerida', 'gatilhos_mentais', 'argumentos', 'eficacia_percentual', 'vezes_usada', 'ativo'] },
+  { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'telefone', 'ramal'] },
+  { value: 'customer_segmentos', label: 'Segmentos de Clientes', colunas: ['id', 'customer_id', 'segmento_id'] },
+  { value: 'pesquisas_respostas', label: 'Respostas de Pesquisas', colunas: ['id', 'pesquisa_id', 'customer_id', 'atendente_id', 'nota', 'comentario', 'classificacao', 'canal', 'enviada_em', 'respondida_em', 'tempo_resposta_segundos'] },
 ];
