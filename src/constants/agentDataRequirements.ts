@@ -175,8 +175,7 @@ const financeiroCampos: AgentDataField[] = [
   { campo: 'titulo_valor_pago', label: 'Valor Pago (R$)', descricao: 'Quanto já foi pago', tipo: 'numero', obrigatorio: false, categoria: 'Títulos' },
   { campo: 'titulo_nf', label: 'Nº Nota Fiscal', descricao: 'NF vinculada ao título', tipo: 'tabela', obrigatorio: false, categoria: 'Títulos' },
   // Condições
-  { campo: 'formas_pagamento', label: 'Formas de Pagamento', descricao: 'Formas aceitas', tipo: 'texto', obrigatorio: true, categoria: 'Condições', exemplo: 'Boleto, PIX, Cartão, Cheque' },
-  { campo: 'prazos_pagamento', label: 'Prazos Disponíveis', descricao: 'Condições de prazo', tipo: 'texto', obrigatorio: true, categoria: 'Condições', exemplo: '30/60/90 dias, À vista' },
+  // formas_pagamento e prazos_pagamento agora são globais
   { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
   { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
   { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Condições', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
