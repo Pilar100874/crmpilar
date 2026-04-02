@@ -74,7 +74,6 @@ const comercialCampos: AgentDataField[] = [
   { campo: 'desconto_por_pagamento', label: 'Desconto por Forma de Pgto', descricao: 'Desconto por tipo de pagamento', tipo: 'texto', obrigatorio: false, categoria: 'Descontos', exemplo: 'PIX: 3% | Boleto à vista: 2%' },
   { campo: 'desconto_primeira_compra', label: 'Desconto 1ª Compra (%)', descricao: 'Desconto especial para novos clientes', tipo: 'numero', obrigatorio: false, categoria: 'Descontos', exemplo: '5' },
   // Argumentação
-  { campo: 'diferenciais_empresa', label: 'Diferenciais da Empresa', descricao: 'Principais diferenciais competitivos', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Entrega em 24h, estoque próprio, suporte técnico' },
   { campo: 'campanhas_ativas', label: 'Campanhas Ativas', descricao: 'Promoções vigentes', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Semana do Construtor: 10% em ferramentas até 30/04' },
   { campo: 'condicoes_especiais', label: 'Condições Especiais', descricao: 'Condições especiais por segmento ou porte', tipo: 'texto', obrigatorio: false, categoria: 'Argumentação', exemplo: 'Construtoras: prazo estendido 120 dias' },
 ];
