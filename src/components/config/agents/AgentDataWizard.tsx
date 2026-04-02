@@ -463,12 +463,71 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
       const duplicateRow = (idx: number) => setManualRows(prev => [...prev.slice(0, idx + 1), { ...prev[idx] }, ...prev.slice(idx + 1)]);
       const clearAllRows = () => setManualRows([{}]);
 
+      // Handle paste from clipboard (Excel/Sheets copy)
+      const handlePaste = (e: React.ClipboardEvent, groupFields: AgentDataField[], startRowIdx: number, startFieldIdx: number) => {
+        const clipText = e.clipboardData.getData('text/plain');
+        if (!clipText) return;
+        
+        const pastedRows = clipText.split(/\r?\n/).filter(line => line.trim());
+        if (pastedRows.length <= 1 && !clipText.includes('\t')) return; // single value, let default handle
+        
+        e.preventDefault();
+        
+        setManualRows(prev => {
+          const updated = [...prev];
+          pastedRows.forEach((line, rOffset) => {
+            const cols = line.split('\t');
+            const targetRowIdx = startRowIdx + rOffset;
+            // Ensure row exists
+            while (updated.length <= targetRowIdx) updated.push({});
+            cols.forEach((val, cOffset) => {
+              const fieldIdx = startFieldIdx + cOffset;
+              if (fieldIdx < groupFields.length) {
+                updated[targetRowIdx] = { ...updated[targetRowIdx], [groupFields[fieldIdx].campo]: val.trim() };
+              }
+            });
+          });
+          return updated;
+        });
+        toast.success(`${pastedRows.length} linha(s) colada(s) do clipboard!`);
+      };
+
+      // Handle global paste on the table container (for pasting full blocks)
+      const handleGlobalPaste = async () => {
+        try {
+          const clipText = await navigator.clipboard.readText();
+          if (!clipText || !clipText.includes('\t')) {
+            toast.info('Copie dados do Excel com colunas separadas por TAB');
+            return;
+          }
+          const pastedRows = clipText.split(/\r?\n/).filter(line => line.trim());
+          const allFields = fields;
+          
+          const newRows: Record<string, string>[] = pastedRows.map(line => {
+            const cols = line.split('\t');
+            const row: Record<string, string> = {};
+            cols.forEach((val, idx) => {
+              if (idx < allFields.length && val.trim()) {
+                row[allFields[idx].campo] = val.trim();
+              }
+            });
+            return row;
+          }).filter(r => Object.keys(r).length > 0);
+          
+          if (newRows.length === 0) { toast.warning('Nenhum dado reconhecido'); return; }
+          setManualRows(prev => [...prev.filter(r => Object.values(r).some(v => v?.trim())), ...newRows]);
+          toast.success(`${newRows.length} registro(s) colado(s) com sucesso!`);
+        } catch {
+          toast.error('Não foi possível acessar o clipboard. Use Ctrl+V em uma célula.');
+        }
+      };
+
       return (
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Inserir Dados Manualmente</h3>
             <p className="text-sm text-muted-foreground">
-              Preencha a planilha abaixo — cada linha é um registro. Use os botões para adicionar ou importar do Excel.
+              Preencha a planilha abaixo, importe do Excel ou <strong>cole dados diretamente do Excel (Ctrl+V)</strong>.
             </p>
           </div>
 
@@ -485,20 +544,25 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
               </Button>
             </div>
             <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={handleGlobalPaste} title="Colar dados do Excel">
+                <Copy className="h-4 w-4 mr-1" /> Colar do Excel
+              </Button>
               <input ref={excelInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
               <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
-                <Download className="h-4 w-4 mr-1" /> Baixar Modelo
+                <Download className="h-4 w-4 mr-1" /> Modelo
               </Button>
               <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-1" /> Importar Excel
+                <Upload className="h-4 w-4 mr-1" /> Importar
               </Button>
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
+          <div className="text-xs text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 rounded-md">
             <Badge variant="outline">{manualRows.length} registro(s)</Badge>
             <span>•</span>
-            <span>{fields.length} campos por registro</span>
+            <span>{fields.length} campos</span>
+            <span>•</span>
+            <span className="text-primary font-medium">💡 Dica: Copie do Excel e clique "Colar do Excel" ou use Ctrl+V em qualquer célula</span>
           </div>
 
           {groups.map(group => (
@@ -528,11 +592,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
                       {manualRows.map((row, rowIdx) => (
                         <TableRow key={rowIdx}>
                           <TableCell className="text-center text-xs text-muted-foreground font-mono">{rowIdx + 1}</TableCell>
-                          {group.fields.map(f => (
+                          {group.fields.map((f, fIdx) => (
                             <TableCell key={f.campo} className="p-1">
                               <Input
                                 value={row[f.campo] || ''}
                                 onChange={e => updateRowField(rowIdx, f.campo, e.target.value)}
+                                onPaste={e => handlePaste(e, group.fields, rowIdx, fIdx)}
                                 placeholder={f.exemplo || f.descricao || ''}
                                 className="text-sm h-8 rounded-md"
                               />
