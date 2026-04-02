@@ -470,7 +470,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
   // Excel template download
   const downloadExcelTemplate = () => {
     if (!selectedAgent) return;
-    const fields = selectedAgent.campos;
+    const fields = activeFields;
     // Example row with orientation hints
     const exampleRow: Record<string, string> = {};
     fields.forEach(f => {
