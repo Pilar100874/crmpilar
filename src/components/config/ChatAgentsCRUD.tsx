@@ -343,6 +343,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
+            <TabsTrigger value="geral" className="gap-1"><Settings className="h-4 w-4" /> Geral</TabsTrigger>
             <TabsTrigger value="dados" className="gap-1"><Database className="h-4 w-4" /> Dados</TabsTrigger>
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
