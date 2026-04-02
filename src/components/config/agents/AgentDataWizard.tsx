@@ -770,7 +770,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
 
     if (dataSource === 'sistema') {
       const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
-      const suggestedTables = selectedAgent?.campos.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
+      const suggestedTables = activeFields.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
 
       return (
         <div className="space-y-4">
