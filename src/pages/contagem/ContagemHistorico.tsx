@@ -26,21 +26,22 @@ const ContagemHistorico = () => {
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroData, setFiltroData] = useState("");
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const load = async () => {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("contagens")
+        .select("*")
+        .eq("estabelecimento_id", estabId)
+        .order("created_at", { ascending: false });
+      setContagens(data || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
 
-  const load = async () => {
-    const estabId = getEstabelecimentoId();
-    if (!estabId) return;
-    const { data } = await supabase
-      .from("contagens")
-      .select("*")
-      .eq("estabelecimento_id", estabId)
-      .order("created_at", { ascending: false });
-    setContagens(data || []);
-    setLoading(false);
-  };
-
-  const filtered = contagens.filter(c => {
+  const filtered = contagens.filter((c: any) => {
     if (filtroTipo !== "todos" && c.tipo_objeto !== filtroTipo) return false;
     if (filtroData && !c.created_at.startsWith(filtroData)) return false;
     if (filtroBusca) {
@@ -63,16 +64,10 @@ const ContagemHistorico = () => {
         <h1 className="text-xl font-bold">Histórico de Contagens</h1>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            value={filtroBusca}
-            onChange={e => setFiltroBusca(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar..." value={filtroBusca} onChange={e => setFiltroBusca(e.target.value)} className="pl-9" />
         </div>
         <Select value={filtroTipo} onValueChange={setFiltroTipo}>
           <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
@@ -84,45 +79,28 @@ const ContagemHistorico = () => {
             <SelectItem value="generico">Genérico</SelectItem>
           </SelectContent>
         </Select>
-        <Input
-          type="date"
-          value={filtroData}
-          onChange={e => setFiltroData(e.target.value)}
-          className="w-full sm:w-40"
-        />
+        <Input type="date" value={filtroData} onChange={e => setFiltroData(e.target.value)} className="w-full sm:w-40" />
       </div>
 
-      {/* List */}
       <div className="space-y-2">
-        {filtered.map(c => (
-          <Card
-            key={c.id}
-            className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate(`/contagem/detalhe/${c.id}`)}
-          >
+        {filtered.map((c: any) => (
+          <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/contagem/detalhe/${c.id}`)}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {c.divergencia ? (
-                    <div className="p-2 rounded-lg bg-orange-500/10"><AlertTriangle className="w-4 h-4 text-orange-500" /></div>
-                  ) : (
-                    <div className="p-2 rounded-lg bg-green-500/10"><CheckCircle className="w-4 h-4 text-green-500" /></div>
-                  )}
+                  {c.divergencia
+                    ? <div className="p-2 rounded-lg bg-amber-500/10"><AlertTriangle className="w-4 h-4 text-amber-500" /></div>
+                    : <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle className="w-4 h-4 text-emerald-500" /></div>
+                  }
                   <div>
                     <p className="font-medium text-sm">{tipoLabel[c.tipo_objeto] || c.tipo_objeto}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </p>
-                    {c.observacoes && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{c.observacoes}</p>
-                    )}
+                    <p className="text-xs text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
+                    {c.observacoes && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{c.observacoes}</p>}
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold">{c.quantidade_detectada}</p>
-                  {c.quantidade_esperada != null && (
-                    <p className="text-xs text-muted-foreground">Esperado: {c.quantidade_esperada}</p>
-                  )}
+                  {c.quantidade_esperada != null && <p className="text-xs text-muted-foreground">Esperado: {c.quantidade_esperada}</p>}
                   {c.divergencia && <Badge variant="destructive" className="text-[10px]">Divergência</Badge>}
                 </div>
               </div>

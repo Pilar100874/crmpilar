@@ -1,14 +1,14 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getEstabelecimentoId, getUsuarioId } from "@/lib/estabelecimentoUtils";
+import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Upload, ArrowLeft, Loader2, RotateCcw, X } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 const NovaContagem = () => {
@@ -48,32 +48,20 @@ const NovaContagem = () => {
     });
 
   const handleAnalyze = async () => {
-    if (!imageFile) {
-      toast.error("Selecione uma imagem primeiro");
-      return;
-    }
+    if (!imageFile) { toast.error("Selecione uma imagem primeiro"); return; }
 
-    const estabId = getEstabelecimentoId();
-    const usuarioId = getUsuarioId();
-    if (!estabId || !usuarioId) {
-      toast.error("Usuário não identificado");
-      return;
-    }
+    const estabId = await getEstabelecimentoId();
+    const usuarioId = await getUserIdFromAuth();
+    if (!estabId || !usuarioId) { toast.error("Usuário não identificado"); return; }
 
     setAnalyzing(true);
     try {
-      // Upload image to storage
       const fileName = `${estabId}/${Date.now()}_${imageFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("contagens-images")
-        .upload(fileName, imageFile);
+      const { error: uploadError } = await supabase.storage.from("contagens-images").upload(fileName, imageFile);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("contagens-images")
-        .getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from("contagens-images").getPublicUrl(fileName);
 
-      // Create record
       const { data: contagem, error: createError } = await supabase
         .from("contagens")
         .insert({
@@ -84,15 +72,14 @@ const NovaContagem = () => {
           observacoes: observacoes || null,
           status: "processando",
           imagem_url: urlData.publicUrl,
-        })
+        } as any)
         .select()
         .single();
       if (createError) throw createError;
 
-      // Send to AI
       const imageBase64 = await fileToBase64(imageFile);
       const { data: session } = await supabase.auth.getSession();
-      
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
         {
@@ -115,7 +102,6 @@ const NovaContagem = () => {
       const qtdEsperada = quantidadeEsperada ? parseInt(quantidadeEsperada) : null;
       const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
 
-      // Update record
       await supabase
         .from("contagens")
         .update({
@@ -125,7 +111,7 @@ const NovaContagem = () => {
           status: "concluido",
           divergencia,
           data_analise: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", (contagem as any).id);
 
       toast.success(`${qtdDetectada} objeto(s) detectado(s)!`);
@@ -147,7 +133,6 @@ const NovaContagem = () => {
         <h1 className="text-xl font-bold">Nova Contagem</h1>
       </div>
 
-      {/* Image area */}
       <Card>
         <CardContent className="p-4 space-y-4">
           {imagePreview ? (
@@ -176,23 +161,9 @@ const NovaContagem = () => {
             </div>
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelect} />
 
-          {/* Settings */}
           <div className="space-y-3">
             <div>
               <Label>Tipo de Objeto</Label>
@@ -208,37 +179,16 @@ const NovaContagem = () => {
             </div>
             <div>
               <Label>Quantidade Esperada (opcional)</Label>
-              <Input
-                type="number"
-                placeholder="Ex: 50"
-                value={quantidadeEsperada}
-                onChange={e => setQuantidadeEsperada(e.target.value)}
-              />
+              <Input type="number" placeholder="Ex: 50" value={quantidadeEsperada} onChange={e => setQuantidadeEsperada(e.target.value)} />
             </div>
             <div>
               <Label>Observações</Label>
-              <Textarea
-                placeholder="Informações adicionais..."
-                value={observacoes}
-                onChange={e => setObservacoes(e.target.value)}
-                rows={2}
-              />
+              <Textarea placeholder="Informações adicionais..." value={observacoes} onChange={e => setObservacoes(e.target.value)} rows={2} />
             </div>
           </div>
 
-          <Button
-            onClick={handleAnalyze}
-            disabled={!imagePreview || analyzing}
-            className="w-full gap-2"
-            size="lg"
-          >
-            {analyzing ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Analisando...
-              </>
-            ) : (
-              <>Analisar Imagem</>
-            )}
+          <Button onClick={handleAnalyze} disabled={!imagePreview || analyzing} className="w-full gap-2" size="lg">
+            {analyzing ? (<><Loader2 className="w-5 h-5 animate-spin" /> Analisando...</>) : "Analisar Imagem"}
           </Button>
         </CardContent>
       </Card>
