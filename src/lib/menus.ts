@@ -76,4 +76,4 @@ export const getMenusByCategory = () => {
 };
 
 // Ordem das categorias para exibição
-export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Principal', 'TV', 'Sistema'];
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Sistema'];
