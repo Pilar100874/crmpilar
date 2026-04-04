@@ -31,6 +31,10 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Orçamento", label: "Orçamento", category: "Vendas" },
   { id: "Config Vendas", label: "Configuração de Vendas", category: "Vendas" },
   
+  // Assistente
+  { id: "Assistente", label: "Assistente (Categoria)", category: "Assistente" },
+  { id: "Contagem Inteligente", label: "Contagem Inteligente", category: "Assistente" },
+  
   // Outros menus principais
   { id: "Clientes", label: "Funil de Leads", category: "Principal" },
   { id: "Campanhas", label: "Calendário", category: "Principal" },
@@ -72,4 +76,4 @@ export const getMenusByCategory = () => {
 };
 
 // Ordem das categorias para exibição
-export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Principal', 'TV', 'Sistema'];
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Assistente', 'Principal', 'TV', 'Sistema'];

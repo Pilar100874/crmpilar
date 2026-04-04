@@ -131,6 +131,14 @@ const menuItems: MenuItem[] = [
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
+  {
+    id: "Assistente",
+    title: "Assistente",
+    icon: LucideIcons.ScanEye,
+    subItems: [
+      { id: "Contagem Inteligente", title: "Contagem Inteligente", url: "/contagem", icon: LucideIcons.Camera },
+    ]
+  },
   { id: "Conteúdos", title: "Listas", url: "/listas", icon: FileText },
   { id: "Email", title: "E-mail", url: "/email", icon: Mail },
   { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },

@@ -3035,6 +3035,78 @@ export type Database = {
           },
         ]
       }
+      contagens: {
+        Row: {
+          bounding_boxes: Json | null
+          confianca_media: number | null
+          created_at: string
+          data_analise: string | null
+          divergencia: boolean | null
+          estabelecimento_id: string
+          id: string
+          imagem_url: string | null
+          observacoes: string | null
+          quantidade_detectada: number | null
+          quantidade_esperada: number | null
+          resultado_url: string | null
+          status: string
+          tipo_objeto: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          bounding_boxes?: Json | null
+          confianca_media?: number | null
+          created_at?: string
+          data_analise?: string | null
+          divergencia?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          imagem_url?: string | null
+          observacoes?: string | null
+          quantidade_detectada?: number | null
+          quantidade_esperada?: number | null
+          resultado_url?: string | null
+          status?: string
+          tipo_objeto?: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          bounding_boxes?: Json | null
+          confianca_media?: number | null
+          created_at?: string
+          data_analise?: string | null
+          divergencia?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          imagem_url?: string | null
+          observacoes?: string | null
+          quantidade_detectada?: number | null
+          quantidade_esperada?: number | null
+          resultado_url?: string | null
+          status?: string
+          tipo_objeto?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contagens_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contagens_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contas_marketplace: {
         Row: {
           access_token: string | null
