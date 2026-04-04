@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
@@ -38,13 +38,19 @@ const tipoLabel: Record<string, string> = {
   generico: "Genérico",
 };
 
+const COLORS = [
+  "#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16",
+];
+
 const ResultadoContagem = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [contagem, setContagem] = useState<Contagem | null>(null);
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   useEffect(() => {
     if (id) loadContagem();
@@ -61,36 +67,72 @@ const ResultadoContagem = () => {
   };
 
   useEffect(() => {
-    if (contagem?.imagem_url && canvasRef.current) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = canvasRef.current!;
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0);
-        // Draw bounding boxes
-        const boxes: Detection[] = (contagem.bounding_boxes as any) || [];
-        boxes.forEach((det, i) => {
-          const x = (det.bbox.x / 100) * img.naturalWidth;
-          const y = (det.bbox.y / 100) * img.naturalHeight;
-          const w = (det.bbox.width / 100) * img.naturalWidth;
-          const h = (det.bbox.height / 100) * img.naturalHeight;
-          ctx.strokeStyle = "#22c55e";
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x, y, w, h);
-          // Label
-          ctx.fillStyle = "#22c55e";
-          ctx.fillRect(x, y - 24, 60, 24);
-          ctx.fillStyle = "#fff";
-          ctx.font = "bold 14px sans-serif";
-          ctx.fillText(`#${i + 1}`, x + 4, y - 7);
-        });
-        setImageLoaded(true);
-      };
-      img.src = contagem.imagem_url;
-    }
+    if (!contagem?.imagem_url || !canvasRef.current || !containerRef.current) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = canvasRef.current!;
+      const container = containerRef.current!;
+      const containerWidth = container.clientWidth;
+
+      // Scale canvas to fit container width
+      const scale = containerWidth / img.naturalWidth;
+      const displayWidth = containerWidth;
+      const displayHeight = img.naturalHeight * scale;
+
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+
+      // Draw bounding boxes with numbers
+      const boxes: Detection[] = (contagem.bounding_boxes as any) || [];
+      const fontSize = Math.max(14, Math.min(20, displayWidth * 0.035));
+      const lineWidth = Math.max(2, Math.min(4, displayWidth * 0.005));
+
+      boxes.forEach((det, i) => {
+        const x = (det.bbox.x / 100) * displayWidth;
+        const y = (det.bbox.y / 100) * displayHeight;
+        const w = (det.bbox.width / 100) * displayWidth;
+        const h = (det.bbox.height / 100) * displayHeight;
+        const color = COLORS[i % COLORS.length];
+
+        // Box
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        ctx.strokeRect(x, y, w, h);
+
+        // Number circle
+        const circleR = fontSize * 0.9;
+        const cx = x + circleR + 2;
+        const cy = y + circleR + 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, circleR, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Number text
+        ctx.fillStyle = "#fff";
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${i + 1}`, cx, cy);
+      });
+
+      setCanvasReady(true);
+    };
+    img.onerror = () => {
+      console.error("Failed to load image:", contagem.imagem_url);
+      setCanvasReady(true);
+    };
+    img.src = contagem.imagem_url;
   }, [contagem]);
 
   const handleDownload = () => {
@@ -115,6 +157,8 @@ const ResultadoContagem = () => {
       <div className="p-6 text-center text-muted-foreground">Análise não encontrada</div>
     );
   }
+
+  const boxes: Detection[] = (contagem.bounding_boxes as any) || [];
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
@@ -148,7 +192,17 @@ const ResultadoContagem = () => {
       {/* Image with bounding boxes */}
       <Card>
         <CardContent className="p-4">
-          <canvas ref={canvasRef} className="w-full rounded-xl" />
+          <div ref={containerRef} className="w-full">
+            {!canvasReady && (
+              <div className="flex items-center justify-center h-48 bg-muted rounded-xl">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            <canvas
+              ref={canvasRef}
+              className={`rounded-xl ${canvasReady ? "block" : "hidden"}`}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -169,6 +223,31 @@ const ResultadoContagem = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detection List */}
+      {boxes.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium mb-3">Itens Detectados</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
+              {boxes.map((det, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-sm">
+                  <span
+                    className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white shrink-0"
+                    style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="truncate">{det.label}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {Math.round(det.confianca * 100)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Details */}
       <Card>
