@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
@@ -8,47 +8,134 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Upload, ArrowLeft, Loader2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Camera, Upload, ArrowLeft, Loader2, X, Crop, RotateCw, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
+import Cropper, { Area } from "react-easy-crop";
+
+const MAX_IMAGE_SIZE = 1200;
+
+function resizeImage(dataUrl: string, maxSize: number): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.src = dataUrl;
+  });
+}
+
+function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.src = imageSrc;
+  });
+}
+
+function dataURLtoFile(dataUrl: string, filename: string): File {
+  const arr = dataUrl.split(",");
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
+}
 
 const NovaContagem = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const [rawImage, setRawImage] = useState<string | null>(null);
+  const [finalPreview, setFinalPreview] = useState<string | null>(null);
   const [tipoObjeto, setTipoObjeto] = useState("generico");
+  const [genericoDescricao, setGenericoDescricao] = useState("");
   const [quantidadeEsperada, setQuantidadeEsperada] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Crop state
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels);
+  }, []);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
     const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result as string);
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      setRawImage(dataUrl);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setCropDialogOpen(true);
+    };
     reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = async () => {
+    if (!rawImage || !croppedAreaPixels) return;
+    try {
+      const cropped = await getCroppedImg(rawImage, croppedAreaPixels);
+      const resized = await resizeImage(cropped, MAX_IMAGE_SIZE);
+      setFinalPreview(resized);
+      setCropDialogOpen(false);
+    } catch {
+      toast.error("Erro ao recortar imagem");
+    }
+  };
+
+  const handleSkipCrop = async () => {
+    if (!rawImage) return;
+    const resized = await resizeImage(rawImage, MAX_IMAGE_SIZE);
+    setFinalPreview(resized);
+    setCropDialogOpen(false);
   };
 
   const clearImage = () => {
-    setImagePreview(null);
-    setImageFile(null);
+    setFinalPreview(null);
+    setRawImage(null);
   };
 
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(",")[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
   const handleAnalyze = async () => {
-    if (!imageFile) { toast.error("Selecione uma imagem primeiro"); return; }
+    if (!finalPreview) { toast.error("Selecione uma imagem primeiro"); return; }
+    if (tipoObjeto === "generico" && !genericoDescricao.trim()) {
+      toast.error("Informe o que deseja contar");
+      return;
+    }
 
     const estabId = await getEstabelecimentoId();
     const usuarioId = await getUserIdFromAuth();
@@ -56,7 +143,8 @@ const NovaContagem = () => {
 
     setAnalyzing(true);
     try {
-      const fileName = `${estabId}/${Date.now()}_${imageFile.name}`;
+      const imageFile = dataURLtoFile(finalPreview, `contagem_${Date.now()}.jpg`);
+      const fileName = `${estabId}/${Date.now()}_contagem.jpg`;
       const { error: uploadError } = await supabase.storage.from("contagens-images").upload(fileName, imageFile);
       if (uploadError) throw uploadError;
 
@@ -77,8 +165,10 @@ const NovaContagem = () => {
         .single();
       if (createError) throw createError;
 
-      const imageBase64 = await fileToBase64(imageFile);
+      const imageBase64 = finalPreview.split(",")[1];
       const { data: session } = await supabase.auth.getSession();
+
+      const tipoEnvio = tipoObjeto === "generico" ? genericoDescricao.trim() : tipoObjeto;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
@@ -88,7 +178,7 @@ const NovaContagem = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.session?.access_token}`,
           },
-          body: JSON.stringify({ imageBase64, tipoObjeto }),
+          body: JSON.stringify({ imageBase64, tipoObjeto: tipoEnvio }),
         }
       );
 
@@ -135,12 +225,17 @@ const NovaContagem = () => {
 
       <Card>
         <CardContent className="p-4 space-y-4">
-          {imagePreview ? (
+          {finalPreview ? (
             <div className="relative">
-              <img src={imagePreview} alt="Preview" className="w-full rounded-xl max-h-[400px] object-contain bg-muted" />
-              <Button variant="destructive" size="icon" className="absolute top-2 right-2" onClick={clearImage}>
-                <X className="w-4 h-4" />
-              </Button>
+              <img src={finalPreview} alt="Preview" className="w-full rounded-xl max-h-[400px] object-contain bg-muted" />
+              <div className="absolute top-2 right-2 flex gap-1">
+                <Button variant="secondary" size="icon" className="h-8 w-8" onClick={() => { setCropDialogOpen(true); }}>
+                  <Crop className="w-4 h-4" />
+                </Button>
+                <Button variant="destructive" size="icon" className="h-8 w-8" onClick={clearImage}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
@@ -177,6 +272,18 @@ const NovaContagem = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {tipoObjeto === "generico" && (
+              <div>
+                <Label>O que deseja contar? <span className="text-destructive">*</span></Label>
+                <Input
+                  placeholder="Ex: garrafas, paletes, sacolas..."
+                  value={genericoDescricao}
+                  onChange={e => setGenericoDescricao(e.target.value)}
+                />
+              </div>
+            )}
+
             <div>
               <Label>Quantidade Esperada (opcional)</Label>
               <Input type="number" placeholder="Ex: 50" value={quantidadeEsperada} onChange={e => setQuantidadeEsperada(e.target.value)} />
@@ -187,11 +294,57 @@ const NovaContagem = () => {
             </div>
           </div>
 
-          <Button onClick={handleAnalyze} disabled={!imagePreview || analyzing} className="w-full gap-2" size="lg">
+          <Button onClick={handleAnalyze} disabled={!finalPreview || analyzing} className="w-full gap-2" size="lg">
             {analyzing ? (<><Loader2 className="w-5 h-5 animate-spin" /> Analisando...</>) : "Analisar Imagem"}
           </Button>
         </CardContent>
       </Card>
+
+      {/* Crop Dialog */}
+      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-2xl p-0 gap-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              <Crop className="w-5 h-5" /> Recortar Imagem
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-[50vh] md:h-[60vh] bg-black">
+            {rawImage && (
+              <Cropper
+                image={rawImage}
+                crop={crop}
+                zoom={zoom}
+                rotation={rotation}
+                aspect={undefined}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onRotationChange={setRotation}
+                onCropComplete={onCropComplete}
+              />
+            )}
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <ZoomIn className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Slider value={[zoom]} onValueChange={([v]) => setZoom(v)} min={1} max={3} step={0.1} className="flex-1" />
+              <span className="text-xs text-muted-foreground w-10 text-right">{zoom.toFixed(1)}x</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <RotateCw className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Slider value={[rotation]} onValueChange={([v]) => setRotation(v)} min={0} max={360} step={1} className="flex-1" />
+              <span className="text-xs text-muted-foreground w-10 text-right">{rotation}°</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={handleSkipCrop}>
+                Usar Original
+              </Button>
+              <Button className="flex-1" onClick={handleCropConfirm}>
+                Aplicar Recorte
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
