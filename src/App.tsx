@@ -254,6 +254,12 @@ const App = () => (
               <Route path="/atendimento-config" element={<AtendimentoConfig />} />
               <Route path="/chat-interno" element={<ChatInterno />} />
               <Route path="/agentes-chat" element={<AgentChat />} />
+              {/* Contagem Inteligente */}
+              <Route path="/contagem" element={<ContagemDashboard />} />
+              <Route path="/contagem/nova" element={<NovaContagem />} />
+              <Route path="/contagem/resultado/:id" element={<ResultadoContagem />} />
+              <Route path="/contagem/detalhe/:id" element={<ResultadoContagem />} />
+              <Route path="/contagem/historico" element={<ContagemHistorico />} />
               <Route path="/avisos" element={<Avisos />} />
               <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
               <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
