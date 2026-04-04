@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,23 +9,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     const { imageBase64, tipoObjeto } = await req.json();
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "Imagem não fornecida" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -37,18 +19,19 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY não configurada" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const tipoLabel = {
+    // Map tipo to label - if it's a custom string (generic), use it directly
+    const tipoMap: Record<string, string> = {
       pacotes_graficos: "pacotes gráficos empilhados",
       caixas: "caixas",
       fardos: "fardos",
-      generico: "objetos/volumes",
-    }[tipoObjeto] || "objetos/volumes";
+    };
+    const tipoLabel = tipoMap[tipoObjeto] || tipoObjeto || "objetos/volumes";
 
     const systemPrompt = `Você é um sistema de visão computacional especializado em contar ${tipoLabel} em imagens. 
-Analise a imagem fornecida e identifique cada ${tipoLabel} visível.
-Responda OBRIGATORIAMENTE no formato JSON usando a function tool fornecida.
-Seja preciso na contagem. Se objetos estiverem parcialmente ocultos, estime com base no padrão visível.
-Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em percentual (0-100) da imagem.`;
+Analise a imagem e identifique cada ${tipoLabel} visível.
+Responda OBRIGATORIAMENTE usando a function tool fornecida.
+Seja preciso. Se objetos estiverem parcialmente ocultos, estime com base no padrão visível.
+Para cada objeto, forneça coordenadas de bounding box em percentual (0-100).`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -57,13 +40,13 @@ Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
-              { type: "text", text: `Conte todos os ${tipoLabel} visíveis nesta imagem. Retorne as coordenadas de bounding box para cada um.` },
+              { type: "text", text: `Conte todos os ${tipoLabel} visíveis nesta imagem. Retorne bounding boxes.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },
@@ -77,8 +60,8 @@ Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em 
               parameters: {
                 type: "object",
                 properties: {
-                  total_detectado: { type: "integer", description: "Total de objetos detectados" },
-                  confianca_media: { type: "number", description: "Confiança média de 0 a 1" },
+                  total_detectado: { type: "integer" },
+                  confianca_media: { type: "number" },
                   deteccoes: {
                     type: "array",
                     items: {
@@ -90,10 +73,10 @@ Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em 
                         bbox: {
                           type: "object",
                           properties: {
-                            x: { type: "number", description: "X em percentual (0-100)" },
-                            y: { type: "number", description: "Y em percentual (0-100)" },
-                            width: { type: "number", description: "Largura em percentual" },
-                            height: { type: "number", description: "Altura em percentual" },
+                            x: { type: "number" },
+                            y: { type: "number" },
+                            width: { type: "number" },
+                            height: { type: "number" },
                           },
                           required: ["x", "y", "width", "height"],
                         },
@@ -101,7 +84,7 @@ Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em 
                       required: ["id", "label", "confianca", "bbox"],
                     },
                   },
-                  observacao_ia: { type: "string", description: "Observações sobre a análise" },
+                  observacao_ia: { type: "string" },
                 },
                 required: ["total_detectado", "confianca_media", "deteccoes"],
               },
@@ -113,20 +96,21 @@ Para cada objeto detectado, forneça coordenadas aproximadas de bounding box em 
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições atingido, tente novamente em instantes." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Erro ao processar imagem" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const statusMap: Record<number, string> = {
+        429: "Limite de requisições atingido, tente novamente.",
+        402: "Créditos insuficientes.",
+      };
+      return new Response(
+        JSON.stringify({ error: statusMap[response.status] || "Erro ao processar imagem" }),
+        { status: response.status >= 400 && response.status < 500 ? response.status : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall?.function?.arguments) {
       return new Response(JSON.stringify({ error: "IA não retornou resultado válido" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
