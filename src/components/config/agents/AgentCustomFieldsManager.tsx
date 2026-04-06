@@ -476,7 +476,7 @@ export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, a
                 </Button>
               </div>
             </div>
-            <ScrollArea className="max-h-[250px]">
+            <ScrollArea className="h-[250px]">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {domainSuggestions.campos.map((s, i) => {
                   const alreadyAdded = fields.some(f => f.nome.toLowerCase() === s.nome.toLowerCase());
