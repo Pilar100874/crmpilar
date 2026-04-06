@@ -62,7 +62,7 @@ REGRAS CRÍTICAS DE PRECISÃO:
           {
             role: "user",
             content: [
-              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis, um por um, numerando-os sequencialmente. Use o método de grade (fileira por fileira). Retorne bounding boxes individuais para cada item.` },
+              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },
