@@ -364,6 +364,52 @@ const satisfacaoCampos: AgentDataField[] = [
   { campo: 'acao_promotor', label: 'Ação para Promotores', descricao: 'O que fazer com promotores', tipo: 'texto', obrigatorio: false, categoria: 'Ações', exemplo: 'Pedir indicação, oferecer programa de fidelidade' },
 ];
 
+// ========== AGENTE CADASTRO DE PRODUTOS E ESTOQUE ==========
+const cadastroProdutosCampos: AgentDataField[] = [
+  // Dados Básicos do Produto
+  { campo: 'produto_codigo', label: 'Código do Produto', descricao: 'SKU ou código interno', tipo: 'tabela', obrigatorio: true, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos', 'produtos_importados'], colunas_sugeridas: ['codigo', 'id'], exemplo: 'SKU-001234' },
+  { campo: 'produto_nome', label: 'Nome do Produto', descricao: 'Nome ou descrição do material', tipo: 'tabela', obrigatorio: true, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos', 'produtos_importados'], colunas_sugeridas: ['nome'], exemplo: 'Papel Sulfite A4 75g' },
+  { campo: 'produto_descricao', label: 'Descrição Detalhada', descricao: 'Descrição técnica do produto', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['descricao'] },
+  { campo: 'produto_categoria', label: 'Categoria/Grupo', descricao: 'Categoria ou grupo do produto', tipo: 'tabela', obrigatorio: true, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos', 'produto_grupos'], colunas_sugeridas: ['categoria', 'grupo', 'nome'], exemplo: 'Papéis' },
+  { campo: 'produto_marca', label: 'Marca/Fabricante', descricao: 'Marca ou fabricante', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['marca'], exemplo: 'Chamex' },
+  { campo: 'produto_unidade', label: 'Unidade de Medida', descricao: 'UN, KG, CX, MT, RS, PC, etc.', tipo: 'tabela', obrigatorio: true, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['unidade'], exemplo: 'RS (resma)' },
+  { campo: 'produto_ncm', label: 'NCM', descricao: 'Nomenclatura Comum do Mercosul', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['ncm'], exemplo: '4802.56.10' },
+  { campo: 'produto_ean', label: 'EAN/Código de Barras', descricao: 'Código de barras EAN-13', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['ean_13'] },
+  { campo: 'produto_origem', label: 'Origem', descricao: 'Nacional, importado, etc.', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['origem'] },
+  // Especificações Técnicas (Campos Customizados por grupo)
+  { campo: 'produto_gramatura', label: 'Gramatura (g/m²)', descricao: 'Peso por metro quadrado do material', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos_importados', 'produto_campos_customizados'], colunas_sugeridas: ['gramatura', 'valor'], exemplo: '75' },
+  { campo: 'produto_largura', label: 'Largura (cm/mm)', descricao: 'Largura do material', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos', 'produtos_importados', 'produto_campos_customizados'], colunas_sugeridas: ['largura', 'valor'], exemplo: '210' },
+  { campo: 'produto_comprimento', label: 'Comprimento (cm/mm)', descricao: 'Comprimento do material', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos', 'produtos_importados', 'produto_campos_customizados'], colunas_sugeridas: ['comprimento', 'valor'], exemplo: '297' },
+  { campo: 'produto_altura', label: 'Altura (cm/mm)', descricao: 'Altura do produto ou embalagem', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['altura'] },
+  { campo: 'produto_peso', label: 'Peso Unitário (kg)', descricao: 'Peso por unidade', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['peso_unitario'], exemplo: '2.5' },
+  { campo: 'produto_diametro', label: 'Diâmetro (cm/mm)', descricao: 'Diâmetro do material (ex: bobinas)', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos_importados', 'produto_campos_customizados'], colunas_sugeridas: ['diametro', 'valor'] },
+  { campo: 'produto_numero_folhas', label: 'Número de Folhas', descricao: 'Quantidade de folhas (ex: resmas)', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos_importados'], colunas_sugeridas: ['numero_folhas'], exemplo: '500' },
+  { campo: 'produto_cor', label: 'Cor', descricao: 'Cor do material', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos', 'produto_campos_customizados'], colunas_sugeridas: ['cor', 'valor'], exemplo: 'Branco' },
+  { campo: 'produto_material', label: 'Material/Composição', descricao: 'Tipo de material ou composição', tipo: 'tabela', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produtos', 'produto_campos_customizados'], colunas_sugeridas: ['material', 'valor'], exemplo: 'Celulose virgem' },
+  { campo: 'produto_campos_customizados_grupo', label: 'Campos Customizados do Grupo', descricao: 'Campos extras configurados por grupo de produto (automático)', tipo: 'sistema_auto', obrigatorio: false, categoria: 'Especificações Técnicas', tabelas_sistema_sugeridas: ['produto_campos_customizados'], colunas_sugeridas: ['campo_key', 'label', 'tipo', 'opcoes'] },
+  // Embalagem e Acondicionamento
+  { campo: 'produto_tipo_embalagem', label: 'Tipo de Embalagem', descricao: 'Pallet, pacote, caixa, bobina, fardo', tipo: 'tabela', obrigatorio: true, categoria: 'Embalagem', tabelas_sistema_sugeridas: ['produtos_importados'], colunas_sugeridas: ['embalagem', 'tipo'], exemplo: 'Pallet' },
+  { campo: 'produto_qtd_por_embalagem', label: 'Qtd por Embalagem', descricao: 'Quantas unidades por pacote/caixa', tipo: 'numero', obrigatorio: false, categoria: 'Embalagem', exemplo: '10' },
+  { campo: 'produto_qtd_por_pallet', label: 'Qtd por Pallet', descricao: 'Quantas unidades/caixas por pallet', tipo: 'numero', obrigatorio: false, categoria: 'Embalagem', exemplo: '40' },
+  { campo: 'produto_peso_embalagem', label: 'Peso da Embalagem (kg)', descricao: 'Peso bruto da embalagem fechada', tipo: 'numero', obrigatorio: false, categoria: 'Embalagem', exemplo: '25' },
+  // Estoque
+  { campo: 'produto_estoque_atual', label: 'Estoque Atual', descricao: 'Quantidade disponível em estoque', tipo: 'tabela', obrigatorio: true, categoria: 'Estoque', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['estoque'], exemplo: '500' },
+  { campo: 'produto_estoque_reservado', label: 'Estoque Reservado', descricao: 'Quantidade reservada em pedidos', tipo: 'numero', obrigatorio: false, categoria: 'Estoque', exemplo: '50' },
+  { campo: 'produto_estoque_minimo', label: 'Estoque Mínimo', descricao: 'Ponto de reposição', tipo: 'numero', obrigatorio: false, categoria: 'Estoque', exemplo: '100' },
+  { campo: 'produto_estoque_maximo', label: 'Estoque Máximo', descricao: 'Limite máximo de estoque', tipo: 'numero', obrigatorio: false, categoria: 'Estoque', exemplo: '2000' },
+  { campo: 'produto_localizacao', label: 'Localização no Estoque', descricao: 'Rua, prateleira, posição', tipo: 'texto', obrigatorio: false, categoria: 'Estoque', exemplo: 'Rua A - Prat. 3 - Pos. 12' },
+  { campo: 'produto_lote', label: 'Lote', descricao: 'Número do lote atual', tipo: 'texto', obrigatorio: false, categoria: 'Estoque', exemplo: 'LT-2025-0042' },
+  { campo: 'produto_validade', label: 'Data de Validade', descricao: 'Data de validade (se aplicável)', tipo: 'texto', obrigatorio: false, categoria: 'Estoque' },
+  // Preços
+  { campo: 'produto_preco_custo', label: 'Preço de Custo (R$)', descricao: 'Custo de aquisição', tipo: 'numero', obrigatorio: false, categoria: 'Preços', exemplo: '15.00' },
+  { campo: 'produto_preco_venda', label: 'Preço de Venda (R$)', descricao: 'Preço de tabela', tipo: 'tabela', obrigatorio: true, categoria: 'Preços', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['preco_tabela'], exemplo: '29.90' },
+  { campo: 'produto_preco_minimo', label: 'Preço Mínimo (R$)', descricao: 'Preço mínimo autorizado', tipo: 'tabela', obrigatorio: false, categoria: 'Preços', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['preco_minimo'], exemplo: '22.00' },
+  // Status
+  { campo: 'produto_ativo', label: 'Produto Ativo', descricao: 'Se o produto está ativo para venda', tipo: 'tabela', obrigatorio: false, categoria: 'Status', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['ativo'] },
+  { campo: 'produto_condicao', label: 'Condição', descricao: 'Novo, usado, recondicionado', tipo: 'tabela', obrigatorio: false, categoria: 'Status', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['condicao'], exemplo: 'Novo' },
+  { campo: 'produto_garantia', label: 'Garantia', descricao: 'Prazo de garantia', tipo: 'tabela', obrigatorio: false, categoria: 'Status', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['garantia'], exemplo: '12 meses' },
+];
+
 export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'orquestrador', nome: 'Orquestrador de Vendas', icone: '🧠', campos: orquestradorCampos },
   { template_key: 'comercial', nome: 'Agente Comercial', icone: '💼', campos: comercialCampos },
@@ -379,12 +425,15 @@ export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'performance', nome: 'Agente Performance', icone: '🏆', campos: performanceCampos },
   { template_key: 'pos_venda', nome: 'Agente Pós-Venda', icone: '📦', campos: posVendaCampos },
   { template_key: 'satisfacao', nome: 'Agente Satisfação', icone: '⭐', campos: satisfacaoCampos },
+  { template_key: 'cadastro_produtos', nome: 'Agente Cadastro de Produtos e Estoque', icone: '📋', campos: cadastroProdutosCampos },
 ];
 
 // Tabelas disponíveis do sistema para mapeamento (baseado nas colunas reais do banco)
 export const SYSTEM_TABLES = [
   { value: 'produtos', label: 'Produtos', colunas: ['id', 'nome', 'codigo', 'descricao', 'marca', 'estoque', 'preco_tabela', 'preco_minimo', 'tipo_preco', 'preco_ativo', 'ncm', 'ean_13', 'peso_unitario', 'largura', 'comprimento', 'altura', 'cor', 'tamanho', 'material', 'condicao', 'origem', 'garantia', 'ativo'] },
   { value: 'produtos_importados', label: 'Produtos Importados', colunas: ['id', 'nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'embalagem', 'numero_folhas', 'diametro', 'obs'] },
+  { value: 'produto_campos_customizados', label: 'Campos Customizados (por grupo)', colunas: ['id', 'grupo_id', 'campo_key', 'label', 'tipo', 'opcoes', 'obrigatorio', 'ordem', 'ativo'] },
+  { value: 'produto_grupos', label: 'Grupos de Produtos', colunas: ['id', 'nome', 'descricao'] },
   { value: 'customers', label: 'Clientes/Contatos', colunas: ['id', 'nome', 'telefone', 'email', 'tags', 'tipo_operador', 'tel', 'empresa_id'] },
   { value: 'empresas', label: 'Empresas', colunas: ['id', 'nome', 'nome_fantasia', 'cnpj', 'tipo_cliente', 'email', 'telefone', 'endereco', 'bairro', 'cidade', 'estado', 'cep', 'latitude', 'longitude', 'cnae_principal', 'cnae_descricao', 'segmento_id'] },
   { value: 'orcamentos', label: 'Orçamentos', colunas: ['id', 'cliente_id', 'empresa_id', 'vendedor_id', 'unidade_id', 'condicao_pagamento_id', 'etapa', 'status', 'valor_total', 'valor_desconto', 'percentual_desconto', 'observacoes', 'motivo_perda', 'origem', 'data_envio', 'created_at'] },
