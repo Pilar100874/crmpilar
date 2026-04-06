@@ -87,7 +87,9 @@ REGRAS CRÍTICAS DE PRECISÃO:
           {
             role: "user",
             content: [
-              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
+              { type: "text", text: isResma
+                ? `Esta imagem é uma FAIXA VERTICAL selecionada pelo usuário em uma pilha de resmas de papel. Conte CADA resma individual visível nesta faixa, de cima para baixo. Cada camada horizontal separada por uma linha clara é uma resma. Na observação, liste cada resma numerada. Retorne bounding boxes individuais.`
+                : `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },
