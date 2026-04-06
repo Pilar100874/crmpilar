@@ -1352,4 +1352,5 @@ export const KNOWLEDGE_BASE_DOMAINS = [
   { id: 'tecnica', nome: 'Base Técnica', descricao: 'Fichas técnicas, aplicações, compatibilidade, FAQ técnico', icone: '🔧' },
   { id: 'excecoes', nome: 'Base de Exceções', descricao: 'Regras de exceção, sinais de conflito, fluxos de escalonamento', icone: '⚠️' },
   { id: 'performance', nome: 'Base de Performance', descricao: 'Métricas, benchmarks, padrões de sucesso, motivos de perda', icone: '📈' },
+  { id: 'cadastro_produtos', nome: 'Base de Produtos e Estoque', descricao: 'Cadastro, especificações técnicas, embalagens, estoque, campos customizados', icone: '📋' },
 ];
