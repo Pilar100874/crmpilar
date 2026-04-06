@@ -27,21 +27,25 @@ serve(async (req) => {
     };
     const tipoLabel = tipoMap[tipoObjeto] || tipoObjeto || "objetos/volumes";
 
-    const systemPrompt = `Você é um sistema de visão computacional de alta precisão, especializado em contar ${tipoLabel} em imagens industriais e logísticas.
+    const systemPrompt = `Você é um sistema de visão computacional de ALTÍSSIMA PRECISÃO, especializado em contar ${tipoLabel} em imagens industriais e logísticas.
 
 MÉTODO DE CONTAGEM OBRIGATÓRIO — siga rigorosamente:
-1. Divida a imagem mentalmente em uma grade (linhas horizontais e colunas verticais).
-2. Conte fileira por fileira, de cima para baixo, da esquerda para a direita.
-3. Para cada fileira, conte coluna por coluna.
-4. Numere sequencialmente cada item encontrado (1, 2, 3...).
-5. Se itens estão parcialmente ocultos ou sobrepostos, INCLUA-OS na contagem estimando sua posição.
-6. Após contar, RECONFERE o total percorrendo a grade novamente.
+1. PRIMEIRO, observe a imagem por completo e identifique o padrão de empilhamento (horizontal, vertical, grade).
+2. Conte as FILEIRAS visíveis de cima para baixo. Anote quantas fileiras existem.
+3. Para cada fileira, conte os itens da esquerda para a direita. Anote a quantidade de cada fileira.
+4. Some os totais de cada fileira para obter o total geral.
+5. VERIFIQUE: conte novamente de baixo para cima para confirmar.
+6. Se as duas contagens divergirem, conte uma TERCEIRA vez e use o valor que apareceu 2 vezes.
 7. Forneça bounding boxes em coordenadas percentuais (0-100) relativas à imagem.
 8. Cada bounding box deve envolver individualmente UM ÚNICO item — não agrupe múltiplos itens.
 
-REGRAS:
-- Prefira SUPERESTIMAR levemente do que subestimar.
-- Itens parcialmente visíveis nas bordas DEVEM ser contados.
+REGRAS CRÍTICAS DE PRECISÃO:
+- NÃO superestime. NÃO subestime. Conte EXATAMENTE o que é visível.
+- NÃO conte sombras, reflexos ou texturas como itens separados.
+- NÃO conte divisões visuais dentro de um mesmo item (ex: vincos, dobras, fitas) como itens separados.
+- Itens parcialmente visíveis nas bordas: conte SOMENTE se pelo menos 50% do item é visível.
+- Se houver dúvida se algo é 1 item ou 2, considere como 1.
+- Na observação, SEMPRE descreva: "X fileiras visíveis, com Y itens cada = total Z".
 - Retorne confiança individual realista (0.0 a 1.0) para cada detecção.
 - Use a function tool fornecida OBRIGATORIAMENTE para responder.`;
 
@@ -58,7 +62,7 @@ REGRAS:
           {
             role: "user",
             content: [
-              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis, um por um, numerando-os sequencialmente. Use o método de grade (fileira por fileira). Retorne bounding boxes individuais para cada item.` },
+              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },
