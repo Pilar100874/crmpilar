@@ -330,7 +330,7 @@ const NovaContagem = () => {
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
-                aspect={undefined}
+                aspect={cropAspect}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
@@ -339,6 +339,20 @@ const NovaContagem = () => {
             )}
           </div>
           <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground font-medium">Formato:</span>
+              {aspectOptions.map((opt) => (
+                <Button
+                  key={opt.label}
+                  size="sm"
+                  variant={cropAspect === opt.value ? "default" : "outline"}
+                  className="text-xs h-7 px-2"
+                  onClick={() => setCropAspect(opt.value)}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
             <div className="flex items-center gap-3">
               <ZoomIn className="w-4 h-4 text-muted-foreground shrink-0" />
               <Slider value={[zoom]} onValueChange={([v]) => setZoom(v)} min={1} max={3} step={0.1} className="flex-1" />
