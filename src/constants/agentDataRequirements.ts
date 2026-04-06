@@ -432,6 +432,8 @@ export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
 export const SYSTEM_TABLES = [
   { value: 'produtos', label: 'Produtos', colunas: ['id', 'nome', 'codigo', 'descricao', 'marca', 'estoque', 'preco_tabela', 'preco_minimo', 'tipo_preco', 'preco_ativo', 'ncm', 'ean_13', 'peso_unitario', 'largura', 'comprimento', 'altura', 'cor', 'tamanho', 'material', 'condicao', 'origem', 'garantia', 'ativo'] },
   { value: 'produtos_importados', label: 'Produtos Importados', colunas: ['id', 'nome', 'quantidade', 'gramatura', 'largura', 'comprimento', 'tipo', 'embalagem', 'numero_folhas', 'diametro', 'obs'] },
+  { value: 'produto_campos_customizados', label: 'Campos Customizados (por grupo)', colunas: ['id', 'grupo_id', 'campo_key', 'label', 'tipo', 'opcoes', 'obrigatorio', 'ordem', 'ativo'] },
+  { value: 'produto_grupos', label: 'Grupos de Produtos', colunas: ['id', 'nome', 'descricao'] },
   { value: 'customers', label: 'Clientes/Contatos', colunas: ['id', 'nome', 'telefone', 'email', 'tags', 'tipo_operador', 'tel', 'empresa_id'] },
   { value: 'empresas', label: 'Empresas', colunas: ['id', 'nome', 'nome_fantasia', 'cnpj', 'tipo_cliente', 'email', 'telefone', 'endereco', 'bairro', 'cidade', 'estado', 'cep', 'latitude', 'longitude', 'cnae_principal', 'cnae_descricao', 'segmento_id'] },
   { value: 'orcamentos', label: 'Orçamentos', colunas: ['id', 'cliente_id', 'empresa_id', 'vendedor_id', 'unidade_id', 'condicao_pagamento_id', 'etapa', 'status', 'valor_total', 'valor_desconto', 'percentual_desconto', 'observacoes', 'motivo_perda', 'origem', 'data_envio', 'created_at'] },
