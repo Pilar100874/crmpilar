@@ -3,7 +3,7 @@ export interface AgentDataField {
   campo: string;
   label: string;
   descricao: string;
-  tipo: 'texto' | 'tabela' | 'lista' | 'numero' | 'json';
+  tipo: 'texto' | 'tabela' | 'lista' | 'numero' | 'json' | 'sistema_auto';
   obrigatorio: boolean;
   categoria: string; // agrupamento visual no wizard
   tabelas_sistema_sugeridas?: string[];
