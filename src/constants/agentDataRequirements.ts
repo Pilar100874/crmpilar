@@ -425,6 +425,7 @@ export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'performance', nome: 'Agente Performance', icone: '🏆', campos: performanceCampos },
   { template_key: 'pos_venda', nome: 'Agente Pós-Venda', icone: '📦', campos: posVendaCampos },
   { template_key: 'satisfacao', nome: 'Agente Satisfação', icone: '⭐', campos: satisfacaoCampos },
+  { template_key: 'cadastro_produtos', nome: 'Agente Cadastro de Produtos e Estoque', icone: '📋', campos: cadastroProdutosCampos },
 ];
 
 // Tabelas disponíveis do sistema para mapeamento (baseado nas colunas reais do banco)
