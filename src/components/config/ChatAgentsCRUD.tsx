@@ -674,6 +674,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   <AgentCustomFieldsManager
                     agentId={editingAgent.id}
                     estabelecimentoId={estabelecimentoId}
+                    agentDomain={detectAgentDomain(editingAgent.nome)}
                   />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground text-sm">
