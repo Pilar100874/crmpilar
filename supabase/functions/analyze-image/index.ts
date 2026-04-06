@@ -43,9 +43,10 @@ REGRAS CRÍTICAS DE PRECISÃO:
 - NÃO superestime. NÃO subestime. Conte EXATAMENTE o que é visível.
 - NÃO conte sombras, reflexos ou texturas como itens separados.
 - NÃO conte divisões visuais dentro de um mesmo item (ex: vincos, dobras, fitas) como itens separados.
-- Itens parcialmente visíveis nas bordas: conte SOMENTE se pelo menos 50% do item é visível.
-- Se houver dúvida se algo é 1 item ou 2, considere como 1.
-- Na observação, SEMPRE descreva: "X fileiras visíveis, com Y itens cada = total Z".
+- Itens parcialmente visíveis nas bordas: conte se QUALQUER parte significativa é visível (mesmo uma fresta/borda fina conta como 1 item).
+- Se houver dúvida se algo é 1 item ou 2, observe as linhas de separação entre eles — se há uma linha clara de divisão, são 2 itens separados.
+- ATENÇÃO ESPECIAL: itens nas extremidades (topo e base da pilha) são frequentemente esquecidos. Verifique com cuidado.
+- Na observação, SEMPRE descreva: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z".
 - Retorne confiança individual realista (0.0 a 1.0) para cada detecção.
 - Use a function tool fornecida OBRIGATORIAMENTE para responder.`;
 
