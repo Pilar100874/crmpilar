@@ -32,7 +32,7 @@ interface Contagem {
 }
 
 const tipoLabel: Record<string, string> = {
-  pacotes_graficos: "Pacotes Gráficos",
+  
   caixas: "Caixas",
   fardos: "Fardos",
   generico: "Genérico",
