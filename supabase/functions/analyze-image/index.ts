@@ -27,11 +27,23 @@ serve(async (req) => {
     };
     const tipoLabel = tipoMap[tipoObjeto] || tipoObjeto || "objetos/volumes";
 
-    const systemPrompt = `Você é um sistema de visão computacional especializado em contar ${tipoLabel} em imagens. 
-Analise a imagem e identifique cada ${tipoLabel} visível.
-Responda OBRIGATORIAMENTE usando a function tool fornecida.
-Seja preciso. Se objetos estiverem parcialmente ocultos, estime com base no padrão visível.
-Para cada objeto, forneça coordenadas de bounding box em percentual (0-100).`;
+    const systemPrompt = `Você é um sistema de visão computacional de alta precisão, especializado em contar ${tipoLabel} em imagens industriais e logísticas.
+
+MÉTODO DE CONTAGEM OBRIGATÓRIO — siga rigorosamente:
+1. Divida a imagem mentalmente em uma grade (linhas horizontais e colunas verticais).
+2. Conte fileira por fileira, de cima para baixo, da esquerda para a direita.
+3. Para cada fileira, conte coluna por coluna.
+4. Numere sequencialmente cada item encontrado (1, 2, 3...).
+5. Se itens estão parcialmente ocultos ou sobrepostos, INCLUA-OS na contagem estimando sua posição.
+6. Após contar, RECONFERE o total percorrendo a grade novamente.
+7. Forneça bounding boxes em coordenadas percentuais (0-100) relativas à imagem.
+8. Cada bounding box deve envolver individualmente UM ÚNICO item — não agrupe múltiplos itens.
+
+REGRAS:
+- Prefira SUPERESTIMAR levemente do que subestimar.
+- Itens parcialmente visíveis nas bordas DEVEM ser contados.
+- Retorne confiança individual realista (0.0 a 1.0) para cada detecção.
+- Use a function tool fornecida OBRIGATORIAMENTE para responder.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -40,13 +52,13 @@ Para cada objeto, forneça coordenadas de bounding box em percentual (0-100).`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
-              { type: "text", text: `Conte todos os ${tipoLabel} visíveis nesta imagem. Retorne bounding boxes.` },
+              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis, um por um, numerando-os sequencialmente. Use o método de grade (fileira por fileira). Retorne bounding boxes individuais para cada item.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },
