@@ -99,6 +99,7 @@
     "react-easy-crop": "^5.5.7",
     "react-grid-layout": "^1.5.2",
     "react-hook-form": "^7.61.1",
+    "react-image-crop": "^11.0.10",
     "react-leaflet": "^5.0.0",
     "react-resizable-panels": "^2.1.9",
     "react-rnd": "^10.5.2",

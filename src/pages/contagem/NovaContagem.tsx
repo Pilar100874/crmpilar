@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Slider } from "@/components/ui/slider";
-import { Camera, Upload, ArrowLeft, Loader2, X, Crop, RotateCw, ZoomIn } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Loader2, X, Crop } from "lucide-react";
 import { toast } from "sonner";
-import Cropper, { Area } from "react-easy-crop";
+import ReactCrop, { type PercentCrop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 
 const MAX_IMAGE_SIZE = 1200;
 
@@ -41,17 +41,69 @@ function resizeImage(dataUrl: string, maxSize: number): Promise<string> {
   });
 }
 
-function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string> {
-  return new Promise((resolve) => {
+function createCenteredCrop(mediaWidth: number, mediaHeight: number, aspect: number): PercentCrop {
+  const baseWidth = aspect < 0.75 ? 24 : aspect > 1.25 ? 82 : 55;
+
+  return centerCrop(
+    makeAspectCrop(
+      {
+        unit: "%",
+        width: baseWidth,
+      },
+      aspect,
+      mediaWidth,
+      mediaHeight,
+    ),
+    mediaWidth,
+    mediaHeight,
+  );
+}
+
+function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: PixelCrop,
+  renderedWidth: number,
+  renderedHeight: number,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      if (!pixelCrop.width || !pixelCrop.height || !renderedWidth || !renderedHeight) {
+        reject(new Error("Selecione uma área válida para recorte"));
+        return;
+      }
+
+      const scaleX = img.naturalWidth / renderedWidth;
+      const scaleY = img.naturalHeight / renderedHeight;
+      const cropWidth = Math.max(1, Math.round(pixelCrop.width * scaleX));
+      const cropHeight = Math.max(1, Math.round(pixelCrop.height * scaleY));
+
       const canvas = document.createElement("canvas");
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Não foi possível preparar o recorte"));
+        return;
+      }
+
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(
+        img,
+        pixelCrop.x * scaleX,
+        pixelCrop.y * scaleY,
+        pixelCrop.width * scaleX,
+        pixelCrop.height * scaleY,
+        0,
+        0,
+        cropWidth,
+        cropHeight,
+      );
+
       resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
+    img.onerror = () => reject(new Error("Erro ao carregar imagem para recorte"));
     img.src = imageSrc;
   });
 }
@@ -70,6 +122,7 @@ const NovaContagem = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [finalPreview, setFinalPreview] = useState<string | null>(null);
@@ -81,10 +134,8 @@ const NovaContagem = () => {
 
   // Crop state
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [crop, setCrop] = useState<PercentCrop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [cropAspect, setCropAspect] = useState<number | undefined>(undefined);
 
   const aspectOptions = [
@@ -94,8 +145,33 @@ const NovaContagem = () => {
     { label: "Quadrado", value: 1 },
   ];
 
-  const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
-    setCroppedAreaPixels(croppedPixels);
+  const handleCropImageLoad = useCallback((e: SyntheticEvent<HTMLImageElement>) => {
+    imageRef.current = e.currentTarget;
+    if (cropAspect) {
+      setCrop(createCenteredCrop(e.currentTarget.width, e.currentTarget.height, cropAspect));
+    } else {
+      setCrop(undefined);
+    }
+    setCompletedCrop(null);
+  }, [cropAspect]);
+
+  const handleAspectChange = useCallback((aspect: number | undefined) => {
+    setCropAspect(aspect);
+    setCompletedCrop(null);
+
+    if (!aspect || !imageRef.current) {
+      setCrop(undefined);
+      return;
+    }
+
+    setCrop(createCenteredCrop(imageRef.current.width, imageRef.current.height, aspect));
+  }, []);
+
+  const openCropDialog = useCallback(() => {
+    setCropAspect(undefined);
+    setCrop(undefined);
+    setCompletedCrop(null);
+    setCropDialogOpen(true);
   }, []);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,9 +181,9 @@ const NovaContagem = () => {
     reader.onload = async () => {
       const dataUrl = reader.result as string;
       setRawImage(dataUrl);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setRotation(0);
+      setCropAspect(undefined);
+      setCrop(undefined);
+      setCompletedCrop(null);
       setCropDialogOpen(true);
     };
     reader.readAsDataURL(file);
@@ -115,9 +191,13 @@ const NovaContagem = () => {
   };
 
   const handleCropConfirm = async () => {
-    if (!rawImage || !croppedAreaPixels) return;
+    if (!rawImage || !completedCrop || !imageRef.current) {
+      toast.error("Desenhe a área do recorte antes de aplicar");
+      return;
+    }
+
     try {
-      const cropped = await getCroppedImg(rawImage, croppedAreaPixels);
+      const cropped = await getCroppedImg(rawImage, completedCrop, imageRef.current.width, imageRef.current.height);
       const resized = await resizeImage(cropped, MAX_IMAGE_SIZE);
       setFinalPreview(resized);
       setCropDialogOpen(false);
@@ -136,6 +216,9 @@ const NovaContagem = () => {
   const clearImage = () => {
     setFinalPreview(null);
     setRawImage(null);
+    setCrop(undefined);
+    setCompletedCrop(null);
+    setCropAspect(undefined);
   };
 
   const handleAnalyze = async () => {
@@ -237,7 +320,7 @@ const NovaContagem = () => {
             <div className="relative">
               <img src={finalPreview} alt="Preview" className="w-full rounded-xl max-h-[400px] object-contain bg-muted" />
               <div className="absolute top-2 right-2 flex gap-1">
-                <Button variant="secondary" size="icon" className="h-8 w-8" onClick={() => { setCropDialogOpen(true); }}>
+                <Button variant="secondary" size="icon" className="h-8 w-8" onClick={openCropDialog}>
                   <Crop className="w-4 h-4" />
                 </Button>
                 <Button variant="destructive" size="icon" className="h-8 w-8" onClick={clearImage}>
@@ -323,19 +406,31 @@ const NovaContagem = () => {
               </p>
             </div>
           )}
-          <div className="relative w-full h-[50vh] md:h-[60vh] bg-black">
+          <div className="px-4 pb-2">
+            <p className="text-sm text-muted-foreground">
+              Clique e arraste sobre a imagem para desenhar a área do recorte e depois use as alças para redimensionar.
+            </p>
+          </div>
+          <div className="flex items-center justify-center w-full min-h-[50vh] md:min-h-[60vh] bg-black px-3 py-3 overflow-auto">
             {rawImage && (
-              <Cropper
-                image={rawImage}
+              <ReactCrop
                 crop={crop}
-                zoom={zoom}
-                rotation={rotation}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
                 aspect={cropAspect}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onRotationChange={setRotation}
-                onCropComplete={onCropComplete}
-              />
+                keepSelection
+                ruleOfThirds
+                minWidth={40}
+                minHeight={40}
+              >
+                <img
+                  ref={imageRef}
+                  src={rawImage}
+                  alt="Imagem para recorte"
+                  onLoad={handleCropImageLoad}
+                  className="max-h-[50vh] md:max-h-[60vh] w-auto object-contain"
+                />
+              </ReactCrop>
             )}
           </div>
           <div className="p-4 space-y-3">
@@ -347,21 +442,11 @@ const NovaContagem = () => {
                   size="sm"
                   variant={cropAspect === opt.value ? "default" : "outline"}
                   className="text-xs h-7 px-2"
-                  onClick={() => setCropAspect(opt.value)}
+                  onClick={() => handleAspectChange(opt.value)}
                 >
                   {opt.label}
                 </Button>
               ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <ZoomIn className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Slider value={[zoom]} onValueChange={([v]) => setZoom(v)} min={1} max={3} step={0.1} className="flex-1" />
-              <span className="text-xs text-muted-foreground w-10 text-right">{zoom.toFixed(1)}x</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <RotateCw className="w-4 h-4 text-muted-foreground shrink-0" />
-              <Slider value={[rotation]} onValueChange={([v]) => setRotation(v)} min={0} max={360} step={1} className="flex-1" />
-              <span className="text-xs text-muted-foreground w-10 text-right">{rotation}°</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={handleSkipCrop}>
