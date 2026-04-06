@@ -266,6 +266,7 @@ const NovaContagem = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pacotes_graficos">Pacotes Gráficos</SelectItem>
+                  <SelectItem value="resma">Resmas de Papel</SelectItem>
                   <SelectItem value="caixas">Caixas</SelectItem>
                   <SelectItem value="fardos">Fardos</SelectItem>
                   <SelectItem value="generico">Genérico</SelectItem>
