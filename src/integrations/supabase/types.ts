@@ -2276,6 +2276,66 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_agent_custom_fields: {
+        Row: {
+          agent_id: string
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          obrigatorio: boolean
+          opcoes: string[] | null
+          ordem: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          obrigatorio?: boolean
+          opcoes?: string[] | null
+          ordem?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          obrigatorio?: boolean
+          opcoes?: string[] | null
+          ordem?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_agent_custom_fields_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_agent_custom_fields_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_agent_kb_files: {
         Row: {
           agent_id: string

@@ -17,7 +17,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings, ListChecks } from 'lucide-react';
+import AgentCustomFieldsManager from '@/components/config/agents/AgentCustomFieldsManager';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
 import RulesAssistantChat from '@/components/config/RulesAssistantChat';
@@ -464,9 +465,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs defaultValue="identidade" className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                <TabsTrigger value="campos" disabled={!editingAgent}>
+                  <ListChecks className="h-3 w-3 mr-1" /> Campos
+                </TabsTrigger>
                 <TabsTrigger value="regras">Regras</TabsTrigger>
                 <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 <TabsTrigger value="apis" disabled={formData.knowledge_base_type === 'nenhuma' || formData.knowledge_base_type === 'terceiros'}>APIs</TabsTrigger>
@@ -663,6 +667,19 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
                   agentName={formData.nome}
                 />
+              </TabsContent>
+
+              <TabsContent value="campos" className="mt-0">
+                {editingAgent ? (
+                  <AgentCustomFieldsManager
+                    agentId={editingAgent.id}
+                    estabelecimentoId={estabelecimentoId}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Salve o agente primeiro para configurar campos personalizados
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="regras" className="mt-0 space-y-4">
