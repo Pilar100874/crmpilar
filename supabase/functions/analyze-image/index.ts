@@ -24,10 +24,32 @@ serve(async (req) => {
       pacotes_graficos: "pacotes gráficos empilhados",
       caixas: "caixas",
       fardos: "fardos",
+      resma: "resmas de papel empilhadas",
     };
     const tipoLabel = tipoMap[tipoObjeto] || tipoObjeto || "objetos/volumes";
+    const isResma = tipoObjeto === "resma";
 
-    const systemPrompt = `Você é um sistema de visão computacional de ALTÍSSIMA PRECISÃO, especializado em contar ${tipoLabel} em imagens industriais e logísticas.
+    const resmaPrompt = `Você é um sistema de visão computacional de ALTÍSSIMA PRECISÃO, especializado em contar resmas de papel empilhadas.
+
+CONTEXTO: O usuário selecionou uma FAIXA VERTICAL FINA da pilha de resmas. Isso significa que você está vendo uma seção transversal da pilha.
+
+MÉTODO DE CONTAGEM OBRIGATÓRIO para resmas:
+1. Esta é uma faixa vertical — as resmas aparecem como CAMADAS HORIZONTAIS empilhadas uma sobre a outra.
+2. Percorra a faixa DE CIMA PARA BAIXO.
+3. Cada resma aparece como uma faixa/banda horizontal com bordas claras (linhas de separação entre resmas).
+4. Conte CADA linha de separação visível. O número de resmas = número de separações + 1.
+5. VERIFIQUE: conte novamente DE BAIXO PARA CIMA.
+6. Preste atenção a resmas parciais no topo e na base — conte-as se qualquer parte é visível.
+7. NÃO confunda dobras, vincos ou sombras com separações entre resmas.
+8. Uma separação real entre resmas é uma LINHA HORIZONTAL clara que atravessa toda a largura da faixa.
+
+REGRAS CRÍTICAS:
+- Conte EXATAMENTE o que é visível. Sem estimar, sem arredondar.
+- Na observação, liste: "Resma 1 (topo), Resma 2, ... Resma N (base). Total: N resmas."
+- Forneça bounding boxes em coordenadas percentuais (0-100) — cada box envolvendo UMA resma.
+- Use a function tool fornecida OBRIGATORIAMENTE para responder.`;
+
+    const generalPrompt = `Você é um sistema de visão computacional de ALTÍSSIMA PRECISÃO, especializado em contar ${tipoLabel} em imagens industriais e logísticas.
 
 MÉTODO DE CONTAGEM OBRIGATÓRIO — siga rigorosamente:
 1. PRIMEIRO, observe a imagem por completo e identifique o padrão de empilhamento (horizontal, vertical, grade).
@@ -50,6 +72,8 @@ REGRAS CRÍTICAS DE PRECISÃO:
 - Retorne confiança individual realista (0.0 a 1.0) para cada detecção.
 - Use a function tool fornecida OBRIGATORIAMENTE para responder.`;
 
+    const systemPrompt = isResma ? resmaPrompt : generalPrompt;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,7 +87,9 @@ REGRAS CRÍTICAS DE PRECISÃO:
           {
             role: "user",
             content: [
-              { type: "text", text: `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
+              { type: "text", text: isResma
+                ? `Esta imagem é uma FAIXA VERTICAL selecionada pelo usuário em uma pilha de resmas de papel. Conte CADA resma individual visível nesta faixa, de cima para baixo. Cada camada horizontal separada por uma linha clara é uma resma. Na observação, liste cada resma numerada. Retorne bounding boxes individuais.`
+                : `Analise cuidadosamente esta imagem. Conte TODOS os ${tipoLabel} visíveis com PRECISÃO MÁXIMA. Use o método de fileiras: identifique cada fileira, conte os itens em cada uma, e some. Verifique contando novamente. Na observação, descreva o raciocínio: "Fileira 1: X itens, Fileira 2: Y itens... Total: Z". Retorne bounding boxes individuais para cada item.` },
               { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
           },

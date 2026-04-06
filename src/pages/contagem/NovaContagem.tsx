@@ -266,6 +266,7 @@ const NovaContagem = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pacotes_graficos">Pacotes Gráficos</SelectItem>
+                  <SelectItem value="resma">Resmas de Papel</SelectItem>
                   <SelectItem value="caixas">Caixas</SelectItem>
                   <SelectItem value="fardos">Fardos</SelectItem>
                   <SelectItem value="generico">Genérico</SelectItem>
@@ -308,6 +309,13 @@ const NovaContagem = () => {
               <Crop className="w-5 h-5" /> Recortar Imagem
             </DialogTitle>
           </DialogHeader>
+          {tipoObjeto === "resma" && (
+            <div className="px-4 pb-2">
+              <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                📐 <strong>Modo Resma:</strong> Selecione uma faixa vertical fina que cruze todas as resmas empilhadas de cima a baixo. Isso melhora a precisão da contagem.
+              </p>
+            </div>
+          )}
           <div className="relative w-full h-[50vh] md:h-[60vh] bg-black">
             {rawImage && (
               <Cropper
@@ -315,7 +323,7 @@ const NovaContagem = () => {
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
-                aspect={undefined}
+                aspect={tipoObjeto === "resma" ? 1 / 5 : undefined}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
