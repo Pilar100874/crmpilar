@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
@@ -145,7 +145,7 @@ const NovaContagem = () => {
     { label: "Quadrado", value: 1 },
   ];
 
-  const handleCropImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleCropImageLoad = useCallback((e: SyntheticEvent<HTMLImageElement>) => {
     imageRef.current = e.currentTarget;
     if (cropAspect) {
       setCrop(createCenteredCrop(e.currentTarget.width, e.currentTarget.height, cropAspect));
