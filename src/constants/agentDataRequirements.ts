@@ -99,7 +99,8 @@ const inteligenciaClienteCampos: AgentDataField[] = [
   { campo: 'pedido_valor_total', label: 'Valor Total (R$)', descricao: 'Valor total do pedido', tipo: 'numero', obrigatorio: true, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['orcamentos'], colunas_sugeridas: ['valor_total'], exemplo: '4.500,00' },
   { campo: 'pedido_desconto', label: 'Desconto Aplicado (R$)', descricao: 'Valor de desconto dado', tipo: 'numero', obrigatorio: false, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['orcamentos'], colunas_sugeridas: ['desconto_total'] },
   { campo: 'pedido_status', label: 'Status do Pedido', descricao: 'Status atual', tipo: 'tabela', obrigatorio: false, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['orcamentos'], colunas_sugeridas: ['status'] },
-  { campo: 'pedido_forma_pagamento', label: 'Forma de Pagamento', descricao: 'Como o cliente pagou', tipo: 'tabela', obrigatorio: false, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['orcamentos'], colunas_sugeridas: ['forma_pagamento'] },
+  { campo: 'pedido_condicao_pagamento', label: 'Condição de Pagamento', descricao: 'Condição aplicada (ex: 30/60/90 dias) - depende do valor do pedido (faixa mín/máx)', tipo: 'tabela', obrigatorio: false, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['nome', 'valor_minimo', 'valor_maximo'] },
+  { campo: 'pedido_tipo_pagamento', label: 'Tipo/Forma de Pagamento', descricao: 'Forma de pagto (Boleto, Cartão, Pix) - pode ter taxa/juros por parcela', tipo: 'tabela', obrigatorio: false, categoria: 'Pedidos', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['nome', 'taxa_percentual'] },
   // Itens do Pedido
   { campo: 'item_codigo_produto', label: 'Código Produto (item)', descricao: 'Código do produto no item', tipo: 'tabela', obrigatorio: true, categoria: 'Itens do Pedido', tabelas_sistema_sugeridas: ['orcamento_itens'], colunas_sugeridas: ['produto_id'] },
   { campo: 'item_nome_produto', label: 'Nome Produto (item)', descricao: 'Nome do produto comprado', tipo: 'tabela', obrigatorio: true, categoria: 'Itens do Pedido', tabelas_sistema_sugeridas: ['orcamento_itens'], colunas_sugeridas: ['nome_produto'] },
@@ -174,11 +175,16 @@ const financeiroCampos: AgentDataField[] = [
   { campo: 'titulo_dias_atraso', label: 'Dias em Atraso', descricao: 'Qtd de dias em atraso', tipo: 'numero', obrigatorio: false, categoria: 'Títulos', exemplo: '15' },
   { campo: 'titulo_valor_pago', label: 'Valor Pago (R$)', descricao: 'Quanto já foi pago', tipo: 'numero', obrigatorio: false, categoria: 'Títulos' },
   { campo: 'titulo_nf', label: 'Nº Nota Fiscal', descricao: 'NF vinculada ao título', tipo: 'tabela', obrigatorio: false, categoria: 'Títulos' },
-  // Condições
-  // formas_pagamento e prazos_pagamento agora são globais
-  { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
-  { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
-  { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Condições', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
+  // Condições de Pagamento
+  { campo: 'condicao_pagamento_nome', label: 'Condição de Pagamento', descricao: 'Nome da condição (ex: À Vista, 30/60/90)', tipo: 'tabela', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['nome', 'descricao'] },
+  { campo: 'condicao_pagamento_valor_minimo', label: 'Valor Mínimo do Pedido (R$)', descricao: 'Valor mínimo para liberar esta condição', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['valor_minimo'], exemplo: '500,00' },
+  { campo: 'condicao_pagamento_valor_maximo', label: 'Valor Máximo do Pedido (R$)', descricao: 'Valor máximo para esta condição', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['valor_maximo'], exemplo: '50.000,00' },
+  { campo: 'tipo_pagamento_nome', label: 'Tipo/Forma de Pagamento', descricao: 'Forma de pgto vinculada à condição (Boleto, Cartão, Pix)', tipo: 'tabela', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['nome'] },
+  { campo: 'tipo_pagamento_taxa', label: 'Taxa/Juros por Parcela (%)', descricao: 'Percentual de juros aplicado nas parcelas desta forma', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['taxa_percentual'], exemplo: '1.5' },
+  // Inadimplência
+  { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros por atraso', tipo: 'numero', obrigatorio: false, categoria: 'Inadimplência', exemplo: '2' },
+  { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Inadimplência', exemplo: '2' },
+  { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Inadimplência', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
 ];
 
 // ========== AGENTE LOGÍSTICO ==========
@@ -390,4 +396,6 @@ export const SYSTEM_TABLES = [
   { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'telefone', 'ramal'] },
   { value: 'customer_segmentos', label: 'Segmentos de Clientes', colunas: ['id', 'customer_id', 'segmento_id'] },
   { value: 'pesquisas_respostas', label: 'Respostas de Pesquisas', colunas: ['id', 'pesquisa_id', 'customer_id', 'atendente_id', 'nota', 'comentario', 'classificacao', 'canal', 'enviada_em', 'respondida_em', 'tempo_resposta_segundos'] },
+  { value: 'condicoes_pagamento', label: 'Condições de Pagamento', colunas: ['id', 'nome', 'descricao', 'valor_minimo', 'valor_maximo', 'tipo_pagamento_id', 'ativo'] },
+  { value: 'tipos_pagamento', label: 'Tipos/Formas de Pagamento', colunas: ['id', 'nome', 'taxa_percentual', 'ativo'] },
 ];
