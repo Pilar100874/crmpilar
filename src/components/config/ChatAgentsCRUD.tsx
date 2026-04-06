@@ -28,6 +28,32 @@ import AgentOrchestratorView from '@/components/config/agents/AgentOrchestratorV
 import AgentPerformanceDashboard from '@/components/config/agents/AgentPerformanceDashboard';
 import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings';
 import * as XLSX from 'xlsx';
+import { AGENT_TEMPLATES } from '@/constants/agentTemplates';
+
+const detectAgentDomain = (agentName: string): string | undefined => {
+  const lower = agentName.toLowerCase();
+  const match = AGENT_TEMPLATES.find(t => lower.includes(t.nome.toLowerCase().replace('agente ', '')));
+  if (match) return match.dominio;
+  const keywords: Record<string, string[]> = {
+    cadastro_clientes: ['cadastro de cliente', 'cadastro cliente'],
+    cadastro_produtos: ['cadastro', 'produto', 'material'],
+    tabela_precos: ['preço', 'tabela de preço', 'pricing'],
+    estoque: ['estoque', 'inventário', 'armazém'],
+    comercial: ['comercial', 'vendas', 'venda'],
+    clientes: ['cliente', 'inteligência'],
+    financeira: ['financeiro', 'crédito', 'cobrança'],
+    logistica: ['logístic', 'frete', 'entrega'],
+    tecnica: ['técnic', 'suporte técnico'],
+    margem: ['margem', 'estratégia'],
+    recompra: ['recompra', 'oportunidade'],
+    objecoes: ['objeç', 'persuasão'],
+    mix: ['cross', 'mix', 'up-sell'],
+  };
+  for (const [domain, kws] of Object.entries(keywords)) {
+    if (kws.some(kw => lower.includes(kw))) return domain;
+  }
+  return undefined;
+};
 
 const MODELOS_IA = [
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (Rápido)' },
