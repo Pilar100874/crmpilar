@@ -669,6 +669,19 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 />
               </TabsContent>
 
+              <TabsContent value="campos" className="mt-0">
+                {editingAgent ? (
+                  <AgentCustomFieldsManager
+                    agentId={editingAgent.id}
+                    estabelecimentoId={estabelecimentoId}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Salve o agente primeiro para configurar campos personalizados
+                  </div>
+                )}
+              </TabsContent>
+
               <TabsContent value="regras" className="mt-0 space-y-4">
                 <div>
                   <Label className="text-base font-semibold">Regras de Busca Personalizada</Label>
