@@ -21,7 +21,7 @@ serve(async (req) => {
 
     // Map tipo to label - if it's a custom string (generic), use it directly
     const tipoMap: Record<string, string> = {
-      pacotes_graficos: "pacotes gráficos empilhados",
+      caixas: "caixas",
       caixas: "caixas",
       fardos: "fardos",
       resma: "resmas de papel empilhadas",
