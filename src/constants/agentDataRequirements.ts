@@ -175,11 +175,16 @@ const financeiroCampos: AgentDataField[] = [
   { campo: 'titulo_dias_atraso', label: 'Dias em Atraso', descricao: 'Qtd de dias em atraso', tipo: 'numero', obrigatorio: false, categoria: 'Títulos', exemplo: '15' },
   { campo: 'titulo_valor_pago', label: 'Valor Pago (R$)', descricao: 'Quanto já foi pago', tipo: 'numero', obrigatorio: false, categoria: 'Títulos' },
   { campo: 'titulo_nf', label: 'Nº Nota Fiscal', descricao: 'NF vinculada ao título', tipo: 'tabela', obrigatorio: false, categoria: 'Títulos' },
-  // Condições
-  // formas_pagamento e prazos_pagamento agora são globais
-  { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
-  { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Condições', exemplo: '2' },
-  { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Condições', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
+  // Condições de Pagamento
+  { campo: 'condicao_pagamento_nome', label: 'Condição de Pagamento', descricao: 'Nome da condição (ex: À Vista, 30/60/90)', tipo: 'tabela', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['nome', 'descricao'] },
+  { campo: 'condicao_pagamento_valor_minimo', label: 'Valor Mínimo do Pedido (R$)', descricao: 'Valor mínimo para liberar esta condição', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['valor_minimo'], exemplo: '500,00' },
+  { campo: 'condicao_pagamento_valor_maximo', label: 'Valor Máximo do Pedido (R$)', descricao: 'Valor máximo para esta condição', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['valor_maximo'], exemplo: '50.000,00' },
+  { campo: 'tipo_pagamento_nome', label: 'Tipo/Forma de Pagamento', descricao: 'Forma de pgto vinculada à condição (Boleto, Cartão, Pix)', tipo: 'tabela', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['nome'] },
+  { campo: 'tipo_pagamento_taxa', label: 'Taxa/Juros por Parcela (%)', descricao: 'Percentual de juros aplicado nas parcelas desta forma', tipo: 'numero', obrigatorio: false, categoria: 'Condições de Pagamento', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['taxa_percentual'], exemplo: '1.5' },
+  // Inadimplência
+  { campo: 'juros_atraso', label: 'Juros por Atraso (% mês)', descricao: 'Percentual de juros por atraso', tipo: 'numero', obrigatorio: false, categoria: 'Inadimplência', exemplo: '2' },
+  { campo: 'multa_atraso', label: 'Multa por Atraso (%)', descricao: 'Percentual de multa', tipo: 'numero', obrigatorio: false, categoria: 'Inadimplência', exemplo: '2' },
+  { campo: 'politica_credito', label: 'Regras de Crédito', descricao: 'Critérios de aprovação', tipo: 'texto', obrigatorio: false, categoria: 'Inadimplência', exemplo: 'Score > 500, sem títulos vencidos > 30 dias' },
 ];
 
 // ========== AGENTE LOGÍSTICO ==========
