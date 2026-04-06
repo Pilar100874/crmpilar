@@ -265,7 +265,6 @@ const NovaContagem = () => {
               <Select value={tipoObjeto} onValueChange={setTipoObjeto}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pacotes_graficos">Pacotes Gráficos</SelectItem>
                   <SelectItem value="resma">Resmas de Papel</SelectItem>
                   <SelectItem value="caixas">Caixas</SelectItem>
                   <SelectItem value="fardos">Fardos</SelectItem>
@@ -323,7 +322,7 @@ const NovaContagem = () => {
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
-                aspect={tipoObjeto === "resma" ? 1 / 5 : undefined}
+                aspect={undefined}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}

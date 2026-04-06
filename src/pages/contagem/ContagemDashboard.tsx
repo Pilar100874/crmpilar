@@ -10,7 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 const tipoLabel: Record<string, string> = {
-  pacotes_graficos: "Pacotes Gráficos",
+  
   caixas: "Caixas",
   fardos: "Fardos",
   generico: "Genérico",

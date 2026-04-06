@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const tipoLabel: Record<string, string> = {
-  pacotes_graficos: "Pacotes Gráficos",
+  
   caixas: "Caixas",
   fardos: "Fardos",
   generico: "Genérico",
@@ -73,7 +73,7 @@ const ContagemHistorico = () => {
           <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="pacotes_graficos">Pacotes Gráficos</SelectItem>
+            
             <SelectItem value="caixas">Caixas</SelectItem>
             <SelectItem value="fardos">Fardos</SelectItem>
             <SelectItem value="generico">Genérico</SelectItem>
