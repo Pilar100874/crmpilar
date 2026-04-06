@@ -323,7 +323,7 @@ const NovaContagem = () => {
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
-                aspect={undefined}
+                aspect={tipoObjeto === "resma" ? 1 / 5 : undefined}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
