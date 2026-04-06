@@ -410,6 +410,42 @@ const cadastroProdutosCampos: AgentDataField[] = [
   { campo: 'produto_garantia', label: 'Garantia', descricao: 'Prazo de garantia', tipo: 'tabela', obrigatorio: false, categoria: 'Status', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['garantia'], exemplo: '12 meses' },
 ];
 
+// ========== AGENTE CADASTRO DE CLIENTES ==========
+const cadastroClientesCampos: AgentDataField[] = [
+  { campo: 'cliente_nome', label: 'Nome/Razão Social', descricao: 'Nome do cliente ou razão social', tipo: 'tabela', obrigatorio: true, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['customers', 'empresas'], colunas_sugeridas: ['nome', 'nome_fantasia'] },
+  { campo: 'cliente_cnpj_cpf', label: 'CNPJ/CPF', descricao: 'Documento fiscal', tipo: 'tabela', obrigatorio: false, categoria: 'Dados Básicos', tabelas_sistema_sugeridas: ['empresas'], colunas_sugeridas: ['cnpj'] },
+  { campo: 'cliente_email', label: 'E-mail', descricao: 'E-mail principal', tipo: 'tabela', obrigatorio: false, categoria: 'Contato', tabelas_sistema_sugeridas: ['customers', 'empresas'], colunas_sugeridas: ['email'] },
+  { campo: 'cliente_telefone', label: 'Telefone', descricao: 'Telefone principal', tipo: 'tabela', obrigatorio: false, categoria: 'Contato', tabelas_sistema_sugeridas: ['customers', 'empresas'], colunas_sugeridas: ['telefone'] },
+  { campo: 'cliente_endereco', label: 'Endereço', descricao: 'Endereço completo', tipo: 'tabela', obrigatorio: false, categoria: 'Endereço', tabelas_sistema_sugeridas: ['empresas'], colunas_sugeridas: ['endereco', 'bairro', 'cidade', 'estado', 'cep'] },
+  { campo: 'cliente_tipo', label: 'Tipo de Cliente', descricao: 'PF, PJ, MEI, etc.', tipo: 'tabela', obrigatorio: false, categoria: 'Classificação', tabelas_sistema_sugeridas: ['empresas'], colunas_sugeridas: ['tipo_cliente'] },
+  { campo: 'cliente_segmento', label: 'Segmento', descricao: 'Segmento de atuação', tipo: 'tabela', obrigatorio: false, categoria: 'Classificação', tabelas_sistema_sugeridas: ['empresas'], colunas_sugeridas: ['cnae_descricao', 'segmento_id'] },
+  { campo: 'cliente_tags', label: 'Tags/Categorias', descricao: 'Tags para classificação', tipo: 'tabela', obrigatorio: false, categoria: 'Classificação', tabelas_sistema_sugeridas: ['customers'], colunas_sugeridas: ['tags'] },
+];
+
+// ========== AGENTE TABELA DE PREÇOS ==========
+const tabelaPrecosCampos: AgentDataField[] = [
+  { campo: 'tabela_nome', label: 'Nome da Tabela', descricao: 'Identificação da tabela de preço', tipo: 'texto', obrigatorio: true, categoria: 'Tabela' },
+  { campo: 'tabela_produto', label: 'Produto', descricao: 'Produto vinculado', tipo: 'tabela', obrigatorio: true, categoria: 'Preços', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['nome', 'codigo'] },
+  { campo: 'tabela_preco_tabela', label: 'Preço de Tabela (R$)', descricao: 'Preço base da tabela', tipo: 'tabela', obrigatorio: true, categoria: 'Preços', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['preco_tabela'] },
+  { campo: 'tabela_preco_minimo', label: 'Preço Mínimo (R$)', descricao: 'Preço mínimo autorizado', tipo: 'tabela', obrigatorio: false, categoria: 'Preços', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['preco_minimo'] },
+  { campo: 'tabela_desconto_max', label: 'Desconto Máximo (%)', descricao: 'Percentual máximo de desconto', tipo: 'numero', obrigatorio: false, categoria: 'Regras' },
+  { campo: 'tabela_vigencia', label: 'Vigência', descricao: 'Período de validade da tabela', tipo: 'texto', obrigatorio: false, categoria: 'Regras' },
+  { campo: 'tabela_condicoes', label: 'Condições Especiais', descricao: 'Condições por volume, cliente, etc.', tipo: 'texto', obrigatorio: false, categoria: 'Regras' },
+];
+
+// ========== AGENTE GESTÃO DE ESTOQUE ==========
+const gestaoEstoqueCampos: AgentDataField[] = [
+  { campo: 'estoque_produto', label: 'Produto', descricao: 'Produto em estoque', tipo: 'tabela', obrigatorio: true, categoria: 'Identificação', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['nome', 'codigo'] },
+  { campo: 'estoque_atual', label: 'Quantidade Atual', descricao: 'Estoque disponível', tipo: 'tabela', obrigatorio: true, categoria: 'Quantidades', tabelas_sistema_sugeridas: ['produtos'], colunas_sugeridas: ['estoque'] },
+  { campo: 'estoque_reservado', label: 'Reservado', descricao: 'Quantidade reservada em pedidos', tipo: 'numero', obrigatorio: false, categoria: 'Quantidades' },
+  { campo: 'estoque_minimo', label: 'Estoque Mínimo', descricao: 'Ponto de reposição', tipo: 'numero', obrigatorio: false, categoria: 'Parâmetros' },
+  { campo: 'estoque_maximo', label: 'Estoque Máximo', descricao: 'Limite máximo', tipo: 'numero', obrigatorio: false, categoria: 'Parâmetros' },
+  { campo: 'estoque_localizacao', label: 'Localização', descricao: 'Rua, prateleira, posição', tipo: 'texto', obrigatorio: false, categoria: 'Armazém' },
+  { campo: 'estoque_lote', label: 'Lote', descricao: 'Número do lote', tipo: 'texto', obrigatorio: false, categoria: 'Rastreabilidade' },
+  { campo: 'estoque_validade', label: 'Data de Validade', descricao: 'Validade do lote', tipo: 'texto', obrigatorio: false, categoria: 'Rastreabilidade' },
+  { campo: 'estoque_tipo_embalagem', label: 'Tipo Embalagem', descricao: 'Pallet, caixa, pacote, bobina', tipo: 'tabela', obrigatorio: false, categoria: 'Embalagem', tabelas_sistema_sugeridas: ['produtos_importados'], colunas_sugeridas: ['embalagem'] },
+];
+
 export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'orquestrador', nome: 'Orquestrador de Vendas', icone: '🧠', campos: orquestradorCampos },
   { template_key: 'comercial', nome: 'Agente Comercial', icone: '💼', campos: comercialCampos },
@@ -426,6 +462,9 @@ export const AGENT_DATA_REQUIREMENTS: AgentDataRequirement[] = [
   { template_key: 'pos_venda', nome: 'Agente Pós-Venda', icone: '📦', campos: posVendaCampos },
   { template_key: 'satisfacao', nome: 'Agente Satisfação', icone: '⭐', campos: satisfacaoCampos },
   { template_key: 'cadastro_produtos', nome: 'Agente Cadastro de Produtos e Estoque', icone: '📋', campos: cadastroProdutosCampos },
+  { template_key: 'cadastro_clientes', nome: 'Agente Cadastro de Clientes', icone: '👥', campos: cadastroClientesCampos },
+  { template_key: 'tabela_precos', nome: 'Agente Tabela de Preços', icone: '💲', campos: tabelaPrecosCampos },
+  { template_key: 'gestao_estoque', nome: 'Agente Gestão de Estoque', icone: '📦', campos: gestaoEstoqueCampos },
 ];
 
 // Tabelas disponíveis do sistema para mapeamento (baseado nas colunas reais do banco)
