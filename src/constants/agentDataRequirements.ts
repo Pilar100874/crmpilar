@@ -3,7 +3,7 @@ export interface AgentDataField {
   campo: string;
   label: string;
   descricao: string;
-  tipo: 'texto' | 'tabela' | 'lista' | 'numero' | 'json';
+  tipo: 'texto' | 'tabela' | 'lista' | 'numero' | 'json' | 'sistema_auto';
   obrigatorio: boolean;
   categoria: string; // agrupamento visual no wizard
   tabelas_sistema_sugeridas?: string[];
@@ -40,8 +40,8 @@ export const GLOBAL_AGENT_SETTINGS: AgentDataField[] = [
   // Diferenciais (usados por vários agentes)
   { campo: 'diferenciais_empresa', label: 'Diferenciais da Empresa', descricao: 'Principais diferenciais competitivos', tipo: 'texto', obrigatorio: false, categoria: 'Empresa', exemplo: 'Entrega em 24h, estoque próprio, suporte técnico' },
   { campo: 'politica_devolucao', label: 'Política de Devolução', descricao: 'Regras gerais de devolução', tipo: 'texto', obrigatorio: false, categoria: 'Políticas', exemplo: 'Até 7 dias, com NF, produto lacrado' },
-  { campo: 'formas_pagamento', label: 'Formas de Pagamento Aceitas', descricao: 'Formas de pagamento da empresa', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: 'Boleto, PIX, Cartão, Cheque' },
-  { campo: 'prazos_pagamento', label: 'Prazos de Pagamento', descricao: 'Condições de prazo padrão', tipo: 'texto', obrigatorio: true, categoria: 'Políticas', exemplo: '30/60/90 dias, À vista' },
+  { campo: 'formas_pagamento', label: 'Formas de Pagamento Aceitas', descricao: 'Carregado automaticamente da tabela Tipos de Pagamento', tipo: 'sistema_auto', obrigatorio: true, categoria: 'Políticas', tabelas_sistema_sugeridas: ['tipos_pagamento'], colunas_sugeridas: ['nome', 'taxa_percentual'] },
+  { campo: 'prazos_pagamento', label: 'Condições/Prazos de Pagamento', descricao: 'Carregado automaticamente da tabela Condições de Pagamento (com faixas de valor)', tipo: 'sistema_auto', obrigatorio: true, categoria: 'Políticas', tabelas_sistema_sugeridas: ['condicoes_pagamento'], colunas_sugeridas: ['nome', 'descricao', 'valor_minimo', 'valor_maximo'] },
 ];
 
 // ========== AGENTE ORQUESTRADOR ==========
