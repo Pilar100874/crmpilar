@@ -85,6 +85,14 @@ const NovaContagem = () => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropAspect, setCropAspect] = useState<number | undefined>(undefined);
+
+  const aspectOptions = [
+    { label: "Livre", value: undefined },
+    { label: "Faixa Vertical", value: 1 / 4 },
+    { label: "Faixa Horizontal", value: 4 / 1 },
+    { label: "Quadrado", value: 1 },
+  ];
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
