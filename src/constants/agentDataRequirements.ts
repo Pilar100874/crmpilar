@@ -396,4 +396,6 @@ export const SYSTEM_TABLES = [
   { value: 'usuarios', label: 'Usuários/Vendedores', colunas: ['id', 'nome', 'email', 'telefone', 'ramal'] },
   { value: 'customer_segmentos', label: 'Segmentos de Clientes', colunas: ['id', 'customer_id', 'segmento_id'] },
   { value: 'pesquisas_respostas', label: 'Respostas de Pesquisas', colunas: ['id', 'pesquisa_id', 'customer_id', 'atendente_id', 'nota', 'comentario', 'classificacao', 'canal', 'enviada_em', 'respondida_em', 'tempo_resposta_segundos'] },
+  { value: 'condicoes_pagamento', label: 'Condições de Pagamento', colunas: ['id', 'nome', 'descricao', 'valor_minimo', 'valor_maximo', 'tipo_pagamento_id', 'ativo'] },
+  { value: 'tipos_pagamento', label: 'Tipos/Formas de Pagamento', colunas: ['id', 'nome', 'taxa_percentual', 'ativo'] },
 ];
