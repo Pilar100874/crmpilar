@@ -22,7 +22,7 @@ import {
   FileText,
   Bot
 } from 'lucide-react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -68,7 +68,6 @@ const tabItems: TabItem[] = [
   { id: 'frete-terceiros', label: 'Frete de Terceiros', icon: Truck },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
   { id: 'relatorio-orcamento', label: 'Configuração do Relatório', icon: FileText },
-  { id: 'importacao-api', label: 'Importação via API', icon: Globe },
   { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
   { id: 'licitacoes-bot', label: 'Bot Caça Licitações', icon: Bot },
@@ -186,14 +185,31 @@ export default function VendasConfig() {
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Cadastro de Produtos
+                    Produtos
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    Gerencie seu catálogo de produtos
+                    Gerencie seu catálogo de produtos e importações
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
-                  {estabelecimentoId && <ProdutosCRUD estabelecimentoId={estabelecimentoId} />}
+                  <Tabs defaultValue="cadastro" className="w-full">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="cadastro" className="gap-2">
+                        <Package className="h-4 w-4" />
+                        Cadastro
+                      </TabsTrigger>
+                      <TabsTrigger value="importacao" className="gap-2">
+                        <Globe className="h-4 w-4" />
+                        Importação
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="cadastro">
+                      {estabelecimentoId && <ProdutosCRUD estabelecimentoId={estabelecimentoId} />}
+                    </TabsContent>
+                    <TabsContent value="importacao">
+                      {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -419,22 +435,8 @@ export default function VendasConfig() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="importacao-api" className="mt-0 h-full">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Globe className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Importação de Produtos
-                  </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">
-                    Importe produtos de APIs externas para o cadastro de produtos
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6">
-                  {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
-                </CardContent>
-              </Card>
-            </TabsContent>
+
+
 
             <TabsContent value="importacao-terceiros" className="mt-0 h-full">
               <Card className="h-full">
