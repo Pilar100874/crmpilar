@@ -176,11 +176,23 @@ export function ApiImportWizardStep7({
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Importar Produtos</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          {importMode === "stock_only" ? "Atualizar Estoque" : "Importar Produtos"}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Finalize o processo importando os produtos para o sistema
+          {importMode === "stock_only" 
+            ? "Atualize o estoque dos produtos existentes com base no código" 
+            : "Finalize o processo importando os produtos para o sistema"}
         </p>
       </div>
+
+      {importMode === "stock_only" && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            🔄 <strong>Modo Atualização de Estoque:</strong> Somente o campo <em>estoque</em> será atualizado nos produtos já cadastrados, usando o <em>código</em> como chave de identificação.
+          </p>
+        </div>
+      )}
 
       {!saved ? (
         <>
@@ -190,12 +202,18 @@ export function ApiImportWizardStep7({
                 <Database className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold">Pronto para importar</h4>
+                <h4 className="font-semibold">
+                  {importMode === "stock_only" ? "Pronto para atualizar estoque" : "Pronto para importar"}
+                </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {finalData.length} produto(s) serão importados para o cadastro de produtos
+                  {importMode === "stock_only"
+                    ? `${finalData.length} produto(s) terão o estoque atualizado`
+                    : `${finalData.length} produto(s) serão importados para o cadastro de produtos`}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Os produtos serão adicionados ao grupo selecionado e estarão disponíveis para uso no sistema.
+                  {importMode === "stock_only"
+                    ? "Produtos serão identificados pelo código. Apenas o campo estoque será modificado."
+                    : "Os produtos serão adicionados ao grupo selecionado e estarão disponíveis para uso no sistema."}
                 </p>
               </div>
             </div>
@@ -210,12 +228,14 @@ export function ApiImportWizardStep7({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Importando...
+                {importMode === "stock_only" ? "Atualizando estoque..." : "Importando..."}
               </>
             ) : (
               <>
                 <Database className="h-4 w-4 mr-2" />
-                Importar {finalData.length} Produtos
+                {importMode === "stock_only" 
+                  ? `Atualizar Estoque de ${finalData.length} Produtos`
+                  : `Importar ${finalData.length} Produtos`}
               </>
             )}
           </Button>
