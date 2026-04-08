@@ -66,7 +66,7 @@ export function ApiImportWizardStep7({
           if (existing) {
             const { error: updateError } = await supabase
               .from("produtos")
-              .update({ estoque_atual: estoque })
+              .update({ estoque: estoque })
               .eq("id", existing.id);
 
             if (!updateError) updated++;
