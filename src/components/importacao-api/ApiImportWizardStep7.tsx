@@ -13,6 +13,7 @@ interface Props {
   onApiCreated: (endpoint: string) => void;
   apiEndpoint: string;
   relatorioId: string | null;
+  importMode?: "full" | "stock_only";
 }
 
 export function ApiImportWizardStep7({ 
@@ -20,7 +21,8 @@ export function ApiImportWizardStep7({
   selectedGrupoId,
   onApiCreated, 
   apiEndpoint, 
-  relatorioId 
+  relatorioId,
+  importMode = "full"
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
