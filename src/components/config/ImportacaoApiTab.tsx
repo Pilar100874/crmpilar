@@ -127,6 +127,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
     setApiEndpoint("");
     setRelatorioId(null);
     setEditingId(null);
+    setImportMode("full");
   };
 
   const handleNewImport = () => {
