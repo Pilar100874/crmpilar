@@ -115,7 +115,7 @@ export function ApiImportWizardStep7({
                 standardFields.unidade = value;
                 break;
               case "estoque":
-                standardFields.estoque_atual = value ? Number(value) : null;
+                standardFields.estoque = value ? Number(value) : null;
                 break;
               case "codigo_barras":
                 standardFields.codigo_barras = value;
