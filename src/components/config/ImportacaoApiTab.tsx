@@ -488,10 +488,14 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold">
-                {editingId ? "Editar Importação de Produtos" : "Nova Importação de Produtos"}
+                {importMode === "stock_only" 
+                  ? "Atualizar Estoque de Produtos" 
+                  : editingId ? "Editar Importação de Produtos" : "Nova Importação de Produtos"}
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Importe produtos a partir de uma API externa ou planilha Excel
+                {importMode === "stock_only"
+                  ? "Re-execute a importação para atualizar apenas o estoque"
+                  : "Importe produtos a partir de uma API externa ou planilha Excel"}
               </p>
             </div>
           </div>
