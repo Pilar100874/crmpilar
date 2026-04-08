@@ -48,6 +48,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [relatorioToDelete, setRelatorioToDelete] = useState<string | null>(null);
+  const [importMode, setImportMode] = useState<"full" | "stock_only">("full");
   
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0);
