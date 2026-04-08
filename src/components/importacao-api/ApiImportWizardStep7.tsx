@@ -42,7 +42,48 @@ export function ApiImportWizardStep7({
         return;
       }
 
-      // Separar campos padrão e customizados
+      if (importMode === "stock_only") {
+        // Modo atualização de estoque: buscar produto por código e atualizar estoque_atual
+        let updated = 0;
+        let notFound = 0;
+
+        for (const item of finalData) {
+          const codigo = item.codigo;
+          const estoque = item.estoque !== undefined ? Number(item.estoque) : null;
+
+          if (!codigo) {
+            notFound++;
+            continue;
+          }
+
+          const { data: existing } = await supabase
+            .from("produtos")
+            .select("id")
+            .eq("estabelecimento_id", estabelecimentoId)
+            .eq("codigo", String(codigo))
+            .maybeSingle();
+
+          if (existing) {
+            const { error: updateError } = await supabase
+              .from("produtos")
+              .update({ estoque_atual: estoque })
+              .eq("id", existing.id);
+
+            if (!updateError) updated++;
+          } else {
+            notFound++;
+          }
+        }
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiUrl = `${supabaseUrl}/functions/v1/api-produtos?estabelecimento_id=${estabelecimentoId}&grupo_id=${selectedGrupoId}`;
+        onApiCreated(apiUrl);
+        setSaved(true);
+        toast.success(`Estoque atualizado! ${updated} produto(s) atualizados${notFound > 0 ? `, ${notFound} não encontrado(s)` : ""}`);
+        return;
+      }
+
+      // Modo completo: inserir novos produtos
       const dataToInsert = finalData.map(item => {
         const standardFields: any = {
           estabelecimento_id: estabelecimentoId,
@@ -57,7 +98,6 @@ export function ApiImportWizardStep7({
             const customKey = key.replace("custom_", "");
             customFields[customKey] = value;
           } else {
-            // Mapear para campos da tabela produtos
             switch (key) {
               case "codigo":
                 standardFields.codigo = value;
@@ -102,7 +142,6 @@ export function ApiImportWizardStep7({
           }
         });
 
-        // Adicionar campos customizados como JSONB
         if (Object.keys(customFields).length > 0) {
           standardFields.campos_customizados = customFields;
         }
@@ -110,14 +149,12 @@ export function ApiImportWizardStep7({
         return standardFields;
       });
 
-      // Inserir produtos
       const { error } = await supabase
         .from("produtos")
         .insert(dataToInsert);
 
       if (error) throw error;
 
-      // Gerar endpoint da API
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiUrl = `${supabaseUrl}/functions/v1/api-produtos?estabelecimento_id=${estabelecimentoId}&grupo_id=${selectedGrupoId}`;
       onApiCreated(apiUrl);
