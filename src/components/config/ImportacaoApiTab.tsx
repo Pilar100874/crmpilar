@@ -177,6 +177,51 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
     }
   };
 
+  const handleUpdateStock = async (id: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setEditingId(id);
+        setRelatorioId(id);
+        setReportName(data.nome);
+        setReportDate(data.data_criacao);
+        setApiEndpoint(data.api_endpoint || "");
+        setImportMode("stock_only");
+        
+        const config = data.configuracao as any;
+        if (config) {
+          setSelectedApiId(config.selectedApiId || "");
+          setCustomUrl(config.customUrl || "");
+          setApiHeaders(config.apiHeaders || []);
+          setSelectedFields(config.selectedFields || []);
+          setFilters(config.filters || []);
+          setSelectedGrupoId(config.selectedGrupoId || "");
+          setFieldMapping(config.fieldMapping || {});
+          // Limpar dados para forçar re-fetch
+          setApiData([]);
+          setFinalData([]);
+        }
+        
+        // Ir direto para step 1 (buscar dados) pois a config já existe
+        setCurrentStep(1);
+        setMode("wizard");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar relatório:", error);
+      toast.error("Erro ao carregar relatório");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!relatorioToDelete) return;
 
