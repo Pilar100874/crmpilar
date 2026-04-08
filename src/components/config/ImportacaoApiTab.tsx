@@ -470,6 +470,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             onApiCreated={setApiEndpoint}
             apiEndpoint={apiEndpoint}
             relatorioId={relatorioId}
+            importMode={importMode}
           />
         );
       default:
