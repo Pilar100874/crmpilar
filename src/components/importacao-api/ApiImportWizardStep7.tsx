@@ -13,6 +13,7 @@ interface Props {
   onApiCreated: (endpoint: string) => void;
   apiEndpoint: string;
   relatorioId: string | null;
+  importMode?: "full" | "stock_only";
 }
 
 export function ApiImportWizardStep7({ 
@@ -20,7 +21,8 @@ export function ApiImportWizardStep7({
   selectedGrupoId,
   onApiCreated, 
   apiEndpoint, 
-  relatorioId 
+  relatorioId,
+  importMode = "full"
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -40,7 +42,48 @@ export function ApiImportWizardStep7({
         return;
       }
 
-      // Separar campos padrão e customizados
+      if (importMode === "stock_only") {
+        // Modo atualização de estoque: buscar produto por código e atualizar estoque_atual
+        let updated = 0;
+        let notFound = 0;
+
+        for (const item of finalData) {
+          const codigo = item.codigo;
+          const estoque = item.estoque !== undefined ? Number(item.estoque) : null;
+
+          if (!codigo) {
+            notFound++;
+            continue;
+          }
+
+          const { data: existing } = await supabase
+            .from("produtos")
+            .select("id")
+            .eq("estabelecimento_id", estabelecimentoId)
+            .eq("codigo", String(codigo))
+            .maybeSingle();
+
+          if (existing) {
+            const { error: updateError } = await supabase
+              .from("produtos")
+              .update({ estoque: estoque })
+              .eq("id", existing.id);
+
+            if (!updateError) updated++;
+          } else {
+            notFound++;
+          }
+        }
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiUrl = `${supabaseUrl}/functions/v1/api-produtos?estabelecimento_id=${estabelecimentoId}&grupo_id=${selectedGrupoId}`;
+        onApiCreated(apiUrl);
+        setSaved(true);
+        toast.success(`Estoque atualizado! ${updated} produto(s) atualizados${notFound > 0 ? `, ${notFound} não encontrado(s)` : ""}`);
+        return;
+      }
+
+      // Modo completo: inserir novos produtos
       const dataToInsert = finalData.map(item => {
         const standardFields: any = {
           estabelecimento_id: estabelecimentoId,
@@ -55,7 +98,6 @@ export function ApiImportWizardStep7({
             const customKey = key.replace("custom_", "");
             customFields[customKey] = value;
           } else {
-            // Mapear para campos da tabela produtos
             switch (key) {
               case "codigo":
                 standardFields.codigo = value;
@@ -73,7 +115,7 @@ export function ApiImportWizardStep7({
                 standardFields.unidade = value;
                 break;
               case "estoque":
-                standardFields.estoque_atual = value ? Number(value) : null;
+                standardFields.estoque = value ? Number(value) : null;
                 break;
               case "codigo_barras":
                 standardFields.codigo_barras = value;
@@ -100,7 +142,6 @@ export function ApiImportWizardStep7({
           }
         });
 
-        // Adicionar campos customizados como JSONB
         if (Object.keys(customFields).length > 0) {
           standardFields.campos_customizados = customFields;
         }
@@ -108,14 +149,12 @@ export function ApiImportWizardStep7({
         return standardFields;
       });
 
-      // Inserir produtos
       const { error } = await supabase
         .from("produtos")
         .insert(dataToInsert);
 
       if (error) throw error;
 
-      // Gerar endpoint da API
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiUrl = `${supabaseUrl}/functions/v1/api-produtos?estabelecimento_id=${estabelecimentoId}&grupo_id=${selectedGrupoId}`;
       onApiCreated(apiUrl);
@@ -137,11 +176,23 @@ export function ApiImportWizardStep7({
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Importar Produtos</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          {importMode === "stock_only" ? "Atualizar Estoque" : "Importar Produtos"}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Finalize o processo importando os produtos para o sistema
+          {importMode === "stock_only" 
+            ? "Atualize o estoque dos produtos existentes com base no código" 
+            : "Finalize o processo importando os produtos para o sistema"}
         </p>
       </div>
+
+      {importMode === "stock_only" && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            🔄 <strong>Modo Atualização de Estoque:</strong> Somente o campo <em>estoque</em> será atualizado nos produtos já cadastrados, usando o <em>código</em> como chave de identificação.
+          </p>
+        </div>
+      )}
 
       {!saved ? (
         <>
@@ -151,12 +202,18 @@ export function ApiImportWizardStep7({
                 <Database className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold">Pronto para importar</h4>
+                <h4 className="font-semibold">
+                  {importMode === "stock_only" ? "Pronto para atualizar estoque" : "Pronto para importar"}
+                </h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {finalData.length} produto(s) serão importados para o cadastro de produtos
+                  {importMode === "stock_only"
+                    ? `${finalData.length} produto(s) terão o estoque atualizado`
+                    : `${finalData.length} produto(s) serão importados para o cadastro de produtos`}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Os produtos serão adicionados ao grupo selecionado e estarão disponíveis para uso no sistema.
+                  {importMode === "stock_only"
+                    ? "Produtos serão identificados pelo código. Apenas o campo estoque será modificado."
+                    : "Os produtos serão adicionados ao grupo selecionado e estarão disponíveis para uso no sistema."}
                 </p>
               </div>
             </div>
@@ -171,12 +228,14 @@ export function ApiImportWizardStep7({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Importando...
+                {importMode === "stock_only" ? "Atualizando estoque..." : "Importando..."}
               </>
             ) : (
               <>
                 <Database className="h-4 w-4 mr-2" />
-                Importar {finalData.length} Produtos
+                {importMode === "stock_only" 
+                  ? `Atualizar Estoque de ${finalData.length} Produtos`
+                  : `Importar ${finalData.length} Produtos`}
               </>
             )}
           </Button>

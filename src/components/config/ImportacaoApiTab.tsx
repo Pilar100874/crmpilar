@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, CheckCircle2, Globe, Plus, Trash2, Edit, MoreVertical } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Globe, Plus, Trash2, Edit, MoreVertical, RefreshCw } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -48,6 +48,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [relatorioToDelete, setRelatorioToDelete] = useState<string | null>(null);
+  const [importMode, setImportMode] = useState<"full" | "stock_only">("full");
   
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0);
@@ -126,6 +127,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
     setApiEndpoint("");
     setRelatorioId(null);
     setEditingId(null);
+    setImportMode("full");
   };
 
   const handleNewImport = () => {
@@ -165,6 +167,51 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
         }
         
         setCurrentStep(0);
+        setMode("wizard");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar relatório:", error);
+      toast.error("Erro ao carregar relatório");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStock = async (id: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setEditingId(id);
+        setRelatorioId(id);
+        setReportName(data.nome);
+        setReportDate(data.data_criacao);
+        setApiEndpoint(data.api_endpoint || "");
+        setImportMode("stock_only");
+        
+        const config = data.configuracao as any;
+        if (config) {
+          setSelectedApiId(config.selectedApiId || "");
+          setCustomUrl(config.customUrl || "");
+          setApiHeaders(config.apiHeaders || []);
+          setSelectedFields(config.selectedFields || []);
+          setFilters(config.filters || []);
+          setSelectedGrupoId(config.selectedGrupoId || "");
+          setFieldMapping(config.fieldMapping || {});
+          // Limpar dados para forçar re-fetch
+          setApiData([]);
+          setFinalData([]);
+        }
+        
+        // Ir direto para step 1 (buscar dados) pois a config já existe
+        setCurrentStep(1);
         setMode("wizard");
       }
     } catch (error) {
@@ -423,6 +470,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             onApiCreated={setApiEndpoint}
             apiEndpoint={apiEndpoint}
             relatorioId={relatorioId}
+            importMode={importMode}
           />
         );
       default:
@@ -440,10 +488,14 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold">
-                {editingId ? "Editar Importação de Produtos" : "Nova Importação de Produtos"}
+                {importMode === "stock_only" 
+                  ? "Atualizar Estoque de Produtos" 
+                  : editingId ? "Editar Importação de Produtos" : "Nova Importação de Produtos"}
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Importe produtos a partir de uma API externa ou planilha Excel
+                {importMode === "stock_only"
+                  ? "Re-execute a importação para atualizar apenas o estoque"
+                  : "Importe produtos a partir de uma API externa ou planilha Excel"}
               </p>
             </div>
           </div>
@@ -614,6 +666,10 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStock(relatorio.id)}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Atualizar Estoque
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleToggleAtivo(relatorio.id, relatorio.ativo)}>
                             {relatorio.ativo ? "Desativar" : "Ativar"}
                           </DropdownMenuItem>
@@ -661,6 +717,10 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                         <DropdownMenuItem onClick={() => handleEdit(relatorio.id)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateStock(relatorio.id)}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Atualizar Estoque
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleToggleAtivo(relatorio.id, relatorio.ativo)}>
                           {relatorio.ativo ? "Desativar" : "Ativar"}
