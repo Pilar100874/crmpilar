@@ -662,6 +662,10 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateStock(relatorio.id)}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Atualizar Estoque
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleToggleAtivo(relatorio.id, relatorio.ativo)}>
                             {relatorio.ativo ? "Desativar" : "Ativar"}
                           </DropdownMenuItem>
