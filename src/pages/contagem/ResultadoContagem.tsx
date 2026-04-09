@@ -76,17 +76,20 @@ const ResultadoContagem = () => {
       const container = containerRef.current!;
       const containerWidth = container.clientWidth;
 
-      // Scale canvas to fit container width
+      // Render at natural resolution for quality, CSS will scale to fit
       const scale = containerWidth / img.naturalWidth;
       const displayWidth = containerWidth;
       const displayHeight = img.naturalHeight * scale;
 
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
+      // Use higher resolution canvas for sharp rendering
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
 
       const ctx = canvas.getContext("2d")!;
+      ctx.scale(dpr, dpr);
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
       // Draw bounding boxes with numbers
