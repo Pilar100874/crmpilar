@@ -66,16 +66,50 @@ function dataURLtoFile(dataUrl: string, filename: string): File {
 
 const NovaContagem = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editState = location.state as {
+    editFrom?: string;
+    imageUrl?: string;
+    descricao?: string;
+    quantidadeEsperada?: number | null;
+    observacoes?: string | null;
+  } | null;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [finalPreview, setFinalPreview] = useState<string | null>(null);
-  const [descricaoContagem, setDescricaoContagem] = useState("");
-  const [quantidadeEsperada, setQuantidadeEsperada] = useState("");
-  const [observacoes, setObservacoes] = useState("");
+  const [descricaoContagem, setDescricaoContagem] = useState(editState?.descricao || "");
+  const [quantidadeEsperada, setQuantidadeEsperada] = useState(editState?.quantidadeEsperada?.toString() || "");
+  const [observacoes, setObservacoes] = useState(editState?.observacoes || "");
   const [analyzing, setAnalyzing] = useState(false);
+
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [crop, setCrop] = useState<PercentCrop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
+  const [cropAspect, setCropAspect] = useState<number | undefined>(undefined);
+
+  // Pre-load image from edit state
+  useEffect(() => {
+    if (editState?.imageUrl) {
+      fetch(editState.imageUrl)
+        .then(r => r.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result as string;
+            setRawImage(dataUrl);
+            setCropDialogOpen(true);
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(() => toast.error("Erro ao carregar imagem original"));
+      // Clear state so refresh doesn't re-trigger
+      window.history.replaceState({}, "");
+    }
+  }, []);
 
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [crop, setCrop] = useState<PercentCrop>();
