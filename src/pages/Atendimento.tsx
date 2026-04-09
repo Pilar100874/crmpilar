@@ -4106,7 +4106,20 @@ ${recentMessages}
       open={showConsultaEstoqueDialog}
       onOpenChange={setShowConsultaEstoqueDialog}
       estabelecimentoId={estabelecimentoId}
-      onEnviarParaConversa={(texto) => handleSendMessage(texto, 'text')}
+      onEnviarParaConversa={(texto) => {
+        if (activeTab === 'email') {
+          setComposeEmailDefaults(prev => ({
+            ...prev,
+            body: prev.body ? prev.body + '\n' + texto : texto,
+          }));
+          if (!showComposeEmail) {
+            setComposeEmailMode('compose');
+            setShowComposeEmail(true);
+          }
+        } else {
+          handleSendMessage(texto, 'text');
+        }
+      }}
     />
 
     {/* Catalog Dialog for Radial Menu */}
