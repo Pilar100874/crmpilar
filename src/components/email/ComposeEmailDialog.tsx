@@ -65,7 +65,15 @@ export function ComposeEmailDialog({
     }
   }, [open, defaultTo, defaultSubject, defaultBody]);
 
-  const handleOpenChange = (isOpen: boolean) => {
+  // Append text from external tools (e.g. stock consultation)
+  useEffect(() => {
+    if (pendingAppendText && open) {
+      setBody(prev => prev ? prev.trimEnd() + '\n\n' + pendingAppendText : pendingAppendText);
+      onPendingAppendConsumed?.();
+    }
+  }, [pendingAppendText]);
+
+
     onOpenChange(isOpen);
   };
 
