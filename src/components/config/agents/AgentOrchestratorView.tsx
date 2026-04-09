@@ -158,7 +158,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { zoomIn, zoomOut, fitView } = useReactFlow();
+  const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow();
 
   const handleEditFromNode = useCallback((agent: ChatAgent) => {
     onEditAgent?.(agent);
