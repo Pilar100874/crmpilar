@@ -157,7 +157,11 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
 
   const { zoomIn, zoomOut, fitView } = useReactFlow();
 
-  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes), [orchestrator, allAgents, disabledNodes]);
+  const handleEditFromNode = useCallback((agent: ChatAgent) => {
+    onEditAgent?.(agent);
+  }, [onEditAgent]);
+
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode), [orchestrator, allAgents, disabledNodes, handleEditFromNode]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
 
