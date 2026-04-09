@@ -571,30 +571,46 @@ function WorkflowCanvas(props: {
 /* ─── Main Component: Workflow List ─── */
 export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent, onEditAgent, onDeleteAgent }: Props) {
   const [selectedOrchestrator, setSelectedOrchestrator] = useState<ChatAgent | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   const orchestrators = useMemo(() => agents.filter(a => a.tipo_agente === 'orquestrador'), [agents]);
 
-  // Fullscreen workflow canvas
+  // Workflow canvas (inline or fullscreen)
   if (selectedOrchestrator) {
     const currentOrch = agents.find(a => a.id === selectedOrchestrator.id);
     if (!currentOrch) {
       setSelectedOrchestrator(null);
       return null;
     }
+
+    const canvasContent = (
+      <WorkflowCanvas
+        orchestrator={currentOrch}
+        allAgents={agents}
+        onUpdate={onUpdate}
+        onBack={() => { setSelectedOrchestrator(null); setIsFullscreen(false); }}
+        onCreateAgent={onCreateAgent}
+        onEditAgent={onEditAgent}
+        onDeleteAgent={onDeleteAgent}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => setIsFullscreen(f => !f)}
+      />
+    );
+
+    if (isFullscreen) {
+      return (
+        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+          {canvasContent}
+        </div>
+      );
+    }
+
     return (
-      <div className="fixed inset-0 z-50 bg-background flex flex-col">
-        <WorkflowCanvas
-          orchestrator={currentOrch}
-          allAgents={agents}
-          onUpdate={onUpdate}
-          onBack={() => setSelectedOrchestrator(null)}
-          onCreateAgent={onCreateAgent}
-          onEditAgent={onEditAgent}
-          onDeleteAgent={onDeleteAgent}
-        />
+      <div className="flex flex-col h-[calc(100vh-220px)] min-h-[500px] border rounded-lg overflow-hidden">
+        {canvasContent}
       </div>
     );
   }
