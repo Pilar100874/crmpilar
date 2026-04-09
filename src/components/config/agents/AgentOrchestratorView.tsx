@@ -24,7 +24,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, GripVertical, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, Trash2, Edit, MoreVertical, Power, PowerOff, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -32,13 +34,18 @@ interface Props {
   estabelecimentoId: string;
   onUpdate?: () => void;
   onCreateAgent?: () => void;
+  onEditAgent?: (agent: ChatAgent) => void;
+  onDeleteAgent?: (agent: ChatAgent) => void;
 }
 
-/* ─── Custom Node ─── */
+/* ─── Custom Node with context menu ─── */
 const AgentFlowNode = memo(({ data }: NodeProps & { data: Record<string, any> }) => {
   const isOrch = data.tipo_agente === 'orquestrador';
+  const isDisabled = data._disabled;
+
   return (
     <div className={`rounded-xl border-2 px-4 py-3 min-w-[180px] max-w-[220px] shadow-md transition-all
+      ${isDisabled ? 'opacity-40 grayscale' : ''}
       ${isOrch 
         ? 'bg-primary/10 border-primary dark:bg-primary/20' 
         : 'bg-card border-border'}`}
@@ -57,8 +64,8 @@ const AgentFlowNode = memo(({ data }: NodeProps & { data: Record<string, any> })
             <Network className="h-3 w-3 mr-0.5" />Orquestrador
           </Badge>
         )}
-        <Badge variant={data.ativo ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
-          {data.ativo ? 'Ativo' : 'Inativo'}
+        <Badge variant={data.ativo && !isDisabled ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+          {isDisabled ? 'Desativado' : data.ativo ? 'Ativo' : 'Inativo'}
         </Badge>
       </div>
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
@@ -69,8 +76,8 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 
 const nodeTypes = { agentNode: AgentFlowNode };
 
-/* ─── Layout builder for a single orchestrator tree ─── */
-function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[]): { nodes: Node[]; edges: Edge[] } {
+/* ─── Layout builder ─── */
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
@@ -83,7 +90,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[]): {
     const children = allAgents.filter(a => subIds.includes(a.id));
 
     if (children.length === 0) {
-      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent } });
+      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
       return x + 250;
     }
 
@@ -94,15 +101,19 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[]): {
         id: `${agent.id}->${child.id}`,
         source: agent.id,
         target: child.id,
-        animated: true,
-        style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
+        animated: !disabledNodes.has(child.id),
+        style: { 
+          stroke: disabledNodes.has(child.id) ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))', 
+          strokeWidth: 2,
+          strokeDasharray: disabledNodes.has(child.id) ? '5 5' : undefined,
+        },
+        markerEnd: { type: MarkerType.ArrowClosed, color: disabledNodes.has(child.id) ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' },
       });
       childX = nextX;
     }
 
     const centerX = (x + childX - 250) / 2;
-    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent } });
+    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
     return childX;
   }
 
@@ -111,23 +122,26 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[]): {
 }
 
 /* ─── Workflow Canvas ─── */
-function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent }: {
+function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent, onEditAgent, onDeleteAgent }: {
   orchestrator: ChatAgent;
   allAgents: ChatAgent[];
   onUpdate?: () => void;
   onBack: () => void;
   onCreateAgent?: () => void;
+  onEditAgent?: (agent: ChatAgent) => void;
+  onDeleteAgent?: (agent: ChatAgent) => void;
 }) {
-  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents), [orchestrator, allAgents]);
+  const [disabledNodes, setDisabledNodes] = useState<Set<string>>(new Set());
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes), [orchestrator, allAgents, disabledNodes]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Agents already in the canvas
   const canvasAgentIds = useMemo(() => new Set(nodes.map(n => n.id)), [nodes]);
 
-  // Available agents to add (not yet in canvas)
   const availableAgents = useMemo(() => {
     return allAgents.filter(a => {
       if (canvasAgentIds.has(a.id)) return false;
@@ -139,12 +153,35 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
     });
   }, [allAgents, canvasAgentIds, searchTerm]);
 
+  const selectedAgent = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return allAgents.find(a => a.id === selectedNodeId) || null;
+  }, [selectedNodeId, allAgents]);
+
   useEffect(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents);
+    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
   }, [orchestrator, allAgents]);
+
+  // Update node visuals when disabledNodes changes
+  useEffect(() => {
+    setNodes(nds => nds.map(n => ({
+      ...n,
+      data: { ...n.data, _disabled: disabledNodes.has(n.id) },
+    })));
+    setEdges(eds => eds.map(e => ({
+      ...e,
+      animated: !disabledNodes.has(e.target),
+      style: {
+        stroke: disabledNodes.has(e.target) ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))',
+        strokeWidth: 2,
+        strokeDasharray: disabledNodes.has(e.target) ? '5 5' : undefined,
+      },
+      markerEnd: { type: MarkerType.ArrowClosed, color: disabledNodes.has(e.target) ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' },
+    })));
+  }, [disabledNodes]);
 
   const onConnect = useCallback((params: Connection) => {
     const sourceAgent = allAgents.find(a => a.id === params.source);
@@ -178,14 +215,13 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
   }, [allAgents, setEdges]);
 
   const handleAddToCanvas = useCallback((agent: ChatAgent) => {
-    // Find a good position - place below existing nodes
     const maxY = nodes.reduce((max, n) => Math.max(max, n.position.y), 0);
     const xOffset = (nodes.length % 4) * 250;
     const newNode: Node = {
       id: agent.id,
       type: 'agentNode',
       position: { x: xOffset + 40, y: maxY + 200 },
-      data: { ...agent },
+      data: { ...agent, _disabled: false },
     };
     setNodes(nds => [...nds, newNode]);
     setHasChanges(true);
@@ -199,11 +235,23 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
     }
     setNodes(nds => nds.filter(n => n.id !== agentId));
     setEdges(eds => eds.filter(e => e.source !== agentId && e.target !== agentId));
+    setDisabledNodes(prev => { const next = new Set(prev); next.delete(agentId); return next; });
+    setSelectedNodeId(null);
     setHasChanges(true);
   }, [orchestrator.id, setNodes, setEdges]);
 
+  const handleToggleNode = useCallback((agentId: string) => {
+    if (agentId === orchestrator.id) return;
+    setDisabledNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(agentId)) next.delete(agentId);
+      else next.add(agentId);
+      return next;
+    });
+    setHasChanges(true);
+  }, [orchestrator.id]);
+
   const handleSave = useCallback(async () => {
-    // Build sub_agent_ids map from edges
     const subMap: Record<string, string[]> = {};
     nodes.forEach(n => { subMap[n.id] = []; });
     edges.forEach(e => {
@@ -211,7 +259,6 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
       if (!subMap[e.source].includes(e.target)) subMap[e.source].push(e.target);
     });
 
-    // Update all orchestrators in this workflow
     const orchIds = nodes.filter(n => {
       const agent = allAgents.find(a => a.id === n.id);
       return agent?.tipo_agente === 'orquestrador';
@@ -221,7 +268,6 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
       supabase.from('chat_agents').update({ sub_agent_ids: subMap[id] || [] } as any).eq('id', id)
     );
 
-    // Also clear sub_agent_ids for the orchestrator's old subs that are no longer connected
     const results = await Promise.all(promises);
     const hasError = results.some(r => r.error);
     if (hasError) {
@@ -234,10 +280,12 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
   }, [nodes, edges, allAgents, onUpdate]);
 
   const handleReset = useCallback(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents);
+    const layout = buildWorkflowLayout(orchestrator, allAgents, new Set());
     setNodes(layout.nodes);
     setEdges(layout.edges);
+    setDisabledNodes(new Set());
     setHasChanges(false);
+    setSelectedNodeId(null);
   }, [orchestrator, allAgents, setNodes, setEdges]);
 
   return (
@@ -257,6 +305,20 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
           </div>
         </div>
         <div className="flex gap-2">
+          {selectedAgent && selectedAgent.id !== orchestrator.id && (
+            <div className="flex items-center gap-1 border rounded-lg px-2 py-1 bg-muted/50">
+              <span className="text-xs font-medium truncate max-w-[100px]">{selectedAgent.icone} {selectedAgent.nome}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleToggleNode(selectedAgent.id)} title={disabledNodes.has(selectedAgent.id) ? 'Ativar bloco' : 'Desativar bloco'}>
+                {disabledNodes.has(selectedAgent.id) ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEditAgent?.(selectedAgent)} title="Editar agente">
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveFromCanvas(selectedAgent.id)} title="Remover do workflow">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
           <Button variant="outline" size="sm" onClick={handleReset} disabled={!hasChanges}>
             <RotateCcw className="h-4 w-4 mr-1" /> Desfazer
           </Button>
@@ -267,18 +329,13 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
       </div>
 
       <div className="flex gap-3" style={{ height: 560 }}>
-        {/* Sidebar - Agent Menu */}
+        {/* Sidebar */}
         <div className="w-64 shrink-0 border rounded-xl overflow-hidden flex flex-col bg-card">
           <div className="p-3 border-b space-y-2">
             <h4 className="text-xs font-semibold uppercase text-muted-foreground">Agentes Disponíveis</h4>
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar agente..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 text-xs"
-              />
+              <Input placeholder="Buscar agente..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 h-8 text-xs" />
             </div>
           </div>
           <ScrollArea className="flex-1">
@@ -289,20 +346,14 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
                 </p>
               )}
               {availableAgents.map(agent => (
-                <div
-                  key={agent.id}
-                  className="flex items-center gap-2 p-2 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all group"
-                  onClick={() => handleAddToCanvas(agent)}
-                >
+                <div key={agent.id} className="flex items-center gap-2 p-2 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all group" onClick={() => handleAddToCanvas(agent)}>
                   <span className="text-lg">{agent.icone}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium truncate">{agent.nome}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || 'Sem descrição'}</p>
                   </div>
                   {agent.tipo_agente === 'orquestrador' && (
-                    <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">
-                      <Network className="h-2.5 w-2.5" />
-                    </Badge>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0"><Network className="h-2.5 w-2.5" /></Badge>
                   )}
                   <Plus className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
@@ -318,7 +369,6 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
 
         {/* Canvas */}
         <div className="flex-1 border rounded-xl overflow-hidden relative">
-          {/* Context: nodes in canvas that can be removed */}
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -328,9 +378,8 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
               if (changes.some(c => c.type === 'remove')) setHasChanges(true);
             }}
             onConnect={onConnect}
-            onNodeDoubleClick={(_e, node) => {
-              if (node.id !== orchestrator.id) handleRemoveFromCanvas(node.id);
-            }}
+            onNodeClick={(_e, node) => setSelectedNodeId(node.id)}
+            onPaneClick={() => setSelectedNodeId(null)}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.3 }}
@@ -346,7 +395,7 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
             />
           </ReactFlow>
           <div className="absolute bottom-2 left-2 text-[10px] text-muted-foreground bg-card/80 px-2 py-1 rounded">
-            Arraste conexões • Dbl-click para remover • Delete para apagar arestas
+            Clique para selecionar • Arraste conexões • Delete para apagar arestas
           </div>
         </div>
       </div>
@@ -355,12 +404,11 @@ function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAge
 }
 
 /* ─── Main Component: Workflow List ─── */
-export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent }: Props) {
+export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent, onEditAgent, onDeleteAgent }: Props) {
   const [selectedOrchestrator, setSelectedOrchestrator] = useState<ChatAgent | null>(null);
 
   const orchestrators = useMemo(() => agents.filter(a => a.tipo_agente === 'orquestrador'), [agents]);
 
-  // If an orchestrator is selected, show its workflow canvas
   if (selectedOrchestrator) {
     const currentOrch = agents.find(a => a.id === selectedOrchestrator.id);
     if (!currentOrch) {
@@ -374,11 +422,23 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
         onUpdate={onUpdate}
         onBack={() => setSelectedOrchestrator(null)}
         onCreateAgent={onCreateAgent}
+        onEditAgent={onEditAgent}
+        onDeleteAgent={onDeleteAgent}
       />
     );
   }
 
-  // Workflow list view
+  const handleToggleOrchestrator = async (orch: ChatAgent) => {
+    const newStatus = !orch.ativo;
+    const { error } = await supabase.from('chat_agents').update({ ativo: newStatus } as any).eq('id', orch.id);
+    if (error) {
+      toast.error('Erro ao atualizar status');
+    } else {
+      toast.success(newStatus ? 'Workflow ativado' : 'Workflow desativado');
+      onUpdate?.();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -408,7 +468,6 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {orchestrators.map(orch => {
             const subCount = (orch.sub_agent_ids || []).length;
-            // Count total descendants recursively
             const countDescendants = (agentId: string, visited = new Set<string>()): number => {
               if (visited.has(agentId)) return 0;
               visited.add(agentId);
@@ -420,30 +479,53 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
             const totalDescendants = countDescendants(orch.id);
 
             return (
-              <Card
-                key={orch.id}
-                className="p-4 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
-                onClick={() => setSelectedOrchestrator(orch)}
-              >
+              <Card key={orch.id} className={`p-4 transition-all ${!orch.ativo ? 'opacity-60' : 'hover:border-primary/50 hover:shadow-md'}`}>
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl">{orch.icone}</span>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-semibold truncate">{orch.nome}</h4>
-                    <p className="text-xs text-muted-foreground truncate">{orch.descricao || 'Sem descrição'}</p>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="outline" className="text-[10px]">
-                        <Bot className="h-3 w-3 mr-0.5" /> {subCount} direto{subCount !== 1 ? 's' : ''}
-                      </Badge>
-                      {totalDescendants > subCount && (
+                  <div className="cursor-pointer flex-1 min-w-0 flex items-start gap-3" onClick={() => setSelectedOrchestrator(orch)}>
+                    <span className="text-3xl">{orch.icone}</span>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold truncate">{orch.nome}</h4>
+                      <p className="text-xs text-muted-foreground truncate">{orch.descricao || 'Sem descrição'}</p>
+                      <div className="flex gap-2 mt-2">
                         <Badge variant="outline" className="text-[10px]">
-                          <Network className="h-3 w-3 mr-0.5" /> {totalDescendants} total
+                          <Bot className="h-3 w-3 mr-0.5" /> {subCount} direto{subCount !== 1 ? 's' : ''}
                         </Badge>
-                      )}
-                      <Badge variant={orch.ativo ? 'default' : 'secondary'} className="text-[10px]">
-                        {orch.ativo ? 'Ativo' : 'Inativo'}
-                      </Badge>
+                        {totalDescendants > subCount && (
+                          <Badge variant="outline" className="text-[10px]">
+                            <Network className="h-3 w-3 mr-0.5" /> {totalDescendants} total
+                          </Badge>
+                        )}
+                        <Badge variant={orch.ativo ? 'default' : 'secondary'} className="text-[10px]">
+                          {orch.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Actions menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setSelectedOrchestrator(orch)}>
+                        <Network className="h-4 w-4 mr-2" /> Abrir Workflow
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEditAgent?.(orch)}>
+                        <Edit className="h-4 w-4 mr-2" /> Editar Orquestrador
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleOrchestrator(orch)}>
+                        {orch.ativo ? <PowerOff className="h-4 w-4 mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+                        {orch.ativo ? 'Desativar Workflow' : 'Ativar Workflow'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive" onClick={() => onDeleteAgent?.(orch)}>
+                        <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </Card>
             );
@@ -451,7 +533,7 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
         </div>
       )}
 
-      {/* Unlinked specialist agents info */}
+      {/* Unlinked agents */}
       {(() => {
         const allLinked = new Set<string>();
         orchestrators.forEach(o => {
@@ -460,10 +542,7 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
             visited.add(id);
             const agent = agents.find(a => a.id === id);
             if (!agent) return;
-            (agent.sub_agent_ids || []).forEach(subId => {
-              allLinked.add(subId);
-              collect(subId, visited);
-            });
+            (agent.sub_agent_ids || []).forEach(subId => { allLinked.add(subId); collect(subId, visited); });
           };
           collect(o.id);
           allLinked.add(o.id);
@@ -478,9 +557,7 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
             </p>
             <div className="flex flex-wrap gap-1">
               {unlinked.map(a => (
-                <Badge key={a.id} variant="outline" className="text-xs">
-                  {a.icone} {a.nome}
-                </Badge>
+                <Badge key={a.id} variant="outline" className="text-xs">{a.icone} {a.nome}</Badge>
               ))}
             </div>
           </div>

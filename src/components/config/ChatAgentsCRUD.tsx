@@ -146,9 +146,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setKbFiles(data || []);
   };
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (presetType?: 'especifico' | 'orquestrador') => {
     setEditingAgent(null);
-    setFormData({ ...emptyForm });
+    setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
     setKbFiles([]);
     setInternalKbText('');
     setDialogOpen(true);
@@ -382,7 +382,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </Button>
             )}
             {mainTab === 'agentes' && (
-              <Button onClick={handleOpenCreate}>
+              <Button onClick={() => handleOpenCreate()}>
                 <Plus className="h-4 w-4 mr-2" /> Novo Agente
               </Button>
             )}
@@ -1059,7 +1059,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
-          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={handleOpenCreate} />
+          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} />
         </TabsContent>
 
 
