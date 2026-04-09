@@ -21,6 +21,7 @@ const TOOL_COLORS: Record<string, { bg: string; text: string; border: string }> 
   'tool-agenda-tracking': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200' },
   'tool-translate': { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
   'tool-realtime-translate': { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', border: 'border-fuchsia-200' },
+  'tool-stock': { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
 };
 
 const IA_COLORS: Record<string, { bg: string; text: string; border: string }> = {

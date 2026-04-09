@@ -58,6 +58,7 @@ import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAten
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
 import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { ConsultaEstoqueDialog } from "@/components/atendimento/ConsultaEstoqueDialog";
 
 interface Conversation {
   id: string;
@@ -215,6 +216,7 @@ export default function Atendimento() {
   const [radialCatalogProgress, setRadialCatalogProgress] = useState(0);
   const [selectedRadialCatalog, setSelectedRadialCatalog] = useState<string | null>(null);
   const [radialCatalogSearch, setRadialCatalogSearch] = useState("");
+  const [showConsultaEstoqueDialog, setShowConsultaEstoqueDialog] = useState(false);
   
   // Confirmation dialogs for orcamento actions
   const [confirmDeleteOrcamento, setConfirmDeleteOrcamento] = useState<string | null>(null);
@@ -3635,6 +3637,9 @@ ${recentMessages}
       case "ai-translate":
         setShowRadialRealTimeTranslateDialog(true);
         break;
+      case "tool-stock":
+        setShowConsultaEstoqueDialog(true);
+        break;
     }
   };
 
@@ -4092,6 +4097,14 @@ ${recentMessages}
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Consulta Estoque Dialog */}
+    <ConsultaEstoqueDialog
+      open={showConsultaEstoqueDialog}
+      onOpenChange={setShowConsultaEstoqueDialog}
+      estabelecimentoId={estabelecimentoId}
+      onEnviarParaConversa={(texto) => handleSendMessage(texto, 'text')}
+    />
 
     {/* Catalog Dialog for Radial Menu */}
     <Dialog open={showRadialCatalogDialog} onOpenChange={setShowRadialCatalogDialog} modal={false}>
