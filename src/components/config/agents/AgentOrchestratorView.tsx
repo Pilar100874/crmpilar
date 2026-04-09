@@ -79,9 +79,11 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
         <div className="flex-1" />
         <button
           className="h-5 w-5 rounded flex items-center justify-center hover:bg-muted transition-colors opacity-60 hover:opacity-100"
-          title="Duplo-clique ou clique aqui para editar"
-          onDoubleClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
-          onClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+          title="Clique para editar"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('edit-agent-node', { detail: { agentId: data.id } }));
+          }}
         >
           <Edit className="h-3 w-3" />
         </button>
