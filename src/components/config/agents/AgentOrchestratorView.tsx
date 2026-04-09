@@ -95,7 +95,7 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 const nodeTypes = { agentNode: AgentFlowNode };
 
 /* ─── Layout builder ─── */
-function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>): { nodes: Node[]; edges: Edge[] } {
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>, onEditFn?: (agent: ChatAgent) => void): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
@@ -107,7 +107,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     const children = allAgents.filter(a => subIds.includes(a.id));
 
     if (children.length === 0) {
-      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
+      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
       return x + 260;
     }
 
@@ -129,7 +129,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     }
 
     const centerX = (x + childX - 260) / 2;
-    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
+    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
     return childX;
   }
 
