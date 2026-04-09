@@ -3104,6 +3104,7 @@ export type Database = {
           divergencia: boolean | null
           estabelecimento_id: string
           id: string
+          imagem_original_url: string | null
           imagem_url: string | null
           observacoes: string | null
           quantidade_detectada: number | null
@@ -3122,6 +3123,7 @@ export type Database = {
           divergencia?: boolean | null
           estabelecimento_id: string
           id?: string
+          imagem_original_url?: string | null
           imagem_url?: string | null
           observacoes?: string | null
           quantidade_detectada?: number | null
@@ -3140,6 +3142,7 @@ export type Database = {
           divergencia?: boolean | null
           estabelecimento_id?: string
           id?: string
+          imagem_original_url?: string | null
           imagem_url?: string | null
           observacoes?: string | null
           quantidade_detectada?: number | null
