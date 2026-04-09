@@ -1061,9 +1061,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentGlobalSettings estabelecimentoId={estabelecimentoId} />
         </TabsContent>
 
-        <TabsContent value="dados" className="mt-0">
-          <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
-        </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
           <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} />
