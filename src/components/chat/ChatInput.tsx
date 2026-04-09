@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { convertVideoToWhatsappMp4 } from "@/lib/video/whatsappMp4";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target, Globe, X } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target, Globe, X, Package } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,6 +87,7 @@ interface ChatInputProps {
   onSelectAgent?: (agent: any, mode: 'cliente' | 'privado') => void;
   externalText?: string;
   onExternalTextConsumed?: () => void;
+  onOpenConsultaEstoque?: () => void;
 }
 
 export default function ChatInput({ 
@@ -127,6 +128,7 @@ export default function ChatInput({
   onSelectAgent,
   externalText,
   onExternalTextConsumed,
+  onOpenConsultaEstoque,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -1140,7 +1142,13 @@ export default function ChatInput({
     </TooltipProvider>
   );
 
-  // === IA ===
+  if (onOpenConsultaEstoque) {
+    groupAtendimento.push(
+      <ToolbarBtn key="consulta-estoque" icon={Package} title="Consultar Estoque" color="#059669" onClick={() => { onOpenConsultaEstoque(); setShowToolsMenu(false); }} disabled={disabled} />
+    );
+  }
+
+
   groupIA.push(
     <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" color="#f59e0b" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
   );
