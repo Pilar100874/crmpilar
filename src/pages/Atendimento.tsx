@@ -6659,7 +6659,11 @@ ${recentMessages}
               setShowComposeEmail(true);
             }}
             toolsSlot={
-              null
+              <ToolsDropdown
+                ferramentas={getToolbarFerramentas('email')}
+                onSelectTool={handleToolSelect}
+                tabType="email"
+              />
             }
           />
         ) : (
