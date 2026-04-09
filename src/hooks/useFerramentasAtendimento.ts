@@ -7,6 +7,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, CalendarPlus, Target, Package
 };
 
+const STOCK_TOOL_ID = 'tool-stock';
+
 export interface FerramentaConfig {
   id: string;
   ferramenta_id: string;
@@ -32,6 +34,14 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
   const [ferramentas, setFerramentas] = useState<FerramentaConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeFerramenta = useCallback((f: any) => ({
+    ...f,
+    tipo: f.ferramenta_id === STOCK_TOOL_ID ? 'ferramenta' : f.tipo,
+    aba_chat: f.ferramenta_id === STOCK_TOOL_ID ? true : f.aba_chat,
+    radial_chat: f.ferramenta_id === STOCK_TOOL_ID ? false : f.radial_chat,
+    IconComponent: ICON_MAP[f.icone] || Wand2
+  }) as FerramentaConfig, []);
+
   const loadFerramentas = useCallback(async () => {
     if (!estabelecimentoId) return;
     
@@ -46,18 +56,37 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
 
       if (error) throw error;
 
-      const mapped = (data || []).map(f => ({
-        ...f,
-        IconComponent: ICON_MAP[f.icone] || Wand2
-      })) as FerramentaConfig[];
+      const mapped = (data || []).map(normalizeFerramenta);
+      const withStockTool = mapped.some(f => f.ferramenta_id === STOCK_TOOL_ID)
+        ? mapped
+        : [
+            ...mapped,
+            normalizeFerramenta({
+              id: STOCK_TOOL_ID,
+              ferramenta_id: STOCK_TOOL_ID,
+              nome: 'Consulta Estoque',
+              icone: 'Package',
+              descricao: 'Pesquisar produtos e enviar estoque',
+              aba_chat: true,
+              aba_agenda: false,
+              aba_email: false,
+              aba_orcamento: false,
+              radial_chat: false,
+              radial_agenda: false,
+              radial_email: false,
+              radial_orcamento: false,
+              tipo: 'ferramenta',
+              ativo: true,
+            })
+          ];
 
-      setFerramentas(mapped);
+      setFerramentas(withStockTool);
     } catch (error) {
       console.error('Erro ao carregar ferramentas:', error);
     } finally {
       setLoading(false);
     }
-  }, [estabelecimentoId]);
+  }, [estabelecimentoId, normalizeFerramenta]);
 
   useEffect(() => {
     loadFerramentas();

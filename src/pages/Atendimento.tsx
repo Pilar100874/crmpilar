@@ -3561,6 +3561,9 @@ ${recentMessages}
         setShowRadialCatalogDialog(true);
         loadRadialCatalogs();
         break;
+      case "tool-stock":
+        setShowConsultaEstoqueDialog(true);
+        break;
       case "tool-agenda-email":
         setTriggerTool('agenda-tracking');
         break;
