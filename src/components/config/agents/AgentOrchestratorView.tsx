@@ -97,7 +97,7 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 const nodeTypes = { agentNode: AgentFlowNode };
 
 /* ─── Layout builder ─── */
-function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>, onEditFn?: (agent: ChatAgent) => void): { nodes: Node[]; edges: Edge[] } {
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
