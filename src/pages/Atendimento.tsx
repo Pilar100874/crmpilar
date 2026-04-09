@@ -217,6 +217,7 @@ export default function Atendimento() {
   const [selectedRadialCatalog, setSelectedRadialCatalog] = useState<string | null>(null);
   const [radialCatalogSearch, setRadialCatalogSearch] = useState("");
   const [showConsultaEstoqueDialog, setShowConsultaEstoqueDialog] = useState(false);
+  const [pendingEmailAppendText, setPendingEmailAppendText] = useState<string | null>(null);
   
   // Confirmation dialogs for orcamento actions
   const [confirmDeleteOrcamento, setConfirmDeleteOrcamento] = useState<string | null>(null);
@@ -4108,12 +4109,16 @@ ${recentMessages}
       estabelecimentoId={estabelecimentoId}
       onEnviarParaConversa={(texto) => {
         if (activeTab === 'email') {
-          setComposeEmailDefaults(prev => ({
-            ...prev,
-            body: prev.body ? prev.body + '\n' + texto : texto,
-          }));
-          if (!showComposeEmail) {
+          if (showComposeEmail) {
+            // Compose is open — append to existing body
+            setPendingEmailAppendText(texto);
+          } else {
+            // Compose not open — open it with the text
             setComposeEmailMode('compose');
+            setComposeEmailDefaults(prev => ({
+              ...prev,
+              body: texto,
+            }));
             setShowComposeEmail(true);
           }
         } else {
@@ -4877,6 +4882,8 @@ ${recentMessages}
             defaultBody={composeEmailDefaults.body}
             estabelecimentoId={estabelecimentoId}
             onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+            pendingAppendText={pendingEmailAppendText}
+            onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
           />
         </div>
       ) : (
@@ -7074,6 +7081,8 @@ ${recentMessages}
         defaultBody={composeEmailDefaults.body}
         estabelecimentoId={estabelecimentoId}
         onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+        pendingAppendText={pendingEmailAppendText}
+        onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
       />
       </div>
       )}

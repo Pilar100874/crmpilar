@@ -32,6 +32,8 @@ interface ComposeEmailDialogProps {
   mode?: 'compose' | 'reply' | 'forward';
   estabelecimentoId?: string | null;
   onOpenConsultaEstoque?: () => void;
+  pendingAppendText?: string | null;
+  onPendingAppendConsumed?: () => void;
 }
 
 export function ComposeEmailDialog({
@@ -44,6 +46,8 @@ export function ComposeEmailDialog({
   mode = 'compose',
   estabelecimentoId = null,
   onOpenConsultaEstoque,
+  pendingAppendText,
+  onPendingAppendConsumed,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
@@ -60,6 +64,14 @@ export function ComposeEmailDialog({
       setAttachments([]);
     }
   }, [open, defaultTo, defaultSubject, defaultBody]);
+
+  // Append text from external tools (e.g. stock consultation)
+  useEffect(() => {
+    if (pendingAppendText && open) {
+      setBody(prev => prev ? prev.trimEnd() + '\n\n' + pendingAppendText : pendingAppendText);
+      onPendingAppendConsumed?.();
+    }
+  }, [pendingAppendText]);
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
