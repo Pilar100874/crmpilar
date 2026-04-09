@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -45,7 +45,12 @@ const ResultadoContagem = () => {
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const isPanning = useRef(false);
+  const lastPan = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (id) loadContagem();
