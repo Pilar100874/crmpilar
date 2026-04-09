@@ -371,7 +371,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <TabsList>
             <TabsTrigger value="agentes" className="gap-1"><Bot className="h-4 w-4" /> Agentes</TabsTrigger>
             <TabsTrigger value="geral" className="gap-1"><Settings className="h-4 w-4" /> Geral</TabsTrigger>
-            <TabsTrigger value="dados" className="gap-1"><Database className="h-4 w-4" /> Dados</TabsTrigger>
+            
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
           </TabsList>
@@ -491,7 +491,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs defaultValue="identidade" className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
                 <TabsTrigger value="campos" disabled={!editingAgent}>
@@ -500,6 +500,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 <TabsTrigger value="regras">Regras</TabsTrigger>
                 <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 <TabsTrigger value="apis" disabled={formData.knowledge_base_type === 'nenhuma' || formData.knowledge_base_type === 'terceiros'}>APIs</TabsTrigger>
+                <TabsTrigger value="dados">
+                  <Database className="h-3 w-3 mr-1" /> Dados
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -963,6 +966,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
+              <TabsContent value="dados" className="mt-0">
+                <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
+              </TabsContent>
+
               </div>
             </Tabs>
 
@@ -1054,9 +1061,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentGlobalSettings estabelecimentoId={estabelecimentoId} />
         </TabsContent>
 
-        <TabsContent value="dados" className="mt-0">
-          <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
-        </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
           <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} />
