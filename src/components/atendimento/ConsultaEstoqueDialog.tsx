@@ -342,13 +342,11 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
       <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 gap-0">
         {/* Header */}
         <DialogHeader className="px-3 sm:px-4 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-sm sm:text-base">
-              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              Consulta de Estoque
-            </span>
+          <DialogTitle className="flex items-center gap-2 text-sm sm:text-base pr-8">
+            <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+            Consulta de Estoque
             {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7 gap-1 text-muted-foreground">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-6 gap-1 text-muted-foreground ml-auto mr-0">
                 <X className="h-3 w-3" /> Limpar filtros
               </Button>
             )}
