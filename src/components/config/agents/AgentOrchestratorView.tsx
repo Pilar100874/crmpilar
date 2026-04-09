@@ -397,6 +397,15 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <Maximize2 className="h-4 w-4" />
           </Button>
 
+          {onToggleFullscreen && (
+            <>
+              <div className="h-6 w-px bg-border mx-1" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleFullscreen} title={isFullscreen ? 'Minimizar' : 'Maximizar'}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+            </>
+          )}
+
           <div className="h-6 w-px bg-border mx-1" />
 
           <Button variant="outline" size="sm" onClick={handleReset} disabled={!hasChanges}>
