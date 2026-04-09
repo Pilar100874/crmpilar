@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -45,7 +45,12 @@ const ResultadoContagem = () => {
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const isPanning = useRef(false);
+  const lastPan = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (id) loadContagem();
@@ -71,17 +76,20 @@ const ResultadoContagem = () => {
       const container = containerRef.current!;
       const containerWidth = container.clientWidth;
 
-      // Scale canvas to fit container width
+      // Render at natural resolution for quality, CSS will scale to fit
       const scale = containerWidth / img.naturalWidth;
       const displayWidth = containerWidth;
       const displayHeight = img.naturalHeight * scale;
 
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
+      // Use higher resolution canvas for sharp rendering
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
 
       const ctx = canvas.getContext("2d")!;
+      ctx.scale(dpr, dpr);
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
       // Draw bounding boxes with numbers
@@ -129,6 +137,33 @@ const ResultadoContagem = () => {
     };
     img.src = contagem.imagem_url;
   }, [contagem]);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(prev => Math.min(5, Math.max(1, prev + delta)));
+  }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (zoom <= 1) return;
+    isPanning.current = true;
+    lastPan.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [zoom, pan]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isPanning.current) return;
+    setPan({ x: e.clientX - lastPan.current.x, y: e.clientY - lastPan.current.y });
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    isPanning.current = false;
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
 
   const handleDownload = () => {
     if (!canvasRef.current) return;
@@ -186,17 +221,47 @@ const ResultadoContagem = () => {
 
       {/* Image with bounding boxes */}
       <Card>
-        <CardContent className="p-4">
-          <div ref={containerRef} className="w-full">
+        <CardContent className="p-2 sm:p-4">
+          <div ref={containerRef} className="w-full relative">
             {!canvasReady && (
               <div className="flex items-center justify-center h-48 bg-muted rounded-xl">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             )}
-            <canvas
-              ref={canvasRef}
-              className={`rounded-xl ${canvasReady ? "block" : "hidden"}`}
-            />
+            <div
+              ref={wrapperRef}
+              className={`overflow-hidden rounded-xl ${canvasReady ? "block" : "hidden"}`}
+              style={{ cursor: zoom > 1 ? "grab" : "default", touchAction: "none" }}
+              onWheel={handleWheel}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+            >
+              <canvas
+                ref={canvasRef}
+                className="w-full h-auto"
+                style={{
+                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                  transformOrigin: "center center",
+                }}
+              />
+            </div>
+            {canvasReady && (
+              <div className="flex items-center gap-1 mt-2 justify-center">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(prev => Math.max(1, prev - 0.25))}>
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground w-12 text-center">{Math.round(zoom * 100)}%</span>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(prev => Math.min(5, prev + 0.25))}>
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                {zoom > 1 && (
+                  <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={resetZoom}>
+                    <RotateCcw className="w-3 h-3 mr-1" /> Reset
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
