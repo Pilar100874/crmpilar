@@ -163,7 +163,18 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     onEditAgent?.(agent);
   }, [onEditAgent]);
 
-  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode), [orchestrator, allAgents, disabledNodes, handleEditFromNode]);
+  // Listen for edit events from node buttons
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const agentId = (e as CustomEvent).detail?.agentId;
+      const agent = allAgents.find(a => a.id === agentId);
+      if (agent) onEditAgent?.(agent);
+    };
+    window.addEventListener('edit-agent-node', handler);
+    return () => window.removeEventListener('edit-agent-node', handler);
+  }, [allAgents, onEditAgent]);
+
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes), [orchestrator, allAgents, disabledNodes]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
 
