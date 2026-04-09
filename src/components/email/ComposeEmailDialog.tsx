@@ -32,6 +32,8 @@ interface ComposeEmailDialogProps {
   mode?: 'compose' | 'reply' | 'forward';
   estabelecimentoId?: string | null;
   onOpenConsultaEstoque?: () => void;
+  pendingAppendText?: string | null;
+  onPendingAppendConsumed?: () => void;
 }
 
 export function ComposeEmailDialog({
