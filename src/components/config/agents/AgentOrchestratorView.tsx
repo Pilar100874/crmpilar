@@ -530,7 +530,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             />
           </ReactFlow>
           <div className="absolute bottom-2 left-2 text-[10px] text-muted-foreground bg-card/80 backdrop-blur px-2 py-1 rounded-md border">
-            Duplo-clique p/ editar agente • Clique p/ selecionar • Arraste conexões • Delete p/ apagar arestas
+            Arraste blocos da sidebar • Duplo-clique p/ editar • Arraste conexões entre nós • Delete p/ apagar arestas
           </div>
         </div>
       </div>
