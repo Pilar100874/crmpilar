@@ -107,7 +107,8 @@ const ContagemDashboard = () => {
   };
 
   const handleEditOriginal = (contagem: any) => {
-    if (!contagem.imagem_url) {
+    const imgUrl = contagem.imagem_original_url || contagem.imagem_url;
+    if (!imgUrl) {
       toast.error("Imagem original não disponível");
       return;
     }
@@ -115,7 +116,7 @@ const ContagemDashboard = () => {
     navigate("/contagem/nova", {
       state: {
         editFrom: contagem.id,
-        imageUrl: contagem.imagem_url,
+        imageUrl: imgUrl,
         descricao: contagem.tipo_objeto,
         quantidadeEsperada: contagem.quantidade_esperada,
         observacoes: contagem.observacoes,

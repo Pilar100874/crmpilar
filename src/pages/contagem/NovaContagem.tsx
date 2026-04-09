@@ -237,12 +237,26 @@ const NovaContagem = () => {
     setAnalyzing(true);
     try {
       const qtdEsperada = quantidadeEsperada ? Number.parseInt(quantidadeEsperada, 10) : null;
-      const imageFile = dataURLtoFile(finalPreview, `contagem_${Date.now()}.jpg`);
-      const fileName = `${estabId}/${Date.now()}_contagem.jpg`;
+      const ts = Date.now();
+
+      // Upload cropped/final image
+      const imageFile = dataURLtoFile(finalPreview, `contagem_${ts}.jpg`);
+      const fileName = `${estabId}/${ts}_contagem.jpg`;
       const { error: uploadError } = await supabase.storage.from("contagens-images").upload(fileName, imageFile);
       if (uploadError) throw uploadError;
-
       const { data: urlData } = supabase.storage.from("contagens-images").getPublicUrl(fileName);
+
+      // Upload original (uncropped) image
+      let originalUrl: string | null = null;
+      if (rawImage) {
+        const originalFile = dataURLtoFile(rawImage, `contagem_original_${ts}.jpg`);
+        const originalFileName = `${estabId}/${ts}_contagem_original.jpg`;
+        const { error: origUploadErr } = await supabase.storage.from("contagens-images").upload(originalFileName, originalFile);
+        if (!origUploadErr) {
+          const { data: origUrlData } = supabase.storage.from("contagens-images").getPublicUrl(originalFileName);
+          originalUrl = origUrlData.publicUrl;
+        }
+      }
 
       const result = await analyzeContagemImage({
         imageDataUrl: finalPreview,
@@ -258,6 +272,7 @@ const NovaContagem = () => {
         quantidade_esperada: qtdEsperada,
         observacoes: observacoes || null,
         imagem_url: urlData.publicUrl,
+        ...(originalUrl ? { imagem_original_url: originalUrl } : {}),
         quantidade_detectada: qtdDetectada,
         confianca_media: result.confianca_media ? Math.round(result.confianca_media * 100) : null,
         bounding_boxes: result.deteccoes || [],
@@ -289,6 +304,7 @@ const NovaContagem = () => {
           observacoes: observacoes || null,
           status: "processando",
           imagem_url: urlData.publicUrl,
+          ...(originalUrl ? { imagem_original_url: originalUrl } : {}),
         } as any)
         .select()
         .single();
