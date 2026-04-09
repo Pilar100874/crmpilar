@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import { ChatAgent } from '@/hooks/useChatAgents';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -30,10 +30,11 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, Trash2, Edit,
   MoreVertical, Power, PowerOff, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2,
-  Lock, Unlock, X,
+  Lock, Unlock, X, ChevronDown, GripVertical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
