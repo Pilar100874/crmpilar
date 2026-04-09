@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Camera, Upload, ArrowLeft, Loader2, X, Crop } from "lucide-react";
@@ -43,17 +42,8 @@ function resizeImage(dataUrl: string, maxSize: number): Promise<string> {
 
 function createCenteredCrop(mediaWidth: number, mediaHeight: number, aspect: number): PercentCrop {
   const baseWidth = aspect < 0.75 ? 24 : aspect > 1.25 ? 82 : 55;
-
   return centerCrop(
-    makeAspectCrop(
-      {
-        unit: "%",
-        width: baseWidth,
-      },
-      aspect,
-      mediaWidth,
-      mediaHeight,
-    ),
+    makeAspectCrop({ unit: "%", width: baseWidth }, aspect, mediaWidth, mediaHeight),
     mediaWidth,
     mediaHeight,
   );
@@ -72,35 +62,17 @@ function getCroppedImg(
         reject(new Error("Selecione uma área válida para recorte"));
         return;
       }
-
       const scaleX = img.naturalWidth / renderedWidth;
       const scaleY = img.naturalHeight / renderedHeight;
       const cropWidth = Math.max(1, Math.round(pixelCrop.width * scaleX));
       const cropHeight = Math.max(1, Math.round(pixelCrop.height * scaleY));
-
       const canvas = document.createElement("canvas");
       canvas.width = cropWidth;
       canvas.height = cropHeight;
-
       const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Não foi possível preparar o recorte"));
-        return;
-      }
-
+      if (!ctx) { reject(new Error("Não foi possível preparar o recorte")); return; }
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(
-        img,
-        pixelCrop.x * scaleX,
-        pixelCrop.y * scaleY,
-        pixelCrop.width * scaleX,
-        pixelCrop.height * scaleY,
-        0,
-        0,
-        cropWidth,
-        cropHeight,
-      );
-
+      ctx.drawImage(img, pixelCrop.x * scaleX, pixelCrop.y * scaleY, pixelCrop.width * scaleX, pixelCrop.height * scaleY, 0, 0, cropWidth, cropHeight);
       resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.onerror = () => reject(new Error("Erro ao carregar imagem para recorte"));
@@ -126,13 +98,11 @@ const NovaContagem = () => {
 
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [finalPreview, setFinalPreview] = useState<string | null>(null);
-  const [tipoObjeto, setTipoObjeto] = useState("generico");
-  const [genericoDescricao, setGenericoDescricao] = useState("");
+  const [descricaoContagem, setDescricaoContagem] = useState("");
   const [quantidadeEsperada, setQuantidadeEsperada] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
 
-  // Crop state
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [crop, setCrop] = useState<PercentCrop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
@@ -158,12 +128,7 @@ const NovaContagem = () => {
   const handleAspectChange = useCallback((aspect: number | undefined) => {
     setCropAspect(aspect);
     setCompletedCrop(null);
-
-    if (!aspect || !imageRef.current) {
-      setCrop(undefined);
-      return;
-    }
-
+    if (!aspect || !imageRef.current) { setCrop(undefined); return; }
     setCrop(createCenteredCrop(imageRef.current.width, imageRef.current.height, aspect));
   }, []);
 
@@ -195,7 +160,6 @@ const NovaContagem = () => {
       toast.error("Desenhe a área do recorte antes de aplicar");
       return;
     }
-
     try {
       const cropped = await getCroppedImg(rawImage, completedCrop, imageRef.current.width, imageRef.current.height);
       const resized = await resizeImage(cropped, MAX_IMAGE_SIZE);
@@ -223,8 +187,8 @@ const NovaContagem = () => {
 
   const handleAnalyze = async () => {
     if (!finalPreview) { toast.error("Selecione uma imagem primeiro"); return; }
-    if (tipoObjeto === "generico" && !genericoDescricao.trim()) {
-      toast.error("Informe o que deseja contar");
+    if (!descricaoContagem.trim()) {
+      toast.error("Descreva o que deseja contar");
       return;
     }
 
@@ -246,7 +210,7 @@ const NovaContagem = () => {
         .insert({
           usuario_id: usuarioId,
           estabelecimento_id: estabId,
-          tipo_objeto: tipoObjeto,
+          tipo_objeto: descricaoContagem.trim(),
           quantidade_esperada: quantidadeEsperada ? parseInt(quantidadeEsperada) : null,
           observacoes: observacoes || null,
           status: "processando",
@@ -259,8 +223,6 @@ const NovaContagem = () => {
       const imageBase64 = finalPreview.split(",")[1];
       const { data: session } = await supabase.auth.getSession();
 
-      const tipoEnvio = tipoObjeto === "generico" ? genericoDescricao.trim() : tipoObjeto;
-
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
         {
@@ -269,7 +231,7 @@ const NovaContagem = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.session?.access_token}`,
           },
-          body: JSON.stringify({ imageBase64, tipoObjeto: tipoEnvio }),
+          body: JSON.stringify({ imageBase64, tipoObjeto: descricaoContagem.trim() }),
         }
       );
 
@@ -352,28 +314,16 @@ const NovaContagem = () => {
 
           <div className="space-y-3">
             <div>
-              <Label>Tipo de Objeto</Label>
-              <Select value={tipoObjeto} onValueChange={setTipoObjeto}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="resma">Resmas de Papel</SelectItem>
-                  <SelectItem value="caixas">Caixas</SelectItem>
-                  <SelectItem value="fardos">Fardos</SelectItem>
-                  <SelectItem value="generico">Genérico</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>O que deseja contar? <span className="text-destructive">*</span></Label>
+              <Input
+                placeholder="Ex: caixas de papelão, resmas de papel, garrafas, fardos..."
+                value={descricaoContagem}
+                onChange={e => setDescricaoContagem(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Descreva exatamente o que contar. Pallets, estrados, fitas e embalagens serão ignorados automaticamente.
+              </p>
             </div>
-
-            {tipoObjeto === "generico" && (
-              <div>
-                <Label>O que deseja contar? <span className="text-destructive">*</span></Label>
-                <Input
-                  placeholder="Ex: garrafas, paletes, sacolas..."
-                  value={genericoDescricao}
-                  onChange={e => setGenericoDescricao(e.target.value)}
-                />
-              </div>
-            )}
 
             <div>
               <Label>Quantidade Esperada (opcional)</Label>
@@ -385,7 +335,7 @@ const NovaContagem = () => {
             </div>
           </div>
 
-          <Button onClick={handleAnalyze} disabled={!finalPreview || analyzing} className="w-full gap-2" size="lg">
+          <Button onClick={handleAnalyze} disabled={!finalPreview || analyzing || !descricaoContagem.trim()} className="w-full gap-2" size="lg">
             {analyzing ? (<><Loader2 className="w-5 h-5 animate-spin" /> Analisando...</>) : "Analisar Imagem"}
           </Button>
         </CardContent>
@@ -399,16 +349,9 @@ const NovaContagem = () => {
               <Crop className="w-5 h-5" /> Recortar Imagem
             </DialogTitle>
           </DialogHeader>
-          {tipoObjeto === "resma" && (
-            <div className="px-4 pb-2">
-              <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                📐 <strong>Modo Resma:</strong> Selecione uma faixa vertical fina que cruze todas as resmas empilhadas de cima a baixo. Isso melhora a precisão da contagem.
-              </p>
-            </div>
-          )}
           <div className="px-4 pb-2">
             <p className="text-sm text-muted-foreground">
-              Clique e arraste sobre a imagem para desenhar a área do recorte e depois use as alças para redimensionar.
+              Clique e arraste sobre a imagem para desenhar a área do recorte.
             </p>
           </div>
           <div className="flex items-center justify-center w-full min-h-[50vh] md:min-h-[60vh] bg-black px-3 py-3 overflow-auto">
