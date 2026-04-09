@@ -4876,6 +4876,7 @@ ${recentMessages}
             defaultSubject={composeEmailDefaults.subject}
             defaultBody={composeEmailDefaults.body}
             estabelecimentoId={estabelecimentoId}
+            onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
           />
         </div>
       ) : (
@@ -7072,6 +7073,7 @@ ${recentMessages}
         defaultSubject={composeEmailDefaults.subject}
         defaultBody={composeEmailDefaults.body}
         estabelecimentoId={estabelecimentoId}
+        onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
       />
       </div>
       )}

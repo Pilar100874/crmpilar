@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip } from "lucide-react";
+import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip, Package } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EmailToolsMenu } from "./EmailToolsMenu";
 
@@ -31,6 +31,7 @@ interface ComposeEmailDialogProps {
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
   estabelecimentoId?: string | null;
+  onOpenConsultaEstoque?: () => void;
 }
 
 export function ComposeEmailDialog({
@@ -42,6 +43,7 @@ export function ComposeEmailDialog({
   defaultBody = "",
   mode = 'compose',
   estabelecimentoId = null,
+  onOpenConsultaEstoque,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
@@ -153,7 +155,7 @@ export function ComposeEmailDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange} modal={false}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -237,7 +239,7 @@ export function ComposeEmailDialog({
 
         <DialogFooter className="flex items-center justify-between w-full">
           {/* Tools menu on left side */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center gap-1">
             <EmailToolsMenu 
               estabelecimentoId={estabelecimentoId}
               onInsertText={handleInsertText}
@@ -245,6 +247,12 @@ export function ComposeEmailDialog({
               disabled={sending}
               recipientEmail={to}
             />
+            {onOpenConsultaEstoque && (
+              <Button variant="ghost" size="sm" onClick={onOpenConsultaEstoque} disabled={sending} className="gap-1 text-xs">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Estoque</span>
+              </Button>
+            )}
           </div>
           
           {/* Action buttons on right side */}
