@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw, RefreshCw, Crop } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
