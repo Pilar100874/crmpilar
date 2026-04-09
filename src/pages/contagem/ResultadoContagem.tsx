@@ -31,12 +31,7 @@ interface Contagem {
   created_at: string;
 }
 
-const tipoLabel: Record<string, string> = {
-  
-  caixas: "Caixas",
-  fardos: "Fardos",
-  generico: "Genérico",
-};
+// tipo_objeto now stores the user's free-text description
 
 const COLORS = [
   "#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -254,7 +249,7 @@ const ResultadoContagem = () => {
         <CardContent className="p-4 space-y-3">
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Tipo</span>
-            <Badge variant="secondary">{tipoLabel[contagem.tipo_objeto] || contagem.tipo_objeto}</Badge>
+            <Badge variant="secondary">{contagem.tipo_objeto}</Badge>
           </div>
           {contagem.quantidade_esperada != null && (
             <div className="flex justify-between">
