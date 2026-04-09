@@ -87,6 +87,7 @@ const DEFAULT_TOOLS = [
   { ferramenta_id: 'tool-reports', nome: 'Relatórios', icone: 'FileText', descricao: 'Importar relatórios', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-bot', nome: 'Redirecionar Bot', icone: 'Bot', descricao: 'Redirecionar para bot', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   
+  { ferramenta_id: 'tool-stock', nome: 'Consulta Estoque', icone: 'Package', descricao: 'Pesquisar produtos e enviar estoque', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-transfer', nome: 'Transferir Usuário', icone: 'UserPlus', descricao: 'Transferir atendimento', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'ai-chat', nome: 'Chat IA', icone: 'Wand2', descricao: 'Conversar com IA', tipo: 'ia', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'ai-suggestion', nome: 'Sugestão Contextual', icone: 'Sparkles', descricao: 'Sugestão de resposta', tipo: 'ia', aba_chat: true, radial_chat: true },
