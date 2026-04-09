@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Search, Send, Package, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Send, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -157,30 +157,18 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
             </div>
           </div>
 
-          {/* Filtros de grupo em chips */}
           {grupos.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              <Badge
-                variant={grupoFilter === 'all' ? 'default' : 'outline'}
-                className="cursor-pointer text-xs px-2.5 py-1 hover:opacity-80 transition-opacity"
-                onClick={() => setGrupoFilter('all')}
-              >
-                Todos
-              </Badge>
-              {grupos.map(g => (
-                <Badge
-                  key={g.id}
-                  variant={grupoFilter === g.id ? 'default' : 'outline'}
-                  className="cursor-pointer text-xs px-2.5 py-1 hover:opacity-80 transition-opacity"
-                  onClick={() => setGrupoFilter(grupoFilter === g.id ? 'all' : g.id)}
-                >
-                  {g.nome}
-                  {grupoFilter === g.id && (
-                    <X className="h-3 w-3 ml-1" />
-                  )}
-                </Badge>
-              ))}
-            </div>
+            <Select value={grupoFilter} onValueChange={setGrupoFilter}>
+              <SelectTrigger className="h-9 w-full">
+                <SelectValue placeholder="Todos os grupos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os grupos</SelectItem>
+                {grupos.map(g => (
+                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
 
