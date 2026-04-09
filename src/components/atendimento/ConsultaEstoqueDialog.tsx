@@ -416,25 +416,24 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
             )}
           </div>
 
-          {/* Custom field filters */}
-          {showFilters && camposCustomizados.length > 0 && (
-            <div className="pt-1">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Filtros de campos customizados</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {camposCustomizados.map(renderCampoFilter)}
-              </div>
-              <div className="flex justify-end mt-2">
-                <Button size="sm" className="h-7 gap-1 text-xs" onClick={() => setShowFilters(false)}>
-                  <Check className="h-3.5 w-3.5" /> OK
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Product list */}
         <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: '50vh' }}>
           <div className="px-3 sm:px-4 py-1">
+            {/* Custom field filters inline */}
+            {showFilters && camposCustomizados.length > 0 && (
+              <div className="py-2 mb-2 border-b">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {camposCustomizados.map(renderCampoFilter)}
+                </div>
+                <div className="flex justify-end mt-2">
+                  <Button size="sm" className="h-7 gap-1 text-xs" onClick={() => setShowFilters(false)}>
+                    <Check className="h-3.5 w-3.5" /> OK
+                  </Button>
+                </div>
+              </div>
+            )}
             {/* Header row - hidden on mobile, shown on sm+ */}
             <div className="hidden sm:flex items-center gap-3 py-2 px-2 text-xs font-semibold text-muted-foreground border-b">
               <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="h-4 w-4" />
