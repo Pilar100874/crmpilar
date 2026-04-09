@@ -432,7 +432,7 @@ const ResultadoContagem = () => {
             navigate("/contagem/nova", {
               state: {
                 editFrom: contagem.id,
-                imageUrl: contagem.imagem_url,
+                imageUrl: (contagem as any).imagem_original_url || contagem.imagem_url,
                 descricao: contagem.tipo_objeto,
                 quantidadeEsperada: contagem.quantidade_esperada,
                 observacoes: contagem.observacoes,

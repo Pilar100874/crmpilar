@@ -1,0 +1,1 @@
+ALTER TABLE public.contagens ADD COLUMN IF NOT EXISTS imagem_original_url text;
