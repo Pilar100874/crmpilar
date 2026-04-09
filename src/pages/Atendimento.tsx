@@ -6479,6 +6479,7 @@ ${recentMessages}
                   onSelectAgent={handleSelectAgent}
                   externalText={injectedChatText}
                   onExternalTextConsumed={() => setInjectedChatText(undefined)}
+                  onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
                 />
               </div>
             </div>
@@ -8070,6 +8071,7 @@ function MobileMainContent({
             customerPhone={selectedConv?.customer?.telefone}
             customerName={selectedConv?.customer?.nome}
             customerId={selectedConv?.customer?.id}
+            onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
           />
         </div>
       </div>
