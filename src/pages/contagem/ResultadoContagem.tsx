@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { analyzeContagemImage, imageUrlToDataUrl } from "@/lib/contagemAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,8 +52,6 @@ const ResultadoContagem = () => {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
   const lastPan = useRef({ x: 0, y: 0 });
-
-  // Recount state
   const [showRecount, setShowRecount] = useState(false);
   const [recountDesc, setRecountDesc] = useState("");
   const [recountQtd, setRecountQtd] = useState("");
@@ -81,12 +80,11 @@ const ResultadoContagem = () => {
       const canvas = canvasRef.current!;
       const container = containerRef.current!;
       const containerWidth = container.clientWidth;
-
       const scale = containerWidth / img.naturalWidth;
       const displayWidth = containerWidth;
       const displayHeight = img.naturalHeight * scale;
-
       const dpr = window.devicePixelRatio || 1;
+
       canvas.width = displayWidth * dpr;
       canvas.height = displayHeight * dpr;
       canvas.style.width = "100%";
@@ -182,36 +180,16 @@ const ResultadoContagem = () => {
 
     setRecounting(true);
     try {
-      // Fetch original image as base64
-      const imgResp = await fetch(contagem.imagem_url);
-      const blob = await imgResp.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
-        reader.readAsDataURL(blob);
+      const imageDataUrl = await imageUrlToDataUrl(contagem.imagem_url);
+      const qtdEsperada = recountQtd ? Number.parseInt(recountQtd, 10) : contagem.quantidade_esperada;
+      const result = await analyzeContagemImage({
+        imageDataUrl,
+        tipoObjeto: recountDesc.trim(),
+        quantidadeEsperada: qtdEsperada,
+        observacoes: contagem.observacoes,
       });
 
-      const { data: session } = await supabase.auth.getSession();
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.session?.access_token}`,
-          },
-          body: JSON.stringify({ imageBase64: base64, tipoObjeto: recountDesc.trim() }),
-        }
-      );
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Erro ao analisar imagem");
-      }
-
-      const result = await response.json();
       const qtdDetectada = result.total_detectado || 0;
-      const qtdEsperada = recountQtd ? parseInt(recountQtd) : contagem.quantidade_esperada;
       const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
 
       await supabase
@@ -231,6 +209,7 @@ const ResultadoContagem = () => {
       toast.success(`Recontagem: ${qtdDetectada} objeto(s) detectado(s)!`);
       setShowRecount(false);
       setCanvasReady(false);
+      resetZoom();
       await loadContagem();
     } catch (err: any) {
       console.error(err);
@@ -271,7 +250,6 @@ const ResultadoContagem = () => {
         <h1 className="text-xl font-bold">Resultado da Contagem</h1>
       </div>
 
-      {/* Recount Panel */}
       {showRecount && (
         <Card className="border-primary/30">
           <CardContent className="p-4 space-y-3">
@@ -307,7 +285,6 @@ const ResultadoContagem = () => {
         </Card>
       )}
 
-      {/* Status Banner */}
       {contagem.divergencia && (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
           <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
@@ -327,7 +304,6 @@ const ResultadoContagem = () => {
         </div>
       )}
 
-      {/* Image with bounding boxes */}
       <Card>
         <CardContent className="p-2 sm:p-4">
           <div ref={containerRef} className="w-full relative">
@@ -374,7 +350,6 @@ const ResultadoContagem = () => {
         </CardContent>
       </Card>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="p-4 text-center">
@@ -392,7 +367,6 @@ const ResultadoContagem = () => {
         </Card>
       </div>
 
-      {/* Detection List */}
       {boxes.length > 0 && (
         <Card>
           <CardContent className="p-4">
@@ -417,7 +391,6 @@ const ResultadoContagem = () => {
         </Card>
       )}
 
-      {/* Details */}
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="flex justify-between">
@@ -445,7 +418,6 @@ const ResultadoContagem = () => {
         </CardContent>
       </Card>
 
-      {/* Actions */}
       <div className="grid grid-cols-3 gap-3">
         <Button variant="outline" onClick={handleDownload} className="gap-2">
           <Download className="w-4 h-4" /> Baixar

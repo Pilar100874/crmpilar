@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
+import { analyzeContagemImage, resizeContagemImage } from "@/lib/contagemAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,33 +13,6 @@ import { Camera, Upload, ArrowLeft, Loader2, X, Crop } from "lucide-react";
 import { toast } from "sonner";
 import ReactCrop, { type PercentCrop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-
-const MAX_IMAGE_SIZE = 1200;
-
-function resizeImage(dataUrl: string, maxSize: number): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxSize || height > maxSize) {
-        if (width > height) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        } else {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/jpeg", 0.8));
-    };
-    img.src = dataUrl;
-  });
-}
 
 function createCenteredCrop(mediaWidth: number, mediaHeight: number, aspect: number): PercentCrop {
   const baseWidth = aspect < 0.75 ? 24 : aspect > 1.25 ? 82 : 55;
@@ -73,7 +47,7 @@ function getCroppedImg(
       if (!ctx) { reject(new Error("Não foi possível preparar o recorte")); return; }
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, pixelCrop.x * scaleX, pixelCrop.y * scaleY, pixelCrop.width * scaleX, pixelCrop.height * scaleY, 0, 0, cropWidth, cropHeight);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
+      resolve(canvas.toDataURL("image/jpeg", 0.9));
     };
     img.onerror = () => reject(new Error("Erro ao carregar imagem para recorte"));
     img.src = imageSrc;
@@ -143,7 +117,7 @@ const NovaContagem = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async () => {
+    reader.onload = () => {
       const dataUrl = reader.result as string;
       setRawImage(dataUrl);
       setCropAspect(undefined);
@@ -162,7 +136,7 @@ const NovaContagem = () => {
     }
     try {
       const cropped = await getCroppedImg(rawImage, completedCrop, imageRef.current.width, imageRef.current.height);
-      const resized = await resizeImage(cropped, MAX_IMAGE_SIZE);
+      const resized = await resizeContagemImage(cropped);
       setFinalPreview(resized);
       setCropDialogOpen(false);
     } catch {
@@ -172,9 +146,13 @@ const NovaContagem = () => {
 
   const handleSkipCrop = async () => {
     if (!rawImage) return;
-    const resized = await resizeImage(rawImage, MAX_IMAGE_SIZE);
-    setFinalPreview(resized);
-    setCropDialogOpen(false);
+    try {
+      const resized = await resizeContagemImage(rawImage);
+      setFinalPreview(resized);
+      setCropDialogOpen(false);
+    } catch {
+      toast.error("Erro ao preparar imagem");
+    }
   };
 
   const clearImage = () => {
@@ -198,6 +176,7 @@ const NovaContagem = () => {
 
     setAnalyzing(true);
     try {
+      const qtdEsperada = quantidadeEsperada ? Number.parseInt(quantidadeEsperada, 10) : null;
       const imageFile = dataURLtoFile(finalPreview, `contagem_${Date.now()}.jpg`);
       const fileName = `${estabId}/${Date.now()}_contagem.jpg`;
       const { error: uploadError } = await supabase.storage.from("contagens-images").upload(fileName, imageFile);
@@ -211,7 +190,7 @@ const NovaContagem = () => {
           usuario_id: usuarioId,
           estabelecimento_id: estabId,
           tipo_objeto: descricaoContagem.trim(),
-          quantidade_esperada: quantidadeEsperada ? parseInt(quantidadeEsperada) : null,
+          quantidade_esperada: qtdEsperada,
           observacoes: observacoes || null,
           status: "processando",
           imagem_url: urlData.publicUrl,
@@ -220,29 +199,14 @@ const NovaContagem = () => {
         .single();
       if (createError) throw createError;
 
-      const imageBase64 = finalPreview.split(",")[1];
-      const { data: session } = await supabase.auth.getSession();
+      const result = await analyzeContagemImage({
+        imageDataUrl: finalPreview,
+        tipoObjeto: descricaoContagem.trim(),
+        quantidadeEsperada: qtdEsperada,
+        observacoes,
+      });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.session?.access_token}`,
-          },
-          body: JSON.stringify({ imageBase64, tipoObjeto: descricaoContagem.trim() }),
-        }
-      );
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Erro ao analisar imagem");
-      }
-
-      const result = await response.json();
       const qtdDetectada = result.total_detectado || 0;
-      const qtdEsperada = quantidadeEsperada ? parseInt(quantidadeEsperada) : null;
       const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
 
       await supabase
@@ -341,7 +305,6 @@ const NovaContagem = () => {
         </CardContent>
       </Card>
 
-      {/* Crop Dialog */}
       <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
         <DialogContent className="max-w-[95vw] md:max-w-2xl p-0 gap-0">
           <DialogHeader className="p-4 pb-2">
