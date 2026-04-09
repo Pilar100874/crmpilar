@@ -40,10 +40,10 @@ const AgentFlowNode = memo(({ data }: NodeProps & { data: Record<string, any> })
     >
       <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
       <div className="flex items-center gap-2">
-        <span className="text-2xl">{data.icone}</span>
+        <span className="text-2xl">{String(data.icone || '🤖')}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{data.nome}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{data.descricao || 'Sem descrição'}</p>
+          <p className="text-sm font-semibold truncate">{String(data.nome || '')}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{String(data.descricao || 'Sem descrição')}</p>
         </div>
       </div>
       <div className="flex gap-1 mt-2">
