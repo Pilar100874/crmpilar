@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip, Package } from "lucide-react";
+import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EmailToolsMenu } from "./EmailToolsMenu";
 
@@ -244,15 +244,14 @@ export function ComposeEmailDialog({
               estabelecimentoId={estabelecimentoId}
               onInsertText={handleInsertText}
               onAddAttachment={handleAddAttachment}
+              onToolAction={(toolId) => {
+                if (toolId === 'tool-stock' && onOpenConsultaEstoque) {
+                  onOpenConsultaEstoque();
+                }
+              }}
               disabled={sending}
               recipientEmail={to}
             />
-            {onOpenConsultaEstoque && (
-              <Button variant="ghost" size="sm" onClick={onOpenConsultaEstoque} disabled={sending} className="gap-1 text-xs">
-                <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Estoque</span>
-              </Button>
-            )}
           </div>
           
           {/* Action buttons on right side */}
