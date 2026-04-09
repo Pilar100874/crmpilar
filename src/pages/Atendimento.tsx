@@ -4882,6 +4882,8 @@ ${recentMessages}
             defaultBody={composeEmailDefaults.body}
             estabelecimentoId={estabelecimentoId}
             onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+            pendingAppendText={pendingEmailAppendText}
+            onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
           />
         </div>
       ) : (
@@ -7079,6 +7081,8 @@ ${recentMessages}
         defaultBody={composeEmailDefaults.body}
         estabelecimentoId={estabelecimentoId}
         onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+        pendingAppendText={pendingEmailAppendText}
+        onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
       />
       </div>
       )}
