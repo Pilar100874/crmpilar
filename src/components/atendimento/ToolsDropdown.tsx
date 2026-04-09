@@ -51,18 +51,8 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
 
   const toolsFerramentas = ferramentas.filter(f => f.tipo === 'ferramenta');
   const iaFerramentas = ferramentas.filter(f => f.tipo === 'ia');
-  // Only show agents linked to an active orchestrator
-  const activeAgents = (() => {
-    const orchs = chatAgents.filter(a => (a as any).tipo_agente === 'orquestrador' && a.ativo);
-    const linked = new Set<string>();
-    const collect = (id: string, v = new Set<string>()) => {
-      if (v.has(id)) return; v.add(id); linked.add(id);
-      const ag = chatAgents.find(a => a.id === id);
-      if (ag) ((ag as any).sub_agent_ids || []).forEach((s: string) => collect(s, v));
-    };
-    orchs.forEach(o => collect(o.id));
-    return chatAgents.filter(a => a.ativo && linked.has(a.id));
-  })();
+  // Only show active orchestrators
+  const activeAgents = chatAgents.filter(a => (a as any).tipo_agente === 'orquestrador' && a.ativo);
 
   if (ferramentas.length === 0 && activeAgents.length === 0) {
     return null;
