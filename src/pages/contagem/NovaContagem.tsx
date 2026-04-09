@@ -111,10 +111,6 @@ const NovaContagem = () => {
     }
   }, []);
 
-  const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const [crop, setCrop] = useState<PercentCrop>();
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
-  const [cropAspect, setCropAspect] = useState<number | undefined>(undefined);
 
   const aspectOptions = [
     { label: "Livre", value: undefined },
