@@ -558,6 +558,8 @@ function WorkflowCanvas(props: {
   onCreateAgent?: () => void;
   onEditAgent?: (agent: ChatAgent) => void;
   onDeleteAgent?: (agent: ChatAgent) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
   return (
     <ReactFlowProvider>
