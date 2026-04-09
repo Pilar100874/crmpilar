@@ -31,6 +31,7 @@ interface ComposeEmailDialogProps {
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
   estabelecimentoId?: string | null;
+  onOpenConsultaEstoque?: () => void;
 }
 
 export function ComposeEmailDialog({
