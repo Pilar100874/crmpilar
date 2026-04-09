@@ -15,6 +15,7 @@ interface Produto {
   codigo: string | null;
   estoque: number | null;
   grupo_id: string | null;
+  categoria_id: string | null;
   marca: string | null;
   preco_tabela: number | null;
 }
@@ -22,6 +23,12 @@ interface Produto {
 interface Grupo {
   id: string;
   nome: string;
+}
+
+interface Categoria {
+  id: string;
+  nome: string;
+  grupo: string | null;
 }
 
 interface ConsultaEstoqueDialogProps {
@@ -34,8 +41,10 @@ interface ConsultaEstoqueDialogProps {
 export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, onEnviarParaConversa }: ConsultaEstoqueDialogProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [search, setSearch] = useState('');
   const [grupoFilter, setGrupoFilter] = useState<string>('all');
+  const [categoriaFilter, setCategoriaFilter] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
@@ -50,16 +59,22 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
       setSelectedIds(new Set());
       setSearch('');
       setGrupoFilter('all');
+      setCategoriaFilter('all');
     }
   }, [open]);
+
+  // Reset categoria when grupo changes
+  useEffect(() => {
+    setCategoriaFilter('all');
+  }, [grupoFilter]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, grupoRes] = await Promise.all([
+      const [prodRes, grupoRes, catRes] = await Promise.all([
         supabase
           .from('produtos')
-          .select('id, nome, codigo, estoque, grupo_id, marca, preco_tabela')
+          .select('id, nome, codigo, estoque, grupo_id, categoria_id, marca, preco_tabela')
           .eq('estabelecimento_id', estabelecimentoId)
           .eq('ativo', true)
           .order('nome'),
@@ -67,17 +82,32 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
           .from('produto_grupos')
           .select('id, nome')
           .eq('estabelecimento_id', estabelecimentoId)
+          .order('nome'),
+        supabase
+          .from('produto_categorias')
+          .select('id, nome, grupo')
+          .eq('estabelecimento_id', estabelecimentoId)
           .order('nome')
       ]);
 
       if (prodRes.data) setProdutos(prodRes.data);
       if (grupoRes.data) setGrupos(grupoRes.data);
+      if (catRes.data) setCategorias(catRes.data);
     } catch (err) {
       console.error('Erro ao carregar produtos:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Categories filtered by selected group
+  const categoriasDoGrupo = useMemo(() => {
+    if (grupoFilter === 'all') return [];
+    const grupoSelecionado = grupos.find(g => g.id === grupoFilter);
+    if (!grupoSelecionado) return [];
+    // Match by grupo name or grupo id
+    return categorias.filter(c => c.grupo === grupoSelecionado.id || c.grupo === grupoSelecionado.nome);
+  }, [categorias, grupoFilter, grupos]);
 
   const filtered = useMemo(() => {
     return produtos.filter(p => {
@@ -86,9 +116,10 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
         (p.codigo && p.codigo.toLowerCase().includes(search.toLowerCase())) ||
         (p.marca && p.marca.toLowerCase().includes(search.toLowerCase()));
       const matchGrupo = grupoFilter === 'all' || p.grupo_id === grupoFilter;
-      return matchSearch && matchGrupo;
+      const matchCategoria = categoriaFilter === 'all' || p.categoria_id === categoriaFilter;
+      return matchSearch && matchGrupo && matchCategoria;
     });
-  }, [produtos, search, grupoFilter]);
+  }, [produtos, search, grupoFilter, categoriaFilter]);
 
   const toggleItem = (id: string) => {
     setSelectedIds(prev => {
@@ -138,7 +169,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-3 border-b">
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Package className="h-5 w-5 text-emerald-600" />
+            <Package className="h-5 w-5 text-primary" />
             Consulta de Estoque
           </DialogTitle>
         </DialogHeader>
@@ -157,19 +188,37 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
             </div>
           </div>
 
-          {grupos.length > 0 && (
-            <Select value={grupoFilter} onValueChange={setGrupoFilter}>
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue placeholder="Todos os grupos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os grupos</SelectItem>
-                {grupos.map(g => (
-                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <div className="flex gap-2">
+            {/* Grupo filter */}
+            {grupos.length > 0 && (
+              <Select value={grupoFilter} onValueChange={setGrupoFilter}>
+                <SelectTrigger className="h-9 flex-1">
+                  <SelectValue placeholder="Todos os grupos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os grupos</SelectItem>
+                  {grupos.map(g => (
+                    <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Categoria filter - appears when a group is selected */}
+            {grupoFilter !== 'all' && categoriasDoGrupo.length > 0 && (
+              <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
+                <SelectTrigger className="h-9 flex-1">
+                  <SelectValue placeholder="Todas as categorias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categoriasDoGrupo.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {/* Lista */}
@@ -196,13 +245,13 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
               filtered.map(p => {
                 const isSelected = selectedIds.has(p.id);
                 const estoque = p.estoque ?? 0;
-                const estoqueColor = estoque <= 0 ? 'text-red-600 font-bold' : estoque < 10 ? 'text-amber-600 font-medium' : 'text-emerald-600 font-medium';
+                const estoqueColor = estoque <= 0 ? 'text-destructive font-bold' : estoque < 10 ? 'text-amber-600 font-medium' : 'text-primary font-medium';
                 return (
                   <div
                     key={p.id}
                     onClick={() => toggleItem(p.id)}
                     className={`flex items-center gap-3 py-2 px-2 rounded-md cursor-pointer transition-colors text-sm ${
-                      isSelected ? 'bg-emerald-50 border border-emerald-200' : 'hover:bg-muted/50 border border-transparent'
+                      isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50 border border-transparent'
                     }`}
                   >
                     <Checkbox checked={isSelected} className="h-4 w-4" />
@@ -226,7 +275,7 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
             onClick={handleEnviar}
             disabled={selectedIds.size === 0}
             size="sm"
-            className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+            className="gap-2"
           >
             <Send className="h-4 w-4" />
             Enviar para conversa
