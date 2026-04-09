@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Trash2, Eye, Loader2, Package } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Camera, Trash2, Eye, Loader2, Package, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { cn } from "@/lib/utils";
 
 const ContagemDashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +19,13 @@ const ContagemDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Date range delete
+  const [showDateDelete, setShowDateDelete] = useState(false);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [deletingRange, setDeletingRange] = useState(false);
+  const [confirmRangeDelete, setConfirmRangeDelete] = useState(false);
 
   const load = async () => {
     const estabId = await getEstabelecimentoId();
@@ -47,17 +57,119 @@ const ContagemDashboard = () => {
     }
   };
 
+  const rangeCount = dateFrom && dateTo
+    ? contagens.filter(c => {
+        const d = new Date(c.created_at);
+        const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+        const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+        return d >= from && d <= to;
+      }).length
+    : 0;
+
+  const handleDeleteRange = async () => {
+    if (!dateFrom || !dateTo) return;
+    setDeletingRange(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) throw new Error("Estabelecimento não encontrado");
+      const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+      const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+
+      const { error } = await supabase
+        .from("contagens")
+        .delete()
+        .eq("estabelecimento_id", estabId)
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString());
+
+      if (error) throw error;
+      toast.success(`${rangeCount} contagem(ns) excluída(s)`);
+      setShowDateDelete(false);
+      setConfirmRangeDelete(false);
+      setDateFrom(undefined);
+      setDateTo(undefined);
+      await load();
+    } catch {
+      toast.error("Erro ao excluir contagens");
+    } finally {
+      setDeletingRange(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Contagem Inteligente</h1>
           <p className="text-muted-foreground text-sm">Contagem automática de volumes por IA</p>
         </div>
-        <Button onClick={() => navigate("/contagem/nova")} className="gap-2">
-          <Camera className="w-4 h-4" /> Nova Contagem
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setShowDateDelete(!showDateDelete); setConfirmRangeDelete(false); }} className="gap-1 text-destructive hover:text-destructive">
+            <Trash2 className="w-4 h-4" /> Por Data
+          </Button>
+          <Button onClick={() => navigate("/contagem/nova")} className="gap-2">
+            <Camera className="w-4 h-4" /> Nova Contagem
+          </Button>
+        </div>
       </div>
+
+      {/* Date range delete panel */}
+      {showDateDelete && (
+        <Card className="border-destructive/30">
+          <CardContent className="p-4 space-y-3">
+            <p className="text-sm font-medium">Excluir contagens por faixa de data</p>
+            <div className="flex flex-wrap gap-3 items-end">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Data início</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("w-[150px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="w-4 h-4 mr-1" />
+                      {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Data fim</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("w-[150px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+                      <CalendarIcon className="w-4 h-4 mr-1" />
+                      {dateTo ? format(dateTo, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {dateFrom && dateTo && (
+                <p className="text-sm"><span className="font-bold text-destructive">{rangeCount}</span> contagem(ns) encontrada(s)</p>
+              )}
+            </div>
+            {!confirmRangeDelete ? (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowDateDelete(false)}>Cancelar</Button>
+                <Button variant="destructive" size="sm" disabled={!dateFrom || !dateTo || rangeCount === 0} onClick={() => setConfirmRangeDelete(true)}>
+                  Excluir {rangeCount} contagem(ns)
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-sm flex-1">Confirma exclusão de <strong>{rangeCount}</strong> contagem(ns)?</p>
+                <Button variant="outline" size="sm" onClick={() => setConfirmRangeDelete(false)} disabled={deletingRange}>Não</Button>
+                <Button variant="destructive" size="sm" onClick={handleDeleteRange} disabled={deletingRange}>
+                  {deletingRange ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sim, excluir"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
