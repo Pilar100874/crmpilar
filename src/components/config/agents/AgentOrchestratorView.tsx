@@ -67,7 +67,7 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
           <p className="text-[10px] text-muted-foreground truncate">{String(data.descricao || 'Sem descrição')}</p>
         </div>
       </div>
-      <div className="flex gap-1 mt-2">
+      <div className="flex items-center gap-1 mt-2">
         {isOrch && (
           <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
             <Network className="h-3 w-3 mr-0.5" />Orquestrador
@@ -76,6 +76,15 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
         <Badge variant={data.ativo && !isDisabled ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
           {isDisabled ? 'Desativado' : data.ativo ? 'Ativo' : 'Inativo'}
         </Badge>
+        <div className="flex-1" />
+        <button
+          className="h-5 w-5 rounded flex items-center justify-center hover:bg-muted transition-colors opacity-60 hover:opacity-100"
+          title="Duplo-clique ou clique aqui para editar"
+          onDoubleClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+          onClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+        >
+          <Edit className="h-3 w-3" />
+        </button>
       </div>
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
     </div>
@@ -86,7 +95,7 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 const nodeTypes = { agentNode: AgentFlowNode };
 
 /* ─── Layout builder ─── */
-function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>): { nodes: Node[]; edges: Edge[] } {
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>, onEditFn?: (agent: ChatAgent) => void): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
@@ -98,7 +107,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     const children = allAgents.filter(a => subIds.includes(a.id));
 
     if (children.length === 0) {
-      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
+      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
       return x + 260;
     }
 
@@ -120,7 +129,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     }
 
     const centerX = (x + childX - 260) / 2;
-    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
+    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
     return childX;
   }
 
@@ -148,7 +157,11 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
 
   const { zoomIn, zoomOut, fitView } = useReactFlow();
 
-  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes), [orchestrator, allAgents, disabledNodes]);
+  const handleEditFromNode = useCallback((agent: ChatAgent) => {
+    onEditAgent?.(agent);
+  }, [onEditAgent]);
+
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode), [orchestrator, allAgents, disabledNodes, handleEditFromNode]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
 
@@ -171,7 +184,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   }, [selectedNodeId, allAgents]);
 
   useEffect(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
+    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
@@ -229,11 +242,11 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     setNodes(nds => [...nds, {
       id: agent.id, type: 'agentNode',
       position: { x: xOffset + 40, y: maxY + 200 },
-      data: { ...agent, _disabled: false },
+      data: { ...agent, _disabled: false, _onEdit: () => handleEditFromNode(agent) },
     }]);
     setHasChanges(true);
     toast.success(`${agent.nome} adicionado`);
-  }, [nodes, setNodes]);
+  }, [nodes, setNodes, handleEditFromNode]);
 
   const handleRemoveFromCanvas = useCallback((agentId: string) => {
     if (agentId === orchestrator.id) { toast.error('Não é possível remover o orquestrador raiz'); return; }
@@ -431,6 +444,10 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             }}
             onConnect={onConnect}
             onNodeClick={(_e, node) => setSelectedNodeId(node.id)}
+            onNodeDoubleClick={(_e, node) => {
+              const agent = allAgents.find(a => a.id === node.id);
+              if (agent) handleEditFromNode(agent);
+            }}
             onPaneClick={() => setSelectedNodeId(null)}
             nodeTypes={nodeTypes}
             fitView
@@ -446,7 +463,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             />
           </ReactFlow>
           <div className="absolute bottom-2 left-2 text-[10px] text-muted-foreground bg-card/80 backdrop-blur px-2 py-1 rounded-md border">
-            Clique p/ selecionar • Arraste conexões • Delete p/ apagar arestas
+            Duplo-clique p/ editar agente • Clique p/ selecionar • Arraste conexões • Delete p/ apagar arestas
           </div>
         </div>
       </div>
