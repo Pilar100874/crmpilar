@@ -30,7 +30,7 @@ interface Props {
 }
 
 /* ─── Custom Node ─── */
-const AgentFlowNode = memo(({ data }: NodeProps) => {
+const AgentFlowNode = memo(({ data }: NodeProps & { data: Record<string, any> }) => {
   const isOrch = data.tipo_agente === 'orquestrador';
   return (
     <div className={`rounded-xl border-2 px-4 py-3 min-w-[180px] max-w-[220px] shadow-md transition-all
