@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Camera, Trash2, Eye, Loader2, Package, CalendarIcon } from "lucide-react";
+import { Camera, Trash2, Eye, Loader2, Package, CalendarIcon, Crop } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -20,7 +20,6 @@ const ContagemDashboard = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Date range delete
   const [showDateDelete, setShowDateDelete] = useState(false);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
@@ -29,17 +28,24 @@ const ContagemDashboard = () => {
 
   const load = async () => {
     const estabId = await getEstabelecimentoId();
-    if (!estabId) { setLoading(false); return; }
+    if (!estabId) {
+      setLoading(false);
+      return;
+    }
+
     const { data } = await supabase
       .from("contagens")
       .select("*")
       .eq("estabelecimento_id", estabId)
       .order("created_at", { ascending: false });
+
     setContagens(data || []);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -60,8 +66,10 @@ const ContagemDashboard = () => {
   const rangeCount = dateFrom && dateTo
     ? contagens.filter(c => {
         const d = new Date(c.created_at);
-        const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-        const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+        const from = new Date(dateFrom);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
         return d >= from && d <= to;
       }).length
     : 0;
@@ -72,8 +80,10 @@ const ContagemDashboard = () => {
     try {
       const estabId = await getEstabelecimentoId();
       if (!estabId) throw new Error("Estabelecimento não encontrado");
-      const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
-      const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+      const from = new Date(dateFrom);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
 
       const { error } = await supabase
         .from("contagens")
@@ -96,6 +106,23 @@ const ContagemDashboard = () => {
     }
   };
 
+  const handleEditOriginal = (contagem: any) => {
+    if (!contagem.imagem_url) {
+      toast.error("Imagem original não disponível");
+      return;
+    }
+
+    navigate("/contagem/nova", {
+      state: {
+        editFrom: contagem.id,
+        imageUrl: contagem.imagem_url,
+        descricao: contagem.tipo_objeto,
+        quantidadeEsperada: contagem.quantidade_esperada,
+        observacoes: contagem.observacoes,
+      },
+    });
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -113,7 +140,6 @@ const ContagemDashboard = () => {
         </div>
       </div>
 
-      {/* Date range delete panel */}
       {showDateDelete && (
         <Card className="border-destructive/30">
           <CardContent className="p-4 space-y-3">
@@ -189,7 +215,7 @@ const ContagemDashboard = () => {
         <div className="space-y-2">
           {contagens.map((c: any) => (
             <Card key={c.id} className="hover:bg-muted/30 transition-colors">
-              <CardContent className="p-3 sm:p-4">
+              <CardContent className="p-3 sm:p-4 space-y-3">
                 <div className="flex items-center gap-3">
                   {c.imagem_url && (
                     <img
@@ -213,24 +239,38 @@ const ContagemDashboard = () => {
                     <p className="text-lg font-bold">{c.quantidade_detectada ?? "—"}</p>
                     <p className="text-[10px] text-muted-foreground">detectados</p>
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => navigate(`/contagem/resultado/${c.id}`)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => setDeleteId(c.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleEditOriginal(c)}
+                    disabled={!c.imagem_url}
+                  >
+                    <Crop className="w-4 h-4" /> Editar original
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => navigate(`/contagem/resultado/${c.id}`)}
+                    title="Ver resultado"
+                    aria-label="Ver resultado"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => setDeleteId(c.id)}
+                    title="Excluir contagem"
+                    aria-label="Excluir contagem"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

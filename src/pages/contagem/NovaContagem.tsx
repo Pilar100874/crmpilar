@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, type SyntheticEvent } from "r
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
-import { analyzeContagemImage, resizeContagemImage } from "@/lib/contagemAnalysis";
+import { analyzeContagemImage, imageUrlToDataUrl, resizeContagemImage } from "@/lib/contagemAnalysis";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,9 +44,22 @@ function getCroppedImg(
       canvas.width = cropWidth;
       canvas.height = cropHeight;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("Não foi possível preparar o recorte")); return; }
+      if (!ctx) {
+        reject(new Error("Não foi possível preparar o recorte"));
+        return;
+      }
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, pixelCrop.x * scaleX, pixelCrop.y * scaleY, pixelCrop.width * scaleX, pixelCrop.height * scaleY, 0, 0, cropWidth, cropHeight);
+      ctx.drawImage(
+        img,
+        pixelCrop.x * scaleX,
+        pixelCrop.y * scaleY,
+        pixelCrop.width * scaleX,
+        pixelCrop.height * scaleY,
+        0,
+        0,
+        cropWidth,
+        cropHeight,
+      );
       resolve(canvas.toDataURL("image/jpeg", 0.9));
     };
     img.onerror = () => reject(new Error("Erro ao carregar imagem para recorte"));
@@ -64,16 +77,19 @@ function dataURLtoFile(dataUrl: string, filename: string): File {
   return new File([u8arr], filename, { type: mime });
 }
 
+interface EditContagemState {
+  editFrom?: string;
+  imageUrl?: string | null;
+  descricao?: string | null;
+  quantidadeEsperada?: number | null;
+  observacoes?: string | null;
+}
+
 const NovaContagem = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const editState = location.state as {
-    editFrom?: string;
-    imageUrl?: string;
-    descricao?: string;
-    quantidadeEsperada?: number | null;
-    observacoes?: string | null;
-  } | null;
+  const editState = (location.state as EditContagemState | null) ?? null;
+  const isEditingOriginal = Boolean(editState?.editFrom);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -91,26 +107,30 @@ const NovaContagem = () => {
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [cropAspect, setCropAspect] = useState<number | undefined>(undefined);
 
-  // Pre-load image from edit state
   useEffect(() => {
-    if (editState?.imageUrl) {
-      fetch(editState.imageUrl)
-        .then(r => r.blob())
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const dataUrl = reader.result as string;
-            setRawImage(dataUrl);
-            setCropDialogOpen(true);
-          };
-          reader.readAsDataURL(blob);
-        })
-        .catch(() => toast.error("Erro ao carregar imagem original"));
-      // Clear state so refresh doesn't re-trigger
-      window.history.replaceState({}, "");
-    }
-  }, []);
+    if (!editState?.imageUrl) return;
 
+    let active = true;
+
+    imageUrlToDataUrl(editState.imageUrl)
+      .then((dataUrl) => {
+        if (!active) return;
+        setRawImage(dataUrl);
+        setFinalPreview(null);
+        setCropAspect(undefined);
+        setCrop(undefined);
+        setCompletedCrop(null);
+        setCropDialogOpen(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        toast.error("Erro ao carregar imagem original");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [editState?.imageUrl]);
 
   const aspectOptions = [
     { label: "Livre", value: undefined },
@@ -132,7 +152,10 @@ const NovaContagem = () => {
   const handleAspectChange = useCallback((aspect: number | undefined) => {
     setCropAspect(aspect);
     setCompletedCrop(null);
-    if (!aspect || !imageRef.current) { setCrop(undefined); return; }
+    if (!aspect || !imageRef.current) {
+      setCrop(undefined);
+      return;
+    }
     setCrop(createCenteredCrop(imageRef.current.width, imageRef.current.height, aspect));
   }, []);
 
@@ -150,6 +173,7 @@ const NovaContagem = () => {
     reader.onload = () => {
       const dataUrl = reader.result as string;
       setRawImage(dataUrl);
+      setFinalPreview(null);
       setCropAspect(undefined);
       setCrop(undefined);
       setCompletedCrop(null);
@@ -194,7 +218,10 @@ const NovaContagem = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!finalPreview) { toast.error("Selecione uma imagem primeiro"); return; }
+    if (!finalPreview) {
+      toast.error("Selecione uma imagem primeiro");
+      return;
+    }
     if (!descricaoContagem.trim()) {
       toast.error("Descreva o que deseja contar");
       return;
@@ -202,7 +229,10 @@ const NovaContagem = () => {
 
     const estabId = await getEstabelecimentoId();
     const usuarioId = await getUserIdFromAuth();
-    if (!estabId || !usuarioId) { toast.error("Usuário não identificado"); return; }
+    if (!estabId || !usuarioId) {
+      toast.error("Usuário não identificado");
+      return;
+    }
 
     setAnalyzing(true);
     try {
@@ -213,6 +243,41 @@ const NovaContagem = () => {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("contagens-images").getPublicUrl(fileName);
+
+      const result = await analyzeContagemImage({
+        imageDataUrl: finalPreview,
+        tipoObjeto: descricaoContagem.trim(),
+        quantidadeEsperada: qtdEsperada,
+        observacoes,
+      });
+
+      const qtdDetectada = result.total_detectado || 0;
+      const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
+      const payload = {
+        tipo_objeto: descricaoContagem.trim(),
+        quantidade_esperada: qtdEsperada,
+        observacoes: observacoes || null,
+        imagem_url: urlData.publicUrl,
+        quantidade_detectada: qtdDetectada,
+        confianca_media: result.confianca_media ? Math.round(result.confianca_media * 100) : null,
+        bounding_boxes: result.deteccoes || [],
+        status: "concluido",
+        divergencia,
+        data_analise: new Date().toISOString(),
+      } as any;
+
+      if (isEditingOriginal && editState?.editFrom) {
+        const { error: updateError } = await supabase
+          .from("contagens")
+          .update(payload)
+          .eq("id", editState.editFrom);
+
+        if (updateError) throw updateError;
+
+        toast.success(`Contagem refeita: ${qtdDetectada} objeto(s) detectado(s)!`);
+        navigate(`/contagem/resultado/${editState.editFrom}`);
+        return;
+      }
 
       const { data: contagem, error: createError } = await supabase
         .from("contagens")
@@ -227,29 +292,15 @@ const NovaContagem = () => {
         } as any)
         .select()
         .single();
+
       if (createError) throw createError;
 
-      const result = await analyzeContagemImage({
-        imageDataUrl: finalPreview,
-        tipoObjeto: descricaoContagem.trim(),
-        quantidadeEsperada: qtdEsperada,
-        observacoes,
-      });
-
-      const qtdDetectada = result.total_detectado || 0;
-      const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
-
-      await supabase
+      const { error: finalizeError } = await supabase
         .from("contagens")
-        .update({
-          quantidade_detectada: qtdDetectada,
-          confianca_media: result.confianca_media ? Math.round(result.confianca_media * 100) : null,
-          bounding_boxes: result.deteccoes || [],
-          status: "concluido",
-          divergencia,
-          data_analise: new Date().toISOString(),
-        } as any)
+        .update(payload)
         .eq("id", (contagem as any).id);
+
+      if (finalizeError) throw finalizeError;
 
       toast.success(`${qtdDetectada} objeto(s) detectado(s)!`);
       navigate(`/contagem/resultado/${(contagem as any).id}`);
@@ -267,7 +318,7 @@ const NovaContagem = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate("/contagem")}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-xl font-bold">Nova Contagem</h1>
+        <h1 className="text-xl font-bold">{isEditingOriginal ? "Editar Contagem" : "Nova Contagem"}</h1>
       </div>
 
       <Card>
@@ -330,7 +381,14 @@ const NovaContagem = () => {
           </div>
 
           <Button onClick={handleAnalyze} disabled={!finalPreview || analyzing || !descricaoContagem.trim()} className="w-full gap-2" size="lg">
-            {analyzing ? (<><Loader2 className="w-5 h-5 animate-spin" /> Analisando...</>) : "Analisar Imagem"}
+            {analyzing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {isEditingOriginal ? "Refazendo..." : "Analisando..."}
+              </>
+            ) : (
+              isEditingOriginal ? "Refazer Contagem" : "Analisar Imagem"
+            )}
           </Button>
         </CardContent>
       </Card>
