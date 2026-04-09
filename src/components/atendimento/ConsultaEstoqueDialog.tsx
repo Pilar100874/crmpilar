@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Send, Package, CheckSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Search, Send, Package, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -155,18 +155,33 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
                 className="pl-9 h-9"
               />
             </div>
-            <Select value={grupoFilter} onValueChange={setGrupoFilter}>
-              <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="Grupo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os grupos</SelectItem>
-                {grupos.map(g => (
-                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
+
+          {/* Filtros de grupo em chips */}
+          {grupos.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <Badge
+                variant={grupoFilter === 'all' ? 'default' : 'outline'}
+                className="cursor-pointer text-xs px-2.5 py-1 hover:opacity-80 transition-opacity"
+                onClick={() => setGrupoFilter('all')}
+              >
+                Todos
+              </Badge>
+              {grupos.map(g => (
+                <Badge
+                  key={g.id}
+                  variant={grupoFilter === g.id ? 'default' : 'outline'}
+                  className="cursor-pointer text-xs px-2.5 py-1 hover:opacity-80 transition-opacity"
+                  onClick={() => setGrupoFilter(grupoFilter === g.id ? 'all' : g.id)}
+                >
+                  {g.nome}
+                  {grupoFilter === g.id && (
+                    <X className="h-3 w-3 ml-1" />
+                  )}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Lista */}
