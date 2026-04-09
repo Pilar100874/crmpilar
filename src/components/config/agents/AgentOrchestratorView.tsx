@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import { ChatAgent } from '@/hooks/useChatAgents';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -30,10 +30,11 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, Trash2, Edit,
   MoreVertical, Power, PowerOff, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2,
-  Lock, Unlock, X,
+  Lock, Unlock, X, ChevronDown, GripVertical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -157,7 +158,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { zoomIn, zoomOut, fitView } = useReactFlow();
+  const { zoomIn, zoomOut, fitView, screenToFlowPosition } = useReactFlow();
 
   const handleEditFromNode = useCallback((agent: ChatAgent) => {
     onEditAgent?.(agent);
@@ -249,17 +250,19 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     setHasChanges(true);
   }, [allAgents, setEdges]);
 
-  const handleAddToCanvas = useCallback((agent: ChatAgent) => {
-    const maxY = nodes.reduce((max, n) => Math.max(max, n.position.y), 0);
-    const xOffset = (nodes.length % 4) * 260;
+  const handleAddToCanvas = useCallback((agent: ChatAgent, position?: { x: number; y: number }) => {
+    const pos = position || {
+      x: (nodes.length % 4) * 260 + 40,
+      y: nodes.reduce((max, n) => Math.max(max, n.position.y), 0) + 200,
+    };
     setNodes(nds => [...nds, {
       id: agent.id, type: 'agentNode',
-      position: { x: xOffset + 40, y: maxY + 200 },
-      data: { ...agent, _disabled: false, _onEdit: () => handleEditFromNode(agent) },
+      position: pos,
+      data: { ...agent, _disabled: false },
     }]);
     setHasChanges(true);
     toast.success(`${agent.nome} adicionado`);
-  }, [nodes, setNodes, handleEditFromNode]);
+  }, [nodes, setNodes]);
 
   const handleRemoveFromCanvas = useCallback((agentId: string) => {
     if (agentId === orchestrator.id) { toast.error('Não é possível remover o orquestrador raiz'); return; }
@@ -405,37 +408,72 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
 
       {/* ─── Main area ─── */}
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <div className="w-60 shrink-0 border-r flex flex-col bg-card">
-          <div className="p-3 border-b space-y-2">
-            <h4 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
-              <Plus className="h-3 w-3" /> Adicionar Agente
-            </h4>
+        {/* Sidebar - Block Library */}
+        <div className="w-72 shrink-0 border-r flex flex-col bg-card">
+          <div className="flex items-center justify-between p-3 border-b">
+            <h3 className="font-semibold text-sm">Blocos</h3>
+          </div>
+          <div className="p-3">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 h-7 text-xs" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar agentes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 h-9" />
             </div>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-              {availableAgents.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-4">
-                  {searchTerm ? 'Nenhum encontrado' : 'Todos no workflow'}
-                </p>
-              )}
-              {availableAgents.map(agent => (
-                <div key={agent.id} className="flex items-center gap-2 p-2 rounded-lg border border-dashed border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all group" onClick={() => handleAddToCanvas(agent)}>
-                  <span className="text-base">{agent.icone}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium truncate">{agent.nome}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || ''}</p>
-                  </div>
-                  {agent.tipo_agente === 'orquestrador' && (
-                    <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0"><Network className="h-2.5 w-2.5" /></Badge>
-                  )}
-                  <Plus className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0" />
-                </div>
-              ))}
+            <div className="px-3 pb-3 space-y-2">
+              {(() => {
+                const orchAgents = availableAgents.filter(a => a.tipo_agente === 'orquestrador');
+                const specAgents = availableAgents.filter(a => a.tipo_agente !== 'orquestrador');
+                const groups = [
+                  { name: 'Orquestradores', icon: Network, agents: orchAgents, gradient: 'from-primary/10 to-primary/5', border: 'border-primary/20', borderHover: 'hover:border-primary/40', iconColor: 'text-primary' },
+                  { name: 'Agentes', icon: Bot, agents: specAgents, gradient: 'from-accent/40 to-accent/20', border: 'border-border', borderHover: 'hover:border-primary/30', iconColor: 'text-muted-foreground' },
+                ];
+                const filteredGroups = groups.filter(g => g.agents.length > 0);
+                if (filteredGroups.length === 0) {
+                  return (
+                    <p className="text-xs text-muted-foreground text-center py-6">
+                      {searchTerm ? 'Nenhum encontrado' : 'Todos os agentes já estão no workflow'}
+                    </p>
+                  );
+                }
+                return filteredGroups.map(group => {
+                  const GroupIcon = group.icon;
+                  return (
+                    <Collapsible key={group.name} defaultOpen>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <GroupIcon className={`h-4 w-4 ${group.iconColor}`} />
+                          <span className="text-sm font-medium">{group.name}</span>
+                          <span className="text-xs text-muted-foreground">({group.agents.length})</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-1 mt-1">
+                        {group.agents.map(agent => (
+                          <div
+                            key={agent.id}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('application/agent-id', agent.id);
+                              e.dataTransfer.effectAllowed = 'move';
+                            }}
+                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-grab active:cursor-grabbing bg-gradient-to-r ${group.gradient} border ${group.border} ${group.borderHover} transition-all hover:shadow-sm`}
+                          >
+                            <div className="flex items-center gap-1 text-muted-foreground/50">
+                              <GripVertical className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-lg shrink-0">{agent.icone}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs font-medium block truncate">{agent.nome}</span>
+                              <span className="text-[10px] text-muted-foreground block truncate">{agent.descricao || 'Sem descrição'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                });
+              })()}
             </div>
           </ScrollArea>
           <div className="p-2 border-t">
@@ -446,7 +484,23 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 relative">
+        <div
+          className="flex-1 relative"
+          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const agentId = e.dataTransfer.getData('application/agent-id');
+            if (!agentId) return;
+            const agent = allAgents.find(a => a.id === agentId);
+            if (!agent || canvasAgentIds.has(agent.id)) return;
+            const reactFlowBounds = e.currentTarget.getBoundingClientRect();
+            const position = screenToFlowPosition({
+              x: e.clientX - reactFlowBounds.left,
+              y: e.clientY - reactFlowBounds.top,
+            });
+            handleAddToCanvas(agent, position);
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -476,7 +530,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             />
           </ReactFlow>
           <div className="absolute bottom-2 left-2 text-[10px] text-muted-foreground bg-card/80 backdrop-blur px-2 py-1 rounded-md border">
-            Duplo-clique p/ editar agente • Clique p/ selecionar • Arraste conexões • Delete p/ apagar arestas
+            Arraste blocos da sidebar • Duplo-clique p/ editar • Arraste conexões entre nós • Delete p/ apagar arestas
           </div>
         </div>
       </div>
