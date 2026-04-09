@@ -7,6 +7,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, CalendarPlus, Target, Package
 };
 
+const STOCK_TOOL_ID = 'tool-stock';
+
 export interface FerramentaConfig {
   id: string;
   ferramenta_id: string;
@@ -32,6 +34,14 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
   const [ferramentas, setFerramentas] = useState<FerramentaConfig[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeFerramenta = useCallback((f: any) => ({
+    ...f,
+    tipo: f.ferramenta_id === STOCK_TOOL_ID ? 'ferramenta' : f.tipo,
+    aba_chat: f.ferramenta_id === STOCK_TOOL_ID ? true : f.aba_chat,
+    radial_chat: f.ferramenta_id === STOCK_TOOL_ID ? false : f.radial_chat,
+    IconComponent: ICON_MAP[f.icone] || Wand2
+  }) as FerramentaConfig, []);
+
   const loadFerramentas = useCallback(async () => {
     if (!estabelecimentoId) return;
     
@@ -46,10 +56,7 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
 
       if (error) throw error;
 
-      const mapped = (data || []).map(f => ({
-        ...f,
-        IconComponent: ICON_MAP[f.icone] || Wand2
-      })) as FerramentaConfig[];
+      const mapped = (data || []).map(normalizeFerramenta);
 
       setFerramentas(mapped);
     } catch (error) {
@@ -57,7 +64,7 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [estabelecimentoId]);
+  }, [estabelecimentoId, normalizeFerramenta]);
 
   useEffect(() => {
     loadFerramentas();
