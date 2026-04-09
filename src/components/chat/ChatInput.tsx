@@ -128,6 +128,7 @@ export default function ChatInput({
   onSelectAgent,
   externalText,
   onExternalTextConsumed,
+  onOpenConsultaEstoque,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
