@@ -4109,12 +4109,16 @@ ${recentMessages}
       estabelecimentoId={estabelecimentoId}
       onEnviarParaConversa={(texto) => {
         if (activeTab === 'email') {
-          setComposeEmailDefaults(prev => ({
-            ...prev,
-            body: prev.body ? prev.body + '\n' + texto : texto,
-          }));
-          if (!showComposeEmail) {
+          if (showComposeEmail) {
+            // Compose is open — append to existing body
+            setPendingEmailAppendText(texto);
+          } else {
+            // Compose not open — open it with the text
             setComposeEmailMode('compose');
+            setComposeEmailDefaults(prev => ({
+              ...prev,
+              body: texto,
+            }));
             setShowComposeEmail(true);
           }
         } else {
