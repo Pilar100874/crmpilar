@@ -4098,6 +4098,14 @@ ${recentMessages}
       </DialogContent>
     </Dialog>
 
+    {/* Consulta Estoque Dialog */}
+    <ConsultaEstoqueDialog
+      open={showConsultaEstoqueDialog}
+      onOpenChange={setShowConsultaEstoqueDialog}
+      estabelecimentoId={estabelecimentoId}
+      onEnviarParaConversa={(texto) => handleSendMessage(texto, 'text')}
+    />
+
     {/* Catalog Dialog for Radial Menu */}
     <Dialog open={showRadialCatalogDialog} onOpenChange={setShowRadialCatalogDialog} modal={false}>
       <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
