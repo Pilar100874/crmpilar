@@ -484,7 +484,23 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 relative">
+        <div
+          className="flex-1 relative"
+          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const agentId = e.dataTransfer.getData('application/agent-id');
+            if (!agentId) return;
+            const agent = allAgents.find(a => a.id === agentId);
+            if (!agent || canvasAgentIds.has(agent.id)) return;
+            const reactFlowBounds = e.currentTarget.getBoundingClientRect();
+            const position = screenToFlowPosition({
+              x: e.clientX - reactFlowBounds.left,
+              y: e.clientY - reactFlowBounds.top,
+            });
+            handleAddToCanvas(agent, position);
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
