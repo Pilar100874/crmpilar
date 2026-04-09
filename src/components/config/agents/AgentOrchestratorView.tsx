@@ -444,6 +444,10 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             }}
             onConnect={onConnect}
             onNodeClick={(_e, node) => setSelectedNodeId(node.id)}
+            onNodeDoubleClick={(_e, node) => {
+              const agent = allAgents.find(a => a.id === node.id);
+              if (agent) handleEditFromNode(agent);
+            }}
             onPaneClick={() => setSelectedNodeId(null)}
             nodeTypes={nodeTypes}
             fitView
