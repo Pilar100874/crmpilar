@@ -4636,6 +4636,7 @@ ${recentMessages}
                   setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
                   setShowComposeEmail(true);
                 }}
+                onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
               />
             </div>
 
@@ -7924,6 +7925,7 @@ interface MobileMainContentProps {
   onOrcamentoSave?: () => void;
   onReply?: (email: any) => void;
   onForward?: (email: any) => void;
+  onOpenConsultaEstoque?: () => void;
 }
 
 function MobileMainContent({
@@ -7980,6 +7982,7 @@ function MobileMainContent({
   onOrcamentoSave,
   onReply,
   onForward,
+  onOpenConsultaEstoque,
 }: MobileMainContentProps) {
   // Chat content
   if (activeTab === "chat" && selectedConversation && selectedConv) {
@@ -8071,7 +8074,7 @@ function MobileMainContent({
             customerPhone={selectedConv?.customer?.telefone}
             customerName={selectedConv?.customer?.nome}
             customerId={selectedConv?.customer?.id}
-            onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+            onOpenConsultaEstoque={onOpenConsultaEstoque}
           />
         </div>
       </div>
