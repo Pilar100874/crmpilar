@@ -249,6 +249,7 @@ export default function Atendimento() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [showComposeEmail, setShowComposeEmail] = useState(false);
+  const [keepComposeEmailOpen, setKeepComposeEmailOpen] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
   const [composeEmailDefaults, setComposeEmailDefaults] = useState<{ to: string; subject: string; body: string }>({ to: '', subject: '', body: '' });
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
@@ -4105,15 +4106,16 @@ ${recentMessages}
     {/* Consulta Estoque Dialog */}
     <ConsultaEstoqueDialog
       open={showConsultaEstoqueDialog}
-      onOpenChange={setShowConsultaEstoqueDialog}
+      onOpenChange={(open) => {
+        setShowConsultaEstoqueDialog(open);
+        if (!open) setKeepComposeEmailOpen(false);
+      }}
       estabelecimentoId={estabelecimentoId}
       onEnviarParaConversa={(texto) => {
         if (activeTab === 'email') {
           if (showComposeEmail) {
-            // Compose is open — append to existing body
             setPendingEmailAppendText(texto);
           } else {
-            // Compose not open — open it with the text
             setComposeEmailMode('compose');
             setComposeEmailDefaults(prev => ({
               ...prev,
@@ -4874,14 +4876,21 @@ ${recentMessages}
           />
           <ComposeEmailDialog
             open={showComposeEmail}
-            onOpenChange={setShowComposeEmail}
+            onOpenChange={(open) => {
+              if (!open && keepComposeEmailOpen) return;
+              setShowComposeEmail(open);
+            }}
             onSend={handleSendEmail}
             mode={composeEmailMode}
             defaultTo={composeEmailDefaults.to}
             defaultSubject={composeEmailDefaults.subject}
             defaultBody={composeEmailDefaults.body}
             estabelecimentoId={estabelecimentoId}
-            onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+            onOpenConsultaEstoque={() => {
+              setKeepComposeEmailOpen(true);
+              setShowComposeEmail(true);
+              setShowConsultaEstoqueDialog(true);
+            }}
             pendingAppendText={pendingEmailAppendText}
             onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
           />
@@ -7073,14 +7082,21 @@ ${recentMessages}
 
       <ComposeEmailDialog
         open={showComposeEmail}
-        onOpenChange={setShowComposeEmail}
+        onOpenChange={(open) => {
+          if (!open && keepComposeEmailOpen) return;
+          setShowComposeEmail(open);
+        }}
         onSend={handleSendEmail}
         mode={composeEmailMode}
         defaultTo={composeEmailDefaults.to}
         defaultSubject={composeEmailDefaults.subject}
         defaultBody={composeEmailDefaults.body}
         estabelecimentoId={estabelecimentoId}
-        onOpenConsultaEstoque={() => setShowConsultaEstoqueDialog(true)}
+        onOpenConsultaEstoque={() => {
+          setKeepComposeEmailOpen(true);
+          setShowComposeEmail(true);
+          setShowConsultaEstoqueDialog(true);
+        }}
         pendingAppendText={pendingEmailAppendText}
         onPendingAppendConsumed={() => setPendingEmailAppendText(null)}
       />
