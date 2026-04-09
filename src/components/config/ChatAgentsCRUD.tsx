@@ -966,6 +966,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
+              <TabsContent value="dados" className="mt-0">
+                <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} />
+              </TabsContent>
+
               </div>
             </Tabs>
 
