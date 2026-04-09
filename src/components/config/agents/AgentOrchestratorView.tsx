@@ -21,12 +21,17 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Network, Bot, Save, RotateCcw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
+import { Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, GripVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
   agents: ChatAgent[];
+  estabelecimentoId: string;
   onUpdate?: () => void;
+  onCreateAgent?: () => void;
 }
 
 /* ─── Custom Node ─── */
@@ -64,32 +69,21 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 
 const nodeTypes = { agentNode: AgentFlowNode };
 
-/* ─── Layout helpers ─── */
-function buildLayout(agents: ChatAgent[]): { nodes: Node[]; edges: Edge[] } {
+/* ─── Layout builder for a single orchestrator tree ─── */
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[]): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
-
-  const orchestrators = agents.filter(a => a.tipo_agente === 'orquestrador');
-  const allSubIds = new Set(orchestrators.flatMap(o => o.sub_agent_ids || []));
-  const roots = orchestrators.filter(o => !allSubIds.has(o.id));
-
-  let globalX = 0;
 
   function placeTree(agent: ChatAgent, x: number, y: number): number {
     if (placed.has(agent.id)) return x;
     placed.add(agent.id);
 
     const subIds = agent.sub_agent_ids || [];
-    const children = agents.filter(a => subIds.includes(a.id));
+    const children = allAgents.filter(a => subIds.includes(a.id));
 
     if (children.length === 0) {
-      nodes.push({
-        id: agent.id,
-        type: 'agentNode',
-        position: { x, y },
-        data: { ...agent },
-      });
+      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent } });
       return x + 250;
     }
 
@@ -108,63 +102,62 @@ function buildLayout(agents: ChatAgent[]): { nodes: Node[]; edges: Edge[] } {
     }
 
     const centerX = (x + childX - 250) / 2;
-    nodes.push({
-      id: agent.id,
-      type: 'agentNode',
-      position: { x: centerX, y },
-      data: { ...agent },
-    });
-
+    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent } });
     return childX;
   }
 
-  for (const root of roots) {
-    globalX = placeTree(root, globalX, 40);
-    globalX += 80;
-  }
-
-  // Unlinked agents
-  const unlinked = agents.filter(a => !placed.has(a.id));
-  unlinked.forEach((agent, i) => {
-    nodes.push({
-      id: agent.id,
-      type: 'agentNode',
-      position: { x: i * 250, y: (roots.length > 0 ? 500 : 40) },
-      data: { ...agent },
-    });
-  });
-
+  placeTree(orchestrator, 40, 40);
   return { nodes, edges };
 }
 
-/* ─── Main Component ─── */
-export default function AgentOrchestratorView({ agents, onUpdate }: Props) {
-  const initialLayout = useMemo(() => buildLayout(agents), [agents]);
+/* ─── Workflow Canvas ─── */
+function WorkflowCanvas({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent }: {
+  orchestrator: ChatAgent;
+  allAgents: ChatAgent[];
+  onUpdate?: () => void;
+  onBack: () => void;
+  onCreateAgent?: () => void;
+}) {
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents), [orchestrator, allAgents]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
   const [hasChanges, setHasChanges] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Agents already in the canvas
+  const canvasAgentIds = useMemo(() => new Set(nodes.map(n => n.id)), [nodes]);
+
+  // Available agents to add (not yet in canvas)
+  const availableAgents = useMemo(() => {
+    return allAgents.filter(a => {
+      if (canvasAgentIds.has(a.id)) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        return a.nome.toLowerCase().includes(term) || (a.descricao || '').toLowerCase().includes(term);
+      }
+      return true;
+    });
+  }, [allAgents, canvasAgentIds, searchTerm]);
 
   useEffect(() => {
-    const layout = buildLayout(agents);
+    const layout = buildWorkflowLayout(orchestrator, allAgents);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
-  }, [agents]);
+  }, [orchestrator, allAgents]);
 
   const onConnect = useCallback((params: Connection) => {
-    // Only orchestrators can be sources
-    const sourceAgent = agents.find(a => a.id === params.source);
+    const sourceAgent = allAgents.find(a => a.id === params.source);
     if (!sourceAgent || sourceAgent.tipo_agente !== 'orquestrador') {
       toast.error('Somente orquestradores podem ter sub-agentes');
       return;
     }
-    // Prevent self-loop
     if (params.source === params.target) return;
-    // Prevent circular: target's subtree shouldn't contain source
+
     const wouldCycle = (targetId: string, visited = new Set<string>()): boolean => {
       if (visited.has(targetId)) return false;
       visited.add(targetId);
-      const targetAgent = agents.find(a => a.id === targetId);
+      const targetAgent = allAgents.find(a => a.id === targetId);
       if (!targetAgent) return false;
       const subs = targetAgent.sub_agent_ids || [];
       if (subs.includes(params.source!)) return true;
@@ -182,97 +175,317 @@ export default function AgentOrchestratorView({ agents, onUpdate }: Props) {
       markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
     }, eds));
     setHasChanges(true);
-  }, [agents, setEdges]);
+  }, [allAgents, setEdges]);
 
-  const onEdgesDelete = useCallback(() => {
+  const handleAddToCanvas = useCallback((agent: ChatAgent) => {
+    // Find a good position - place below existing nodes
+    const maxY = nodes.reduce((max, n) => Math.max(max, n.position.y), 0);
+    const xOffset = (nodes.length % 4) * 250;
+    const newNode: Node = {
+      id: agent.id,
+      type: 'agentNode',
+      position: { x: xOffset + 40, y: maxY + 200 },
+      data: { ...agent },
+    };
+    setNodes(nds => [...nds, newNode]);
     setHasChanges(true);
-  }, []);
+    toast.success(`${agent.nome} adicionado ao workflow`);
+  }, [nodes, setNodes]);
+
+  const handleRemoveFromCanvas = useCallback((agentId: string) => {
+    if (agentId === orchestrator.id) {
+      toast.error('Não é possível remover o orquestrador raiz');
+      return;
+    }
+    setNodes(nds => nds.filter(n => n.id !== agentId));
+    setEdges(eds => eds.filter(e => e.source !== agentId && e.target !== agentId));
+    setHasChanges(true);
+  }, [orchestrator.id, setNodes, setEdges]);
 
   const handleSave = useCallback(async () => {
     // Build sub_agent_ids map from edges
     const subMap: Record<string, string[]> = {};
-    agents.forEach(a => { subMap[a.id] = []; });
+    nodes.forEach(n => { subMap[n.id] = []; });
     edges.forEach(e => {
       if (!subMap[e.source]) subMap[e.source] = [];
-      subMap[e.source].push(e.target);
+      if (!subMap[e.source].includes(e.target)) subMap[e.source].push(e.target);
     });
 
-    // Update each orchestrator
-    const promises = agents
-      .filter(a => a.tipo_agente === 'orquestrador')
-      .map(a =>
-        supabase
-          .from('chat_agents')
-          .update({ sub_agent_ids: subMap[a.id] || [] })
-          .eq('id', a.id)
-      );
+    // Update all orchestrators in this workflow
+    const orchIds = nodes.filter(n => {
+      const agent = allAgents.find(a => a.id === n.id);
+      return agent?.tipo_agente === 'orquestrador';
+    }).map(n => n.id);
 
+    const promises = orchIds.map(id =>
+      supabase.from('chat_agents').update({ sub_agent_ids: subMap[id] || [] } as any).eq('id', id)
+    );
+
+    // Also clear sub_agent_ids for the orchestrator's old subs that are no longer connected
     const results = await Promise.all(promises);
     const hasError = results.some(r => r.error);
     if (hasError) {
       toast.error('Erro ao salvar vínculos');
     } else {
-      toast.success('Vínculos salvos com sucesso');
+      toast.success('Workflow salvo com sucesso');
       setHasChanges(false);
       onUpdate?.();
     }
-  }, [agents, edges, onUpdate]);
+  }, [nodes, edges, allAgents, onUpdate]);
 
   const handleReset = useCallback(() => {
-    const layout = buildLayout(agents);
+    const layout = buildWorkflowLayout(orchestrator, allAgents);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
-  }, [agents, setNodes, setEdges]);
-
-  if (agents.length === 0) {
-    return (
-      <div className="text-center py-12 border rounded-lg border-dashed">
-        <Network className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-        <p className="text-muted-foreground">Nenhum agente configurado</p>
-        <p className="text-xs text-muted-foreground mt-1">Crie agentes para montar a hierarquia visual</p>
-      </div>
-    );
-  }
+  }, [orchestrator, allAgents, setNodes, setEdges]);
 
   return (
     <div className="space-y-3">
+      {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Arraste conexões de um <strong>orquestrador</strong> (saída inferior) para qualquer agente (entrada superior). Delete arestas com backspace.
-        </p>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{orchestrator.icone}</span>
+            <div>
+              <h3 className="text-sm font-semibold">{orchestrator.nome}</h3>
+              <p className="text-xs text-muted-foreground">Workflow do orquestrador</p>
+            </div>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleReset} disabled={!hasChanges}>
             <RotateCcw className="h-4 w-4 mr-1" /> Desfazer
           </Button>
           <Button size="sm" onClick={handleSave} disabled={!hasChanges}>
-            <Save className="h-4 w-4 mr-1" /> Salvar vínculos
+            <Save className="h-4 w-4 mr-1" /> Salvar Workflow
           </Button>
         </div>
       </div>
 
-      <div className="border rounded-xl overflow-hidden" style={{ height: 520 }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={(changes) => { onEdgesChange(changes); if (changes.some(c => c.type === 'remove')) setHasChanges(true); }}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          deleteKeyCode={['Backspace', 'Delete']}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/30" />
-          <Controls className="!bg-card !border-border !shadow-md" />
-          <MiniMap
-            className="!bg-card !border-border"
-            nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
-            maskColor="hsl(var(--background) / 0.7)"
-          />
-        </ReactFlow>
+      <div className="flex gap-3" style={{ height: 560 }}>
+        {/* Sidebar - Agent Menu */}
+        <div className="w-64 shrink-0 border rounded-xl overflow-hidden flex flex-col bg-card">
+          <div className="p-3 border-b space-y-2">
+            <h4 className="text-xs font-semibold uppercase text-muted-foreground">Agentes Disponíveis</h4>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar agente..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-8 h-8 text-xs"
+              />
+            </div>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {availableAgents.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">
+                  {searchTerm ? 'Nenhum agente encontrado' : 'Todos os agentes já estão no workflow'}
+                </p>
+              )}
+              {availableAgents.map(agent => (
+                <div
+                  key={agent.id}
+                  className="flex items-center gap-2 p-2 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 cursor-pointer transition-all group"
+                  onClick={() => handleAddToCanvas(agent)}
+                >
+                  <span className="text-lg">{agent.icone}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{agent.nome}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{agent.descricao || 'Sem descrição'}</p>
+                  </div>
+                  {agent.tipo_agente === 'orquestrador' && (
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">
+                      <Network className="h-2.5 w-2.5" />
+                    </Badge>
+                  )}
+                  <Plus className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="p-2 border-t">
+            <Button variant="outline" size="sm" className="w-full text-xs" onClick={onCreateAgent}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Criar Novo Agente
+            </Button>
+          </div>
+        </div>
+
+        {/* Canvas */}
+        <div className="flex-1 border rounded-xl overflow-hidden relative">
+          {/* Context: nodes in canvas that can be removed */}
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={(changes) => {
+              onEdgesChange(changes);
+              if (changes.some(c => c.type === 'remove')) setHasChanges(true);
+            }}
+            onConnect={onConnect}
+            onNodeDoubleClick={(_e, node) => {
+              if (node.id !== orchestrator.id) handleRemoveFromCanvas(node.id);
+            }}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            deleteKeyCode={['Backspace', 'Delete']}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/30" />
+            <Controls className="!bg-card !border-border !shadow-md" />
+            <MiniMap
+              className="!bg-card !border-border"
+              nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
+              maskColor="hsl(var(--background) / 0.7)"
+            />
+          </ReactFlow>
+          <div className="absolute bottom-2 left-2 text-[10px] text-muted-foreground bg-card/80 px-2 py-1 rounded">
+            Arraste conexões • Dbl-click para remover • Delete para apagar arestas
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Main Component: Workflow List ─── */
+export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent }: Props) {
+  const [selectedOrchestrator, setSelectedOrchestrator] = useState<ChatAgent | null>(null);
+
+  const orchestrators = useMemo(() => agents.filter(a => a.tipo_agente === 'orquestrador'), [agents]);
+
+  // If an orchestrator is selected, show its workflow canvas
+  if (selectedOrchestrator) {
+    const currentOrch = agents.find(a => a.id === selectedOrchestrator.id);
+    if (!currentOrch) {
+      setSelectedOrchestrator(null);
+      return null;
+    }
+    return (
+      <WorkflowCanvas
+        orchestrator={currentOrch}
+        allAgents={agents}
+        onUpdate={onUpdate}
+        onBack={() => setSelectedOrchestrator(null)}
+        onCreateAgent={onCreateAgent}
+      />
+    );
+  }
+
+  // Workflow list view
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold">Workflows de Orquestração</h3>
+          <p className="text-xs text-muted-foreground">
+            Cada orquestrador representa um workflow. Clique para gerenciar a cascata de agentes.
+          </p>
+        </div>
+        <Button size="sm" onClick={onCreateAgent}>
+          <Plus className="h-4 w-4 mr-1" /> Novo Orquestrador
+        </Button>
+      </div>
+
+      {orchestrators.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg border-dashed">
+          <Network className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">Nenhum workflow criado</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Crie um agente do tipo <strong>Orquestrador</strong> para montar um workflow
+          </p>
+          <Button variant="link" size="sm" className="mt-2" onClick={onCreateAgent}>
+            <Plus className="h-4 w-4 mr-1" /> Criar Orquestrador
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {orchestrators.map(orch => {
+            const subCount = (orch.sub_agent_ids || []).length;
+            // Count total descendants recursively
+            const countDescendants = (agentId: string, visited = new Set<string>()): number => {
+              if (visited.has(agentId)) return 0;
+              visited.add(agentId);
+              const agent = agents.find(a => a.id === agentId);
+              if (!agent) return 0;
+              const subs = agent.sub_agent_ids || [];
+              return subs.length + subs.reduce((sum, id) => sum + countDescendants(id, visited), 0);
+            };
+            const totalDescendants = countDescendants(orch.id);
+
+            return (
+              <Card
+                key={orch.id}
+                className="p-4 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all"
+                onClick={() => setSelectedOrchestrator(orch)}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">{orch.icone}</span>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-semibold truncate">{orch.nome}</h4>
+                    <p className="text-xs text-muted-foreground truncate">{orch.descricao || 'Sem descrição'}</p>
+                    <div className="flex gap-2 mt-2">
+                      <Badge variant="outline" className="text-[10px]">
+                        <Bot className="h-3 w-3 mr-0.5" /> {subCount} direto{subCount !== 1 ? 's' : ''}
+                      </Badge>
+                      {totalDescendants > subCount && (
+                        <Badge variant="outline" className="text-[10px]">
+                          <Network className="h-3 w-3 mr-0.5" /> {totalDescendants} total
+                        </Badge>
+                      )}
+                      <Badge variant={orch.ativo ? 'default' : 'secondary'} className="text-[10px]">
+                        {orch.ativo ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Unlinked specialist agents info */}
+      {(() => {
+        const allLinked = new Set<string>();
+        orchestrators.forEach(o => {
+          const collect = (id: string, visited = new Set<string>()) => {
+            if (visited.has(id)) return;
+            visited.add(id);
+            const agent = agents.find(a => a.id === id);
+            if (!agent) return;
+            (agent.sub_agent_ids || []).forEach(subId => {
+              allLinked.add(subId);
+              collect(subId, visited);
+            });
+          };
+          collect(o.id);
+          allLinked.add(o.id);
+        });
+        const unlinked = agents.filter(a => !allLinked.has(a.id) && a.tipo_agente !== 'orquestrador');
+        if (unlinked.length === 0) return null;
+        return (
+          <div className="mt-4 p-3 rounded-lg border border-dashed bg-muted/30">
+            <p className="text-xs text-muted-foreground mb-2">
+              <Bot className="h-3.5 w-3.5 inline mr-1" />
+              {unlinked.length} agente{unlinked.length !== 1 ? 's' : ''} não vinculado{unlinked.length !== 1 ? 's' : ''} a nenhum workflow
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {unlinked.map(a => (
+                <Badge key={a.id} variant="outline" className="text-xs">
+                  {a.icone} {a.nome}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
