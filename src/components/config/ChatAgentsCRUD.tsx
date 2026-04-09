@@ -1059,7 +1059,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
-          <AgentOrchestratorView agents={agents} />
+          <AgentOrchestratorView agents={agents} onUpdate={refetch} />
         </TabsContent>
 
 
