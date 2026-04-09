@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -31,8 +33,6 @@ interface Contagem {
   created_at: string;
 }
 
-// tipo_objeto now stores the user's free-text description
-
 const COLORS = [
   "#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
   "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16",
@@ -51,6 +51,12 @@ const ResultadoContagem = () => {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
   const lastPan = useRef({ x: 0, y: 0 });
+
+  // Recount state
+  const [showRecount, setShowRecount] = useState(false);
+  const [recountDesc, setRecountDesc] = useState("");
+  const [recountQtd, setRecountQtd] = useState("");
+  const [recounting, setRecounting] = useState(false);
 
   useEffect(() => {
     if (id) loadContagem();
@@ -76,12 +82,10 @@ const ResultadoContagem = () => {
       const container = containerRef.current!;
       const containerWidth = container.clientWidth;
 
-      // Render at natural resolution for quality, CSS will scale to fit
       const scale = containerWidth / img.naturalWidth;
       const displayWidth = containerWidth;
       const displayHeight = img.naturalHeight * scale;
 
-      // Use higher resolution canvas for sharp rendering
       const dpr = window.devicePixelRatio || 1;
       canvas.width = displayWidth * dpr;
       canvas.height = displayHeight * dpr;
@@ -92,7 +96,6 @@ const ResultadoContagem = () => {
       ctx.scale(dpr, dpr);
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-      // Draw bounding boxes with numbers
       const boxes: Detection[] = (contagem.bounding_boxes as any) || [];
       const fontSize = Math.max(14, Math.min(20, displayWidth * 0.035));
       const lineWidth = Math.max(2, Math.min(4, displayWidth * 0.005));
@@ -104,12 +107,10 @@ const ResultadoContagem = () => {
         const h = (det.bbox.height / 100) * displayHeight;
         const color = COLORS[i % COLORS.length];
 
-        // Box
         ctx.strokeStyle = color;
         ctx.lineWidth = lineWidth;
         ctx.strokeRect(x, y, w, h);
 
-        // Number circle
         const circleR = fontSize * 0.9;
         const cx = x + circleR + 2;
         const cy = y + circleR + 2;
@@ -121,7 +122,6 @@ const ResultadoContagem = () => {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Number text
         ctx.fillStyle = "#fff";
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = "center";
@@ -174,6 +174,78 @@ const ResultadoContagem = () => {
     toast.success("Imagem baixada!");
   };
 
+  const handleRecount = async () => {
+    if (!contagem?.imagem_url || !recountDesc.trim()) {
+      toast.error("Descreva o que deseja contar");
+      return;
+    }
+
+    setRecounting(true);
+    try {
+      // Fetch original image as base64
+      const imgResp = await fetch(contagem.imagem_url);
+      const blob = await imgResp.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.readAsDataURL(blob);
+      });
+
+      const { data: session } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.session?.access_token}`,
+          },
+          body: JSON.stringify({ imageBase64: base64, tipoObjeto: recountDesc.trim() }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Erro ao analisar imagem");
+      }
+
+      const result = await response.json();
+      const qtdDetectada = result.total_detectado || 0;
+      const qtdEsperada = recountQtd ? parseInt(recountQtd) : contagem.quantidade_esperada;
+      const divergencia = qtdEsperada !== null && qtdEsperada !== qtdDetectada;
+
+      await supabase
+        .from("contagens")
+        .update({
+          tipo_objeto: recountDesc.trim(),
+          quantidade_detectada: qtdDetectada,
+          quantidade_esperada: qtdEsperada,
+          confianca_media: result.confianca_media ? Math.round(result.confianca_media * 100) : null,
+          bounding_boxes: result.deteccoes || [],
+          status: "concluido",
+          divergencia,
+          data_analise: new Date().toISOString(),
+        } as any)
+        .eq("id", contagem.id);
+
+      toast.success(`Recontagem: ${qtdDetectada} objeto(s) detectado(s)!`);
+      setShowRecount(false);
+      setCanvasReady(false);
+      await loadContagem();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao recontar");
+    } finally {
+      setRecounting(false);
+    }
+  };
+
+  const openRecount = () => {
+    setRecountDesc(contagem?.tipo_objeto || "");
+    setRecountQtd(contagem?.quantidade_esperada?.toString() || "");
+    setShowRecount(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -198,6 +270,42 @@ const ResultadoContagem = () => {
         </Button>
         <h1 className="text-xl font-bold">Resultado da Contagem</h1>
       </div>
+
+      {/* Recount Panel */}
+      {showRecount && (
+        <Card className="border-primary/30">
+          <CardContent className="p-4 space-y-3">
+            <p className="text-sm font-semibold flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" /> Recontar com nova descrição
+            </p>
+            <div>
+              <Label>O que deseja contar? <span className="text-destructive">*</span></Label>
+              <Input
+                placeholder="Ex: caixas de papelão, resmas de papel..."
+                value={recountDesc}
+                onChange={e => setRecountDesc(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Quantidade Esperada (opcional)</Label>
+              <Input
+                type="number"
+                placeholder="Ex: 50"
+                value={recountQtd}
+                onChange={e => setRecountQtd(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowRecount(false)} disabled={recounting}>
+                Cancelar
+              </Button>
+              <Button className="flex-1 gap-2" onClick={handleRecount} disabled={recounting || !recountDesc.trim()}>
+                {recounting ? <><Loader2 className="w-4 h-4 animate-spin" /> Analisando...</> : "Recontar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status Banner */}
       {contagem.divergencia && (
@@ -338,12 +446,15 @@ const ResultadoContagem = () => {
       </Card>
 
       {/* Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Button variant="outline" onClick={handleDownload} className="gap-2">
-          <Download className="w-4 h-4" /> Baixar Imagem
+          <Download className="w-4 h-4" /> Baixar
+        </Button>
+        <Button variant="secondary" onClick={openRecount} className="gap-2">
+          <RefreshCw className="w-4 h-4" /> Recontar
         </Button>
         <Button onClick={() => navigate("/contagem/nova")} className="gap-2">
-          <Camera className="w-4 h-4" /> Nova Contagem
+          <Camera className="w-4 h-4" /> Nova
         </Button>
       </div>
     </div>
