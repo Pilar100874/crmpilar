@@ -242,11 +242,11 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     setNodes(nds => [...nds, {
       id: agent.id, type: 'agentNode',
       position: { x: xOffset + 40, y: maxY + 200 },
-      data: { ...agent, _disabled: false },
+      data: { ...agent, _disabled: false, _onEdit: () => handleEditFromNode(agent) },
     }]);
     setHasChanges(true);
     toast.success(`${agent.nome} adicionado`);
-  }, [nodes, setNodes]);
+  }, [nodes, setNodes, handleEditFromNode]);
 
   const handleRemoveFromCanvas = useCallback((agentId: string) => {
     if (agentId === orchestrator.id) { toast.error('Não é possível remover o orquestrador raiz'); return; }
