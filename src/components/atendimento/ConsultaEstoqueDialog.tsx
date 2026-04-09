@@ -96,8 +96,10 @@ export function ConsultaEstoqueDialog({ open, onOpenChange, estabelecimentoId, o
     setCustomFieldFilters(emptyFilters);
     if (grupoFilter !== 'all') {
       loadCamposCustomizados(grupoFilter);
+      setShowFilters(true);
     } else {
       setCamposCustomizados([]);
+      setShowFilters(false);
     }
   }, [grupoFilter]);
 
