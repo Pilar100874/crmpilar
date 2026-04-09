@@ -146,9 +146,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setKbFiles(data || []);
   };
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (presetType?: 'especifico' | 'orquestrador') => {
     setEditingAgent(null);
-    setFormData({ ...emptyForm });
+    setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
     setKbFiles([]);
     setInternalKbText('');
     setDialogOpen(true);
