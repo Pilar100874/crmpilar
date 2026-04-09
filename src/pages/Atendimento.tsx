@@ -3457,17 +3457,8 @@ ${recentMessages}
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
     const tools = getRadialMenuItems(currentTabType);
-    // Add active agents to radial tools
-    // Only agents linked to an active orchestrator
-    const orchs = chatAgents.filter(a => (a as any).tipo_agente === 'orquestrador' && a.ativo);
-    const linked = new Set<string>();
-    const collect = (id: string, v = new Set<string>()) => {
-      if (v.has(id)) return; v.add(id); linked.add(id);
-      const ag = chatAgents.find(x => x.id === id);
-      if (ag) ((ag as any).sub_agent_ids || []).forEach((s: string) => collect(s, v));
-    };
-    orchs.forEach(o => collect(o.id));
-    const activeAgents = chatAgents.filter(a => a.ativo && linked.has(a.id));
+    // Only show active orchestrators
+    const activeAgents = chatAgents.filter(a => (a as any).tipo_agente === 'orquestrador' && a.ativo);
     const agentItems: RadialMenuItem[] = activeAgents.map(agent => ({
       id: `agent-${agent.id}`,
       icon: Bot,
