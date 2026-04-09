@@ -73,7 +73,7 @@ export function ComposeEmailDialog({
     }
   }, [pendingAppendText]);
 
-
+  const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
   };
 
