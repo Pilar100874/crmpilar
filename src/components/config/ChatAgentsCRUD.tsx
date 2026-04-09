@@ -253,6 +253,20 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
   const confirmDelete = async () => {
     if (!agentToDelete) return;
+    // Block deletion of orchestrators linked as sub-agent of another orchestrator
+    if (agentToDelete.tipo_agente === 'orquestrador') {
+      const parentOrch = agents.find(a =>
+        a.tipo_agente === 'orquestrador' &&
+        a.id !== agentToDelete.id &&
+        (a.sub_agent_ids || []).includes(agentToDelete.id)
+      );
+      if (parentOrch) {
+        toast.error(`Não é possível excluir: este orquestrador está vinculado ao workflow "${parentOrch.nome}". Remova o vínculo primeiro.`);
+        setDeleteDialogOpen(false);
+        setAgentToDelete(null);
+        return;
+      }
+    }
     await deleteAgent(agentToDelete.id);
     setDeleteDialogOpen(false);
     setAgentToDelete(null);
