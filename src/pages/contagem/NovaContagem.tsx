@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, type SyntheticEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback, useEffect, type SyntheticEvent } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId, getUserIdFromAuth } from "@/lib/estabelecimentoUtils";
 import { analyzeContagemImage, resizeContagemImage } from "@/lib/contagemAnalysis";
