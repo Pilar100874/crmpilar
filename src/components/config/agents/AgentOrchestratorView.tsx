@@ -141,7 +141,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
 }
 
 /* ─── Inner Canvas (needs ReactFlowProvider parent) ─── */
-function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent, onEditAgent, onDeleteAgent }: {
+function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent, onEditAgent, onDeleteAgent, isFullscreen, onToggleFullscreen }: {
   orchestrator: ChatAgent;
   allAgents: ChatAgent[];
   onUpdate?: () => void;
@@ -149,6 +149,8 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   onCreateAgent?: () => void;
   onEditAgent?: (agent: ChatAgent) => void;
   onDeleteAgent?: (agent: ChatAgent) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
   const [disabledNodes, setDisabledNodes] = useState<Set<string>>(new Set());
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
