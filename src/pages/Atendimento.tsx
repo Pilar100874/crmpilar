@@ -6559,13 +6559,6 @@ ${recentMessages}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ToolsDropdown 
-                    ferramentas={getAllFerramentas('agenda')} 
-                    onSelectTool={handleToolSelect} 
-                    tabType="agenda"
-                    chatAgents={chatAgents}
-                    onSelectAgent={handleSelectAgent}
-                  />
                   <Button
                     size="sm"
                     variant="ghost"
@@ -6660,13 +6653,7 @@ ${recentMessages}
               setShowComposeEmail(true);
             }}
             toolsSlot={
-              <ToolsDropdown 
-                ferramentas={getAllFerramentas('email')} 
-                onSelectTool={handleToolSelect} 
-                tabType="email"
-                chatAgents={chatAgents}
-                onSelectAgent={handleSelectAgent}
-              />
+              null
             }
           />
         ) : (
