@@ -184,7 +184,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   }, [selectedNodeId, allAgents]);
 
   useEffect(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
+    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
