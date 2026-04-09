@@ -1142,7 +1142,13 @@ export default function ChatInput({
     </TooltipProvider>
   );
 
-  // === IA ===
+  if (onOpenConsultaEstoque) {
+    groupAtendimento.push(
+      <ToolbarBtn key="consulta-estoque" icon={Package} title="Consultar Estoque" color="#059669" onClick={() => { onOpenConsultaEstoque(); setShowToolsMenu(false); }} disabled={disabled} />
+    );
+  }
+
+
   groupIA.push(
     <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" color="#f59e0b" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
   );
