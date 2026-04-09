@@ -67,7 +67,7 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
           <p className="text-[10px] text-muted-foreground truncate">{String(data.descricao || 'Sem descrição')}</p>
         </div>
       </div>
-      <div className="flex gap-1 mt-2">
+      <div className="flex items-center gap-1 mt-2">
         {isOrch && (
           <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
             <Network className="h-3 w-3 mr-0.5" />Orquestrador
@@ -76,6 +76,15 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
         <Badge variant={data.ativo && !isDisabled ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
           {isDisabled ? 'Desativado' : data.ativo ? 'Ativo' : 'Inativo'}
         </Badge>
+        <div className="flex-1" />
+        <button
+          className="h-5 w-5 rounded flex items-center justify-center hover:bg-muted transition-colors opacity-60 hover:opacity-100"
+          title="Duplo-clique ou clique aqui para editar"
+          onDoubleClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+          onClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+        >
+          <Edit className="h-3 w-3" />
+        </button>
       </div>
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
     </div>
