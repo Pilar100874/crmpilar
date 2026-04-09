@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip } from "lucide-react";
+import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip, Package } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EmailToolsMenu } from "./EmailToolsMenu";
 
