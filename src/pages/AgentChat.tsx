@@ -84,7 +84,21 @@ export default function AgentChat() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isLoading]);
 
-  const activeAgents = agents.filter(a => a.ativo);
+  // Only show agents that belong to at least one orchestrator (or are orchestrators themselves)
+  const activeAgents = useMemo(() => {
+    const orchestrators = agents.filter(a => a.tipo_agente === 'orquestrador' && a.ativo);
+    const linkedIds = new Set<string>();
+    const collectLinked = (id: string, visited = new Set<string>()) => {
+      if (visited.has(id)) return;
+      visited.add(id);
+      linkedIds.add(id);
+      const agent = agents.find(a => a.id === id);
+      if (!agent) return;
+      (agent.sub_agent_ids || []).forEach(subId => collectLinked(subId, visited));
+    };
+    orchestrators.forEach(o => collectLinked(o.id));
+    return agents.filter(a => a.ativo && linkedIds.has(a.id));
+  }, [agents]);
 
   // Load sessions for selected agent
   const loadSessions = useCallback(async (agentId: string) => {
