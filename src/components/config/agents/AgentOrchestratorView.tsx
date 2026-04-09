@@ -34,7 +34,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, Trash2, Edit,
   MoreVertical, Power, PowerOff, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2,
-  Lock, Unlock, X, ChevronDown, GripVertical,
+  Lock, Unlock, X, ChevronDown, GripVertical, Minimize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
