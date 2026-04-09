@@ -34,7 +34,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   Network, Bot, Save, RotateCcw, Plus, ArrowLeft, Search, Trash2, Edit,
   MoreVertical, Power, PowerOff, Eye, EyeOff, ZoomIn, ZoomOut, Maximize2,
-  Lock, Unlock, X, ChevronDown, GripVertical,
+  Lock, Unlock, X, ChevronDown, GripVertical, Minimize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -141,7 +141,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
 }
 
 /* ─── Inner Canvas (needs ReactFlowProvider parent) ─── */
-function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent, onEditAgent, onDeleteAgent }: {
+function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCreateAgent, onEditAgent, onDeleteAgent, isFullscreen, onToggleFullscreen }: {
   orchestrator: ChatAgent;
   allAgents: ChatAgent[];
   onUpdate?: () => void;
@@ -149,6 +149,8 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   onCreateAgent?: () => void;
   onEditAgent?: (agent: ChatAgent) => void;
   onDeleteAgent?: (agent: ChatAgent) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
   const [disabledNodes, setDisabledNodes] = useState<Set<string>>(new Set());
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -395,6 +397,15 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <Maximize2 className="h-4 w-4" />
           </Button>
 
+          {onToggleFullscreen && (
+            <>
+              <div className="h-6 w-px bg-border mx-1" />
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleFullscreen} title={isFullscreen ? 'Minimizar' : 'Maximizar'}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+            </>
+          )}
+
           <div className="h-6 w-px bg-border mx-1" />
 
           <Button variant="outline" size="sm" onClick={handleReset} disabled={!hasChanges}>
@@ -547,6 +558,8 @@ function WorkflowCanvas(props: {
   onCreateAgent?: () => void;
   onEditAgent?: (agent: ChatAgent) => void;
   onDeleteAgent?: (agent: ChatAgent) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
   return (
     <ReactFlowProvider>
@@ -558,30 +571,46 @@ function WorkflowCanvas(props: {
 /* ─── Main Component: Workflow List ─── */
 export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent, onEditAgent, onDeleteAgent }: Props) {
   const [selectedOrchestrator, setSelectedOrchestrator] = useState<ChatAgent | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   const orchestrators = useMemo(() => agents.filter(a => a.tipo_agente === 'orquestrador'), [agents]);
 
-  // Fullscreen workflow canvas
+  // Workflow canvas (inline or fullscreen)
   if (selectedOrchestrator) {
     const currentOrch = agents.find(a => a.id === selectedOrchestrator.id);
     if (!currentOrch) {
       setSelectedOrchestrator(null);
       return null;
     }
+
+    const canvasContent = (
+      <WorkflowCanvas
+        orchestrator={currentOrch}
+        allAgents={agents}
+        onUpdate={onUpdate}
+        onBack={() => { setSelectedOrchestrator(null); setIsFullscreen(false); }}
+        onCreateAgent={onCreateAgent}
+        onEditAgent={onEditAgent}
+        onDeleteAgent={onDeleteAgent}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => setIsFullscreen(f => !f)}
+      />
+    );
+
+    if (isFullscreen) {
+      return (
+        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+          {canvasContent}
+        </div>
+      );
+    }
+
     return (
-      <div className="fixed inset-0 z-50 bg-background flex flex-col">
-        <WorkflowCanvas
-          orchestrator={currentOrch}
-          allAgents={agents}
-          onUpdate={onUpdate}
-          onBack={() => setSelectedOrchestrator(null)}
-          onCreateAgent={onCreateAgent}
-          onEditAgent={onEditAgent}
-          onDeleteAgent={onDeleteAgent}
-        />
+      <div className="flex flex-col h-[calc(100vh-220px)] min-h-[500px] border rounded-lg overflow-hidden">
+        {canvasContent}
       </div>
     );
   }
