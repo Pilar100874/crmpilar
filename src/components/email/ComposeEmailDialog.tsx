@@ -43,6 +43,7 @@ export function ComposeEmailDialog({
   defaultBody = "",
   mode = 'compose',
   estabelecimentoId = null,
+  onOpenConsultaEstoque,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
