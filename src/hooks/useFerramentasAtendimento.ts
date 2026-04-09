@@ -57,8 +57,30 @@ export function useFerramentasAtendimento(estabelecimentoId: string | null) {
       if (error) throw error;
 
       const mapped = (data || []).map(normalizeFerramenta);
+      const withStockTool = mapped.some(f => f.ferramenta_id === STOCK_TOOL_ID)
+        ? mapped
+        : [
+            ...mapped,
+            normalizeFerramenta({
+              id: STOCK_TOOL_ID,
+              ferramenta_id: STOCK_TOOL_ID,
+              nome: 'Consulta Estoque',
+              icone: 'Package',
+              descricao: 'Pesquisar produtos e enviar estoque',
+              aba_chat: true,
+              aba_agenda: false,
+              aba_email: false,
+              aba_orcamento: false,
+              radial_chat: false,
+              radial_agenda: false,
+              radial_email: false,
+              radial_orcamento: false,
+              tipo: 'ferramenta',
+              ativo: true,
+            })
+          ];
 
-      setFerramentas(mapped);
+      setFerramentas(withStockTool);
     } catch (error) {
       console.error('Erro ao carregar ferramentas:', error);
     } finally {
