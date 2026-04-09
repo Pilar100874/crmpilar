@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, Camera, CheckCircle, AlertTriangle, Loader2, ZoomIn, ZoomOut, RotateCcw, RefreshCw, Crop } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -418,12 +418,29 @@ const ResultadoContagem = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Button variant="outline" onClick={handleDownload} className="gap-2">
           <Download className="w-4 h-4" /> Baixar
         </Button>
         <Button variant="secondary" onClick={openRecount} className="gap-2">
           <RefreshCw className="w-4 h-4" /> Recontar
+        </Button>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() =>
+            navigate("/contagem/nova", {
+              state: {
+                editFrom: contagem.id,
+                imageUrl: contagem.imagem_url,
+                descricao: contagem.tipo_objeto,
+                quantidadeEsperada: contagem.quantidade_esperada,
+                observacoes: contagem.observacoes,
+              },
+            })
+          }
+        >
+          <Crop className="w-4 h-4" /> Editar Original
         </Button>
         <Button onClick={() => navigate("/contagem/nova")} className="gap-2">
           <Camera className="w-4 h-4" /> Nova
