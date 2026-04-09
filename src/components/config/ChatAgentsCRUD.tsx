@@ -382,7 +382,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </Button>
             )}
             {mainTab === 'agentes' && (
-              <Button onClick={handleOpenCreate}>
+              <Button onClick={() => handleOpenCreate()}>
                 <Plus className="h-4 w-4 mr-2" /> Novo Agente
               </Button>
             )}
