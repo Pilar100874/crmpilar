@@ -79,9 +79,11 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
         <div className="flex-1" />
         <button
           className="h-5 w-5 rounded flex items-center justify-center hover:bg-muted transition-colors opacity-60 hover:opacity-100"
-          title="Duplo-clique ou clique aqui para editar"
-          onDoubleClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
-          onClick={(e) => { e.stopPropagation(); data._onEdit?.(); }}
+          title="Clique para editar"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('edit-agent-node', { detail: { agentId: data.id } }));
+          }}
         >
           <Edit className="h-3 w-3" />
         </button>
@@ -95,7 +97,7 @@ AgentFlowNode.displayName = 'AgentFlowNode';
 const nodeTypes = { agentNode: AgentFlowNode };
 
 /* ─── Layout builder ─── */
-function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>, onEditFn?: (agent: ChatAgent) => void): { nodes: Node[]; edges: Edge[] } {
+function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], disabledNodes: Set<string>): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
   const placed = new Set<string>();
@@ -107,7 +109,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     const children = allAgents.filter(a => subIds.includes(a.id));
 
     if (children.length === 0) {
-      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
+      nodes.push({ id: agent.id, type: 'agentNode', position: { x, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
       return x + 260;
     }
 
@@ -129,7 +131,7 @@ function buildWorkflowLayout(orchestrator: ChatAgent, allAgents: ChatAgent[], di
     }
 
     const centerX = (x + childX - 260) / 2;
-    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id), _onEdit: () => onEditFn?.(agent) } });
+    nodes.push({ id: agent.id, type: 'agentNode', position: { x: centerX, y }, data: { ...agent, _disabled: disabledNodes.has(agent.id) } });
     return childX;
   }
 
@@ -161,7 +163,18 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     onEditAgent?.(agent);
   }, [onEditAgent]);
 
-  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode), [orchestrator, allAgents, disabledNodes, handleEditFromNode]);
+  // Listen for edit events from node buttons
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const agentId = (e as CustomEvent).detail?.agentId;
+      const agent = allAgents.find(a => a.id === agentId);
+      if (agent) onEditAgent?.(agent);
+    };
+    window.addEventListener('edit-agent-node', handler);
+    return () => window.removeEventListener('edit-agent-node', handler);
+  }, [allAgents, onEditAgent]);
+
+  const initialLayout = useMemo(() => buildWorkflowLayout(orchestrator, allAgents, disabledNodes), [orchestrator, allAgents, disabledNodes]);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialLayout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialLayout.edges);
 
@@ -184,7 +197,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
   }, [selectedNodeId, allAgents]);
 
   useEffect(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes, handleEditFromNode);
+    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
     setNodes(layout.nodes);
     setEdges(layout.edges);
     setHasChanges(false);
@@ -446,7 +459,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             onNodeClick={(_e, node) => setSelectedNodeId(node.id)}
             onNodeDoubleClick={(_e, node) => {
               const agent = allAgents.find(a => a.id === node.id);
-              if (agent) handleEditFromNode(agent);
+              if (agent) onEditAgent?.(agent);
             }}
             onPaneClick={() => setSelectedNodeId(null)}
             nodeTypes={nodeTypes}
