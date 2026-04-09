@@ -703,7 +703,7 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
             const totalDesc = countDesc(orch.id);
 
             return (
-              <Card key={orch.id} className={`p-4 transition-all ${!orch.ativo ? 'opacity-60' : 'hover:border-primary/50 hover:shadow-md'}`}>
+              <Card key={orch.id} className={`p-4 transition-all border-primary/30 bg-primary/5 dark:bg-primary/10 ${!orch.ativo ? 'opacity-60' : 'hover:border-primary/50 hover:shadow-md hover:bg-primary/10'}`}>
                 <div className="flex items-start gap-3">
                   <div className="cursor-pointer flex-1 min-w-0 flex items-start gap-3" onClick={() => setSelectedOrchestrator(orch)}>
                     <span className="text-3xl">{orch.icone}</span>
