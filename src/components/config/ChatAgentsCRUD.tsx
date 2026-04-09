@@ -1059,7 +1059,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         </TabsContent>
 
         <TabsContent value="orquestrador" className="mt-0">
-          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={handleOpenCreate} />
+          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} />
         </TabsContent>
 
 
