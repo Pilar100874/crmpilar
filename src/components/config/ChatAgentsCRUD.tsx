@@ -52,6 +52,7 @@ function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabe
   return <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} agentName={agentName} agentId={agentId} />;
 }
 
+const detectAgentDomain = (agentName: string): string | undefined => {
   const lower = agentName.toLowerCase();
   const match = AGENT_TEMPLATES.find(t => lower.includes(t.nome.toLowerCase().replace('agente ', '')));
   if (match) return match.dominio;
