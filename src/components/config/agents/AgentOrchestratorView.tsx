@@ -45,6 +45,8 @@ interface Props {
   onCreateAgent?: () => void;
   onEditAgent?: (agent: ChatAgent) => void;
   onDeleteAgent?: (agent: ChatAgent) => void;
+  autoOpenOrchestratorId?: string | null;
+  onAutoOpenConsumed?: () => void;
 }
 
 /* ─── Custom Node ─── */
@@ -569,7 +571,7 @@ function WorkflowCanvas(props: {
 }
 
 /* ─── Main Component: Workflow List ─── */
-export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent, onEditAgent, onDeleteAgent }: Props) {
+export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpdate, onCreateAgent, onEditAgent, onDeleteAgent, autoOpenOrchestratorId, onAutoOpenConsumed }: Props) {
   const [selectedOrchestrator, setSelectedOrchestrator] = useState<ChatAgent | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -577,6 +579,17 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
   const [isCreating, setIsCreating] = useState(false);
 
   const orchestrators = useMemo(() => agents.filter(a => a.tipo_agente === 'orquestrador'), [agents]);
+
+  // Auto-open orchestrator workflow when requested
+  useEffect(() => {
+    if (autoOpenOrchestratorId && !selectedOrchestrator) {
+      const orch = agents.find(a => a.id === autoOpenOrchestratorId);
+      if (orch) {
+        setSelectedOrchestrator(orch);
+        onAutoOpenConsumed?.();
+      }
+    }
+  }, [autoOpenOrchestratorId, agents, selectedOrchestrator, onAutoOpenConsumed]);
 
   // Workflow canvas (inline or fullscreen)
   if (selectedOrchestrator) {
