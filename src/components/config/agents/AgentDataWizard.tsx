@@ -24,6 +24,8 @@ import {
 interface Props {
   estabelecimentoId: string;
   onClose: () => void;
+  agentName?: string;
+  agentId?: string;
 }
 
 interface ApiEndpoint {
