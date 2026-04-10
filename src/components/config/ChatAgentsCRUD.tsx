@@ -726,6 +726,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     Salve o agente primeiro para configurar campos personalizados
                   </div>
                 )}
+                </ScrollArea>
               </TabsContent>
 
               <TabsContent value="regras" className="mt-0 space-y-4">
