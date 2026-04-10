@@ -24,6 +24,8 @@ import {
 interface Props {
   estabelecimentoId: string;
   onClose: () => void;
+  agentName?: string;
+  agentId?: string;
 }
 
 interface ApiEndpoint {
@@ -41,12 +43,51 @@ interface FieldMappingEntry {
   value: string;
 }
 
-export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
+export default function AgentDataWizard({ estabelecimentoId, onClose, agentName, agentId }: Props) {
   const { bindings, loading, upsertBinding, getProgressForAgent } = useAgentDataBindings(estabelecimentoId);
 
+  // Auto-detect template key from agent name
+  const detectedTemplateKey = useMemo(() => {
+    if (!agentName) return null;
+    const lower = agentName.toLowerCase();
+    const match = AGENT_DATA_REQUIREMENTS.find(a => lower.includes(a.nome.toLowerCase().replace('agente ', '').replace('de ', '')));
+    if (match) return match.template_key;
+    const keywords: Record<string, string[]> = {
+      orquestrador: ['orquestrador', 'orchestrador'],
+      comercial: ['comercial', 'vendas', 'venda'],
+      inteligencia_cliente: ['inteligência', 'cliente inteligência'],
+      recompra: ['recompra'],
+      mix_crosssell: ['cross', 'mix', 'up-sell'],
+      financeiro: ['financeiro', 'crédito', 'cobrança'],
+      logistico: ['logístic', 'frete', 'entrega'],
+      margem: ['margem', 'estratégia'],
+      objecoes: ['objeç', 'persuasão'],
+      tecnico: ['técnic', 'suporte técnico'],
+      excecoes: ['exceç'],
+      performance: ['performance', 'desempenho'],
+      pos_venda: ['pós-venda', 'pos venda'],
+      satisfacao: ['satisfação', 'satisfacao'],
+      cadastro_produtos: ['cadastro de produto', 'cadastro produto', 'estoque'],
+      cadastro_clientes: ['cadastro de cliente', 'cadastro cliente'],
+      tabela_precos: ['preço', 'tabela de preço', 'pricing'],
+      gestao_estoque: ['gestão de estoque', 'gestao estoque'],
+    };
+    for (const [key, kws] of Object.entries(keywords)) {
+      if (kws.some(kw => lower.includes(kw))) return key;
+    }
+    return null;
+  }, [agentName]);
+
+  const filteredRequirements = useMemo(() => {
+    if (detectedTemplateKey) {
+      return AGENT_DATA_REQUIREMENTS.filter(a => a.template_key === detectedTemplateKey);
+    }
+    return AGENT_DATA_REQUIREMENTS;
+  }, [detectedTemplateKey]);
+
   // Wizard state
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(() => detectedTemplateKey ? 0 : 0);
+  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(detectedTemplateKey);
   const [dataSource, setDataSource] = useState<DataSourceType>('manual');
 
   // API state
@@ -304,7 +345,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose }: Props) {
         <p className="text-sm text-muted-foreground">Escolha qual agente deseja configurar os dados</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {AGENT_DATA_REQUIREMENTS.map(agent => {
+        {filteredRequirements.map(agent => {
           const prog = getProgressForAgent(agent.template_key, agent.campos.length);
           const configuredCount = bindings.filter(b => b.agent_template_key === agent.template_key && b.configurado).length;
           const isSelected = selectedAgentKey === agent.template_key;
