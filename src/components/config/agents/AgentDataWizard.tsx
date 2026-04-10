@@ -18,7 +18,7 @@ import * as XLSX from 'xlsx';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
 } from 'lucide-react';
 
 interface Props {
@@ -119,6 +119,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // Saving
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
   const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
@@ -281,9 +282,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         }
       }
       toast.success('Dados do agente salvos com sucesso!');
-      setCurrentStep(0);
-      setSelectedAgentKey(null);
-      resetWizardState();
+      // Stay on confirmation step so user can review/edit
+      setSaved(true);
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + err.message);
     } finally {
@@ -1182,7 +1182,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
             <Button variant="outline" onClick={handleBack}><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Button>
           )}
         </div>
-        <div>
+        <div className="flex gap-2">
+          {saved && currentStep === totalSteps - 1 && (
+            <Button variant="outline" onClick={() => { setSaved(false); setCurrentStep(2); }}>
+              <Edit2 className="h-4 w-4 mr-1" /> Editar Dados
+            </Button>
+          )}
           {currentStep < totalSteps - 1 ? (
             <Button onClick={handleNext} disabled={!canGoNext()}>
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
@@ -1190,7 +1195,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           ) : (
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-              Salvar Configuração
+              {saved ? 'Salvar Alterações' : 'Salvar Configuração'}
             </Button>
           )}
         </div>

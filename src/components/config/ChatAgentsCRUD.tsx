@@ -30,6 +30,28 @@ import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings'
 import * as XLSX from 'xlsx';
 import { AGENT_TEMPLATES } from '@/constants/agentTemplates';
 
+function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabelecimentoId: string; agentId?: string; agentName?: string }) {
+  const [hasFields, setHasFields] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!agentId) return;
+    supabase.from('chat_agent_custom_fields').select('id', { count: 'exact', head: true })
+      .eq('agent_id', agentId).eq('ativo', true)
+      .then(({ count }) => setHasFields((count ?? 0) > 0));
+  }, [agentId]);
+
+  if (hasFields === null) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  if (!hasFields) return (
+    <div className="flex flex-col items-center justify-center p-12 text-center space-y-4">
+      <ListChecks className="h-12 w-12 text-muted-foreground" />
+      <div>
+        <h3 className="text-lg font-semibold">Nenhum campo customizado encontrado</h3>
+        <p className="text-sm text-muted-foreground mt-1">Para utilizar o Wizard de Dados, primeiro crie os campos necessários na aba <strong>Campos</strong>.</p>
+      </div>
+    </div>
+  );
+  return <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} agentName={agentName} agentId={agentId} />;
+}
+
 const detectAgentDomain = (agentName: string): string | undefined => {
   const lower = agentName.toLowerCase();
   const match = AGENT_TEMPLATES.find(t => lower.includes(t.nome.toLowerCase().replace('agente ', '')));
@@ -968,7 +990,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="dados" className="mt-0">
-                <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} agentName={editingAgent?.nome} agentId={editingAgent?.id} />
+                <AgentDataWizardGate estabelecimentoId={estabelecimentoId} agentId={editingAgent?.id} agentName={editingAgent?.nome} />
               </TabsContent>
 
               </div>
