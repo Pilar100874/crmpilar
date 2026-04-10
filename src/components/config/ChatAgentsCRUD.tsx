@@ -403,7 +403,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </div>
         </div>
 
-        <TabsContent value="agentes" className="mt-0">
+        <TabsContent value="agentes" className="mt-0" forceMount>
       <div className="flex justify-between items-center mb-3">
         <p className="text-sm text-muted-foreground">
           {agents.length} agente{agents.length !== 1 ? 's' : ''} configurado{agents.length !== 1 ? 's' : ''}
