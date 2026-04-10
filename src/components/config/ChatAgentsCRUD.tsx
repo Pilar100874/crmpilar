@@ -476,6 +476,23 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       Prod. Terceiros
                     </Badge>
                   )}
+                  {/* Mostrar vínculo com orquestrador(es) para agentes não-orquestradores */}
+                  {(agent as any).tipo_agente !== 'orquestrador' && (() => {
+                    const parentOrchs = agents.filter(a => 
+                      (a as any).tipo_agente === 'orquestrador' && 
+                      ((a as any).sub_agent_ids || []).includes(agent.id)
+                    );
+                    return parentOrchs.length > 0 ? parentOrchs.map(p => (
+                      <Badge key={p.id} variant="outline" className="text-xs border-primary/30 text-primary">
+                        <Network className="h-3 w-3 mr-1" />
+                        {p.nome}
+                      </Badge>
+                    )) : (
+                      <Badge variant="outline" className="text-xs text-muted-foreground border-dashed">
+                        Sem vínculo
+                      </Badge>
+                    );
+                  })()}
                 </div>
                 <div className="flex gap-1 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(agent)}>
