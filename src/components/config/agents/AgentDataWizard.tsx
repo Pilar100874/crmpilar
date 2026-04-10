@@ -281,9 +281,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         }
       }
       toast.success('Dados do agente salvos com sucesso!');
-      setCurrentStep(0);
-      setSelectedAgentKey(null);
-      resetWizardState();
+      // Stay on confirmation step so user can review/edit
+      setSaved(true);
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + err.message);
     } finally {
