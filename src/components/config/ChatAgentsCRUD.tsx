@@ -144,6 +144,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [previewTab, setPreviewTab] = useState<'conhecimento' | 'apis' | null>(null);
   const [mainTab, setMainTab] = useState('agentes');
   const [showSetup, setShowSetup] = useState(false);
+  const [autoOpenOrchestratorId, setAutoOpenOrchestratorId] = useState<string | null>(null);
 
   useEffect(() => {
     loadApiEndpoints();
@@ -229,7 +230,12 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     if (editingAgent) {
       await updateAgent(editingAgent.id, saveData);
     } else {
-      await createAgent(saveData);
+      const newAgent = await createAgent(saveData);
+      // If orchestrator, switch to workflow tab and auto-open it
+      if (newAgent && (saveData as any).tipo_agente === 'orquestrador') {
+        setAutoOpenOrchestratorId(newAgent.id);
+        setMainTab('orquestrador');
+      }
     }
     setDialogOpen(false);
   };
@@ -1086,7 +1092,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
 
         <TabsContent value="orquestrador" className="mt-0">
-          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} />
+          <AgentOrchestratorView agents={agents} estabelecimentoId={estabelecimentoId} onUpdate={refetch} onCreateAgent={() => handleOpenCreate('orquestrador')} onEditAgent={handleOpenEdit} onDeleteAgent={(agent) => { setAgentToDelete(agent); setDeleteDialogOpen(true); }} autoOpenOrchestratorId={autoOpenOrchestratorId} onAutoOpenConsumed={() => setAutoOpenOrchestratorId(null)} />
         </TabsContent>
 
 
