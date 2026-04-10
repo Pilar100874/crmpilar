@@ -714,6 +714,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="campos" className="mt-0">
+                <ScrollArea className="h-[60vh]">
                 {editingAgent ? (
                   <AgentCustomFieldsManager
                     agentId={editingAgent.id}
