@@ -752,7 +752,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="conhecimento" className="mt-0 space-y-4">
+              <TabsContent value="conhecimento" className="mt-0">
+                <ScrollArea className="h-[60vh]">
+                <div className="space-y-4">
                 <div>
                   <Label className="text-base font-semibold">Tipo de Base de Conhecimento</Label>
                   <p className="text-xs text-muted-foreground mb-2">Define como o agente obtém informações para responder.</p>
@@ -781,9 +783,30 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </div>
                 )}
 
-                {formData.knowledge_base_type === 'interna' && (
+                {formData.knowledge_base_type === 'terceiros' && (
+                  <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium">Base de Conhecimento do Modelo</p>
+                        <p className="text-xs text-muted-foreground">
+                          O agente utilizará o conhecimento pré-treinado do modelo de IA selecionado. Não é necessário enviar arquivos.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 flex items-start gap-2">
+                      <span className="mt-0.5">⚠️</span>
+                      <span>O modelo pode não ter informações específicas sobre seu negócio. Para dados exclusivos, use "Interna" ou "Externa".</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fontes de dados do sistema — visível para interna e externa */}
+                {(formData.knowledge_base_type === 'interna' || formData.knowledge_base_type === 'externa') && (
                   <>
-                     <div className="flex items-center justify-between rounded-lg border p-3">
+                    <Separator />
+                    <Label className="text-sm font-semibold">Fontes de Dados do Sistema</Label>
+                    <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
                         <Label className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
@@ -813,10 +836,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
                       </div>
                     </div>
+                  </>
+                )}
+
+                {/* Conteúdo textual — apenas interna */}
+                {formData.knowledge_base_type === 'interna' && (
+                  <>
                     <Separator />
                     <div>
                       <Label>Conteúdo da Base de Conhecimento</Label>
-
                       <Textarea
                         value={internalKbText}
                         onChange={e => setInternalKbText(e.target.value)}
@@ -828,38 +856,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </>
                 )}
 
+                {/* Upload de arquivos — apenas externa */}
                 {formData.knowledge_base_type === 'externa' && (
                   <>
-                     <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <Label className="flex items-center gap-2">
-                          <Database className="h-4 w-4 text-primary" />
-                          Usar Estoque do Sistema
-                        </Label>
-                        <p className="text-xs text-muted-foreground">Acesso aos produtos cadastrados no estoque (nome, código, preço, estoque, marca, etc.).</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('estoque', undefined, undefined, 'conhecimento')} title="Visualizar dados">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Switch checked={formData.usar_estoque_sistema || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_estoque_sistema: checked })} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="space-y-0.5">
-                        <Label className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-primary" />
-                          Usar Produtos Importados de Terceiros
-                        </Label>
-                        <p className="text-xs text-muted-foreground">Acesso aos dados de produtos de terceiros ativos e válidos.</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadPreviewData('importados', undefined, undefined, 'conhecimento')} title="Visualizar dados">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Switch checked={formData.usar_produtos_importados || false} onCheckedChange={(checked) => setFormData({ ...formData, usar_produtos_importados: checked })} />
-                      </div>
-                    </div>
                     <Separator />
                     <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
                       <Label className="flex items-center gap-2 text-base font-semibold">
@@ -900,85 +899,72 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </>
                 )}
 
-                {formData.knowledge_base_type === 'terceiros' && (
-                  <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
-                    <div className="flex items-center gap-2">
-                      <Brain className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-medium">Base de Conhecimento do Modelo</p>
-                        <p className="text-xs text-muted-foreground">
-                          O agente utilizará o conhecimento pré-treinado do modelo de IA selecionado. Não é necessário enviar arquivos.
-                        </p>
-                      </div>
+                {/* APIs de dados — visível para interna e externa */}
+                {(formData.knowledge_base_type === 'interna' || formData.knowledge_base_type === 'externa') && (
+                  <>
+                    <Separator />
+                    <div>
+                      <Label className="text-sm font-semibold">APIs de Dados</Label>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Selecione os endpoints de API que o agente poderá consultar para obter dados em tempo real.
+                      </p>
+                      {apiEndpoints.length === 0 ? (
+                        <div className="text-center py-6 border rounded-lg border-dashed">
+                          <Database className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                          <p className="text-sm text-muted-foreground">Nenhum endpoint de API configurado</p>
+                          <p className="text-xs text-muted-foreground">Configure endpoints em Configurações &gt; API Endpoints</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {apiEndpoints.map(ep => {
+                            const isChecked = (formData.api_endpoint_ids || []).includes(ep.id);
+                            const epConfig = ((formData as any).api_endpoint_config || {})[ep.id];
+                            const epTipo = epConfig?.tipo || 'estoque';
+                            return (
+                             <div key={ep.id} className="border rounded-lg px-3 py-2 space-y-2">
+                              <div className="flex items-center space-x-3">
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={() => toggleEndpoint(ep.id)}
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium">{ep.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name, 'conhecimento')} title="Visualizar dados">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              {isChecked && (
+                                <div className="ml-8">
+                                  <Select
+                                    value={epTipo}
+                                    onValueChange={(v) => {
+                                      const config = { ...((formData as any).api_endpoint_config || {}) };
+                                      config[ep.id] = { tipo: v };
+                                      setFormData({ ...formData, api_endpoint_config: config } as any);
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs w-56">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="estoque">📦 Dados de Estoque</SelectItem>
+                                      <SelectItem value="compras_cliente">🛒 Compras do Cliente</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                             </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 flex items-start gap-2">
-                      <span className="mt-0.5">⚠️</span>
-                      <span>O modelo pode não ter informações específicas sobre seu negócio. Para dados exclusivos, use "Interna" ou "Externa".</span>
-                    </div>
-                  </div>
+                  </>
                 )}
-              </TabsContent>
-
-              <TabsContent value="apis" className="mt-0 space-y-4">
-                <div>
-                  <Label>APIs de Dados (Estoque, Produtos, etc.)</Label>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Selecione os endpoints de API que o agente poderá consultar para obter dados em tempo real.
-                    Configure os endpoints em "API Endpoints" no menu de configurações.
-                  </p>
-                  {apiEndpoints.length === 0 ? (
-                    <div className="text-center py-6 border rounded-lg border-dashed">
-                      <Database className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-sm text-muted-foreground">Nenhum endpoint de API configurado</p>
-                      <p className="text-xs text-muted-foreground">Configure endpoints em Configurações &gt; API Endpoints</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {apiEndpoints.map(ep => {
-                        const isChecked = (formData.api_endpoint_ids || []).includes(ep.id);
-                        const epConfig = ((formData as any).api_endpoint_config || {})[ep.id];
-                        const epTipo = epConfig?.tipo || 'estoque';
-                        return (
-                         <div key={ep.id} className="border rounded-lg px-3 py-2 space-y-2">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox
-                              checked={isChecked}
-                              onCheckedChange={() => toggleEndpoint(ep.id)}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium">{ep.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{ep.description || ep.endpoint_path}</p>
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => loadPreviewData('api', ep.id, ep.name, 'apis')} title="Visualizar dados">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          {isChecked && (
-                            <div className="ml-8">
-                              <Select
-                                value={epTipo}
-                                onValueChange={(v) => {
-                                  const config = { ...((formData as any).api_endpoint_config || {}) };
-                                  config[ep.id] = { tipo: v };
-                                  setFormData({ ...formData, api_endpoint_config: config } as any);
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-xs w-56">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="estoque">📦 Dados de Estoque</SelectItem>
-                                  <SelectItem value="compras_cliente">🛒 Compras do Cliente</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                         </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
+                </ScrollArea>
               </TabsContent>
 
               <TabsContent value="dados" className="mt-0">
