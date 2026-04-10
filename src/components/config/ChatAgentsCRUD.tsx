@@ -556,52 +556,35 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
-                {(formData as any).tipo_agente === 'orquestrador' && (
-                  <div className="rounded-lg border p-4 space-y-3 bg-primary/5 border-primary/20">
+{(formData as any).tipo_agente === 'orquestrador' && (
+                  <div className="rounded-lg border p-4 space-y-2 bg-primary/5 border-primary/20">
                     <Label className="flex items-center gap-2 text-base font-semibold">
                       <Layers className="h-5 w-5 text-primary" />
                       Sub-Agentes (Capacidades)
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Selecione agentes específicos ou outros orquestradores para criar uma hierarquia em cascata. O prompt e as fontes de dados de cada sub-agente serão combinados automaticamente.
-                    </p>
-                    {agents.filter(a => a.id !== editingAgent?.id).length === 0 ? (
-                      <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
-                        ⚠️ Crie agentes primeiro para poder combiná-los.
+                    {((formData as any).sub_agent_ids || []).length > 0 ? (
+                      <div className="space-y-1">
+                        <p className="text-xs text-primary font-medium">
+                          ✓ {((formData as any).sub_agent_ids || []).length} sub-agente(s) vinculado(s)
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {((formData as any).sub_agent_ids || []).map((sid: string) => {
+                            const sub = agents.find(a => a.id === sid);
+                            return sub ? (
+                              <Badge key={sid} variant="outline" className="text-xs">
+                                {sub.icone} {sub.nome}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {agents.filter(a => a.id !== editingAgent?.id && !((a as any).sub_agent_ids || []).includes(editingAgent?.id)).map(a => {
-                          const isSelected = ((formData as any).sub_agent_ids || []).includes(a.id);
-                          return (
-                            <div key={a.id} className={`flex items-center space-x-3 rounded-lg border px-3 py-2 cursor-pointer transition-all ${isSelected ? 'bg-primary/10 border-primary/30' : 'hover:bg-muted/50'}`}
-                              onClick={() => {
-                                const current = (formData as any).sub_agent_ids || [];
-                                const next = isSelected ? current.filter((id: string) => id !== a.id) : [...current, a.id];
-                                setFormData({ ...formData, sub_agent_ids: next } as any);
-                              }}>
-                              <Checkbox checked={isSelected} />
-                              <span className="text-lg">{a.icone}</span>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium">{a.nome}</p>
-                                <p className="text-xs text-muted-foreground truncate">{a.descricao || 'Sem descrição'}</p>
-                              </div>
-                              <div className="flex flex-wrap gap-1">
-                                {(a as any).tipo_agente === 'orquestrador' && <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30"><Network className="h-3 w-3 mr-0.5" />Orquestrador</Badge>}
-                                {a.usar_estoque_sistema && <Badge variant="outline" className="text-[10px]">Estoque</Badge>}
-                                {a.usar_produtos_importados && <Badge variant="outline" className="text-[10px]">Prod. Terceiros</Badge>}
-                                {(a.api_endpoint_ids || []).length > 0 && <Badge variant="outline" className="text-[10px]">{(a.api_endpoint_ids || []).length} API(s)</Badge>}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <p className="text-xs text-muted-foreground">Nenhum sub-agente vinculado.</p>
                     )}
-                    {((formData as any).sub_agent_ids || []).length > 0 && (
-                      <p className="text-xs text-primary font-medium">
-                        ✓ {((formData as any).sub_agent_ids || []).length} sub-agente(s) selecionado(s)
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground italic flex items-center gap-1">
+                      <Network className="h-3 w-3" />
+                      Gerencie vínculos pelo Workflow Visual na aba Workflow.
+                    </p>
                   </div>
                 )}
                 <div>
