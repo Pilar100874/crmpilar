@@ -345,7 +345,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         <p className="text-sm text-muted-foreground">Escolha qual agente deseja configurar os dados</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {AGENT_DATA_REQUIREMENTS.map(agent => {
+        {filteredRequirements.map(agent => {
           const prog = getProgressForAgent(agent.template_key, agent.campos.length);
           const configuredCount = bindings.filter(b => b.agent_template_key === agent.template_key && b.configurado).length;
           const isSelected = selectedAgentKey === agent.template_key;
