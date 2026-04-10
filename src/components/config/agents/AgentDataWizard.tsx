@@ -1185,7 +1185,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         <div className="flex gap-2">
           {saved && currentStep === totalSteps - 1 && (
             <Button variant="outline" onClick={() => { setSaved(false); setCurrentStep(2); }}>
-              <Edit className="h-4 w-4 mr-1" /> Editar Dados
+              <Edit2 className="h-4 w-4 mr-1" /> Editar Dados
             </Button>
           )}
           {currentStep < totalSteps - 1 ? (
