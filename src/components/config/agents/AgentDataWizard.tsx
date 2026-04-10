@@ -18,7 +18,7 @@ import * as XLSX from 'xlsx';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
 } from 'lucide-react';
 
 interface Props {
