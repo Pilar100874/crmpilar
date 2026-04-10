@@ -1182,7 +1182,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
             <Button variant="outline" onClick={handleBack}><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Button>
           )}
         </div>
-        <div>
+        <div className="flex gap-2">
+          {saved && currentStep === totalSteps - 1 && (
+            <Button variant="outline" onClick={() => { setSaved(false); setCurrentStep(2); }}>
+              <Edit className="h-4 w-4 mr-1" /> Editar Dados
+            </Button>
+          )}
           {currentStep < totalSteps - 1 ? (
             <Button onClick={handleNext} disabled={!canGoNext()}>
               Próximo <ArrowRight className="h-4 w-4 ml-1" />
@@ -1190,7 +1195,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           ) : (
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-              Salvar Configuração
+              {saved ? 'Salvar Alterações' : 'Salvar Configuração'}
             </Button>
           )}
         </div>
