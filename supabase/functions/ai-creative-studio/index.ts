@@ -835,10 +835,21 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
   // Apiframe has a prompt length limit (~500 chars for most models)
   // Truncate long storyboard prompts to a concise version
   if (cleanPrompt.length > 480) {
-    // Try to extract just the product name and style from long prompts
-    const productMatch = cleanPrompt.match(/for "([^"]+)"/);
-    const productName = productMatch?.[1] || '';
-    cleanPrompt = `Cinematic promotional video for "${productName}". Professional product advertising, clean modern style, premium lighting, smooth camera movements. No text overlays, no audio.`;
+    // Build a concise prompt preserving key info about product + influencer
+    const productMatch = cleanPrompt.match(/for "([^"]+)"/) || cleanPrompt.match(/PRODUTO[^:]*:\s*([^\n.]{3,60})/i);
+    const productName = productMatch?.[1]?.trim() || '';
+    const hasInfluencer = /influencer|pessoa|person/i.test(cleanPrompt);
+    const hasHeroFrame = params._heroFrameUsed === true;
+    
+    if (hasHeroFrame) {
+      cleanPrompt = hasInfluencer
+        ? `Animate this image: a person naturally demonstrating and holding the product "${productName}". Cinematic smooth motion, professional lighting. The person and product must remain IDENTICAL to the starting image. No text overlays.`
+        : `Animate this image: cinematic product video for "${productName}". Smooth camera movement, professional lighting. The product must remain IDENTICAL to the starting image. No text overlays.`;
+    } else {
+      cleanPrompt = hasInfluencer
+        ? `Cinematic video: an influencer holding and demonstrating the product "${productName}". Professional advertising, premium lighting. The product must appear exactly as in the reference image. No text overlays.`
+        : `Cinematic promotional video for "${productName}". Professional product advertising, clean modern style, premium lighting, smooth camera movements. No text overlays.`;
+    }
     console.log(`[apiframe-video] Prompt truncated from ${(params.prompt || "").length} chars to ${cleanPrompt.length}`);
   }
   afParams.prompt = cleanPrompt;
