@@ -215,6 +215,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     const internalData = agent.knowledge_base_internal_data || [];
     setInternalKbText(internalData.map((item: any) => typeof item === 'string' ? item : JSON.stringify(item)).join('\n\n'));
     await loadKbFiles(agent.id);
+    setDialogTab('identidade');
     setDialogOpen(true);
   };
 
