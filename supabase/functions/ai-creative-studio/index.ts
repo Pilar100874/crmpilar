@@ -1055,7 +1055,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     const data = await callGateway(LOVABLE_API_KEY, {
       model: "google/gemini-3-pro-image-preview",
       messages: [
-        { role: "system", content: "You are a professional photo compositor. Take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance. The face of any person MUST remain pixel-identical. The packaging of any product MUST remain pixel-identical. You NEVER redraw faces or redesign packaging." },
+        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE PRIORITY is the PRODUCT — it must appear EXACTLY as in the reference photo: same packaging, colors, label, logo, proportions, typography. NEVER redesign, recolor, or modify the product in any way. The PERSON/INFLUENCER must hold or interact with the product naturally — their face must remain identical to the reference. The person should be ACTIVELY DEMONSTRATING the product (holding it, showing it to camera, using it). NEVER separate the person and product — they must be together in the same scene interacting." },
         { role: "user", content: editContent },
       ],
       modalities: ["image", "text"],
