@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings, ListChecks } from 'lucide-react';
+import AgentHelpGuide from '@/components/config/agents/AgentHelpGuide';
 import AgentCustomFieldsManager from '@/components/config/agents/AgentCustomFieldsManager';
 import { toast } from 'sonner';
 import { ChatAgentPromptWizard } from '@/components/config/ChatAgentPromptWizard';
