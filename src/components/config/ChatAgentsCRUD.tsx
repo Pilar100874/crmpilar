@@ -136,6 +136,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<ChatAgent | null>(null);
   const [editingAgent, setEditingAgent] = useState<ChatAgent | null>(null);
+  const [dialogTab, setDialogTab] = useState('identidade');
   const [formData, setFormData] = useState<Partial<ChatAgent>>(emptyForm);
   const [apiEndpoints, setApiEndpoints] = useState<ApiEndpoint[]>([]);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
