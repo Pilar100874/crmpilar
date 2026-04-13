@@ -762,6 +762,28 @@ export function useStudioExecution() {
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
 
+        // Inject videoStyle into the prompt
+        const videoStyleValue = config.videoStyle || 'realistic';
+        if (videoStyleValue && videoStyleValue !== 'realistic') {
+          const videoStyleMap: Record<string, string> = {
+            'cinematic': 'Cinematic style with dramatic lighting, shallow depth of field, and film-grade color grading.',
+            'anime': 'Anime animation style with vibrant colors, expressive characters and dynamic action.',
+            'cartoon': 'Cartoon animation style with exaggerated expressions, bright colors and playful motion.',
+            '3d-animation': '3D animated style with smooth rendering, realistic materials and polished motion.',
+            'stop-motion': 'Stop-motion animation style with tactile textures and frame-by-frame character.',
+            'slow-motion': 'Slow-motion cinematic capture revealing fine details and dramatic tension.',
+            'timelapse': 'Timelapse photography style showing accelerated passage of time with smooth transitions.',
+            'noir': 'Film noir style with high-contrast black and white, dramatic shadows and moody atmosphere.',
+            'vintage': 'Vintage / retro film look with warm tones, grain, light leaks and nostalgic feeling.',
+            'documentary': 'Documentary style with natural lighting, handheld camera feel and authentic atmosphere.',
+            'music-video': 'Music video style with dynamic editing, creative angles and visually striking compositions.',
+          };
+          const styleDesc = videoStyleMap[videoStyleValue] || '';
+          if (styleDesc) {
+            videoPrompt = `[VISUAL STYLE] ${styleDesc}\n\n${videoPrompt}`;
+          }
+        }
+
         // If correction mode, override prompt to preserve original and only apply the fix
         if (isCorrectionVideo && correctionSourceVideo) {
           const isVideoSource = !!correctionInputVideo?.videoUrl;
