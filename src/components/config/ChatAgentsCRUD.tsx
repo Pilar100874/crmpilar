@@ -181,6 +181,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
     setKbFiles([]);
     setInternalKbText('');
+    setDialogTab('identidade');
     setDialogOpen(true);
   };
 
@@ -222,7 +223,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       toast.error('Nome do agente é obrigatório');
       return;
     }
-    if (!formData.system_prompt?.trim()) {
+    // Prompt obrigatório apenas na edição (agente já existente)
+    if (editingAgent && !formData.system_prompt?.trim()) {
       toast.error('Prompt do sistema é obrigatório');
       return;
     }
@@ -254,7 +256,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             updated_at: newAgent.updated_at,
             estabelecimento_id: newAgent.estabelecimento_id,
           } as any);
-          toast.info('Agente criado! Agora você pode configurar os campos.');
+          setDialogTab('campos');
+          toast.success('Agente criado! Configure os campos do agente.');
         }
         return;
       }
