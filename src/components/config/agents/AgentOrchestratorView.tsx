@@ -259,14 +259,63 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
       x: (nodes.length % 4) * 260 + 40,
       y: nodes.reduce((max, n) => Math.max(max, n.position.y), 0) + 200,
     };
-    setNodes(nds => [...nds, {
+
+    const newNodes: any[] = [{
       id: agent.id, type: 'agentNode',
       position: pos,
       data: { ...agent, _disabled: false },
-    }]);
+    }];
+    const newEdges: any[] = [];
+
+    // If the agent is an orchestrator with existing sub-agents, auto-add them
+    if (agent.tipo_agente === 'orquestrador' && agent.sub_agent_ids && agent.sub_agent_ids.length > 0) {
+      const existingNodeIds = new Set(nodes.map(n => n.id));
+      agent.sub_agent_ids.forEach((subId, idx) => {
+        if (existingNodeIds.has(subId)) {
+          // Sub-agent already on canvas, just create edge
+          newEdges.push({
+            id: `e-${agent.id}-${subId}`,
+            source: agent.id,
+            target: subId,
+            animated: true,
+            style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
+          });
+          return;
+        }
+        const subAgent = allAgents.find(a => a.id === subId);
+        if (!subAgent) return;
+        const subPos = {
+          x: pos.x + (idx - (agent.sub_agent_ids.length - 1) / 2) * 260,
+          y: pos.y + 180,
+        };
+        newNodes.push({
+          id: subAgent.id, type: 'agentNode',
+          position: subPos,
+          data: { ...subAgent, _disabled: false },
+        });
+        newEdges.push({
+          id: `e-${agent.id}-${subId}`,
+          source: agent.id,
+          target: subId,
+          animated: true,
+          style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
+        });
+      });
+    }
+
+    setNodes(nds => [...nds, ...newNodes]);
+    if (newEdges.length > 0) {
+      setEdges(eds => [...eds, ...newEdges]);
+    }
     setHasChanges(true);
-    toast.success(`${agent.nome} adicionado`);
-  }, [nodes, setNodes]);
+    const subCount = newNodes.length - 1;
+    toast.success(subCount > 0 
+      ? `${agent.nome} adicionado com ${subCount} sub-agente(s)` 
+      : `${agent.nome} adicionado`
+    );
+  }, [nodes, setNodes, setEdges, allAgents]);
 
   const handleRemoveFromCanvas = useCallback((agentId: string) => {
     if (agentId === orchestrator.id) { toast.error('Não é possível remover o orquestrador raiz'); return; }
