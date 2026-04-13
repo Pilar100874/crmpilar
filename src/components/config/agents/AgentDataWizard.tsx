@@ -486,7 +486,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     const ws = XLSX.utils.json_to_sheet([exampleRow]);
     ws['!cols'] = fields.map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, agentName.substring(0, 31));
+    XLSX.utils.book_append_sheet(wb, ws, (agentName || 'Agente').substring(0, 31));
     XLSX.writeFile(wb, `modelo_${templateKey}.xlsx`);
     toast.success('Modelo Excel baixado com exemplo de orientação!');
   };
