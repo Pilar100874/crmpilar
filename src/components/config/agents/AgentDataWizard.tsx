@@ -63,7 +63,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       campo: f.id,
       label: f.nome,
       descricao: f.descricao || '',
-      tipo: f.tipo === 'lista' ? 'texto' : f.tipo === 'booleano' ? 'texto' : f.tipo,
+      tipo: (f.tipo === 'lista' ? 'texto' : f.tipo === 'booleano' ? 'texto' : f.tipo) as AgentDataField['tipo'],
       obrigatorio: f.obrigatorio,
       categoria: 'Campos do Agente',
       exemplo: f.opcoes?.length ? f.opcoes.join(', ') : undefined,
@@ -220,7 +220,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // Save all mappings
   const handleSave = async () => {
-    if (!selectedAgent) return;
+    
     setSaving(true);
     try {
       for (const field of activeFields) {
@@ -230,7 +230,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const val = allValues.length > 0 ? JSON.stringify(allValues.map(row => row[field.campo] || '')) : (manualValues[field.campo] || '');
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -242,7 +242,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const mapping = fieldMappings[field.campo];
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -255,7 +255,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const mapping = fieldMappings[field.campo];
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -391,7 +391,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Origem dos Dados</h3>
         <p className="text-sm text-muted-foreground">
-          Escolha como deseja alimentar os dados do agente <strong>{selectedAgent?.nome}</strong>
+          Escolha como deseja alimentar os dados do agente <strong>{agentName}</strong>
         </p>
       </div>
 
@@ -479,7 +479,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   // ========== STEP 2: Data Input ==========
   // Group fields by categoria
   const getGroupedFields = () => {
-    if (!selectedAgent) return [];
+    // use agentFields directly
     const groups: { categoria: string; fields: AgentDataField[] }[] = [];
     const seen = new Set<string>();
     for (const field of activeFields) {
@@ -495,7 +495,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // Excel template download
   const downloadExcelTemplate = () => {
-    if (!selectedAgent) return;
+    
     const fields = activeFields;
     // Example row with orientation hints
     const exampleRow: Record<string, string> = {};
@@ -537,14 +537,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     const ws = XLSX.utils.json_to_sheet([exampleRow]);
     ws['!cols'] = fields.map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
-    XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, agentName.substring(0, 31));
+    XLSX.writeFile(wb, `modelo_${templateKey}.xlsx`);
     toast.success('Modelo Excel baixado com exemplo de orientação!');
   };
 
   // Excel import
   const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedAgent) return;
+    
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -941,7 +941,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Mapeamento de Campos</h3>
           <p className="text-sm text-muted-foreground">
-            Vincule cada campo do agente <strong>{selectedAgent?.nome}</strong> ao campo correspondente da {dataSource === 'api' ? 'API' : 'tabela'}
+            Vincule cada campo do agente <strong>{agentName}</strong> ao campo correspondente da {dataSource === 'api' ? 'API' : 'tabela'}
           </p>
         </div>
 
@@ -1054,7 +1054,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">Agente</Label>
-              <p className="font-medium flex items-center gap-2"><span>{selectedAgent?.icone}</span> {selectedAgent?.nome}</p>
+              <p className="font-medium flex items-center gap-2"><span>{"🤖"}</span> {agentName}</p>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Origem</Label>
