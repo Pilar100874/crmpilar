@@ -91,8 +91,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
 
-  // Sistema state
-  const [selectedTable, setSelectedTable] = useState('');
+  // Sistema state - multiple tables
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
 
   // Field mapping state (for API and Sistema)
   const [fieldMappings, setFieldMappings] = useState<Record<string, FieldMappingEntry>>({});
@@ -101,18 +101,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
-  // Disabled fields - user can exclude fields they won't use
-  const [disabledFields, setDisabledFields] = useState<Set<string>>(new Set());
 
   // Saving
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
-  // Active fields = all agent fields minus disabled ones
-  const activeFields = useMemo(() => {
-    return agentFields.filter(f => !disabledFields.has(f.campo));
-  }, [agentFields, disabledFields]);
+  // Active fields = all agent fields (all must be used)
+  const activeFields = agentFields;
 
   // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
   const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
