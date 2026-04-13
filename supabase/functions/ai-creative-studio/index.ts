@@ -835,10 +835,21 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
   // Apiframe has a prompt length limit (~500 chars for most models)
   // Truncate long storyboard prompts to a concise version
   if (cleanPrompt.length > 480) {
-    // Try to extract just the product name and style from long prompts
-    const productMatch = cleanPrompt.match(/for "([^"]+)"/);
-    const productName = productMatch?.[1] || '';
-    cleanPrompt = `Cinematic promotional video for "${productName}". Professional product advertising, clean modern style, premium lighting, smooth camera movements. No text overlays, no audio.`;
+    // Build a concise prompt preserving key info about product + influencer
+    const productMatch = cleanPrompt.match(/for "([^"]+)"/) || cleanPrompt.match(/PRODUTO[^:]*:\s*([^\n.]{3,60})/i);
+    const productName = productMatch?.[1]?.trim() || '';
+    const hasInfluencer = /influencer|pessoa|person/i.test(cleanPrompt);
+    const hasHeroFrame = params._heroFrameUsed === true;
+    
+    if (hasHeroFrame) {
+      cleanPrompt = hasInfluencer
+        ? `Animate this image: a person naturally demonstrating and holding the product "${productName}". Cinematic smooth motion, professional lighting. The person and product must remain IDENTICAL to the starting image. No text overlays.`
+        : `Animate this image: cinematic product video for "${productName}". Smooth camera movement, professional lighting. The product must remain IDENTICAL to the starting image. No text overlays.`;
+    } else {
+      cleanPrompt = hasInfluencer
+        ? `Cinematic video: an influencer holding and demonstrating the product "${productName}". Professional advertising, premium lighting. The product must appear exactly as in the reference image. No text overlays.`
+        : `Cinematic promotional video for "${productName}". Professional product advertising, clean modern style, premium lighting, smooth camera movements. No text overlays.`;
+    }
     console.log(`[apiframe-video] Prompt truncated from ${(params.prompt || "").length} chars to ${cleanPrompt.length}`);
   }
   afParams.prompt = cleanPrompt;
@@ -1055,7 +1066,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     const data = await callGateway(LOVABLE_API_KEY, {
       model: "google/gemini-3-pro-image-preview",
       messages: [
-        { role: "system", content: "You are a professional photo compositor. Take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance. The face of any person MUST remain pixel-identical. The packaging of any product MUST remain pixel-identical. You NEVER redraw faces or redesign packaging." },
+        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE PRIORITY is the PRODUCT — it must appear EXACTLY as in the reference photo: same packaging, colors, label, logo, proportions, typography. NEVER redesign, recolor, or modify the product in any way. The PERSON/INFLUENCER must hold or interact with the product naturally — their face must remain identical to the reference. The person should be ACTIVELY DEMONSTRATING the product (holding it, showing it to camera, using it). NEVER separate the person and product — they must be together in the same scene interacting." },
         { role: "user", content: editContent },
       ],
       modalities: ["image", "text"],
@@ -1254,7 +1265,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   }
 
   // Pre-generate hero frame only for providers that support image-to-video
-  const imageToVideoProviders = ["google", "runway", "luma", "stability"];
+  const imageToVideoProviders = ["google", "runway", "luma", "stability", "apiframe"];
   if (hasStrictRefs && imageToVideoProviders.includes(provider)) {
     const heroFrameUrl = await generateHeroFrame(params);
     if (heroFrameUrl) {
@@ -1262,8 +1273,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
-      // Hero frame failed — do NOT proceed with partial references
-      throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
+      // Hero frame failed — continue with original references instead of blocking
+      console.warn(`[generate_video] Hero frame failed for ${provider}, proceeding with original references`);
     }
   }
 
