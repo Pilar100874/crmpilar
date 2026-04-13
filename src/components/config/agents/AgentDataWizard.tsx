@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { AGENT_DATA_REQUIREMENTS, SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
+import { SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
 import { useAgentDataBindings } from '@/hooks/useAgentDataBindings';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,22 @@ import {
   Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
 } from 'lucide-react';
 
+interface CustomFieldFromDB {
+  id: string;
+  nome: string;
+  tipo: string;
+  descricao?: string | null;
+  obrigatorio: boolean;
+  opcoes?: string[] | null;
+  ordem: number;
+}
+
 interface Props {
   estabelecimentoId: string;
   onClose: () => void;
   agentName?: string;
   agentId?: string;
+  customFields: CustomFieldFromDB[];
 }
 
 interface ApiEndpoint {
@@ -43,51 +54,27 @@ interface FieldMappingEntry {
   value: string;
 }
 
-export default function AgentDataWizard({ estabelecimentoId, onClose, agentName, agentId }: Props) {
+export default function AgentDataWizard({ estabelecimentoId, onClose, agentName, agentId, customFields }: Props) {
   const { bindings, loading, upsertBinding, getProgressForAgent } = useAgentDataBindings(estabelecimentoId);
 
-  // Auto-detect template key from agent name
-  const detectedTemplateKey = useMemo(() => {
-    if (!agentName) return null;
-    const lower = agentName.toLowerCase();
-    const match = AGENT_DATA_REQUIREMENTS.find(a => lower.includes(a.nome.toLowerCase().replace('agente ', '').replace('de ', '')));
-    if (match) return match.template_key;
-    const keywords: Record<string, string[]> = {
-      orquestrador: ['orquestrador', 'orchestrador'],
-      comercial: ['comercial', 'vendas', 'venda'],
-      inteligencia_cliente: ['inteligência', 'cliente inteligência'],
-      recompra: ['recompra'],
-      mix_crosssell: ['cross', 'mix', 'up-sell'],
-      financeiro: ['financeiro', 'crédito', 'cobrança'],
-      logistico: ['logístic', 'frete', 'entrega'],
-      margem: ['margem', 'estratégia'],
-      objecoes: ['objeç', 'persuasão'],
-      tecnico: ['técnic', 'suporte técnico'],
-      excecoes: ['exceç'],
-      performance: ['performance', 'desempenho'],
-      pos_venda: ['pós-venda', 'pos venda'],
-      satisfacao: ['satisfação', 'satisfacao'],
-      cadastro_produtos: ['cadastro de produto', 'cadastro produto', 'estoque'],
-      cadastro_clientes: ['cadastro de cliente', 'cadastro cliente'],
-      tabela_precos: ['preço', 'tabela de preço', 'pricing'],
-      gestao_estoque: ['gestão de estoque', 'gestao estoque'],
-    };
-    for (const [key, kws] of Object.entries(keywords)) {
-      if (kws.some(kw => lower.includes(kw))) return key;
-    }
-    return null;
-  }, [agentName]);
+  // Convert custom fields from DB to AgentDataField format
+  const agentFields: AgentDataField[] = useMemo(() => {
+    return customFields.map(f => ({
+      campo: f.id,
+      label: f.nome,
+      descricao: f.descricao || '',
+      tipo: f.tipo === 'lista' ? 'texto' : f.tipo === 'booleano' ? 'texto' : f.tipo,
+      obrigatorio: f.obrigatorio,
+      categoria: 'Campos do Agente',
+      exemplo: f.opcoes?.length ? f.opcoes.join(', ') : undefined,
+    }));
+  }, [customFields]);
 
-  const filteredRequirements = useMemo(() => {
-    if (detectedTemplateKey) {
-      return AGENT_DATA_REQUIREMENTS.filter(a => a.template_key === detectedTemplateKey);
-    }
-    return AGENT_DATA_REQUIREMENTS;
-  }, [detectedTemplateKey]);
+  // Use agentId as the template key for bindings
+  const templateKey = agentId || 'custom';
 
-  // Wizard state
-  const [currentStep, setCurrentStep] = useState(() => detectedTemplateKey ? 0 : 0);
-  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(detectedTemplateKey);
+  // Wizard state — skip Step 0 (agent selection), start at Step 0 = data source
+  const [currentStep, setCurrentStep] = useState(0);
   const [dataSource, setDataSource] = useState<DataSourceType>('manual');
 
   // API state
@@ -122,15 +109,13 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
-  const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
-
   // Active fields = all agent fields minus disabled ones
   const activeFields = useMemo(() => {
-    if (!selectedAgent) return [];
-    return selectedAgent.campos.filter(f => !disabledFields.has(f.campo));
-  }, [selectedAgent, disabledFields]);
+    return agentFields.filter(f => !disabledFields.has(f.campo));
+  }, [agentFields, disabledFields]);
 
-  const STEP_LABELS = ['Agente', 'Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
+  // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
+  const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
