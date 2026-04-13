@@ -674,7 +674,11 @@ export function useStudioExecution() {
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
-            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena INSERINDO esses sujeitos reais.`,
+            hasProduct && hasInfluencer
+              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena, com a pessoa interagindo fisicamente com o produto. O produto é o FOCO PRINCIPAL da imagem.`
+              : '',
+            ``,
+            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena INSERINDO esses sujeitos reais${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}.`,
             imagePositionHint,
             ``,
             referenceDescs.join('\n'),
