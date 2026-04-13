@@ -424,6 +424,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
+            <AgentHelpGuide />
             {agents.length === 0 && (
               <Button variant="outline" onClick={() => setShowSetup(true)}>
                 <Sparkles className="h-4 w-4 mr-2" /> Configuração Rápida
