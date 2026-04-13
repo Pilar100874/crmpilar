@@ -1078,10 +1078,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 0: return renderStep0();
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
+      case 1: return renderStep2();
+      case 2: return renderStep3();
+      case 3: return renderStep4();
       default: return null;
     }
   };
