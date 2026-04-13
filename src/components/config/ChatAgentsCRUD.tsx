@@ -136,6 +136,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [agentToDelete, setAgentToDelete] = useState<ChatAgent | null>(null);
   const [editingAgent, setEditingAgent] = useState<ChatAgent | null>(null);
+  const [dialogTab, setDialogTab] = useState('identidade');
   const [formData, setFormData] = useState<Partial<ChatAgent>>(emptyForm);
   const [apiEndpoints, setApiEndpoints] = useState<ApiEndpoint[]>([]);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
@@ -180,6 +181,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
     setKbFiles([]);
     setInternalKbText('');
+    setDialogTab('identidade');
     setDialogOpen(true);
   };
 
@@ -213,6 +215,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     const internalData = agent.knowledge_base_internal_data || [];
     setInternalKbText(internalData.map((item: any) => typeof item === 'string' ? item : JSON.stringify(item)).join('\n\n'));
     await loadKbFiles(agent.id);
+    setDialogTab('identidade');
     setDialogOpen(true);
   };
 
@@ -221,7 +224,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       toast.error('Nome do agente é obrigatório');
       return;
     }
-    if (!formData.system_prompt?.trim()) {
+    // Prompt obrigatório apenas na edição (agente já existente)
+    if (editingAgent && !formData.system_prompt?.trim()) {
       toast.error('Prompt do sistema é obrigatório');
       return;
     }
@@ -253,7 +257,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             updated_at: newAgent.updated_at,
             estabelecimento_id: newAgent.estabelecimento_id,
           } as any);
-          toast.info('Agente criado! Agora você pode configurar os campos.');
+          setDialogTab('campos');
+          toast.success('Agente criado! Configure os campos do agente.');
         }
         return;
       }
@@ -569,7 +574,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </DialogHeader>
 
           <div className="flex-1 min-h-0 flex overflow-hidden">
-            <Tabs defaultValue="identidade" className="flex-1 min-w-0 flex flex-col overflow-hidden">
+            <Tabs value={dialogTab} onValueChange={setDialogTab} className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
               <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
