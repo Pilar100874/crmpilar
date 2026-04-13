@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, GripVertical, Edit2, X, Save, Lightbulb, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Edit2, X, Save, Lightbulb, ChevronDown, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CustomField {
