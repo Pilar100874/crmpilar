@@ -763,18 +763,10 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
-        // Validate multi-ref compatibility before execution
+        // Multi-ref: product + influencer are handled via enriched text prompt, no blocking needed
         const hasProductRef = inputs.some((i) => i?._referenceRole === 'produto');
         const hasInfluencerRef = inputs.some((i) => i?._referenceRole === 'influencer');
         const selectedVideoModel = config.videoModel || 'free/gif-animated';
-        
-        if (hasProductRef && hasInfluencerRef && selectedVideoModel !== 'free/gif-animated') {
-          throw new Error(
-            '⚠️ O modelo selecionado não suporta múltiplas referências visuais (produto + influencer) em um mesmo vídeo. ' +
-            'Modelos de vídeo geram cenas contínuas e só conseguem focar em um sujeito por vez. ' +
-            'Use o modelo "GIF Animado (Gratuito)" que compõe os elementos frame a frame, ou conecte apenas uma referência (produto OU influencer).'
-          );
-        }
 
         // Check if this is a correction/refinement pass
         const isCorrectionVideo = inputs.some(i => i?._isCorrection);
