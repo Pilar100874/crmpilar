@@ -237,10 +237,25 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       await updateAgent(editingAgent.id, saveData);
     } else {
       const newAgent = await createAgent(saveData);
-      // If orchestrator, switch to workflow tab and auto-open it
-      if (newAgent && (saveData as any).tipo_agente === 'orquestrador') {
-        setAutoOpenOrchestratorId(newAgent.id);
-        setMainTab('orquestrador');
+      if (newAgent) {
+        // If orchestrator, switch to workflow tab and auto-open it
+        if ((saveData as any).tipo_agente === 'orquestrador') {
+          setAutoOpenOrchestratorId(newAgent.id);
+          setMainTab('orquestrador');
+          setDialogOpen(false);
+        } else {
+          // Re-open dialog in edit mode so Campos tab becomes available
+          setEditingAgent(newAgent);
+          setFormData({
+            ...saveData,
+            id: newAgent.id,
+            created_at: newAgent.created_at,
+            updated_at: newAgent.updated_at,
+            estabelecimento_id: newAgent.estabelecimento_id,
+          } as any);
+          toast.info('Agente criado! Agora você pode configurar os campos.');
+        }
+        return;
       }
     }
     setDialogOpen(false);
