@@ -108,13 +108,13 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico', supportsMultiRef: false },
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo', supportsMultiRef: false },
   { value: 'replicate/ltx-video', label: '🔮 LTX-Video 2 (Replicate)', provider: 'Replicate', cost: '$', quality: 4, tip: 'Open source, custo muito baixo (~$0.02/vídeo)', supportsMultiRef: false },
-  // Apiframe video models
-  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
-  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
-  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos', supportsMultiRef: false },
-  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos', supportsMultiRef: false },
-  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos', supportsMultiRef: false },
-  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos', supportsMultiRef: false },
+  // Apiframe video models — these support prompt-based multi-subject composition
+  { value: 'apiframe/midjourney-video', label: '⚡ AF: Midjourney Video', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: true },
+  { value: 'apiframe/runway-gen4', label: '⚡ AF: Runway Gen-4', provider: 'Apiframe', cost: '$$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: true },
+  { value: 'apiframe/runway', label: '⚡ AF: Runway Gen-3', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe, 4 créditos', supportsMultiRef: true },
+  { value: 'apiframe/kling-2.6', label: '⚡ AF: Kling 2.6', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 10-20 créditos', supportsMultiRef: true },
+  { value: 'apiframe/kling-2.5', label: '⚡ AF: Kling 2.5 Turbo', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 10 créditos', supportsMultiRef: true },
+  { value: 'apiframe/luma', label: '⚡ AF: Luma AI', provider: 'Apiframe', cost: '$$', quality: 4, tip: 'Via Apiframe, 6 créditos', supportsMultiRef: true },
   // AIML API video models
   { value: 'aimlapi/runway-gen3', label: '🤖 ML: Runway Gen-3', provider: 'AIML API', cost: '$$', quality: 5, tip: 'Via AIML API, $0.25', supportsMultiRef: false },
   { value: 'aimlapi/kling-v2', label: '🤖 ML: Kling v2', provider: 'AIML API', cost: '$$', quality: 4, tip: 'Via AIML API, $0.28', supportsMultiRef: false },
