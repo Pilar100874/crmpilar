@@ -589,12 +589,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     return filteredImageBase;
   }, [filteredImageBase, hasMultipleSubjectRefs]);
 
-  const filteredVideoFinal = useMemo(() => {
-    if (hasMultipleSubjectRefs) {
-      return filteredVideo.filter(m => m.supportsMultiRef);
-    }
-    return filteredVideo;
-  }, [filteredVideo, hasMultipleSubjectRefs]);
+  // Video models handle multi-subject composition via enriched text prompts, so no filtering needed
+  const filteredVideoFinal = filteredVideo;
 
   const currentVideoModel = config.videoModel || 'free/gif-animated';
   const currentImageModel = config.model || 'google/gemini-2.5-flash-image';
