@@ -291,30 +291,29 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   const canGoNext = (): boolean => {
     switch (currentStep) {
-      case 0: return !!selectedAgentKey;
-      case 1: return true;
-      case 2:
+      case 0: return true; // data source selection
+      case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return !!selectedTable;
         return false;
-      case 3: return true;
+      case 2: return true;
       default: return true;
     }
   };
 
   const handleNext = () => {
-    if (dataSource === 'manual' && currentStep === 2) {
+    if (dataSource === 'manual' && currentStep === 1) {
       // Skip mapping step for manual, go directly to confirmation
-      setCurrentStep(4);
+      setCurrentStep(3);
     } else {
       setCurrentStep(prev => Math.min(prev + 1, totalSteps - 1));
     }
   };
 
   const handleBack = () => {
-    if (dataSource === 'manual' && currentStep === 4) {
-      setCurrentStep(2);
+    if (dataSource === 'manual' && currentStep === 3) {
+      setCurrentStep(1);
     } else {
       setCurrentStep(prev => Math.max(prev - 1, 0));
     }
