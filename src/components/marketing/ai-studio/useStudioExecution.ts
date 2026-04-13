@@ -568,6 +568,31 @@ export function useStudioExecution() {
         
         let enrichedPrompt = combinedInput || 'Uma cena bonita';
 
+        // Inject imageStyle into the prompt
+        const imageStyleValue = config.imageStyle || 'natural';
+        if (imageStyleValue && imageStyleValue !== 'natural') {
+          const imageStyleMap: Record<string, string> = {
+            'vivid': 'Vivid, highly saturated colors with bold contrast.',
+            'anime': 'Anime / Manga art style with cel-shading and stylized features.',
+            'digital-art': 'Digital art illustration, clean lines, vibrant digital painting.',
+            'oil-painting': 'Oil painting style with visible brush strokes and rich textures.',
+            'watercolor': 'Delicate watercolor painting style with soft washes and organic blending.',
+            'pixel-art': 'Pixel art / retro 8-bit style with visible pixels and limited palette.',
+            '3d-render': '3D rendered scene with realistic materials, lighting and depth of field.',
+            'cinematic': 'Cinematic look with dramatic lighting, film grain, and anamorphic lens flare.',
+            'comic': 'Comic book / graphic novel style with bold outlines and halftone shading.',
+            'minimalist': 'Minimalist style with clean composition, few elements, ample negative space.',
+            'sketch': 'Hand-drawn sketch style with pencil or charcoal strokes.',
+            'fantasy': 'Fantasy art style with magical, ethereal atmosphere and otherworldly elements.',
+            'isometric': 'Isometric perspective with clean geometric shapes and balanced composition.',
+            'neon': 'Neon / Cyberpunk aesthetic with glowing lights, dark backgrounds, and futuristic vibes.',
+          };
+          const styleDesc = imageStyleMap[imageStyleValue] || '';
+          if (styleDesc) {
+            enrichedPrompt = `[VISUAL STYLE] ${styleDesc}\n\n${enrichedPrompt}`;
+          }
+        }
+
         // If correction mode, override prompt to be edit-only
         if (isCorrectionImage && correctionSourceImage) {
           enrichedPrompt = [
@@ -736,6 +761,28 @@ export function useStudioExecution() {
 
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
+
+        // Inject videoStyle into the prompt
+        const videoStyleValue = config.videoStyle || 'realistic';
+        if (videoStyleValue && videoStyleValue !== 'realistic') {
+          const videoStyleMap: Record<string, string> = {
+            'cinematic': 'Cinematic style with dramatic lighting, shallow depth of field, and film-grade color grading.',
+            'anime': 'Anime animation style with vibrant colors, expressive characters and dynamic action.',
+            'cartoon': 'Cartoon animation style with exaggerated expressions, bright colors and playful motion.',
+            '3d-animation': '3D animated style with smooth rendering, realistic materials and polished motion.',
+            'stop-motion': 'Stop-motion animation style with tactile textures and frame-by-frame character.',
+            'slow-motion': 'Slow-motion cinematic capture revealing fine details and dramatic tension.',
+            'timelapse': 'Timelapse photography style showing accelerated passage of time with smooth transitions.',
+            'noir': 'Film noir style with high-contrast black and white, dramatic shadows and moody atmosphere.',
+            'vintage': 'Vintage / retro film look with warm tones, grain, light leaks and nostalgic feeling.',
+            'documentary': 'Documentary style with natural lighting, handheld camera feel and authentic atmosphere.',
+            'music-video': 'Music video style with dynamic editing, creative angles and visually striking compositions.',
+          };
+          const styleDesc = videoStyleMap[videoStyleValue] || '';
+          if (styleDesc) {
+            videoPrompt = `[VISUAL STYLE] ${styleDesc}\n\n${videoPrompt}`;
+          }
+        }
 
         // If correction mode, override prompt to preserve original and only apply the fix
         if (isCorrectionVideo && correctionSourceVideo) {
