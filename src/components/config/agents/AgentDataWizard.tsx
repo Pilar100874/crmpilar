@@ -18,7 +18,7 @@ import * as XLSX from 'xlsx';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2, ListChecks
 } from 'lucide-react';
 
 interface CustomFieldFromDB {
@@ -730,43 +730,66 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
 
     if (dataSource === 'sistema') {
-      const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
       const suggestedTables = activeFields.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
+
+      const toggleTable = (tableValue: string) => {
+        setSelectedTables(prev => 
+          prev.includes(tableValue) 
+            ? prev.filter(t => t !== tableValue) 
+            : [...prev, tableValue]
+        );
+      };
 
       return (
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">Selecionar Tabela do Sistema</h3>
-            <p className="text-sm text-muted-foreground">Escolha a tabela que contém os dados para o agente</p>
+            <h3 className="text-lg font-semibold mb-2">Selecionar Tabelas do Sistema</h3>
+            <p className="text-sm text-muted-foreground">Selecione uma ou mais tabelas que contêm os dados para o agente. As colunas serão combinadas no mapeamento.</p>
           </div>
 
           <Card className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label>Tabela do Sistema</Label>
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger><SelectValue placeholder="Selecione uma tabela..." /></SelectTrigger>
-                <SelectContent>
-                  {SYSTEM_TABLES.map(t => (
-                    <SelectItem key={t.value} value={t.value}>
-                      <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4" />
-                        {t.label}
-                        {suggestedTables.includes(t.value) && <Badge variant="secondary" className="text-[10px] ml-1">⭐ Sugerido</Badge>}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tabelas do Sistema</Label>
+              <p className="text-xs text-muted-foreground">Clique para selecionar/deselecionar tabelas. Tabelas sugeridas são marcadas com ⭐.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto">
+                {SYSTEM_TABLES.map(t => {
+                  const isSelected = selectedTables.includes(t.value);
+                  const isSuggested = suggestedTables.includes(t.value);
+                  return (
+                    <div
+                      key={t.value}
+                      onClick={() => toggleTable(t.value)}
+                      className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleTable(t.value)} />
+                      <Database className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium">{t.label}</span>
+                      {isSuggested && <Badge variant="secondary" className="text-[10px] ml-auto">⭐ Sugerido</Badge>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {tbl && (
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium">Colunas disponíveis:</p>
-                <div className="flex flex-wrap gap-1">
-                  {tbl.colunas.map(c => (
-                    <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
-                  ))}
-                </div>
+            {selectedTables.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Colunas disponíveis ({selectedTables.length} tabela(s) selecionada(s)):</p>
+                {selectedTables.map(tblVal => {
+                  const tbl = SYSTEM_TABLES.find(t => t.value === tblVal);
+                  if (!tbl) return null;
+                  return (
+                    <div key={tblVal} className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+                      <p className="text-xs font-semibold text-primary">{tbl.label}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {tbl.colunas.map(c => (
+                          <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -995,7 +1018,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
               <Label className="text-xs text-muted-foreground">Origem</Label>
               <p className="font-medium flex items-center gap-2">
                 {dataSource === 'manual' ? <><FileText className="h-4 w-4" /> Manual</> :
-                 dataSource === 'sistema' ? <><Database className="h-4 w-4" /> Sistema ({SYSTEM_TABLES.find(t => t.value === selectedTable)?.label})</> :
+                 dataSource === 'sistema' ? <><Database className="h-4 w-4" /> Sistema ({selectedTables.map(t => SYSTEM_TABLES.find(s => s.value === t)?.label).filter(Boolean).join(', ')})</> :
                  <><Globe className="h-4 w-4" /> API ({useCustomUrl ? 'URL personalizada' : apiEndpoints.find(e => e.id === selectedApiId)?.name})</>}
               </p>
             </div>
