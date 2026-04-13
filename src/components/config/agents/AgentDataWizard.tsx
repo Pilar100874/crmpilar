@@ -18,7 +18,7 @@ import * as XLSX from 'xlsx';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2, ListChecks
 } from 'lucide-react';
 
 interface CustomFieldFromDB {
@@ -91,8 +91,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
 
-  // Sistema state
-  const [selectedTable, setSelectedTable] = useState('');
+  // Sistema state - multiple tables
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
 
   // Field mapping state (for API and Sistema)
   const [fieldMappings, setFieldMappings] = useState<Record<string, FieldMappingEntry>>({});
@@ -101,18 +101,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
-  // Disabled fields - user can exclude fields they won't use
-  const [disabledFields, setDisabledFields] = useState<Set<string>>(new Set());
 
   // Saving
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
-  // Active fields = all agent fields minus disabled ones
-  const activeFields = useMemo(() => {
-    return agentFields.filter(f => !disabledFields.has(f.campo));
-  }, [agentFields, disabledFields]);
+  // Active fields = all agent fields (all must be used)
+  const activeFields = agentFields;
 
   // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
   const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
@@ -208,12 +204,21 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
   };
 
-  // Get available columns for mapping
+  // Get available columns for mapping (combined from all selected tables)
   const getAvailableColumns = (): string[] => {
     if (dataSource === 'api') return apiHeaders;
     if (dataSource === 'sistema') {
-      const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
-      return tbl?.colunas || [];
+      const allCols: string[] = [];
+      selectedTables.forEach(tblVal => {
+        const tbl = SYSTEM_TABLES.find(t => t.value === tblVal);
+        if (tbl) {
+          tbl.colunas.forEach(c => {
+            const prefixed = selectedTables.length > 1 ? `${tbl.label}.${c}` : c;
+            if (!allCols.includes(prefixed)) allCols.push(prefixed);
+          });
+        }
+      });
+      return allCols;
     }
     return [];
   };
@@ -260,9 +265,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
             label: field.label,
             descricao: field.descricao,
             fonte_tipo: 'sistema',
-            tabela_sistema: selectedTable,
+            tabela_sistema: selectedTables.join(','),
             coluna_sistema: mapping?.value || '__all__',
-            configurado: !!selectedTable,
+            configurado: selectedTables.length > 0,
           });
         }
       }
@@ -283,10 +288,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     setUseCustomUrl(false);
     setApiData([]);
     setApiHeaders([]);
-    setSelectedTable('');
+    setSelectedTables([]);
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
-    setDisabledFields(new Set());
   };
 
   const canGoNext = (): boolean => {
@@ -295,7 +299,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
-        if (dataSource === 'sistema') return !!selectedTable;
+        if (dataSource === 'sistema') return selectedTables.length > 0;
         return false;
       case 2: return true;
       default: return true;
@@ -323,15 +327,6 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // ========== STEP 0: Select Data Source ==========
   const renderStep0 = () => {
-    const toggleField = (campo: string) => {
-      setDisabledFields(prev => {
-        const next = new Set(prev);
-        if (next.has(campo)) next.delete(campo);
-        else next.add(campo);
-        return next;
-      });
-    };
-
     const allCampos = agentFields;
     const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
 
@@ -375,21 +370,16 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         </RadioGroup>
       </Card>
 
-      {/* Field selection - allow user to disable unused fields */}
+      {/* Show all fields that will be used (read-only) */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Campos a utilizar</span>
+            <ListChecks className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Campos que serão configurados</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">{activeFields.length}/{allCampos.length} ativos</Badge>
-            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setDisabledFields(new Set())}>
-              Ativar todos
-            </Button>
-          </div>
+          <Badge variant="outline" className="text-xs">{allCampos.length} campos</Badge>
         </div>
-        <p className="text-xs text-muted-foreground">Desmarque os campos que você não utilizará neste agente.</p>
+        <p className="text-xs text-muted-foreground">Todos os campos da aba Campos serão utilizados na configuração de dados.</p>
         <ScrollArea className="max-h-[250px]">
           <div className="space-y-3">
             {categorias.map(cat => {
@@ -402,18 +392,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1">
                     {catFields.map(f => (
-                      <label
+                      <div
                         key={f.campo}
-                        className={`flex items-center gap-2 p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-muted/50 ${disabledFields.has(f.campo) ? 'opacity-50' : ''}`}
+                        className="flex items-center gap-2 p-1.5 rounded-md text-xs"
                       >
-                        <Checkbox
-                          checked={!disabledFields.has(f.campo)}
-                          onCheckedChange={() => toggleField(f.campo)}
-                          disabled={f.obrigatorio}
-                        />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
                         <span className="truncate">{f.label}</span>
                         {f.obrigatorio && <span className="text-destructive text-[10px]">*</span>}
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -744,43 +730,66 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
 
     if (dataSource === 'sistema') {
-      const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
       const suggestedTables = activeFields.flatMap(c => c.tabelas_sistema_sugeridas || []).filter((v, i, a) => a.indexOf(v) === i) || [];
+
+      const toggleTable = (tableValue: string) => {
+        setSelectedTables(prev => 
+          prev.includes(tableValue) 
+            ? prev.filter(t => t !== tableValue) 
+            : [...prev, tableValue]
+        );
+      };
 
       return (
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">Selecionar Tabela do Sistema</h3>
-            <p className="text-sm text-muted-foreground">Escolha a tabela que contém os dados para o agente</p>
+            <h3 className="text-lg font-semibold mb-2">Selecionar Tabelas do Sistema</h3>
+            <p className="text-sm text-muted-foreground">Selecione uma ou mais tabelas que contêm os dados para o agente. As colunas serão combinadas no mapeamento.</p>
           </div>
 
           <Card className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label>Tabela do Sistema</Label>
-              <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger><SelectValue placeholder="Selecione uma tabela..." /></SelectTrigger>
-                <SelectContent>
-                  {SYSTEM_TABLES.map(t => (
-                    <SelectItem key={t.value} value={t.value}>
-                      <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4" />
-                        {t.label}
-                        {suggestedTables.includes(t.value) && <Badge variant="secondary" className="text-[10px] ml-1">⭐ Sugerido</Badge>}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tabelas do Sistema</Label>
+              <p className="text-xs text-muted-foreground">Clique para selecionar/deselecionar tabelas. Tabelas sugeridas são marcadas com ⭐.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto">
+                {SYSTEM_TABLES.map(t => {
+                  const isSelected = selectedTables.includes(t.value);
+                  const isSuggested = suggestedTables.includes(t.value);
+                  return (
+                    <div
+                      key={t.value}
+                      onClick={() => toggleTable(t.value)}
+                      className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleTable(t.value)} />
+                      <Database className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium">{t.label}</span>
+                      {isSuggested && <Badge variant="secondary" className="text-[10px] ml-auto">⭐ Sugerido</Badge>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {tbl && (
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium">Colunas disponíveis:</p>
-                <div className="flex flex-wrap gap-1">
-                  {tbl.colunas.map(c => (
-                    <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
-                  ))}
-                </div>
+            {selectedTables.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Colunas disponíveis ({selectedTables.length} tabela(s) selecionada(s)):</p>
+                {selectedTables.map(tblVal => {
+                  const tbl = SYSTEM_TABLES.find(t => t.value === tblVal);
+                  if (!tbl) return null;
+                  return (
+                    <div key={tblVal} className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+                      <p className="text-xs font-semibold text-primary">{tbl.label}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {tbl.colunas.map(c => (
+                          <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -1009,7 +1018,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
               <Label className="text-xs text-muted-foreground">Origem</Label>
               <p className="font-medium flex items-center gap-2">
                 {dataSource === 'manual' ? <><FileText className="h-4 w-4" /> Manual</> :
-                 dataSource === 'sistema' ? <><Database className="h-4 w-4" /> Sistema ({SYSTEM_TABLES.find(t => t.value === selectedTable)?.label})</> :
+                 dataSource === 'sistema' ? <><Database className="h-4 w-4" /> Sistema ({selectedTables.map(t => SYSTEM_TABLES.find(s => s.value === t)?.label).filter(Boolean).join(', ')})</> :
                  <><Globe className="h-4 w-4" /> API ({useCustomUrl ? 'URL personalizada' : apiEndpoints.find(e => e.id === selectedApiId)?.name})</>}
               </p>
             </div>
