@@ -846,7 +846,22 @@ export function useStudioExecution() {
         const hasPlacementHintVideo = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLowerVideo);
 
         if (hasProductVideo && hasInfluencerVideo && !hasPlacementHintVideo) {
-          videoPrompt = `${videoPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
+          videoPrompt = [
+            `🎯 OBJETIVO PRINCIPAL DO VÍDEO: A pessoa/influencer deve estar INTERAGINDO ATIVAMENTE com o produto durante todo o vídeo.`,
+            ``,
+            `📦 PRIORIDADE #1 — PRODUTO: O produto é o PROTAGONISTA. Ele DEVE:`,
+            `   - Estar em DESTAQUE VISUAL (posição central ou primeiro plano)`,
+            `   - Ser mostrado de forma clara, nítido e bem iluminado`,
+            `   - Estar sendo SEGURADO, DEMONSTRADO ou APRESENTADO pela pessoa`,
+            `   - Manter TODAS as características visuais da referência`,
+            ``,
+            `👤 PRIORIDADE #2 — INFLUENCER/PESSOA: A pessoa apresenta o produto. Ela DEVE:`,
+            `   - Estar SEGURANDO, USANDO ou DEMONSTRANDO o produto durante o vídeo`,
+            `   - Interagir fisicamente com o produto (não apenas estar ao lado)`,
+            `   - Manter o mesmo rosto e aparência da referência`,
+            ``,
+            videoPrompt,
+          ].join('\n');
         }
 
         // Inject platform format dimensions
