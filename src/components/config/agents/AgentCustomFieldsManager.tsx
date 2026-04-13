@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, GripVertical, Edit2, X, Save, Lightbulb, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Edit2, X, Save, Lightbulb, ChevronDown, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CustomField {
@@ -261,15 +261,18 @@ interface Props {
   agentId: string;
   estabelecimentoId: string;
   agentDomain?: string;
+  agentName?: string;
+  agentDescription?: string;
 }
 
-export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, agentDomain }: Props) {
+export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, agentDomain, agentName, agentDescription }: Props) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<CustomField>>({});
   const [newOptionText, setNewOptionText] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [generatingDescriptions, setGeneratingDescriptions] = useState(false);
 
   const loadFields = useCallback(async () => {
     setLoading(true);
@@ -434,6 +437,54 @@ export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, a
     setEditForm({ ...editForm, opcoes: current.filter((_, i) => i !== idx) });
   };
 
+  const handleGenerateDescriptions = async () => {
+    const activeFields = fields.filter(f => f.ativo);
+    if (activeFields.length === 0) {
+      toast.error('Adicione campos antes de gerar descrições');
+      return;
+    }
+    setGeneratingDescriptions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-field-descriptions', {
+        body: {
+          agentName: agentName || 'Agente',
+          agentDescription: agentDescription || '',
+          fields: activeFields.map(f => ({
+            nome: f.nome,
+            tipo: f.tipo,
+            obrigatorio: f.obrigatorio,
+            descricao: f.descricao || '',
+          })),
+        },
+      });
+      if (error) throw error;
+      const generated = data?.fields || [];
+      if (generated.length === 0) {
+        toast.error('Nenhuma descrição foi gerada');
+        return;
+      }
+      // Update each field with the generated description
+      let updated = 0;
+      for (const gen of generated) {
+        const field = fields.find(f => f.nome.toLowerCase() === gen.nome.toLowerCase());
+        if (field?.id) {
+          const { error: upErr } = await supabase
+            .from('chat_agent_custom_fields')
+            .update({ descricao: gen.descricao } as any)
+            .eq('id', field.id);
+          if (!upErr) updated++;
+        }
+      }
+      await loadFields();
+      toast.success(`${updated} descrição(ões) gerada(s) com IA! Revise e ajuste conforme necessário.`);
+    } catch (err: any) {
+      console.error('Error generating descriptions:', err);
+      toast.error(err?.message || 'Erro ao gerar descrições');
+    } finally {
+      setGeneratingDescriptions(false);
+    }
+  };
+
   // Determinar sugestões para o domínio atual
   const domainSuggestions = agentDomain && SUGGESTED_FIELDS[agentDomain]
     ? SUGGESTED_FIELDS[agentDomain]
@@ -449,6 +500,18 @@ export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, a
           <p className="text-xs text-muted-foreground">Defina os campos que este agente deve conhecer e utilizar</p>
         </div>
         <div className="flex gap-2">
+          {fields.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateDescriptions}
+              disabled={generatingDescriptions}
+              className="gap-1"
+            >
+              {generatingDescriptions ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-primary" />}
+              {generatingDescriptions ? 'Gerando...' : 'Gerar Descrições com IA'}
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => setShowSuggestions(!showSuggestions)} className="gap-1">
             <Lightbulb className="h-3 w-3 text-yellow-500" /> Sugestões
           </Button>

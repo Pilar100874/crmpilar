@@ -761,6 +761,8 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     agentId={editingAgent.id}
                     estabelecimentoId={estabelecimentoId}
                     agentDomain={detectAgentDomain(editingAgent.nome)}
+                    agentName={editingAgent.nome}
+                    agentDescription={editingAgent.descricao || ''}
                   />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground text-sm">
