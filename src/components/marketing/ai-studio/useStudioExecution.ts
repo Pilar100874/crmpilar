@@ -1722,7 +1722,8 @@ export function useStudioExecution() {
           nodeResultStore.setError(nodeId, errMsg);
           updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: errMsg });
           toast.error(`Erro no bloco "${nd.label}": ${errMsg.substring(0, 100)}`, { duration: 6000 });
-          // Continue to next node instead of aborting the whole workflow
+          // Stop execution on error
+          break;
         }
       }
     } finally {
