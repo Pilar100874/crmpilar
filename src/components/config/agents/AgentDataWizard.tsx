@@ -204,12 +204,21 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
   };
 
-  // Get available columns for mapping
+  // Get available columns for mapping (combined from all selected tables)
   const getAvailableColumns = (): string[] => {
     if (dataSource === 'api') return apiHeaders;
     if (dataSource === 'sistema') {
-      const tbl = SYSTEM_TABLES.find(t => t.value === selectedTable);
-      return tbl?.colunas || [];
+      const allCols: string[] = [];
+      selectedTables.forEach(tblVal => {
+        const tbl = SYSTEM_TABLES.find(t => t.value === tblVal);
+        if (tbl) {
+          tbl.colunas.forEach(c => {
+            const prefixed = selectedTables.length > 1 ? `${tbl.label}.${c}` : c;
+            if (!allCols.includes(prefixed)) allCols.push(prefixed);
+          });
+        }
+      });
+      return allCols;
     }
     return [];
   };
