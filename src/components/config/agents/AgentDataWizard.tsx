@@ -265,9 +265,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
             label: field.label,
             descricao: field.descricao,
             fonte_tipo: 'sistema',
-            tabela_sistema: selectedTable,
+            tabela_sistema: selectedTables.join(','),
             coluna_sistema: mapping?.value || '__all__',
-            configurado: !!selectedTable,
+            configurado: selectedTables.length > 0,
           });
         }
       }
@@ -288,10 +288,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     setUseCustomUrl(false);
     setApiData([]);
     setApiHeaders([]);
-    setSelectedTable('');
+    setSelectedTables([]);
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
-    setDisabledFields(new Set());
   };
 
   const canGoNext = (): boolean => {
@@ -300,7 +299,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
-        if (dataSource === 'sistema') return !!selectedTable;
+        if (dataSource === 'sistema') return selectedTables.length > 0;
         return false;
       case 2: return true;
       default: return true;
