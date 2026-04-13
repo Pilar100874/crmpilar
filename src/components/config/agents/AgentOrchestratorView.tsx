@@ -201,7 +201,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     return allAgents.find(a => a.id === selectedNodeId) || null;
   }, [selectedNodeId, allAgents]);
 
-  const orchestratorIdRef = React.useRef(orchestrator.id);
+  const orchestratorIdRef = useRef(orchestrator.id);
   useEffect(() => {
     // Only rebuild layout if orchestrator changed or no unsaved changes
     if (orchestratorIdRef.current !== orchestrator.id || !hasChanges) {
