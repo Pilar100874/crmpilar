@@ -267,12 +267,24 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     }];
     const newEdges: any[] = [];
 
+    // If adding a specialist (not orchestrator), auto-link to the main orchestrator
+    if (agent.tipo_agente !== 'orquestrador' && agent.id !== orchestrator.id) {
+      const edgeId = `e-${orchestrator.id}-${agent.id}`;
+      newEdges.push({
+        id: edgeId,
+        source: orchestrator.id,
+        target: agent.id,
+        animated: true,
+        style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
+      });
+    }
+
     // If the agent is an orchestrator with existing sub-agents, auto-add them
     if (agent.tipo_agente === 'orquestrador' && agent.sub_agent_ids && agent.sub_agent_ids.length > 0) {
       const existingNodeIds = new Set(nodes.map(n => n.id));
       agent.sub_agent_ids.forEach((subId, idx) => {
         if (existingNodeIds.has(subId)) {
-          // Sub-agent already on canvas, just create edge
           newEdges.push({
             id: `e-${agent.id}-${subId}`,
             source: agent.id,
@@ -315,7 +327,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
       ? `${agent.nome} adicionado com ${subCount} sub-agente(s)` 
       : `${agent.nome} adicionado`
     );
-  }, [nodes, setNodes, setEdges, allAgents]);
+  }, [nodes, setNodes, setEdges, allAgents, orchestrator.id]);
 
   const handleRemoveFromCanvas = useCallback((agentId: string) => {
     if (agentId === orchestrator.id) { toast.error('Não é possível remover o orquestrador raiz'); return; }
