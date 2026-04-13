@@ -261,15 +261,18 @@ interface Props {
   agentId: string;
   estabelecimentoId: string;
   agentDomain?: string;
+  agentName?: string;
+  agentDescription?: string;
 }
 
-export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, agentDomain }: Props) {
+export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, agentDomain, agentName, agentDescription }: Props) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<CustomField>>({});
   const [newOptionText, setNewOptionText] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [generatingDescriptions, setGeneratingDescriptions] = useState(false);
 
   const loadFields = useCallback(async () => {
     setLoading(true);
