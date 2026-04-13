@@ -410,16 +410,6 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       </Card>
     </div>
   )};
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </Card>
-    </div>
-  )};
 
   // ========== STEP 2: Data Input ==========
   // Group fields by categoria
