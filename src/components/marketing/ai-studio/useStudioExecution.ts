@@ -136,6 +136,74 @@ export function useStudioExecution() {
     return result;
   };
 
+  const waitForStudioDelay = (ms: number) => new Promise<void>((resolve, reject) => {
+    const globalSignal = abortRef.current?.signal;
+    if (globalSignal?.aborted) {
+      reject(new Error('Execução cancelada pelo usuário.'));
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      globalSignal?.removeEventListener('abort', handleAbort);
+      resolve();
+    }, ms);
+
+    function handleAbort() {
+      window.clearTimeout(timer);
+      globalSignal?.removeEventListener('abort', handleAbort);
+      reject(new Error('Execução cancelada pelo usuário.'));
+    }
+
+    globalSignal?.addEventListener('abort', handleAbort, { once: true });
+  });
+
+  const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
+    const started = await callStudio('start_apiframe_video', params, 60000);
+
+    if (started?.error) {
+      throw new Error(started.error);
+    }
+
+    if (started?.videoUrl) {
+      return started;
+    }
+
+    const taskId = started?.taskId;
+    if (!taskId) {
+      throw new Error('O provedor de vídeo não retornou o identificador da tarefa.');
+    }
+
+    const totalPolls = Math.max(1, Math.ceil(maxWaitMs / 5000));
+
+    for (let attempt = 0; attempt < totalPolls; attempt += 1) {
+      await waitForStudioDelay(5000);
+
+      const pollResult = await callStudio('fetch_apiframe_video', {
+        estabelecimentoId: params.estabelecimentoId,
+        taskId,
+      }, 60000);
+
+      if (pollResult?.error) {
+        throw new Error(pollResult.error);
+      }
+
+      if (pollResult?.done && pollResult?.videoUrl) {
+        return {
+          videoUrl: pollResult.videoUrl,
+          thumbnailUrl: pollResult.thumbnailUrl || started?.thumbnailUrl,
+          provider: pollResult.provider || started?.provider || 'apiframe',
+          providerVideoId: pollResult.providerVideoId || started?.providerVideoId,
+        };
+      }
+
+      if (pollResult?.done) {
+        throw new Error('A geração foi concluída, mas o vídeo não foi retornado.');
+      }
+    }
+
+    throw new Error('timeout:A geração de vídeo demorou mais de 10 minutos. Tente novamente.');
+  };
+
   const getExecutionOrder = (nodes: StudioNode[], edges: StudioEdge[]): string[] => {
     const inDegree = new Map<string, number>();
     const adj = new Map<string, string[]>();
@@ -924,7 +992,7 @@ export function useStudioExecution() {
             const effectiveWithAudio = config.withAudio ?? true;
             const effectiveWithMusic = effectiveWithAudio ? (config.withMusic ?? true) : false;
 
-            const result = await callStudio('generate_video', {
+            const videoRequestParams = {
               prompt: videoPrompt,
               model: effectiveVideoModel,
               aspectRatio,
@@ -947,7 +1015,12 @@ export function useStudioExecution() {
               sourceVideoId: correctionSourceProviderVideoId,
               sourceProvider: correctionSourceProvider,
               estabelecimentoId: estabId,
-            }, 300000); // 5 min timeout for video generation
+            };
+
+            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/');
+            const result = usesAsyncVideoTask
+              ? await generateAsyncStudioVideo(videoRequestParams)
+              : await callStudio('generate_video', videoRequestParams, 300000);
             
             if (result?.videoUrl) {
               return {
