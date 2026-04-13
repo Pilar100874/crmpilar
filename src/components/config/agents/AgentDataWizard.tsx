@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { AGENT_DATA_REQUIREMENTS, SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
+import { SYSTEM_TABLES, AgentDataField, AgentDataRequirement } from '@/constants/agentDataRequirements';
 import { useAgentDataBindings } from '@/hooks/useAgentDataBindings';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,22 @@ import {
   Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2
 } from 'lucide-react';
 
+interface CustomFieldFromDB {
+  id: string;
+  nome: string;
+  tipo: string;
+  descricao?: string | null;
+  obrigatorio: boolean;
+  opcoes?: string[] | null;
+  ordem: number;
+}
+
 interface Props {
   estabelecimentoId: string;
   onClose: () => void;
   agentName?: string;
   agentId?: string;
+  customFields: CustomFieldFromDB[];
 }
 
 interface ApiEndpoint {
@@ -43,51 +54,27 @@ interface FieldMappingEntry {
   value: string;
 }
 
-export default function AgentDataWizard({ estabelecimentoId, onClose, agentName, agentId }: Props) {
+export default function AgentDataWizard({ estabelecimentoId, onClose, agentName, agentId, customFields }: Props) {
   const { bindings, loading, upsertBinding, getProgressForAgent } = useAgentDataBindings(estabelecimentoId);
 
-  // Auto-detect template key from agent name
-  const detectedTemplateKey = useMemo(() => {
-    if (!agentName) return null;
-    const lower = agentName.toLowerCase();
-    const match = AGENT_DATA_REQUIREMENTS.find(a => lower.includes(a.nome.toLowerCase().replace('agente ', '').replace('de ', '')));
-    if (match) return match.template_key;
-    const keywords: Record<string, string[]> = {
-      orquestrador: ['orquestrador', 'orchestrador'],
-      comercial: ['comercial', 'vendas', 'venda'],
-      inteligencia_cliente: ['inteligência', 'cliente inteligência'],
-      recompra: ['recompra'],
-      mix_crosssell: ['cross', 'mix', 'up-sell'],
-      financeiro: ['financeiro', 'crédito', 'cobrança'],
-      logistico: ['logístic', 'frete', 'entrega'],
-      margem: ['margem', 'estratégia'],
-      objecoes: ['objeç', 'persuasão'],
-      tecnico: ['técnic', 'suporte técnico'],
-      excecoes: ['exceç'],
-      performance: ['performance', 'desempenho'],
-      pos_venda: ['pós-venda', 'pos venda'],
-      satisfacao: ['satisfação', 'satisfacao'],
-      cadastro_produtos: ['cadastro de produto', 'cadastro produto', 'estoque'],
-      cadastro_clientes: ['cadastro de cliente', 'cadastro cliente'],
-      tabela_precos: ['preço', 'tabela de preço', 'pricing'],
-      gestao_estoque: ['gestão de estoque', 'gestao estoque'],
-    };
-    for (const [key, kws] of Object.entries(keywords)) {
-      if (kws.some(kw => lower.includes(kw))) return key;
-    }
-    return null;
-  }, [agentName]);
+  // Convert custom fields from DB to AgentDataField format
+  const agentFields: AgentDataField[] = useMemo(() => {
+    return customFields.map(f => ({
+      campo: f.id,
+      label: f.nome,
+      descricao: f.descricao || '',
+      tipo: (f.tipo === 'lista' ? 'texto' : f.tipo === 'booleano' ? 'texto' : f.tipo) as AgentDataField['tipo'],
+      obrigatorio: f.obrigatorio,
+      categoria: 'Campos do Agente',
+      exemplo: f.opcoes?.length ? f.opcoes.join(', ') : undefined,
+    }));
+  }, [customFields]);
 
-  const filteredRequirements = useMemo(() => {
-    if (detectedTemplateKey) {
-      return AGENT_DATA_REQUIREMENTS.filter(a => a.template_key === detectedTemplateKey);
-    }
-    return AGENT_DATA_REQUIREMENTS;
-  }, [detectedTemplateKey]);
+  // Use agentId as the template key for bindings
+  const templateKey = agentId || 'custom';
 
-  // Wizard state
-  const [currentStep, setCurrentStep] = useState(() => detectedTemplateKey ? 0 : 0);
-  const [selectedAgentKey, setSelectedAgentKey] = useState<string | null>(detectedTemplateKey);
+  // Wizard state — skip Step 0 (agent selection), start at Step 0 = data source
+  const [currentStep, setCurrentStep] = useState(0);
   const [dataSource, setDataSource] = useState<DataSourceType>('manual');
 
   // API state
@@ -122,15 +109,13 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [saved, setSaved] = useState(false);
   const [goToRow, setGoToRow] = useState('');
 
-  const selectedAgent = selectedAgentKey ? AGENT_DATA_REQUIREMENTS.find(a => a.template_key === selectedAgentKey) : null;
-
   // Active fields = all agent fields minus disabled ones
   const activeFields = useMemo(() => {
-    if (!selectedAgent) return [];
-    return selectedAgent.campos.filter(f => !disabledFields.has(f.campo));
-  }, [selectedAgent, disabledFields]);
+    return agentFields.filter(f => !disabledFields.has(f.campo));
+  }, [agentFields, disabledFields]);
 
-  const STEP_LABELS = ['Agente', 'Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
+  // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
+  const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
@@ -142,10 +127,10 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       .then(({ data }) => { if (data) setApiEndpoints(data as ApiEndpoint[]); });
   }, [estabelecimentoId]);
 
-  // Pre-fill manual values and mappings from existing bindings when agent is selected
+  // Pre-fill manual values and mappings from existing bindings
   useEffect(() => {
-    if (!selectedAgentKey || !selectedAgent) return;
-    const agentBindings = bindings.filter(b => b.agent_template_key === selectedAgentKey);
+    if (!templateKey) return;
+    const agentBindings = bindings.filter(b => b.agent_template_key === templateKey);
     const mv: Record<string, string> = {};
     const fm: Record<string, FieldMappingEntry> = {};
     agentBindings.forEach(b => {
@@ -161,7 +146,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     });
     setManualValues(mv);
     setFieldMappings(fm);
-  }, [selectedAgentKey, bindings]);
+  }, [templateKey, bindings]);
 
   // Progress simulation
   const startProgress = () => {
@@ -235,7 +220,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // Save all mappings
   const handleSave = async () => {
-    if (!selectedAgent) return;
+    
     setSaving(true);
     try {
       for (const field of activeFields) {
@@ -245,7 +230,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const val = allValues.length > 0 ? JSON.stringify(allValues.map(row => row[field.campo] || '')) : (manualValues[field.campo] || '');
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -257,7 +242,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const mapping = fieldMappings[field.campo];
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -270,7 +255,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           const mapping = fieldMappings[field.campo];
           await upsertBinding({
             estabelecimento_id: estabelecimentoId,
-            agent_template_key: selectedAgent.template_key,
+            agent_template_key: templateKey,
             campo: field.campo,
             label: field.label,
             descricao: field.descricao,
@@ -306,30 +291,29 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   const canGoNext = (): boolean => {
     switch (currentStep) {
-      case 0: return !!selectedAgentKey;
-      case 1: return true;
-      case 2:
+      case 0: return true; // data source selection
+      case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return !!selectedTable;
         return false;
-      case 3: return true;
+      case 2: return true;
       default: return true;
     }
   };
 
   const handleNext = () => {
-    if (dataSource === 'manual' && currentStep === 2) {
+    if (dataSource === 'manual' && currentStep === 1) {
       // Skip mapping step for manual, go directly to confirmation
-      setCurrentStep(4);
+      setCurrentStep(3);
     } else {
       setCurrentStep(prev => Math.min(prev + 1, totalSteps - 1));
     }
   };
 
   const handleBack = () => {
-    if (dataSource === 'manual' && currentStep === 4) {
-      setCurrentStep(2);
+    if (dataSource === 'manual' && currentStep === 3) {
+      setCurrentStep(1);
     } else {
       setCurrentStep(prev => Math.max(prev - 1, 0));
     }
@@ -337,58 +321,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   if (loading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
-  // ========== STEP 0: Select Agent ==========
-  const renderStep0 = () => (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Selecione o Agente</h3>
-        <p className="text-sm text-muted-foreground">Escolha qual agente deseja configurar os dados</p>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {filteredRequirements.map(agent => {
-          const prog = getProgressForAgent(agent.template_key, agent.campos.length);
-          const configuredCount = bindings.filter(b => b.agent_template_key === agent.template_key && b.configurado).length;
-          const isSelected = selectedAgentKey === agent.template_key;
-          return (
-            <Card
-              key={agent.template_key}
-              className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:ring-2 hover:ring-primary/50'}`}
-              onClick={() => { setSelectedAgentKey(agent.template_key); resetWizardState(); }}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{agent.icone}</span>
-                  <div className="flex-1">
-                    <CardTitle className="text-sm">{agent.nome}</CardTitle>
-                    <CardDescription className="text-xs">{configuredCount}/{agent.campos.length} campos</CardDescription>
-                  </div>
-                  {prog === 100 ? <CheckCircle2 className="h-5 w-5 text-green-500" /> :
-                   prog > 0 ? <Badge variant="outline" className="text-xs">{prog}%</Badge> :
-                   <AlertCircle className="h-5 w-5 text-muted-foreground" />}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Progress value={prog} className="h-1.5" />
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {agent.campos.map(c => {
-                    const bound = bindings.find(b => b.agent_template_key === agent.template_key && b.campo === c.campo && b.configurado);
-                    return (
-                      <Badge key={c.campo} variant={bound ? 'default' : 'outline'} className="text-[10px]">
-                        {bound ? (bound.fonte_tipo === 'sistema' ? '🗄️' : bound.fonte_tipo === 'api' ? '🌐' : '✏️') : '○'} {c.label}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  // ========== STEP 1: Select Data Source ==========
-  const renderStep1 = () => {
+  // ========== STEP 0: Select Data Source ==========
+  const renderStep0 = () => {
     const toggleField = (campo: string) => {
       setDisabledFields(prev => {
         const next = new Set(prev);
@@ -398,7 +332,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       });
     };
 
-    const allCampos = selectedAgent?.campos || [];
+    const allCampos = agentFields;
     const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
 
     return (
@@ -406,7 +340,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Origem dos Dados</h3>
         <p className="text-sm text-muted-foreground">
-          Escolha como deseja alimentar os dados do agente <strong>{selectedAgent?.nome}</strong>
+          Escolha como deseja alimentar os dados do agente <strong>{agentName}</strong>
         </p>
       </div>
 
@@ -494,7 +428,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   // ========== STEP 2: Data Input ==========
   // Group fields by categoria
   const getGroupedFields = () => {
-    if (!selectedAgent) return [];
+    // use agentFields directly
     const groups: { categoria: string; fields: AgentDataField[] }[] = [];
     const seen = new Set<string>();
     for (const field of activeFields) {
@@ -510,7 +444,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // Excel template download
   const downloadExcelTemplate = () => {
-    if (!selectedAgent) return;
+    
     const fields = activeFields;
     // Example row with orientation hints
     const exampleRow: Record<string, string> = {};
@@ -552,14 +486,14 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     const ws = XLSX.utils.json_to_sheet([exampleRow]);
     ws['!cols'] = fields.map(() => ({ wch: 22 }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, selectedAgent.nome.substring(0, 31));
-    XLSX.writeFile(wb, `modelo_${selectedAgent.template_key}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, (agentName || 'Agente').substring(0, 31));
+    XLSX.writeFile(wb, `modelo_${templateKey}.xlsx`);
     toast.success('Modelo Excel baixado com exemplo de orientação!');
   };
 
   // Excel import
   const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedAgent) return;
+    
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -956,7 +890,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Mapeamento de Campos</h3>
           <p className="text-sm text-muted-foreground">
-            Vincule cada campo do agente <strong>{selectedAgent?.nome}</strong> ao campo correspondente da {dataSource === 'api' ? 'API' : 'tabela'}
+            Vincule cada campo do agente <strong>{agentName}</strong> ao campo correspondente da {dataSource === 'api' ? 'API' : 'tabela'}
           </p>
         </div>
 
@@ -1069,7 +1003,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">Agente</Label>
-              <p className="font-medium flex items-center gap-2"><span>{selectedAgent?.icone}</span> {selectedAgent?.nome}</p>
+              <p className="font-medium flex items-center gap-2"><span>{"🤖"}</span> {agentName}</p>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Origem</Label>
@@ -1144,10 +1078,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 0: return renderStep0();
-      case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
+      case 1: return renderStep2();
+      case 2: return renderStep3();
+      case 3: return renderStep4();
       default: return null;
     }
   };
@@ -1184,7 +1117,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         </div>
         <div className="flex gap-2">
           {saved && currentStep === totalSteps - 1 && (
-            <Button variant="outline" onClick={() => { setSaved(false); setCurrentStep(2); }}>
+            <Button variant="outline" onClick={() => { setSaved(false); setCurrentStep(1); }}>
               <Edit2 className="h-4 w-4 mr-1" /> Editar Dados
             </Button>
           )}

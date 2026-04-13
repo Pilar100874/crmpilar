@@ -32,11 +32,16 @@ import { AGENT_TEMPLATES } from '@/constants/agentTemplates';
 
 function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabelecimentoId: string; agentId?: string; agentName?: string }) {
   const [hasFields, setHasFields] = useState<boolean | null>(null);
+  const [customFields, setCustomFields] = useState<any[]>([]);
   useEffect(() => {
     if (!agentId) return;
-    supabase.from('chat_agent_custom_fields').select('id', { count: 'exact', head: true })
-      .eq('agent_id', agentId).eq('ativo', true)
-      .then(({ count }) => setHasFields((count ?? 0) > 0));
+    supabase.from('chat_agent_custom_fields').select('*')
+      .eq('agent_id', agentId).eq('ativo', true).order('ordem')
+      .then(({ data, count }) => {
+        const fields = data || [];
+        setCustomFields(fields);
+        setHasFields(fields.length > 0);
+      });
   }, [agentId]);
 
   if (hasFields === null) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -49,7 +54,7 @@ function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabe
       </div>
     </div>
   );
-  return <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} agentName={agentName} agentId={agentId} />;
+  return <AgentDataWizard estabelecimentoId={estabelecimentoId} onClose={() => {}} agentName={agentName} agentId={agentId} customFields={customFields} />;
 }
 
 const detectAgentDomain = (agentName: string): string | undefined => {
