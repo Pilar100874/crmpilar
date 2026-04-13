@@ -201,12 +201,17 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
     return allAgents.find(a => a.id === selectedNodeId) || null;
   }, [selectedNodeId, allAgents]);
 
+  const orchestratorIdRef = useRef(orchestrator.id);
   useEffect(() => {
-    const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
-    setNodes(layout.nodes);
-    setEdges(layout.edges);
-    setHasChanges(false);
-    setWorkflowName(orchestrator.nome);
+    // Only rebuild layout if orchestrator changed or no unsaved changes
+    if (orchestratorIdRef.current !== orchestrator.id || !hasChanges) {
+      const layout = buildWorkflowLayout(orchestrator, allAgents, disabledNodes);
+      setNodes(layout.nodes);
+      setEdges(layout.edges);
+      setHasChanges(false);
+      setWorkflowName(orchestrator.nome);
+      orchestratorIdRef.current = orchestrator.id;
+    }
   }, [orchestrator, allAgents]);
 
   useEffect(() => {
