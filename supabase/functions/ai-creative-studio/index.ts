@@ -1254,7 +1254,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   }
 
   // Pre-generate hero frame only for providers that support image-to-video
-  const imageToVideoProviders = ["google", "runway", "luma", "stability"];
+  const imageToVideoProviders = ["google", "runway", "luma", "stability", "apiframe"];
   if (hasStrictRefs && imageToVideoProviders.includes(provider)) {
     const heroFrameUrl = await generateHeroFrame(params);
     if (heroFrameUrl) {
@@ -1262,8 +1262,8 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
-      // Hero frame failed — do NOT proceed with partial references
-      throw new Error("hero_frame_failed:Não foi possível compor a imagem de referência com todos os elementos (produto, influencer, etc.). O servidor de composição está temporariamente indisponível. Tente novamente em alguns instantes.");
+      // Hero frame failed — continue with original references instead of blocking
+      console.warn(`[generate_video] Hero frame failed for ${provider}, proceeding with original references`);
     }
   }
 
