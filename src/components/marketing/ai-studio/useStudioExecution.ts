@@ -621,7 +621,29 @@ export function useStudioExecution() {
           enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px). Compose the image to fit this exact aspect ratio perfectly.`;
         }
         if (hasProduct && hasInfluencer && !hasPlacementHint) {
-          enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
+          enrichedPrompt = [
+            `🎯 OBJETIVO PRINCIPAL DA IMAGEM: A pessoa/influencer da referência deve estar INTERAGINDO ATIVAMENTE com o produto.`,
+            ``,
+            `📦 PRIORIDADE #1 — PRODUTO: O produto é o PROTAGONISTA da imagem. Ele DEVE:`,
+            `   - Estar em DESTAQUE VISUAL (posição central ou em primeiro plano)`,
+            `   - Ser mostrado de forma clara, nítido e bem iluminado`,
+            `   - Estar sendo SEGURADO NA MÃO da pessoa, DEMONSTRADO em uso, ou APRESENTADO pela pessoa`,
+            `   - Manter TODAS as características visuais da referência (cores, rótulo, formato, logo)`,
+            ``,
+            `👤 PRIORIDADE #2 — INFLUENCER/PESSOA: A pessoa SERVE como apresentadora do produto. Ela DEVE:`,
+            `   - Estar SEGURANDO, USANDO ou DEMONSTRANDO o produto de forma natural e elegante`,
+            `   - Olhar para o produto ou para a câmera com expressão positiva/confiante`,
+            `   - Manter o mesmo rosto e aparência da referência`,
+            `   - A pose deve ser de DEMONSTRAÇÃO/APRESENTAÇÃO (não apenas existir ao lado do produto)`,
+            ``,
+            `❌ PROIBIDO:`,
+            `   - NÃO coloque o produto e a pessoa separados ou distantes`,
+            `   - NÃO gere a pessoa sem interagir com o produto`,
+            `   - NÃO esconda o produto atrás da pessoa ou em segundo plano`,
+            `   - NÃO faça o produto parecer pequeno demais ou irrelevante na composição`,
+            ``,
+            enrichedPrompt,
+          ].join('\n');
         }
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
