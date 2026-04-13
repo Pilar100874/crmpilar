@@ -327,15 +327,6 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // ========== STEP 0: Select Data Source ==========
   const renderStep0 = () => {
-    const toggleField = (campo: string) => {
-      setDisabledFields(prev => {
-        const next = new Set(prev);
-        if (next.has(campo)) next.delete(campo);
-        else next.add(campo);
-        return next;
-      });
-    };
-
     const allCampos = agentFields;
     const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
 
@@ -379,21 +370,16 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
         </RadioGroup>
       </Card>
 
-      {/* Field selection - allow user to disable unused fields */}
+      {/* Show all fields that will be used (read-only) */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <EyeOff className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Campos a utilizar</span>
+            <ListChecks className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Campos que serão configurados</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">{activeFields.length}/{allCampos.length} ativos</Badge>
-            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setDisabledFields(new Set())}>
-              Ativar todos
-            </Button>
-          </div>
+          <Badge variant="outline" className="text-xs">{allCampos.length} campos</Badge>
         </div>
-        <p className="text-xs text-muted-foreground">Desmarque os campos que você não utilizará neste agente.</p>
+        <p className="text-xs text-muted-foreground">Todos os campos da aba Campos serão utilizados na configuração de dados.</p>
         <ScrollArea className="max-h-[250px]">
           <div className="space-y-3">
             {categorias.map(cat => {
@@ -406,18 +392,24 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1">
                     {catFields.map(f => (
-                      <label
+                      <div
                         key={f.campo}
-                        className={`flex items-center gap-2 p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-muted/50 ${disabledFields.has(f.campo) ? 'opacity-50' : ''}`}
+                        className="flex items-center gap-2 p-1.5 rounded-md text-xs"
                       >
-                        <Checkbox
-                          checked={!disabledFields.has(f.campo)}
-                          onCheckedChange={() => toggleField(f.campo)}
-                          disabled={f.obrigatorio}
-                        />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
                         <span className="truncate">{f.label}</span>
                         {f.obrigatorio && <span className="text-destructive text-[10px]">*</span>}
-                      </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </Card>
+    </div>
+  )};
                     ))}
                   </div>
                 </div>
