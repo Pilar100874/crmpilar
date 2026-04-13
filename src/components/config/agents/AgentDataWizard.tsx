@@ -321,58 +321,8 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   if (loading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
-  // ========== STEP 0: Select Agent ==========
-  const renderStep0 = () => (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Selecione o Agente</h3>
-        <p className="text-sm text-muted-foreground">Escolha qual agente deseja configurar os dados</p>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {filteredRequirements.map(agent => {
-          const prog = getProgressForAgent(agent.template_key, agent.campos.length);
-          const configuredCount = bindings.filter(b => b.agent_template_key === agent.template_key && b.configurado).length;
-          const isSelected = selectedAgentKey === agent.template_key;
-          return (
-            <Card
-              key={agent.template_key}
-              className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:ring-2 hover:ring-primary/50'}`}
-              onClick={() => { setSelectedAgentKey(agent.template_key); resetWizardState(); }}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{agent.icone}</span>
-                  <div className="flex-1">
-                    <CardTitle className="text-sm">{agent.nome}</CardTitle>
-                    <CardDescription className="text-xs">{configuredCount}/{agent.campos.length} campos</CardDescription>
-                  </div>
-                  {prog === 100 ? <CheckCircle2 className="h-5 w-5 text-green-500" /> :
-                   prog > 0 ? <Badge variant="outline" className="text-xs">{prog}%</Badge> :
-                   <AlertCircle className="h-5 w-5 text-muted-foreground" />}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Progress value={prog} className="h-1.5" />
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {agent.campos.map(c => {
-                    const bound = bindings.find(b => b.agent_template_key === agent.template_key && b.campo === c.campo && b.configurado);
-                    return (
-                      <Badge key={c.campo} variant={bound ? 'default' : 'outline'} className="text-[10px]">
-                        {bound ? (bound.fonte_tipo === 'sistema' ? '🗄️' : bound.fonte_tipo === 'api' ? '🌐' : '✏️') : '○'} {c.label}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  // ========== STEP 1: Select Data Source ==========
-  const renderStep1 = () => {
+  // ========== STEP 0: Select Data Source ==========
+  const renderStep0 = () => {
     const toggleField = (campo: string) => {
       setDisabledFields(prev => {
         const next = new Set(prev);
@@ -382,7 +332,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       });
     };
 
-    const allCampos = selectedAgent?.campos || [];
+    const allCampos = agentFields;
     const categorias = [...new Set(allCampos.map(f => f.categoria || 'Geral'))];
 
     return (
