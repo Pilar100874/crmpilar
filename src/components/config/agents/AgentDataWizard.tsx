@@ -127,10 +127,10 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
       .then(({ data }) => { if (data) setApiEndpoints(data as ApiEndpoint[]); });
   }, [estabelecimentoId]);
 
-  // Pre-fill manual values and mappings from existing bindings when agent is selected
+  // Pre-fill manual values and mappings from existing bindings
   useEffect(() => {
-    if (!selectedAgentKey || !selectedAgent) return;
-    const agentBindings = bindings.filter(b => b.agent_template_key === selectedAgentKey);
+    if (!templateKey) return;
+    const agentBindings = bindings.filter(b => b.agent_template_key === templateKey);
     const mv: Record<string, string> = {};
     const fm: Record<string, FieldMappingEntry> = {};
     agentBindings.forEach(b => {
@@ -146,7 +146,7 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     });
     setManualValues(mv);
     setFieldMappings(fm);
-  }, [selectedAgentKey, bindings]);
+  }, [templateKey, bindings]);
 
   // Progress simulation
   const startProgress = () => {
