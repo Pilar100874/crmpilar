@@ -572,7 +572,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
               <TabsContent value="identidade" className="mt-0 space-y-4">
                 <div>
                   <Label>Nome *</Label>

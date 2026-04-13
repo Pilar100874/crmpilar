@@ -522,136 +522,134 @@ export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, a
           <p className="text-xs text-muted-foreground mt-1">Clique em <strong>Sugestões</strong> para ver campos recomendados ou adicione manualmente</p>
         </div>
       ) : (
-        <ScrollArea className="h-[50vh]">
-          <div className="space-y-2">
-            {fields.map((field) => (
-              <Card key={field.id} className={`transition-opacity ${!field.ativo ? 'opacity-50' : ''}`}>
-                <CardContent className="p-3">
-                  {editingId === field.id ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs">Nome do Campo *</Label>
-                          <Input
-                            value={editForm.nome || ''}
-                            onChange={e => setEditForm({ ...editForm, nome: e.target.value })}
-                            placeholder="Ex: Gramatura"
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Tipo</Label>
-                          <Select value={editForm.tipo || 'texto'} onValueChange={v => setEditForm({ ...editForm, tipo: v })}>
-                            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {FIELD_TYPES.map(t => (
-                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+        <div className="space-y-2 pb-4">
+          {fields.map((field) => (
+            <Card key={field.id} className={`transition-opacity ${!field.ativo ? 'opacity-50' : ''}`}>
+              <CardContent className="p-3">
+                {editingId === field.id ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-xs">Descrição</Label>
+                        <Label className="text-xs">Nome do Campo *</Label>
                         <Input
-                          value={editForm.descricao || ''}
-                          onChange={e => setEditForm({ ...editForm, descricao: e.target.value })}
-                          placeholder="Descreva o que este campo representa"
+                          value={editForm.nome || ''}
+                          onChange={e => setEditForm({ ...editForm, nome: e.target.value })}
+                          placeholder="Ex: Gramatura"
                           className="h-8 text-sm"
                         />
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={editForm.obrigatorio || false}
-                            onCheckedChange={v => setEditForm({ ...editForm, obrigatorio: v })}
-                          />
-                          <Label className="text-xs">Obrigatório</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={editForm.ativo !== false}
-                            onCheckedChange={v => setEditForm({ ...editForm, ativo: v })}
-                          />
-                          <Label className="text-xs">Ativo</Label>
-                        </div>
-                      </div>
-                      {editForm.tipo === 'lista' && (
-                        <div>
-                          <Label className="text-xs">Opções da Lista</Label>
-                          <div className="flex gap-2 mb-2">
-                            <Input
-                              value={newOptionText}
-                              onChange={e => setNewOptionText(e.target.value)}
-                              placeholder="Nova opção..."
-                              className="h-8 text-sm"
-                              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addOption())}
-                            />
-                            <Button size="sm" variant="outline" onClick={addOption} className="h-8">
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {(editForm.opcoes || []).map((opt, idx) => (
-                              <Badge key={idx} variant="secondary" className="gap-1">
-                                {opt}
-                                <X className="h-3 w-3 cursor-pointer" onClick={() => removeOption(idx)} />
-                              </Badge>
+                      <div>
+                        <Label className="text-xs">Tipo</Label>
+                        <Select value={editForm.tipo || 'texto'} onValueChange={v => setEditForm({ ...editForm, tipo: v })}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {FIELD_TYPES.map(t => (
+                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                             ))}
-                          </div>
-                        </div>
-                      )}
-                      <div className="flex gap-2 justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                          <X className="h-3 w-3 mr-1" /> Cancelar
-                        </Button>
-                        <Button size="sm" onClick={handleSaveEdit}>
-                          <Save className="h-3 w-3 mr-1" /> Salvar
-                        </Button>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{field.nome}</span>
-                            <Badge variant="outline" className="text-[10px] shrink-0">
-                              {FIELD_TYPES.find(t => t.value === field.tipo)?.label || field.tipo}
-                            </Badge>
-                            {field.obrigatorio && <Badge variant="destructive" className="text-[10px] shrink-0">Obrigatório</Badge>}
-                          </div>
-                          {field.descricao && <p className="text-xs text-muted-foreground truncate">{field.descricao}</p>}
-                          {field.tipo === 'lista' && field.opcoes?.length && (
-                            <div className="flex gap-1 mt-1 flex-wrap">
-                              {field.opcoes.slice(0, 5).map((o, i) => (
-                                <Badge key={i} variant="secondary" className="text-[10px]">{o}</Badge>
-                              ))}
-                              {field.opcoes.length > 5 && <Badge variant="secondary" className="text-[10px]">+{field.opcoes.length - 5}</Badge>}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                    <div>
+                      <Label className="text-xs">Descrição</Label>
+                      <Input
+                        value={editForm.descricao || ''}
+                        onChange={e => setEditForm({ ...editForm, descricao: e.target.value })}
+                        placeholder="Descreva o que este campo representa"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
                         <Switch
-                          checked={field.ativo}
-                          onCheckedChange={v => handleToggleActive(field.id!, v)}
+                          checked={editForm.obrigatorio || false}
+                          onCheckedChange={v => setEditForm({ ...editForm, obrigatorio: v })}
                         />
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(field.id!); setEditForm(field); }}>
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(field.id!)}>
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
+                        <Label className="text-xs">Obrigatório</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={editForm.ativo !== false}
+                          onCheckedChange={v => setEditForm({ ...editForm, ativo: v })}
+                        />
+                        <Label className="text-xs">Ativo</Label>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+                    {editForm.tipo === 'lista' && (
+                      <div>
+                        <Label className="text-xs">Opções da Lista</Label>
+                        <div className="flex gap-2 mb-2">
+                          <Input
+                            value={newOptionText}
+                            onChange={e => setNewOptionText(e.target.value)}
+                            placeholder="Nova opção..."
+                            className="h-8 text-sm"
+                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addOption())}
+                          />
+                          <Button size="sm" variant="outline" onClick={addOption} className="h-8">
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(editForm.opcoes || []).map((opt, idx) => (
+                            <Badge key={idx} variant="secondary" className="gap-1">
+                              {opt}
+                              <X className="h-3 w-3 cursor-pointer" onClick={() => removeOption(idx)} />
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                        <X className="h-3 w-3 mr-1" /> Cancelar
+                      </Button>
+                      <Button size="sm" onClick={handleSaveEdit}>
+                        <Save className="h-3 w-3 mr-1" /> Salvar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium truncate">{field.nome}</span>
+                          <Badge variant="outline" className="text-[10px] shrink-0">
+                            {FIELD_TYPES.find(t => t.value === field.tipo)?.label || field.tipo}
+                          </Badge>
+                          {field.obrigatorio && <Badge variant="destructive" className="text-[10px] shrink-0">Obrigatório</Badge>}
+                        </div>
+                        {field.descricao && <p className="text-xs text-muted-foreground truncate">{field.descricao}</p>}
+                        {field.tipo === 'lista' && field.opcoes?.length && (
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            {field.opcoes.slice(0, 5).map((o, i) => (
+                              <Badge key={i} variant="secondary" className="text-[10px]">{o}</Badge>
+                            ))}
+                            {field.opcoes.length > 5 && <Badge variant="secondary" className="text-[10px]">+{field.opcoes.length - 5}</Badge>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Switch
+                        checked={field.ativo}
+                        onCheckedChange={v => handleToggleActive(field.id!, v)}
+                      />
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(field.id!); setEditForm(field); }}>
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(field.id!)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
