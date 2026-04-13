@@ -522,7 +522,7 @@ export default function AgentCustomFieldsManager({ agentId, estabelecimentoId, a
           <p className="text-xs text-muted-foreground mt-1">Clique em <strong>Sugestões</strong> para ver campos recomendados ou adicione manualmente</p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="h-[50vh]">
           <div className="space-y-2">
             {fields.map((field) => (
               <Card key={field.id} className={`transition-opacity ${!field.ativo ? 'opacity-50' : ''}`}>
