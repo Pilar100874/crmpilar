@@ -269,30 +269,36 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const handleUploadKbFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editingAgent || !e.target.files?.length) return;
     setUploading(true);
+    const files = Array.from(e.target.files);
+    let successCount = 0;
+    let errorCount = 0;
     try {
-      const file = e.target.files[0];
-      const filePath = `chat-agents/${editingAgent.id}/${Date.now()}_${file.name}`;
+      for (const file of files) {
+        try {
+          const filePath = `chat-agents/${editingAgent.id}/${Date.now()}_${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('agent-knowledge-base')
+            .upload(filePath, file);
+          if (uploadError) throw uploadError;
 
-      const { error: uploadError } = await supabase.storage
-        .from('agent-knowledge-base')
-        .upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { error: dbError } = await supabase
-        .from('chat_agent_kb_files')
-        .insert({
-          agent_id: editingAgent.id,
-          nome_arquivo: file.name,
-          storage_path: filePath,
-          mime_type: file.type,
-          tamanho_bytes: file.size,
-        } as any);
-      if (dbError) throw dbError;
-
-      toast.success('Arquivo enviado!');
+          const { error: dbError } = await supabase
+            .from('chat_agent_kb_files')
+            .insert({
+              agent_id: editingAgent.id,
+              nome_arquivo: file.name,
+              storage_path: filePath,
+              mime_type: file.type,
+              tamanho_bytes: file.size,
+            } as any);
+          if (dbError) throw dbError;
+          successCount++;
+        } catch {
+          errorCount++;
+        }
+      }
+      if (successCount > 0) toast.success(`${successCount} arquivo(s) enviado(s)!`);
+      if (errorCount > 0) toast.error(`${errorCount} arquivo(s) com erro no upload.`);
       await loadKbFiles(editingAgent.id);
-    } catch (err: any) {
-      toast.error(`Erro no upload: ${err.message}`);
     } finally {
       setUploading(false);
     }
@@ -934,7 +940,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       </p>
                       {editingAgent ? (
                         <div className="flex gap-2 items-center">
-                          <Input type="file" accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx" onChange={handleUploadKbFile} disabled={uploading} className="cursor-pointer" />
+                          <Input type="file" accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx" onChange={handleUploadKbFile} disabled={uploading} multiple className="cursor-pointer" />
                           {uploading && <span className="text-xs text-muted-foreground animate-pulse">Enviando...</span>}
                         </div>
                       ) : (
