@@ -302,36 +302,72 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     setSelectedTables([]);
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
+    setIgnoredColumns(new Set());
+    setApiFilters([]);
+    setFilteredApiData([]);
+    setFilterTested(false);
   };
+
+  // For API: steps are 0=Origem, 1=Dados, 2=Filtros, 3=Mapeamento, 4=Confirmação
+  // For others: steps are 0=Origem, 1=Dados, 2=Mapeamento, 3=Confirmação
+  const mappingStep = dataSource === 'api' ? 3 : 2;
+  const confirmStep = dataSource === 'api' ? 4 : 3;
+  const filterStep = dataSource === 'api' ? 2 : -1;
 
   const canGoNext = (): boolean => {
     switch (currentStep) {
-      case 0: return true; // data source selection
+      case 0: return true;
       case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return selectedTables.length > 0;
         return false;
-      case 2: return true;
+      case filterStep: return true; // filter step is optional
       default: return true;
     }
   };
 
   const handleNext = () => {
     if (dataSource === 'manual' && currentStep === 1) {
-      // Skip mapping step for manual, go directly to confirmation
-      setCurrentStep(3);
+      setCurrentStep(confirmStep);
     } else {
       setCurrentStep(prev => Math.min(prev + 1, totalSteps - 1));
     }
   };
 
   const handleBack = () => {
-    if (dataSource === 'manual' && currentStep === 3) {
+    if (dataSource === 'manual' && currentStep === confirmStep) {
       setCurrentStep(1);
     } else {
       setCurrentStep(prev => Math.max(prev - 1, 0));
     }
+  };
+
+  // Apply filters to API data
+  const applyApiFilters = () => {
+    let data = [...apiData];
+    for (const filter of apiFilters) {
+      if (!filter.campo || !filter.valor) continue;
+      data = data.filter(row => {
+        const val = String(row[filter.campo] ?? '').toLowerCase();
+        const target = filter.valor.toLowerCase();
+        switch (filter.operador) {
+          case 'contem': return val.includes(target);
+          case 'igual': return val === target;
+          case 'diferente': return val !== target;
+          case 'comeca': return val.startsWith(target);
+          case 'termina': return val.endsWith(target);
+          case 'maior': return parseFloat(val) > parseFloat(target);
+          case 'menor': return parseFloat(val) < parseFloat(target);
+          case 'vazio': return val.trim() === '';
+          case 'nao_vazio': return val.trim() !== '';
+          default: return true;
+        }
+      });
+    }
+    setFilteredApiData(data);
+    setFilterTested(true);
+    toast.success(`Filtros aplicados: ${data.length} de ${apiData.length} registros`);
   };
 
   if (loading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
