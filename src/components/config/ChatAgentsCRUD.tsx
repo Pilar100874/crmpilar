@@ -940,7 +940,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       </p>
                       {editingAgent ? (
                         <div className="flex gap-2 items-center">
-                          <Input type="file" accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx" onChange={handleUploadKbFile} disabled={uploading} className="cursor-pointer" />
+                          <Input type="file" accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx" onChange={handleUploadKbFile} disabled={uploading} multiple className="cursor-pointer" />
                           {uploading && <span className="text-xs text-muted-foreground animate-pulse">Enviando...</span>}
                         </div>
                       ) : (
