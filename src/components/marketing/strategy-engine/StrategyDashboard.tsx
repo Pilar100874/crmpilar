@@ -18,11 +18,17 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
   const resolvedInfo = agentInfo || AGENT_INFO;
 
   // Deduplicate: keep only the latest execution per agent_type
+  // Also treat stuck "running" executions (>10min) as "failed"
+  const stuckThreshold = 10 * 60 * 1000;
+  const now = new Date().getTime();
   const latestExecMap = new Map<string, AgentExecution>();
   for (const e of executions) {
-    const existing = latestExecMap.get(e.agent_type);
-    if (!existing || new Date(e.created_at) > new Date(existing.created_at)) {
-      latestExecMap.set(e.agent_type, e);
+    const effectiveExec = e.status === 'running' && 
+      (now - new Date(e.created_at).getTime()) > stuckThreshold
+      ? { ...e, status: 'failed' as const } : e;
+    const existing = latestExecMap.get(effectiveExec.agent_type);
+    if (!existing || new Date(effectiveExec.created_at) > new Date(existing.created_at)) {
+      latestExecMap.set(effectiveExec.agent_type, effectiveExec);
     }
   }
   const uniqueExecutions = Array.from(latestExecMap.values());
@@ -42,7 +48,11 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
     failed: { label: 'Falhou', color: 'text-destructive', icon: <XCircle className="h-4 w-4" /> },
   };
 
-  const st = statusConfig[project.status] || statusConfig.draft;
+  // Treat stuck "processing" projects (>10min) as draft
+  const isStuckProcessing = project.status === 'processing' && 
+    new Date().getTime() - new Date(project.updated_at || project.created_at).getTime() > 10 * 60 * 1000;
+  const effectiveStatus = isStuckProcessing ? 'draft' : project.status;
+  const st = statusConfig[effectiveStatus] || statusConfig.draft;
 
   return (
     <div className="space-y-4">

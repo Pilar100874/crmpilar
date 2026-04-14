@@ -145,7 +145,10 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map(project => {
-            const st = statusConfig[project.status] || statusConfig.draft;
+            // Treat stuck "processing" projects (>10min) as draft
+            const isStuck = project.status === 'processing' && 
+              new Date().getTime() - new Date(project.updated_at || project.created_at).getTime() > 10 * 60 * 1000;
+            const st = statusConfig[isStuck ? 'draft' : project.status] || statusConfig.draft;
             return (
               <Card
                 key={project.id}
