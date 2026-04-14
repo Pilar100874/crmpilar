@@ -212,9 +212,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
   };
 
-  // Get available columns for mapping (combined from all selected tables)
+  // Get available columns for mapping (combined from all selected tables), excluding ignored
   const getAvailableColumns = (): string[] => {
-    if (dataSource === 'api') return apiHeaders;
+    if (dataSource === 'api') return apiHeaders.filter(h => !ignoredColumns.has(h));
     if (dataSource === 'sistema') {
       const allCols: string[] = [];
       selectedTables.forEach(tblVal => {
@@ -230,6 +230,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
     return [];
   };
+
+  // Get effective API data (filtered if filters applied)
+  const getEffectiveApiData = () => filterTested && filteredApiData.length > 0 ? filteredApiData : apiData;
 
   // Save all mappings
   const handleSave = async () => {
