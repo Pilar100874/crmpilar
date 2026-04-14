@@ -657,11 +657,18 @@ export default function AgentOrchestratorView({ agents, estabelecimentoId, onUpd
     }
   }, [autoOpenOrchestratorId, agents, selectedOrchestrator, onAutoOpenConsumed]);
 
+  // Clear selection if orchestrator was deleted
+  useEffect(() => {
+    if (selectedOrchestrator && !agents.find(a => a.id === selectedOrchestrator.id)) {
+      setSelectedOrchestrator(null);
+      setIsFullscreen(false);
+    }
+  }, [agents, selectedOrchestrator]);
+
   // Workflow canvas (inline or fullscreen)
   if (selectedOrchestrator) {
     const currentOrch = agents.find(a => a.id === selectedOrchestrator.id);
     if (!currentOrch) {
-      setSelectedOrchestrator(null);
       return null;
     }
 
