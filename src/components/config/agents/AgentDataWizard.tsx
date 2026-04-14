@@ -1306,13 +1306,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // ========== RENDER ==========
   const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 0: return renderStep0();
-      case 1: return renderStep2();
-      case 2: return renderStep3();
-      case 3: return renderStep4();
-      default: return null;
-    }
+    if (currentStep === 0) return renderStep0();
+    if (currentStep === 1) return renderStep2();
+    if (dataSource === 'api' && currentStep === filterStep) return renderFilterStep();
+    if (currentStep === mappingStep) return renderMappingStep();
+    if (currentStep === confirmStep) return renderStep4();
+    return null;
   };
 
   return (
