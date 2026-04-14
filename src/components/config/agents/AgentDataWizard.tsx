@@ -18,8 +18,9 @@ import * as XLSX from 'xlsx';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronLeft, Check, Database, FileText, Globe, AlertCircle, CheckCircle2,
-  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2, ListChecks
+  Loader2, ArrowRight, ArrowLeft, Table2, RefreshCw, Eye, Download, Upload, Plus, Copy, Trash2, EyeOff, Edit2, ListChecks, Filter, X, Search, Play
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface CustomFieldFromDB {
   id: string;
@@ -101,6 +102,11 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
+  // API filter state
+  const [ignoredColumns, setIgnoredColumns] = useState<Set<string>>(new Set());
+  const [apiFilters, setApiFilters] = useState<{ campo: string; operador: string; valor: string }[]>([]);
+  const [filteredApiData, setFilteredApiData] = useState<any[]>([]);
+  const [filterTested, setFilterTested] = useState(false);
 
   // Saving
   const [saving, setSaving] = useState(false);
@@ -110,8 +116,10 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   // Active fields = all agent fields (all must be used)
   const activeFields = agentFields;
 
-  // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
-  const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
+  // Dynamic steps based on data source
+  const STEP_LABELS = dataSource === 'api'
+    ? ['Origem dos Dados', 'Dados', 'Filtros e Campos', 'Mapeamento', 'Confirmação']
+    : ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
@@ -204,9 +212,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
   };
 
-  // Get available columns for mapping (combined from all selected tables)
+  // Get available columns for mapping (combined from all selected tables), excluding ignored
   const getAvailableColumns = (): string[] => {
-    if (dataSource === 'api') return apiHeaders;
+    if (dataSource === 'api') return apiHeaders.filter(h => !ignoredColumns.has(h));
     if (dataSource === 'sistema') {
       const allCols: string[] = [];
       selectedTables.forEach(tblVal => {
@@ -222,6 +230,9 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     }
     return [];
   };
+
+  // Get effective API data (filtered if filters applied)
+  const getEffectiveApiData = () => filterTested && filteredApiData.length > 0 ? filteredApiData : apiData;
 
   // Save all mappings
   const handleSave = async () => {
@@ -291,36 +302,72 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     setSelectedTables([]);
     setFieldMappings({});
     setManualRows(Array.from({ length: 50 }, () => ({})));
+    setIgnoredColumns(new Set());
+    setApiFilters([]);
+    setFilteredApiData([]);
+    setFilterTested(false);
   };
+
+  // For API: steps are 0=Origem, 1=Dados, 2=Filtros, 3=Mapeamento, 4=Confirmação
+  // For others: steps are 0=Origem, 1=Dados, 2=Mapeamento, 3=Confirmação
+  const mappingStep = dataSource === 'api' ? 3 : 2;
+  const confirmStep = dataSource === 'api' ? 4 : 3;
+  const filterStep = dataSource === 'api' ? 2 : -1;
 
   const canGoNext = (): boolean => {
     switch (currentStep) {
-      case 0: return true; // data source selection
+      case 0: return true;
       case 1:
         if (dataSource === 'manual') return manualRows.some(row => Object.values(row).some(v => v?.trim()));
         if (dataSource === 'api') return apiHeaders.length > 0;
         if (dataSource === 'sistema') return selectedTables.length > 0;
         return false;
-      case 2: return true;
+      case filterStep: return true; // filter step is optional
       default: return true;
     }
   };
 
   const handleNext = () => {
     if (dataSource === 'manual' && currentStep === 1) {
-      // Skip mapping step for manual, go directly to confirmation
-      setCurrentStep(3);
+      setCurrentStep(confirmStep);
     } else {
       setCurrentStep(prev => Math.min(prev + 1, totalSteps - 1));
     }
   };
 
   const handleBack = () => {
-    if (dataSource === 'manual' && currentStep === 3) {
+    if (dataSource === 'manual' && currentStep === confirmStep) {
       setCurrentStep(1);
     } else {
       setCurrentStep(prev => Math.max(prev - 1, 0));
     }
+  };
+
+  // Apply filters to API data
+  const applyApiFilters = () => {
+    let data = [...apiData];
+    for (const filter of apiFilters) {
+      if (!filter.campo || !filter.valor) continue;
+      data = data.filter(row => {
+        const val = String(row[filter.campo] ?? '').toLowerCase();
+        const target = filter.valor.toLowerCase();
+        switch (filter.operador) {
+          case 'contem': return val.includes(target);
+          case 'igual': return val === target;
+          case 'diferente': return val !== target;
+          case 'comeca': return val.startsWith(target);
+          case 'termina': return val.endsWith(target);
+          case 'maior': return parseFloat(val) > parseFloat(target);
+          case 'menor': return parseFloat(val) < parseFloat(target);
+          case 'vazio': return val.trim() === '';
+          case 'nao_vazio': return val.trim() !== '';
+          default: return true;
+        }
+      });
+    }
+    setFilteredApiData(data);
+    setFilterTested(true);
+    toast.success(`Filtros aplicados: ${data.length} de ${apiData.length} registros`);
   };
 
   if (loading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -890,8 +937,182 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
     );
   };
 
-  // ========== STEP 3: Field Mapping ==========
-  const renderStep3 = () => {
+  // ========== STEP: API Filters ==========
+  const renderFilterStep = () => {
+    const activeHeaders = apiHeaders.filter(h => !ignoredColumns.has(h));
+    const effectiveData = filterTested ? filteredApiData : apiData;
+
+    const addFilter = () => setApiFilters(prev => [...prev, { campo: apiHeaders[0] || '', operador: 'contem', valor: '' }]);
+    const removeFilter = (idx: number) => setApiFilters(prev => prev.filter((_, i) => i !== idx));
+    const updateFilter = (idx: number, key: string, value: string) => {
+      setApiFilters(prev => prev.map((f, i) => i === idx ? { ...f, [key]: value } : f));
+      setFilterTested(false);
+    };
+
+    const toggleColumn = (col: string) => {
+      setIgnoredColumns(prev => {
+        const next = new Set(prev);
+        if (next.has(col)) next.delete(col);
+        else next.add(col);
+        return next;
+      });
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Filtros e Campos da API</h3>
+          <p className="text-sm text-muted-foreground">
+            Filtre os registros e selecione quais campos serão usados no mapeamento
+          </p>
+        </div>
+
+        {/* Column visibility */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Campos da API</span>
+            <Badge variant="outline" className="ml-auto text-xs">{activeHeaders.length} de {apiHeaders.length} ativos</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">Desative os campos que não deseja usar no mapeamento.</p>
+          <div className="flex flex-wrap gap-2">
+            {apiHeaders.map(h => {
+              const isIgnored = ignoredColumns.has(h);
+              return (
+                <div
+                  key={h}
+                  onClick={() => toggleColumn(h)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border cursor-pointer text-xs transition-all ${
+                    isIgnored
+                      ? 'border-border bg-muted/50 text-muted-foreground line-through opacity-60'
+                      : 'border-primary/30 bg-primary/5 text-foreground'
+                  }`}
+                >
+                  {isIgnored ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3 text-primary" />}
+                  {h}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Row filters */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-sm">Filtros de Registros</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={addFilter}>
+              <Plus className="h-3 w-3 mr-1" /> Adicionar Filtro
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Filtre os registros da API para usar apenas os que atendem aos critérios.</p>
+
+          {apiFilters.length === 0 && (
+            <p className="text-xs text-muted-foreground italic text-center py-2">Nenhum filtro aplicado — todos os {apiData.length} registros serão usados.</p>
+          )}
+
+          {apiFilters.map((filter, idx) => (
+            <div key={idx} className="flex items-center gap-2 flex-wrap">
+              <Select value={filter.campo} onValueChange={v => updateFilter(idx, 'campo', v)}>
+                <SelectTrigger className="h-8 text-xs w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {apiHeaders.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filter.operador} onValueChange={v => updateFilter(idx, 'operador', v)}>
+                <SelectTrigger className="h-8 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="contem">Contém</SelectItem>
+                  <SelectItem value="igual">Igual a</SelectItem>
+                  <SelectItem value="diferente">Diferente de</SelectItem>
+                  <SelectItem value="comeca">Começa com</SelectItem>
+                  <SelectItem value="termina">Termina com</SelectItem>
+                  <SelectItem value="maior">Maior que</SelectItem>
+                  <SelectItem value="menor">Menor que</SelectItem>
+                  <SelectItem value="vazio">Vazio</SelectItem>
+                  <SelectItem value="nao_vazio">Não vazio</SelectItem>
+                </SelectContent>
+              </Select>
+              {!['vazio', 'nao_vazio'].includes(filter.operador) && (
+                <Input
+                  value={filter.valor}
+                  onChange={e => updateFilter(idx, 'valor', e.target.value)}
+                  placeholder="Valor..."
+                  className="h-8 text-xs flex-1 min-w-[120px]"
+                />
+              )}
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeFilter(idx)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+
+          {apiFilters.length > 0 && (
+            <div className="flex items-center gap-2 pt-1">
+              <Button variant="default" size="sm" onClick={applyApiFilters}>
+                <Play className="h-3.5 w-3.5 mr-1" /> Testar Filtros
+              </Button>
+              {filterTested && (
+                <Badge variant="secondary" className="text-xs">
+                  {filteredApiData.length} de {apiData.length} registros
+                </Badge>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => { setApiFilters([]); setFilterTested(false); setFilteredApiData([]); }}>
+                Limpar
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        {/* Preview filtered data */}
+        {filterTested && (
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Search className="h-4 w-4 text-primary" />
+              <span className="font-medium text-sm">Prévia dos Dados Filtrados</span>
+              <Badge variant="outline" className="ml-auto">{filteredApiData.length} registros</Badge>
+            </div>
+            <ScrollArea className="max-h-[200px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">#</TableHead>
+                    {activeHeaders.slice(0, 6).map(h => <TableHead key={h} className="min-w-[100px] text-xs">{h}</TableHead>)}
+                    {activeHeaders.length > 6 && <TableHead className="text-muted-foreground text-xs">+{activeHeaders.length - 6}</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredApiData.slice(0, 5).map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
+                      {activeHeaders.slice(0, 6).map(h => (
+                        <TableCell key={h} className="text-xs max-w-[150px] truncate">
+                          {row[h] !== undefined && row[h] !== null ? String(row[h]) : '-'}
+                        </TableCell>
+                      ))}
+                      {activeHeaders.length > 6 && <TableCell className="text-xs text-muted-foreground">...</TableCell>}
+                    </TableRow>
+                  ))}
+                  {filteredApiData.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={Math.min(activeHeaders.length, 6) + 2} className="text-center text-sm text-muted-foreground py-4">
+                        Nenhum registro encontrado com os filtros aplicados
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </Card>
+        )}
+      </div>
+    );
+  };
+
+  // ========== STEP: Field Mapping ==========
+  const renderMappingStep = () => {
     const availableColumns = getAvailableColumns();
 
     return (
@@ -1085,13 +1306,12 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
 
   // ========== RENDER ==========
   const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 0: return renderStep0();
-      case 1: return renderStep2();
-      case 2: return renderStep3();
-      case 3: return renderStep4();
-      default: return null;
-    }
+    if (currentStep === 0) return renderStep0();
+    if (currentStep === 1) return renderStep2();
+    if (dataSource === 'api' && currentStep === filterStep) return renderFilterStep();
+    if (currentStep === mappingStep) return renderMappingStep();
+    if (currentStep === confirmStep) return renderStep4();
+    return null;
   };
 
   return (
