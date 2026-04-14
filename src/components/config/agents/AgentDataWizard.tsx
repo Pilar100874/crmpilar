@@ -102,6 +102,11 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   const [manualValues, setManualValues] = useState<Record<string, string>>({});
   const [manualRows, setManualRows] = useState<Record<string, string>[]>(Array.from({ length: 50 }, () => ({})));
 
+  // API filter state
+  const [ignoredColumns, setIgnoredColumns] = useState<Set<string>>(new Set());
+  const [apiFilters, setApiFilters] = useState<{ campo: string; operador: string; valor: string }[]>([]);
+  const [filteredApiData, setFilteredApiData] = useState<any[]>([]);
+  const [filterTested, setFilterTested] = useState(false);
 
   // Saving
   const [saving, setSaving] = useState(false);
@@ -111,8 +116,10 @@ export default function AgentDataWizard({ estabelecimentoId, onClose, agentName,
   // Active fields = all agent fields (all must be used)
   const activeFields = agentFields;
 
-  // Steps: Origem dos Dados → Dados → Mapeamento → Confirmação
-  const STEP_LABELS = ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
+  // Dynamic steps based on data source
+  const STEP_LABELS = dataSource === 'api'
+    ? ['Origem dos Dados', 'Dados', 'Filtros e Campos', 'Mapeamento', 'Confirmação']
+    : ['Origem dos Dados', 'Dados', 'Mapeamento', 'Confirmação'];
   const totalSteps = STEP_LABELS.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
