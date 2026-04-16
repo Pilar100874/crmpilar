@@ -538,10 +538,12 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <div className="px-3 pb-3 space-y-2">
               {(() => {
                 const orchAgents = availableAgents.filter(a => a.tipo_agente === 'orquestrador');
-                const specAgents = availableAgents.filter(a => a.tipo_agente !== 'orquestrador');
+                const humAgents = availableAgents.filter(a => a.tipo_agente === 'humanizador');
+                const specAgents = availableAgents.filter(a => a.tipo_agente !== 'orquestrador' && a.tipo_agente !== 'humanizador');
                 const groups = [
                   { name: 'Orquestradores', icon: Network, agents: orchAgents, gradient: 'from-primary/10 to-primary/5', border: 'border-primary/20', borderHover: 'hover:border-primary/40', iconColor: 'text-primary' },
                   { name: 'Agentes', icon: Bot, agents: specAgents, gradient: 'from-accent/40 to-accent/20', border: 'border-border', borderHover: 'hover:border-primary/30', iconColor: 'text-muted-foreground' },
+                  { name: 'Pós-processamento', icon: Bot, agents: humAgents, gradient: 'from-pink-500/10 to-pink-500/5', border: 'border-pink-500/20', borderHover: 'hover:border-pink-500/40', iconColor: 'text-pink-500' },
                 ];
                 const filteredGroups = groups.filter(g => g.agents.length > 0);
                 if (filteredGroups.length === 0) {
