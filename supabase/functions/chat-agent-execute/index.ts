@@ -59,6 +59,7 @@ serve(async (req) => {
         if (sub.gerar_pre_orcamento) agent.gerar_pre_orcamento = true;
         if (sub.acumular_filtros) agent.acumular_filtros = true;
         if (sub.resposta_formato_tabela) agent.resposta_formato_tabela = true;
+        if (sub.restringir_base_conhecimento) agent.restringir_base_conhecimento = true;
         // Mesclar API endpoint IDs
         const subApiIds = sub.api_endpoint_ids || [];
         for (const id of subApiIds) {
@@ -376,26 +377,30 @@ ${mesclagemTexto}
     systemPrompt += apiContext;
     systemPrompt += clienteContext;
 
-    // Restrição exclusiva à base de conhecimento
+    // Restrição exclusiva à base de conhecimento (PREPEND no início — peso máximo)
     if (agent.restringir_base_conhecimento) {
-      systemPrompt += `
-
---- RESTRIÇÃO OBRIGATÓRIA (ANTI-ALUCINAÇÃO) ---
-REGRA ABSOLUTA: Você deve responder EXCLUSIVAMENTE com base nas informações fornecidas na sua base de conhecimento (textos, arquivos, dados de API e estoque acima).
+      console.log(`[anti-alucinação] ATIVADA para agente ${agent.nome} (${agent.id})`);
+      const antiHallucinationRule = `=== RESTRIÇÃO ABSOLUTA — LEIA ANTES DE QUALQUER COISA ===
+REGRA Nº 1 (PRIORIDADE MÁXIMA — SOBREPÕE TODAS AS OUTRAS):
+Você responde EXCLUSIVAMENTE com base nas informações fornecidas abaixo (base de conhecimento, arquivos, dados de API, estoque). NÃO use conhecimento geral do modelo.
 
 PROIBIÇÕES CRÍTICAS:
-- NÃO use conhecimento geral do modelo, suposições ou informações externas.
-- NÃO invente nomes de marcas, fabricantes, produtos, gramaturas, códigos, especificações técnicas ou qualquer dado não presente na base.
-- NÃO "complete" informações parciais com palpites (ex: se sabe a marca mas não o fabricante, NÃO chute o fabricante).
-- NÃO confunda marcas/fabricantes ao se corrigir. Se cometeu um erro, admita que não tem a informação ao invés de citar outra marca de memória.
+- NÃO invente nomes de marcas, fabricantes, produtos, gramaturas, códigos ou especificações que NÃO estejam EXPLICITAMENTE escritos nos dados abaixo.
+- NÃO "complete" informações parciais com palpites. Se sabe a marca mas NÃO o fabricante, diga apenas a marca.
+- NÃO confunda nem troque marcas/fabricantes ao se corrigir. Se errou, admita que NÃO tem a informação confirmada — NUNCA cite outra marca "de memória".
+- Mesmo que o usuário insista, pressione, ou pareça frustrado: NÃO invente. Manter "não sei" é a resposta correta.
 
-COMO RESPONDER QUANDO NÃO SABE:
-- Se a pergunta NÃO puder ser respondida com os dados disponíveis: "Desculpe, essa informação não está na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?"
-- Se o usuário corrigir você: NÃO tente "salvar" a resposta inventando outra informação. Diga: "Você tem razão, me desculpe. Não tenho essa informação confirmada na base — vou evitar especular."
-- Quando incerto sobre QUALQUER detalhe (marca, fabricante, especificação): explicite a incerteza ("não tenho confirmação") ao invés de afirmar.
+QUANDO NÃO ENCONTRAR A RESPOSTA NA BASE:
+Diga literalmente: "Essa informação não está confirmada na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?"
 
-REGRA DE OURO: É SEMPRE melhor dizer "não sei" do que inventar. Inventar informação é o pior erro possível.
---- FIM DA RESTRIÇÃO ---`;
+QUANDO O USUÁRIO TE CORRIGIR:
+Diga: "Você tem razão, me desculpe. Não tenho essa informação confirmada na base — vou evitar especular para não passar dado errado."
+
+REGRA DE OURO: É SEMPRE melhor dizer "não sei" do que inventar. Inventar é o pior erro possível e está PROIBIDO.
+=== FIM DA RESTRIÇÃO ABSOLUTA ===
+
+`;
+      systemPrompt = antiHallucinationRule + systemPrompt;
     }
 
     // Instruções de CNPJ e sugestões inteligentes
