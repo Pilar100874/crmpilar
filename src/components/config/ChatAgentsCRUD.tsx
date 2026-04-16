@@ -1259,13 +1259,43 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       {kbFiles.length > 0 && (
                         <div className="space-y-2">
                           {kbFiles.map(file => (
-                            <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                              <div className="flex items-center gap-2 min-w-0">
+                            <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                                 <span className="truncate">{file.nome_arquivo}</span>
-                                <span className="text-xs text-muted-foreground">{file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                                {!isTextEditable(file) && (
+                                  <Badge variant="outline" className="text-[10px] shrink-0">binário</Badge>
+                                )}
                               </div>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)}><X className="h-3 w-3" /></Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {isTextEditable(file) && (
+                                  <Button variant="ghost" size="sm" onClick={() => openEditKbFile(file)} title="Editar conteúdo">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="sm" onClick={() => handleDownloadKbFile(file)} title="Baixar">
+                                  <Download className="h-3 w-3" />
+                                </Button>
+                                <label className="cursor-pointer" title="Substituir arquivo">
+                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent">
+                                    <Upload className="h-3 w-3" />
+                                  </span>
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx,.tsv,.log,.xml,.yaml,.yml,.html,.htm"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) handleReplaceKbFile(file, f);
+                                      e.target.value = '';
+                                    }}
+                                  />
+                                </label>
+                                <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)} title="Remover">
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
