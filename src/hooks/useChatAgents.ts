@@ -27,6 +27,10 @@ export interface ChatAgent {
   tipo_agente: 'especifico' | 'orquestrador' | 'humanizador';
   sub_agent_ids: string[];
   restringir_base_conhecimento: boolean;
+  regra_mesclagem: string | null;
+  regra_mesclagem_ativa: boolean;
+  regra_sugestao_proativa: string | null;
+  regra_sugestao_ativa: boolean;
   ativo: boolean;
   ordem: number;
   created_at: string;
