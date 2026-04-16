@@ -533,6 +533,11 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       🗣️ Humanizador
                     </Badge>
                   )}
+                  {(agent as any).tipo_agente === 'conhecimento' && (
+                    <Badge className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30">
+                      📚 Conhecimento
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
@@ -603,7 +608,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs value={dialogTab} onValueChange={setDialogTab} className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'humanizador' ? 'grid-cols-2' : (formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : 'grid-cols-6'}`}>
+              <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'humanizador' ? 'grid-cols-2' : (formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : (formData as any).tipo_agente === 'conhecimento' ? 'grid-cols-3' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
                 {(formData as any).tipo_agente === 'orquestrador' && (
@@ -611,18 +616,23 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     <Sparkles className="h-3 w-3 mr-1" /> Regras
                   </TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
+                {(formData as any).tipo_agente === 'conhecimento' && (
+                  <TabsTrigger value="conhecimento">
+                    <Brain className="h-3 w-3 mr-1" /> Conhecimento
+                  </TabsTrigger>
+                )}
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (formData as any).tipo_agente !== 'conhecimento' && (
                   <TabsTrigger value="campos" disabled={!editingAgent}>
                     <ListChecks className="h-3 w-3 mr-1" /> Campos
                   </TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (formData as any).tipo_agente !== 'conhecimento' && (
                   <TabsTrigger value="regras">Regras</TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (formData as any).tipo_agente !== 'conhecimento' && (
                   <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (formData as any).tipo_agente !== 'conhecimento' && (
                   <TabsTrigger value="dados">
                     <Database className="h-3 w-3 mr-1" /> Dados
                   </TabsTrigger>
@@ -638,7 +648,23 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 </div>
                 <div>
                   <Label>Tipo de Agente</Label>
-                  <Select value={(formData as any).tipo_agente || 'especifico'} onValueChange={v => setFormData({ ...formData, tipo_agente: v as any })}>
+                  <Select value={(formData as any).tipo_agente || 'especifico'} onValueChange={v => {
+                    const tipo = v as any;
+                    setFormData({
+                      ...formData,
+                      tipo_agente: tipo,
+                      // Conhecimento: força base externa, sem dados/campos/cnpj
+                      ...(tipo === 'conhecimento' ? {
+                        knowledge_base_type: 'externa',
+                        usar_estoque_sistema: false,
+                        usar_produtos_importados: false,
+                        api_endpoint_ids: [],
+                        solicitar_cnpj: false,
+                        gerar_pre_orcamento: false,
+                        cor: '#06B6D4',
+                      } : {}),
+                    });
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="especifico">
@@ -650,11 +676,19 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <SelectItem value="humanizador">
                         <span className="flex items-center gap-2">🗣️ Humanizador — Reescreve respostas em tom humano (pós-processamento)</span>
                       </SelectItem>
+                      <SelectItem value="conhecimento">
+                        <span className="flex items-center gap-2">📚 Conhecimento — Responde apenas com base em arquivos/documentos externos</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {(formData as any).tipo_agente === 'humanizador' && (
                     <p className="text-xs text-muted-foreground mt-2">
                       ℹ️ O Humanizador atua APÓS outros agentes responderem. Ele só precisa de <strong>Identidade</strong> e <strong>Prompt</strong> — sem regras, conhecimento ou dados. Vincule-o como sub-agente de um Orquestrador para ativá-lo.
+                    </p>
+                  )}
+                  {(formData as any).tipo_agente === 'conhecimento' && (
+                    <p className="text-xs text-cyan-700 dark:text-cyan-300 mt-2">
+                      📚 Este agente responde <strong>somente</strong> com base nos arquivos/documentos enviados na aba <strong>Conhecimento</strong>. Não acessa estoque, APIs nem campos personalizados.
                     </p>
                   )}
                 </div>
