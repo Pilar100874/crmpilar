@@ -763,66 +763,70 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     onCheckedChange={(checked) => setFormData({ ...formData, permite_cliente: checked })}
                   />
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Table className="h-4 w-4 text-primary" />
-                      Respostas em Formato Tabela
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Quando ativado, respostas com listas ou dados tabulares serão exibidas como tabela interativa com opção de download Excel.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.resposta_formato_tabela || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, resposta_formato_tabela: checked })}
-                  />
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-primary" />
-                      Acumular Filtros Progressivamente
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Quando ativado, o agente memoriza critérios de busca anteriores e pergunta se deseja acumulá-los com novos filtros.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.acumular_filtros || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, acumular_filtros: checked })}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Brain className="h-4 w-4 text-primary" />
-                      Solicitar CNPJ do Cliente
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Ao iniciar, o agente pergunta o CNPJ para identificar o cliente e buscar histórico de compras.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={(formData as any).solicitar_cnpj || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, solicitar_cnpj: checked } as any)}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
-                  <div className="space-y-0.5">
-                    <Label className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-primary" />
-                      Gerar Pré-Orçamento
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Ao final da conversa, salva automaticamente os itens de interesse como rascunho de orçamento.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={(formData as any).gerar_pre_orcamento || false}
-                    onCheckedChange={(checked) => setFormData({ ...formData, gerar_pre_orcamento: checked } as any)}
-                  />
-                </div>
+                {(formData as any).tipo_agente !== 'conhecimento' && (
+                  <>
+                    <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Table className="h-4 w-4 text-primary" />
+                          Respostas em Formato Tabela
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Quando ativado, respostas com listas ou dados tabulares serão exibidas como tabela interativa com opção de download Excel.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.resposta_formato_tabela || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, resposta_formato_tabela: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg border">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Filter className="h-4 w-4 text-primary" />
+                          Acumular Filtros Progressivamente
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Quando ativado, o agente memoriza critérios de busca anteriores e pergunta se deseja acumulá-los com novos filtros.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.acumular_filtros || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, acumular_filtros: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-primary" />
+                          Solicitar CNPJ do Cliente
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Ao iniciar, o agente pergunta o CNPJ para identificar o cliente e buscar histórico de compras.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={(formData as any).solicitar_cnpj || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, solicitar_cnpj: checked } as any)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3 border-dashed bg-muted/30">
+                      <div className="space-y-0.5">
+                        <Label className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          Gerar Pré-Orçamento
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Ao final da conversa, salva automaticamente os itens de interesse como rascunho de orçamento.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={(formData as any).gerar_pre_orcamento || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, gerar_pre_orcamento: checked } as any)}
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <Label>Modelo de IA</Label>
                   <Select value={formData.modelo_ia} onValueChange={v => setFormData({ ...formData, modelo_ia: v })}>
