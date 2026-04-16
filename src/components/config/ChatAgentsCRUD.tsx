@@ -226,10 +226,17 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       toast.error('Nome do agente é obrigatório');
       return;
     }
-    // Prompt obrigatório apenas na edição (agente já existente)
-    if (editingAgent && !formData.system_prompt?.trim()) {
+    // Prompt obrigatório apenas na edição de agente específico (orquestrador gera automaticamente)
+    if (editingAgent && !formData.system_prompt?.trim() && (formData as any).tipo_agente !== 'orquestrador') {
       toast.error('Prompt do sistema é obrigatório');
       return;
+    }
+    // Auto-gerar prompt para orquestrador se estiver vazio
+    if ((formData as any).tipo_agente === 'orquestrador' && !formData.system_prompt?.trim()) {
+      const subIds = (formData as any).sub_agent_ids || [];
+      const subNames = agents.filter(a => subIds.includes(a.id)).map(a => `${a.icone} ${a.nome}`);
+      const autoPrompt = `Você é o orquestrador "${formData.nome}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subNames.length ? subNames.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado ainda)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas\n• Seja claro e objetivo no direcionamento`;
+      formData.system_prompt = autoPrompt;
     }
 
     const saveData = {
@@ -775,19 +782,56 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
               </TabsContent>
 
               <TabsContent value="prompt" className="mt-0">
-                <ChatAgentPromptWizard
-                  value={formData.system_prompt || ''}
-                  onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
-                  agentName={formData.nome}
-                  knowledgeBaseType={formData.knowledge_base_type}
-                  knowledgeBaseSummary={
-                    formData.knowledge_base_type === 'interna'
-                      ? internalKbText
-                      : formData.knowledge_base_type === 'externa'
-                        ? kbFiles.map(f => `Arquivo: ${f.nome_arquivo}`).join('\n')
-                        : undefined
-                  }
-                />
+                {(formData as any).tipo_agente === 'orquestrador' ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border p-4 bg-muted/30 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🎯</span>
+                        <Label className="text-sm font-semibold">Prompt de Orquestrador</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        O orquestrador recebe automaticamente as capacidades dos sub-agentes vinculados durante a execução.
+                        O prompt abaixo é opcional — se deixar vazio, será gerado automaticamente ao salvar.
+                      </p>
+                    </div>
+                    <Textarea
+                      value={formData.system_prompt || ''}
+                      onChange={e => setFormData({ ...formData, system_prompt: e.target.value })}
+                      placeholder="Deixe vazio para gerar automaticamente com base nos sub-agentes vinculados..."
+                      rows={10}
+                      className="text-sm font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const subIds = (formData as any).sub_agent_ids || [];
+                        const subAgentsList = agents.filter(a => subIds.includes(a.id));
+                        const subNames = subAgentsList.map(a => `${a.icone} ${a.nome}${a.descricao ? ` — ${a.descricao}` : ''}`);
+                        const autoPrompt = `Você é o orquestrador "${formData.nome}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subNames.length ? subNames.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado ainda)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
+                        setFormData({ ...formData, system_prompt: autoPrompt });
+                        toast.success('Prompt gerado automaticamente!');
+                      }}
+                      className="gap-2"
+                    >
+                      <Wand2 className="h-4 w-4" /> Gerar Prompt Automático
+                    </Button>
+                  </div>
+                ) : (
+                  <ChatAgentPromptWizard
+                    value={formData.system_prompt || ''}
+                    onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
+                    agentName={formData.nome}
+                    knowledgeBaseType={formData.knowledge_base_type}
+                    knowledgeBaseSummary={
+                      formData.knowledge_base_type === 'interna'
+                        ? internalKbText
+                        : formData.knowledge_base_type === 'externa'
+                          ? kbFiles.map(f => `Arquivo: ${f.nome_arquivo}`).join('\n')
+                          : undefined
+                    }
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="campos" className="mt-0">
