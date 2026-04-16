@@ -24,6 +24,9 @@ export default function AgentTemplateSetup({ estabelecimentoId, onComplete }: Pr
   };
 
   const existingNames = agents.map(a => a.nome);
+  const selectedToCreate = selected.filter(idx => !existingNames.includes(AGENT_TEMPLATES[idx].nome));
+  const orchestratorWillBeCreated = createOrchestrator && !existingNames.includes(ORCHESTRATOR_TEMPLATE.nome);
+  const totalToCreate = selectedToCreate.length + (orchestratorWillBeCreated ? 1 : 0);
 
   const handleCreateAll = async () => {
     if (selected.length === 0) {
@@ -157,9 +160,9 @@ export default function AgentTemplateSetup({ estabelecimentoId, onComplete }: Pr
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={onComplete}>Pular</Button>
-        <Button onClick={handleCreateAll} disabled={creating || selected.length === 0}>
+        <Button onClick={handleCreateAll} disabled={creating || totalToCreate === 0}>
           {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
-          Criar {selected.length} Agente{selected.length !== 1 ? 's' : ''}{createOrchestrator ? ' + Orquestrador' : ''}
+          Criar {totalToCreate} Agente{totalToCreate !== 1 ? 's' : ''}
         </Button>
       </div>
     </div>
