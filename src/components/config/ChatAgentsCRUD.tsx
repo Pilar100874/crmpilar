@@ -248,6 +248,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
     if (editingAgent) {
       await updateAgent(editingAgent.id, saveData);
+      toast.success('Agente atualizado!');
+      // Não fecha o dialog — usuário fecha manualmente pelo X
+      return;
     } else {
       const newAgent = await createAgent(saveData);
       if (newAgent) {
@@ -272,7 +275,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
         return;
       }
     }
-    setDialogOpen(false);
   };
 
   const handleUploadKbFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
