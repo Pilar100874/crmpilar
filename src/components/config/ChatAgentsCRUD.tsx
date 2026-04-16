@@ -210,6 +210,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
       tipo_agente: (agent as any).tipo_agente || 'especifico',
       sub_agent_ids: (agent as any).sub_agent_ids || [],
+      restringir_base_conhecimento: (agent as any).restringir_base_conhecimento ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
