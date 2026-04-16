@@ -808,9 +808,18 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         const subIds = (formData as any).sub_agent_ids || [];
                         const subAgentsList = agents.filter(a => subIds.includes(a.id));
                         const subNames = subAgentsList.map(a => `${a.icone} ${a.nome}${a.descricao ? ` — ${a.descricao}` : ''}`);
-                        const autoPrompt = `Você é o orquestrador "${formData.nome}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subNames.length ? subNames.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado ainda)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
-                        setFormData({ ...formData, system_prompt: autoPrompt });
-                        toast.success('Prompt gerado automaticamente!');
+                        const agentsSection = `AGENTES DISPONÍVEIS:\n${subNames.length ? subNames.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado ainda)'}`;
+                        const existing = formData.system_prompt || '';
+                        let updatedPrompt: string;
+                        if (existing.includes('AGENTES DISPONÍVEIS:')) {
+                          updatedPrompt = existing.replace(/AGENTES DISPONÍVEIS:\n(?:• .*\n?)*/g, agentsSection + '\n');
+                        } else if (existing.trim()) {
+                          updatedPrompt = existing.trim() + '\n\n' + agentsSection;
+                        } else {
+                          updatedPrompt = `Você é o orquestrador "${formData.nome}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\n${agentsSection}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
+                        }
+                        setFormData({ ...formData, system_prompt: updatedPrompt });
+                        toast.success('Lista de agentes atualizada no prompt!');
                       }}
                       className="gap-2"
                     >

@@ -369,12 +369,30 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
         const subAgentsList = allAgents.filter(a => subs.includes(a.id));
         const subDescriptions = subAgentsList.map(a => `${a.icone} ${a.nome}${a.descricao ? ` — ${a.descricao}` : ''}`);
         const orch = allAgents.find(a => a.id === id);
-        const orchName = id === orchestrator.id ? workflowName : (orch?.nome || 'Orquestrador');
-        const autoPrompt = `Você é o orquestrador "${orchName}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subDescriptions.length ? subDescriptions.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
+        const existingPrompt = orch?.system_prompt || '';
+
+        // Build the new agents section
+        const agentsSection = `AGENTES DISPONÍVEIS:\n${subDescriptions.length ? subDescriptions.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado)'}`;
+
+        let updatedPrompt: string;
+        if (existingPrompt.includes('AGENTES DISPONÍVEIS:')) {
+          // Replace only the agents section, preserve everything else
+          updatedPrompt = existingPrompt.replace(
+            /AGENTES DISPONÍVEIS:\n(?:• .*\n?)*/,
+            agentsSection + '\n'
+          );
+        } else if (existingPrompt.trim()) {
+          // Has manual prompt but no agents section — append it
+          updatedPrompt = existingPrompt.trim() + '\n\n' + agentsSection;
+        } else {
+          // Empty prompt — generate full default
+          const orchName = id === orchestrator.id ? workflowName : (orch?.nome || 'Orquestrador');
+          updatedPrompt = `Você é o orquestrador "${orchName}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\n${agentsSection}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
+        }
 
         return supabase.from('chat_agents').update({
           sub_agent_ids: subs,
-          system_prompt: autoPrompt,
+          system_prompt: updatedPrompt,
         } as any).eq('id', id);
       });
 
