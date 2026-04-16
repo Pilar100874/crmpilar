@@ -2394,6 +2394,10 @@ export type Database = {
           nome: string
           ordem: number
           permite_cliente: boolean
+          regra_mesclagem: string | null
+          regra_mesclagem_ativa: boolean
+          regra_sugestao_ativa: boolean
+          regra_sugestao_proativa: string | null
           regras_busca_personalizada: string | null
           resposta_formato_tabela: boolean
           restringir_base_conhecimento: boolean
@@ -2424,6 +2428,10 @@ export type Database = {
           nome: string
           ordem?: number
           permite_cliente?: boolean
+          regra_mesclagem?: string | null
+          regra_mesclagem_ativa?: boolean
+          regra_sugestao_ativa?: boolean
+          regra_sugestao_proativa?: string | null
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           restringir_base_conhecimento?: boolean
@@ -2454,6 +2462,10 @@ export type Database = {
           nome?: string
           ordem?: number
           permite_cliente?: boolean
+          regra_mesclagem?: string | null
+          regra_mesclagem_ativa?: boolean
+          regra_sugestao_ativa?: boolean
+          regra_sugestao_proativa?: string | null
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
           restringir_base_conhecimento?: boolean

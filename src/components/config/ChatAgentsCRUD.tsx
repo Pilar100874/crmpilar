@@ -30,6 +30,7 @@ import AgentPerformanceDashboard from '@/components/config/agents/AgentPerforman
 import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings';
 import * as XLSX from 'xlsx';
 import { AGENT_TEMPLATES } from '@/constants/agentTemplates';
+import { DEFAULT_REGRA_MESCLAGEM, DEFAULT_REGRA_SUGESTAO_PROATIVA } from '@/constants/orchestratorRules';
 
 function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabelecimentoId: string; agentId?: string; agentName?: string }) {
   const [hasFields, setHasFields] = useState<boolean | null>(null);
@@ -593,9 +594,14 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs value={dialogTab} onValueChange={setDialogTab} className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className={`grid w-full ${((formData as any).tipo_agente === 'orquestrador' || (formData as any).tipo_agente === 'humanizador') ? 'grid-cols-2' : 'grid-cols-6'}`}>
+              <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'humanizador' ? 'grid-cols-2' : (formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                {(formData as any).tipo_agente === 'orquestrador' && (
+                  <TabsTrigger value="regras-orq">
+                    <Sparkles className="h-3 w-3 mr-1" /> Regras
+                  </TabsTrigger>
+                )}
                 {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="campos" disabled={!editingAgent}>
                     <ListChecks className="h-3 w-3 mr-1" /> Campos
@@ -851,6 +857,79 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     }
                   />
                 )}
+              </TabsContent>
+
+              <TabsContent value="regras-orq" className="mt-0 space-y-6">
+                <div className="rounded-lg border p-4 bg-muted/30 space-y-1">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" /> Regras do Orquestrador
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Edite as regras globais que o orquestrador aplica ao combinar respostas dos sub-agentes. Se uma regra for desativada ou deixada em branco, o sistema usa o texto padrão.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold">🔀 Regra de Mesclagem de Respostas</Label>
+                      <p className="text-xs text-muted-foreground">Como o orquestrador deve combinar respostas de múltiplos sub-agentes em uma única mensagem.</p>
+                    </div>
+                    <Switch
+                      checked={(formData as any).regra_mesclagem_ativa !== false}
+                      onCheckedChange={(checked) => setFormData({ ...formData, regra_mesclagem_ativa: checked } as any)}
+                    />
+                  </div>
+                  <Textarea
+                    value={(formData as any).regra_mesclagem || ''}
+                    onChange={e => setFormData({ ...formData, regra_mesclagem: e.target.value } as any)}
+                    placeholder={DEFAULT_REGRA_MESCLAGEM}
+                    rows={10}
+                    className="text-sm font-mono"
+                    disabled={(formData as any).regra_mesclagem_ativa === false}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, regra_mesclagem: DEFAULT_REGRA_MESCLAGEM } as any)}
+                    >
+                      Restaurar padrão
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-semibold">💡 Sugestão Proativa de Produtos</Label>
+                      <p className="text-xs text-muted-foreground">Força o orquestrador a buscar e listar produtos do estoque/catálogo antes de explicações técnicas.</p>
+                    </div>
+                    <Switch
+                      checked={(formData as any).regra_sugestao_ativa !== false}
+                      onCheckedChange={(checked) => setFormData({ ...formData, regra_sugestao_ativa: checked } as any)}
+                    />
+                  </div>
+                  <Textarea
+                    value={(formData as any).regra_sugestao_proativa || ''}
+                    onChange={e => setFormData({ ...formData, regra_sugestao_proativa: e.target.value } as any)}
+                    placeholder={DEFAULT_REGRA_SUGESTAO_PROATIVA}
+                    rows={12}
+                    className="text-sm font-mono"
+                    disabled={(formData as any).regra_sugestao_ativa === false}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, regra_sugestao_proativa: DEFAULT_REGRA_SUGESTAO_PROATIVA } as any)}
+                    >
+                      Restaurar padrão
+                    </Button>
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="campos" className="mt-0">
