@@ -24,6 +24,9 @@ export default function AgentTemplateSetup({ estabelecimentoId, onComplete }: Pr
   };
 
   const existingNames = agents.map(a => a.nome);
+  const selectedToCreate = selected.filter(idx => !existingNames.includes(AGENT_TEMPLATES[idx].nome));
+  const orchestratorWillBeCreated = createOrchestrator && !existingNames.includes(ORCHESTRATOR_TEMPLATE.nome);
+  const totalToCreate = selectedToCreate.length + (orchestratorWillBeCreated ? 1 : 0);
 
   const handleCreateAll = async () => {
     if (selected.length === 0) {
