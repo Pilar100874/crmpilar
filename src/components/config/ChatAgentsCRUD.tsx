@@ -328,6 +328,98 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     toast.success('Arquivo removido');
   };
 
+  const isTextEditable = (file: any) => {
+    const name = (file.nome_arquivo || '').toLowerCase();
+    return /\.(txt|md|csv|json|tsv|log|xml|yaml|yml|html|htm)$/.test(name);
+  };
+
+  const [editingFile, setEditingFile] = useState<any | null>(null);
+  const [editingFileContent, setEditingFileContent] = useState('');
+  const [editingFileLoading, setEditingFileLoading] = useState(false);
+  const [editingFileSaving, setEditingFileSaving] = useState(false);
+
+  const openEditKbFile = async (file: any) => {
+    if (!isTextEditable(file)) {
+      toast.error('Este formato não é editável inline. Use "Substituir" para enviar uma nova versão.');
+      return;
+    }
+    setEditingFile(file);
+    setEditingFileContent('');
+    setEditingFileLoading(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-knowledge-base')
+        .download(file.storage_path);
+      if (error) throw error;
+      const text = await data.text();
+      setEditingFileContent(text);
+    } catch (err: any) {
+      toast.error('Erro ao carregar arquivo: ' + (err.message || ''));
+      setEditingFile(null);
+    } finally {
+      setEditingFileLoading(false);
+    }
+  };
+
+  const saveEditedKbFile = async () => {
+    if (!editingFile) return;
+    setEditingFileSaving(true);
+    try {
+      const blob = new Blob([editingFileContent], { type: editingFile.mime_type || 'text/plain' });
+      const { error: upErr } = await supabase.storage
+        .from('agent-knowledge-base')
+        .update(editingFile.storage_path, blob, { upsert: true, contentType: editingFile.mime_type || 'text/plain' });
+      if (upErr) throw upErr;
+      await supabase.from('chat_agent_kb_files')
+        .update({ tamanho_bytes: blob.size } as any)
+        .eq('id', editingFile.id);
+      toast.success('Arquivo atualizado');
+      setEditingFile(null);
+      if (editingAgent) await loadKbFiles(editingAgent.id);
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || ''));
+    } finally {
+      setEditingFileSaving(false);
+    }
+  };
+
+  const handleReplaceKbFile = async (file: any, newFile: File) => {
+    try {
+      const { error: upErr } = await supabase.storage
+        .from('agent-knowledge-base')
+        .update(file.storage_path, newFile, { upsert: true, contentType: newFile.type });
+      if (upErr) throw upErr;
+      await supabase.from('chat_agent_kb_files')
+        .update({
+          nome_arquivo: newFile.name,
+          mime_type: newFile.type,
+          tamanho_bytes: newFile.size,
+        } as any)
+        .eq('id', file.id);
+      toast.success('Arquivo substituído');
+      if (editingAgent) await loadKbFiles(editingAgent.id);
+    } catch (err: any) {
+      toast.error('Erro ao substituir: ' + (err.message || ''));
+    }
+  };
+
+  const handleDownloadKbFile = async (file: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-knowledge-base')
+        .download(file.storage_path);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.nome_arquivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error('Erro ao baixar: ' + (err.message || ''));
+    }
+  };
+
   const confirmDelete = async () => {
     if (!agentToDelete) return;
     // Block deletion of any agent (specialist or orchestrator) used as sub-agent in any orchestrator
