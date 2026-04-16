@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN IF NOT EXISTS restringir_base_conhecimento boolean NOT NULL DEFAULT false;

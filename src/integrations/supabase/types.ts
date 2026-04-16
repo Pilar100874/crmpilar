@@ -2396,6 +2396,7 @@ export type Database = {
           permite_cliente: boolean
           regras_busca_personalizada: string | null
           resposta_formato_tabela: boolean
+          restringir_base_conhecimento: boolean
           solicitar_cnpj: boolean | null
           sub_agent_ids: string[] | null
           system_prompt: string
@@ -2425,6 +2426,7 @@ export type Database = {
           permite_cliente?: boolean
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
+          restringir_base_conhecimento?: boolean
           solicitar_cnpj?: boolean | null
           sub_agent_ids?: string[] | null
           system_prompt?: string
@@ -2454,6 +2456,7 @@ export type Database = {
           permite_cliente?: boolean
           regras_busca_personalizada?: string | null
           resposta_formato_tabela?: boolean
+          restringir_base_conhecimento?: boolean
           solicitar_cnpj?: boolean | null
           sub_agent_ids?: string[] | null
           system_prompt?: string
