@@ -200,7 +200,7 @@ interface Props {
   knowledgeBaseSummary?: string; // resumo textual da KB (textos internos, nomes de arquivos, etc.)
 }
 
-export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
+export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary }: Props) {
   const [step, setStep] = useState(0);
   const [cardData, setCardData] = useState<ChatAgentCardData>(() => {
     if (value?.trim()) return promptToCardData(value);
