@@ -253,8 +253,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
     if (editingAgent) {
       await updateAgent(editingAgent.id, saveData);
+      setEditingAgent({ ...editingAgent, ...saveData } as ChatAgent);
       toast.success('Agente atualizado!');
-      // Não fecha o dialog — usuário fecha manualmente pelo X
+      // Dialog permanece aberto após salvar
       return;
     } else {
       const newAgent = await createAgent(saveData);
