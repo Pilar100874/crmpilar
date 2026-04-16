@@ -30,6 +30,7 @@ import AgentPerformanceDashboard from '@/components/config/agents/AgentPerforman
 import AgentGlobalSettings from '@/components/config/agents/AgentGlobalSettings';
 import * as XLSX from 'xlsx';
 import { AGENT_TEMPLATES } from '@/constants/agentTemplates';
+import { DEFAULT_REGRA_MESCLAGEM, DEFAULT_REGRA_SUGESTAO_PROATIVA } from '@/constants/orchestratorRules';
 
 function AgentDataWizardGate({ estabelecimentoId, agentId, agentName }: { estabelecimentoId: string; agentId?: string; agentName?: string }) {
   const [hasFields, setHasFields] = useState<boolean | null>(null);
