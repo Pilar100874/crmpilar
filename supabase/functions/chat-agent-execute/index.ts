@@ -529,7 +529,73 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     }
 
     const aiData = await aiResponse.json();
-    const resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
+    let resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
+
+    // 🗣️ ETAPA DE HUMANIZAÇÃO: se o orquestrador tem um sub-agente Humanizador, passa a resposta por ele
+    if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0) {
+      const humanizador = subAgents.find((s: any) =>
+        (s.nome && s.nome.toLowerCase().includes('humanizador')) ||
+        s.dominio === 'humanizacao'
+      );
+
+      if (humanizador && resposta && resposta.trim().length > 0) {
+        try {
+          // Preservar blocos estruturais (tabelas e pré-orçamento) extraindo-os antes
+          const preservedBlocks: string[] = [];
+          let respostaParaHumanizar = resposta;
+
+          respostaParaHumanizar = respostaParaHumanizar.replace(
+            /<!--PRE_ORDER_START-->[\s\S]*?<!--PRE_ORDER_END-->/g,
+            (match: string) => {
+              preservedBlocks.push(match);
+              return `[[PRESERVED_${preservedBlocks.length - 1}]]`;
+            }
+          );
+          respostaParaHumanizar = respostaParaHumanizar.replace(
+            /<!--TABLE_DATA_START-->[\s\S]*?<!--TABLE_DATA_END-->/g,
+            (match: string) => {
+              preservedBlocks.push(match);
+              return `[[PRESERVED_${preservedBlocks.length - 1}]]`;
+            }
+          );
+
+          const humanizerResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: humanizador.modelo_ia || "google/gemini-2.5-flash",
+              messages: [
+                { role: "system", content: humanizador.system_prompt },
+                {
+                  role: "user",
+                  content: `[RESPOSTA_ORIGINAL]\n${respostaParaHumanizar}\n\nReescreva acima em tom humano, natural e amigável. Preserve EXATAMENTE os marcadores [[PRESERVED_N]] (não os altere, apenas mantenha-os onde fazem sentido). Devolva APENAS o texto humanizado, sem comentários.`
+                }
+              ],
+              stream: false,
+            }),
+          });
+
+          if (humanizerResponse.ok) {
+            const humanData = await humanizerResponse.json();
+            let humanizada = humanData.choices?.[0]?.message?.content;
+            if (humanizada && humanizada.trim().length > 0) {
+              humanizada = humanizada.replace(/\[\[PRESERVED_(\d+)\]\]/g, (_: string, idx: string) => {
+                return preservedBlocks[parseInt(idx)] || '';
+              });
+              resposta = humanizada;
+              console.log("✅ Resposta humanizada com sucesso");
+            }
+          } else {
+            console.warn("⚠️ Humanizador falhou, usando resposta original");
+          }
+        } catch (humErr) {
+          console.error("Erro no humanizador (usando resposta original):", humErr);
+        }
+      }
+    }
 
     // Detectar e extrair pré-orçamento da resposta
     let preOrderData = null;
