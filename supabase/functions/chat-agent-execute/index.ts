@@ -534,6 +534,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     // 🗣️ ETAPA DE HUMANIZAÇÃO: se o orquestrador tem um sub-agente Humanizador, passa a resposta por ele
     if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0) {
       const humanizador = subAgents.find((s: any) =>
+        s.tipo_agente === 'humanizador' ||
         (s.nome && s.nome.toLowerCase().includes('humanizador')) ||
         s.dominio === 'humanizacao'
       );
