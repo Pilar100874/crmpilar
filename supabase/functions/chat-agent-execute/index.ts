@@ -569,6 +569,25 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     }
 
     // Chamar Lovable AI
+    const groundingContext = [kbContext, estoqueSistemaContext, produtosImportadosContext, apiContext, clienteContext]
+      .filter((part) => Boolean(part && part.trim()))
+      .join("\n\n")
+      .trim();
+    const isKnowledgeRestricted = Boolean(agent.restringir_base_conhecimento);
+    const safeKnowledgeFallback = "Essa informação não está confirmada na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?";
+    const shouldSkipHumanization = (text: string) =>
+      /não está confirmada na minha base de conhecimento|não tenho essa informação confirmada na base/i.test(text);
+    const extractJsonObject = (text: string): { grounded?: boolean; reason?: string } | null => {
+      const fenced = text.match(/```json\s*([\s\S]*?)\s*```/i);
+      const candidate = fenced?.[1] || text.match(/\{[\s\S]*\}/)?.[0];
+      if (!candidate) return null;
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        return null;
+      }
+    };
+
     const messages: { role: string; content: string }[] = [
       { role: "system", content: systemPrompt },
     ];
@@ -613,8 +632,63 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     const aiData = await aiResponse.json();
     let resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
 
+    if (isKnowledgeRestricted) {
+      const respostaSemBlocos = resposta
+        .replace(/<!--PRE_ORDER_START-->[\s\S]*?<!--PRE_ORDER_END-->/g, "")
+        .replace(/<!--TABLE_DATA_START-->[\s\S]*?<!--TABLE_DATA_END-->/g, "")
+        .trim();
+
+      if (!groundingContext) {
+        console.warn("[anti-alucinação] Restrição ativa sem contexto disponível; bloqueando resposta livre.");
+        resposta = safeKnowledgeFallback;
+      } else if (respostaSemBlocos) {
+        try {
+          const validationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [
+                {
+                  role: "system",
+                  content: "Você é um validador factual extremamente rígido. Compare a RESPOSTA com o CONTEXTO. Se QUALQUER afirmação factual, marca, fabricante, gramatura, categoria técnica ou especificação não estiver EXPLICITAMENTE no contexto, grounded=false. Não aceite memória do modelo, plausibilidade, dedução nem correção do usuário como prova. Responda APENAS JSON válido no formato {\"grounded\": boolean, \"reason\": string}."
+                },
+                {
+                  role: "user",
+                  content: `[CONTEXTO]\n${groundingContext.substring(0, 30000)}\n\n[RESPOSTA]\n${respostaSemBlocos}`
+                }
+              ],
+              stream: false,
+            }),
+          });
+
+          if (!validationResponse.ok) {
+            const validationError = await validationResponse.text().catch(() => "");
+            console.warn("[anti-alucinação] Falha ao validar grounding:", validationResponse.status, validationError);
+            resposta = safeKnowledgeFallback;
+          } else {
+            const validationData = await validationResponse.json();
+            const validationText = validationData.choices?.[0]?.message?.content || "";
+            const validationJson = extractJsonObject(validationText);
+            const isGrounded = validationJson?.grounded === true;
+
+            if (!isGrounded) {
+              console.warn("[anti-alucinação] Resposta bloqueada por falta de grounding:", validationJson?.reason || "sem motivo informado");
+              resposta = safeKnowledgeFallback;
+            }
+          }
+        } catch (validationError) {
+          console.error("[anti-alucinação] Erro na validação de grounding:", validationError);
+          resposta = safeKnowledgeFallback;
+        }
+      }
+    }
+
     // 🗣️ ETAPA DE HUMANIZAÇÃO: se o orquestrador tem um sub-agente Humanizador, passa a resposta por ele
-    if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0) {
+    if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0 && !shouldSkipHumanization(resposta)) {
       const humanizador = subAgents.find((s: any) =>
         s.tipo_agente === 'humanizador' ||
         (s.nome && s.nome.toLowerCase().includes('humanizador')) ||
@@ -623,7 +697,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
 
       if (humanizador && resposta && resposta.trim().length > 0) {
         try {
-          // Preservar blocos estruturais (tabelas e pré-orçamento) extraindo-os antes
+          const respostaOriginal = resposta;
           const preservedBlocks: string[] = [];
           let respostaParaHumanizar = resposta;
 
@@ -654,7 +728,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
                 { role: "system", content: humanizador.system_prompt },
                 {
                   role: "user",
-                  content: `[RESPOSTA_ORIGINAL]\n${respostaParaHumanizar}\n\nReescreva acima em tom humano, natural e amigável. Preserve EXATAMENTE os marcadores [[PRESERVED_N]] (não os altere, apenas mantenha-os onde fazem sentido). Devolva APENAS o texto humanizado, sem comentários.`
+                  content: `[RESPOSTA_ORIGINAL]\n${respostaParaHumanizar}\n\nReescreva acima em tom humano, natural e amigável. Preserve EXATAMENTE qualquer marcador no formato [[PRESERVED_0]], [[PRESERVED_1]], etc. NÃO troque por [[PRESERVED_N]] nem altere a numeração. Se não houver marcadores, ignore esta instrução. Devolva APENAS o texto humanizado, sem comentários.`
                 }
               ],
               stream: false,
@@ -663,13 +737,19 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
 
           if (humanizerResponse.ok) {
             const humanData = await humanizerResponse.json();
-            let humanizada = humanData.choices?.[0]?.message?.content;
+            const humanizada = humanData.choices?.[0]?.message?.content;
             if (humanizada && humanizada.trim().length > 0) {
-              humanizada = humanizada.replace(/\[\[PRESERVED_(\d+)\]\]/g, (_: string, idx: string) => {
+              const restoredHumanizada = humanizada.replace(/\[\[PRESERVED_(\d+)\]\]/g, (_: string, idx: string) => {
                 return preservedBlocks[parseInt(idx)] || '';
               });
-              resposta = humanizada;
-              console.log("✅ Resposta humanizada com sucesso");
+
+              if (/\[\[PRESERVED_[^\]]+\]\]/i.test(restoredHumanizada)) {
+                console.warn("⚠️ Humanizador devolveu marcador inválido, usando resposta original");
+                resposta = respostaOriginal;
+              } else {
+                resposta = restoredHumanizada;
+                console.log("✅ Resposta humanizada com sucesso");
+              }
             }
           } else {
             console.warn("⚠️ Humanizador falhou, usando resposta original");
