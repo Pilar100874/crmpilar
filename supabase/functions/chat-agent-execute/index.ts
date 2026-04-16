@@ -463,6 +463,31 @@ REGRAS:
       systemPrompt += "--- FIM DA REGRA DE FIDELIDADE ---";
     }
 
+    // Hierarquia obrigatória de fontes de dados
+    if (estoqueSistemaContext || produtosImportadosContext || kbContext) {
+      systemPrompt += `
+
+--- HIERARQUIA OBRIGATÓRIA DE FONTES (PRIORIDADE DE SUGESTÃO) ---
+Ao recomendar, sugerir ou listar papéis/produtos para o cliente, você DEVE seguir RIGOROSAMENTE esta ordem de prioridade:
+
+1️⃣ PRIMEIRO — ESTOQUE DO SISTEMA (disponibilidade imediata):
+   • Sempre comece sugerindo papéis/produtos que estão atualmente em ESTOQUE no sistema.
+   • Estes têm prioridade ABSOLUTA porque podem ser entregues imediatamente.
+   • Sinalize claramente: "Temos em estoque: ..." ou "Disponível agora: ..."
+
+2️⃣ SEGUNDO — PRODUTOS CADASTRADOS (sem estoque imediato, mas no catálogo):
+   • Caso o item solicitado não esteja em estoque, sugira papéis/produtos do CADASTRO de produtos importados/cadastrados.
+   • Sinalize: "Temos no catálogo (sob encomenda): ..." ou "Cadastrado mas sem estoque imediato: ..."
+
+3️⃣ POR ÚLTIMO — BASE DE CONHECIMENTO (informação técnica/genérica):
+   • SOMENTE quando o cliente pedir explicações técnicas, especificações, ou quando NÃO houver opção equivalente em estoque nem em cadastro, use a BASE DE CONHECIMENTO.
+   • A base de conhecimento serve para EXPLICAR características técnicas, NÃO para substituir produtos reais.
+   • Sinalize: "Como referência técnica: ..." ou "Informação técnica complementar: ..."
+
+REGRA DE OURO: NUNCA recomende um papel da base de conhecimento se houver opção equivalente em estoque ou cadastrado. NUNCA misture as três fontes sem deixar claro de onde vem cada sugestão.
+--- FIM DA HIERARQUIA DE FONTES ---`;
+    }
+
     // Filtros progressivos
     if (agent.acumular_filtros) {
       systemPrompt += `
