@@ -52,6 +52,7 @@ interface Props {
 /* ─── Custom Node ─── */
 const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<string, any> }) => {
   const isOrch = data.tipo_agente === 'orquestrador';
+  const isHumanizer = data.tipo_agente === 'humanizador';
   const isDisabled = data._disabled;
 
   return (
@@ -60,9 +61,11 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
       ${selected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
       ${isOrch
         ? 'bg-primary/10 border-primary dark:bg-primary/20'
-        : 'bg-card border-border'}`}
+        : isHumanizer
+          ? 'bg-pink-500/10 border-pink-500 dark:bg-pink-500/20'
+          : 'bg-card border-border'}`}
     >
-      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
+      <Handle type="target" position={Position.Top} className={`!w-3 !h-3 !border-2 !border-background ${isHumanizer ? '!bg-pink-500' : '!bg-primary'}`} />
       <div className="flex items-center gap-2">
         <span className="text-2xl">{String(data.icone || '🤖')}</span>
         <div className="min-w-0 flex-1">
@@ -74,6 +77,11 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
         {isOrch && (
           <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
             <Network className="h-3 w-3 mr-0.5" />Orquestrador
+          </Badge>
+        )}
+        {isHumanizer && (
+          <Badge className="bg-pink-500 text-white text-[10px] px-1.5 py-0">
+            🗣️ Humanizador
           </Badge>
         )}
         <Badge variant={data.ativo && !isDisabled ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
@@ -91,7 +99,7 @@ const AgentFlowNode = memo(({ data, selected }: NodeProps & { data: Record<strin
           <Edit className="h-3 w-3" />
         </button>
       </div>
-      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-primary !border-2 !border-background" />
+      <Handle type="source" position={Position.Bottom} className={`!w-3 !h-3 !border-2 !border-background ${isHumanizer ? '!bg-pink-500' : '!bg-primary'}`} />
     </div>
   );
 });
@@ -530,10 +538,12 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <div className="px-3 pb-3 space-y-2">
               {(() => {
                 const orchAgents = availableAgents.filter(a => a.tipo_agente === 'orquestrador');
-                const specAgents = availableAgents.filter(a => a.tipo_agente !== 'orquestrador');
+                const humAgents = availableAgents.filter(a => a.tipo_agente === 'humanizador');
+                const specAgents = availableAgents.filter(a => a.tipo_agente !== 'orquestrador' && a.tipo_agente !== 'humanizador');
                 const groups = [
                   { name: 'Orquestradores', icon: Network, agents: orchAgents, gradient: 'from-primary/10 to-primary/5', border: 'border-primary/20', borderHover: 'hover:border-primary/40', iconColor: 'text-primary' },
                   { name: 'Agentes', icon: Bot, agents: specAgents, gradient: 'from-accent/40 to-accent/20', border: 'border-border', borderHover: 'hover:border-primary/30', iconColor: 'text-muted-foreground' },
+                  { name: 'Pós-processamento', icon: Bot, agents: humAgents, gradient: 'from-pink-500/10 to-pink-500/5', border: 'border-pink-500/20', borderHover: 'hover:border-pink-500/40', iconColor: 'text-pink-500' },
                 ];
                 const filteredGroups = groups.filter(g => g.agents.length > 0);
                 if (filteredGroups.length === 0) {
@@ -632,7 +642,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/30" />
             <MiniMap
               className="!bg-card !border-border"
-              nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
+              nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : n.data?.tipo_agente === 'humanizador' ? '#EC4899' : 'hsl(var(--muted-foreground))'}
               maskColor="hsl(var(--background) / 0.7)"
             />
           </ReactFlow>
