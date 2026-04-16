@@ -642,7 +642,7 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="!bg-muted/30" />
             <MiniMap
               className="!bg-card !border-border"
-              nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
+              nodeColor={(n) => n.data?.tipo_agente === 'orquestrador' ? 'hsl(var(--primary))' : n.data?.tipo_agente === 'humanizador' ? '#EC4899' : 'hsl(var(--muted-foreground))'}
               maskColor="hsl(var(--background) / 0.7)"
             />
           </ReactFlow>
