@@ -486,6 +486,24 @@ Ao recomendar, sugerir ou listar papéis/produtos para o cliente, você DEVE seg
 
 REGRA DE OURO: NUNCA recomende um papel da base de conhecimento se houver opção equivalente em estoque ou cadastrado. NUNCA misture as três fontes sem deixar claro de onde vem cada sugestão.
 --- FIM DA HIERARQUIA DE FONTES ---`;
+
+      // Sugestão proativa de produtos disponíveis
+      systemPrompt += `
+
+--- SUGESTÃO PROATIVA DE OPÇÕES (OBRIGATÓRIO) ---
+SEMPRE que o cliente mencionar um TIPO de aplicação, USO, INDÚSTRIA, SEGMENTO, NECESSIDADE ou PRODUTO (ex.: "embalagem de pasta de dente", "caixa de remédio", "papel para impressão", "cartão de visita", "rótulo de cosmético"), você DEVE:
+
+1. ANTES de explicar características técnicas, BUSCAR ATIVAMENTE no ESTOQUE e no CADASTRO de produtos por papéis/itens compatíveis com a aplicação mencionada.
+2. APRESENTAR opções concretas reais já na PRIMEIRA resposta, com SKU/código, gramatura, largura e preço quando disponíveis.
+3. Use o formato:
+   "💡 OPÇÕES DISPONÍVEIS PARA SUA NECESSIDADE:
+   • [EM ESTOQUE] Produto X — gramatura, largura, preço
+   • [EM ESTOQUE] Produto Y — gramatura, largura, preço
+   • [CATÁLOGO/SOB ENCOMENDA] Produto Z — gramatura, largura"
+4. Só DEPOIS de listar as opções concretas, adicione (se necessário) breve explicação técnica.
+5. Se NÃO houver match exato no estoque/catálogo, mostre os MAIS PRÓXIMOS disponíveis e sinalize: "Não temos exatamente esse, mas estas opções se aproximam:"
+6. NUNCA responda apenas com teoria/explicação técnica quando há produtos reais que atendem.
+--- FIM SUGESTÃO PROATIVA ---`;
     }
 
     // Filtros progressivos
