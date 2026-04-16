@@ -332,6 +332,35 @@ export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBas
               </Button>
             </div>
 
+            {/* Generate from Knowledge Base */}
+            {knowledgeBaseType && knowledgeBaseType !== 'nenhuma' && knowledgeBaseType !== 'terceiros' && (
+              <div className="rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-amber-600" />
+                  <Label className="text-sm font-semibold text-amber-700 dark:text-amber-400">Gerar a partir da Base de Conhecimento</Label>
+                  <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-600">Auto</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Gera automaticamente um prompt otimizado com base nos dados da sua base de conhecimento ({knowledgeBaseType === 'interna' ? 'textos internos' : 'arquivos anexados'}). O agente será configurado como especialista no conteúdo da KB.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateFromKB}
+                  disabled={generating || !knowledgeBaseSummary?.trim()}
+                  className="gap-2 w-full border-amber-500/50 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Analisando base de conhecimento...</>
+                  ) : (
+                    <><Wand2 className="h-4 w-4" /> Gerar Prompt da Base de Conhecimento</>
+                  )}
+                </Button>
+                {!knowledgeBaseSummary?.trim() && (
+                  <p className="text-[10px] text-amber-600">⚠️ Adicione conteúdo à base de conhecimento na aba "Conhecimento" primeiro.</p>
+                )}
+              </div>
+            )}
+
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-2">Ou preencha manualmente:</p>
               <Button variant="outline" size="sm" onClick={() => setStep(1)}>
