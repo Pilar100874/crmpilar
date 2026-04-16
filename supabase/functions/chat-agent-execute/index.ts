@@ -78,6 +78,14 @@ serve(async (req) => {
           ];
           if (agent.knowledge_base_type === 'nenhuma') agent.knowledge_base_type = 'interna';
         }
+        // Marcar para herdar KB externa (arquivos) dos sub-agentes
+        if (sub.knowledge_base_type === 'externa') {
+          if (agent.knowledge_base_type === 'nenhuma') agent.knowledge_base_type = 'externa';
+          (agent as any)._inheritedKbAgentIds = [
+            ...((agent as any)._inheritedKbAgentIds || []),
+            sub.id,
+          ];
+        }
         // Mesclar regras de busca
         if (sub.regras_busca_personalizada?.trim()) {
           agent.regras_busca_personalizada = (agent.regras_busca_personalizada || '') + '\n' + sub.regras_busca_personalizada;
@@ -93,11 +101,17 @@ serve(async (req) => {
       kbContext = "\n\n--- BASE DE CONHECIMENTO ---\n" + items.join("\n\n") + "\n--- FIM DA BASE ---\n";
     }
 
-    if (agent.knowledge_base_type === "externa") {
+    if (agent.knowledge_base_type === "externa" || (agent as any)._inheritedKbAgentIds?.length) {
+      const kbAgentIds = Array.from(new Set([
+        agent_id,
+        ...(((agent as any)._inheritedKbAgentIds as string[]) || []),
+      ]));
       const { data: kbFiles } = await supabase
         .from("chat_agent_kb_files")
-        .select("storage_path, nome_arquivo")
-        .eq("agent_id", agent_id);
+        .select("storage_path, nome_arquivo, agent_id")
+        .in("agent_id", kbAgentIds);
+
+      console.log(`[KB externa] Buscando arquivos para agentes: ${kbAgentIds.join(", ")} -> ${kbFiles?.length || 0} arquivo(s)`);
 
       if (kbFiles?.length) {
         kbContext = "\n\n--- BASE DE CONHECIMENTO (ARQUIVOS) ---\n";
