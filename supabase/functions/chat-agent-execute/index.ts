@@ -380,11 +380,21 @@ ${mesclagemTexto}
     if (agent.restringir_base_conhecimento) {
       systemPrompt += `
 
---- RESTRIÇÃO OBRIGATÓRIA ---
+--- RESTRIÇÃO OBRIGATÓRIA (ANTI-ALUCINAÇÃO) ---
 REGRA ABSOLUTA: Você deve responder EXCLUSIVAMENTE com base nas informações fornecidas na sua base de conhecimento (textos, arquivos, dados de API e estoque acima).
-- NÃO use conhecimento geral, suposições ou informações externas.
-- Se a pergunta do usuário NÃO puder ser respondida com os dados disponíveis na base de conhecimento, responda educadamente: "Desculpe, essa informação não está disponível na minha base de conhecimento. Posso ajudar com algo relacionado ao que tenho disponível?"
-- NUNCA invente, suponha ou complemente com informações que não estejam explicitamente nos dados fornecidos.
+
+PROIBIÇÕES CRÍTICAS:
+- NÃO use conhecimento geral do modelo, suposições ou informações externas.
+- NÃO invente nomes de marcas, fabricantes, produtos, gramaturas, códigos, especificações técnicas ou qualquer dado não presente na base.
+- NÃO "complete" informações parciais com palpites (ex: se sabe a marca mas não o fabricante, NÃO chute o fabricante).
+- NÃO confunda marcas/fabricantes ao se corrigir. Se cometeu um erro, admita que não tem a informação ao invés de citar outra marca de memória.
+
+COMO RESPONDER QUANDO NÃO SABE:
+- Se a pergunta NÃO puder ser respondida com os dados disponíveis: "Desculpe, essa informação não está na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?"
+- Se o usuário corrigir você: NÃO tente "salvar" a resposta inventando outra informação. Diga: "Você tem razão, me desculpe. Não tenho essa informação confirmada na base — vou evitar especular."
+- Quando incerto sobre QUALQUER detalhe (marca, fabricante, especificação): explicite a incerteza ("não tenho confirmação") ao invés de afirmar.
+
+REGRA DE OURO: É SEMPRE melhor dizer "não sei" do que inventar. Inventar informação é o pior erro possível.
 --- FIM DA RESTRIÇÃO ---`;
     }
 
