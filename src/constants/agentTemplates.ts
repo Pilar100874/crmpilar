@@ -14,7 +14,7 @@ export interface AgentTemplate {
   resposta_formato_tabela: boolean;
   acumular_filtros: boolean;
   permite_cliente: boolean;
-  tipo_agente: 'especifico' | 'orquestrador';
+  tipo_agente: 'especifico' | 'orquestrador' | 'humanizador';
   modo_operacao: 'sugerir' | 'automatico';
   modelo_ia: string;
 }
