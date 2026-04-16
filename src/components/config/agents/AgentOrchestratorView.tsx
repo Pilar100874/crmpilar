@@ -364,9 +364,19 @@ function WorkflowCanvasInner({ orchestrator, allAgents, onUpdate, onBack, onCrea
       });
 
       const orchIds = nodes.filter(n => allAgents.find(a => a.id === n.id)?.tipo_agente === 'orquestrador').map(n => n.id);
-      const promises = orchIds.map(id =>
-        supabase.from('chat_agents').update({ sub_agent_ids: subMap[id] || [] } as any).eq('id', id)
-      );
+      const promises = orchIds.map(id => {
+        const subs = subMap[id] || [];
+        const subAgentsList = allAgents.filter(a => subs.includes(a.id));
+        const subDescriptions = subAgentsList.map(a => `${a.icone} ${a.nome}${a.descricao ? ` — ${a.descricao}` : ''}`);
+        const orch = allAgents.find(a => a.id === id);
+        const orchName = id === orchestrator.id ? workflowName : (orch?.nome || 'Orquestrador');
+        const autoPrompt = `Você é o orquestrador "${orchName}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subDescriptions.length ? subDescriptions.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas de diferentes agentes\n• Seja claro e objetivo no direcionamento\n• Quando não souber qual agente acionar, pergunte ao usuário para esclarecer`;
+
+        return supabase.from('chat_agents').update({
+          sub_agent_ids: subs,
+          system_prompt: autoPrompt,
+        } as any).eq('id', id);
+      });
 
       // Also save name if changed
       if (workflowName !== orchestrator.nome) {
