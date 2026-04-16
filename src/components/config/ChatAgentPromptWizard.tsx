@@ -196,9 +196,11 @@ interface Props {
   value: string; // current system_prompt
   onChange: (prompt: string) => void;
   agentName?: string;
+  knowledgeBaseType?: string;
+  knowledgeBaseSummary?: string; // resumo textual da KB (textos internos, nomes de arquivos, etc.)
 }
 
-export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
+export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary }: Props) {
   const [step, setStep] = useState(0);
   const [cardData, setCardData] = useState<ChatAgentCardData>(() => {
     if (value?.trim()) return promptToCardData(value);
@@ -272,6 +274,70 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
     }
   };
 
+  const handleGenerateFromKB = async () => {
+    if (!knowledgeBaseSummary?.trim()) {
+      toast.error('Base de conhecimento vazia');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const kbPreview = knowledgeBaseSummary.substring(0, 3000);
+      const description = `Crie um prompt para um agente especialista chamado "${agentName || 'Agente'}". 
+Este agente possui uma base de conhecimento anexada com o seguinte conteúdo (resumo):
+
+---
+${kbPreview}
+---
+
+O agente deve:
+- Ser um especialista no conteúdo acima
+- Responder APENAS com base nos dados da base de conhecimento
+- Recusar educadamente perguntas fora do escopo
+- Ser técnico e preciso nas informações`;
+
+      const { data, error } = await supabase.functions.invoke('generate-chat-agent-prompt', {
+        body: {
+          description,
+          agent_name: agentName || 'Agente',
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+
+      const newCard: ChatAgentCardData = {
+        papel: data.papel || '',
+        missao: data.missao || '',
+        tom_de_voz: data.tom_de_voz || '',
+        capacidades: data.capacidades?.length ? data.capacidades : [''],
+        restricoes: [
+          ...(data.restricoes?.length ? data.restricoes : []),
+          'Não responder perguntas que não possam ser respondidas com a base de conhecimento',
+          'Não inventar informações que não estejam nos dados disponíveis',
+        ],
+        protocolo_raciocinio: data.protocolo_raciocinio?.length ? data.protocolo_raciocinio : [''],
+        padroes_qualidade: data.padroes_qualidade?.length ? data.padroes_qualidade : [''],
+        anti_padroes: [
+          ...(data.anti_padroes?.length ? data.anti_padroes : []),
+          'Inventar dados, especificações ou informações não presentes na base de conhecimento',
+        ],
+        tratamento_erros: data.tratamento_erros || 'Se a informação não estiver na base de conhecimento, informe educadamente que não possui essa informação e sugira o que pode ajudar.',
+        instrucoes_extras: data.instrucoes_extras || '',
+      };
+
+      setCardData(newCard);
+      setFreeText('');
+      onChange(cardDataToPrompt(newCard, ''));
+      toast.success('✨ Prompt gerado com base na KB! Revise antes de salvar.');
+      setStep(1);
+    } catch (err: any) {
+      toast.error(`Erro ao gerar: ${err.message || 'Erro desconhecido'}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const copyPrompt = () => {
     navigator.clipboard.writeText(generatedPrompt);
     toast.success('Prompt copiado!');
@@ -329,6 +395,35 @@ export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
                 )}
               </Button>
             </div>
+
+            {/* Generate from Knowledge Base */}
+            {knowledgeBaseType && knowledgeBaseType !== 'nenhuma' && knowledgeBaseType !== 'terceiros' && (
+              <div className="rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-amber-600" />
+                  <Label className="text-sm font-semibold text-amber-700 dark:text-amber-400">Gerar a partir da Base de Conhecimento</Label>
+                  <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-600">Auto</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Gera automaticamente um prompt otimizado com base nos dados da sua base de conhecimento ({knowledgeBaseType === 'interna' ? 'textos internos' : 'arquivos anexados'}). O agente será configurado como especialista no conteúdo da KB.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateFromKB}
+                  disabled={generating || !knowledgeBaseSummary?.trim()}
+                  className="gap-2 w-full border-amber-500/50 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+                >
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Analisando base de conhecimento...</>
+                  ) : (
+                    <><Wand2 className="h-4 w-4" /> Gerar Prompt da Base de Conhecimento</>
+                  )}
+                </Button>
+                {!knowledgeBaseSummary?.trim() && (
+                  <p className="text-[10px] text-amber-600">⚠️ Adicione conteúdo à base de conhecimento na aba "Conhecimento" primeiro.</p>
+                )}
+              </div>
+            )}
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-2">Ou preencha manualmente:</p>
