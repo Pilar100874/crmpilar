@@ -779,6 +779,14 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   value={formData.system_prompt || ''}
                   onChange={prompt => setFormData({ ...formData, system_prompt: prompt })}
                   agentName={formData.nome}
+                  knowledgeBaseType={formData.knowledge_base_type}
+                  knowledgeBaseSummary={
+                    formData.knowledge_base_type === 'interna'
+                      ? internalKbText
+                      : formData.knowledge_base_type === 'externa'
+                        ? kbFiles.map(f => `Arquivo: ${f.nome_arquivo}`).join('\n')
+                        : undefined
+                  }
                 />
               </TabsContent>
 
