@@ -1178,7 +1178,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                 )}
 
                 {/* APIs de dados — visível para interna e externa */}
-                {(formData.knowledge_base_type === 'interna' || formData.knowledge_base_type === 'externa') && (
+                {(formData.knowledge_base_type === 'interna' || formData.knowledge_base_type === 'externa') && (formData as any).tipo_agente !== 'conhecimento' && (
                   <>
                     <Separator />
                     <div>
