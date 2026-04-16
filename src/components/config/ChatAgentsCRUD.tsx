@@ -630,8 +630,16 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <SelectItem value="orquestrador">
                         <span className="flex items-center gap-2"><Network className="h-4 w-4" /> Orquestrador — Combina capacidades de vários agentes</span>
                       </SelectItem>
+                      <SelectItem value="humanizador">
+                        <span className="flex items-center gap-2">🗣️ Humanizador — Reescreve respostas em tom humano (pós-processamento)</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  {(formData as any).tipo_agente === 'humanizador' && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ℹ️ O Humanizador atua APÓS outros agentes responderem. Ele só precisa de <strong>Identidade</strong> e <strong>Prompt</strong> — sem regras, conhecimento ou dados. Vincule-o como sub-agente de um Orquestrador para ativá-lo.
+                    </p>
+                  )}
                 </div>
 {(formData as any).tipo_agente === 'orquestrador' && (
                   <div className="rounded-lg border p-4 space-y-2 bg-primary/5 border-primary/20">
