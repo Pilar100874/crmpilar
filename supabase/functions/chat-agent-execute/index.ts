@@ -59,6 +59,7 @@ serve(async (req) => {
         if (sub.gerar_pre_orcamento) agent.gerar_pre_orcamento = true;
         if (sub.acumular_filtros) agent.acumular_filtros = true;
         if (sub.resposta_formato_tabela) agent.resposta_formato_tabela = true;
+        if (sub.restringir_base_conhecimento) agent.restringir_base_conhecimento = true;
         // Mesclar API endpoint IDs
         const subApiIds = sub.api_endpoint_ids || [];
         for (const id of subApiIds) {
