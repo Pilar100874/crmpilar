@@ -1478,6 +1478,37 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editingFile} onOpenChange={(open) => { if (!open) setEditingFile(null); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar arquivo: {editingFile?.nome_arquivo}</DialogTitle>
+            <DialogDescription>
+              Edite o conteúdo do arquivo da base de conhecimento. As alterações serão aplicadas imediatamente.
+            </DialogDescription>
+          </DialogHeader>
+          {editingFileLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <Textarea
+              value={editingFileContent}
+              onChange={(e) => setEditingFileContent(e.target.value)}
+              className="min-h-[400px] font-mono text-sm"
+              placeholder="Conteúdo do arquivo..."
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingFile(null)} disabled={editingFileSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEditedKbFile} disabled={editingFileSaving || editingFileLoading}>
+              {editingFileSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : 'Salvar alterações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
