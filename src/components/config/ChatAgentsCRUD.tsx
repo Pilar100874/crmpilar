@@ -226,10 +226,17 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       toast.error('Nome do agente é obrigatório');
       return;
     }
-    // Prompt obrigatório apenas na edição (agente já existente)
-    if (editingAgent && !formData.system_prompt?.trim()) {
+    // Prompt obrigatório apenas na edição de agente específico (orquestrador gera automaticamente)
+    if (editingAgent && !formData.system_prompt?.trim() && (formData as any).tipo_agente !== 'orquestrador') {
       toast.error('Prompt do sistema é obrigatório');
       return;
+    }
+    // Auto-gerar prompt para orquestrador se estiver vazio
+    if ((formData as any).tipo_agente === 'orquestrador' && !formData.system_prompt?.trim()) {
+      const subIds = (formData as any).sub_agent_ids || [];
+      const subNames = agents.filter(a => subIds.includes(a.id)).map(a => `${a.icone} ${a.nome}`);
+      const autoPrompt = `Você é o orquestrador "${formData.nome}". Sua função é analisar a intenção do usuário e direcionar para o agente especialista mais adequado.\n\nAGENTES DISPONÍVEIS:\n${subNames.length ? subNames.map(n => `• ${n}`).join('\n') : '(nenhum agente vinculado ainda)'}\n\nREGRAS:\n• Identifique a intenção do usuário e acione o agente mais adequado\n• Se a pergunta envolver múltiplas áreas, combine as respostas\n• Seja claro e objetivo no direcionamento`;
+      formData.system_prompt = autoPrompt;
     }
 
     const saveData = {
