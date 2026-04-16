@@ -593,9 +593,14 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs value={dialogTab} onValueChange={setDialogTab} className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className={`grid w-full ${((formData as any).tipo_agente === 'orquestrador' || (formData as any).tipo_agente === 'humanizador') ? 'grid-cols-2' : 'grid-cols-6'}`}>
+              <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'humanizador' ? 'grid-cols-2' : (formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
+                {(formData as any).tipo_agente === 'orquestrador' && (
+                  <TabsTrigger value="regras-orq">
+                    <Sparkles className="h-3 w-3 mr-1" /> Regras
+                  </TabsTrigger>
+                )}
                 {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="campos" disabled={!editingAgent}>
                     <ListChecks className="h-3 w-3 mr-1" /> Campos
