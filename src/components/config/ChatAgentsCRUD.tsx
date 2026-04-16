@@ -337,10 +337,6 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     return /\.(txt|md|csv|json|tsv|log|xml|yaml|yml|html|htm)$/.test(name);
   };
 
-  const [editingFile, setEditingFile] = useState<any | null>(null);
-  const [editingFileContent, setEditingFileContent] = useState('');
-  const [editingFileLoading, setEditingFileLoading] = useState(false);
-  const [editingFileSaving, setEditingFileSaving] = useState(false);
 
   const openEditKbFile = async (file: any) => {
     if (!isTextEditable(file)) {
