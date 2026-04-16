@@ -196,6 +196,8 @@ interface Props {
   value: string; // current system_prompt
   onChange: (prompt: string) => void;
   agentName?: string;
+  knowledgeBaseType?: string;
+  knowledgeBaseSummary?: string; // resumo textual da KB (textos internos, nomes de arquivos, etc.)
 }
 
 export function ChatAgentPromptWizard({ value, onChange, agentName }: Props) {
