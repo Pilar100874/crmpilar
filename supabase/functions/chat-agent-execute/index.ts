@@ -347,7 +347,17 @@ serve(async (req) => {
         }
       }
       systemPrompt += "\n--- FIM DAS CAPACIDADES ---\n";
-      systemPrompt += "REGRA: Identifique qual(is) capacidade(s) são relevantes para cada pergunta e responda com base nelas. Se a pergunta envolve múltiplas áreas, combine as respostas de forma coerente.\n";
+      systemPrompt += `
+--- REGRA DE MESCLAGEM DE RESPOSTAS (OBRIGATÓRIO) ---
+Quando a pergunta do cliente envolver múltiplas áreas/capacidades, você DEVE:
+
+1. Acionar TODOS os sub-agentes relevantes mentalmente (não apenas um).
+2. CONSOLIDAR todas as informações em UMA ÚNICA RESPOSTA COESA, fluida e natural — NUNCA enviar respostas separadas, blocos isolados ou frases tipo "respondendo como agente X / agora como agente Y".
+3. Integrar dados de ESTOQUE + CADASTRO + KB em um único raciocínio, respeitando a HIERARQUIA DE FONTES (estoque → cadastro → KB).
+4. A resposta final deve parecer vir de UMA única pessoa que sabe tudo, não de vários robôs falando em sequência.
+5. Se houver capacidades técnicas + comerciais envolvidas, una os dois lados em uma resposta única (ex.: explicar tecnicamente + já listar opções disponíveis em estoque/cadastro).
+--- FIM REGRA DE MESCLAGEM ---
+`;
     }
 
     systemPrompt = systemPrompt.replace("{{historico_chat}}", historico_chat || "");
