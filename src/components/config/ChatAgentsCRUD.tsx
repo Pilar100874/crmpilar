@@ -154,6 +154,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [mainTab, setMainTab] = useState('agentes');
   const [showSetup, setShowSetup] = useState(false);
   const [autoOpenOrchestratorId, setAutoOpenOrchestratorId] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<any | null>(null);
+  const [editingFileContent, setEditingFileContent] = useState('');
+  const [editingFileLoading, setEditingFileLoading] = useState(false);
+  const [editingFileSaving, setEditingFileSaving] = useState(false);
 
   useEffect(() => {
     loadApiEndpoints();
@@ -326,6 +330,94 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     await supabase.from('chat_agent_kb_files').delete().eq('id', fileId);
     setKbFiles(kbFiles.filter(f => f.id !== fileId));
     toast.success('Arquivo removido');
+  };
+
+  const isTextEditable = (file: any) => {
+    const name = (file.nome_arquivo || '').toLowerCase();
+    return /\.(txt|md|csv|json|tsv|log|xml|yaml|yml|html|htm)$/.test(name);
+  };
+
+
+  const openEditKbFile = async (file: any) => {
+    if (!isTextEditable(file)) {
+      toast.error('Este formato não é editável inline. Use "Substituir" para enviar uma nova versão.');
+      return;
+    }
+    setEditingFile(file);
+    setEditingFileContent('');
+    setEditingFileLoading(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-knowledge-base')
+        .download(file.storage_path);
+      if (error) throw error;
+      const text = await data.text();
+      setEditingFileContent(text);
+    } catch (err: any) {
+      toast.error('Erro ao carregar arquivo: ' + (err.message || ''));
+      setEditingFile(null);
+    } finally {
+      setEditingFileLoading(false);
+    }
+  };
+
+  const saveEditedKbFile = async () => {
+    if (!editingFile) return;
+    setEditingFileSaving(true);
+    try {
+      const blob = new Blob([editingFileContent], { type: editingFile.mime_type || 'text/plain' });
+      const { error: upErr } = await supabase.storage
+        .from('agent-knowledge-base')
+        .update(editingFile.storage_path, blob, { upsert: true, contentType: editingFile.mime_type || 'text/plain' });
+      if (upErr) throw upErr;
+      await supabase.from('chat_agent_kb_files')
+        .update({ tamanho_bytes: blob.size } as any)
+        .eq('id', editingFile.id);
+      toast.success('Arquivo atualizado');
+      setEditingFile(null);
+      if (editingAgent) await loadKbFiles(editingAgent.id);
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + (err.message || ''));
+    } finally {
+      setEditingFileSaving(false);
+    }
+  };
+
+  const handleReplaceKbFile = async (file: any, newFile: File) => {
+    try {
+      const { error: upErr } = await supabase.storage
+        .from('agent-knowledge-base')
+        .update(file.storage_path, newFile, { upsert: true, contentType: newFile.type });
+      if (upErr) throw upErr;
+      await supabase.from('chat_agent_kb_files')
+        .update({
+          nome_arquivo: newFile.name,
+          mime_type: newFile.type,
+          tamanho_bytes: newFile.size,
+        } as any)
+        .eq('id', file.id);
+      toast.success('Arquivo substituído');
+      if (editingAgent) await loadKbFiles(editingAgent.id);
+    } catch (err: any) {
+      toast.error('Erro ao substituir: ' + (err.message || ''));
+    }
+  };
+
+  const handleDownloadKbFile = async (file: any) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('agent-knowledge-base')
+        .download(file.storage_path);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.nome_arquivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error('Erro ao baixar: ' + (err.message || ''));
+    }
   };
 
   const confirmDelete = async () => {
@@ -1167,13 +1259,43 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       {kbFiles.length > 0 && (
                         <div className="space-y-2">
                           {kbFiles.map(file => (
-                            <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm">
-                              <div className="flex items-center gap-2 min-w-0">
+                            <div key={file.id} className="flex items-center justify-between border rounded-lg px-3 py-2 text-sm gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                                 <span className="truncate">{file.nome_arquivo}</span>
-                                <span className="text-xs text-muted-foreground">{file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{file.tamanho_bytes ? `${(file.tamanho_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                                {!isTextEditable(file) && (
+                                  <Badge variant="outline" className="text-[10px] shrink-0">binário</Badge>
+                                )}
                               </div>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)}><X className="h-3 w-3" /></Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {isTextEditable(file) && (
+                                  <Button variant="ghost" size="sm" onClick={() => openEditKbFile(file)} title="Editar conteúdo">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="sm" onClick={() => handleDownloadKbFile(file)} title="Baixar">
+                                  <Download className="h-3 w-3" />
+                                </Button>
+                                <label className="cursor-pointer" title="Substituir arquivo">
+                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent">
+                                    <Upload className="h-3 w-3" />
+                                  </span>
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf,.txt,.md,.csv,.xlsx,.json,.docx,.tsv,.log,.xml,.yaml,.yml,.html,.htm"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) handleReplaceKbFile(file, f);
+                                      e.target.value = '';
+                                    }}
+                                  />
+                                </label>
+                                <Button variant="ghost" size="sm" onClick={() => handleDeleteKbFile(file.id, file.storage_path)} title="Remover">
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1356,6 +1478,37 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editingFile} onOpenChange={(open) => { if (!open) setEditingFile(null); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar arquivo: {editingFile?.nome_arquivo}</DialogTitle>
+            <DialogDescription>
+              Edite o conteúdo do arquivo da base de conhecimento. As alterações serão aplicadas imediatamente.
+            </DialogDescription>
+          </DialogHeader>
+          {editingFileLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <Textarea
+              value={editingFileContent}
+              onChange={(e) => setEditingFileContent(e.target.value)}
+              className="min-h-[400px] font-mono text-sm"
+              placeholder="Conteúdo do arquivo..."
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingFile(null)} disabled={editingFileSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEditedKbFile} disabled={editingFileSaving || editingFileLoading}>
+              {editingFileSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : 'Salvar alterações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
