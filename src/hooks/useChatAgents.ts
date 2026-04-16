@@ -26,6 +26,7 @@ export interface ChatAgent {
   gerar_pre_orcamento: boolean;
   tipo_agente: 'especifico' | 'orquestrador';
   sub_agent_ids: string[];
+  restringir_base_conhecimento: boolean;
   ativo: boolean;
   ordem: number;
   created_at: string;

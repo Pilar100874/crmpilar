@@ -125,6 +125,7 @@ const emptyForm: Partial<ChatAgent> = {
   solicitar_cnpj: false,
   gerar_pre_orcamento: false,
   tipo_agente: 'especifico',
+  restringir_base_conhecimento: false,
   sub_agent_ids: [],
   ativo: true,
   ordem: 0,
@@ -209,6 +210,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       gerar_pre_orcamento: (agent as any).gerar_pre_orcamento ?? false,
       tipo_agente: (agent as any).tipo_agente || 'especifico',
       sub_agent_ids: (agent as any).sub_agent_ids || [],
+      restringir_base_conhecimento: (agent as any).restringir_base_conhecimento ?? false,
       ativo: agent.ativo,
       ordem: agent.ordem,
     });
@@ -844,6 +846,21 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.knowledge_base_type !== 'nenhuma' && formData.knowledge_base_type !== 'terceiros' && (
+                  <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">🔒 Restringir à Base de Conhecimento</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Quando ativo, o agente responderá <strong>exclusivamente</strong> com base nos dados da base de conhecimento anexada. Perguntas fora do escopo serão recusadas educadamente.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={(formData as any).restringir_base_conhecimento || false}
+                      onCheckedChange={v => setFormData({ ...formData, restringir_base_conhecimento: v } as any)}
+                    />
+                  </div>
+                )}
 
                 {formData.knowledge_base_type === 'nenhuma' && (
                   <div className="rounded-lg border p-3 bg-muted/30 text-xs text-muted-foreground">
