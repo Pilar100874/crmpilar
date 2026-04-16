@@ -78,6 +78,14 @@ serve(async (req) => {
           ];
           if (agent.knowledge_base_type === 'nenhuma') agent.knowledge_base_type = 'interna';
         }
+        // Marcar para herdar KB externa (arquivos) dos sub-agentes
+        if (sub.knowledge_base_type === 'externa') {
+          if (agent.knowledge_base_type === 'nenhuma') agent.knowledge_base_type = 'externa';
+          (agent as any)._inheritedKbAgentIds = [
+            ...((agent as any)._inheritedKbAgentIds || []),
+            sub.id,
+          ];
+        }
         // Mesclar regras de busca
         if (sub.regras_busca_personalizada?.trim()) {
           agent.regras_busca_personalizada = (agent.regras_busca_personalizada || '') + '\n' + sub.regras_busca_personalizada;
