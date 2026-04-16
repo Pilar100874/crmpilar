@@ -14,7 +14,7 @@ export interface AgentTemplate {
   resposta_formato_tabela: boolean;
   acumular_filtros: boolean;
   permite_cliente: boolean;
-  tipo_agente: 'especifico' | 'orquestrador';
+  tipo_agente: 'especifico' | 'orquestrador' | 'humanizador';
   modo_operacao: 'sugerir' | 'automatico';
   modelo_ia: string;
 }
@@ -1320,7 +1320,7 @@ Lembre-se: você é a PONTE entre a inteligência técnica do sistema e a experi
     resposta_formato_tabela: false,
     acumular_filtros: false,
     permite_cliente: true,
-    tipo_agente: 'especifico',
+    tipo_agente: 'humanizador',
     modo_operacao: 'automatico',
     modelo_ia: 'google/gemini-2.5-flash',
   },

@@ -591,21 +591,21 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           <div className="flex-1 min-h-0 flex overflow-hidden">
             <Tabs value={dialogTab} onValueChange={setDialogTab} className="flex-1 min-w-0 flex flex-col overflow-hidden">
             <div className="px-6 pt-4 shrink-0">
-              <TabsList className={`grid w-full ${(formData as any).tipo_agente === 'orquestrador' ? 'grid-cols-3' : 'grid-cols-6'}`}>
+              <TabsList className={`grid w-full ${((formData as any).tipo_agente === 'orquestrador' || (formData as any).tipo_agente === 'humanizador') ? 'grid-cols-2' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identidade">Identidade</TabsTrigger>
                 <TabsTrigger value="prompt">Prompt</TabsTrigger>
-                {(formData as any).tipo_agente !== 'orquestrador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="campos" disabled={!editingAgent}>
                     <ListChecks className="h-3 w-3 mr-1" /> Campos
                   </TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="regras">Regras</TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="conhecimento">Conhecimento</TabsTrigger>
                 )}
-                {(formData as any).tipo_agente !== 'orquestrador' && (
+                {(formData as any).tipo_agente !== 'orquestrador' && (formData as any).tipo_agente !== 'humanizador' && (
                   <TabsTrigger value="dados">
                     <Database className="h-3 w-3 mr-1" /> Dados
                   </TabsTrigger>
@@ -630,8 +630,16 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       <SelectItem value="orquestrador">
                         <span className="flex items-center gap-2"><Network className="h-4 w-4" /> Orquestrador — Combina capacidades de vários agentes</span>
                       </SelectItem>
+                      <SelectItem value="humanizador">
+                        <span className="flex items-center gap-2">🗣️ Humanizador — Reescreve respostas em tom humano (pós-processamento)</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  {(formData as any).tipo_agente === 'humanizador' && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ℹ️ O Humanizador atua APÓS outros agentes responderem. Ele só precisa de <strong>Identidade</strong> e <strong>Prompt</strong> — sem regras, conhecimento ou dados. Vincule-o como sub-agente de um Orquestrador para ativá-lo.
+                    </p>
+                  )}
                 </div>
 {(formData as any).tipo_agente === 'orquestrador' && (
                   <div className="rounded-lg border p-4 space-y-2 bg-primary/5 border-primary/20">
