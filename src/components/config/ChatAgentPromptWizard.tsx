@@ -274,6 +274,70 @@ export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBas
     }
   };
 
+  const handleGenerateFromKB = async () => {
+    if (!knowledgeBaseSummary?.trim()) {
+      toast.error('Base de conhecimento vazia');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const kbPreview = knowledgeBaseSummary.substring(0, 3000);
+      const description = `Crie um prompt para um agente especialista chamado "${agentName || 'Agente'}". 
+Este agente possui uma base de conhecimento anexada com o seguinte conteúdo (resumo):
+
+---
+${kbPreview}
+---
+
+O agente deve:
+- Ser um especialista no conteúdo acima
+- Responder APENAS com base nos dados da base de conhecimento
+- Recusar educadamente perguntas fora do escopo
+- Ser técnico e preciso nas informações`;
+
+      const { data, error } = await supabase.functions.invoke('generate-chat-agent-prompt', {
+        body: {
+          description,
+          agent_name: agentName || 'Agente',
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+
+      const newCard: ChatAgentCardData = {
+        papel: data.papel || '',
+        missao: data.missao || '',
+        tom_de_voz: data.tom_de_voz || '',
+        capacidades: data.capacidades?.length ? data.capacidades : [''],
+        restricoes: [
+          ...(data.restricoes?.length ? data.restricoes : []),
+          'Não responder perguntas que não possam ser respondidas com a base de conhecimento',
+          'Não inventar informações que não estejam nos dados disponíveis',
+        ],
+        protocolo_raciocinio: data.protocolo_raciocinio?.length ? data.protocolo_raciocinio : [''],
+        padroes_qualidade: data.padroes_qualidade?.length ? data.padroes_qualidade : [''],
+        anti_padroes: [
+          ...(data.anti_padroes?.length ? data.anti_padroes : []),
+          'Inventar dados, especificações ou informações não presentes na base de conhecimento',
+        ],
+        tratamento_erros: data.tratamento_erros || 'Se a informação não estiver na base de conhecimento, informe educadamente que não possui essa informação e sugira o que pode ajudar.',
+        instrucoes_extras: data.instrucoes_extras || '',
+      };
+
+      setCardData(newCard);
+      setFreeText('');
+      onChange(cardDataToPrompt(newCard, ''));
+      toast.success('✨ Prompt gerado com base na KB! Revise antes de salvar.');
+      setStep(1);
+    } catch (err: any) {
+      toast.error(`Erro ao gerar: ${err.message || 'Erro desconhecido'}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const copyPrompt = () => {
     navigator.clipboard.writeText(generatedPrompt);
     toast.success('Prompt copiado!');
