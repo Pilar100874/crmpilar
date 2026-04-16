@@ -6,6 +6,77 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const KB_STOP_WORDS = new Set([
+  "a", "o", "os", "as", "um", "uma", "uns", "umas", "de", "da", "do", "das", "dos", "e", "ou", "que", "para",
+  "por", "com", "sem", "sobre", "qual", "quais", "como", "onde", "quando", "isso", "essa", "esse", "esta", "este",
+  "tem", "temos", "ser", "sao", "são", "eh", "é", "na", "no", "nas", "nos", "ao", "aos", "à", "às", "paper", "papel"
+]);
+
+const normalizeForSearch = (value: string = "") =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildKbSearchTerms = (message: string = "") =>
+  Array.from(
+    new Set(
+      normalizeForSearch(message)
+        .split(/[^a-z0-9]+/g)
+        .filter((term) => term.length >= 3 && !KB_STOP_WORDS.has(term))
+    )
+  );
+
+const extractRelevantKbSnippet = (text: string, fileName: string, searchTerms: string[]) => {
+  const cleanText = text?.trim() || "";
+  if (!cleanText) return "";
+
+  if (!searchTerms.length) {
+    return cleanText.substring(0, 2000).trim();
+  }
+
+  const normalizedFileName = normalizeForSearch(fileName);
+  const blocks = cleanText
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  const scoredBlocks = blocks
+    .map((block) => {
+      const normalizedBlock = normalizeForSearch(block);
+      let score = 0;
+
+      for (const term of searchTerms) {
+        const matches = normalizedBlock.match(new RegExp(escapeRegExp(term), "g"));
+        if (matches?.length) {
+          score += matches.length * (term.length >= 5 ? 3 : 2);
+        }
+      }
+
+      if (score === 0 && searchTerms.some((term) => normalizedFileName.includes(term))) {
+        score = 1;
+      }
+
+      return { block, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.block.length - a.block.length)
+    .slice(0, 4)
+    .map((item) => item.block.substring(0, 1800).trim());
+
+  if (scoredBlocks.length) {
+    return Array.from(new Set(scoredBlocks)).join("\n\n");
+  }
+
+  if (searchTerms.some((term) => normalizedFileName.includes(term))) {
+    return cleanText.substring(0, 2000).trim();
+  }
+
+  return "";
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -106,6 +177,7 @@ serve(async (req) => {
         agent_id,
         ...(((agent as any)._inheritedKbAgentIds as string[]) || []),
       ]));
+      const kbSearchTerms = buildKbSearchTerms(mensagem_cliente);
       const { data: kbFiles } = await supabase
         .from("chat_agent_kb_files")
         .select("storage_path, nome_arquivo, agent_id")
@@ -114,7 +186,9 @@ serve(async (req) => {
       console.log(`[KB externa] Buscando arquivos para agentes: ${kbAgentIds.join(", ")} -> ${kbFiles?.length || 0} arquivo(s)`);
 
       if (kbFiles?.length) {
-        kbContext = "\n\n--- BASE DE CONHECIMENTO (ARQUIVOS) ---\n";
+        const relevantSnippets: string[] = [];
+        const fallbackSnippets: string[] = [];
+
         for (const file of kbFiles) {
           try {
             const { data: fileData } = await supabase.storage
@@ -122,13 +196,26 @@ serve(async (req) => {
               .download(file.storage_path);
             if (fileData) {
               const text = await fileData.text();
-              kbContext += `\n[Arquivo: ${file.nome_arquivo}]\n${text.substring(0, 10000)}\n`;
+              const relevantSnippet = extractRelevantKbSnippet(text, file.nome_arquivo, kbSearchTerms);
+
+              if (relevantSnippet) {
+                relevantSnippets.push(`\n[Arquivo: ${file.nome_arquivo}]\n${relevantSnippet}\n`);
+              } else if (fallbackSnippets.length < 3) {
+                fallbackSnippets.push(`\n[Arquivo: ${file.nome_arquivo}]\n${text.substring(0, 1500)}\n`);
+              }
             }
           } catch (e) {
             console.error(`Erro ao ler arquivo ${file.nome_arquivo}:`, e);
           }
         }
-        kbContext += "--- FIM DA BASE ---\n";
+
+        const selectedSnippets = relevantSnippets.length ? relevantSnippets : fallbackSnippets;
+        if (selectedSnippets.length) {
+          kbContext = "\n\n--- BASE DE CONHECIMENTO (ARQUIVOS) ---\n";
+          kbContext += selectedSnippets.join("\n");
+          kbContext += "--- FIM DA BASE ---\n";
+          console.log(`[KB externa] Termos: ${kbSearchTerms.join(", ") || "nenhum"} | trechos relevantes: ${relevantSnippets.length} | fallback: ${fallbackSnippets.length} | chars: ${kbContext.length}`);
+        }
       }
     }
 
@@ -588,9 +675,39 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
       .join("\n\n")
       .trim();
     const isKnowledgeRestricted = Boolean(agent.restringir_base_conhecimento);
+    const hasOperationalDataContext = Boolean(
+      estoqueSistemaContext?.trim() ||
+      produtosImportadosContext?.trim() ||
+      apiContext?.trim()
+    );
     const safeKnowledgeFallback = "Essa informação não está confirmada na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?";
     const shouldSkipHumanization = (text: string) =>
       /não está confirmada na minha base de conhecimento|não tenho essa informação confirmada na base/i.test(text);
+    const stripNonGroundedOperationalClauses = (text: string) => {
+      if (hasOperationalDataContext || !text?.trim()) return text;
+
+      const operationalPatterns = [
+        /essa informação não está confirmada no meu estoque atual\.?/gi,
+        /não consigo confirmar a disponibilidade no meu estoque atual\.?/gi,
+        /posso verificar (?:a )?disponibilidade com a equipe[^.!?\n]*[.!?]?/gi,
+        /posso verificar com a equipe[^.!?\n]*[.!?]?/gi,
+        /se quiser[, ]+posso verificar[^.!?\n]*[.!?]?/gi,
+        /ou te ajudar com algum outro modelo[^.!?\n]*[.!?]?/gi,
+        /posso te ajudar com algum outro modelo[^.!?\n]*[.!?]?/gi,
+      ];
+
+      let sanitized = text;
+      for (const pattern of operationalPatterns) {
+        sanitized = sanitized.replace(pattern, " ");
+      }
+
+      return sanitized
+        .replace(/[ \t]{2,}/g, " ")
+        .replace(/ ?\n ?/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .replace(/\s+([,.;!?])/g, "$1")
+        .trim();
+    };
     const extractJsonObject = (text: string): { grounded?: boolean; reason?: string } | null => {
       const fenced = text.match(/```json\s*([\s\S]*?)\s*```/i);
       const candidate = fenced?.[1] || text.match(/\{[\s\S]*\}/)?.[0];
@@ -647,6 +764,12 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     let resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
 
     if (isKnowledgeRestricted) {
+      const respostaOriginal = resposta;
+      resposta = stripNonGroundedOperationalClauses(resposta);
+      if (resposta !== respostaOriginal) {
+        console.log("[anti-alucinação] Removidas cláusulas operacionais não ancoradas da resposta.");
+      }
+
       const respostaSemBlocos = resposta
         .replace(/<!--PRE_ORDER_START-->[\s\S]*?<!--PRE_ORDER_END-->/g, "")
         .replace(/<!--TABLE_DATA_START-->[\s\S]*?<!--TABLE_DATA_END-->/g, "")
@@ -668,7 +791,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
               messages: [
                 {
                   role: "system",
-                  content: "Você é um validador factual extremamente rígido. Compare a RESPOSTA com o CONTEXTO. Se QUALQUER afirmação factual, marca, fabricante, gramatura, categoria técnica ou especificação não estiver EXPLICITAMENTE no contexto, grounded=false. Não aceite memória do modelo, plausibilidade, dedução nem correção do usuário como prova. Responda APENAS JSON válido no formato {\"grounded\": boolean, \"reason\": string}."
+                  content: "Você é um validador factual extremamente rígido. Compare a RESPOSTA com o CONTEXTO. Se QUALQUER afirmação factual sobre produto, marca, fabricante, gramatura, categoria técnica, aplicação ou especificação não estiver EXPLICITAMENTE no contexto, grounded=false. Ignore frases de cortesia, convite para continuar a conversa, emojis e comentários operacionais como verificar disponibilidade, estoque ou equipe. Não aceite memória do modelo, plausibilidade, dedução nem correção do usuário como prova. Responda APENAS JSON válido no formato {\"grounded\": boolean, \"reason\": string}."
                 },
                 {
                   role: "user",
