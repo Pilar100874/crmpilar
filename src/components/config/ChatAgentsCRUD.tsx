@@ -154,6 +154,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [mainTab, setMainTab] = useState('agentes');
   const [showSetup, setShowSetup] = useState(false);
   const [autoOpenOrchestratorId, setAutoOpenOrchestratorId] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<any | null>(null);
+  const [editingFileContent, setEditingFileContent] = useState('');
+  const [editingFileLoading, setEditingFileLoading] = useState(false);
+  const [editingFileSaving, setEditingFileSaving] = useState(false);
 
   useEffect(() => {
     loadApiEndpoints();
