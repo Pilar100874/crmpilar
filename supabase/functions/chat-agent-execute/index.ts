@@ -358,6 +358,18 @@ serve(async (req) => {
     systemPrompt += apiContext;
     systemPrompt += clienteContext;
 
+    // Restrição exclusiva à base de conhecimento
+    if (agent.restringir_base_conhecimento) {
+      systemPrompt += `
+
+--- RESTRIÇÃO OBRIGATÓRIA ---
+REGRA ABSOLUTA: Você deve responder EXCLUSIVAMENTE com base nas informações fornecidas na sua base de conhecimento (textos, arquivos, dados de API e estoque acima).
+- NÃO use conhecimento geral, suposições ou informações externas.
+- Se a pergunta do usuário NÃO puder ser respondida com os dados disponíveis na base de conhecimento, responda educadamente: "Desculpe, essa informação não está disponível na minha base de conhecimento. Posso ajudar com algo relacionado ao que tenho disponível?"
+- NUNCA invente, suponha ou complemente com informações que não estejam explicitamente nos dados fornecidos.
+--- FIM DA RESTRIÇÃO ---`;
+    }
+
     // Instruções de CNPJ e sugestões inteligentes
     if (agent.solicitar_cnpj) {
       systemPrompt += `

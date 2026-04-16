@@ -845,6 +845,21 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </Select>
                 </div>
 
+                {formData.knowledge_base_type !== 'nenhuma' && formData.knowledge_base_type !== 'terceiros' && (
+                  <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">🔒 Restringir à Base de Conhecimento</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Quando ativo, o agente responderá <strong>exclusivamente</strong> com base nos dados da base de conhecimento anexada. Perguntas fora do escopo serão recusadas educadamente.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={(formData as any).restringir_base_conhecimento || false}
+                      onCheckedChange={v => setFormData({ ...formData, restringir_base_conhecimento: v } as any)}
+                    />
+                  </div>
+                )}
+
                 {formData.knowledge_base_type === 'nenhuma' && (
                   <div className="rounded-lg border p-3 bg-muted/30 text-xs text-muted-foreground">
                     O agente responderá <strong>apenas</strong> com base no texto do prompt do sistema. Nenhuma fonte de dados adicional será utilizada.
