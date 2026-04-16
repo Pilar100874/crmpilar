@@ -1321,6 +1321,10 @@ Lembre-se: você é a PONTE entre a inteligência técnica do sistema e a experi
     acumular_filtros: false,
     permite_cliente: true,
     tipo_agente: 'humanizador',
+    modo_operacao: 'automatico',
+    modelo_ia: 'google/gemini-2.5-flash',
+  },
+];
 
 export const ORCHESTRATOR_TEMPLATE: AgentTemplate = {
   nome: 'Orquestrador de Vendas',
