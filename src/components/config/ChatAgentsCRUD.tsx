@@ -502,7 +502,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {agents.map(agent => (
-            <Card key={agent.id} className={`transition-all ${(agent as any).tipo_agente === 'orquestrador' ? 'border-primary/30 bg-primary/5 dark:bg-primary/10 hover:border-primary/50 hover:bg-primary/10' : (agent as any).tipo_agente === 'humanizador' ? 'border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 hover:border-amber-500/50 hover:bg-amber-500/10' : ''} ${!agent.ativo ? 'opacity-60' : ''}`}>
+            <Card key={agent.id} className={`transition-all ${(agent as any).tipo_agente === 'orquestrador' ? 'border-primary/30 bg-primary/5 dark:bg-primary/10 hover:border-primary/50 hover:bg-primary/10' : (agent as any).tipo_agente === 'humanizador' ? 'border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 hover:border-amber-500/50 hover:bg-amber-500/10' : (agent as any).tipo_agente === 'conhecimento' ? 'border-cyan-500/30 bg-cyan-500/5 dark:bg-cyan-500/10 hover:border-cyan-500/50 hover:bg-cyan-500/10' : ''} ${!agent.ativo ? 'opacity-60' : ''}`}>
               <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-2xl">{agent.icone}</span>
