@@ -588,9 +588,39 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
       .join("\n\n")
       .trim();
     const isKnowledgeRestricted = Boolean(agent.restringir_base_conhecimento);
+    const hasOperationalDataContext = Boolean(
+      estoqueSistemaContext?.trim() ||
+      produtosImportadosContext?.trim() ||
+      apiContext?.trim()
+    );
     const safeKnowledgeFallback = "Essa informação não está confirmada na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?";
     const shouldSkipHumanization = (text: string) =>
       /não está confirmada na minha base de conhecimento|não tenho essa informação confirmada na base/i.test(text);
+    const stripNonGroundedOperationalClauses = (text: string) => {
+      if (hasOperationalDataContext || !text?.trim()) return text;
+
+      const operationalPatterns = [
+        /essa informação não está confirmada no meu estoque atual\.?/gi,
+        /não consigo confirmar a disponibilidade no meu estoque atual\.?/gi,
+        /posso verificar (?:a )?disponibilidade com a equipe[^.!?\n]*[.!?]?/gi,
+        /posso verificar com a equipe[^.!?\n]*[.!?]?/gi,
+        /se quiser[, ]+posso verificar[^.!?\n]*[.!?]?/gi,
+        /ou te ajudar com algum outro modelo[^.!?\n]*[.!?]?/gi,
+        /posso te ajudar com algum outro modelo[^.!?\n]*[.!?]?/gi,
+      ];
+
+      let sanitized = text;
+      for (const pattern of operationalPatterns) {
+        sanitized = sanitized.replace(pattern, " ");
+      }
+
+      return sanitized
+        .replace(/[ \t]{2,}/g, " ")
+        .replace(/ ?\n ?/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .replace(/\s+([,.;!?])/g, "$1")
+        .trim();
+    };
     const extractJsonObject = (text: string): { grounded?: boolean; reason?: string } | null => {
       const fenced = text.match(/```json\s*([\s\S]*?)\s*```/i);
       const candidate = fenced?.[1] || text.match(/\{[\s\S]*\}/)?.[0];
@@ -647,6 +677,12 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
     let resposta = aiData.choices?.[0]?.message?.content || "Não foi possível gerar uma resposta.";
 
     if (isKnowledgeRestricted) {
+      const respostaOriginal = resposta;
+      resposta = stripNonGroundedOperationalClauses(resposta);
+      if (resposta !== respostaOriginal) {
+        console.log("[anti-alucinação] Removidas cláusulas operacionais não ancoradas da resposta.");
+      }
+
       const respostaSemBlocos = resposta
         .replace(/<!--PRE_ORDER_START-->[\s\S]*?<!--PRE_ORDER_END-->/g, "")
         .replace(/<!--TABLE_DATA_START-->[\s\S]*?<!--TABLE_DATA_END-->/g, "")
@@ -668,7 +704,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
               messages: [
                 {
                   role: "system",
-                  content: "Você é um validador factual extremamente rígido. Compare a RESPOSTA com o CONTEXTO. Se QUALQUER afirmação factual, marca, fabricante, gramatura, categoria técnica ou especificação não estiver EXPLICITAMENTE no contexto, grounded=false. Não aceite memória do modelo, plausibilidade, dedução nem correção do usuário como prova. Responda APENAS JSON válido no formato {\"grounded\": boolean, \"reason\": string}."
+                  content: "Você é um validador factual extremamente rígido. Compare a RESPOSTA com o CONTEXTO. Se QUALQUER afirmação factual sobre produto, marca, fabricante, gramatura, categoria técnica, aplicação ou especificação não estiver EXPLICITAMENTE no contexto, grounded=false. Ignore frases de cortesia, convite para continuar a conversa, emojis e comentários operacionais como verificar disponibilidade, estoque ou equipe. Não aceite memória do modelo, plausibilidade, dedução nem correção do usuário como prova. Responda APENAS JSON válido no formato {\"grounded\": boolean, \"reason\": string}."
                 },
                 {
                   role: "user",
