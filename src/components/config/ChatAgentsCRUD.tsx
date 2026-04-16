@@ -528,6 +528,11 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                       Orquestrador · {((agent as any).sub_agent_ids || []).length} agentes
                     </Badge>
                   )}
+                  {(agent as any).tipo_agente === 'humanizador' && (
+                    <Badge className="text-xs bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                      🗣️ Humanizador
+                    </Badge>
+                  )}
                   {agent.knowledge_base_type !== 'nenhuma' && (
                     <Badge variant="outline" className="text-xs">
                       <Brain className="h-3 w-3 mr-1" />
