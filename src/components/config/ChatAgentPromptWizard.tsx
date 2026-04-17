@@ -198,9 +198,10 @@ interface Props {
   agentName?: string;
   knowledgeBaseType?: string;
   knowledgeBaseSummary?: string; // resumo textual da KB (textos internos, nomes de arquivos, etc.)
+  onScopeChange?: (escopo: string) => void; // chamado quando IA gera o escopo do agente
 }
 
-export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary }: Props) {
+export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary, onScopeChange }: Props) {
   const [step, setStep] = useState(0);
   const [cardData, setCardData] = useState<ChatAgentCardData>(() => {
     if (value?.trim()) return promptToCardData(value);
@@ -265,6 +266,9 @@ export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBas
       setCardData(newCard);
       setFreeText('');
       onChange(cardDataToPrompt(newCard, ''));
+      if (data?.escopo_agente && onScopeChange) {
+        onScopeChange(data.escopo_agente);
+      }
       toast.success('✨ Prompt gerado com IA! Revise cada etapa antes de salvar.');
       setStep(1); // Go to identity step to review
     } catch (err: any) {
@@ -329,6 +333,9 @@ O agente deve:
       setCardData(newCard);
       setFreeText('');
       onChange(cardDataToPrompt(newCard, ''));
+      if (data?.escopo_agente && onScopeChange) {
+        onScopeChange(data.escopo_agente);
+      }
       toast.success('✨ Prompt gerado com base na KB! Revise antes de salvar.');
       setStep(1);
     } catch (err: any) {

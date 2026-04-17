@@ -1072,6 +1072,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                           ? kbFiles.map(f => `Arquivo: ${f.nome_arquivo}`).join('\n')
                           : undefined
                     }
+                    onScopeChange={(escopo) => {
+                      setFormData(prev => ({ ...prev, escopo_agente: escopo } as any));
+                      toast.success('🎯 Escopo do Agente também foi preenchido pela IA');
+                    }}
                   />
                 )}
               </TabsContent>
