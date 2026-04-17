@@ -66,6 +66,7 @@ import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplates
 import { CampaignPermissionsCRUD } from '@/components/config/CampaignPermissionsCRUD';
 import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
+import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
 
 // Import Bot components
@@ -85,6 +86,7 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
   { id: 'agentes-chat', label: 'Agentes de Chat', icon: Bot },
+  { id: 'lacunas-base', label: 'Lacunas da Base', icon: MessageSquareQuote },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
   { id: 'anexos-rapidos', label: 'Anexos Rápidos', icon: Paperclip },
   { id: 'skills', label: 'Skills de Atendimento', icon: Award },
@@ -498,6 +500,16 @@ export default function AtendimentoConfig() {
                   <CardDescription className="text-xs sm:text-sm">Crie agentes de IA para auxiliar ou responder automaticamente no atendimento</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatAgentsCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="lacunas-base" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><MessageSquareQuote className="h-4 w-4 sm:h-5 sm:w-5" />Lacunas da Base de Conhecimento</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Perguntas que os agentes não conseguiram responder. Gere uma sugestão com IA, valide e adicione à base.</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <KbLacunasCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
             </TabsContent>
             <TabsContent value="textos-prontos" className="mt-0 h-full">
