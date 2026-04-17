@@ -126,6 +126,8 @@ const extractRelevantKbSnippet = (text: string, fileName: string, searchTerms: s
           score += exactMatches.length * (term.length >= 5 ? 5 : 3);
         } else if (sectionTokens.some((token) => isFuzzyTokenMatch(term, token))) {
           score += term.length >= 7 ? 4 : 2;
+        } else if (sectionTokens.some((token) => isFuzzyTokenMatch(term, token))) {
+          score += term.length >= 7 ? 4 : 2;
         }
 
         if (
