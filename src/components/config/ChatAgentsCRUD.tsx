@@ -1666,6 +1666,56 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Editor de Entrada da Base de Conhecimento */}
+      <Dialog open={kbEntryDialogOpen} onOpenChange={setKbEntryDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingKbEntry ? 'Editar Entrada da Base' : 'Nova Entrada na Base'}</DialogTitle>
+            <DialogDescription>
+              {editingKbEntry?.origem === 'lacuna'
+                ? 'Esta entrada foi gerada a partir de uma Lacuna da Base.'
+                : 'Adicione ou edite informações que o agente poderá consultar.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Título</Label>
+              <Input value={kbEntryForm.titulo} onChange={e => setKbEntryForm({ ...kbEntryForm, titulo: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Domínio</Label>
+                <Input value={kbEntryForm.dominio} onChange={e => setKbEntryForm({ ...kbEntryForm, dominio: e.target.value })} placeholder="geral" />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={kbEntryForm.tipo} onValueChange={v => setKbEntryForm({ ...kbEntryForm, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="texto">Texto</SelectItem>
+                    <SelectItem value="qa">Pergunta/Resposta</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                    <SelectItem value="regra">Regra</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Conteúdo</Label>
+              <Textarea value={kbEntryForm.conteudo} onChange={e => setKbEntryForm({ ...kbEntryForm, conteudo: e.target.value })} rows={10} className="font-mono text-sm" />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-2">
+              <Label className="text-sm">Ativo</Label>
+              <Switch checked={kbEntryForm.ativo} onCheckedChange={v => setKbEntryForm({ ...kbEntryForm, ativo: v })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setKbEntryDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveKbEntry}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
