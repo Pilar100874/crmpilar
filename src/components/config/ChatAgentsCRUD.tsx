@@ -17,7 +17,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table as UITable, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings, ListChecks } from 'lucide-react';
+import { Plus, Edit, Trash2, Bot, Wand2, Zap, Upload, X, Database, FileText, Brain, Package, Table, Filter, Eye, Download, Loader2, Network, Layers, BarChart3, Sparkles, Settings, ListChecks, MessageSquareQuote } from 'lucide-react';
+import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import AgentHelpGuide from '@/components/config/agents/AgentHelpGuide';
 import AgentCustomFieldsManager from '@/components/config/agents/AgentCustomFieldsManager';
 import { toast } from 'sonner';
@@ -556,6 +557,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
+            <TabsTrigger value="lacunas" className="gap-1"><MessageSquareQuote className="h-4 w-4" /> Lacunas da Base</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
             <AgentHelpGuide />
@@ -1476,6 +1478,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
         <TabsContent value="dashboard" className="mt-0">
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
+        </TabsContent>
+
+        <TabsContent value="lacunas" className="mt-0">
+          <KbLacunasCRUD estabelecimentoId={estabelecimentoId} />
         </TabsContent>
       </Tabs>
 
