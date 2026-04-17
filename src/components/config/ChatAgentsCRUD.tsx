@@ -290,6 +290,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
       tipo_agente: (agent as any).tipo_agente || 'especifico',
       sub_agent_ids: (agent as any).sub_agent_ids || [],
       restringir_base_conhecimento: (agent as any).restringir_base_conhecimento ?? false,
+      escopo_agente: (agent as any).escopo_agente ?? '',
       regra_mesclagem: (agent as any).regra_mesclagem ?? '',
       regra_mesclagem_ativa: (agent as any).regra_mesclagem_ativa ?? true,
       regra_sugestao_proativa: (agent as any).regra_sugestao_proativa ?? '',
