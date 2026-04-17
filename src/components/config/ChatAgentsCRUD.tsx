@@ -197,6 +197,64 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setKbEntries(data || []);
   };
 
+  const openCreateKbEntry = () => {
+    setEditingKbEntry(null);
+    setKbEntryForm({ titulo: '', conteudo: '', dominio: 'geral', tipo: 'texto', ativo: true });
+    setKbEntryDialogOpen(true);
+  };
+
+  const openEditKbEntry = (entry: any) => {
+    setEditingKbEntry(entry);
+    setKbEntryForm({
+      titulo: entry.titulo || '',
+      conteudo: entry.conteudo || '',
+      dominio: entry.dominio || 'geral',
+      tipo: entry.tipo || 'texto',
+      ativo: entry.ativo ?? true,
+    });
+    setKbEntryDialogOpen(true);
+  };
+
+  const handleSaveKbEntry = async () => {
+    if (!kbEntryForm.titulo.trim() || !kbEntryForm.conteudo.trim()) {
+      toast.error('Título e conteúdo são obrigatórios');
+      return;
+    }
+    if (editingKbEntry) {
+      const { error } = await supabase
+        .from('agent_knowledge_bases')
+        .update(kbEntryForm as any)
+        .eq('id', editingKbEntry.id);
+      if (error) { toast.error('Erro ao atualizar'); return; }
+      toast.success('Entrada atualizada');
+    } else {
+      const { error } = await supabase
+        .from('agent_knowledge_bases')
+        .insert({ ...kbEntryForm, estabelecimento_id: estabelecimentoId, origem: 'manual' } as any);
+      if (error) { toast.error('Erro ao criar'); return; }
+      toast.success('Entrada criada');
+    }
+    setKbEntryDialogOpen(false);
+    setEditingKbEntry(null);
+    await loadKbEntries();
+  };
+
+  const handleDeleteKbEntry = async (id: string) => {
+    if (!confirm('Remover esta entrada da base de conhecimento?')) return;
+    const { error } = await supabase.from('agent_knowledge_bases').delete().eq('id', id);
+    if (error) { toast.error('Erro ao remover'); return; }
+    toast.success('Entrada removida');
+    await loadKbEntries();
+  };
+
+  const handleToggleKbEntryAtivo = async (entry: any) => {
+    const { error } = await supabase
+      .from('agent_knowledge_bases')
+      .update({ ativo: !entry.ativo } as any)
+      .eq('id', entry.id);
+    if (error) { toast.error('Erro ao atualizar status'); return; }
+    await loadKbEntries();
+  };
   const handleOpenCreate = (presetType?: 'especifico' | 'orquestrador') => {
     setEditingAgent(null);
     setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
