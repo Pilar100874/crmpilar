@@ -600,8 +600,76 @@ serve(async (req) => {
       }
     }
 
+    // ============================================================
+    // CONFIGURAÇÕES GLOBAIS DOS AGENTES (agent_data_bindings)
+    // Busca bindings globais (_global) + bindings específicos deste agente
+    // e injeta como bloco "DADOS DA EMPRESA" no início do prompt.
+    // ============================================================
+    let globalSettingsContext = "";
+    try {
+      const { data: bindings } = await supabase
+        .from("agent_data_bindings")
+        .select("agent_template_key, campo, label, descricao, fonte_tipo, valor_manual, tabela_sistema, coluna_sistema, configurado")
+        .eq("estabelecimento_id", agent.estabelecimento_id)
+        .in("agent_template_key", ["_global", agent.id]);
+
+      if (bindings && bindings.length > 0) {
+        const resolved: { label: string; valor: string; descricao?: string; scope: string }[] = [];
+
+        for (const b of bindings) {
+          if (!b.configurado) continue;
+          let valor: string | null = null;
+
+          if (b.fonte_tipo === "manual" && b.valor_manual) {
+            valor = b.valor_manual;
+          } else if (b.fonte_tipo === "sistema" && b.tabela_sistema && b.coluna_sistema) {
+            // Resolver de tabela do sistema (best-effort)
+            try {
+              const { data: sysData } = await supabase
+                .from(b.tabela_sistema as any)
+                .select(b.coluna_sistema)
+                .eq("estabelecimento_id", agent.estabelecimento_id)
+                .limit(20);
+              if (sysData && sysData.length > 0) {
+                const valores = sysData
+                  .map((r: any) => r[b.coluna_sistema as string])
+                  .filter((v: any) => v !== null && v !== undefined && v !== "");
+                if (valores.length > 0) valor = valores.join(", ");
+              }
+            } catch (err) {
+              console.warn(`[global-settings] não resolveu ${b.tabela_sistema}.${b.coluna_sistema}:`, (err as Error).message);
+            }
+          }
+
+          if (valor) {
+            resolved.push({
+              label: b.label,
+              valor,
+              descricao: b.descricao || undefined,
+              scope: b.agent_template_key === "_global" ? "global" : "agente",
+            });
+          }
+        }
+
+        if (resolved.length > 0) {
+          globalSettingsContext = "\n\n--- DADOS DA EMPRESA (CONFIGURAÇÕES GLOBAIS) ---\n";
+          globalSettingsContext += "Use estas informações para responder o cliente quando relevante. NÃO invente dados que não estejam aqui.\n\n";
+          for (const r of resolved) {
+            globalSettingsContext += `• ${r.label}: ${r.valor}`;
+            if (r.descricao) globalSettingsContext += ` (${r.descricao})`;
+            globalSettingsContext += "\n";
+          }
+          globalSettingsContext += "--- FIM DOS DADOS DA EMPRESA ---\n";
+          console.log(`[global-settings] injetados ${resolved.length} campos no prompt do agente ${agent.nome}`);
+        }
+      }
+    } catch (err) {
+      console.error("[global-settings] erro ao buscar bindings:", (err as Error).message);
+    }
+
     // Montar prompt final
     let systemPrompt = agent.system_prompt || "Você é um assistente útil de atendimento ao cliente.";
+    systemPrompt += globalSettingsContext;
 
     // Se for orquestrador, injetar capacidades dos sub-agentes
     if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0) {
