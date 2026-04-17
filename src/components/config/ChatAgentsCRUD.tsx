@@ -147,6 +147,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [internalKbText, setInternalKbText] = useState('');
   const [kbEntries, setKbEntries] = useState<any[]>([]);
   const [kbOrigemFiltro, setKbOrigemFiltro] = useState<'todas' | 'manual' | 'lacuna' | 'importada'>('todas');
+  const [kbEntryDialogOpen, setKbEntryDialogOpen] = useState(false);
+  const [editingKbEntry, setEditingKbEntry] = useState<any | null>(null);
+  const [kbEntryForm, setKbEntryForm] = useState({ titulo: '', conteudo: '', dominio: 'geral', tipo: 'texto', ativo: true });
   const [previewType, setPreviewType] = useState<'estoque' | 'importados' | 'api' | null>(null);
   const [previewApiId, setPreviewApiId] = useState<string>('');
   const [previewApiName, setPreviewApiName] = useState<string>('');
@@ -194,6 +197,64 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setKbEntries(data || []);
   };
 
+  const openCreateKbEntry = () => {
+    setEditingKbEntry(null);
+    setKbEntryForm({ titulo: '', conteudo: '', dominio: 'geral', tipo: 'texto', ativo: true });
+    setKbEntryDialogOpen(true);
+  };
+
+  const openEditKbEntry = (entry: any) => {
+    setEditingKbEntry(entry);
+    setKbEntryForm({
+      titulo: entry.titulo || '',
+      conteudo: entry.conteudo || '',
+      dominio: entry.dominio || 'geral',
+      tipo: entry.tipo || 'texto',
+      ativo: entry.ativo ?? true,
+    });
+    setKbEntryDialogOpen(true);
+  };
+
+  const handleSaveKbEntry = async () => {
+    if (!kbEntryForm.titulo.trim() || !kbEntryForm.conteudo.trim()) {
+      toast.error('Título e conteúdo são obrigatórios');
+      return;
+    }
+    if (editingKbEntry) {
+      const { error } = await supabase
+        .from('agent_knowledge_bases')
+        .update(kbEntryForm as any)
+        .eq('id', editingKbEntry.id);
+      if (error) { toast.error('Erro ao atualizar'); return; }
+      toast.success('Entrada atualizada');
+    } else {
+      const { error } = await supabase
+        .from('agent_knowledge_bases')
+        .insert({ ...kbEntryForm, estabelecimento_id: estabelecimentoId, origem: 'manual' } as any);
+      if (error) { toast.error('Erro ao criar'); return; }
+      toast.success('Entrada criada');
+    }
+    setKbEntryDialogOpen(false);
+    setEditingKbEntry(null);
+    await loadKbEntries();
+  };
+
+  const handleDeleteKbEntry = async (id: string) => {
+    if (!confirm('Remover esta entrada da base de conhecimento?')) return;
+    const { error } = await supabase.from('agent_knowledge_bases').delete().eq('id', id);
+    if (error) { toast.error('Erro ao remover'); return; }
+    toast.success('Entrada removida');
+    await loadKbEntries();
+  };
+
+  const handleToggleKbEntryAtivo = async (entry: any) => {
+    const { error } = await supabase
+      .from('agent_knowledge_bases')
+      .update({ ativo: !entry.ativo } as any)
+      .eq('id', entry.id);
+    if (error) { toast.error('Erro ao atualizar status'); return; }
+    await loadKbEntries();
+  };
   const handleOpenCreate = (presetType?: 'especifico' | 'orquestrador') => {
     setEditingAgent(null);
     setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
@@ -1162,17 +1223,22 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Inclui itens criados manualmente, importados e gerados a partir das Lacunas da Base.</p>
                       </div>
-                      <Select value={kbOrigemFiltro} onValueChange={(v) => setKbOrigemFiltro(v as any)}>
-                        <SelectTrigger className="w-[200px] h-8 text-xs">
-                          <SelectValue placeholder="Filtrar origem" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todas">Todas as origens ({kbEntries.length})</SelectItem>
-                          <SelectItem value="manual">✍️ Manual ({kbEntries.filter(e => (e.origem || 'manual') === 'manual').length})</SelectItem>
-                          <SelectItem value="lacuna">🧠 Lacuna ({kbEntries.filter(e => e.origem === 'lacuna').length})</SelectItem>
-                          <SelectItem value="importada">📥 Importada ({kbEntries.filter(e => e.origem === 'importada').length})</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Select value={kbOrigemFiltro} onValueChange={(v) => setKbOrigemFiltro(v as any)}>
+                          <SelectTrigger className="w-[200px] h-8 text-xs">
+                            <SelectValue placeholder="Filtrar origem" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todas">Todas as origens ({kbEntries.length})</SelectItem>
+                            <SelectItem value="manual">✍️ Manual ({kbEntries.filter(e => (e.origem || 'manual') === 'manual').length})</SelectItem>
+                            <SelectItem value="lacuna">🧠 Lacuna ({kbEntries.filter(e => e.origem === 'lacuna').length})</SelectItem>
+                            <SelectItem value="importada">📥 Importada ({kbEntries.filter(e => e.origem === 'importada').length})</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="outline" onClick={openCreateKbEntry} className="h-8">
+                          <Plus className="h-3 w-3 mr-1" /> Nova
+                        </Button>
+                      </div>
                     </div>
                     {(() => {
                       const filtered = kbEntries.filter(e => kbOrigemFiltro === 'todas' ? true : (e.origem || 'manual') === kbOrigemFiltro);
@@ -1189,15 +1255,31 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                                 ? <Badge variant="default" className="text-[10px] shrink-0">📥 Importada</Badge>
                                 : <Badge variant="outline" className="text-[10px] shrink-0">✍️ Manual</Badge>;
                             return (
-                              <div key={entry.id} className="border rounded-md p-2 text-xs bg-muted/20">
+                              <div key={entry.id} className={`border rounded-md p-2 text-xs bg-muted/20 ${!entry.ativo ? 'opacity-60' : ''}`}>
                                 <div className="flex items-start justify-between gap-2">
                                   <p className="font-medium truncate flex-1">{entry.titulo}</p>
                                   {badge}
                                 </div>
                                 <p className="text-muted-foreground line-clamp-2 mt-1">{entry.conteudo}</p>
-                                <div className="flex gap-1 mt-1">
-                                  <Badge variant="outline" className="text-[9px]">{entry.dominio}</Badge>
-                                  <Badge variant="outline" className="text-[9px]">{entry.tipo}</Badge>
+                                <div className="flex items-center justify-between gap-2 mt-2">
+                                  <div className="flex gap-1 flex-wrap">
+                                    <Badge variant="outline" className="text-[9px]">{entry.dominio}</Badge>
+                                    <Badge variant="outline" className="text-[9px]">{entry.tipo}</Badge>
+                                    {!entry.ativo && <Badge variant="destructive" className="text-[9px]">inativo</Badge>}
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <Switch
+                                      checked={entry.ativo}
+                                      onCheckedChange={() => handleToggleKbEntryAtivo(entry)}
+                                      className="scale-75"
+                                    />
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditKbEntry(entry)} title="Editar">
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteKbEntry(entry.id)} title="Remover">
+                                      <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -1581,6 +1663,56 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             <Button onClick={saveEditedKbFile} disabled={editingFileSaving || editingFileLoading}>
               {editingFileSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : 'Salvar alterações'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editor de Entrada da Base de Conhecimento */}
+      <Dialog open={kbEntryDialogOpen} onOpenChange={setKbEntryDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingKbEntry ? 'Editar Entrada da Base' : 'Nova Entrada na Base'}</DialogTitle>
+            <DialogDescription>
+              {editingKbEntry?.origem === 'lacuna'
+                ? 'Esta entrada foi gerada a partir de uma Lacuna da Base.'
+                : 'Adicione ou edite informações que o agente poderá consultar.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Título</Label>
+              <Input value={kbEntryForm.titulo} onChange={e => setKbEntryForm({ ...kbEntryForm, titulo: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Domínio</Label>
+                <Input value={kbEntryForm.dominio} onChange={e => setKbEntryForm({ ...kbEntryForm, dominio: e.target.value })} placeholder="geral" />
+              </div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={kbEntryForm.tipo} onValueChange={v => setKbEntryForm({ ...kbEntryForm, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="texto">Texto</SelectItem>
+                    <SelectItem value="qa">Pergunta/Resposta</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                    <SelectItem value="regra">Regra</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Conteúdo</Label>
+              <Textarea value={kbEntryForm.conteudo} onChange={e => setKbEntryForm({ ...kbEntryForm, conteudo: e.target.value })} rows={10} className="font-mono text-sm" />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-2">
+              <Label className="text-sm">Ativo</Label>
+              <Switch checked={kbEntryForm.ativo} onCheckedChange={v => setKbEntryForm({ ...kbEntryForm, ativo: v })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setKbEntryDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveKbEntry}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
