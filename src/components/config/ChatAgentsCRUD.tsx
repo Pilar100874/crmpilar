@@ -1292,6 +1292,22 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </div>
                 )}
 
+                <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">🎯 Escopo do Agente (resposta para perguntas meta)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Texto usado quando o cliente pergunta sobre o próprio agente (ex: <em>"o que você sabe?"</em>, <em>"o que não sabe responder?"</em>, <em>"qual seu escopo?"</em>). Descreva claramente o que o agente cobre e o que não cobre. Se vazio, será usado um texto genérico baseado no nome/descrição.
+                    </p>
+                  </div>
+                  <Textarea
+                    value={(formData as any).escopo_agente || ''}
+                    onChange={(e) => setFormData({ ...formData, escopo_agente: e.target.value } as any)}
+                    placeholder="Ex: Sou especialista em papéis das fábricas Suzano, Klabin, Ibema e Irani. Posso ajudar com gramaturas, aplicações e indicações técnicas. Não respondo sobre preços, prazos de entrega, materiais plásticos ou marcas fora da minha base."
+                    rows={4}
+                    className="text-sm"
+                  />
+                </div>
+
                 {formData.knowledge_base_type !== 'nenhuma' && formData.knowledge_base_type !== 'terceiros' && (
                   <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
                     <div className="space-y-0.5">
