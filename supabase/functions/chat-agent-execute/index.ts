@@ -249,6 +249,14 @@ serve(async (req) => {
 
     // Montar contexto de KB
     let kbContext = "";
+    let relevantStructuredKbEntries: Array<{
+      titulo?: string;
+      conteudo?: string;
+      tipo?: string;
+      dominio?: string;
+      origem?: string;
+      ativo?: boolean;
+    }> = [];
 
     if (agent.knowledge_base_type === "interna" && agent.knowledge_base_internal_data?.length) {
       const items = agent.knowledge_base_internal_data;
@@ -324,6 +332,7 @@ serve(async (req) => {
         });
         const relevant = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
         const selected = relevant.length ? relevant : scored.slice(0, 5);
+        relevantStructuredKbEntries = selected.map(({ e }) => e);
 
         if (selected.length) {
           const blocks = selected.map(({ e }) => {
