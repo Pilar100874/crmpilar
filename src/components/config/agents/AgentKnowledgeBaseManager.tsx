@@ -164,7 +164,10 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{entry.titulo}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{entry.conteudo}</p>
-                      <Badge variant="outline" className="text-xs mt-1">{entry.tipo}</Badge>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        <Badge variant="outline" className="text-xs">{entry.tipo}</Badge>
+                        {origemBadge(entry.origem)}
+                      </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(entry)}>
