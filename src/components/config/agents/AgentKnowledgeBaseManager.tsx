@@ -37,6 +37,7 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
   const [editing, setEditing] = useState<KbEntry | null>(null);
   const [activeDomain, setActiveDomain] = useState('comercial');
   const [searchTerm, setSearchTerm] = useState('');
+  const [origemFiltro, setOrigemFiltro] = useState<OrigemFiltro>('todas');
   const [form, setForm] = useState({ dominio: 'comercial', titulo: '', conteudo: '', tipo: 'texto' });
 
   const fetchEntries = useCallback(async () => {
@@ -90,6 +91,7 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
 
   const filtered = entries.filter(e =>
     e.dominio === activeDomain &&
+    (origemFiltro === 'todas' ? true : (e.origem || 'manual') === origemFiltro) &&
     (searchTerm ? e.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || e.conteudo.toLowerCase().includes(searchTerm.toLowerCase()) : true)
   );
 
@@ -97,6 +99,21 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
     acc[d.id] = entries.filter(e => e.dominio === d.id).length;
     return acc;
   }, {} as Record<string, number>);
+
+  const origemCounts = entries
+    .filter(e => e.dominio === activeDomain)
+    .reduce((acc, e) => {
+      const o = e.origem || 'manual';
+      acc[o] = (acc[o] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const origemBadge = (origem?: string) => {
+    const o = origem || 'manual';
+    if (o === 'lacuna') return <Badge className="text-xs bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20" variant="outline">🧠 Lacuna</Badge>;
+    if (o === 'importada') return <Badge className="text-xs bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/20" variant="outline">📥 Importada</Badge>;
+    return <Badge variant="outline" className="text-xs">✍️ Manual</Badge>;
+  };
 
   return (
     <div className="space-y-4">
