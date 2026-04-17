@@ -198,9 +198,10 @@ interface Props {
   agentName?: string;
   knowledgeBaseType?: string;
   knowledgeBaseSummary?: string; // resumo textual da KB (textos internos, nomes de arquivos, etc.)
+  onScopeChange?: (escopo: string) => void; // chamado quando IA gera o escopo do agente
 }
 
-export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary }: Props) {
+export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBaseType, knowledgeBaseSummary, onScopeChange }: Props) {
   const [step, setStep] = useState(0);
   const [cardData, setCardData] = useState<ChatAgentCardData>(() => {
     if (value?.trim()) return promptToCardData(value);

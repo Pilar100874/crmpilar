@@ -38,13 +38,15 @@ Retorne EXATAMENTE um JSON com os seguintes campos:
 - anti_padroes: string[] (3-4 comportamentos proibidos)
 - tratamento_erros: string (como reagir quando não tem informação suficiente)
 - instrucoes_extras: string (instruções adicionais relevantes)
+- escopo_agente: string (3-5 frases respondendo, em primeira pessoa, "o que eu sei e o que eu não sei". Liste claramente: temas/produtos/áreas que o agente cobre, e temas que ele NÃO cobre. Será exibido literalmente quando o cliente perguntar sobre o próprio agente — ex: "o que você sabe?", "qual seu escopo?", "o que não sabe responder?". Exemplo: "Sou especialista em X, Y e Z. Posso ajudar com A, B e C. Não respondo sobre preços, prazos de entrega ou temas fora do meu escopo — nesses casos, encaminhe para um atendente humano.")
 
 Diretrizes de qualidade:
 - Capacidades devem ser ESPECÍFICAS e acionáveis (não genéricas)
 - Restrições devem prevenir erros comuns de chatbots
 - O protocolo de raciocínio deve ser uma sequência lógica clara
 - Anti-padrões devem listar comportamentos realistas a evitar
-- Tom de voz deve ser descritivo e dar exemplos`;
+- Tom de voz deve ser descritivo e dar exemplos
+- Escopo do agente deve ser direto, em primeira pessoa, listar coberturas E exclusões`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
