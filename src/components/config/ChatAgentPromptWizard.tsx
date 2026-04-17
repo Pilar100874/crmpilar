@@ -266,6 +266,9 @@ export function ChatAgentPromptWizard({ value, onChange, agentName, knowledgeBas
       setCardData(newCard);
       setFreeText('');
       onChange(cardDataToPrompt(newCard, ''));
+      if (data?.escopo_agente && onScopeChange) {
+        onScopeChange(data.escopo_agente);
+      }
       toast.success('✨ Prompt gerado com IA! Revise cada etapa antes de salvar.');
       setStep(1); // Go to identity step to review
     } catch (err: any) {
