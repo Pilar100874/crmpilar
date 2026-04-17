@@ -144,11 +144,22 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
         </TabsList>
 
         <div className="mt-4">
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
             </div>
+            <Select value={origemFiltro} onValueChange={(v) => setOrigemFiltro(v as OrigemFiltro)}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as origens</SelectItem>
+                <SelectItem value="manual">✍️ Manual ({origemCounts.manual || 0})</SelectItem>
+                <SelectItem value="lacuna">🧠 Lacuna ({origemCounts.lacuna || 0})</SelectItem>
+                <SelectItem value="importada">📥 Importada ({origemCounts.importada || 0})</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {filtered.length === 0 ? (
