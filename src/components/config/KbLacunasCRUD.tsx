@@ -245,7 +245,7 @@ export default function KbLacunasCRUD({ estabelecimentoId }: KbLacunasCRUDProps)
 
   const statusBadge = (s: string) => {
     if (s === "pendente") return <Badge variant="secondary">Pendente</Badge>;
-    if (s === "aprovada") return <Badge className="bg-green-600 hover:bg-green-700">Aprovada</Badge>;
+    if (s === "aprovada") return <Badge className="bg-primary text-primary-foreground">Aprovada</Badge>;
     return <Badge variant="outline">Ignorada</Badge>;
   };
 
