@@ -21,7 +21,10 @@ interface KbEntry {
   tipo: string;
   ativo: boolean;
   ordem: number;
+  origem?: string;
 }
+
+type OrigemFiltro = 'todas' | 'manual' | 'lacuna' | 'importada';
 
 interface Props {
   estabelecimentoId: string;
@@ -34,6 +37,7 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
   const [editing, setEditing] = useState<KbEntry | null>(null);
   const [activeDomain, setActiveDomain] = useState('comercial');
   const [searchTerm, setSearchTerm] = useState('');
+  const [origemFiltro, setOrigemFiltro] = useState<OrigemFiltro>('todas');
   const [form, setForm] = useState({ dominio: 'comercial', titulo: '', conteudo: '', tipo: 'texto' });
 
   const fetchEntries = useCallback(async () => {
@@ -87,6 +91,7 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
 
   const filtered = entries.filter(e =>
     e.dominio === activeDomain &&
+    (origemFiltro === 'todas' ? true : (e.origem || 'manual') === origemFiltro) &&
     (searchTerm ? e.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || e.conteudo.toLowerCase().includes(searchTerm.toLowerCase()) : true)
   );
 
@@ -94,6 +99,21 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
     acc[d.id] = entries.filter(e => e.dominio === d.id).length;
     return acc;
   }, {} as Record<string, number>);
+
+  const origemCounts = entries
+    .filter(e => e.dominio === activeDomain)
+    .reduce((acc, e) => {
+      const o = e.origem || 'manual';
+      acc[o] = (acc[o] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const origemBadge = (origem?: string) => {
+    const o = origem || 'manual';
+    if (o === 'lacuna') return <Badge variant="secondary" className="text-xs">🧠 Lacuna</Badge>;
+    if (o === 'importada') return <Badge variant="default" className="text-xs">📥 Importada</Badge>;
+    return <Badge variant="outline" className="text-xs">✍️ Manual</Badge>;
+  };
 
   return (
     <div className="space-y-4">
@@ -124,11 +144,22 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
         </TabsList>
 
         <div className="mt-4">
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
             </div>
+            <Select value={origemFiltro} onValueChange={(v) => setOrigemFiltro(v as OrigemFiltro)}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as origens</SelectItem>
+                <SelectItem value="manual">✍️ Manual ({origemCounts.manual || 0})</SelectItem>
+                <SelectItem value="lacuna">🧠 Lacuna ({origemCounts.lacuna || 0})</SelectItem>
+                <SelectItem value="importada">📥 Importada ({origemCounts.importada || 0})</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {filtered.length === 0 ? (
@@ -144,7 +175,10 @@ export default function AgentKnowledgeBaseManager({ estabelecimentoId }: Props) 
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{entry.titulo}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{entry.conteudo}</p>
-                      <Badge variant="outline" className="text-xs mt-1">{entry.tipo}</Badge>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        <Badge variant="outline" className="text-xs">{entry.tipo}</Badge>
+                        {origemBadge(entry.origem)}
+                      </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(entry)}>
