@@ -128,6 +128,7 @@ const emptyForm: Partial<ChatAgent> = {
   gerar_pre_orcamento: false,
   tipo_agente: 'especifico',
   restringir_base_conhecimento: false,
+  escopo_agente: '',
   sub_agent_ids: [],
   ativo: true,
   ordem: 0,
