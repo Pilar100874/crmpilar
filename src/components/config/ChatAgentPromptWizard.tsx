@@ -333,6 +333,9 @@ O agente deve:
       setCardData(newCard);
       setFreeText('');
       onChange(cardDataToPrompt(newCard, ''));
+      if (data?.escopo_agente && onScopeChange) {
+        onScopeChange(data.escopo_agente);
+      }
       toast.success('✨ Prompt gerado com base na KB! Revise antes de salvar.');
       setStep(1);
     } catch (err: any) {
