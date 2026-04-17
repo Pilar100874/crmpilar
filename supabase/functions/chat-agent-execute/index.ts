@@ -195,6 +195,41 @@ serve(async (req) => {
       });
     }
 
+    // ============================================================
+    // DETECTOR DE PERGUNTAS META (sobre o próprio agente)
+    // Responde direto com o "escopo_agente" sem passar por IA/KB,
+    // evitando bloqueio do filtro anti-alucinação.
+    // ============================================================
+    const metaPatterns = [
+      /\bo que (voc[eê]|tu) (sabe|sabes|conhece|faz|pode)\b/i,
+      /\bo que (n[ãa]o|nao) (sabe|sabes|consegue|pode) (responder|fazer|ajudar)\b/i,
+      /\bqual (seu|teu) (escopo|papel|prop[oó]sito|objetivo|conhecimento|limite|limitac[ãa]o)\b/i,
+      /\bquais? (suas?|tuas?) (capacidades?|funcionalidades?|limita[cç][õo]es?|habilidades?)\b/i,
+      /\bcomo (voc[eê]|tu) pode(s)? (ajudar|me ajudar)\b/i,
+      /\bquem (é|eh|es) (voc[eê]|tu)\b/i,
+      /\bsobre o que (posso|pode) (perguntar|falar)\b/i,
+      /\bem que (voc[eê]|tu) (pode|consegue) (ajudar|me ajudar)\b/i,
+    ];
+    const isMetaQuestion = metaPatterns.some((re) => re.test(mensagem_cliente || ""));
+    const escopoAgente = (agent as any).escopo_agente?.trim();
+
+    if (isMetaQuestion) {
+      console.log(`[meta-pergunta] Detectada pergunta sobre o agente: "${(mensagem_cliente || "").slice(0, 80)}"`);
+      const respostaMeta = escopoAgente
+        ? escopoAgente
+        : `Sou o agente **${agent.nome}**${agent.descricao ? ` — ${agent.descricao}` : ""}. Posso ajudar com perguntas relacionadas ao meu escopo. Se quiser saber se cubro um tema específico, é só perguntar diretamente!`;
+
+      return new Response(
+        JSON.stringify({
+          resposta: respostaMeta,
+          agent_id: agent.id,
+          agent_nome: agent.nome,
+          meta_question: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Se for orquestrador, mesclar capacidades dos sub-agentes
     let subAgents: any[] = [];
     if (agent.tipo_agente === 'orquestrador' && agent.sub_agent_ids?.length) {
