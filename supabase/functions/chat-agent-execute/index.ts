@@ -302,6 +302,44 @@ serve(async (req) => {
       }
     }
 
+    // Buscar entradas estruturadas em agent_knowledge_bases (lacuna / manual / importada)
+    {
+      const kbAgentIds = Array.from(new Set([
+        agent_id,
+        ...(((agent as any)._inheritedKbAgentIds as string[]) || []),
+        ...((agent.sub_agent_ids as string[]) || []),
+      ]));
+      const { data: kbEntries } = await supabase
+        .from("agent_knowledge_bases")
+        .select("titulo, conteudo, tipo, dominio, origem, ativo")
+        .eq("estabelecimento_id", agent.estabelecimento_id)
+        .eq("ativo", true);
+
+      if (kbEntries?.length) {
+        const terms = buildKbSearchTerms(mensagem_cliente).map((t) => t.toLowerCase());
+        const scored = kbEntries.map((e: any) => {
+          const haystack = `${e.titulo || ""}\n${e.conteudo || ""}`.toLowerCase();
+          const score = terms.reduce((acc, t) => acc + (t && haystack.includes(t) ? 1 : 0), 0);
+          return { e, score };
+        });
+        const relevant = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
+        const selected = relevant.length ? relevant : scored.slice(0, 5);
+
+        if (selected.length) {
+          const blocks = selected.map(({ e }) => {
+            const tag = e.origem === "lacuna" ? "🧠 LACUNA APROVADA"
+                      : e.origem === "importada" ? "📥 IMPORTADA"
+                      : "✍️ MANUAL";
+            return `\n[${tag} | ${e.dominio || "geral"}] ${e.titulo}\n${e.conteudo}\n`;
+          });
+          kbContext += "\n\n--- BASE DE CONHECIMENTO (ENTRADAS) ---\n";
+          kbContext += blocks.join("\n");
+          kbContext += "--- FIM DAS ENTRADAS ---\n";
+          console.log(`[KB entradas] Total: ${kbEntries.length} | relevantes: ${relevant.length} | usadas: ${selected.length} | termos: ${terms.join(",") || "nenhum"}`);
+        }
+      }
+    }
+
     // Buscar estoque do sistema se habilitado
     let estoqueSistemaContext = "";
     if (agent.usar_estoque_sistema) {
