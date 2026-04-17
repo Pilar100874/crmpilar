@@ -330,8 +330,11 @@ serve(async (req) => {
           const score = terms.reduce((acc, t) => acc + (t && haystack.includes(t) ? 1 : 0), 0);
           return { e, score };
         });
+        // Apenas considerar entradas com correspondência real de termos.
+        // Sem isso, perguntas não relacionadas reusam entradas irrelevantes
+        // (ex: pergunta de "display plástico" puxando entrada de "oleosidade").
         const relevant = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
-        const selected = relevant.length ? relevant : scored.slice(0, 5);
+        const selected = relevant; // não usar fallback genérico aqui
         relevantStructuredKbEntries = selected.map(({ e }) => e);
 
         if (selected.length) {
