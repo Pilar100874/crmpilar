@@ -1151,6 +1151,63 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                   </Select>
                 </div>
 
+                {/* Entradas da Base de Conhecimento (com origem) */}
+                {formData.knowledge_base_type !== 'nenhuma' && formData.knowledge_base_type !== 'terceiros' && (
+                  <div className="rounded-lg border p-3 space-y-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div>
+                        <Label className="text-sm font-semibold flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-primary" />
+                          Entradas da Base ({kbEntries.length})
+                        </Label>
+                        <p className="text-xs text-muted-foreground">Inclui itens criados manualmente, importados e gerados a partir das Lacunas da Base.</p>
+                      </div>
+                      <Select value={kbOrigemFiltro} onValueChange={(v) => setKbOrigemFiltro(v as any)}>
+                        <SelectTrigger className="w-[200px] h-8 text-xs">
+                          <SelectValue placeholder="Filtrar origem" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todas">Todas as origens ({kbEntries.length})</SelectItem>
+                          <SelectItem value="manual">✍️ Manual ({kbEntries.filter(e => (e.origem || 'manual') === 'manual').length})</SelectItem>
+                          <SelectItem value="lacuna">🧠 Lacuna ({kbEntries.filter(e => e.origem === 'lacuna').length})</SelectItem>
+                          <SelectItem value="importada">📥 Importada ({kbEntries.filter(e => e.origem === 'importada').length})</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {(() => {
+                      const filtered = kbEntries.filter(e => kbOrigemFiltro === 'todas' ? true : (e.origem || 'manual') === kbOrigemFiltro);
+                      if (filtered.length === 0) {
+                        return <p className="text-xs text-muted-foreground italic text-center py-3">Nenhuma entrada encontrada para este filtro.</p>;
+                      }
+                      return (
+                        <div className="space-y-2 max-h-[260px] overflow-y-auto">
+                          {filtered.map(entry => {
+                            const o = entry.origem || 'manual';
+                            const badge = o === 'lacuna'
+                              ? <Badge variant="secondary" className="text-[10px] shrink-0">🧠 Lacuna</Badge>
+                              : o === 'importada'
+                                ? <Badge variant="default" className="text-[10px] shrink-0">📥 Importada</Badge>
+                                : <Badge variant="outline" className="text-[10px] shrink-0">✍️ Manual</Badge>;
+                            return (
+                              <div key={entry.id} className="border rounded-md p-2 text-xs bg-muted/20">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="font-medium truncate flex-1">{entry.titulo}</p>
+                                  {badge}
+                                </div>
+                                <p className="text-muted-foreground line-clamp-2 mt-1">{entry.conteudo}</p>
+                                <div className="flex gap-1 mt-1">
+                                  <Badge variant="outline" className="text-[9px]">{entry.dominio}</Badge>
+                                  <Badge variant="outline" className="text-[9px]">{entry.tipo}</Badge>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
                 {formData.knowledge_base_type !== 'nenhuma' && formData.knowledge_base_type !== 'terceiros' && (
                   <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
                     <div className="space-y-0.5">
