@@ -249,6 +249,14 @@ serve(async (req) => {
 
     // Montar contexto de KB
     let kbContext = "";
+    let relevantStructuredKbEntries: Array<{
+      titulo?: string;
+      conteudo?: string;
+      tipo?: string;
+      dominio?: string;
+      origem?: string;
+      ativo?: boolean;
+    }> = [];
 
     if (agent.knowledge_base_type === "interna" && agent.knowledge_base_internal_data?.length) {
       const items = agent.knowledge_base_internal_data;
@@ -324,6 +332,7 @@ serve(async (req) => {
         });
         const relevant = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
         const selected = relevant.length ? relevant : scored.slice(0, 5);
+        relevantStructuredKbEntries = selected.map(({ e }) => e);
 
         if (selected.length) {
           const blocks = selected.map(({ e }) => {
@@ -802,6 +811,13 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
       apiContext?.trim()
     );
     const safeKnowledgeFallback = "Essa informação não está confirmada na minha base de conhecimento. Posso verificar com a equipe ou ajudar com outro assunto?";
+    const safeStructuredKbFallback = relevantStructuredKbEntries.length
+      ? relevantStructuredKbEntries
+          .map((entry) => entry.conteudo?.trim())
+          .filter(Boolean)
+          .slice(0, 2)
+          .join("\n\n")
+      : "";
     const shouldSkipHumanization = (text: string) =>
       /não está confirmada na minha base de conhecimento|não tenho essa informação confirmada na base/i.test(text);
     const stripNonGroundedOperationalClauses = (text: string) => {
@@ -898,7 +914,7 @@ Aplique essas regras SEMPRE que houver dados de produtos, estoque, catálogo ou 
 
       if (!groundingContext) {
         console.warn("[anti-alucinação] Restrição ativa sem contexto disponível; bloqueando resposta livre.");
-        resposta = safeKnowledgeFallback;
+        resposta = safeStructuredKbFallback || safeKnowledgeFallback;
       } else if (respostaSemBlocos) {
         try {
           const validationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -950,7 +966,7 @@ Responda APENAS JSON válido no formato {"grounded": boolean, "reason": string}.
           if (!validationResponse.ok) {
             const validationError = await validationResponse.text().catch(() => "");
             console.warn("[anti-alucinação] Falha ao validar grounding:", validationResponse.status, validationError);
-            resposta = safeKnowledgeFallback;
+            resposta = safeStructuredKbFallback || safeKnowledgeFallback;
           } else {
             const validationData = await validationResponse.json();
             const validationText = validationData.choices?.[0]?.message?.content || "";
@@ -959,12 +975,12 @@ Responda APENAS JSON válido no formato {"grounded": boolean, "reason": string}.
 
             if (!isGrounded) {
               console.warn("[anti-alucinação] Resposta bloqueada por falta de grounding:", validationJson?.reason || "sem motivo informado");
-              resposta = safeKnowledgeFallback;
+              resposta = safeStructuredKbFallback || safeKnowledgeFallback;
             }
           }
         } catch (validationError) {
           console.error("[anti-alucinação] Erro na validação de grounding:", validationError);
-          resposta = safeKnowledgeFallback;
+          resposta = safeStructuredKbFallback || safeKnowledgeFallback;
         }
       }
     }
