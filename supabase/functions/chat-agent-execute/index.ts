@@ -9,7 +9,8 @@ const corsHeaders = {
 const KB_STOP_WORDS = new Set([
   "a", "o", "os", "as", "um", "uma", "uns", "umas", "de", "da", "do", "das", "dos", "e", "ou", "que", "para",
   "por", "com", "sem", "sobre", "qual", "quais", "como", "onde", "quando", "isso", "essa", "esse", "esta", "este",
-  "tem", "temos", "ser", "sao", "são", "eh", "é", "na", "no", "nas", "nos", "ao", "aos", "à", "às", "paper", "papel"
+  "tem", "temos", "ser", "sao", "são", "eh", "é", "na", "no", "nas", "nos", "ao", "aos", "à", "às", "paper", "papel",
+  "posso", "usar", "fazer", "fabricar", "sugere", "sugerir", "preciso", "quero", "gostaria", "indica", "indicar", "seria"
 ]);
 
 const normalizeForSearch = (value: string = "") =>
@@ -18,16 +19,86 @@ const normalizeForSearch = (value: string = "") =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
+const tokenizeForSearch = (value: string = "") =>
+  normalizeForSearch(value)
+    .split(/[^a-z0-9]+/g)
+    .filter(Boolean);
+
+const normalizeSearchToken = (term: string) => {
+  if (!term) return "";
+  if (term.endsWith("oes") && term.length > 5) return `${term.slice(0, -3)}ao`;
+  if (term.endsWith("ais") && term.length > 5) return `${term.slice(0, -3)}al`;
+  if (term.endsWith("eis") && term.length > 5) return `${term.slice(0, -3)}el`;
+  if (term.endsWith("is") && term.length > 4) return `${term.slice(0, -2)}l`;
+  if (term.endsWith("s") && !term.endsWith("ss") && term.length > 4) return term.slice(0, -1);
+  return term;
+};
+
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const buildKbSearchTerms = (message: string = "") =>
   Array.from(
     new Set(
-      normalizeForSearch(message)
-        .split(/[^a-z0-9]+/g)
+      tokenizeForSearch(message)
+        .map(normalizeSearchToken)
         .filter((term) => term.length >= 3 && !KB_STOP_WORDS.has(term))
     )
   );
+
+const levenshteinDistance = (a: string, b: string) => {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const matrix = Array.from({ length: b.length + 1 }, (_, row) =>
+    Array.from({ length: a.length + 1 }, (_, col) => (row === 0 ? col : col === 0 ? row : 0))
+  );
+
+  for (let row = 1; row <= b.length; row++) {
+    for (let col = 1; col <= a.length; col++) {
+      const cost = a[col - 1] === b[row - 1] ? 0 : 1;
+      matrix[row][col] = Math.min(
+        matrix[row - 1][col] + 1,
+        matrix[row][col - 1] + 1,
+        matrix[row - 1][col - 1] + cost,
+      );
+    }
+  }
+
+  return matrix[b.length][a.length];
+};
+
+const isFuzzyTokenMatch = (term: string, candidate: string) => {
+  if (!term || !candidate) return false;
+  if (term === candidate) return true;
+  if (term.length < 5 || candidate.length < 5) return false;
+  if (term.includes(candidate) || candidate.includes(term)) return true;
+  if (Math.abs(term.length - candidate.length) > 2) return false;
+
+  const maxDistance = Math.max(term.length, candidate.length) >= 9 ? 2 : 1;
+  return levenshteinDistance(term, candidate) <= maxDistance;
+};
+
+const splitKbIntoSections = (text: string) => {
+  const cleanText = text?.trim() || "";
+  if (!cleanText) return [];
+
+  const markdownSections = cleanText
+    .split(/\n(?=###\s)/g)
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  if (markdownSections.length > 1) return markdownSections;
+
+  const blocks = cleanText
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return blocks.map((block, index) =>
+    [blocks[index - 1], block, blocks[index + 1]].filter(Boolean).join("\n\n")
+  );
+};
 
 const extractRelevantKbSnippet = (text: string, fileName: string, searchTerms: string[]) => {
   const cleanText = text?.trim() || "";
@@ -38,20 +109,32 @@ const extractRelevantKbSnippet = (text: string, fileName: string, searchTerms: s
   }
 
   const normalizedFileName = normalizeForSearch(fileName);
-  const blocks = cleanText
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const sections = splitKbIntoSections(cleanText);
 
-  const scoredBlocks = blocks
-    .map((block) => {
-      const normalizedBlock = normalizeForSearch(block);
+  const scoredSections = sections
+    .map((section) => {
+      const normalizedSection = normalizeForSearch(section);
+      const sectionTokens = Array.from(new Set(tokenizeForSearch(section).map(normalizeSearchToken)));
+      const heading = section.split("\n")[0] || "";
+      const normalizedHeading = normalizeForSearch(heading);
+      const headingTokens = Array.from(new Set(tokenizeForSearch(heading).map(normalizeSearchToken)));
       let score = 0;
 
       for (const term of searchTerms) {
-        const matches = normalizedBlock.match(new RegExp(escapeRegExp(term), "g"));
-        if (matches?.length) {
-          score += matches.length * (term.length >= 5 ? 3 : 2);
+        const exactMatches = normalizedSection.match(new RegExp(`\\b${escapeRegExp(term)}\\b`, "g"));
+        if (exactMatches?.length) {
+          score += exactMatches.length * (term.length >= 5 ? 5 : 3);
+        } else if (sectionTokens.some((token) => isFuzzyTokenMatch(term, token))) {
+          score += term.length >= 7 ? 4 : 2;
+        } else if (sectionTokens.some((token) => isFuzzyTokenMatch(term, token))) {
+          score += term.length >= 7 ? 4 : 2;
+        }
+
+        if (
+          normalizedHeading.includes(term) ||
+          headingTokens.some((token) => isFuzzyTokenMatch(term, token))
+        ) {
+          score += 3;
         }
       }
 
@@ -59,15 +142,15 @@ const extractRelevantKbSnippet = (text: string, fileName: string, searchTerms: s
         score = 1;
       }
 
-      return { block, score };
+      return { section, score };
     })
     .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || b.block.length - a.block.length)
+    .sort((a, b) => b.score - a.score || b.section.length - a.section.length)
     .slice(0, 4)
-    .map((item) => item.block.substring(0, 1800).trim());
+    .map((item) => item.section.substring(0, 2400).trim());
 
-  if (scoredBlocks.length) {
-    return Array.from(new Set(scoredBlocks)).join("\n\n");
+  if (scoredSections.length) {
+    return Array.from(new Set(scoredSections)).join("\n\n");
   }
 
   if (searchTerms.some((term) => normalizedFileName.includes(term))) {
