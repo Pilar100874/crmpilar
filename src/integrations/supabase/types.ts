@@ -6170,6 +6170,95 @@ export type Database = {
           },
         ]
       }
+      kb_lacunas: {
+        Row: {
+          agent_id: string | null
+          agent_nome: string | null
+          aprovada_em: string | null
+          aprovada_por: string | null
+          contexto: Json | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          kb_id_criada: string | null
+          motivo: string
+          pergunta: string
+          resposta_editada: string | null
+          resposta_sugerida: string | null
+          score_kb: number | null
+          session_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_nome?: string | null
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          contexto?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          kb_id_criada?: string | null
+          motivo?: string
+          pergunta: string
+          resposta_editada?: string | null
+          resposta_sugerida?: string | null
+          score_kb?: number | null
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          agent_nome?: string | null
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          contexto?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          kb_id_criada?: string | null
+          motivo?: string
+          pergunta?: string
+          resposta_editada?: string | null
+          resposta_sugerida?: string | null
+          score_kb?: number | null
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_lacunas_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "chat_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_lacunas_aprovada_por_fkey"
+            columns: ["aprovada_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_lacunas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kb_lacunas_kb_id_criada_fkey"
+            columns: ["kb_id_criada"]
+            isOneToOne: false
+            referencedRelation: "agent_knowledge_bases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kb_tags: {
         Row: {
           cor: string | null
