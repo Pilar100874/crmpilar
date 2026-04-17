@@ -185,6 +185,15 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
     setKbFiles(data || []);
   };
 
+  const loadKbEntries = async () => {
+    const { data } = await supabase
+      .from('agent_knowledge_bases')
+      .select('id, titulo, conteudo, dominio, tipo, origem, ativo, created_at')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('created_at', { ascending: false });
+    setKbEntries(data || []);
+  };
+
   const handleOpenCreate = (presetType?: 'especifico' | 'orquestrador') => {
     setEditingAgent(null);
     setFormData({ ...emptyForm, ...(presetType ? { tipo_agente: presetType } : {}) });
