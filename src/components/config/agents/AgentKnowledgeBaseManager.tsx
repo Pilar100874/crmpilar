@@ -21,7 +21,10 @@ interface KbEntry {
   tipo: string;
   ativo: boolean;
   ordem: number;
+  origem?: string;
 }
+
+type OrigemFiltro = 'todas' | 'manual' | 'lacuna' | 'importada';
 
 interface Props {
   estabelecimentoId: string;

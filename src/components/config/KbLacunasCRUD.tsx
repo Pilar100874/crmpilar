@@ -187,7 +187,8 @@ export default function KbLacunasCRUD({ estabelecimentoId }: KbLacunasCRUDProps)
           conteudo: conteudoFinal,
           tipo: "qa",
           ativo: true,
-        })
+          origem: "lacuna",
+        } as any)
         .select("id")
         .single();
 
