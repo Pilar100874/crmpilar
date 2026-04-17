@@ -1015,6 +1015,26 @@ Responda APENAS JSON válido no formato {"grounded": boolean, "reason": string}.
       }
     }
 
+    // 📝 LACUNAS DA BASE DE CONHECIMENTO
+    // Registrar pergunta sem resposta confiável para revisão posterior pelo usuário
+    try {
+      const respostaIsFallback = /não está confirmada na minha base de conhecimento|não tenho essa informação confirmada na base/i.test(resposta);
+      const askedSomething = (mensagem_cliente || "").trim().length >= 4;
+      if (askedSomething && respostaIsFallback) {
+        await supabase.from("kb_lacunas").upsert({
+          estabelecimento_id: agent.estabelecimento_id,
+          agent_id: agent.id,
+          agent_nome: agent.nome,
+          session_id: conversation_id || null,
+          pergunta: (mensagem_cliente as string).trim().slice(0, 2000),
+          motivo: 'fallback',
+          status: 'pendente',
+        }, { onConflict: 'estabelecimento_id,agent_id,(lower(pergunta))', ignoreDuplicates: true });
+      }
+    } catch (lacunaErr) {
+      console.warn("[kb_lacunas] Falha ao registrar lacuna:", lacunaErr);
+    }
+
     return new Response(JSON.stringify({
       resposta,
       modo_operacao: agent.modo_operacao,
