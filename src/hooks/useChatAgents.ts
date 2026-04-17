@@ -51,9 +51,9 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
   const [agents, setAgents] = useState<ChatAgent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAgents = useCallback(async () => {
+  const fetchAgents = useCallback(async (opts?: { silent?: boolean }) => {
     if (!estabelecimentoId) return;
-    setLoading(true);
+    if (!opts?.silent) setLoading(true);
     const { data, error } = await supabase
       .from('chat_agents')
       .select('*')
@@ -65,7 +65,7 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
     } else if (error) {
       console.error('Erro ao carregar agentes:', error);
     }
-    setLoading(false);
+    if (!opts?.silent) setLoading(false);
   }, [estabelecimentoId]);
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
@@ -108,11 +108,14 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
       return null;
     }
     toast.success(`Agente "${agent.nome}" criado!`);
-    await fetchAgents();
+    await fetchAgents({ silent: true });
     return data as unknown as ChatAgent;
   };
 
   const updateAgent = async (id: string, updates: Partial<ChatAgent>) => {
+    // Update otimista — atualiza localmente sem trigger de loading
+    setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, ...(updates as any) } : a)));
+
     const { error } = await supabase
       .from('chat_agents')
       .update(updates as any)
@@ -120,9 +123,10 @@ export function useChatAgents(estabelecimentoId: string | undefined | null) {
 
     if (error) {
       toast.error(`Erro ao atualizar: ${error.message}`);
+      await fetchAgents({ silent: true });
       return false;
     }
-    await fetchAgents();
+    await fetchAgents({ silent: true });
     return true;
   };
 
