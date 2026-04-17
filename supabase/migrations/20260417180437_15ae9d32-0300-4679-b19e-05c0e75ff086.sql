@@ -1,0 +1,1 @@
+ALTER TABLE public.chat_agents ADD COLUMN IF NOT EXISTS escopo_agente text;

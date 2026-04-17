@@ -2386,6 +2386,7 @@ export type Database = {
           cor: string
           created_at: string
           descricao: string | null
+          escopo_agente: string | null
           estabelecimento_id: string
           gerar_pre_orcamento: boolean | null
           icone: string
@@ -2420,6 +2421,7 @@ export type Database = {
           cor?: string
           created_at?: string
           descricao?: string | null
+          escopo_agente?: string | null
           estabelecimento_id: string
           gerar_pre_orcamento?: boolean | null
           icone?: string
@@ -2454,6 +2456,7 @@ export type Database = {
           cor?: string
           created_at?: string
           descricao?: string | null
+          escopo_agente?: string | null
           estabelecimento_id?: string
           gerar_pre_orcamento?: boolean | null
           icone?: string
