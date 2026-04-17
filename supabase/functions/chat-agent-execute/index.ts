@@ -931,6 +931,41 @@ Responda APENAS JSON válido no formato {"grounded": boolean, "reason": string}.
       }
     }
 
+    // 📝 LACUNAS DA BASE DE CONHECIMENTO (ANTES da humanização — captura o fallback real)
+    const respostaEhFallback = shouldSkipHumanization(resposta) || resposta?.trim() === safeKnowledgeFallback?.trim();
+    try {
+      const askedSomething = (mensagem_cliente || "").trim().length >= 4;
+      if (askedSomething && respostaEhFallback) {
+        const perguntaLimpa = (mensagem_cliente as string).trim().slice(0, 2000);
+        const { data: existente } = await supabase
+          .from("kb_lacunas")
+          .select("id")
+          .eq("estabelecimento_id", agent.estabelecimento_id)
+          .eq("agent_id", agent.id)
+          .eq("status", "pendente")
+          .ilike("pergunta", perguntaLimpa)
+          .maybeSingle();
+        if (!existente) {
+          const { error: insertErr } = await supabase.from("kb_lacunas").insert({
+            estabelecimento_id: agent.estabelecimento_id,
+            agent_id: agent.id,
+            agent_nome: agent.nome,
+            session_id: conversation_id || null,
+            pergunta: perguntaLimpa,
+            motivo: 'fallback',
+            status: 'pendente',
+          });
+          if (insertErr) {
+            console.warn("[kb_lacunas] Erro ao inserir:", insertErr);
+          } else {
+            console.log("[kb_lacunas] ✅ Lacuna registrada:", perguntaLimpa.slice(0, 80));
+          }
+        }
+      }
+    } catch (lacunaErr) {
+      console.warn("[kb_lacunas] Falha ao registrar lacuna:", lacunaErr);
+    }
+
     // 🗣️ ETAPA DE HUMANIZAÇÃO: se o orquestrador tem um sub-agente Humanizador, passa a resposta por ele
     if (agent.tipo_agente === 'orquestrador' && subAgents.length > 0 && !shouldSkipHumanization(resposta)) {
       const humanizador = subAgents.find((s: any) =>
