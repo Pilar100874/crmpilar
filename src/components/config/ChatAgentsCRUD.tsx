@@ -1223,17 +1223,22 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                         </Label>
                         <p className="text-xs text-muted-foreground">Inclui itens criados manualmente, importados e gerados a partir das Lacunas da Base.</p>
                       </div>
-                      <Select value={kbOrigemFiltro} onValueChange={(v) => setKbOrigemFiltro(v as any)}>
-                        <SelectTrigger className="w-[200px] h-8 text-xs">
-                          <SelectValue placeholder="Filtrar origem" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todas">Todas as origens ({kbEntries.length})</SelectItem>
-                          <SelectItem value="manual">✍️ Manual ({kbEntries.filter(e => (e.origem || 'manual') === 'manual').length})</SelectItem>
-                          <SelectItem value="lacuna">🧠 Lacuna ({kbEntries.filter(e => e.origem === 'lacuna').length})</SelectItem>
-                          <SelectItem value="importada">📥 Importada ({kbEntries.filter(e => e.origem === 'importada').length})</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Select value={kbOrigemFiltro} onValueChange={(v) => setKbOrigemFiltro(v as any)}>
+                          <SelectTrigger className="w-[200px] h-8 text-xs">
+                            <SelectValue placeholder="Filtrar origem" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todas">Todas as origens ({kbEntries.length})</SelectItem>
+                            <SelectItem value="manual">✍️ Manual ({kbEntries.filter(e => (e.origem || 'manual') === 'manual').length})</SelectItem>
+                            <SelectItem value="lacuna">🧠 Lacuna ({kbEntries.filter(e => e.origem === 'lacuna').length})</SelectItem>
+                            <SelectItem value="importada">📥 Importada ({kbEntries.filter(e => e.origem === 'importada').length})</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="outline" onClick={openCreateKbEntry} className="h-8">
+                          <Plus className="h-3 w-3 mr-1" /> Nova
+                        </Button>
+                      </div>
                     </div>
                     {(() => {
                       const filtered = kbEntries.filter(e => kbOrigemFiltro === 'todas' ? true : (e.origem || 'manual') === kbOrigemFiltro);
@@ -1250,15 +1255,31 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
                                 ? <Badge variant="default" className="text-[10px] shrink-0">📥 Importada</Badge>
                                 : <Badge variant="outline" className="text-[10px] shrink-0">✍️ Manual</Badge>;
                             return (
-                              <div key={entry.id} className="border rounded-md p-2 text-xs bg-muted/20">
+                              <div key={entry.id} className={`border rounded-md p-2 text-xs bg-muted/20 ${!entry.ativo ? 'opacity-60' : ''}`}>
                                 <div className="flex items-start justify-between gap-2">
                                   <p className="font-medium truncate flex-1">{entry.titulo}</p>
                                   {badge}
                                 </div>
                                 <p className="text-muted-foreground line-clamp-2 mt-1">{entry.conteudo}</p>
-                                <div className="flex gap-1 mt-1">
-                                  <Badge variant="outline" className="text-[9px]">{entry.dominio}</Badge>
-                                  <Badge variant="outline" className="text-[9px]">{entry.tipo}</Badge>
+                                <div className="flex items-center justify-between gap-2 mt-2">
+                                  <div className="flex gap-1 flex-wrap">
+                                    <Badge variant="outline" className="text-[9px]">{entry.dominio}</Badge>
+                                    <Badge variant="outline" className="text-[9px]">{entry.tipo}</Badge>
+                                    {!entry.ativo && <Badge variant="destructive" className="text-[9px]">inativo</Badge>}
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <Switch
+                                      checked={entry.ativo}
+                                      onCheckedChange={() => handleToggleKbEntryAtivo(entry)}
+                                      className="scale-75"
+                                    />
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditKbEntry(entry)} title="Editar">
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteKbEntry(entry.id)} title="Remover">
+                                      <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             );
