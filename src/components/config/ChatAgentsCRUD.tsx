@@ -147,6 +147,9 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
   const [internalKbText, setInternalKbText] = useState('');
   const [kbEntries, setKbEntries] = useState<any[]>([]);
   const [kbOrigemFiltro, setKbOrigemFiltro] = useState<'todas' | 'manual' | 'lacuna' | 'importada'>('todas');
+  const [kbEntryDialogOpen, setKbEntryDialogOpen] = useState(false);
+  const [editingKbEntry, setEditingKbEntry] = useState<any | null>(null);
+  const [kbEntryForm, setKbEntryForm] = useState({ titulo: '', conteudo: '', dominio: 'geral', tipo: 'texto', ativo: true });
   const [previewType, setPreviewType] = useState<'estoque' | 'importados' | 'api' | null>(null);
   const [previewApiId, setPreviewApiId] = useState<string>('');
   const [previewApiName, setPreviewApiName] = useState<string>('');
