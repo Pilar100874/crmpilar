@@ -557,6 +557,7 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
             
             <TabsTrigger value="orquestrador" className="gap-1"><Network className="h-4 w-4" /> Orquestrador</TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-1"><BarChart3 className="h-4 w-4" /> Dashboard</TabsTrigger>
+            <TabsTrigger value="lacunas" className="gap-1"><MessageSquareQuote className="h-4 w-4" /> Lacunas da Base</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
             <AgentHelpGuide />
@@ -1477,6 +1478,10 @@ export default function ChatAgentsCRUD({ estabelecimentoId }: Props) {
 
         <TabsContent value="dashboard" className="mt-0">
           <AgentPerformanceDashboard estabelecimentoId={estabelecimentoId} agents={agents} />
+        </TabsContent>
+
+        <TabsContent value="lacunas" className="mt-0">
+          <KbLacunasCRUD estabelecimentoId={estabelecimentoId} />
         </TabsContent>
       </Tabs>
 
