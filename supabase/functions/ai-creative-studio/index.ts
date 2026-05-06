@@ -1477,26 +1477,146 @@ Deno.serve(async (req) => {
         const imageRoles = (params.imageRoles || []) as string[];
         const imageSize = (params.imageSize || '') as string;
         const imagePlatformPreset = (params.imagePlatformPreset || '') as string;
+        const carouselMode = (params.carouselMode || 'panoramic') as string;
 
+        // Determine if this is a multi-slide preset
+        const isGrid = imagePlatformPreset.startsWith('ig-grid-');
+        const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
+        let totalSlides = 1;
+        let slideW = 0;
+        let slideH = 0;
+        let gridCols = 1;
+        let gridRows = 1;
+        
+        if (imageSize) {
+          const [iw, ih] = imageSize.split('x').map(Number);
+          if (iw && ih) {
+            slideH = ih;
+            if (isCarousel) {
+              const match = imagePlatformPreset.match(/ig-carousel-(\d+)/);
+              totalSlides = match ? parseInt(match[1]) : 2;
+              slideW = Math.round(iw / totalSlides);
+            } else if (isGrid) {
+              const match = imagePlatformPreset.match(/ig-grid-(\d+)x(\d+)/);
+              gridCols = match ? parseInt(match[1]) : 3;
+              gridRows = match ? parseInt(match[2]) : 1;
+              totalSlides = gridCols * gridRows;
+              slideW = Math.round(iw / gridCols);
+              slideH = Math.round(ih / gridRows);
+            }
+          }
+        }
+
+        // === INDEPENDENT MODE: Generate each slide separately ===
+        if ((isGrid || isCarousel) && carouselMode === 'independent' && totalSlides > 1) {
+          console.log(`[generate_image] INDEPENDENT MODE — ${totalSlides} slides, each ${slideW}x${slideH}px`);
+          
+          const slideImages: string[] = [];
+          const basePrompt = params.prompt as string;
+          
+          for (let slideIdx = 0; slideIdx < totalSlides; slideIdx++) {
+            const slideNum = slideIdx + 1;
+            const slidePrompt = `[SLIDE ${slideNum} of ${totalSlides}] ${basePrompt}\n\n[FORMAT] Generate this as a SINGLE STANDALONE image at ${slideW}x${slideH}px (aspect ratio ${slideW}:${slideH}). This is slide ${slideNum} of a ${totalSlides}-slide ${isCarousel ? 'Instagram Carousel' : 'Instagram Grid'}. Make this a COMPLETE, self-contained, professionally composed image. It must be beautiful and impactful on its own. Maintain a consistent color palette and visual style that will look cohesive when placed alongside the other slides in the series. Fill the ENTIRE canvas.`;
+            
+            const slideDimInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${slideW}x${slideH} pixels. This is a SINGLE STANDALONE image — fill the entire ${slideW}x${slideH} canvas with a complete composition.`;
+            
+            // Build messages based on refs
+            const strictRoles = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+            const hasStrict = refImages.some((_, i) => strictRoles.includes(imageRoles[i] || ''));
+            
+            let slideData: any;
+            if (hasStrict) {
+              const editContent: any[] = [];
+              for (let i = 0; i < refImages.length; i++) {
+                const safe = truncateImageUrl(refImages[i]);
+                if (!safe) continue;
+                const role = imageRoles[i] || 'REFERENCE';
+                if (strictRoles.includes(role)) {
+                  editContent.push({ type: "image_url", image_url: { url: safe } });
+                  editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
+                }
+              }
+              editContent.push({ type: "text", text: slidePrompt });
+              
+              slideData = await callGateway(LOVABLE_API_KEY, {
+                model,
+                messages: [
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY." + slideDimInstruction },
+                  { role: "user", content: editContent },
+                ],
+                modalities: ["image", "text"],
+              });
+            } else {
+              const content: any[] = [];
+              for (let idx = 0; idx < refImages.length; idx++) {
+                const safe = truncateImageUrl(refImages[idx]);
+                if (safe) {
+                  content.push({ type: "image_url", image_url: { url: safe } });
+                }
+              }
+              content.push({ type: "text", text: slidePrompt });
+              
+              slideData = await callGateway(LOVABLE_API_KEY, {
+                model,
+                messages: [
+                  { role: "system", content: "You are an image generator. Create high-quality images." + slideDimInstruction },
+                  { role: "user", content },
+                ],
+                modalities: ["image", "text"],
+              });
+            }
+            
+            // Extract image from response
+            const slideMsg = slideData.choices?.[0]?.message;
+            let slideImageUrl = slideMsg?.images?.[0]?.image_url?.url;
+            if (!slideImageUrl && Array.isArray(slideMsg?.content)) {
+              for (const part of slideMsg.content) {
+                if (part.type === 'image_url' && part.image_url?.url) { slideImageUrl = part.image_url.url; break; }
+                if (part.inline_data?.mime_type?.startsWith('image/')) { slideImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+              }
+            }
+            
+            if (slideImageUrl) {
+              // Upload to storage
+              if (slideImageUrl.startsWith('data:')) {
+                const publicUrl = await uploadBase64ToStorage(slideImageUrl);
+                if (publicUrl) slideImageUrl = publicUrl;
+              }
+              slideImages.push(slideImageUrl);
+              console.log(`[generate_image] Slide ${slideNum}/${totalSlides} generated OK`);
+            } else {
+              console.warn(`[generate_image] Slide ${slideNum}/${totalSlides} failed to generate`);
+            }
+          }
+          
+          return new Response(JSON.stringify({ 
+            result: { 
+              imageUrl: slideImages[0] || '', 
+              slideImages,
+              text: `Generated ${slideImages.length} independent slides`,
+              carouselMode: 'independent',
+              slideWidth: slideW,
+              slideHeight: slideH,
+              gridCols,
+              gridRows,
+            } 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // === PANORAMIC MODE (default): Generate single wide image ===
         // Build dimension/format system instruction
         let dimensionInstruction = '';
         if (imageSize) {
           const [iw, ih] = imageSize.split('x').map(Number);
           if (iw && ih) {
-            const isGrid = imagePlatformPreset.startsWith('ig-grid-');
-            const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
             if (isGrid || isCarousel) {
               dimensionInstruction = `\n\nCRITICAL OUTPUT FORMAT: You MUST generate a SINGLE wide/tall panoramic image at ${iw}x${ih} pixels.`;
               if (isCarousel) {
-                const match = imagePlatformPreset.match(/ig-carousel-(\d+)/);
-                const slides = match ? parseInt(match[1]) : 2;
-                const slideW = Math.round(iw / slides);
-                dimensionInstruction += ` This is an Instagram Carousel of ${slides} slides (each ${slideW}x${ih}px). Design so that EACH ${slideW}x${ih}px vertical slice is a COMPLETE, INDEPENDENTLY BEAUTIFUL image — like professional wedding photography where every single photo is stunning on its own with proper subject framing and visual balance. At the same time, when all ${slides} slices are viewed together as one ${iw}x${ih} panorama, they form a UNIFIED cohesive scene with seamless flowing background, consistent lighting, and a visual narrative. Position the subject(s) so they appear naturally within individual slides. The transition between slides must be seamless — shared colors, lighting, and atmosphere.`;
+                dimensionInstruction += ` This is an Instagram Carousel of ${totalSlides} slides (each ${slideW}x${slideH}px). Design so that EACH ${slideW}x${slideH}px vertical slice is a COMPLETE, INDEPENDENTLY BEAUTIFUL image — like professional wedding photography where every single photo is stunning on its own with proper subject framing and visual balance. At the same time, when all ${totalSlides} slices are viewed together as one ${iw}x${ih} panorama, they form a UNIFIED cohesive scene with seamless flowing background, consistent lighting, and a visual narrative. Position the subject(s) so they appear naturally within individual slides. The transition between slides must be seamless — shared colors, lighting, and atmosphere.`;
               } else {
-                const match = imagePlatformPreset.match(/ig-grid-(\d+)x(\d+)/);
-                const gc = match ? parseInt(match[1]) : 3;
-                const gr = match ? parseInt(match[2]) : 1;
-                dimensionInstruction += ` This is an Instagram Grid of ${gc}×${gr} = ${gc*gr} posts. Each cell must be a COMPLETE, INDEPENDENTLY BEAUTIFUL composition (like a professional photo album). Every cell works as standalone art with proper framing, yet together all cells reveal one grand unified panoramic image with flowing colors and atmosphere.`;
+                dimensionInstruction += ` This is an Instagram Grid of ${gridCols}×${gridRows} = ${totalSlides} posts. Each cell must be a COMPLETE, INDEPENDENTLY BEAUTIFUL composition (like a professional photo album). Every cell works as standalone art with proper framing, yet together all cells reveal one grand unified panoramic image with flowing colors and atmosphere.`;
               }
               dimensionInstruction += ` DO NOT generate multiple separate images. DO NOT add borders, frames, or dividers. Generate ONE single seamless image that fills the entire ${iw}x${ih} canvas.`;
             } else {
