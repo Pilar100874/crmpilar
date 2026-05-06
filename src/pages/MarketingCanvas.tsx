@@ -821,6 +821,18 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
                 Exportar Grid ({platformPreset.gridLayout.cols * platformPreset.gridLayout.rows} posts)
               </Button>
             )}
+
+            {/* Carousel export floating button */}
+            {platformPreset?.carouselConfig && (
+              <Button
+                onClick={exportCarouselSlides}
+                className="absolute bottom-4 right-4 z-20 gap-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white shadow-lg"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                Exportar Carrossel ({platformPreset.carouselConfig.slides} slides)
+              </Button>
+            )}
           </div>
 
         <div className="lg:hidden">
