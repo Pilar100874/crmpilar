@@ -871,13 +871,98 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </SelectContent>
               </Select>
             </ConfigField>
-            {currentImgPreset !== 'custom' && (
-              <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-2.5">
-                <p className="text-[11px] text-green-400 font-medium">✅ {IMAGE_PLATFORM_PRESETS[currentImgPreset]?.note}</p>
-                {isGridOrCarousel && (
-                  <p className="text-[10px] text-green-400/70 mt-1">💡 A imagem gerada será cortada automaticamente em posts individuais para download.</p>
-                )}
-              </div>
+            {currentImgPreset !== 'custom' && (() => {
+              const presetData = IMAGE_PLATFORM_PRESETS[currentImgPreset];
+              if (!presetData) return null;
+              const [pw, ph] = (presetData.imageSize || '1080x1080').split('x').map(Number);
+              // Determine grid/carousel subdivisions
+              let cols = 1, rows = 1;
+              if (currentImgPreset === 'ig-grid-3x1') { cols = 3; rows = 1; }
+              else if (currentImgPreset === 'ig-grid-3x2') { cols = 3; rows = 2; }
+              else if (currentImgPreset === 'ig-grid-3x3') { cols = 3; rows = 3; }
+              else if (currentImgPreset.startsWith('ig-carousel-')) {
+                const m = currentImgPreset.match(/ig-carousel-(\d+)/);
+                cols = m ? parseInt(m[1]) : 2; rows = 1;
+              }
+              const maxW = 220;
+              const scale = maxW / pw;
+              const dispW = Math.round(pw * scale);
+              const dispH = Math.round(ph * scale);
+              const cellW = dispW / cols;
+              const cellH = dispH / rows;
+              return (
+                <div className="rounded-xl bg-muted/60 border border-border/50 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-foreground/80">{presetData.note}</p>
+                  </div>
+                  {/* Visual layout preview */}
+                  <div className="flex justify-center">
+                    <div
+                      className="relative rounded-md overflow-hidden border-2 border-primary/40"
+                      style={{
+                        width: dispW,
+                        height: Math.min(dispH, 180),
+                        background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05))',
+                      }}
+                    >
+                      {/* Grid/Carousel lines */}
+                      {cols > 1 && Array.from({ length: cols - 1 }).map((_, i) => (
+                        <div
+                          key={`vc-${i}`}
+                          className="absolute top-0 bottom-0"
+                          style={{
+                            left: `${((i + 1) / cols) * 100}%`,
+                            width: 1,
+                            borderLeft: '1.5px dashed hsl(var(--primary) / 0.6)',
+                          }}
+                        />
+                      ))}
+                      {rows > 1 && Array.from({ length: rows - 1 }).map((_, i) => (
+                        <div
+                          key={`hr-${i}`}
+                          className="absolute left-0 right-0"
+                          style={{
+                            top: `${((i + 1) / rows) * 100}%`,
+                            height: 1,
+                            borderTop: '1.5px dashed hsl(var(--primary) / 0.6)',
+                          }}
+                        />
+                      ))}
+                      {/* Cell numbers */}
+                      {(cols > 1 || rows > 1) && Array.from({ length: cols * rows }).map((_, idx) => {
+                        const c = idx % cols;
+                        const r = Math.floor(idx / cols);
+                        return (
+                          <div
+                            key={`num-${idx}`}
+                            className="absolute flex items-center justify-center"
+                            style={{
+                              left: c * cellW,
+                              top: r * cellH,
+                              width: cellW,
+                              height: Math.min(cellH, 180 / rows),
+                            }}
+                          >
+                            <span className="text-[10px] font-bold text-primary/70 bg-primary/10 rounded-full w-5 h-5 flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      {/* Single image aspect ratio indicator */}
+                      {cols === 1 && rows === 1 && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs font-semibold text-primary/50">{pw}×{ph}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isGridOrCarousel && (
+                    <p className="text-[10px] text-muted-foreground text-center">💡 Cada célula será recortada como post individual</p>
+                  )}
+                </div>
+              );
+            })()}
             )}
             <ConfigField label="Modelo de Imagem">
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
