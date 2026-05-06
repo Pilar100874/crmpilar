@@ -77,15 +77,22 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const removeGridOverlay = () => {
     const fabricCanvas = (window as any).fabricCanvas;
     if (!fabricCanvas) return;
-    const gridObjects = fabricCanvas.getObjects().filter((obj: any) =>
-      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-')
+    const overlayObjects = fabricCanvas.getObjects().filter((obj: any) =>
+      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-') ||
+      obj.name?.startsWith('carousel-line-') || obj.name?.startsWith('carousel-num-')
     );
-    gridObjects.forEach((obj: any) => fabricCanvas.remove(obj));
+    overlayObjects.forEach((obj: any) => fabricCanvas.remove(obj));
+    // Remove listener
+    const keepFn = (window as any).__gridKeepOnTopFn;
+    if (keepFn) {
+      fabricCanvas.off('object:added', keepFn);
+      (window as any).__gridKeepOnTopFn = undefined;
+    }
     fabricCanvas.renderAll();
   };
 
   const handlePlatformSelect = (preset: PlatformPreset) => {
-    // Remove old grid overlay when switching platform/type
+    // Remove old overlays when switching platform/type
     removeGridOverlay();
 
     setPlatformPreset(preset);
@@ -95,6 +102,10 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     // If grid preset, apply grid lines after canvas is ready
     if (preset.gridLayout) {
       setTimeout(() => applyGridOverlay(preset.gridLayout!, preset.width, preset.height), 800);
+    }
+    // If carousel preset, apply carousel lines
+    if (preset.carouselConfig) {
+      setTimeout(() => applyCarouselOverlay(preset.carouselConfig!, preset.width, preset.height), 800);
     }
   };
 
