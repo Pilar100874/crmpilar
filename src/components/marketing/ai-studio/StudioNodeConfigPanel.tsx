@@ -963,7 +963,6 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </div>
               );
             })()}
-            )}
             <ConfigField label="Modelo de Imagem">
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
                 update('model', v);
