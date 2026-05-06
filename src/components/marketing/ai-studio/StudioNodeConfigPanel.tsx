@@ -1038,8 +1038,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             )}
           </div>
         );
-
-      case 'videoGen':
+      }
+      case 'videoGen': {
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-2.5">
