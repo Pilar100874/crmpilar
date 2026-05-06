@@ -25,6 +25,7 @@ import ImageEffectsPanel from "@/components/editor/panels/ImageEffectsPanel";
 import LayersPanel from "@/components/editor/LayersPanel";
 import PropertiesPanel from "@/components/editor/PropertiesPanel";
 import BarcodePanel from "@/components/editor/panels/BarcodePanel";
+import InstagramGridPanel from "@/components/editor/panels/InstagramGridPanel";
 import { FloatingObjectToolbar } from "@/components/editor/FloatingObjectToolbar";
 import { ObjectActionsMenu } from "@/components/editor/ObjectActionsMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -389,6 +390,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
           return <BarcodePanel />;
         case 'ai':
           return <AIPanel />;
+        case 'instagram-grid':
+          return <InstagramGridPanel />;
         case 'layers':
           return <LayersPanel />;
         case 'properties':
@@ -436,6 +439,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
         return <BarcodePanel />;
       case 'ai':
         return <AIPanel />;
+      case 'instagram-grid':
+        return <InstagramGridPanel />;
       case 'layers':
         return <LayersPanel />;
       case 'properties':
