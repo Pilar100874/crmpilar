@@ -778,7 +778,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const resultText = typeof activeResult === 'string'
     ? activeResult
     : activeResult?.text;
-  const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames);
+  const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames || activeResult?.slideImages?.length);
 
   // Stabilize frames reference to avoid flickering re-renders
   const stableFramesRef = useRef<string[]>([]);
