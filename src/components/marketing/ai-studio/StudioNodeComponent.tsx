@@ -1692,23 +1692,27 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       canvas.height = totalH;
                       const ctx = canvas.getContext('2d');
                       if (!ctx) return;
-                      const loadImg = (src: string): Promise<HTMLImageElement> => new Promise((res, rej) => { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => res(img); img.onerror = rej; img.src = src; });
+                      // Use downloadAsBlob to avoid CORS taint on canvas
                       for (let i = 0; i < slides.length; i++) {
-                        const img = await loadImg(slides[i]);
+                        const blob = await downloadAsBlob(slides[i]);
+                        const bmp = await createImageBitmap(blob);
                         const col = i % cols;
                         const row = Math.floor(i / cols);
-                        ctx.drawImage(img, col * sW, row * sH, sW, sH);
+                        ctx.drawImage(bmp, col * sW, row * sH, sW, sH);
+                        bmp.close();
                       }
-                      canvas.toBlob((blob) => {
-                        if (!blob) return;
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `panoramic_${totalW}x${totalH}.png`;
-                        link.click();
-                        URL.revokeObjectURL(url);
-                      }, 'image/png');
-                      toast.success('✅ Imagem panorâmica baixada!');
+                      const stitchedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+                      if (!stitchedBlob) {
+                        toast.error('Erro ao gerar imagem panorâmica');
+                        return;
+                      }
+                      const url = URL.createObjectURL(stitchedBlob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `panoramic_${totalW}x${totalH}.png`;
+                      link.click();
+                      URL.revokeObjectURL(url);
+                      toast.success(`✅ Imagem panorâmica ${totalW}x${totalH} baixada!`);
                     } catch (err) {
                       console.error('Stitch error:', err);
                       toast.error('Erro ao montar imagem panorâmica');
