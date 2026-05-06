@@ -701,15 +701,14 @@ export function useStudioExecution() {
               const match = imgPresetKey.match(/ig-grid-(\d+)x(\d+)/);
               const gc = match ? match[1] : '3';
               const gr = match ? match[2] : '1';
-              formatNote = `Instagram Grid ${gc}×${gr} (${iw}x${ih}px total). The image will be sliced into ${gc}×${gr} = ${parseInt(gc)*parseInt(gr)} individual square posts of 1080x1080px each. Design a single CONTINUOUS panoramic composition that looks stunning when viewed as one large image AND makes sense when cut into ${parseInt(gc)*parseInt(gr)} separate square posts. Each post should have visual interest on its own while contributing to the whole.`;
+              formatNote = `Instagram Grid ${gc}×${gr} (${iw}x${ih}px total, ${parseInt(gc)*parseInt(gr)} posts). Create ONE SINGLE CONTINUOUS panoramic image. The composition must be seamless — the subject (person, product, scene) should span naturally across the entire canvas. When this image is sliced into a ${gc}×${gr} grid, each cell must be visually interesting on its own while forming a beautiful whole. DO NOT create separate panels or borders.`;
             } else if (isCarousel) {
               const match = imgPresetKey.match(/ig-carousel-(\d+)/);
               const slides = match ? parseInt(match[1]) : 2;
-              const slideH = ih;
               const slideW = Math.round(iw / slides);
-              formatNote = `Instagram Carousel with ${slides} slides (${iw}x${ih}px total, each slide ${slideW}x${slideH}px). Design a CONTINUOUS horizontal composition that flows naturally from left to right across ${slides} slides. Each slide should work as a standalone image while the full composition tells a cohesive visual story.`;
+              formatNote = `Instagram Carousel ${slides} slides (${iw}x${ih}px total, each slide ${slideW}x${ih}px). Create ONE SINGLE CONTINUOUS WIDE image. The person/influencer and product MUST appear in the composition — position them naturally across the panoramic scene (e.g. the person in slides 2-3, product visible in slides 1-2). The background must flow seamlessly from left to right with NO borders, NO frames, NO dividers between slides. Each slide section should look beautiful individually while the full panorama tells a complete visual story.`;
             }
-            enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image at EXACTLY ${iw}x${ih} pixels. ${formatNote}. The aspect ratio is ${iw}:${ih}. Fill the ENTIRE canvas — no letterboxing, no black bars.`;
+            enrichedPrompt = `[CRITICAL FORMAT REQUIREMENT] Generate EXACTLY ONE image at ${iw}x${ih} pixels. ${formatNote}. Fill the ENTIRE canvas — no letterboxing, no black bars, no padding.\n\n${enrichedPrompt}`;
           }
         }
         if (hasProduct && hasInfluencer && !hasPlacementHint) {
