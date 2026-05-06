@@ -684,9 +684,33 @@ export function useStudioExecution() {
             orderedImageInputs.unshift(correctionSourceImage);
           }
         }
-        // Inject platform format dimensions into prompt
+        // Inject platform format dimensions into prompt (from connected platformFormat node)
         if (formatWidth && formatHeight) {
           enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px). Compose the image to fit this exact aspect ratio perfectly.`;
+        }
+        // Inject imageSize from node config (platform preset or manual selection)
+        const cfgImageSize = config.imageSize;
+        const imgPresetKey = config.imagePlatformPreset || '';
+        if (cfgImageSize && !formatWidth) {
+          const [iw, ih] = cfgImageSize.split('x').map(Number);
+          if (iw && ih) {
+            const isGrid = imgPresetKey.startsWith('ig-grid-');
+            const isCarousel = imgPresetKey.startsWith('ig-carousel-');
+            let formatNote = `${iw}x${ih}px`;
+            if (isGrid) {
+              const match = imgPresetKey.match(/ig-grid-(\d+)x(\d+)/);
+              const gc = match ? match[1] : '3';
+              const gr = match ? match[2] : '1';
+              formatNote = `Instagram Grid ${gc}×${gr} (${iw}x${ih}px total). The image will be sliced into ${gc}×${gr} = ${parseInt(gc)*parseInt(gr)} individual square posts of 1080x1080px each. Design a single CONTINUOUS panoramic composition that looks stunning when viewed as one large image AND makes sense when cut into ${parseInt(gc)*parseInt(gr)} separate square posts. Each post should have visual interest on its own while contributing to the whole.`;
+            } else if (isCarousel) {
+              const match = imgPresetKey.match(/ig-carousel-(\d+)/);
+              const slides = match ? parseInt(match[1]) : 2;
+              const slideH = ih;
+              const slideW = Math.round(iw / slides);
+              formatNote = `Instagram Carousel with ${slides} slides (${iw}x${ih}px total, each slide ${slideW}x${slideH}px). Design a CONTINUOUS horizontal composition that flows naturally from left to right across ${slides} slides. Each slide should work as a standalone image while the full composition tells a cohesive visual story.`;
+            }
+            enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image at EXACTLY ${iw}x${ih} pixels. ${formatNote}. The aspect ratio is ${iw}:${ih}. Fill the ENTIRE canvas — no letterboxing, no black bars.`;
+          }
         }
         if (hasProduct && hasInfluencer && !hasPlacementHint) {
           enrichedPrompt = [
