@@ -1073,45 +1073,66 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </SelectContent>
               </Select>
             </ConfigField>
-            {isGifModel && (
-              <>
-                <SectionTitle>Configuração do GIF</SectionTitle>
-                <ConfigField label={`Quantidade de Frames: ${config.frameCount || 4}`}>
-                  <Slider
-                    className="mt-1"
-                    min={2}
-                    max={20}
-                    step={1}
-                    value={[config.frameCount || 4]}
-                    onValueChange={([v]) => update('frameCount', v)}
-                  />
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                    <span>2</span>
-                    <span>20</span>
-                  </div>
-                </ConfigField>
-                <ConfigField label="Velocidade (FPS)">
-                  <Select value={String(config.fps || 3)} onValueChange={(v) => update('fps', Number(v))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0.5">0.5 fps (Muito lento — 2s/frame)</SelectItem>
-                      <SelectItem value="1">1 fps (Lento — 1s/frame)</SelectItem>
-                      <SelectItem value="2">2 fps (Normal — 0.5s/frame)</SelectItem>
-                      <SelectItem value="3">3 fps (Rápido)</SelectItem>
-                      <SelectItem value="4">4 fps (Muito rápido)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </ConfigField>
-                <div className="rounded-lg bg-muted/30 border border-border/40 p-3">
-                  <Label className="text-[11px] font-semibold text-foreground/80">Duração total estimada</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ~{((config.frameCount || 4) / (config.fps || 2)).toFixed(1)}s ({config.frameCount || 4} frames × {(1 / (config.fps || 2)).toFixed(1)}s)
-                  </p>
-                </div>
-              </>
+            <SectionTitle>Plataforma / Formato</SectionTitle>
+            <ConfigField label="Preset de Plataforma">
+              <Select value={config.videoPlatformPreset || 'custom'} onValueChange={(v) => {
+                update('videoPlatformPreset', v);
+                const presets: Record<string, { aspectRatio: string; resolution: string; duration: number; note: string }> = {
+                  'ig-reels': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'Instagram Reels — 9:16, 1080p' },
+                  'ig-stories': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'Instagram Stories — 9:16, 1080p' },
+                  'ig-post': { aspectRatio: '1:1', resolution: '1080p', duration: 5, note: 'Instagram Post — 1:1, 1080p' },
+                  'ig-post-portrait': { aspectRatio: '4:5', resolution: '1080p', duration: 5, note: 'Instagram Post Retrato — 4:5, 1080p' },
+                  'ig-post-landscape': { aspectRatio: '16:9', resolution: '1080p', duration: 5, note: 'Instagram Post Paisagem — 16:9, 1080p' },
+                  'tiktok': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'TikTok — 9:16, 1080p' },
+                  'youtube': { aspectRatio: '16:9', resolution: '1080p', duration: 5, note: 'YouTube — 16:9, 1080p' },
+                  'youtube-shorts': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'YouTube Shorts — 9:16, 1080p' },
+                  'facebook-feed': { aspectRatio: '1:1', resolution: '1080p', duration: 5, note: 'Facebook Feed — 1:1, 1080p' },
+                  'facebook-stories': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'Facebook Stories — 9:16, 1080p' },
+                  'facebook-cover': { aspectRatio: '16:9', resolution: '1080p', duration: 5, note: 'Facebook Capa — 16:9, 1080p' },
+                  'linkedin': { aspectRatio: '1:1', resolution: '1080p', duration: 5, note: 'LinkedIn — 1:1, 1080p' },
+                  'linkedin-landscape': { aspectRatio: '16:9', resolution: '1080p', duration: 5, note: 'LinkedIn Paisagem — 16:9, 1080p' },
+                  'twitter': { aspectRatio: '16:9', resolution: '1080p', duration: 5, note: 'Twitter/X — 16:9, 1080p' },
+                  'pinterest': { aspectRatio: '9:16', resolution: '1080p', duration: 5, note: 'Pinterest — 9:16, 1080p' },
+                  'whatsapp-status': { aspectRatio: '9:16', resolution: '720p', duration: 5, note: 'WhatsApp Status — 9:16, 720p' },
+                  'cinema': { aspectRatio: '21:9', resolution: '1080p', duration: 5, note: 'Cinema Widescreen — 21:9, 1080p' },
+                };
+                const preset = presets[v];
+                if (preset) {
+                  update('aspectRatio', preset.aspectRatio);
+                  update('resolution', preset.resolution);
+                  update('duration', preset.duration);
+                }
+              }}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Personalizado" /></SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  <SelectItem value="custom">🎛️ Personalizado</SelectItem>
+                  <SelectItem value="ig-reels">📱 Instagram Reels (9:16)</SelectItem>
+                  <SelectItem value="ig-stories">📱 Instagram Stories (9:16)</SelectItem>
+                  <SelectItem value="ig-post">📸 Instagram Post (1:1)</SelectItem>
+                  <SelectItem value="ig-post-portrait">📸 Instagram Post Retrato (4:5)</SelectItem>
+                  <SelectItem value="ig-post-landscape">📸 Instagram Post Paisagem (16:9)</SelectItem>
+                  <SelectItem value="tiktok">🎵 TikTok (9:16)</SelectItem>
+                  <SelectItem value="youtube">▶️ YouTube (16:9)</SelectItem>
+                  <SelectItem value="youtube-shorts">▶️ YouTube Shorts (9:16)</SelectItem>
+                  <SelectItem value="facebook-feed">📘 Facebook Feed (1:1)</SelectItem>
+                  <SelectItem value="facebook-stories">📘 Facebook Stories (9:16)</SelectItem>
+                  <SelectItem value="facebook-cover">📘 Facebook Capa (16:9)</SelectItem>
+                  <SelectItem value="linkedin">💼 LinkedIn (1:1)</SelectItem>
+                  <SelectItem value="linkedin-landscape">💼 LinkedIn Paisagem (16:9)</SelectItem>
+                  <SelectItem value="twitter">🐦 Twitter/X (16:9)</SelectItem>
+                  <SelectItem value="pinterest">📌 Pinterest (9:16)</SelectItem>
+                  <SelectItem value="whatsapp-status">💬 WhatsApp Status (9:16)</SelectItem>
+                  <SelectItem value="cinema">🎬 Cinema Widescreen (21:9)</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+            {config.videoPlatformPreset && config.videoPlatformPreset !== 'custom' && (
+              <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-2.5">
+                <p className="text-[11px] text-green-400 font-medium">✅ Configurações ajustadas automaticamente para a plataforma selecionada</p>
+              </div>
             )}
             <ConfigField label="Resolução">
-              <Select value={config.resolution || '1080p'} onValueChange={(v) => update('resolution', v)}>
+              <Select value={config.resolution || '1080p'} onValueChange={(v) => { update('resolution', v); update('videoPlatformPreset', 'custom'); }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="480p">480p (Rápido)</SelectItem>
@@ -1123,12 +1144,13 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               </Select>
             </ConfigField>
             <ConfigField label="Aspecto">
-              <Select value={config.aspectRatio || '16:9'} onValueChange={(v) => update('aspectRatio', v)}>
+              <Select value={config.aspectRatio || '16:9'} onValueChange={(v) => { update('aspectRatio', v); update('videoPlatformPreset', 'custom'); }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="16:9">16:9 (Paisagem)</SelectItem>
                   <SelectItem value="9:16">9:16 (Retrato/Reels)</SelectItem>
                   <SelectItem value="1:1">1:1 (Quadrado)</SelectItem>
+                  <SelectItem value="4:5">4:5 (Retrato Instagram)</SelectItem>
                   <SelectItem value="4:3">4:3 (Clássico)</SelectItem>
                   <SelectItem value="3:4">3:4 (Retrato Clássico)</SelectItem>
                   <SelectItem value="21:9">21:9 (Cinemascope)</SelectItem>
