@@ -1701,23 +1701,23 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   </button>
                 </div>
                </div>
-              {/* Grid/Carousel slice button */}
-              {(nodeData.config?.imagePlatformPreset?.startsWith('ig-grid-') || nodeData.config?.imagePlatformPreset?.startsWith('ig-carousel-')) && (
-                <div className="px-3 pb-2">
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (resultImage) handleSliceAndDownload(resultImage);
-                    }}
-                    className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-                  >
-                    <Scissors className="h-3.5 w-3.5" />
-                    Recortar e Baixar Posts Individuais
-                  </button>
-                </div>
-              )}
+            )}
+            {/* Grid/Carousel slice button */}
+            {resultImage && (nodeData.config?.imagePlatformPreset?.startsWith('ig-grid-') || nodeData.config?.imagePlatformPreset?.startsWith('ig-carousel-')) && (
+              <div className="px-3 pb-2">
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (resultImage) handleSliceAndDownload(resultImage);
+                  }}
+                  className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                >
+                  <Scissors className="h-3.5 w-3.5" />
+                  Recortar e Baixar Posts Individuais
+                </button>
+              </div>
             )}
 
             {resultVideo && (
