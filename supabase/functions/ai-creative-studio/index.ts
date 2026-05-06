@@ -1605,23 +1605,122 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE (default): Generate single wide image ===
-        // Build dimension/format system instruction
+        // === PANORAMIC MODE: Generate each slide individually with continuity, then stitch ===
+        if ((isGrid || isCarousel) && totalSlides > 1) {
+          console.log(`[generate_image] PANORAMIC MODE — ${totalSlides} slides, each ${slideW}x${slideH}px, will stitch into ${imageSize}`);
+          
+          const slideImages: string[] = [];
+          const basePrompt = params.prompt as string;
+          
+          // Determine scene descriptions for continuity
+          const scenePositions = isCarousel
+            ? Array.from({ length: totalSlides }, (_, i) => {
+                if (i === 0) return 'LEFT side of a panoramic scene';
+                if (i === totalSlides - 1) return 'RIGHT side of a panoramic scene';
+                return `CENTER section ${i} of a panoramic scene`;
+              })
+            : Array.from({ length: totalSlides }, (_, i) => {
+                const row = Math.floor(i / gridCols);
+                const col = i % gridCols;
+                return `cell row ${row + 1}, column ${col + 1} of a ${gridCols}x${gridRows} panoramic grid`;
+              });
+          
+          for (let slideIdx = 0; slideIdx < totalSlides; slideIdx++) {
+            const slideNum = slideIdx + 1;
+            const position = scenePositions[slideIdx];
+            const slidePrompt = `[PANORAMIC SLIDE ${slideNum} of ${totalSlides} — ${position}]\n\n${basePrompt}\n\n[CONTINUITY INSTRUCTIONS] This image is part of a ${totalSlides}-part CONTINUOUS PANORAMIC scene. You are generating the ${position}. The FULL scene should flow seamlessly when all ${totalSlides} images are placed side by side.\n- Use CONSISTENT lighting, color palette, atmosphere, and horizon line across all parts\n- The background/scenery at the EDGES of this image should be designed to CONNECT smoothly with adjacent slides\n- ${slideIdx === 0 ? 'The LEFT edge is the start of the panorama.' : 'The LEFT edge should blend with the previous slide.'}\n- ${slideIdx === totalSlides - 1 ? 'The RIGHT edge is the end of the panorama.' : 'The RIGHT edge should blend with the next slide.'}\n- This individual slide must ALSO be a beautiful, well-composed image on its own.\n\n[FORMAT] Generate at ${slideW}x${slideH}px. Fill the ENTIRE canvas.`;
+            
+            const slideDimInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${slideW}x${slideH} pixels. SINGLE image filling the entire canvas.`;
+            
+            const strictRolesSlide = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+            const hasStrict = refImages.some((_, i) => strictRolesSlide.includes(imageRoles[i] || ''));
+            
+            let slideData: any;
+            if (hasStrict) {
+              const editContent: any[] = [];
+              for (let i = 0; i < refImages.length; i++) {
+                const safe = truncateImageUrl(refImages[i]);
+                if (!safe) continue;
+                const role = imageRoles[i] || 'REFERENCE';
+                if (strictRolesSlide.includes(role)) {
+                  editContent.push({ type: "image_url", image_url: { url: safe } });
+                  editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
+                }
+              }
+              editContent.push({ type: "text", text: slidePrompt });
+              
+              slideData = await callGateway(LOVABLE_API_KEY, {
+                model,
+                messages: [
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Create each image as part of a flowing panoramic scene." + slideDimInstruction },
+                  { role: "user", content: editContent },
+                ],
+                modalities: ["image", "text"],
+              });
+            } else {
+              const content: any[] = [];
+              for (let idx = 0; idx < refImages.length; idx++) {
+                const safe = truncateImageUrl(refImages[idx]);
+                if (safe) {
+                  content.push({ type: "image_url", image_url: { url: safe } });
+                }
+              }
+              content.push({ type: "text", text: slidePrompt });
+              
+              slideData = await callGateway(LOVABLE_API_KEY, {
+                model,
+                messages: [
+                  { role: "system", content: "You are an image generator. Create high-quality images as parts of a continuous panoramic scene." + slideDimInstruction },
+                  { role: "user", content },
+                ],
+                modalities: ["image", "text"],
+              });
+            }
+            
+            const slideMsg = slideData.choices?.[0]?.message;
+            let slideImageUrl = slideMsg?.images?.[0]?.image_url?.url;
+            if (!slideImageUrl && Array.isArray(slideMsg?.content)) {
+              for (const part of slideMsg.content) {
+                if (part.type === 'image_url' && part.image_url?.url) { slideImageUrl = part.image_url.url; break; }
+                if (part.inline_data?.mime_type?.startsWith('image/')) { slideImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+              }
+            }
+            
+            if (slideImageUrl) {
+              if (slideImageUrl.startsWith('data:')) {
+                const publicUrl = await uploadBase64ToStorage(slideImageUrl);
+                if (publicUrl) slideImageUrl = publicUrl;
+              }
+              slideImages.push(slideImageUrl);
+              console.log(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} generated OK`);
+            } else {
+              console.warn(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} failed to generate`);
+            }
+          }
+          
+          return new Response(JSON.stringify({ 
+            result: { 
+              imageUrl: slideImages[0] || '', 
+              slideImages,
+              text: `Generated ${slideImages.length} panoramic slides for stitching`,
+              carouselMode: 'panoramic',
+              slideWidth: slideW,
+              slideHeight: slideH,
+              gridCols,
+              gridRows,
+              totalSlides,
+            } 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // === SINGLE IMAGE MODE (non-carousel/grid presets) ===
         let dimensionInstruction = '';
         if (imageSize) {
           const [iw, ih] = imageSize.split('x').map(Number);
           if (iw && ih) {
-            if (isGrid || isCarousel) {
-              dimensionInstruction = `\n\nCRITICAL OUTPUT FORMAT: You MUST generate a SINGLE wide/tall panoramic image at ${iw}x${ih} pixels.`;
-              if (isCarousel) {
-                dimensionInstruction += ` This is an Instagram Carousel of ${totalSlides} slides (each ${slideW}x${slideH}px). Design so that EACH ${slideW}x${slideH}px vertical slice is a COMPLETE, INDEPENDENTLY BEAUTIFUL image — like professional wedding photography where every single photo is stunning on its own with proper subject framing and visual balance. At the same time, when all ${totalSlides} slices are viewed together as one ${iw}x${ih} panorama, they form a UNIFIED cohesive scene with seamless flowing background, consistent lighting, and a visual narrative. Position the subject(s) so they appear naturally within individual slides. The transition between slides must be seamless — shared colors, lighting, and atmosphere.`;
-              } else {
-                dimensionInstruction += ` This is an Instagram Grid of ${gridCols}×${gridRows} = ${totalSlides} posts. Each cell must be a COMPLETE, INDEPENDENTLY BEAUTIFUL composition (like a professional photo album). Every cell works as standalone art with proper framing, yet together all cells reveal one grand unified panoramic image with flowing colors and atmosphere.`;
-              }
-              dimensionInstruction += ` DO NOT generate multiple separate images. DO NOT add borders, frames, or dividers. Generate ONE single seamless image that fills the entire ${iw}x${ih} canvas.`;
-            } else {
-              dimensionInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${iw}x${ih} pixels aspect ratio. Fill the entire canvas.`;
-            }
+            dimensionInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${iw}x${ih} pixels aspect ratio. Fill the entire canvas.`;
           }
         }
 
@@ -1644,32 +1743,23 @@ Deno.serve(async (req) => {
         let data: any;
 
         if (strictImages.length > 0) {
-          // === EDIT MODE: ALL strict images sent as subjects to preserve ===
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           
           const editContent: any[] = [];
-
-          // CRITICAL: Send strict subject images FIRST so the model "sees" them before anything else
           for (let i = 0; i < strictImages.length; i++) {
             const s = strictImages[i];
             editContent.push({ type: "image_url", image_url: { url: s.url } });
             editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
           }
-
-          // Then: flexible references as environment/style context
           for (const flex of flexibleImages) {
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
-            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT use this to change the subjects.` });
+            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration.` });
           }
-
-          // Build the list of what must be preserved
           const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
-          
-          // Finally: the edit instruction
-          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL — same eyes, nose, mouth, skin tone, hair. Not similar. IDENTICAL.\n- The product PACKAGING must be IDENTICAL — same label, same colors, same logo, same shape. Not similar. IDENTICAL.\n- You are doing PHOTO EDITING, not generating new content. Cut the subjects from their photos and place them into the new scene.\n\nScene description:\n${params.prompt}`;
+          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL.\n- The product PACKAGING must be IDENTICAL.\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL. You work like Photoshop — you CUT subjects from their original photos and PASTE them into new backgrounds. The face of any person MUST remain pixel-identical to the input photo. The packaging/label of any product MUST remain pixel-identical to the input photo. You NEVER redraw faces. You NEVER redesign packaging. You ONLY change the background, lighting, and composition around the subjects." + dimensionInstruction;
+          const editSystemPrompt = "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL." + dimensionInstruction;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
@@ -1680,7 +1770,6 @@ Deno.serve(async (req) => {
             modalities: ["image", "text"],
           });
         } else {
-          // === GENERATION MODE: No strict references, generate freely ===
           const content: any[] = [];
           for (let idx = 0; idx < refImages.length; idx++) {
             const safe = truncateImageUrl(refImages[idx]);
