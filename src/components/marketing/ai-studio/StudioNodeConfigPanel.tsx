@@ -805,7 +805,43 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
       case 'imageGen':
       case 'imageEdit':
-      case 'productComposite':
+      case 'productComposite': {
+        const IMAGE_PLATFORM_PRESETS: Record<string, { imageSize: string; label: string; note: string }> = {
+          'custom': { imageSize: '', label: 'Personalizado', note: '' },
+          // Instagram
+          'ig-post': { imageSize: '1080x1080', label: '📸 Instagram Post (1:1)', note: '1080×1080 — Post quadrado' },
+          'ig-story': { imageSize: '1080x1920', label: '📸 Instagram Stories (9:16)', note: '1080×1920 — Stories/Reels' },
+          'ig-portrait': { imageSize: '1080x1350', label: '📸 Instagram Retrato (4:5)', note: '1080×1350 — Post retrato' },
+          'ig-landscape': { imageSize: '1080x566', label: '📸 Instagram Paisagem (1.91:1)', note: '1080×566 — Post paisagem' },
+          // Instagram Grid
+          'ig-grid-3x1': { imageSize: '3240x1080', label: '📐 Instagram Grid 3×1', note: '3240×1080 — 3 posts em linha (corte automático)' },
+          'ig-grid-3x2': { imageSize: '3240x2160', label: '📐 Instagram Grid 3×2', note: '3240×2160 — 6 posts (corte automático)' },
+          'ig-grid-3x3': { imageSize: '3240x3240', label: '📐 Instagram Grid 3×3', note: '3240×3240 — 9 posts (corte automático)' },
+          // Instagram Carousel
+          'ig-carousel-2-sq': { imageSize: '2160x1080', label: '🎠 Carrossel 2 slides (1:1)', note: '2160×1080 — 2 slides quadrados (corte automático)' },
+          'ig-carousel-3-sq': { imageSize: '3240x1080', label: '🎠 Carrossel 3 slides (1:1)', note: '3240×1080 — 3 slides quadrados (corte automático)' },
+          'ig-carousel-4-sq': { imageSize: '4320x1080', label: '🎠 Carrossel 4 slides (1:1)', note: '4320×1080 — 4 slides quadrados (corte automático)' },
+          'ig-carousel-5-sq': { imageSize: '5400x1080', label: '🎠 Carrossel 5 slides (1:1)', note: '5400×1080 — 5 slides quadrados (corte automático)' },
+          'ig-carousel-2-pt': { imageSize: '2160x1350', label: '🎠 Carrossel 2 slides (4:5)', note: '2160×1350 — 2 slides retrato (corte automático)' },
+          'ig-carousel-3-pt': { imageSize: '3240x1350', label: '🎠 Carrossel 3 slides (4:5)', note: '3240×1350 — 3 slides retrato (corte automático)' },
+          'ig-carousel-5-pt': { imageSize: '5400x1350', label: '🎠 Carrossel 5 slides (4:5)', note: '5400×1350 — 5 slides retrato (corte automático)' },
+          // Facebook
+          'fb-post': { imageSize: '1200x630', label: '📘 Facebook Post', note: '1200×630' },
+          'fb-story': { imageSize: '1080x1920', label: '📘 Facebook Stories', note: '1080×1920' },
+          'fb-cover': { imageSize: '820x312', label: '📘 Facebook Capa', note: '820×312' },
+          // WhatsApp
+          'wa-status': { imageSize: '1080x1920', label: '💬 WhatsApp Status', note: '1080×1920' },
+          // YouTube
+          'yt-thumbnail': { imageSize: '1280x720', label: '▶️ YouTube Thumbnail', note: '1280×720' },
+          // LinkedIn
+          'li-post': { imageSize: '1200x627', label: '💼 LinkedIn Post', note: '1200×627' },
+          // Twitter/X
+          'tw-post': { imageSize: '1200x675', label: '🐦 Twitter/X Post', note: '1200×675' },
+          // Pinterest
+          'pin-post': { imageSize: '1000x1500', label: '📌 Pinterest Pin', note: '1000×1500' },
+        };
+        const currentImgPreset = config.imagePlatformPreset || 'custom';
+        const isGridOrCarousel = currentImgPreset.startsWith('ig-grid-') || currentImgPreset.startsWith('ig-carousel-');
         return (
           <div className="space-y-2.5">
             {hasMultipleSubjectRefs && (
@@ -817,30 +853,52 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </div>
               </div>
             )}
+            <SectionTitle>Plataforma / Formato</SectionTitle>
+            <ConfigField label="Preset de Plataforma" hint="Selecione para ajustar tamanho automaticamente. Grid e Carrossel geram imagem única com corte automático.">
+              <Select value={currentImgPreset} onValueChange={(v) => {
+                update('imagePlatformPreset', v);
+                const preset = IMAGE_PLATFORM_PRESETS[v];
+                if (preset && preset.imageSize) {
+                  update('imageSize', preset.imageSize);
+                }
+              }}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Personalizado" /></SelectTrigger>
+                <SelectContent className="max-h-[400px]">
+                  <SelectItem value="custom">🎛️ Personalizado</SelectItem>
+                  {Object.entries(IMAGE_PLATFORM_PRESETS).filter(([k]) => k !== 'custom').map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </ConfigField>
+            {currentImgPreset !== 'custom' && (
+              <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-2.5">
+                <p className="text-[11px] text-green-400 font-medium">✅ {IMAGE_PLATFORM_PRESETS[currentImgPreset]?.note}</p>
+                {isGridOrCarousel && (
+                  <p className="text-[10px] text-green-400/70 mt-1">💡 A imagem gerada será cortada automaticamente em posts individuais para download.</p>
+                )}
+              </div>
+            )}
             <ConfigField label="Modelo de Imagem">
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
                 update('model', v);
-                // Auto-fill optimal params per image model
+                if (currentImgPreset !== 'custom') return; // don't override preset size
                 if (v.startsWith('google/')) {
-                  // Gemini image models
                   update('imageSize', '1024x1024');
                   update('quality', 'standard');
                   update('guidanceScale', 7.5);
                   update('steps', 30);
                 } else if (v.startsWith('openai/')) {
-                  // DALL-E models
                   update('imageSize', '1024x1024');
                   update('quality', 'standard');
                   update('guidanceScale', 7);
                   update('steps', 50);
                 } else if (v.startsWith('stability/')) {
-                  // Stable Diffusion
                   update('imageSize', '1024x1024');
                   update('quality', 'standard');
                   update('guidanceScale', 7);
                   update('steps', 30);
                 } else if (v.startsWith('flux/') || v.startsWith('black-forest-labs/')) {
-                  // Flux models
                   update('imageSize', '1024x1024');
                   update('quality', 'hd');
                   update('guidanceScale', 3.5);
@@ -851,7 +909,6 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   update('guidanceScale', 7);
                   update('steps', 30);
                 } else {
-                  // Default
                   update('imageSize', '1024x1024');
                   update('quality', 'standard');
                   update('guidanceScale', 7.5);
@@ -889,7 +946,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               </Select>
             </ConfigField>
             <ConfigField label="Tamanho">
-              <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => update('imageSize', v)}>
+              <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => { update('imageSize', v); update('imagePlatformPreset', 'custom'); }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {IMAGE_SIZES.map((s) => (
@@ -981,8 +1038,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             )}
           </div>
         );
-
-      case 'videoGen':
+      }
+      case 'videoGen': {
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-2.5">
@@ -1300,7 +1357,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             </ConfigField>
           </div>
         );
-
+      }
       case 'audioGen':
         return (
           <div className="space-y-2.5">
