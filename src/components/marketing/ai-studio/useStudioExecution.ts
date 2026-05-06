@@ -810,6 +810,7 @@ export function useStudioExecution() {
           imageSize: cfgImageSize || undefined,
           imagePlatformPreset: imgPresetKey || undefined,
           carouselMode: config.carouselMode || 'panoramic',
+          panoramicStyle: config.panoramicStyle || 'classic',
         });
         return result;
       }
