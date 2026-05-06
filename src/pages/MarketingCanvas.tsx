@@ -78,6 +78,141 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     setPlatformPreset(preset);
     setShowPlatformDialog(false);
     toast.success(`Canvas configurado para ${preset.label}`);
+
+    // If grid preset, apply grid lines after canvas is ready
+    if (preset.gridLayout) {
+      setTimeout(() => applyGridOverlay(preset.gridLayout!, preset.width, preset.height), 800);
+    }
+  };
+
+  const applyGridOverlay = (layout: GridLayoutConfig, totalW: number, totalH: number) => {
+    const fabricCanvas = (window as any).fabricCanvas;
+    if (!fabricCanvas) return;
+
+    const { cols, rows } = layout;
+    const cw = fabricCanvas.width || totalW;
+    const ch = fabricCanvas.height || totalH;
+
+    // Draw vertical dashed lines
+    for (let i = 1; i < cols; i++) {
+      const x = (cw / cols) * i;
+      const line = new Line([x, 0, x, ch], {
+        stroke: 'rgba(255,255,255,0.6)',
+        strokeWidth: 2,
+        strokeDashArray: [8, 6],
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+        name: `grid-line-v-${i}`,
+      });
+      fabricCanvas.add(line);
+    }
+
+    // Draw horizontal dashed lines
+    for (let i = 1; i < rows; i++) {
+      const y = (ch / rows) * i;
+      const line = new Line([0, y, cw, y], {
+        stroke: 'rgba(255,255,255,0.6)',
+        strokeWidth: 2,
+        strokeDashArray: [8, 6],
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+        name: `grid-line-h-${i}`,
+      });
+      fabricCanvas.add(line);
+    }
+
+    // Add cell numbers
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const postNum = (rows - 1 - r) * cols + (cols - 1 - c) + 1;
+        const cellW = cw / cols;
+        const cellH = ch / rows;
+        const text = new Textbox(`${postNum}º`, {
+          left: c * cellW + cellW / 2,
+          top: r * cellH + cellH / 2,
+          originX: 'center',
+          originY: 'center',
+          fontSize: Math.min(cellW, cellH) * 0.12,
+          fill: 'rgba(255,255,255,0.7)',
+          fontWeight: 'bold',
+          backgroundColor: 'rgba(0,0,0,0.4)',
+          textAlign: 'center',
+          selectable: false,
+          evented: false,
+          excludeFromExport: true,
+          name: `grid-num-${r}-${c}`,
+          editable: false,
+          width: 60,
+        });
+        fabricCanvas.add(text);
+      }
+    }
+
+    fabricCanvas.renderAll();
+  };
+
+  const exportGridPieces = () => {
+    if (!platformPreset?.gridLayout) return;
+    const fabricCanvas = (window as any).fabricCanvas;
+    if (!fabricCanvas) return;
+
+    const { cols, rows } = platformPreset.gridLayout;
+    
+    // Temporarily hide grid overlay objects
+    const gridObjects = fabricCanvas.getObjects().filter((obj: any) => 
+      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-')
+    );
+    gridObjects.forEach((obj: any) => obj.set('visible', false));
+    fabricCanvas.renderAll();
+
+    const cw = fabricCanvas.width || 1080;
+    const ch = fabricCanvas.height || 1080;
+    const cellW = cw / cols;
+    const cellH = ch / rows;
+
+    // Export full canvas at 2x quality
+    const multiplier = 2;
+    const fullDataUrl = fabricCanvas.toDataURL({
+      format: 'jpeg',
+      quality: 0.95,
+      multiplier,
+    });
+
+    // Restore grid overlays
+    gridObjects.forEach((obj: any) => obj.set('visible', true));
+    fabricCanvas.renderAll();
+
+    const img = new Image();
+    img.onload = () => {
+      const pieces: string[] = [];
+      const pCellW = (img.width / cols);
+      const pCellH = (img.height / rows);
+
+      // Bottom-right to top-left (Instagram posting order)
+      for (let r = rows - 1; r >= 0; r--) {
+        for (let c = cols - 1; c >= 0; c--) {
+          const pieceCanvas = document.createElement('canvas');
+          pieceCanvas.width = pCellW;
+          pieceCanvas.height = pCellH;
+          const ctx = pieceCanvas.getContext('2d')!;
+          ctx.drawImage(img, c * pCellW, r * pCellH, pCellW, pCellH, 0, 0, pCellW, pCellH);
+          pieces.push(pieceCanvas.toDataURL('image/jpeg', 0.95));
+        }
+      }
+
+      // Download all pieces
+      pieces.forEach((piece, idx) => {
+        const link = document.createElement('a');
+        link.href = piece;
+        link.download = `instagram_grid_${String(idx + 1).padStart(2, '0')}.jpg`;
+        link.click();
+      });
+
+      toast.success(`${pieces.length} posts do grid exportados! Poste na ordem: 1, 2, 3...`);
+    };
+    img.src = fullDataUrl;
   };
   const hasCanvasContent = () => {
     const fabricCanvas = (window as any).fabricCanvas;
