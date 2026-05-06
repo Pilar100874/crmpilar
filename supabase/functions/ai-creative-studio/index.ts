@@ -1490,12 +1490,13 @@ Deno.serve(async (req) => {
               if (isCarousel) {
                 const match = imagePlatformPreset.match(/ig-carousel-(\d+)/);
                 const slides = match ? parseInt(match[1]) : 2;
-                dimensionInstruction += ` This is an Instagram Carousel of ${slides} slides. The image will be sliced vertically into ${slides} equal parts. Design a CONTINUOUS, FLOWING composition across the full width. Each slice must be visually beautiful on its own AND contribute to a cohesive panoramic story. The subject (person/product) should span across multiple slides naturally — for example, the person could be in the center 1-2 slides with the product, while the background flows seamlessly across all ${slides} slides.`;
+                const slideW = Math.round(iw / slides);
+                dimensionInstruction += ` This is an Instagram Carousel of ${slides} slides (each ${slideW}x${ih}px). Design so that EACH ${slideW}x${ih}px vertical slice is a COMPLETE, INDEPENDENTLY BEAUTIFUL image — like professional wedding photography where every single photo is stunning on its own with proper subject framing and visual balance. At the same time, when all ${slides} slices are viewed together as one ${iw}x${ih} panorama, they form a UNIFIED cohesive scene with seamless flowing background, consistent lighting, and a visual narrative. Position the subject(s) so they appear naturally within individual slides. The transition between slides must be seamless — shared colors, lighting, and atmosphere.`;
               } else {
                 const match = imagePlatformPreset.match(/ig-grid-(\d+)x(\d+)/);
                 const gc = match ? parseInt(match[1]) : 3;
                 const gr = match ? parseInt(match[2]) : 1;
-                dimensionInstruction += ` This is an Instagram Grid of ${gc} columns × ${gr} rows = ${gc*gr} posts. Design a CONTINUOUS composition where the full image is stunning as one piece and each ${gc===3?'1080x1080':''}cell is also visually interesting when viewed alone.`;
+                dimensionInstruction += ` This is an Instagram Grid of ${gc}×${gr} = ${gc*gr} posts. Each cell must be a COMPLETE, INDEPENDENTLY BEAUTIFUL composition (like a professional photo album). Every cell works as standalone art with proper framing, yet together all cells reveal one grand unified panoramic image with flowing colors and atmosphere.`;
               }
               dimensionInstruction += ` DO NOT generate multiple separate images. DO NOT add borders, frames, or dividers. Generate ONE single seamless image that fills the entire ${iw}x${ih} canvas.`;
             } else {
