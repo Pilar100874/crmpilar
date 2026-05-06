@@ -11,7 +11,6 @@ import {
   Layers,
   BookText,
   QrCode,
-  Instagram,
 } from "lucide-react";
 
 interface DesktopSidebarProps {
@@ -30,7 +29,6 @@ const DesktopSidebar = ({ activePanel, onPanelChange }: DesktopSidebarProps) => 
     { id: 'elements', icon: Sticker, label: 'Elementos' },
     { id: 'barcode', icon: QrCode, label: 'Códigos' },
     { id: 'ai', icon: Sparkles, label: 'IA' },
-    { id: 'instagram-grid', icon: Instagram, label: 'Grid Instagram' },
   ];
 
   return (
