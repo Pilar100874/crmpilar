@@ -911,6 +911,53 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [id, nodeData.type, nodeData.label, downloadAsBlob]);
 
+  // Slice image for Instagram Grid or Carousel and download individual posts
+  const handleSliceAndDownload = useCallback(async (imageUrl: string) => {
+    const preset = nodeData.config?.imagePlatformPreset || '';
+    if (!preset) return;
+
+    let cols = 1, rows = 1, prefix = 'instagram';
+    if (preset === 'ig-grid-3x1') { cols = 3; rows = 1; prefix = 'grid_3x1'; }
+    else if (preset === 'ig-grid-3x2') { cols = 3; rows = 2; prefix = 'grid_3x2'; }
+    else if (preset === 'ig-grid-3x3') { cols = 3; rows = 3; prefix = 'grid_3x3'; }
+    else if (preset.startsWith('ig-carousel-')) {
+      const match = preset.match(/ig-carousel-(\d+)/);
+      cols = match ? parseInt(match[1]) : 2;
+      rows = 1;
+      prefix = `carrossel_${cols}`;
+    } else return;
+
+    try {
+      const blob = await downloadAsBlob(imageUrl);
+      const bmp = await createImageBitmap(blob);
+      const sliceW = Math.floor(bmp.width / cols);
+      const sliceH = Math.floor(bmp.height / rows);
+      let idx = 1;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const off = document.createElement('canvas');
+          off.width = sliceW;
+          off.height = sliceH;
+          const ctx = off.getContext('2d')!;
+          ctx.drawImage(bmp, c * sliceW, r * sliceH, sliceW, sliceH, 0, 0, sliceW, sliceH);
+          const sliceBlob = await new Promise<Blob>((res) => off.toBlob((b) => res(b!), 'image/png', 1));
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(sliceBlob);
+          link.download = `${prefix}_post_${String(idx).padStart(2, '0')}.png`;
+          link.click();
+          URL.revokeObjectURL(link.href);
+          idx++;
+          await new Promise(r => setTimeout(r, 300));
+        }
+      }
+      bmp.close();
+      toast.success(`✅ ${idx - 1} imagens recortadas salvas!`);
+    } catch (err: any) {
+      console.error('[Studio] Slice error:', err);
+      toast.error('Erro ao recortar: ' + (err.message || String(err)));
+    }
+  }, [nodeData.config?.imagePlatformPreset, downloadAsBlob]);
+
   const handleSaveVideoToGallery = useCallback(async (videoUrl: string, withAudio: boolean = true) => {
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId || !videoUrl) {
