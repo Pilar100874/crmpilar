@@ -11,6 +11,7 @@ import {
   Layers,
   BookText,
   QrCode,
+  Instagram,
 } from "lucide-react";
 
 interface DesktopSidebarProps {
