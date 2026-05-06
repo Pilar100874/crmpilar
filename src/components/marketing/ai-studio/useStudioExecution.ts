@@ -794,6 +794,7 @@ export function useStudioExecution() {
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           imageSize: cfgImageSize || undefined,
           imagePlatformPreset: imgPresetKey || undefined,
+          carouselMode: config.carouselMode || 'panoramic',
         });
         return result;
       }
