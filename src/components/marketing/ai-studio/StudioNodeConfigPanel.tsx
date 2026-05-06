@@ -946,7 +946,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               </Select>
             </ConfigField>
             <ConfigField label="Tamanho">
-              <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => update('imageSize', v)}>
+              <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => { update('imageSize', v); update('imagePlatformPreset', 'custom'); }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {IMAGE_SIZES.map((s) => (
