@@ -1640,84 +1640,132 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-           {resultImage && (
-              <div className="relative group px-3 pb-3 pt-1">
-                <div 
-                  className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
-                  style={{ 
-                    boxShadow: `0 4px 20px -4px ${accent}20`,
-                    height: imageExpanded ? 400 : 200,
-                    width: '100%',
-                    backgroundColor: 'hsl(var(--muted))',
-                  }}
-                  onClick={() => setImageExpanded(!imageExpanded)}
-                >
-                  <img 
-                    src={resultImage} 
-                    alt="Generated" 
-                    className="w-full h-full object-contain"
-                    loading="eager"
-                  />
+           {/* Independent carousel slides */}
+           {activeResult?.carouselMode === 'independent' && activeResult?.slideImages?.length > 0 && (
+              <div className="px-3 pb-3 pt-1 space-y-2">
+                <p className="text-[10px] font-semibold text-muted-foreground text-center">📸 {activeResult.slideImages.length} slides independentes</p>
+                <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(activeResult.slideImages.length, 4)}, 1fr)` }}>
+                  {activeResult.slideImages.map((url: string, idx: number) => (
+                    <div key={idx} className="relative group/slide rounded-lg overflow-hidden border border-border/50 aspect-square bg-muted">
+                      <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" loading="eager" />
+                      <div className="absolute inset-0 bg-black/0 group-hover/slide:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover/slide:opacity-100">
+                        <a
+                          href={url}
+                          download={`slide_${idx + 1}.png`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                        >
+                          <Download className="h-3 w-3 text-white" />
+                        </a>
+                      </div>
+                      <span className="absolute bottom-1 left-1 text-[9px] font-bold text-white bg-black/50 rounded px-1">{idx + 1}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      if (resultImage) handleSaveToMediaGallery(resultImage);
-                    }}
-                    disabled={isSavingToGallery}
-                    className="p-1.5 rounded-lg bg-emerald-600/80 backdrop-blur-sm hover:bg-emerald-600 transition-colors"
-                    title="Salvar na galeria do sistema"
-                  >
-                    {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
-                  </button>
-                  <a
-                    href={resultImage}
-                    download={`studio-${nodeData.type}-${id}.png`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors cursor-pointer"
-                    title="Download / Abrir imagem"
-                  >
-                    <Download className="h-3 w-3 text-white" />
-                  </a>
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setImagePreviewOpen(true);
-                    }}
-                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                  >
-                    <Maximize2 className="h-3 w-3 text-white" />
-                  </button>
-                </div>
-               </div>
-            )}
-            {/* Grid/Carousel slice button */}
-            {resultImage && (nodeData.config?.imagePlatformPreset?.startsWith('ig-grid-') || nodeData.config?.imagePlatformPreset?.startsWith('ig-carousel-')) && (
-              <div className="px-3 pb-2">
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (resultImage) handleSliceAndDownload(resultImage);
+                    (activeResult.slideImages as string[]).forEach(async (url: string, idx: number) => {
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `slide_${idx + 1}.png`;
+                      link.target = '_blank';
+                      link.click();
+                      await new Promise(r => setTimeout(r, 300));
+                    });
+                    toast.success(`✅ ${activeResult.slideImages.length} slides baixados!`);
                   }}
                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
                 >
-                  <Scissors className="h-3.5 w-3.5" />
-                  Recortar e Baixar Posts Individuais
+                  <Download className="h-3.5 w-3.5" />
+                  Baixar Todos os Slides
                 </button>
               </div>
+           )}
+           {resultImage && !activeResult?.carouselMode && (
+               <div className="relative group px-3 pb-3 pt-1">
+                 <div 
+                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
+                   style={{ 
+                     boxShadow: `0 4px 20px -4px ${accent}20`,
+                     height: imageExpanded ? 400 : 200,
+                     width: '100%',
+                     backgroundColor: 'hsl(var(--muted))',
+                   }}
+                   onClick={() => setImageExpanded(!imageExpanded)}
+                 >
+                   <img 
+                     src={resultImage} 
+                     alt="Generated" 
+                     className="w-full h-full object-contain"
+                     loading="eager"
+                   />
+                 </div>
+                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button
+                     onPointerDown={(e) => e.stopPropagation()}
+                     onMouseDown={(e) => e.stopPropagation()}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       e.preventDefault();
+                       if (resultImage) handleSaveToMediaGallery(resultImage);
+                     }}
+                     disabled={isSavingToGallery}
+                     className="p-1.5 rounded-lg bg-emerald-600/80 backdrop-blur-sm hover:bg-emerald-600 transition-colors"
+                     title="Salvar na galeria do sistema"
+                   >
+                     {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                   </button>
+                   <a
+                     href={resultImage}
+                     download={`studio-${nodeData.type}-${id}.png`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     onPointerDown={(e) => e.stopPropagation()}
+                     onMouseDown={(e) => e.stopPropagation()}
+                     onClick={(e) => e.stopPropagation()}
+                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors cursor-pointer"
+                     title="Download / Abrir imagem"
+                   >
+                     <Download className="h-3 w-3 text-white" />
+                   </a>
+                   <button
+                     onPointerDown={(e) => e.stopPropagation()}
+                     onMouseDown={(e) => e.stopPropagation()}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       e.preventDefault();
+                       setImagePreviewOpen(true);
+                     }}
+                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                   >
+                     <Maximize2 className="h-3 w-3 text-white" />
+                   </button>
+                 </div>
+                </div>
+             )}
+             {/* Grid/Carousel slice button */}
+             {resultImage && !activeResult?.carouselMode && (nodeData.config?.imagePlatformPreset?.startsWith('ig-grid-') || nodeData.config?.imagePlatformPreset?.startsWith('ig-carousel-')) && (
+               <div className="px-3 pb-2">
+                 <button
+                   onPointerDown={(e) => e.stopPropagation()}
+                   onMouseDown={(e) => e.stopPropagation()}
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     if (resultImage) handleSliceAndDownload(resultImage);
+                   }}
+                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                 >
+                   <Scissors className="h-3.5 w-3.5" />
+                   Recortar e Baixar Posts Individuais
+                 </button>
+               </div>
             )}
 
             {resultVideo && (
