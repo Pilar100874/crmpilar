@@ -974,7 +974,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               </Select>
             </ConfigField>
             <SectionTitle>Ajustes Avançados</SectionTitle>
-            <ConfigField label={`Número de Variações (${config.numImages ?? 1})`}>
+            <ConfigField label={`Quantas imagens gerar (${config.numImages ?? 1})`} hint="Gera múltiplas versões para você escolher a melhor">
               <Slider
                 value={[config.numImages ?? 1]}
                 onValueChange={([v]) => update('numImages', v)}
@@ -982,7 +982,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1"
               />
             </ConfigField>
-            <ConfigField label={`Guidance Scale (${config.guidanceScale ?? 7.5})`}>
+            <ConfigField label={`Fidelidade ao prompt (${config.guidanceScale ?? 7.5})`} hint="Mais alto = segue mais o texto. Mais baixo = mais criativo">
               <Slider
                 value={[config.guidanceScale ?? 7.5]}
                 onValueChange={([v]) => update('guidanceScale', v)}
@@ -990,7 +990,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1"
               />
             </ConfigField>
-            <ConfigField label={`Steps (${config.steps ?? 30})`}>
+            <ConfigField label={`Nível de detalhamento (${config.steps ?? 30})`} hint="Mais passos = mais detalhes, porém mais lento">
               <Slider
                 value={[config.steps ?? 30]}
                 onValueChange={([v]) => update('steps', v)}
@@ -998,7 +998,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1"
               />
             </ConfigField>
-            <ConfigField label="Seed (Semente)">
+            <ConfigField label="Código de reprodução" hint="Fixe um número para gerar sempre a mesma imagem base. Vazio = aleatório">
               <Input
                 type="number"
                 value={config.seed || ''}
@@ -1007,11 +1007,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1"
               />
             </ConfigField>
-            <ConfigField label="Prompt Negativo">
+            <ConfigField label="O que NÃO incluir" hint="Descreva elementos que a IA deve evitar na imagem">
               <Textarea
                 value={config.negativePrompt || ''}
                 onChange={(e) => update('negativePrompt', e.target.value)}
-                placeholder="O que NÃO incluir na imagem..."
+                placeholder="Ex: sem texto, sem marca d'água, sem deformações..."
                 rows={2}
                 className="mt-1"
               />
