@@ -32,8 +32,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Progress } from "@/components/ui/progress";
 import { TemplateSelectionDialog } from "@/components/editor/TemplateSelectionDialog";
-import { PlatformSelectionDialog, PlatformPreset } from "@/components/editor/PlatformSelectionDialog";
-import { FabricImage, Rect } from "fabric";
+import { PlatformSelectionDialog, PlatformPreset, GridLayoutConfig } from "@/components/editor/PlatformSelectionDialog";
+import { FabricImage, Rect, Line, Textbox } from "fabric";
+import { Download, Grid } from "lucide-react";
 
 // Loading overlay shown while the editor initializes
 const LoadingOverlay = () => {
