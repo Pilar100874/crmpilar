@@ -958,8 +958,29 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     </div>
                   </div>
                   {isGridOrCarousel && (
-                    <p className="text-[10px] text-muted-foreground text-center">💡 Cada célula será recortada como post individual</p>
-                  )}
+                     <div className="space-y-2">
+                       <p className="text-[10px] text-muted-foreground text-center">💡 Cada célula será recortada como post individual</p>
+                       <div className="grid grid-cols-2 gap-1.5">
+                         {[
+                           { value: 'panoramic', label: '🖼️ Panorâmica', desc: 'Imagem única com cortes' },
+                           { value: 'independent', label: '📸 Fotos Independentes', desc: 'Cada slide é uma foto única' },
+                         ].map(opt => {
+                           const active = (config.carouselMode || 'panoramic') === opt.value;
+                           return (
+                             <button
+                               key={opt.value}
+                               type="button"
+                               onClick={() => update('carouselMode', opt.value)}
+                               className={`p-2 rounded-lg border text-left transition-all ${active ? 'border-primary bg-primary/15 ring-1 ring-primary/40' : 'border-border/50 bg-muted/30 hover:bg-muted/60'}`}
+                             >
+                               <span className="text-[11px] font-semibold block">{opt.label}</span>
+                               <span className="text-[9px] text-muted-foreground leading-tight block mt-0.5">{opt.desc}</span>
+                             </button>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
                 </div>
               );
             })()}
