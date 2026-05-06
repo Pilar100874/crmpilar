@@ -1625,10 +1625,17 @@ Deno.serve(async (req) => {
                 return `cell row ${row + 1}, column ${col + 1} of a ${gridCols}x${gridRows} panoramic grid`;
               });
           
+          let previousSlideUrl: string | null = null;
+          
           for (let slideIdx = 0; slideIdx < totalSlides; slideIdx++) {
             const slideNum = slideIdx + 1;
             const position = scenePositions[slideIdx];
-            const slidePrompt = `[PANORAMIC SLIDE ${slideNum} of ${totalSlides} — ${position}]\n\n${basePrompt}\n\n[CONTINUITY INSTRUCTIONS] This image is part of a ${totalSlides}-part CONTINUOUS PANORAMIC scene. You are generating the ${position}. The FULL scene should flow seamlessly when all ${totalSlides} images are placed side by side.\n- Use CONSISTENT lighting, color palette, atmosphere, and horizon line across all parts\n- The background/scenery at the EDGES of this image should be designed to CONNECT smoothly with adjacent slides\n- ${slideIdx === 0 ? 'The LEFT edge is the start of the panorama.' : 'The LEFT edge should blend with the previous slide.'}\n- ${slideIdx === totalSlides - 1 ? 'The RIGHT edge is the end of the panorama.' : 'The RIGHT edge should blend with the next slide.'}\n- This individual slide must ALSO be a beautiful, well-composed image on its own.\n\n[FORMAT] Generate at ${slideW}x${slideH}px. Fill the ENTIRE canvas.`;
+            
+            const continuityRef = previousSlideUrl 
+              ? `\n- CRITICAL: I am providing the PREVIOUS SLIDE as a reference image. Your image MUST continue seamlessly from the RIGHT EDGE of that previous slide. Match its colors, lighting, horizon line, and scene elements exactly at the LEFT edge of your output.`
+              : '';
+            
+            const slidePrompt = `[PANORAMIC SLIDE ${slideNum} of ${totalSlides} — ${position}]\n\n${basePrompt}\n\n[CONTINUITY INSTRUCTIONS] This image is part of a ${totalSlides}-part CONTINUOUS PANORAMIC scene. You are generating the ${position}. The FULL scene should flow seamlessly when all ${totalSlides} images are placed side by side.\n- Use CONSISTENT lighting, color palette, atmosphere, and horizon line across all parts\n- The background/scenery at the EDGES of this image should be designed to CONNECT smoothly with adjacent slides\n- ${slideIdx === 0 ? 'The LEFT edge is the start of the panorama.' : 'The LEFT edge MUST seamlessly continue from the previous slide.'}\n- ${slideIdx === totalSlides - 1 ? 'The RIGHT edge is the end of the panorama.' : 'The RIGHT edge should be designed to connect with the next slide.'}${continuityRef}\n- This individual slide must ALSO be a beautiful, well-composed image on its own.\n\n[FORMAT] Generate at ${slideW}x${slideH}px. Fill the ENTIRE canvas.`;
             
             const slideDimInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${slideW}x${slideH} pixels. SINGLE image filling the entire canvas.`;
             
@@ -1638,6 +1645,13 @@ Deno.serve(async (req) => {
             let slideData: any;
             if (hasStrict) {
               const editContent: any[] = [];
+              
+              // Add previous slide as visual continuity reference
+              if (previousSlideUrl) {
+                editContent.push({ type: "image_url", image_url: { url: previousSlideUrl } });
+                editContent.push({ type: "text", text: "↑ PREVIOUS SLIDE — Your new image MUST continue seamlessly from the RIGHT EDGE of this image. Match colors, lighting, horizon, and scene." });
+              }
+              
               for (let i = 0; i < refImages.length; i++) {
                 const safe = truncateImageUrl(refImages[i]);
                 if (!safe) continue;
@@ -1652,13 +1666,20 @@ Deno.serve(async (req) => {
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Create each image as part of a flowing panoramic scene." + slideDimInstruction },
+                  { role: "system", content: "You are a professional photo compositor creating a CONTINUOUS PANORAMIC scene. Each slide MUST visually connect to the previous one — same horizon, same lighting, same atmosphere, same color palette. The viewer should see ONE unified scene when slides are placed side by side." + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
               });
             } else {
               const content: any[] = [];
+              
+              // Add previous slide as visual continuity reference
+              if (previousSlideUrl) {
+                content.push({ type: "image_url", image_url: { url: previousSlideUrl } });
+                content.push({ type: "text", text: "↑ PREVIOUS SLIDE — Your new image MUST continue seamlessly from the RIGHT EDGE of this image. Match colors, lighting, horizon, and scene." });
+              }
+              
               for (let idx = 0; idx < refImages.length; idx++) {
                 const safe = truncateImageUrl(refImages[idx]);
                 if (safe) {
@@ -1670,7 +1691,7 @@ Deno.serve(async (req) => {
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model,
                 messages: [
-                  { role: "system", content: "You are an image generator. Create high-quality images as parts of a continuous panoramic scene." + slideDimInstruction },
+                  { role: "system", content: "You are an image generator creating a CONTINUOUS PANORAMIC scene. Each slide MUST visually connect to the previous one — same horizon, same lighting, same atmosphere, same color palette. The viewer should see ONE unified scene when slides are placed side by side." + slideDimInstruction },
                   { role: "user", content },
                 ],
                 modalities: ["image", "text"],
@@ -1692,6 +1713,7 @@ Deno.serve(async (req) => {
                 if (publicUrl) slideImageUrl = publicUrl;
               }
               slideImages.push(slideImageUrl);
+              previousSlideUrl = slideImageUrl; // Pass to next iteration for visual continuity
               console.log(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} generated OK`);
             } else {
               console.warn(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} failed to generate`);
