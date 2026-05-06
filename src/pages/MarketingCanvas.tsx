@@ -658,6 +658,18 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
             />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
+
+            {/* Grid export floating button */}
+            {platformPreset?.gridLayout && (
+              <Button
+                onClick={exportGridPieces}
+                className="absolute bottom-4 right-4 z-20 gap-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                Exportar Grid ({platformPreset.gridLayout.cols * platformPreset.gridLayout.rows} posts)
+              </Button>
+            )}
           </div>
 
         <div className="lg:hidden">
