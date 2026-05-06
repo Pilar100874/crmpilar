@@ -784,6 +784,8 @@ export function useStudioExecution() {
           model: config.model,
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+          imageSize: cfgImageSize || undefined,
+          imagePlatformPreset: imgPresetKey || undefined,
         });
         return result;
       }
