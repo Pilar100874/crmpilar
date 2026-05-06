@@ -389,6 +389,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
           return <BarcodePanel />;
         case 'ai':
           return <AIPanel />;
+        case 'instagram-grid':
+          return <InstagramGridPanel />;
         case 'layers':
           return <LayersPanel />;
         case 'properties':
