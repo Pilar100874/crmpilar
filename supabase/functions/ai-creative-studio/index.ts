@@ -1475,6 +1475,34 @@ Deno.serve(async (req) => {
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
         const refImages = (params.imageUrls || []) as string[];
         const imageRoles = (params.imageRoles || []) as string[];
+        const imageSize = (params.imageSize || '') as string;
+        const imagePlatformPreset = (params.imagePlatformPreset || '') as string;
+
+        // Build dimension/format system instruction
+        let dimensionInstruction = '';
+        if (imageSize) {
+          const [iw, ih] = imageSize.split('x').map(Number);
+          if (iw && ih) {
+            const isGrid = imagePlatformPreset.startsWith('ig-grid-');
+            const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
+            if (isGrid || isCarousel) {
+              dimensionInstruction = `\n\nCRITICAL OUTPUT FORMAT: You MUST generate a SINGLE wide/tall panoramic image at ${iw}x${ih} pixels.`;
+              if (isCarousel) {
+                const match = imagePlatformPreset.match(/ig-carousel-(\d+)/);
+                const slides = match ? parseInt(match[1]) : 2;
+                dimensionInstruction += ` This is an Instagram Carousel of ${slides} slides. The image will be sliced vertically into ${slides} equal parts. Design a CONTINUOUS, FLOWING composition across the full width. Each slice must be visually beautiful on its own AND contribute to a cohesive panoramic story. The subject (person/product) should span across multiple slides naturally — for example, the person could be in the center 1-2 slides with the product, while the background flows seamlessly across all ${slides} slides.`;
+              } else {
+                const match = imagePlatformPreset.match(/ig-grid-(\d+)x(\d+)/);
+                const gc = match ? parseInt(match[1]) : 3;
+                const gr = match ? parseInt(match[2]) : 1;
+                dimensionInstruction += ` This is an Instagram Grid of ${gc} columns × ${gr} rows = ${gc*gr} posts. Design a CONTINUOUS composition where the full image is stunning as one piece and each ${gc===3?'1080x1080':''}cell is also visually interesting when viewed alone.`;
+              }
+              dimensionInstruction += ` DO NOT generate multiple separate images. DO NOT add borders, frames, or dividers. Generate ONE single seamless image that fills the entire ${iw}x${ih} canvas.`;
+            } else {
+              dimensionInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${iw}x${ih} pixels aspect ratio. Fill the entire canvas.`;
+            }
+          }
+        }
 
         // Identify strict references (product/logo/influencer/clothing) — use EDIT mode
         const strictRoles = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
@@ -1496,7 +1524,7 @@ Deno.serve(async (req) => {
 
         if (strictImages.length > 0) {
           // === EDIT MODE: ALL strict images sent as subjects to preserve ===
-          console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs`);
+          console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           
           const editContent: any[] = [];
 
@@ -1520,10 +1548,12 @@ Deno.serve(async (req) => {
           const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL — same eyes, nose, mouth, skin tone, hair. Not similar. IDENTICAL.\n- The product PACKAGING must be IDENTICAL — same label, same colors, same logo, same shape. Not similar. IDENTICAL.\n- You are doing PHOTO EDITING, not generating new content. Cut the subjects from their photos and place them into the new scene.\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
+          const editSystemPrompt = "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL. You work like Photoshop — you CUT subjects from their original photos and PASTE them into new backgrounds. The face of any person MUST remain pixel-identical to the input photo. The packaging/label of any product MUST remain pixel-identical to the input photo. You NEVER redraw faces. You NEVER redesign packaging. You ONLY change the background, lighting, and composition around the subjects." + dimensionInstruction;
+
           data = await callGateway(LOVABLE_API_KEY, {
             model,
             messages: [
-              { role: "system", content: "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL. You work like Photoshop — you CUT subjects from their original photos and PASTE them into new backgrounds. The face of any person MUST remain pixel-identical to the input photo. The packaging/label of any product MUST remain pixel-identical to the input photo. You NEVER redraw faces. You NEVER redesign packaging. You ONLY change the background, lighting, and composition around the subjects." },
+              { role: "system", content: editSystemPrompt },
               { role: "user", content: editContent },
             ],
             modalities: ["image", "text"],
@@ -1541,11 +1571,12 @@ Deno.serve(async (req) => {
           }
           content.push({ type: "text", text: params.prompt });
 
-          console.log(`[generate_image] GENERATION MODE — ${refImages.length} refs`);
+          console.log(`[generate_image] GENERATION MODE — ${refImages.length} refs, size=${imageSize}, preset=${imagePlatformPreset}`);
 
-          const systemMessage = refImages.length > 0
+          let systemMessage = refImages.length > 0
             ? "You are an image generator. Use reference images for style and environment inspiration. Create a high-quality image based on the prompt."
             : "You are an image generator. Create high-quality images based on the prompt.";
+          systemMessage += dimensionInstruction;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
