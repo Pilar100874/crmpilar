@@ -946,14 +946,21 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               </Select>
             </ConfigField>
             <ConfigField label="Tamanho">
-              <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => { update('imageSize', v); update('imagePlatformPreset', 'custom'); }}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {IMAGE_SIZES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {currentImgPreset !== 'custom' ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2">
+                  <span className="text-sm font-medium text-foreground">{config.imageSize || '1024x1024'}</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">Definido pelo preset</span>
+                </div>
+              ) : (
+                <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => { update('imageSize', v); update('imagePlatformPreset', 'custom'); }}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_SIZES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </ConfigField>
             <ConfigField label="Qualidade">
               <Select value={config.quality || 'standard'} onValueChange={(v) => update('quality', v)}>
