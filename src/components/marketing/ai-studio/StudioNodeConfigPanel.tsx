@@ -1357,7 +1357,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             </ConfigField>
           </div>
         );
-
+      }
       case 'audioGen':
         return (
           <div className="space-y-2.5">
