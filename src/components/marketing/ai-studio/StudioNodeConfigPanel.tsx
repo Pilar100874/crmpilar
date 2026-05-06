@@ -961,26 +961,52 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                      <div className="space-y-2">
                        <p className="text-[10px] text-muted-foreground text-center">💡 Cada célula será recortada como post individual</p>
                        <div className="grid grid-cols-2 gap-1.5">
-                         {[
-                           { value: 'panoramic', label: '🖼️ Panorâmica', desc: 'Imagem única com cortes' },
-                           { value: 'independent', label: '📸 Fotos Independentes', desc: 'Cada slide é uma foto única' },
-                         ].map(opt => {
-                           const active = (config.carouselMode || 'panoramic') === opt.value;
-                           return (
-                             <button
-                               key={opt.value}
-                               type="button"
-                               onClick={() => update('carouselMode', opt.value)}
-                               className={`p-2 rounded-lg border text-left transition-all ${active ? 'border-primary bg-primary/15 ring-1 ring-primary/40' : 'border-border/50 bg-muted/30 hover:bg-muted/60'}`}
-                             >
-                               <span className="text-[11px] font-semibold block">{opt.label}</span>
-                               <span className="text-[9px] text-muted-foreground leading-tight block mt-0.5">{opt.desc}</span>
-                             </button>
-                           );
-                         })}
-                       </div>
-                     </div>
-                   )}
+                          {[
+                            { value: 'panoramic', label: '🖼️ Panorâmica', desc: 'Imagem única contínua com cortes' },
+                            { value: 'independent', label: '📸 Fotos Independentes', desc: 'Cada slide é uma foto única' },
+                          ].map(opt => {
+                            const active = (config.carouselMode || 'panoramic') === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => { update('carouselMode', opt.value); if (opt.value === 'independent') update('panoramicStyle', undefined); }}
+                                className={`p-2 rounded-lg border text-left transition-all ${active ? 'border-primary bg-primary/15 ring-1 ring-primary/40' : 'border-border/50 bg-muted/30 hover:bg-muted/60'}`}
+                              >
+                                <span className="text-[11px] font-semibold block">{opt.label}</span>
+                                <span className="text-[9px] text-muted-foreground leading-tight block mt-0.5">{opt.desc}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {(config.carouselMode || 'panoramic') === 'panoramic' && (
+                          <div className="space-y-1.5 pt-1">
+                            <p className="text-[10px] font-semibold text-muted-foreground">Estilo Panorâmico</p>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {[
+                                { value: 'classic', label: '🌄 Clássica', desc: 'Cena contínua e fluida entre slides' },
+                                { value: 'collage', label: '🎨 Colagem / Moodboard', desc: 'Fotos sobrepostas com bordas, rotações e fundo neutro' },
+                                { value: 'editorial', label: '📰 Editorial / Fashion', desc: 'Layout geométrico com texto, cores fortes e blocos gráficos' },
+                                { value: 'overlay', label: '📷 Foto + Sobreposição', desc: 'Foto panorâmica com polaroids e fotos sobrepostas' },
+                              ].map(opt => {
+                                const active = (config.panoramicStyle || 'classic') === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => update('panoramicStyle', opt.value)}
+                                    className={`p-2 rounded-lg border text-left transition-all ${active ? 'border-primary bg-primary/15 ring-1 ring-primary/40' : 'border-border/50 bg-muted/30 hover:bg-muted/60'}`}
+                                  >
+                                    <span className="text-[11px] font-semibold block">{opt.label}</span>
+                                    <span className="text-[9px] text-muted-foreground leading-tight block mt-0.5">{opt.desc}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               );
             })()}
