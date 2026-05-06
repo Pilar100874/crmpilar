@@ -74,7 +74,20 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const isMobile = useIsMobile();
   const galleryImageLoadedRef = useRef(false);
 
+  const removeGridOverlay = () => {
+    const fabricCanvas = (window as any).fabricCanvas;
+    if (!fabricCanvas) return;
+    const gridObjects = fabricCanvas.getObjects().filter((obj: any) =>
+      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-')
+    );
+    gridObjects.forEach((obj: any) => fabricCanvas.remove(obj));
+    fabricCanvas.renderAll();
+  };
+
   const handlePlatformSelect = (preset: PlatformPreset) => {
+    // Remove old grid overlay when switching platform/type
+    removeGridOverlay();
+
     setPlatformPreset(preset);
     setShowPlatformDialog(false);
     toast.success(`Canvas configurado para ${preset.label}`);
@@ -83,6 +96,13 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     if (preset.gridLayout) {
       setTimeout(() => applyGridOverlay(preset.gridLayout!, preset.width, preset.height), 800);
     }
+  };
+
+  const bringGridToFront = (fabricCanvas: any) => {
+    const gridObjects = fabricCanvas.getObjects().filter((obj: any) =>
+      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-')
+    );
+    gridObjects.forEach((obj: any) => fabricCanvas.bringObjectToFront(obj));
   };
 
   const applyGridOverlay = (layout: GridLayoutConfig, totalW: number, totalH: number) => {
@@ -97,7 +117,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     for (let i = 1; i < cols; i++) {
       const x = (cw / cols) * i;
       const line = new Line([x, 0, x, ch], {
-        stroke: 'rgba(255,255,255,0.6)',
+        stroke: 'rgba(255,255,255,0.8)',
         strokeWidth: 2,
         strokeDashArray: [8, 6],
         selectable: false,
@@ -112,7 +132,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     for (let i = 1; i < rows; i++) {
       const y = (ch / rows) * i;
       const line = new Line([0, y, cw, y], {
-        stroke: 'rgba(255,255,255,0.6)',
+        stroke: 'rgba(255,255,255,0.8)',
         strokeWidth: 2,
         strokeDashArray: [8, 6],
         selectable: false,
@@ -135,9 +155,9 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
           originX: 'center',
           originY: 'center',
           fontSize: Math.min(cellW, cellH) * 0.12,
-          fill: 'rgba(255,255,255,0.7)',
+          fill: 'rgba(255,255,255,0.9)',
           fontWeight: 'bold',
-          backgroundColor: 'rgba(0,0,0,0.4)',
+          backgroundColor: 'rgba(0,0,0,0.5)',
           textAlign: 'center',
           selectable: false,
           evented: false,
@@ -149,6 +169,15 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
         fabricCanvas.add(text);
       }
     }
+
+    // Ensure grid is always on top
+    bringGridToFront(fabricCanvas);
+
+    // Listen for object additions to keep grid on top
+    const keepGridOnTop = () => bringGridToFront(fabricCanvas);
+    fabricCanvas.off('object:added', keepGridOnTop);
+    fabricCanvas.on('object:added', keepGridOnTop);
+    (window as any).__gridKeepOnTopFn = keepGridOnTop;
 
     fabricCanvas.renderAll();
   };
