@@ -32,9 +32,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Progress } from "@/components/ui/progress";
 import { TemplateSelectionDialog } from "@/components/editor/TemplateSelectionDialog";
-import { PlatformSelectionDialog, PlatformPreset, GridLayoutConfig } from "@/components/editor/PlatformSelectionDialog";
+import { PlatformSelectionDialog, PlatformPreset, GridLayoutConfig, CarouselConfig } from "@/components/editor/PlatformSelectionDialog";
 import { FabricImage, Rect, Line, Textbox } from "fabric";
-import { Download, Grid } from "lucide-react";
+import { Download, Grid, GalleryHorizontal } from "lucide-react";
 
 // Loading overlay shown while the editor initializes
 const LoadingOverlay = () => {
@@ -77,15 +77,22 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
   const removeGridOverlay = () => {
     const fabricCanvas = (window as any).fabricCanvas;
     if (!fabricCanvas) return;
-    const gridObjects = fabricCanvas.getObjects().filter((obj: any) =>
-      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-')
+    const overlayObjects = fabricCanvas.getObjects().filter((obj: any) =>
+      obj.name?.startsWith('grid-line-') || obj.name?.startsWith('grid-num-') ||
+      obj.name?.startsWith('carousel-line-') || obj.name?.startsWith('carousel-num-')
     );
-    gridObjects.forEach((obj: any) => fabricCanvas.remove(obj));
+    overlayObjects.forEach((obj: any) => fabricCanvas.remove(obj));
+    // Remove listener
+    const keepFn = (window as any).__gridKeepOnTopFn;
+    if (keepFn) {
+      fabricCanvas.off('object:added', keepFn);
+      (window as any).__gridKeepOnTopFn = undefined;
+    }
     fabricCanvas.renderAll();
   };
 
   const handlePlatformSelect = (preset: PlatformPreset) => {
-    // Remove old grid overlay when switching platform/type
+    // Remove old overlays when switching platform/type
     removeGridOverlay();
 
     setPlatformPreset(preset);
@@ -95,6 +102,10 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     // If grid preset, apply grid lines after canvas is ready
     if (preset.gridLayout) {
       setTimeout(() => applyGridOverlay(preset.gridLayout!, preset.width, preset.height), 800);
+    }
+    // If carousel preset, apply carousel lines
+    if (preset.carouselConfig) {
+      setTimeout(() => applyCarouselOverlay(preset.carouselConfig!, preset.width, preset.height), 800);
     }
   };
 
@@ -243,6 +254,117 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
     };
     img.src = fullDataUrl;
   };
+
+  const applyCarouselOverlay = (config: CarouselConfig, totalW: number, totalH: number) => {
+    const fabricCanvas = (window as any).fabricCanvas;
+    if (!fabricCanvas) return;
+
+    const { slides } = config;
+    const cw = fabricCanvas.width || totalW;
+    const ch = fabricCanvas.height || totalH;
+    const slideW = cw / slides;
+
+    // Draw vertical dashed lines between slides
+    for (let i = 1; i < slides; i++) {
+      const x = slideW * i;
+      const line = new Line([x, 0, x, ch], {
+        stroke: 'rgba(255,255,255,0.8)',
+        strokeWidth: 2,
+        strokeDashArray: [10, 6],
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+        name: `carousel-line-${i}`,
+      });
+      fabricCanvas.add(line);
+    }
+
+    // Add slide numbers
+    for (let i = 0; i < slides; i++) {
+      const text = new Textbox(`${i + 1}`, {
+        left: i * slideW + slideW / 2,
+        top: ch / 2,
+        originX: 'center',
+        originY: 'center',
+        fontSize: Math.min(slideW, ch) * 0.1,
+        fill: 'rgba(255,255,255,0.9)',
+        fontWeight: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        textAlign: 'center',
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+        name: `carousel-num-${i}`,
+        editable: false,
+        width: 50,
+      });
+      fabricCanvas.add(text);
+    }
+
+    // Keep overlay on top
+    const bringOverlayToFront = () => {
+      const overlays = fabricCanvas.getObjects().filter((obj: any) =>
+        obj.name?.startsWith('carousel-line-') || obj.name?.startsWith('carousel-num-')
+      );
+      overlays.forEach((obj: any) => fabricCanvas.bringObjectToFront(obj));
+    };
+    bringOverlayToFront();
+
+    fabricCanvas.off('object:added', bringOverlayToFront);
+    fabricCanvas.on('object:added', bringOverlayToFront);
+    (window as any).__gridKeepOnTopFn = bringOverlayToFront;
+
+    fabricCanvas.renderAll();
+  };
+
+  const exportCarouselSlides = () => {
+    if (!platformPreset?.carouselConfig) return;
+    const fabricCanvas = (window as any).fabricCanvas;
+    if (!fabricCanvas) return;
+
+    const { slides } = platformPreset.carouselConfig;
+
+    // Temporarily hide overlay objects
+    const overlayObjects = fabricCanvas.getObjects().filter((obj: any) =>
+      obj.name?.startsWith('carousel-line-') || obj.name?.startsWith('carousel-num-')
+    );
+    overlayObjects.forEach((obj: any) => obj.set('visible', false));
+    fabricCanvas.renderAll();
+
+    const multiplier = 2;
+    const fullDataUrl = fabricCanvas.toDataURL({
+      format: 'jpeg',
+      quality: 0.95,
+      multiplier,
+    });
+
+    // Restore overlays
+    overlayObjects.forEach((obj: any) => obj.set('visible', true));
+    fabricCanvas.renderAll();
+
+    const img = new Image();
+    img.onload = () => {
+      const slideW = img.width / slides;
+      const slideH = img.height;
+
+      for (let i = 0; i < slides; i++) {
+        const slideCanvas = document.createElement('canvas');
+        slideCanvas.width = slideW;
+        slideCanvas.height = slideH;
+        const ctx = slideCanvas.getContext('2d')!;
+        ctx.drawImage(img, i * slideW, 0, slideW, slideH, 0, 0, slideW, slideH);
+        
+        const link = document.createElement('a');
+        link.href = slideCanvas.toDataURL('image/jpeg', 0.95);
+        link.download = `instagram_carrossel_${String(i + 1).padStart(2, '0')}.jpg`;
+        link.click();
+      }
+
+      toast.success(`${slides} slides do carrossel exportados!`);
+    };
+    img.src = fullDataUrl;
+  };
+
   const hasCanvasContent = () => {
     const fabricCanvas = (window as any).fabricCanvas;
     if (!fabricCanvas) return false;
@@ -697,6 +819,18 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
               >
                 <Download className="h-4 w-4" />
                 Exportar Grid ({platformPreset.gridLayout.cols * platformPreset.gridLayout.rows} posts)
+              </Button>
+            )}
+
+            {/* Carousel export floating button */}
+            {platformPreset?.carouselConfig && (
+              <Button
+                onClick={exportCarouselSlides}
+                className="absolute bottom-4 right-4 z-20 gap-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white shadow-lg"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                Exportar Carrossel ({platformPreset.carouselConfig.slides} slides)
               </Button>
             )}
           </div>

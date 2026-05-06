@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Instagram, MessageCircle, Facebook, Send, Ruler, Grid, ArrowLeft } from "lucide-react";
+import { Instagram, MessageCircle, Facebook, Send, Ruler, Grid, ArrowLeft, GalleryHorizontal } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,16 @@ export interface GridLayoutConfig {
   cells?: [number, number, number, number][];
 }
 
+export interface CarouselConfig {
+  id: string;
+  name: string;
+  description: string;
+  slides: number;
+  slideWidth: number;
+  slideHeight: number;
+  format: 'square' | 'portrait' | 'landscape';
+}
+
 export interface PlatformPreset {
   platform: string;
   type: string;
@@ -32,6 +42,7 @@ export interface PlatformPreset {
   height: number;
   label: string;
   gridLayout?: GridLayoutConfig;
+  carouselConfig?: CarouselConfig;
 }
 
 const GRID_LAYOUTS: GridLayoutConfig[] = [
@@ -72,6 +83,22 @@ const GRID_LAYOUTS: GridLayoutConfig[] = [
   },
 ];
 
+const CAROUSEL_PRESETS: CarouselConfig[] = [
+  { id: 'sq-2', name: '2 Slides Quadrado', description: '2 slides 1080×1080', slides: 2, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'sq-3', name: '3 Slides Quadrado', description: '3 slides 1080×1080', slides: 3, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'sq-4', name: '4 Slides Quadrado', description: '4 slides 1080×1080', slides: 4, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'sq-5', name: '5 Slides Quadrado', description: '5 slides 1080×1080', slides: 5, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'sq-7', name: '7 Slides Quadrado', description: '7 slides 1080×1080', slides: 7, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'sq-10', name: '10 Slides Quadrado', description: '10 slides 1080×1080', slides: 10, slideWidth: 1080, slideHeight: 1080, format: 'square' },
+  { id: 'pt-2', name: '2 Slides Retrato', description: '2 slides 1080×1350', slides: 2, slideWidth: 1080, slideHeight: 1350, format: 'portrait' },
+  { id: 'pt-3', name: '3 Slides Retrato', description: '3 slides 1080×1350', slides: 3, slideWidth: 1080, slideHeight: 1350, format: 'portrait' },
+  { id: 'pt-5', name: '5 Slides Retrato', description: '5 slides 1080×1350', slides: 5, slideWidth: 1080, slideHeight: 1350, format: 'portrait' },
+  { id: 'pt-10', name: '10 Slides Retrato', description: '10 slides 1080×1350', slides: 10, slideWidth: 1080, slideHeight: 1350, format: 'portrait' },
+  { id: 'ls-2', name: '2 Slides Paisagem', description: '2 slides 1080×566', slides: 2, slideWidth: 1080, slideHeight: 566, format: 'landscape' },
+  { id: 'ls-3', name: '3 Slides Paisagem', description: '3 slides 1080×566', slides: 3, slideWidth: 1080, slideHeight: 566, format: 'landscape' },
+  { id: 'ls-5', name: '5 Slides Paisagem', description: '5 slides 1080×566', slides: 5, slideWidth: 1080, slideHeight: 566, format: 'landscape' },
+];
+
 const platformPresets: PlatformPreset[] = [
   { platform: "instagram", type: "post", width: 1080, height: 1080, label: "Post Quadrado" },
   { platform: "instagram", type: "story", width: 1080, height: 1920, label: "Stories" },
@@ -79,6 +106,7 @@ const platformPresets: PlatformPreset[] = [
   { platform: "instagram", type: "landscape", width: 1080, height: 566, label: "Post Paisagem" },
   { platform: "instagram", type: "portrait", width: 1080, height: 1350, label: "Post Retrato" },
   { platform: "instagram", type: "grid", width: 1080, height: 1080, label: "Grid de Perfil" },
+  { platform: "instagram", type: "carousel", width: 1080, height: 1080, label: "Carrossel" },
   
   { platform: "whatsapp", type: "status", width: 1080, height: 1920, label: "Status" },
   { platform: "whatsapp", type: "profile", width: 640, height: 640, label: "Foto de Perfil" },
@@ -150,12 +178,41 @@ const renderLayoutPreview = (layout: GridLayoutConfig, size: number = 55) => {
   );
 };
 
+const renderCarouselPreview = (config: CarouselConfig, size: number = 55) => {
+  const { slides, format } = config;
+  const gap = 1;
+  const aspectRatio = format === 'portrait' ? 1.25 : format === 'landscape' ? 0.52 : 1;
+  const cellW = Math.min((size - (Math.min(slides, 5) - 1) * gap) / Math.min(slides, 5), 16);
+  const cellH = cellW * aspectRatio;
+  const totalW = Math.min(slides, 5) * (cellW + gap) - gap;
+
+  return (
+    <svg width={totalW} height={cellH} className="rounded">
+      {Array.from({ length: Math.min(slides, 5) }).map((_, i) => (
+        <rect
+          key={i}
+          x={i * (cellW + gap)}
+          y={0}
+          width={cellW}
+          height={cellH}
+          fill="hsl(var(--primary))"
+          opacity={0.6 + (i * 0.08)}
+          rx="1"
+        />
+      ))}
+      {slides > 5 && (
+        <text x={totalW - 2} y={cellH - 2} fontSize="6" fill="hsl(var(--foreground))" textAnchor="end" opacity={0.6}>+{slides - 5}</text>
+      )}
+    </svg>
+  );
+};
+
 export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSelectionDialogProps) => {
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
   const [selectedType, setSelectedType] = useState<string>("");
   const [customWidth, setCustomWidth] = useState<string>("1080");
   const [customHeight, setCustomHeight] = useState<string>("1080");
-  const [showGridSelection, setShowGridSelection] = useState(false);
+  const [subStep, setSubStep] = useState<'main' | 'grid' | 'carousel'>('main');
 
   const platforms = [
     { id: "instagram", name: "Instagram", icon: Instagram },
@@ -170,9 +227,11 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
   const handleTypeChange = (type: string) => {
     setSelectedType(type);
     if (type === "grid") {
-      setShowGridSelection(true);
+      setSubStep('grid');
+    } else if (type === "carousel") {
+      setSubStep('carousel');
     } else {
-      setShowGridSelection(false);
+      setSubStep('main');
     }
   };
 
@@ -187,7 +246,21 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
       label: `Grid ${layout.name}`,
       gridLayout: layout,
     });
-    setShowGridSelection(false);
+    setSubStep('main');
+    setSelectedType("");
+  };
+
+  const handleCarouselSelect = (config: CarouselConfig) => {
+    const totalWidth = config.slideWidth * config.slides;
+    onSelect({
+      platform: "instagram",
+      type: "carousel",
+      width: totalWidth,
+      height: config.slideHeight,
+      label: `Carrossel ${config.name}`,
+      carouselConfig: config,
+    });
+    setSubStep('main');
     setSelectedType("");
   };
 
@@ -214,34 +287,46 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
 
   const isValid = selectedPlatform === "custom" 
     ? customWidth && customHeight 
-    : selectedType !== "" && selectedType !== "grid";
+    : selectedType !== "" && selectedType !== "grid" && selectedType !== "carousel";
+
+  const subStepTitle = subStep === 'grid' 
+    ? 'Escolha o Layout do Grid'
+    : 'Escolha o Carrossel';
+
+  const subStepDescription = subStep === 'grid'
+    ? 'Selecione como deseja dividir o grid do perfil do Instagram'
+    : 'Selecione quantos slides e o formato do carrossel';
+
+  const subStepIcon = subStep === 'grid'
+    ? <Grid className="h-5 w-5 text-pink-500" />
+    : <GalleryHorizontal className="h-5 w-5 text-pink-500" />;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle>
-            {showGridSelection ? (
+            {subStep !== 'main' ? (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowGridSelection(false)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSubStep('main')}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <Grid className="h-5 w-5 text-pink-500" />
-                Escolha o Layout do Grid
+                {subStepIcon}
+                {subStepTitle}
               </div>
             ) : (
               "Selecione a Plataforma"
             )}
           </DialogTitle>
           <DialogDescription>
-            {showGridSelection
-              ? "Selecione como deseja dividir o grid do perfil do Instagram"
+            {subStep !== 'main'
+              ? subStepDescription
               : "Escolha onde você irá publicar sua imagem para ajustar o tamanho ideal"
             }
           </DialogDescription>
         </DialogHeader>
 
-        {showGridSelection ? (
+        {subStep === 'grid' ? (
           <ScrollArea className="max-h-[400px] py-2">
             <div className="grid grid-cols-3 gap-3 pr-2">
               {GRID_LAYOUTS.map((layout) => (
@@ -259,9 +344,70 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
               ))}
             </div>
           </ScrollArea>
+        ) : subStep === 'carousel' ? (
+          <ScrollArea className="max-h-[400px] py-2">
+            <div className="space-y-4 pr-2">
+              {/* Quadrado */}
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Quadrado (1080×1080)</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {CAROUSEL_PRESETS.filter(c => c.format === 'square').map((config) => (
+                    <Card
+                      key={config.id}
+                      className="p-3 cursor-pointer transition-all hover:scale-105 hover:bg-accent/50 hover:border-primary/50"
+                      onClick={() => handleCarouselSelect(config)}
+                    >
+                      <div className="flex flex-col items-center gap-1.5">
+                        {renderCarouselPreview(config)}
+                        <span className="text-[11px] font-medium text-center leading-tight">{config.slides} Slides</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Retrato */}
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Retrato (1080×1350)</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {CAROUSEL_PRESETS.filter(c => c.format === 'portrait').map((config) => (
+                    <Card
+                      key={config.id}
+                      className="p-3 cursor-pointer transition-all hover:scale-105 hover:bg-accent/50 hover:border-primary/50"
+                      onClick={() => handleCarouselSelect(config)}
+                    >
+                      <div className="flex flex-col items-center gap-1.5">
+                        {renderCarouselPreview(config)}
+                        <span className="text-[11px] font-medium text-center leading-tight">{config.slides} Slides</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Paisagem */}
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Paisagem (1080×566)</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {CAROUSEL_PRESETS.filter(c => c.format === 'landscape').map((config) => (
+                    <Card
+                      key={config.id}
+                      className="p-3 cursor-pointer transition-all hover:scale-105 hover:bg-accent/50 hover:border-primary/50"
+                      onClick={() => handleCarouselSelect(config)}
+                    >
+                      <div className="flex flex-col items-center gap-1.5">
+                        {renderCarouselPreview(config)}
+                        <span className="text-[11px] font-medium text-center leading-tight">{config.slides} Slides</span>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
         ) : (
           <div className="space-y-6 py-4">
-            <RadioGroup value={selectedPlatform} onValueChange={(v) => { setSelectedPlatform(v); setSelectedType(""); setShowGridSelection(false); }}>
+            <RadioGroup value={selectedPlatform} onValueChange={(v) => { setSelectedPlatform(v); setSelectedType(""); setSubStep('main'); }}>
               <div className="grid grid-cols-2 gap-3">
                 {platforms.map((platform) => {
                   const Icon = platform.icon;
@@ -299,6 +445,11 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
                         {preset.type === "grid" ? (
                           <span className="flex items-center gap-2">
                             <Grid className="h-3.5 w-3.5" />
+                            {preset.label}
+                          </span>
+                        ) : preset.type === "carousel" ? (
+                          <span className="flex items-center gap-2">
+                            <GalleryHorizontal className="h-3.5 w-3.5" />
                             {preset.label}
                           </span>
                         ) : (
@@ -347,7 +498,7 @@ export const PlatformSelectionDialog = ({ open, onSelect, onClose }: PlatformSel
           </div>
         )}
 
-        {!showGridSelection && (
+        {subStep === 'main' && (
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Cancelar
