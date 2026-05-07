@@ -1029,22 +1029,27 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     // Build content: subject images first, then prompt
     const editContent: any[] = [];
     
+    // When strict refs exist, do NOT send brand identity images as visual inputs — they confuse the model
+    // Only send strict refs (product, influencer, logo, clothing) as actual images
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       const role = imageRoles[i] || 'REFERENCE';
       if (!url) continue;
       
+      // Skip brand identity reference images when we have strict refs — they override the product
+      if (role === 'BRAND IDENTITY REFERENCE') {
+        continue;
+      }
+      
       // Send image
-      if (url.startsWith('http')) {
-        editContent.push({ type: "image_url", image_url: { url } });
-      } else if (url.startsWith('data:')) {
+      if (url.startsWith('http') || url.startsWith('data:')) {
         editContent.push({ type: "image_url", image_url: { url } });
       } else {
         continue;
       }
       
       if (strictRoles.includes(role)) {
-        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output.` });
+        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output. DO NOT modify, redesign, recolor, or alter this in ANY way.` });
       } else {
         editContent.push({ type: "text", text: `↑ ${role} — use for style/background inspiration only.` });
       }
@@ -1723,6 +1728,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
+              // Skip brand identity images — they confuse the model and override the product
+              if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
                 editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and place FULLY within the center horizontal strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Scale to fit within the strip — do NOT crop.` });
@@ -1874,9 +1881,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             editContent.push({ type: "image_url", image_url: { url: s.url } });
             editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
           }
-          for (const flex of flexibleImages) {
+          // Only send non-brand-identity flexible images as actual visual inputs
+          // Brand identity images overwhelm the model and cause it to modify the product
+          const nonBrandFlex = flexibleImages.filter(f => f.role !== 'BRAND IDENTITY REFERENCE');
+          for (const flex of nonBrandFlex) {
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
-            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration.` });
+            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT let this change the product or person.` });
           }
           const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
           const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL.\n- The product PACKAGING must be IDENTICAL.\n\nScene description:\n${params.prompt}`;
