@@ -85,6 +85,17 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'polloai/recraft-v3', label: '🐔 PL: Recraft V3', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI' },
   { value: 'polloai/kolors', label: '🐔 PL: Kolors', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
   { value: 'polloai/sdxl', label: '🐔 PL: SDXL', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
+  // WaveSpeed image models
+  { value: 'wavespeed/flux-dev', label: '🌊 WS: Flux Dev', provider: 'WaveSpeed', cost: '$', quality: 4, tip: 'Via WaveSpeed, $0.025', supportsMultiRef: false },
+  { value: 'wavespeed/flux-schnell', label: '🌊 WS: Flux Schnell', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed, $0.003', supportsMultiRef: false },
+  { value: 'wavespeed/flux-pro', label: '🌊 WS: Flux Pro', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/gpt-image-2', label: '🌊 WS: GPT Image 2', provider: 'WaveSpeed', cost: '$$', quality: 5, tip: 'Via WaveSpeed, $0.04', supportsMultiRef: false },
+  { value: 'wavespeed/nano-banana-2', label: '🌊 WS: Nano Banana 2', provider: 'WaveSpeed', cost: '$', quality: 4, tip: 'Via WaveSpeed, $0.02', supportsMultiRef: false },
+  { value: 'wavespeed/seedream-3', label: '🌊 WS: Seedream 3.0', provider: 'WaveSpeed', cost: '$', quality: 4, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/recraft-v3', label: '🌊 WS: Recraft V3', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/sd3.5-turbo', label: '🌊 WS: SD 3.5 Turbo', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/ideogram-v3', label: '🌊 WS: Ideogram v3', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/kolors', label: '🌊 WS: Kolors', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
   // ChatGPT Image Creator (usa chave própria do usuário)
   { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1 (Edit)', provider: 'ChatGPT Image', cost: '$$', quality: 5, tip: 'GPT-Image-1 com edição — envia imagens de referência para a OpenAI preservar o produto', supportsMultiRef: true },
   { value: 'chatgpt_image/dall-e-3', label: '🖼️ ChatGPT DALL·E 3', provider: 'ChatGPT Image', cost: '$$', quality: 4, tip: 'DALL·E 3 via sua chave OpenAI (apenas geração, sem referência)', supportsMultiRef: false },
