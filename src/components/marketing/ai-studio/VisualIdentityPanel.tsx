@@ -34,7 +34,7 @@ const MAX_IMAGES = 10;
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
   const [data, setData] = useState<VisualIdentityData>({
     is_active: false, name: 'Identidade Visual', prompt: '', images: [],
-    use_prompt: true, use_images: true, selected_images: [],
+    use_prompt: true, use_images: true, selected_images: [], preferred_model: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
