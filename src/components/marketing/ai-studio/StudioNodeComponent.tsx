@@ -1712,9 +1712,69 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Baixar Imagem Panorâmica Única
-                </button>
-              </div>
+                   Baixar Imagem Panorâmica Única
+                 </button>
+                 <button
+                   onPointerDown={(e) => e.stopPropagation()}
+                   onMouseDown={(e) => e.stopPropagation()}
+                   onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        const targetW = activeResult.slideWidth || 0;
+                        const targetH = activeResult.slideHeight || 0;
+                        
+                        const blob = await downloadAsBlob(activeResult.imageUrl);
+                        const bmp = await createImageBitmap(blob);
+                        
+                        const aspectRatio = targetW / targetH;
+                        const cropH = Math.round(bmp.width / aspectRatio);
+                        const cropY = Math.round((bmp.height - cropH) / 2);
+                        
+                        // Create full panoramic canvas first
+                        const fullCanvas = document.createElement('canvas');
+                        fullCanvas.width = targetW;
+                        fullCanvas.height = targetH;
+                        const fullCtx = fullCanvas.getContext('2d')!;
+                        fullCtx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
+                        bmp.close();
+                        
+                        // Calculate number of slides (square slides based on height)
+                        const slideSize = targetH;
+                        const numSlides = Math.ceil(targetW / slideSize);
+                        
+                        for (let i = 0; i < numSlides; i++) {
+                          const slideCanvas = document.createElement('canvas');
+                          slideCanvas.width = slideSize;
+                          slideCanvas.height = slideSize;
+                          const slideCtx = slideCanvas.getContext('2d')!;
+                          
+                          const sx = i * slideSize;
+                          const sw = Math.min(slideSize, targetW - sx);
+                          slideCtx.drawImage(fullCanvas, sx, 0, sw, slideSize, 0, 0, sw, slideSize);
+                          
+                          const slideBlob = await new Promise<Blob | null>((resolve) => slideCanvas.toBlob(resolve, 'image/png', 1));
+                          if (!slideBlob) continue;
+                          const url = URL.createObjectURL(slideBlob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `slide_${i + 1}_${slideSize}x${slideSize}.png`;
+                          link.click();
+                          URL.revokeObjectURL(url);
+                          await new Promise(r => setTimeout(r, 400));
+                        }
+                        
+                        toast.success(`✅ ${numSlides} slides de ${slideSize}x${slideSize} baixados!`);
+                      } catch (err) {
+                        console.error('Download slides error:', err);
+                        toast.error('Erro ao baixar slides');
+                      }
+                   }}
+                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                 >
+                   <Download className="h-3.5 w-3.5" />
+                   Baixar Cortado por Slides
+                 </button>
+               </div>
            )}
 
            {/* Independent carousel slides */}
