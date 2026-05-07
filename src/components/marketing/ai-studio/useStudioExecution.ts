@@ -870,12 +870,24 @@ export function useStudioExecution() {
           fullPrompt = `${fullPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA:\nReferências de ambiente afetam APENAS o fundo, NUNCA o produto, pessoa ou roupa.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         fullPrompt = `${fullPrompt}\n\n[IDIOMA] Todos os textos na imagem devem estar ${compLangSuffix}.`;
+        
+        // Inject visual identity for compose
+        const viComposeId = localStorage.getItem('estabelecimentoId') || '';
+        const viComposeImages = await getActiveVisualIdentityImages(viComposeId);
+        if (viComposeImages.length > 0) {
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais da marca para manter consistência de estilo.`;
+          for (const viUrl of viComposeImages) {
+            orderedImageInputs.push(viUrl);
+            orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+          }
+        }
+
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
-          estabelecimentoId: localStorage.getItem('estabelecimentoId') || undefined,
+          estabelecimentoId: viComposeId || undefined,
         });
         return result;
       }
