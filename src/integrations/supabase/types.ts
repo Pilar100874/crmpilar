@@ -12639,6 +12639,36 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_visual_identity: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          images: Json
+          is_active: boolean
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          images?: Json
+          is_active?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          images?: Json
+          is_active?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supervisor_acoes: {
         Row: {
           acao: string
