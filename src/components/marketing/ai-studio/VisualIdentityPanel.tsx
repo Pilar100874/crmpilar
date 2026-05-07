@@ -26,7 +26,7 @@ interface VisualIdentityData {
 const MAX_IMAGES = 10;
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
-  const [data, setData] = useState<VisualIdentityData>({ is_active: false, name: 'Identidade Visual', images: [] });
+  const [data, setData] = useState<VisualIdentityData>({ is_active: false, name: 'Identidade Visual', prompt: '', images: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
