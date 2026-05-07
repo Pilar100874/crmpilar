@@ -221,6 +221,21 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   />
                 </div>
 
+                {/* Prompt */}
+                <div>
+                  <Label className="text-xs text-muted-foreground">Prompt da Identidade Visual</Label>
+                  <Textarea
+                    value={data.prompt}
+                    onChange={(e) => setData(prev => ({ ...prev, prompt: e.target.value }))}
+                    onBlur={() => save(data)}
+                    placeholder="Ex: Use cores vibrantes com tons de azul e laranja. Estilo moderno e minimalista. Tipografia sans-serif. Mantenha o logotipo sempre visível no canto inferior direito..."
+                    className="mt-1 text-sm min-h-[100px] resize-y"
+                  />
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">
+                    Descreva o estilo visual, cores, tipografia e regras de branding que devem ser aplicados em todas as gerações.
+                  </p>
+                </div>
+
                 {/* Info */}
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
