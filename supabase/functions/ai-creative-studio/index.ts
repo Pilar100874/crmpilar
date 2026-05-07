@@ -1667,7 +1667,7 @@ const SUPPORTED_IMAGE_MODELS = [
 function validateModel(model: string, type: "llm" | "image"): string {
   const supported = type === "image" ? SUPPORTED_IMAGE_MODELS : SUPPORTED_LLM_MODELS;
   // Also allow chatgpt_image models to pass through
-  if (supported.includes(model) || model.startsWith("chatgpt_image/")) return model;
+  if (supported.includes(model) || model.startsWith("chatgpt_image/") || model.startsWith("wavespeed/")) return model;
   if (supported.includes(model)) return model;
   // Fallback to default
   console.warn(`Unsupported model "${model}" for ${type}, using default`);
