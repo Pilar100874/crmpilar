@@ -877,7 +877,7 @@ export function useStudioExecution() {
         const viCompose = await getActiveVisualIdentity(viComposeId);
         if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
           const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
-          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.${viPText}`;
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}`;
           for (const viUrl of viCompose.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
