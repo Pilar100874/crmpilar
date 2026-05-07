@@ -1605,26 +1605,35 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate at panoramic aspect ratio directly ===
+        // === PANORAMIC MODE: Generate 1080x1080 square with content in safe zone strip ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
           const [fullW, fullH] = imageSize.split('x').map(Number);
           const aspectRatio = fullW / fullH; // e.g. 5400/1080 = 5
           
-          console.log(`[generate_image] PANORAMIC DIRECT MODE — generating at ${aspectRatio}:1 aspect ratio, target ${fullW}x${fullH}`);
+          // Safe zone: a horizontal strip in the center of 1080x1080 that matches the panoramic ratio
+          // For 5 slides: strip height = 1080/5 = 216px, centered vertically
+          const squareSize = 1080;
+          const safeZoneH = Math.round(squareSize / aspectRatio);
+          const safeZoneTop = Math.round((squareSize - safeZoneH) / 2);
+          const safeZoneTopPct = Math.round((safeZoneTop / squareSize) * 100);
+          const safeZoneHeightPct = Math.round((safeZoneH / squareSize) * 100);
+          
+          console.log(`[generate_image] PANORAMIC SAFE-ZONE MODE — 1080x1080, safe zone: top=${safeZoneTopPct}% height=${safeZoneHeightPct}% (${safeZoneH}px strip for ${totalSlides} slides)`);
           
           const basePrompt = params.prompt as string;
           
           const panoramicPrompt = `${basePrompt}
 
-CRITICAL FORMAT RULE: Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1 (width is ${aspectRatio} times the height).
-The image MUST be very wide and short — like a cinematic widescreen banner.
-DO NOT generate a square image. The width must be much larger than the height.
+CRITICAL FORMAT RULE: Generate a SQUARE 1080x1080 pixel image.
+However, ALL important content (people, products, text, logos, focal points) MUST be placed ONLY within a narrow HORIZONTAL STRIP in the CENTER of the image.
+This strip occupies from ${safeZoneTopPct}% to ${safeZoneTopPct + safeZoneHeightPct}% of the image height (approximately ${safeZoneH} pixels tall, centered vertically).
+The areas ABOVE and BELOW this strip should be simple background, gradient, or empty space — NO important content there.
 
-COMPOSITION: Distribute all important content (subjects, text, objects, focal points) across the FULL WIDTH of the panoramic image.
-All subjects must be FULLY VISIBLE and UNCROPPED — show people head-to-toe, products in full, logos complete.
-Use the entire horizontal space effectively for a panoramic composition.
+Think of it like a wide panoramic banner placed in the center of a square canvas.
+Distribute all subjects and content HORIZONTALLY across the full width of the image within this strip.
+All subjects must be FULLY VISIBLE and UNCROPPED — show people head-to-toe (scaled to fit within the strip), products in full, logos complete.
 
-REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED. Scale them proportionally to fit the panoramic height WITHOUT cropping any part.`;
+REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED within the center strip. Scale them proportionally to fit within the ${safeZoneH}px tall strip.`;
 
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
@@ -1639,7 +1648,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const role = imageRoles[i] || 'REFERENCE';
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY — do NOT crop any part. Scale proportionally to fit the panoramic height.` });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and place FULLY within the center horizontal strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Scale to fit within the strip — do NOT crop.` });
               }
             }
             editContent.push({ type: "text", text: panoramicPrompt });
@@ -1647,7 +1656,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1. The image must be very wide and short. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products). DO NOT generate a square image.` },
+                { role: "system", content: `You are a professional photo compositor. Generate a SQUARE 1080x1080 image. Place ALL important content within a horizontal strip in the center of the image (from ${safeZoneTopPct}% to ${safeZoneTopPct + safeZoneHeightPct}% of the height). The top and bottom areas outside this strip should be simple background only. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) within this strip.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1666,7 +1675,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are an image generator. Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1. The image must be very wide and short — like a cinematic widescreen banner. ALL important content must be FULLY VISIBLE and UNCROPPED. DO NOT generate a square image.` },
+                { role: "system", content: `You are an image generator. Generate a SQUARE 1080x1080 image. Place ALL important content within a horizontal strip in the center (from ${safeZoneTopPct}% to ${safeZoneTopPct + safeZoneHeightPct}% of height). Top and bottom areas should be simple background. ALL content must be FULLY VISIBLE and UNCROPPED within the strip.` },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
@@ -1687,12 +1696,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             if (publicUrl) panoImageUrl = publicUrl;
           }
           
-          console.log(`[generate_image] Panoramic direct image generated: ${!!panoImageUrl}`);
+          console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
           
           return new Response(JSON.stringify({ 
             result: { 
               imageUrl: panoImageUrl || '', 
-              text: `Panorâmica gerada diretamente em formato ${fullW}x${fullH}px`,
+              text: `Panorâmica gerada em 1080x1080 com zona segura de ${safeZoneHeightPct}%`,
               carouselMode: 'panoramic',
               slideWidth: fullW,
               slideHeight: fullH,
@@ -1705,6 +1714,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               originalGridCols: gridCols,
               originalGridRows: gridRows,
               directPanoramic: true,
+              safeZoneTopPct,
+              safeZoneHeightPct,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
