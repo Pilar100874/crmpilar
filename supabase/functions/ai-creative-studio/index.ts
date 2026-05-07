@@ -1534,7 +1534,25 @@ Deno.serve(async (req) => {
         const imagePlatformPreset = (params.imagePlatformPreset || '') as string;
         const carouselMode = (params.carouselMode || 'panoramic') as string;
 
-        // Determine if this is a multi-slide preset
+        // === ChatGPT Image Creator: route to OpenAI API with user's own key ===
+        if (model.startsWith("chatgpt_image/")) {
+          const estabId = params.estabelecimentoId || params.estabelecimento_id;
+          if (!estabId) {
+            return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para ChatGPT Image" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          const chatgptKey = await fetchApiKey(estabId, "chatgpt_image");
+          if (!chatgptKey) {
+            return new Response(JSON.stringify({ error: "Chave da API ChatGPT Image não configurada. Vá em Configurações > APIs e configure sua chave OpenAI para o ChatGPT Criador de Imagens." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          try {
+            const result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
+            return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } catch (err: any) {
+            console.error("[chatgpt_image] Error:", err.message);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
         const isGrid = imagePlatformPreset.startsWith('ig-grid-');
         const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
         let totalSlides = 1;
