@@ -1640,10 +1640,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-           {/* Panoramic carousel slides — stitch & display as single image */}
-           {activeResult?.carouselMode === 'panoramic' && activeResult?.slideImages?.length > 0 && (
+           {/* Panoramic single wide image */}
+           {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (
               <div className="px-3 pb-3 pt-1 space-y-2">
-                <p className="text-[10px] font-semibold text-muted-foreground text-center">🖼️ Panorâmica — {activeResult.slideImages.length} slides</p>
+                <p className="text-[10px] font-semibold text-muted-foreground text-center">
+                  🖼️ Panorâmica {activeResult.originalTotalSlides ? `— ${activeResult.originalTotalSlides} slides` : ''}
+                </p>
                 <div 
                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
                   style={{ 
@@ -1654,25 +1656,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   }}
                   onClick={() => setImageExpanded(!imageExpanded)}
                 >
-                  <div className="flex w-full h-full">
-                    {(activeResult.slideImages as string[]).map((url: string, idx: number) => (
-                      <img key={idx} src={url} alt={`Slide ${idx + 1}`} className="h-full object-cover" style={{ width: `${100 / activeResult.slideImages.length}%` }} loading="eager" />
-                    ))}
-                  </div>
-                </div>
-                {/* Individual slides preview */}
-                <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(activeResult.slideImages.length, 5)}, 1fr)` }}>
-                  {(activeResult.slideImages as string[]).map((url: string, idx: number) => (
-                    <div key={idx} className="relative group/slide rounded-lg overflow-hidden border border-border/50 aspect-square bg-muted">
-                      <img src={url} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" loading="eager" />
-                      <div className="absolute inset-0 bg-black/0 group-hover/slide:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover/slide:opacity-100">
-                        <a href={url} download={`slide_${idx + 1}.png`} target="_blank" rel="noopener noreferrer" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors">
-                          <Download className="h-3 w-3 text-white" />
-                        </a>
-                      </div>
-                      <span className="absolute bottom-1 left-1 text-[9px] font-bold text-white bg-black/50 rounded px-1">{idx + 1}</span>
-                    </div>
-                  ))}
+                  <img src={activeResult.imageUrl} alt="Panorâmica" className="w-full h-full object-contain" loading="eager" />
                 </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
@@ -1680,68 +1664,21 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   onClick={async (e) => {
                     e.stopPropagation();
                     try {
-                      const slides = activeResult.slideImages as string[];
-                      const sW = activeResult.slideWidth || 1080;
-                      const sH = activeResult.slideHeight || 1080;
-                      const cols = activeResult.gridCols || slides.length;
-                      const rows = activeResult.gridRows || 1;
-                      const totalW = sW * cols;
-                      const totalH = sH * rows;
-                      const canvas = document.createElement('canvas');
-                      canvas.width = totalW;
-                      canvas.height = totalH;
-                      const ctx = canvas.getContext('2d');
-                      if (!ctx) return;
-                      // Use downloadAsBlob to avoid CORS taint on canvas
-                      for (let i = 0; i < slides.length; i++) {
-                        const blob = await downloadAsBlob(slides[i]);
-                        const bmp = await createImageBitmap(blob);
-                        const col = i % cols;
-                        const row = Math.floor(i / cols);
-                        ctx.drawImage(bmp, col * sW, row * sH, sW, sH);
-                        bmp.close();
-                      }
-                      const stitchedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
-                      if (!stitchedBlob) {
-                        toast.error('Erro ao gerar imagem panorâmica');
-                        return;
-                      }
-                      const url = URL.createObjectURL(stitchedBlob);
                       const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `panoramic_${totalW}x${totalH}.png`;
+                      link.href = activeResult.imageUrl;
+                      link.download = `panoramic_${activeResult.slideWidth || 'full'}x${activeResult.slideHeight || 'full'}.png`;
+                      link.target = '_blank';
                       link.click();
-                      URL.revokeObjectURL(url);
-                      toast.success(`✅ Imagem panorâmica ${totalW}x${totalH} baixada!`);
+                      toast.success(`✅ Imagem panorâmica baixada!`);
                     } catch (err) {
-                      console.error('Stitch error:', err);
-                      toast.error('Erro ao montar imagem panorâmica');
+                      console.error('Download error:', err);
+                      toast.error('Erro ao baixar imagem panorâmica');
                     }
                   }}
                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Baixar Imagem Panorâmica Única
-                </button>
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    (activeResult.slideImages as string[]).forEach(async (url: string, idx: number) => {
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `slide_${idx + 1}.png`;
-                      link.target = '_blank';
-                      link.click();
-                      await new Promise(r => setTimeout(r, 300));
-                    });
-                    toast.success(`✅ ${activeResult.slideImages.length} slides baixados!`);
-                  }}
-                  className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-                >
-                  <Scissors className="h-3.5 w-3.5" />
-                  Baixar Slides Individuais
                 </button>
               </div>
            )}
