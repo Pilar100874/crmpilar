@@ -1170,11 +1170,30 @@ async function generateImageWavespeed(estabelecimentoId: string, prompt: string,
     prompt,
   };
 
+  // Convert width x height to aspect_ratio for WaveSpeed models that use it
   if (size) {
     const [w, h] = size.split("x").map(Number);
     if (w && h) {
-      wsParams.width = w;
-      wsParams.height = h;
+      // Models like gpt-image-2 use aspect_ratio + resolution instead of width/height
+      const isAspectModel = wsModelPath.includes('gpt-image') || wsModelPath.includes('dall-e');
+      if (isAspectModel) {
+        const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+        const d = gcd(w, h);
+        const ratioW = w / d;
+        const ratioH = h / d;
+        const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'];
+        const ratio = `${ratioW}:${ratioH}`;
+        if (validRatios.includes(ratio)) {
+          wsParams.aspect_ratio = ratio;
+        }
+        // Set resolution based on max dimension
+        const maxDim = Math.max(w, h);
+        wsParams.resolution = maxDim > 2048 ? '4k' : maxDim > 1024 ? '2k' : '1k';
+        wsParams.quality = 'medium';
+      } else {
+        wsParams.width = w;
+        wsParams.height = h;
+      }
     }
   }
 
