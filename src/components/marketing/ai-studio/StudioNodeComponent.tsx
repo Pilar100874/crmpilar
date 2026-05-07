@@ -1743,33 +1743,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                          const blob = await downloadAsBlob(activeResult.imageUrl);
                          const bmp = await createImageBitmap(blob);
                          
-                         // Scale image to panoramic dimensions preserving content
-                         const fullCanvas = document.createElement('canvas');
-                         fullCanvas.width = targetW;
-                         fullCanvas.height = targetH;
-                         const fullCtx = fullCanvas.getContext('2d')!;
-                         
-                         // Fill with white background
-                         fullCtx.fillStyle = '#FFFFFF';
-                         fullCtx.fillRect(0, 0, targetW, targetH);
-                         
-                         // Scale preserving aspect ratio
-                         const imgAspect = bmp.width / bmp.height;
-                         const targetAspect = targetW / targetH;
-                         let drawW: number, drawH: number, drawX: number, drawY: number;
-                         if (imgAspect >= targetAspect) {
-                           drawW = targetW;
-                           drawH = Math.round(targetW / imgAspect);
-                           drawX = 0;
-                           drawY = Math.round((targetH - drawH) / 2);
-                         } else {
-                           drawH = targetH;
-                           drawW = Math.round(targetH * imgAspect);
-                           drawX = Math.round((targetW - drawW) / 2);
-                           drawY = 0;
-                         }
-                         fullCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
-                         bmp.close();
+                          // Extract safe zone strip from square image, then scale to panoramic
+                          const safeTopPct = (activeResult as any).safeZoneTopPct;
+                          const safeHPct = (activeResult as any).safeZoneHeightPct;
+                          
+                          let cropY: number, cropH: number;
+                          if (typeof safeTopPct === 'number' && typeof safeHPct === 'number') {
+                            cropY = Math.round(bmp.height * safeTopPct / 100);
+                            cropH = Math.round(bmp.height * safeHPct / 100);
+                          } else {
+                            const aspectRatio = targetW / targetH;
+                            cropH = Math.round(bmp.width / aspectRatio);
+                            if (cropH > bmp.height) cropH = bmp.height;
+                            cropY = Math.round((bmp.height - cropH) / 2);
+                          }
+                          
+                          const fullCanvas = document.createElement('canvas');
+                          fullCanvas.width = targetW;
+                          fullCanvas.height = targetH;
+                          const fullCtx = fullCanvas.getContext('2d')!;
+                          
+                          // Draw cropped strip scaled to panoramic dimensions
+                          fullCtx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
+                          bmp.close();
                         
                         // Calculate number of slides (square slides based on height)
                         const slideSize = targetH;
