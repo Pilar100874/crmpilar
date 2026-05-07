@@ -1042,8 +1042,19 @@ export function useStudioExecution() {
         // Inject language instruction into video prompt
         videoPrompt = `${videoPrompt}\n\n[IDIOMA] Todos os textos, legendas, narrações e elementos textuais no vídeo devem estar ${vidLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
         }
-        
-        // === PAID / AUTO VIDEO MODEL PATH ===
+
+        // Inject visual identity references for video generation
+        {
+          const viEstabId = localStorage.getItem('estabelecimentoId') || '';
+          const viImagesVideo = await getActiveVisualIdentityImages(viEstabId);
+          if (viImagesVideo.length > 0) {
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding no vídeo gerado.`;
+            for (const viUrl of viImagesVideo) {
+              orderedImageInputs.push(viUrl);
+              orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+            }
+          }
+        }
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
         const effectiveVideoModel = videoModel === 'free/gif-animated' ? 'auto' : videoModel;
         {
