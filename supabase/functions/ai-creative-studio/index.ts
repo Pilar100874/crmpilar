@@ -1029,29 +1029,35 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     // Build content: subject images first, then prompt
     const editContent: any[] = [];
     
-    // When strict refs exist, do NOT send brand identity images as visual inputs — they confuse the model
-    // Only send strict refs (product, influencer, logo, clothing) as actual images
+    // Collect strict and non-strict images separately, prioritize PRODUCT first
+    const priorityOrder: Record<string, number> = {
+      'PRODUCT - DO NOT MODIFY': 1,
+      'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+      'LOGO - DO NOT MODIFY': 3,
+      'CLOTHING - DO NOT MODIFY': 4,
+    };
+    
+    // Build sorted list: strict refs first (product > influencer > others), skip brand identity
+    const sortedEntries: { url: string; role: string }[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       const role = imageRoles[i] || 'REFERENCE';
-      if (!url) continue;
-      
-      // Skip brand identity reference images when we have strict refs — they override the product
-      if (role === 'BRAND IDENTITY REFERENCE') {
-        continue;
-      }
-      
-      // Send image
-      if (url.startsWith('http') || url.startsWith('data:')) {
-        editContent.push({ type: "image_url", image_url: { url } });
+      if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+      if (!(url.startsWith('http') || url.startsWith('data:'))) continue;
+      sortedEntries.push({ url, role });
+    }
+    sortedEntries.sort((a, b) => (priorityOrder[a.role] || 99) - (priorityOrder[b.role] || 99));
+    
+    for (const entry of sortedEntries) {
+      editContent.push({ type: "image_url", image_url: { url: entry.url } });
+      if (entry.role === 'PRODUCT - DO NOT MODIFY') {
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy this product EXACTLY into the scene: same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE — do NOT redesign.` });
+      } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
+      } else if (strictRoles.includes(entry.role)) {
+        editContent.push({ type: "text", text: `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY.` });
       } else {
-        continue;
-      }
-      
-      if (strictRoles.includes(role)) {
-        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output. DO NOT modify, redesign, recolor, or alter this in ANY way.` });
-      } else {
-        editContent.push({ type: "text", text: `↑ ${role} — use for style/background inspiration only.` });
+        editContent.push({ type: "text", text: `↑ ${entry.role} — background/style inspiration only.` });
       }
     }
 
@@ -1731,8 +1737,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               // Skip brand identity images — they confuse the model and override the product
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
-              if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and place FULLY within the center horizontal strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Scale to fit within the strip — do NOT crop.` });
+              if (role === 'PRODUCT - DO NOT MODIFY') {
+                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy EXACTLY into scene. Same packaging, label, colors, logo. DO NOT redesign. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
+                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (strictRolesPano.includes(role)) {
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY within center strip.` });
               }
             }
             editContent.push({ type: "text", text: panoramicPrompt });
@@ -1740,7 +1750,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Generate a SQUARE 1080x1080 image. Place ALL important content within a horizontal strip in the center of the image (from ${safeZoneTopPct}% to ${safeZoneTopPct + safeZoneHeightPct}% of the height). The top and bottom areas outside this strip should be simple background only. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) within this strip.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo. NEVER redesign or modify the product. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1876,10 +1886,26 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           
           const editContent: any[] = [];
-          for (let i = 0; i < strictImages.length; i++) {
-            const s = strictImages[i];
+          
+          // Sort strict images: PRODUCT first, then INFLUENCER, then others
+          const priorityOrder: Record<string, number> = {
+            'PRODUCT - DO NOT MODIFY': 1,
+            'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+            'LOGO - DO NOT MODIFY': 3,
+            'CLOTHING - DO NOT MODIFY': 4,
+          };
+          const sortedStrict = [...strictImages].sort((a, b) => (priorityOrder[a.role] || 99) - (priorityOrder[b.role] || 99));
+          
+          for (let i = 0; i < sortedStrict.length; i++) {
+            const s = sortedStrict[i];
             editContent.push({ type: "image_url", image_url: { url: s.url } });
-            editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
+            if (s.role === 'PRODUCT - DO NOT MODIFY') {
+              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. This is the REAL product photo. You MUST reproduce this product PIXEL-PERFECTLY in the output: exact same packaging, label, colors, typography, logo, shape, proportions. DO NOT redesign, recolor, redraw, simplify, or modify ANY detail. Treat this as a CUT-AND-PASTE operation — copy the product exactly as-is into the scene.` });
+            } else if (s.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
+              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON/INFLUENCER. This is a REAL person. Reproduce their EXACT face, skin tone, hair, features. The person should be interacting with the product naturally.` });
+            } else {
+              editContent.push({ type: "text", text: `↑ SUBJECT (${s.role}). Preserve IDENTICALLY in output.` });
+            }
           }
           // Only send non-brand-identity flexible images as actual visual inputs
           // Brand identity images overwhelm the model and cause it to modify the product
@@ -1888,11 +1914,11 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
             editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT let this change the product or person.` });
           }
-          const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
-          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL.\n- The product PACKAGING must be IDENTICAL.\n\nScene description:\n${params.prompt}`;
+          const subjectDescriptions = sortedStrict.map((s, i) => `Priority ${i + 1}: ${s.role}`).join(', ');
+          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nPRIORITY ORDER:\n1. PRODUCT — must appear EXACTLY as in the reference photo (same packaging, label, colors, logo). This is NON-NEGOTIABLE.\n2. PERSON/INFLUENCER — must have the IDENTICAL face.\n3. Everything else is secondary.\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL." + dimensionInstruction;
+          const editSystemPrompt = `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo, typography, proportions. You are doing a CUT-AND-PASTE of the real product photo into a new scene. NEVER redesign, recolor, simplify, or artistically reinterpret the product. If the product looks even slightly different from the reference, the output is WRONG. Priority #2: The person's face must be identical to the reference.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
