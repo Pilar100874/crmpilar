@@ -2306,7 +2306,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           systemMessage += dimensionInstruction;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model,
+            model: gatewayModel,
             messages: [
               { role: "system", content: systemMessage },
               { role: "user", content },
