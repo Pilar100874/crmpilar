@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images, Square, FolderPlus, Folder, FolderOpen, ChevronLeft } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images, Square, FolderPlus, Folder, FolderOpen, ChevronLeft, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
@@ -34,6 +34,7 @@ import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel, { getStudioDefaults } from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
+import VisualIdentityPanel from './VisualIdentityPanel';
 import ExecutionLogPanel from './ExecutionLogPanel';
 import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
@@ -93,6 +94,7 @@ const AICreativeStudioInner: React.FC = () => {
   
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [showVisualIdentity, setShowVisualIdentity] = useState(false);
   const [pendingPreset, setPendingPreset] = useState<Preset | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -1244,6 +1246,10 @@ const AICreativeStudioInner: React.FC = () => {
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Galeria
               </Button>
+              <Button onClick={() => setShowVisualIdentity(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
+                <Palette className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                Identidade Visual
+              </Button>
             </div>
           </motion.div>
 
@@ -1415,6 +1421,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
         <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
+        <VisualIdentityPanel open={showVisualIdentity} onClose={() => setShowVisualIdentity(false)} />
 
         {/* Delete workflow confirm */}
         <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
@@ -1554,6 +1561,13 @@ const AICreativeStudioInner: React.FC = () => {
           <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="h-7 w-7 sm:hidden shrink-0" title="Identidade Visual">
+            <Palette className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Palette className="h-3.5 w-3.5" />
+            Identidade Visual
           </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
@@ -1725,6 +1739,7 @@ const AICreativeStudioInner: React.FC = () => {
       
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
+      <VisualIdentityPanel open={showVisualIdentity} onClose={() => setShowVisualIdentity(false)} />
 
 
       {/* New Workflow Dialog */}

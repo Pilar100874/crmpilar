@@ -4,6 +4,7 @@ import { StudioNode, StudioEdge, StudioNodeData, StudioNodeType } from './types'
 import { nodeResultStore } from './useNodeResults';
 import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
+import { getActiveVisualIdentityImages } from './VisualIdentityPanel';
 
 export interface ExecutionLogEntry {
   nodeId: string;
@@ -802,6 +803,16 @@ export function useStudioExecution() {
         // Inject language instruction into image prompt
         enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
 
+        // Inject visual identity references if active
+        const viImages = await getActiveVisualIdentityImages(imgEstabId);
+        if (viImages.length > 0) {
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding em toda a imagem gerada.`;
+          for (const viUrl of viImages) {
+            orderedImageInputs.push(viUrl);
+            orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+          }
+        }
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: config.model,
@@ -859,12 +870,24 @@ export function useStudioExecution() {
           fullPrompt = `${fullPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA:\nReferências de ambiente afetam APENAS o fundo, NUNCA o produto, pessoa ou roupa.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         fullPrompt = `${fullPrompt}\n\n[IDIOMA] Todos os textos na imagem devem estar ${compLangSuffix}.`;
+        
+        // Inject visual identity for compose
+        const viComposeId = localStorage.getItem('estabelecimentoId') || '';
+        const viComposeImages = await getActiveVisualIdentityImages(viComposeId);
+        if (viComposeImages.length > 0) {
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais da marca para manter consistência de estilo.`;
+          for (const viUrl of viComposeImages) {
+            orderedImageInputs.push(viUrl);
+            orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+          }
+        }
+
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
-          estabelecimentoId: localStorage.getItem('estabelecimentoId') || undefined,
+          estabelecimentoId: viComposeId || undefined,
         });
         return result;
       }
@@ -1031,8 +1054,19 @@ export function useStudioExecution() {
         // Inject language instruction into video prompt
         videoPrompt = `${videoPrompt}\n\n[IDIOMA] Todos os textos, legendas, narrações e elementos textuais no vídeo devem estar ${vidLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
         }
-        
-        // === PAID / AUTO VIDEO MODEL PATH ===
+
+        // Inject visual identity references for video generation
+        {
+          const viEstabId = localStorage.getItem('estabelecimentoId') || '';
+          const viImagesVideo = await getActiveVisualIdentityImages(viEstabId);
+          if (viImagesVideo.length > 0) {
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding no vídeo gerado.`;
+            for (const viUrl of viImagesVideo) {
+              orderedImageInputs.push(viUrl);
+              orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+            }
+          }
+        }
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
         const effectiveVideoModel = videoModel === 'free/gif-animated' ? 'auto' : videoModel;
         {
