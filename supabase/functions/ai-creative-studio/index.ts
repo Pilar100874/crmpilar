@@ -1029,22 +1029,27 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     // Build content: subject images first, then prompt
     const editContent: any[] = [];
     
+    // When strict refs exist, do NOT send brand identity images as visual inputs — they confuse the model
+    // Only send strict refs (product, influencer, logo, clothing) as actual images
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       const role = imageRoles[i] || 'REFERENCE';
       if (!url) continue;
       
+      // Skip brand identity reference images when we have strict refs — they override the product
+      if (role === 'BRAND IDENTITY REFERENCE') {
+        continue;
+      }
+      
       // Send image
-      if (url.startsWith('http')) {
-        editContent.push({ type: "image_url", image_url: { url } });
-      } else if (url.startsWith('data:')) {
+      if (url.startsWith('http') || url.startsWith('data:')) {
         editContent.push({ type: "image_url", image_url: { url } });
       } else {
         continue;
       }
       
       if (strictRoles.includes(role)) {
-        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output.` });
+        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output. DO NOT modify, redesign, recolor, or alter this in ANY way.` });
       } else {
         editContent.push({ type: "text", text: `↑ ${role} — use for style/background inspiration only.` });
       }
