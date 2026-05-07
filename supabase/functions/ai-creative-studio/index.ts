@@ -1896,21 +1896,32 @@ Deno.serve(async (req) => {
         }
 
         // === WaveSpeed Image: route to wavespeed-proxy ===
+        // IMPORTANT: WaveSpeed is TEXT-TO-IMAGE only — it does NOT accept reference images.
+        // When strict references exist (product/influencer), we MUST skip WaveSpeed and use 
+        // the Lovable AI Gateway which supports image editing with actual reference inputs.
         if (model.startsWith("wavespeed/")) {
-          const estabId = params.estabelecimentoId || params.estabelecimento_id;
-          if (!estabId) {
-            return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para WaveSpeed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          }
-          try {
-            const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
-            // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
-            if (result.wavespeedTaskId) {
-              return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          const wsStrictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+          const hasStrictRefs = refImages.length > 0 && refImages.some((_, i) => wsStrictRoles.includes(imageRoles[i] || ''));
+          
+          if (hasStrictRefs) {
+            console.log(`[generate_image] WaveSpeed model requested but ${refImages.length} strict reference images found — redirecting to Lovable AI Gateway for proper image compositing`);
+            // Fall through to Lovable AI Gateway path below which handles reference images properly
+          } else {
+            const estabId = params.estabelecimentoId || params.estabelecimento_id;
+            if (!estabId) {
+              return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para WaveSpeed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
-            return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          } catch (err: any) {
-            console.error("[wavespeed-image] Error:", err.message);
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            try {
+              const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
+              // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
+              if (result.wavespeedTaskId) {
+                return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              }
+              return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            } catch (err: any) {
+              console.error("[wavespeed-image] Error:", err.message);
+              return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
           }
         }
 
@@ -2201,6 +2212,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         }
 
         // === SINGLE IMAGE MODE (non-carousel/grid presets) ===
+        // If model was wavespeed/* but we fell through due to strict refs, remap to a Gateway-compatible image model
+        const gatewayModel = model.startsWith("wavespeed/") ? "google/gemini-2.5-flash-image" : model;
         let dimensionInstruction = '';
         if (imageSize) {
           const [iw, ih] = imageSize.split('x').map(Number);
@@ -2266,7 +2279,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const editSystemPrompt = `You are a professional photo compositor specializing in product placement. Your ABSOLUTE #1 RULE that overrides everything else: The PRODUCT must be a LITERAL COPY-PASTE from the reference photo. You are NOT generating a new product — you are PLACING the existing product photo into a new scene. The packaging, label, text, colors, logo, typography, shape, material, cap, lid, and every visual detail must be EXACTLY IDENTICAL to the reference. You must NEVER: redesign the packaging, change any text on the label, alter colors, simplify details, add or remove elements, or artistically reinterpret any part of the product. If preserving the product exactly means the composition is less "artistic", that is CORRECT — fidelity to the product reference is MORE important than artistic quality. Priority #2: The person's face must be identical to the reference.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model,
+            model: gatewayModel,
             messages: [
               { role: "system", content: editSystemPrompt },
               { role: "user", content: editContent },
@@ -2293,7 +2306,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           systemMessage += dimensionInstruction;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model,
+            model: gatewayModel,
             messages: [
               { role: "system", content: systemMessage },
               { role: "user", content },
