@@ -30,7 +30,27 @@ interface VisualIdentityData {
   preferred_model: string;
 }
 
-const MAX_IMAGES = 10;
+const VI_IMAGE_MODELS = [
+  { value: '', label: 'Usar modelo do bloco (padrão)' },
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image' },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image' },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4' },
+  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3' },
+  { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo' },
+  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3' },
+  { value: 'midjourney/v7', label: '🔵 Midjourney v7' },
+  { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro' },
+  { value: 'flux/schnell', label: '⚡ Flux Schnell' },
+  { value: 'ideogram/v3', label: '🎨 Ideogram v3' },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image' },
+  { value: 'apiframe/midjourney', label: '⚡ AF: Midjourney' },
+  { value: 'wavespeed/gpt-image-2', label: '🌊 WS: GPT Image 2' },
+  { value: 'wavespeed/flux-pro', label: '🌊 WS: Flux Pro' },
+  { value: 'wavespeed/seedream-3', label: '🌊 WS: Seedream 3' },
+  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1' },
+];
+
+
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
   const [data, setData] = useState<VisualIdentityData>({
