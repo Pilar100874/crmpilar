@@ -1679,27 +1679,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
                        
-                       // Download source image
-                       const blob = await downloadAsBlob(activeResult.imageUrl);
-                       const bmp = await createImageBitmap(blob);
-                       
-                       // Always calculate crop from actual image dimensions and target aspect ratio
-                       // This handles cases where AI returns non-square images
-                       const panoAspectRatio = targetW / targetH;
-                       let cropY: number, cropH: number;
-                       // The safe zone is the center horizontal strip whose aspect matches the panoramic target
-                       // cropH = image width / panoramic aspect ratio (how tall the strip should be)
-                       cropH = Math.round(bmp.width / panoAspectRatio);
-                       if (cropH > bmp.height) cropH = bmp.height;
-                       cropY = Math.round((bmp.height - cropH) / 2);
-                       
-                       const canvas = document.createElement('canvas');
-                       canvas.width = targetW;
-                       canvas.height = targetH;
-                       const ctx = canvas.getContext('2d')!;
-                       // Draw the safe zone strip stretched to fill the panoramic canvas
-                       ctx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
-                       bmp.close();
+                        // Download source image
+                        const blob = await downloadAsBlob(activeResult.imageUrl);
+                        const bmp = await createImageBitmap(blob);
+                        
+                        // Scale the panoramic image directly to target dimensions
+                        // The image was generated at the panoramic aspect ratio, so just scale it
+                        const canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        const ctx = canvas.getContext('2d')!;
+                        
+                        // Fill with white background first (for any gaps)
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, targetW, targetH);
+                        
+                        // Calculate scaling to fit the image within target dimensions preserving aspect ratio
+                        const imgAspect = bmp.width / bmp.height;
+                        const targetAspect = targetW / targetH;
+                        
+                        let drawW: number, drawH: number, drawX: number, drawY: number;
+                        if (imgAspect >= targetAspect) {
+                          // Image is wider or same — fit by width
+                          drawW = targetW;
+                          drawH = Math.round(targetW / imgAspect);
+                          drawX = 0;
+                          drawY = Math.round((targetH - drawH) / 2);
+                        } else {
+                          // Image is taller — fit by height
+                          drawH = targetH;
+                          drawW = Math.round(targetH * imgAspect);
+                          drawX = Math.round((targetW - drawW) / 2);
+                          drawY = 0;
+                        }
+                        
+                        ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
+                        bmp.close();
                        
                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
                        if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
