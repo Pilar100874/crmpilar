@@ -1702,9 +1702,7 @@ Generate a WIDE PANORAMIC image (aspect ratio approximately ${aspectRatio}:1). D
               originalTotalSlides: totalSlides,
               originalGridCols: gridCols,
               originalGridRows: gridRows,
-              safeZoneMode: true,
-              safeZoneTopPct: safeTopPct,
-              safeZoneHeightPct: safeHPct,
+              wideMode: true,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
