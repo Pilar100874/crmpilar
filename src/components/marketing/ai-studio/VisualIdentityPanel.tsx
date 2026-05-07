@@ -48,6 +48,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           id: row.id,
           is_active: row.is_active,
           name: row.name || 'Identidade Visual',
+          prompt: row.prompt || '',
           images: Array.isArray(row.images) ? row.images as string[] : [],
         });
       }
