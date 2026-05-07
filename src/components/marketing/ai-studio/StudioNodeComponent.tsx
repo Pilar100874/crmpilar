@@ -1788,8 +1788,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                    <Download className="h-3.5 w-3.5" />
                    Baixar Cortado por Slides
                  </button>
-               </div>
-           )}
+                </div>
+              );
+            })()}
 
            {/* Independent carousel slides */}
            {activeResult?.carouselMode === 'independent' && activeResult?.slideImages?.length > 0 && (
