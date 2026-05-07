@@ -1605,32 +1605,26 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate 1080x1080 with safe-zone, crop on frontend ===
+        // === PANORAMIC MODE: Generate at panoramic aspect ratio directly ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
           const [fullW, fullH] = imageSize.split('x').map(Number);
           const aspectRatio = fullW / fullH; // e.g. 5400/1080 = 5
-          // Safe zone: the center horizontal strip in a 1080x1080 image
-          // safeH = 1080 / aspectRatio  (e.g. 1080/5 = 216px)
-          const genSize = 1080;
-          const safeH = Math.round(genSize / aspectRatio);
-          const safeTopPct = Math.round(((genSize - safeH) / 2 / genSize) * 100);
-          const safeBotPct = 100 - safeTopPct;
-          const safeHPct = Math.round((safeH / genSize) * 100);
           
-          console.log(`[generate_image] PANORAMIC SAFE-ZONE MODE — 1080x1080, safe band ${safeH}px (${safeHPct}% center), target ${fullW}x${fullH}`);
+          console.log(`[generate_image] PANORAMIC DIRECT MODE — generating at ${aspectRatio}:1 aspect ratio, target ${fullW}x${fullH}`);
           
           const basePrompt = params.prompt as string;
           
-          const safeZonePrompt = `${basePrompt}
+          const panoramicPrompt = `${basePrompt}
 
-CRITICAL COMPOSITION RULE: This image will be cropped to a WIDE PANORAMIC format (${fullW}x${fullH}, ratio ${aspectRatio}:1).
-Place ALL important content (subjects, text, objects, focal points) ONLY in the CENTER HORIZONTAL BAND between ${safeTopPct}% and ${safeBotPct}% of the image height.
-The top ${safeTopPct}% and bottom ${safeTopPct}% will be CROPPED AWAY — use those areas ONLY for simple, expendable background (sky, gradient, blurred scenery).
+CRITICAL FORMAT RULE: Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1 (width is ${aspectRatio} times the height).
+The image MUST be very wide and short — like a cinematic widescreen banner.
+DO NOT generate a square image. The width must be much larger than the height.
 
-REFERENCE IMAGE PRESERVATION RULE: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED inside the safe center band. Do NOT cut off any part of the reference subjects — show them head-to-toe (for people) or in full (for products/logos). Scale them down if needed so they fit entirely within the center ${safeHPct}% strip WITHOUT any part being cropped.
+COMPOSITION: Distribute all important content (subjects, text, objects, focal points) across the FULL WIDTH of the panoramic image.
+All subjects must be FULLY VISIBLE and UNCROPPED — show people head-to-toe, products in full, logos complete.
+Use the entire horizontal space effectively for a panoramic composition.
 
-Think of a WIDE CINEMATIC LANDSCAPE — the action happens in the middle strip.
-Generate a 1:1 SQUARE image (1080x1080px).`;
+REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED. Scale them proportionally to fit the panoramic height WITHOUT cropping any part.`;
 
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
