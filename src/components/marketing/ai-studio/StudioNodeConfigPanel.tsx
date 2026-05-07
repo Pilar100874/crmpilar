@@ -549,6 +549,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
   const [viActive, setViActive] = useState(false);
+  const [viPreferredModel, setViPreferredModel] = useState<string | null>(null);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   useEffect(() => {
