@@ -1640,12 +1640,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-           {/* Panoramic single wide image */}
+           {/* Panoramic segments or single wide image */}
            {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (
               <div className="px-3 pb-3 pt-1 space-y-2">
                 <p className="text-[10px] font-semibold text-muted-foreground text-center">
                   🖼️ Panorâmica {activeResult.originalTotalSlides ? `— ${activeResult.originalTotalSlides} slides` : ''}
+                  {(activeResult as any).segmentMode ? ` (${activeResult.slideImages?.length || 1} segmentos)` : ''}
                 </p>
+                {/* Preview: show segments side by side */}
                 <div 
                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
                   style={{ 
@@ -1656,7 +1658,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   }}
                   onClick={() => setImageExpanded(!imageExpanded)}
                 >
-                  <img src={activeResult.imageUrl} alt="Panorâmica" className="w-full h-full object-contain" loading="eager" />
+                  {(activeResult as any).segmentMode && activeResult.slideImages && activeResult.slideImages.length > 1 ? (
+                    <div className="flex h-full w-full">
+                      {activeResult.slideImages.map((url: string, idx: number) => (
+                        <img key={idx} src={url} alt={`Segmento ${idx + 1}`} className="h-full flex-1 object-cover" style={{ minWidth: 0 }} loading="eager" />
+                      ))}
+                    </div>
+                  ) : (
+                    <img src={activeResult.imageUrl} alt="Panorâmica" className="w-full h-full object-contain" loading="eager" />
+                  )}
                 </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
@@ -1666,40 +1676,38 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                      try {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
-                       const blob = await downloadAsBlob(activeResult.imageUrl);
-                       const bmp = await createImageBitmap(blob);
+                       const segments = activeResult.slideImages || [];
+                       const isSegmentMode = !!(activeResult as any).segmentMode && segments.length > 1;
                        
-                       // If dimensions differ from target, resize via canvas
-                       if (targetW && targetH && (bmp.width !== targetW || bmp.height !== targetH)) {
+                       if (isSegmentMode) {
+                         // Stitch multiple segments into one panoramic canvas
+                         const segBlobs = await Promise.all(segments.map((url: string) => downloadAsBlob(url)));
+                         const segBmps = await Promise.all(segBlobs.map((b: Blob) => createImageBitmap(b)));
+                         
                          const canvas = document.createElement('canvas');
                          canvas.width = targetW;
                          canvas.height = targetH;
-                          const ctx = canvas.getContext('2d')!;
-                          // Cover-fit: maintain aspect ratio, crop excess
-                          const srcAspect = bmp.width / bmp.height;
-                          const dstAspect = targetW / targetH;
-                          let sx = 0, sy = 0, sw = bmp.width, sh = bmp.height;
-                          if (srcAspect > dstAspect) {
-                            // Source wider — crop sides
-                            sw = Math.round(bmp.height * dstAspect);
-                            sx = Math.round((bmp.width - sw) / 2);
-                          } else {
-                            // Source taller — crop top/bottom
-                            sh = Math.round(bmp.width / dstAspect);
-                            sy = Math.round((bmp.height - sh) / 2);
-                          }
-                          ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, targetW, targetH);
-                         bmp.close();
-                         const resizedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
-                         if (!resizedBlob) throw new Error('Falha ao redimensionar');
-                         const url = URL.createObjectURL(resizedBlob);
+                         const ctx = canvas.getContext('2d')!;
+                         
+                         const segWidth = targetW / segBmps.length;
+                         for (let i = 0; i < segBmps.length; i++) {
+                           const bmp = segBmps[i];
+                           // Draw each segment into its slot, scaling to fit
+                           ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, segWidth * i, 0, segWidth, targetH);
+                           bmp.close();
+                         }
+                         
+                         const stitchedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+                         if (!stitchedBlob) throw new Error('Falha ao costurar segmentos');
+                         const url = URL.createObjectURL(stitchedBlob);
                          const link = document.createElement('a');
                          link.href = url;
                          link.download = `panoramic_${targetW}x${targetH}.png`;
                          link.click();
                          URL.revokeObjectURL(url);
                        } else {
-                         bmp.close();
+                         // Single image mode — download directly
+                         const blob = await downloadAsBlob(activeResult.imageUrl);
                          const url = URL.createObjectURL(blob);
                          const link = document.createElement('a');
                          link.href = url;
