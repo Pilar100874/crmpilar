@@ -1640,36 +1640,50 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-           {/* Panoramic safe-zone crop preview */}
-           {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (
-              <div className="px-3 pb-3 pt-1 space-y-2">
-                <p className="text-[10px] font-semibold text-muted-foreground text-center">
-                  🖼️ Panorâmica {activeResult.slideWidth}x{activeResult.slideHeight}
-                  {(activeResult as any).safeZoneMode ? ' (zona segura)' : ''}
-                </p>
-                 {/* Preview: show full image without distortion, scaled down to fit */}
-                 <div 
-                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer flex items-center justify-center"
-                   style={{ 
-                     boxShadow: `0 4px 20px -4px ${accent}20`,
-                     maxHeight: imageExpanded ? 500 : 260,
-                     width: '100%',
-                     backgroundColor: 'hsl(var(--muted))',
-                   }}
-                   onClick={() => setImageExpanded(!imageExpanded)}
-                 >
-                   <img 
-                     src={activeResult.imageUrl} 
-                     alt="Panorâmica" 
-                     style={{ 
-                       width: '100%',
-                       height: 'auto',
-                       objectFit: 'contain',
-                       maxHeight: imageExpanded ? 500 : 260,
-                     }} 
-                     loading="eager" 
-                   />
-                 </div>
+            {/* Panoramic safe-zone crop preview — shows cropped final format */}
+            {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (() => {
+              const panoW = activeResult.slideWidth || 1;
+              const panoH = activeResult.slideHeight || 1;
+              const panoAspect = panoW / panoH; // e.g. 5 for 5400x1080
+              // The generated image is 1080x1080 square. The safe zone is the center strip.
+              // To preview as the final panoramic, we use object-fit:cover with the panoramic aspect ratio.
+              // cropPercent = percentage of height to show (center strip)
+              const cropPct = (1 / panoAspect) * 100; // e.g. 20% for 5:1
+              const cropTopPct = (100 - cropPct) / 2;
+              return (
+               <div className="px-3 pb-3 pt-1 space-y-2">
+                 <p className="text-[10px] font-semibold text-muted-foreground text-center">
+                   🖼️ Panorâmica {panoW}x{panoH}
+                   {(activeResult as any).safeZoneMode ? ` (zona segura ${Math.round(cropPct)}%)` : ''}
+                 </p>
+                  {/* Preview: show cropped center strip in panoramic aspect ratio */}
+                  <div 
+                    className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
+                    style={{ 
+                      boxShadow: `0 4px 20px -4px ${accent}20`,
+                      width: '100%',
+                      position: 'relative',
+                      // Use padding-bottom to maintain the panoramic aspect ratio
+                      paddingBottom: `${(panoH / panoW) * 100}%`,
+                      backgroundColor: 'hsl(var(--muted))',
+                    }}
+                    onClick={() => setImageExpanded(!imageExpanded)}
+                  >
+                    <img 
+                      src={activeResult.imageUrl} 
+                      alt="Panorâmica" 
+                      style={{ 
+                        position: 'absolute',
+                        top: `-${cropTopPct}%`,
+                        left: 0,
+                        width: '100%',
+                        height: `${panoAspect * 100}%`,
+                        objectFit: 'cover',
+                        objectPosition: 'center center',
+                      }} 
+                      loading="eager" 
+                    />
+                  </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -1774,8 +1788,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                    <Download className="h-3.5 w-3.5" />
                    Baixar Cortado por Slides
                  </button>
-               </div>
-           )}
+                </div>
+              );
+            })()}
 
            {/* Independent carousel slides */}
            {activeResult?.carouselMode === 'independent' && activeResult?.slideImages?.length > 0 && (
