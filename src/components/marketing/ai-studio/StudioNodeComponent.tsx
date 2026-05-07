@@ -1674,8 +1674,21 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                          const canvas = document.createElement('canvas');
                          canvas.width = targetW;
                          canvas.height = targetH;
-                         const ctx = canvas.getContext('2d')!;
-                         ctx.drawImage(bmp, 0, 0, targetW, targetH);
+                          const ctx = canvas.getContext('2d')!;
+                          // Cover-fit: maintain aspect ratio, crop excess
+                          const srcAspect = bmp.width / bmp.height;
+                          const dstAspect = targetW / targetH;
+                          let sx = 0, sy = 0, sw = bmp.width, sh = bmp.height;
+                          if (srcAspect > dstAspect) {
+                            // Source wider — crop sides
+                            sw = Math.round(bmp.height * dstAspect);
+                            sx = Math.round((bmp.width - sw) / 2);
+                          } else {
+                            // Source taller — crop top/bottom
+                            sh = Math.round(bmp.width / dstAspect);
+                            sy = Math.round((bmp.height - sh) / 2);
+                          }
+                          ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, targetW, targetH);
                          bmp.close();
                          const resizedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
                          if (!resizedBlob) throw new Error('Falha ao redimensionar');
