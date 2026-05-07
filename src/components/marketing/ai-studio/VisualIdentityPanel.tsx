@@ -49,7 +49,7 @@ const VI_IMAGE_MODELS = [
   { value: 'wavespeed/seedream-3', label: '🌊 WS: Seedream 3' },
   { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1' },
 ];
-
+const MAX_IMAGES = 10;
 
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
