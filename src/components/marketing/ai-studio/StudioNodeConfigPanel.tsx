@@ -549,6 +549,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
   const [viActive, setViActive] = useState(false);
+  const [viPreferredModel, setViPreferredModel] = useState<string | null>(null);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   useEffect(() => {
@@ -579,7 +580,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
       // Check if Visual Identity is active
       const vi = await getActiveVisualIdentity(estabId);
-      if (mounted) setViActive(!!vi);
+      if (mounted) {
+        setViActive(!!vi);
+        setViPreferredModel(vi?.preferredModel || null);
+      }
     })();
 
     return () => {
@@ -1041,9 +1045,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               );
             })()}
             <ConfigField label="Modelo de Imagem">
+              {viActive && viPreferredModel ? (
+                <div className="mt-1 space-y-1">
+                  <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                    <Palette className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                    <span className="text-[11px] text-amber-300">
+                      Usando modelo da Identidade Visual: <strong>{IMAGE_MODELS.find(m => m.value === viPreferredModel)?.label || viPreferredModel}</strong>
+                    </span>
+                  </div>
+                </div>
+              ) : (
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
                 update('model', v);
-                if (currentImgPreset !== 'custom') return; // don't override preset size
+                if (currentImgPreset !== 'custom') return;
                 if (v.startsWith('google/')) {
                   update('imageSize', '1024x1024');
                   update('quality', 'standard');
@@ -1083,6 +1097,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
+              )}
             </ConfigField>
             {node.data.type === 'imageEdit' && (
               <ConfigField label="Instrução de Edição">
