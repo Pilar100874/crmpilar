@@ -2279,7 +2279,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const editSystemPrompt = `You are a professional photo compositor specializing in product placement. Your ABSOLUTE #1 RULE that overrides everything else: The PRODUCT must be a LITERAL COPY-PASTE from the reference photo. You are NOT generating a new product — you are PLACING the existing product photo into a new scene. The packaging, label, text, colors, logo, typography, shape, material, cap, lid, and every visual detail must be EXACTLY IDENTICAL to the reference. You must NEVER: redesign the packaging, change any text on the label, alter colors, simplify details, add or remove elements, or artistically reinterpret any part of the product. If preserving the product exactly means the composition is less "artistic", that is CORRECT — fidelity to the product reference is MORE important than artistic quality. Priority #2: The person's face must be identical to the reference.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model,
+            model: gatewayModel,
             messages: [
               { role: "system", content: editSystemPrompt },
               { role: "user", content: editContent },
