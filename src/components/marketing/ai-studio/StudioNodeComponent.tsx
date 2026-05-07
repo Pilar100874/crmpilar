@@ -1737,16 +1737,24 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                         const blob = await downloadAsBlob(activeResult.imageUrl);
                         const bmp = await createImageBitmap(blob);
                         
-                        const aspectRatio = targetW / targetH;
-                        const cropH = Math.round(bmp.width / aspectRatio);
-                        const cropY = Math.round((bmp.height - cropH) / 2);
-                        
-                        // Create full panoramic canvas first
-                        const fullCanvas = document.createElement('canvas');
-                        fullCanvas.width = targetW;
-                        fullCanvas.height = targetH;
-                        const fullCtx = fullCanvas.getContext('2d')!;
-                        fullCtx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
+                         // Fit the generated image into target dimensions (same logic as panoramic download)
+                         const srcAspect = bmp.width / bmp.height;
+                         const tgtAspect = targetW / targetH;
+                         let sx = 0, sy = 0, sw = bmp.width, sh = bmp.height;
+                         if (srcAspect > tgtAspect) {
+                           sw = Math.round(bmp.height * tgtAspect);
+                           sx = Math.round((bmp.width - sw) / 2);
+                         } else {
+                           sh = Math.round(bmp.width / tgtAspect);
+                           sy = Math.round((bmp.height - sh) / 2);
+                         }
+                         
+                         // Create full panoramic canvas first
+                         const fullCanvas = document.createElement('canvas');
+                         fullCanvas.width = targetW;
+                         fullCanvas.height = targetH;
+                         const fullCtx = fullCanvas.getContext('2d')!;
+                         fullCtx.drawImage(bmp, sx, sy, sw, sh, 0, 0, targetW, targetH);
                         bmp.close();
                         
                         // Calculate number of slides (square slides based on height)
