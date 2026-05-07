@@ -811,6 +811,7 @@ export function useStudioExecution() {
           imagePlatformPreset: imgPresetKey || undefined,
           carouselMode: config.carouselMode || 'panoramic',
           panoramicStyle: config.panoramicStyle || 'classic',
+          estabelecimentoId: imgEstabId || undefined,
         });
         return result;
       }
@@ -863,6 +864,7 @@ export function useStudioExecution() {
           model: config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+          estabelecimentoId: localStorage.getItem('estabelecimentoId') || undefined,
         });
         return result;
       }

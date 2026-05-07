@@ -1420,14 +1420,69 @@ const SUPPORTED_LLM_MODELS = [
 
 const SUPPORTED_IMAGE_MODELS = [
   "google/gemini-2.5-flash-image", "google/gemini-3-pro-image-preview",
+  "chatgpt_image/gpt-image-1", "chatgpt_image/dall-e-3",
 ];
 
 function validateModel(model: string, type: "llm" | "image"): string {
   const supported = type === "image" ? SUPPORTED_IMAGE_MODELS : SUPPORTED_LLM_MODELS;
+  // Also allow chatgpt_image models to pass through
+  if (supported.includes(model) || model.startsWith("chatgpt_image/")) return model;
   if (supported.includes(model)) return model;
   // Fallback to default
   console.warn(`Unsupported model "${model}" for ${type}, using default`);
   return type === "image" ? "google/gemini-2.5-flash-image" : "google/gemini-3-flash-preview";
+}
+
+// Helper: generate image via OpenAI Images API (for chatgpt_image provider)
+async function generateImageChatGPT(apiKey: string, prompt: string, model: string, size?: string): Promise<{ imageUrl: string; text: string }> {
+  // Map model names
+  const openaiModel = model === "chatgpt_image/gpt-image-1" ? "gpt-image-1" : "dall-e-3";
+  
+  // Determine size
+  let openaiSize = "1024x1024";
+  if (size) {
+    const [w, h] = size.split("x").map(Number);
+    if (w && h) {
+      const ratio = w / h;
+      if (ratio > 1.3) openaiSize = "1792x1024";
+      else if (ratio < 0.77) openaiSize = "1024x1792";
+    }
+  }
+
+  console.log(`[chatgpt_image] Calling OpenAI Images API: model=${openaiModel}, size=${openaiSize}`);
+
+  const resp = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: openaiModel,
+      prompt,
+      n: 1,
+      size: openaiSize,
+      response_format: "b64_json",
+    }),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    console.error(`[chatgpt_image] OpenAI API error ${resp.status}:`, errText);
+    throw new Error(`OpenAI Images API error: ${resp.status} - ${errText.substring(0, 200)}`);
+  }
+
+  const result = await resp.json();
+  const b64 = result.data?.[0]?.b64_json;
+  if (!b64) throw new Error("No image returned from OpenAI");
+
+  let imageUrl = `data:image/png;base64,${b64}`;
+  
+  // Upload to storage
+  const publicUrl = await uploadBase64ToStorage(imageUrl);
+  if (publicUrl) imageUrl = publicUrl;
+
+  return { imageUrl, text: result.data?.[0]?.revised_prompt || "" };
 }
 
 // Max ~500KB base64 per image to support product composite reference images
@@ -1479,7 +1534,25 @@ Deno.serve(async (req) => {
         const imagePlatformPreset = (params.imagePlatformPreset || '') as string;
         const carouselMode = (params.carouselMode || 'panoramic') as string;
 
-        // Determine if this is a multi-slide preset
+        // === ChatGPT Image Creator: route to OpenAI API with user's own key ===
+        if (model.startsWith("chatgpt_image/")) {
+          const estabId = params.estabelecimentoId || params.estabelecimento_id;
+          if (!estabId) {
+            return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para ChatGPT Image" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          const chatgptKey = await fetchApiKey(estabId, "chatgpt_image");
+          if (!chatgptKey) {
+            return new Response(JSON.stringify({ error: "Chave da API ChatGPT Image não configurada. Vá em Configurações > APIs e configure sua chave OpenAI para o ChatGPT Criador de Imagens." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          try {
+            const result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
+            return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } catch (err: any) {
+            console.error("[chatgpt_image] Error:", err.message);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
         const isGrid = imagePlatformPreset.startsWith('ig-grid-');
         const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
         let totalSlides = 1;
