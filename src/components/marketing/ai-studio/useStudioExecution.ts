@@ -644,9 +644,13 @@ export function useStudioExecution() {
         
         let enrichedPrompt = combinedInput || 'Uma cena bonita';
 
-        // Inject imageStyle into the prompt
+        // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
+        const viCheck = await getActiveVisualIdentity(imgEstabId);
+        const viIsActive = !!(viCheck && (viCheck.images.length > 0 || viCheck.prompt));
+
+        // Inject imageStyle into the prompt (only when VI is NOT active)
         const imageStyleValue = config.imageStyle || 'natural';
-        if (imageStyleValue && imageStyleValue !== 'natural') {
+        if (!viIsActive && imageStyleValue && imageStyleValue !== 'natural') {
           const imageStyleMap: Record<string, string> = {
             'vivid': 'Vivid, highly saturated colors with bold contrast.',
             'anime': 'Anime / Manga art style with cel-shading and stylized features.',
