@@ -93,6 +93,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         use_prompt: newData.use_prompt,
         use_images: newData.use_images,
         selected_images: newData.selected_images,
+        preferred_model: newData.preferred_model || null,
       };
 
       if (newData.id) {
