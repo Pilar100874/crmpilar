@@ -357,21 +357,35 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
 
 export default VisualIdentityPanel;
 
-// Helper to fetch active visual identity images (used by useStudioExecution)
-export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {
-  if (!estabelecimentoId) return [];
+// Helper to fetch active visual identity data (used by useStudioExecution)
+export interface VisualIdentityResult {
+  images: string[];
+  prompt: string;
+}
+
+export async function getActiveVisualIdentity(estabelecimentoId: string): Promise<VisualIdentityResult | null> {
+  if (!estabelecimentoId) return null;
   try {
     const { data } = await supabase
       .from('studio_visual_identity')
-      .select('is_active, images')
+      .select('is_active, images, prompt')
       .eq('estabelecimento_id', estabelecimentoId)
       .eq('is_active', true)
       .maybeSingle();
-    if (data && Array.isArray(data.images)) {
-      return data.images as string[];
+    if (data) {
+      return {
+        images: Array.isArray(data.images) ? data.images as string[] : [],
+        prompt: (data.prompt as string) || '',
+      };
     }
   } catch (err) {
     console.error('[VisualIdentity] Error fetching:', err);
   }
-  return [];
+  return null;
+}
+
+// Legacy helper (backwards compat)
+export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {
+  const vi = await getActiveVisualIdentity(estabelecimentoId);
+  return vi?.images || [];
 }
