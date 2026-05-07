@@ -98,6 +98,31 @@ export const UNIFIED_PROVIDERS: UnifiedProvider[] = [
       { action: 'Ideogram v2', credits: '2' },
     ],
   },
+  {
+    id: 'wavespeed',
+    name: 'WaveSpeed',
+    icon: '🌊',
+    description: 'API unificada com 700+ modelos: Flux, Kling, Veo, Luma, Seedance, Minimax, GPT Image e mais. Ultra-rápido.',
+    website: 'https://wavespeed.ai/accesskey',
+    keyPlaceholder: 'YOUR_WAVESPEED_KEY',
+    coveredModelPrefixes: ['wavespeed/'],
+    availableModels: [
+      { category: '🎨 Imagem', models: ['Flux Dev/Schnell/Pro', 'GPT Image 2', 'Nano Banana 2', 'Seedream 3.0', 'Recraft V3', 'Stable Diffusion 3.5', 'Ideogram v3', 'Kolors'] },
+      { category: '🎬 Vídeo', models: ['Seedance 2.0', 'Kling 2.1', 'Wan 2.1', 'Veo 3', 'Luma Ray 2', 'Minimax Video', 'Hunyuan Video', 'CogVideoX', 'LTX Video'] },
+      { category: '🔊 Áudio', models: ['Spark TTS', 'Kokoro TTS', 'Dia TTS'] },
+    ],
+    creditsTable: [
+      { action: 'Flux Schnell', credits: '$0.003' },
+      { action: 'Flux Dev', credits: '$0.025' },
+      { action: 'GPT Image 2', credits: '$0.04' },
+      { action: 'Seedance 2.0 (img2vid)', credits: '$0.54' },
+      { action: 'Kling 2.1 (5s)', credits: '$0.35' },
+      { action: 'Wan 2.1 (5s)', credits: '$0.20' },
+      { action: 'Veo 3 (8s)', credits: '$0.50' },
+      { action: 'Luma Ray 2', credits: '$0.30' },
+      { action: 'Nano Banana 2', credits: '$0.02' },
+    ],
+  },
 ];
 
 // Storage key for active unified provider

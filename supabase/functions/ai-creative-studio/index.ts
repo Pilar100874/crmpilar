@@ -1003,9 +1003,238 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
   return { videoUrl, provider: "apiframe" };
 }
 
+// --- WaveSpeed video generation ---
+// Model mapping: wavespeed/model-name → WaveSpeed API path
+const WAVESPEED_VIDEO_MODEL_MAP: Record<string, string> = {
+  "seedance-2.0": "bytedance/seedance-2.0/image-to-video",
+  "kling-2.1": "kuaishou/kling/v2.1/image-to-video",
+  "wan-2.1": "alibaba/wan-2.1/image-to-video",
+  "veo-3": "google/veo-3/text-to-video",
+  "luma-ray-2": "luma/ray-2/image-to-video",
+  "minimax-video": "minimax/video-01/image-to-video",
+  "hunyuan-video": "tencent/hunyuan-video/image-to-video",
+  "cogvideox": "zhipu/cogvideox/image-to-video",
+  "ltx-video": "lightricks/ltx-video/image-to-video",
+};
+
+// Image model mapping for wavespeed
+const WAVESPEED_IMAGE_MODEL_MAP: Record<string, string> = {
+  "flux-dev": "wavespeed-ai/flux-dev",
+  "flux-schnell": "wavespeed-ai/flux-schnell",
+  "flux-pro": "wavespeed-ai/flux-pro",
+  "gpt-image-2": "openai/gpt-image-2",
+  "nano-banana-2": "wavespeed-ai/nano-banana-2",
+  "seedream-3": "bytedance/seedream-3.0",
+  "recraft-v3": "recraft/v3",
+  "sd3.5-turbo": "stabilityai/sd3.5-turbo",
+  "ideogram-v3": "ideogram/v3",
+  "kolors": "kwai/kolors",
+};
+
+async function startVideoWavespeed(estabelecimentoId: string, params: any): Promise<{ taskId?: string; videoUrl?: string; error?: string }> {
+  const model = (params.model as string) || "";
+  const subModel = model.replace("wavespeed/", "");
+  const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
+  if (!wsModelPath) {
+    return { error: `Modelo "${subModel}" não está mapeado no WaveSpeed. Modelos suportados: ${Object.keys(WAVESPEED_VIDEO_MODEL_MAP).join(', ')}` };
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) {
+    return { error: "Configuração do servidor incompleta." };
+  }
+
+  const wsParams: Record<string, any> = {
+    model: wsModelPath,
+    prompt: params.prompt || "",
+  };
+
+  const startImageUrl = params.imageUrls?.[0] || null;
+  if (startImageUrl) {
+    wsParams.image = startImageUrl;
+  }
+
+  // Truncate prompt for video models
+  if (wsParams.prompt.length > 500) {
+    wsParams.prompt = wsParams.prompt.substring(0, 500);
+  }
+
+  if (params.aspectRatio) wsParams.aspect_ratio = params.aspectRatio;
+  if (params.duration) wsParams.duration = Number(params.duration) || 5;
+
+  console.log(`[wavespeed-video] Submitting: model=${wsModelPath}, hasImage=${!!startImageUrl}`);
+
+  const proxyUrl = `${supabaseUrl}/functions/v1/wavespeed-proxy`;
+  const resp = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ action: "generate", estabelecimentoId, params: wsParams }),
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || data?.error) {
+    return { error: data?.error || `Erro WaveSpeed (${resp.status})` };
+  }
+
+  if (data.status === "completed" && data.videoUrl) {
+    const videoResp = await fetch(data.videoUrl);
+    const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+    const storedUrl = await uploadVideoToStorage(videoBytes);
+    return { videoUrl: storedUrl || data.videoUrl };
+  }
+
+  if (data.taskId) {
+    console.log(`[wavespeed-video] Task started: ${data.taskId}`);
+    return { taskId: data.taskId };
+  }
+
+  return { error: "WaveSpeed não retornou taskId nem videoUrl." };
+}
+
+async function fetchVideoWavespeed(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string }> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) {
+    return { done: true, error: "Configuração do servidor incompleta." };
+  }
+
+  const proxyUrl = `${supabaseUrl}/functions/v1/wavespeed-proxy`;
+  const resp = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: taskId } }),
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || data?.error) {
+    return { done: true, error: data?.error || `Falha ao consultar tarefa WaveSpeed (${resp.status}).` };
+  }
+
+  if (data.status === "completed") {
+    const url = data.videoUrl || data.imageUrl || data.outputs?.[0];
+    if (url) {
+      const videoResp = await fetch(url);
+      const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+      const storedUrl = await uploadVideoToStorage(videoBytes);
+      return { done: true, videoUrl: storedUrl || url };
+    }
+    return { done: true, error: "WaveSpeed concluiu mas não retornou URL." };
+  }
+
+  if (data.status === "failed") {
+    return { done: true, error: data.error || "Geração falhou no WaveSpeed." };
+  }
+
+  return { done: false };
+}
+
+async function generateVideoWavespeed(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
+  const started = await startVideoWavespeed(estabelecimentoId, params);
+  if (started.error) return { error: started.error };
+  if (started.videoUrl) return { videoUrl: started.videoUrl, provider: "wavespeed" };
+  if (!started.taskId) return { error: "WaveSpeed não retornou task_id." };
+
+  const videoUrl = await pollUntilDone<string>(async () => {
+    const poll = await fetchVideoWavespeed(estabelecimentoId, started.taskId!);
+    if (poll.error) return { done: true, error: poll.error };
+    if (poll.done && poll.videoUrl) return { done: true, result: poll.videoUrl };
+    return { done: false };
+  }, 5000, 120);
+
+  return { videoUrl, provider: "wavespeed" };
+}
+
+// --- WaveSpeed image generation (async via proxy) ---
+async function generateImageWavespeed(estabelecimentoId: string, prompt: string, model: string, size?: string): Promise<{ imageUrl: string; text: string }> {
+  const subModel = model.replace("wavespeed/", "");
+  const wsModelPath = WAVESPEED_IMAGE_MODEL_MAP[subModel];
+  if (!wsModelPath) {
+    throw new Error(`Modelo de imagem "${subModel}" não está mapeado no WaveSpeed.`);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Configuração do servidor incompleta.");
+  }
+
+  const wsParams: Record<string, any> = {
+    model: wsModelPath,
+    prompt,
+  };
+
+  if (size) {
+    const [w, h] = size.split("x").map(Number);
+    if (w && h) {
+      wsParams.width = w;
+      wsParams.height = h;
+    }
+  }
+
+  console.log(`[wavespeed-image] Submitting: model=${wsModelPath}, promptLen=${prompt.length}`);
+
+  const proxyUrl = `${supabaseUrl}/functions/v1/wavespeed-proxy`;
+  const resp = await fetch(proxyUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ action: "generate", estabelecimentoId, params: wsParams }),
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || data?.error) {
+    throw new Error(data?.error || `Erro WaveSpeed (${resp.status})`);
+  }
+
+  // Sync response
+  if (data.status === "completed" && (data.imageUrl || data.outputs?.[0])) {
+    let imageUrl = data.imageUrl || data.outputs[0];
+    const publicUrl = await uploadBase64ToStorage(imageUrl);
+    if (publicUrl) imageUrl = publicUrl;
+    return { imageUrl, text: "" };
+  }
+
+  // Async: poll
+  if (data.taskId) {
+    const imageUrl = await pollUntilDone<string>(async () => {
+      const pollResp = await fetch(proxyUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: data.taskId } }),
+      });
+      const pollData = await pollResp.json().catch(() => ({}));
+      if (pollData.status === "completed") {
+        const url = pollData.imageUrl || pollData.outputs?.[0];
+        if (url) return { done: true, result: url };
+        return { done: true, error: "WaveSpeed completou sem URL da imagem." };
+      }
+      if (pollData.status === "failed") {
+        return { done: true, error: pollData.error || "Geração falhou." };
+      }
+      return { done: false };
+    }, 3000, 60);
+
+    return { imageUrl, text: "" };
+  }
+
+  throw new Error("WaveSpeed não retornou resultado nem taskId.");
+}
+
 // --- Generic handler for unsupported providers ---
 async function generateVideoUnsupported(model: string): Promise<VideoGenerationResult> {
-  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma, Stability, Replicate ou Apiframe.` };
+  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma, Stability, Replicate, Apiframe ou WaveSpeed.` };
 }
 
 // Pre-generate a "hero frame" compositing product/influencer into the scene
@@ -1346,6 +1575,7 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     case "stability": return generateVideoStability(apiKey, params);
     case "replicate": return generateVideoReplicate(apiKey, params);
     case "apiframe": return generateVideoApiframe(estabelecimentoId, params);
+    case "wavespeed": return generateVideoWavespeed(estabelecimentoId, params);
     case "pika":
     case "minimax":
     case "bytedance":
@@ -1437,7 +1667,7 @@ const SUPPORTED_IMAGE_MODELS = [
 function validateModel(model: string, type: "llm" | "image"): string {
   const supported = type === "image" ? SUPPORTED_IMAGE_MODELS : SUPPORTED_LLM_MODELS;
   // Also allow chatgpt_image models to pass through
-  if (supported.includes(model) || model.startsWith("chatgpt_image/")) return model;
+  if (supported.includes(model) || model.startsWith("chatgpt_image/") || model.startsWith("wavespeed/")) return model;
   if (supported.includes(model)) return model;
   // Fallback to default
   console.warn(`Unsupported model "${model}" for ${type}, using default`);
@@ -1666,7 +1896,21 @@ Deno.serve(async (req) => {
           }
         }
 
-        const isGrid = imagePlatformPreset.startsWith('ig-grid-');
+        // === WaveSpeed Image: route to wavespeed-proxy ===
+        if (model.startsWith("wavespeed/")) {
+          const estabId = params.estabelecimentoId || params.estabelecimento_id;
+          if (!estabId) {
+            return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para WaveSpeed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          try {
+            const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
+            return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } catch (err: any) {
+            console.error("[wavespeed-image] Error:", err.message);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
         const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
         let totalSlides = 1;
         let slideW = 0;
@@ -2222,6 +2466,21 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
       case "fetch_apiframe_video": {
         const result = await fetchVideoApiframe(params.estabelecimentoId, params.taskId);
+        return new Response(JSON.stringify({ result }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "start_wavespeed_video": {
+        const estabId = params.estabelecimentoId;
+        const started = await startVideoWavespeed(estabId, params);
+        return new Response(JSON.stringify({ result: started }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "fetch_wavespeed_video": {
+        const result = await fetchVideoWavespeed(params.estabelecimentoId, params.taskId);
         return new Response(JSON.stringify({ result }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

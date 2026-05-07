@@ -159,7 +159,14 @@ export function useStudioExecution() {
   });
 
   const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
-    const started = await callStudio('start_apiframe_video', params, 60000);
+    // Detect provider from model prefix
+    const model = params.model || '';
+    const isWavespeed = model.startsWith('wavespeed/');
+    const startAction = isWavespeed ? 'start_wavespeed_video' : 'start_apiframe_video';
+    const fetchAction = isWavespeed ? 'fetch_wavespeed_video' : 'fetch_apiframe_video';
+    const providerName = isWavespeed ? 'wavespeed' : 'apiframe';
+
+    const started = await callStudio(startAction, params, 60000);
 
     if (started?.error) {
       throw new Error(started.error);
@@ -179,7 +186,7 @@ export function useStudioExecution() {
     for (let attempt = 0; attempt < totalPolls; attempt += 1) {
       await waitForStudioDelay(5000);
 
-      const pollResult = await callStudio('fetch_apiframe_video', {
+      const pollResult = await callStudio(fetchAction, {
         estabelecimentoId: params.estabelecimentoId,
         taskId,
       }, 60000);
@@ -192,7 +199,7 @@ export function useStudioExecution() {
         return {
           videoUrl: pollResult.videoUrl,
           thumbnailUrl: pollResult.thumbnailUrl || started?.thumbnailUrl,
-          provider: pollResult.provider || started?.provider || 'apiframe',
+          provider: pollResult.provider || started?.provider || providerName,
           providerVideoId: pollResult.providerVideoId || started?.providerVideoId,
         };
       }
@@ -1107,7 +1114,7 @@ export function useStudioExecution() {
               estabelecimentoId: estabId,
             };
 
-            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/');
+            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/');
             const result = usesAsyncVideoTask
               ? await generateAsyncStudioVideo(videoRequestParams)
               : await callStudio('generate_video', videoRequestParams, 300000);
