@@ -1770,12 +1770,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           
                           const slideBlob = await new Promise<Blob | null>((resolve) => slideCanvas.toBlob(resolve, 'image/png', 1));
                           if (!slideBlob) continue;
-                          const url = URL.createObjectURL(slideBlob);
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `slide_${i + 1}_${slideSize}x${slideSize}.png`;
-                          link.click();
-                          URL.revokeObjectURL(url);
+                           const url = URL.createObjectURL(slideBlob);
+                           const link = document.createElement('a');
+                           link.href = url;
+                           link.download = `slide_${i + 1}_${slideSize}x${slideSize}.png`;
+                           link.style.display = 'none';
+                           document.body.appendChild(link);
+                           link.click();
+                           document.body.removeChild(link);
+                           setTimeout(() => URL.revokeObjectURL(url), 5000);
                           await new Promise(r => setTimeout(r, 400));
                         }
                         
