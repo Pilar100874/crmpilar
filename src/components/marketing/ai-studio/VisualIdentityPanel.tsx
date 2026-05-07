@@ -306,6 +306,37 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   />
                 </div>
 
+                {/* Preferred Model */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Modelo Preferido</Label>
+                  </div>
+                  <Select
+                    value={data.preferred_model || '_default'}
+                    onValueChange={(val) => {
+                      const newData = { ...data, preferred_model: val === '_default' ? '' : val };
+                      setData(newData);
+                      save(newData);
+                    }}
+                    disabled={saving || !data.is_active}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Usar modelo do bloco (padrão)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VI_IMAGE_MODELS.map((m) => (
+                        <SelectItem key={m.value || '_default'} value={m.value || '_default'}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Quando definido, este modelo será usado automaticamente em todas as gerações de imagem com a identidade visual ativa.
+                  </p>
+                </div>
+
                 {/* Prompt Section with Toggle */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
