@@ -12648,7 +12648,10 @@ export type Database = {
           is_active: boolean
           name: string | null
           prompt: string | null
+          selected_images: Json
           updated_at: string
+          use_images: boolean
+          use_prompt: boolean
         }
         Insert: {
           created_at?: string
@@ -12658,7 +12661,10 @@ export type Database = {
           is_active?: boolean
           name?: string | null
           prompt?: string | null
+          selected_images?: Json
           updated_at?: string
+          use_images?: boolean
+          use_prompt?: boolean
         }
         Update: {
           created_at?: string
@@ -12668,7 +12674,10 @@ export type Database = {
           is_active?: boolean
           name?: string | null
           prompt?: string | null
+          selected_images?: Json
           updated_at?: string
+          use_images?: boolean
+          use_prompt?: boolean
         }
         Relationships: []
       }
