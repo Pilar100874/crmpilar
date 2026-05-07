@@ -803,6 +803,16 @@ export function useStudioExecution() {
         // Inject language instruction into image prompt
         enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
 
+        // Inject visual identity references if active
+        const viImages = await getActiveVisualIdentityImages(imgEstabId);
+        if (viImages.length > 0) {
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding em toda a imagem gerada.`;
+          for (const viUrl of viImages) {
+            orderedImageInputs.push(viUrl);
+            orderedImageRoles.push('BRAND IDENTITY REFERENCE');
+          }
+        }
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: config.model,
