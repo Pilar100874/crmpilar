@@ -814,8 +814,8 @@ export function useStudioExecution() {
         // Inject language instruction into image prompt
         enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
 
-        // Inject visual identity references if active
-        const vi = await getActiveVisualIdentity(imgEstabId);
+        // Inject visual identity references if active (reuse viCheck from above)
+        const vi = viCheck;
         if (vi && (vi.images.length > 0 || vi.prompt)) {
           const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
           enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}`;
