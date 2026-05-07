@@ -1639,15 +1639,15 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const role = imageRoles[i] || 'REFERENCE';
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY — do NOT crop any part. Scale down if needed to fit entirely within center ${safeHPct}% band.` });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY — do NOT crop any part. Scale proportionally to fit the panoramic height.` });
               }
             }
-            editContent.push({ type: "text", text: safeZonePrompt });
+            editContent.push({ type: "text", text: panoramicPrompt });
             
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) in the center ${safeHPct}% horizontal band. Scale subjects down if necessary so nothing is cut off. Top and bottom areas should be simple background. Generate a 1:1 square image.` },
+                { role: "system", content: `You are a professional photo compositor. Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1. The image must be very wide and short. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products). DO NOT generate a square image.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1661,12 +1661,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
                 content.push({ type: "text", text: `[${imageRoles[i] || 'REFERENCE'}]` });
               }
             }
-            content.push({ type: "text", text: safeZonePrompt });
+            content.push({ type: "text", text: panoramicPrompt });
             
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are an image generator. Create a square 1080x1080 image where ALL important content (including reference subjects like products, people, logos) is concentrated FULLY VISIBLE and UNCROPPED in the center ${safeHPct}% horizontal strip. Scale subjects down if needed — never crop them. The top and bottom edges are expendable background.` },
+                { role: "system", content: `You are an image generator. Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1. The image must be very wide and short — like a cinematic widescreen banner. ALL important content must be FULLY VISIBLE and UNCROPPED. DO NOT generate a square image.` },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
