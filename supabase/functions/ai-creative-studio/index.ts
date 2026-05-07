@@ -2212,6 +2212,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         }
 
         // === SINGLE IMAGE MODE (non-carousel/grid presets) ===
+        // If model was wavespeed/* but we fell through due to strict refs, remap to a Gateway-compatible image model
+        const gatewayModel = model.startsWith("wavespeed/") ? "google/gemini-2.5-flash-image" : model;
         let dimensionInstruction = '';
         if (imageSize) {
           const [iw, ih] = imageSize.split('x').map(Number);
