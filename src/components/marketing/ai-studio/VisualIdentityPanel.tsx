@@ -66,6 +66,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           use_prompt: row.use_prompt ?? true,
           use_images: row.use_images ?? true,
           selected_images: selected,
+          preferred_model: (row as any).preferred_model || '',
         });
       }
     } catch (err) {
