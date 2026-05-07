@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, StudioEdge, getNodeMeta, StudioNodeType } from './types';
 import { useNodeResult } from './useNodeResults';
+import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw, AlertTriangle } from 'lucide-react';
+import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw, AlertTriangle, Palette } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
