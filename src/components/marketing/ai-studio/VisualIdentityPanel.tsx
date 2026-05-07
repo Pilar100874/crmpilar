@@ -26,6 +26,7 @@ interface VisualIdentityData {
   use_prompt: boolean;
   use_images: boolean;
   selected_images: number[];
+  preferred_model: string;
 }
 
 const MAX_IMAGES = 10;
