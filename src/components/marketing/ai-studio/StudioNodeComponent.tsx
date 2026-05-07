@@ -1686,19 +1686,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
                        
-                       // Download source image and crop center strip
+                       // Download source image
                        const blob = await downloadAsBlob(activeResult.imageUrl);
                        const bmp = await createImageBitmap(blob);
                        
-                       const aspectRatio = targetW / targetH;
-                       const cropH = Math.round(bmp.width / aspectRatio);
-                       const cropY = Math.round((bmp.height - cropH) / 2);
+                       // Use safeZone percentages from backend if available, otherwise calculate
+                       const safeTopPct = (activeResult as any).safeZoneTopPct;
+                       const safeHPct = (activeResult as any).safeZoneHeightPct;
+                       let cropY: number, cropH: number;
+                       if (typeof safeTopPct === 'number' && typeof safeHPct === 'number') {
+                         cropY = Math.round(bmp.height * safeTopPct / 100);
+                         cropH = Math.round(bmp.height * safeHPct / 100);
+                       } else {
+                         const aspectRatio = targetW / targetH;
+                         cropH = Math.round(bmp.height / aspectRatio);
+                         cropY = Math.round((bmp.height - cropH) / 2);
+                       }
                        
                        const canvas = document.createElement('canvas');
                        canvas.width = targetW;
                        canvas.height = targetH;
                        const ctx = canvas.getContext('2d')!;
-                       ctx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
+                       // Draw the safe zone strip stretched to fill the panoramic canvas
+                       ctx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
                        bmp.close();
                        
                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
