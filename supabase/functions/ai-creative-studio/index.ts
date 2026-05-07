@@ -1746,7 +1746,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Generate a SQUARE 1080x1080 image. Place ALL important content within a horizontal strip in the center of the image (from ${safeZoneTopPct}% to ${safeZoneTopPct + safeZoneHeightPct}% of the height). The top and bottom areas outside this strip should be simple background only. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) within this strip.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo. NEVER redesign or modify the product. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
