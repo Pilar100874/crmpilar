@@ -613,11 +613,8 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
   }
   return null;
 }
-  } catch (err) {
-    console.error('[VisualIdentity] Error fetching:', err);
-  }
-  return null;
-}
+
+
 
 // Legacy helper (backwards compat)
 export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {
