@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const resp = await fetch(`${WAVESPEED_BASE}/predictions/${taskId}`, {
+      const resp = await fetch(`${WAVESPEED_BASE}/predictions/${taskId}/result`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${apiKey}`,
