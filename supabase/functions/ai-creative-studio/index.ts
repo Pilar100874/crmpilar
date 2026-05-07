@@ -1444,7 +1444,97 @@ function validateModel(model: string, type: "llm" | "image"): string {
   return type === "image" ? "google/gemini-2.5-flash-image" : "google/gemini-3-flash-preview";
 }
 
-// Helper: generate image via OpenAI Images API (for chatgpt_image provider)
+// Helper: edit image via OpenAI Images Edit API (for chatgpt_image provider with reference images)
+async function editImageChatGPT(apiKey: string, prompt: string, model: string, imageUrls: string[], imageRoles: string[], size?: string): Promise<{ imageUrl: string; text: string }> {
+  const openaiModel = model === "chatgpt_image/gpt-image-1" ? "gpt-image-1" : "dall-e-3";
+  
+  let openaiSize: string = "1024x1024";
+  if (size) {
+    const [w, h] = size.split("x").map(Number);
+    if (w && h) {
+      const ratio = w / h;
+      if (ratio > 1.3) openaiSize = "1792x1024";
+      else if (ratio < 0.77) openaiSize = "1024x1792";
+    }
+  }
+
+  // Build priority-sorted images array: Product first, then Influencer, skip brand identity
+  const priorityOrder: Record<string, number> = {
+    'PRODUCT - DO NOT MODIFY': 1,
+    'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+    'LOGO - DO NOT MODIFY': 3,
+    'CLOTHING - DO NOT MODIFY': 4,
+  };
+  
+  const entries: { url: string; role: string; priority: number }[] = [];
+  for (let i = 0; i < imageUrls.length; i++) {
+    const url = imageUrls[i];
+    const role = imageRoles[i] || 'REFERENCE';
+    if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+    if (!url.startsWith('http')) continue;
+    entries.push({ url, role, priority: priorityOrder[role] || 99 });
+  }
+  entries.sort((a, b) => a.priority - b.priority);
+
+  // Build images array for OpenAI edit endpoint
+  const images = entries.map(e => ({ type: "image_url" as const, image_url: e.url }));
+  
+  // Build enriched prompt with priority instructions
+  const maxLen = openaiModel === "dall-e-3" ? 4000 : 32000;
+  let editPrompt = prompt;
+  
+  // Add priority context
+  const productEntries = entries.filter(e => e.role === 'PRODUCT - DO NOT MODIFY');
+  const personEntries = entries.filter(e => e.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
+  
+  let priorityPrefix = '';
+  if (productEntries.length > 0) {
+    priorityPrefix += `\n\n⚠️ PRIORITY #1 — PRODUCT: The first image is the REAL product. Copy it EXACTLY into the scene — same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE operation.`;
+  }
+  if (personEntries.length > 0) {
+    priorityPrefix += `\n\n⚠️ PRIORITY #2 — PERSON: Reproduce the person's EXACT face, skin tone, hair, features identically.`;
+  }
+  
+  editPrompt = editPrompt + priorityPrefix;
+  if (editPrompt.length > maxLen) editPrompt = editPrompt.substring(0, maxLen);
+
+  console.log(`[chatgpt_image_edit] Calling OpenAI Images Edit API: model=${openaiModel}, size=${openaiSize}, images=${images.length}, promptLen=${editPrompt.length}`);
+
+  const body: any = {
+    model: openaiModel,
+    prompt: editPrompt,
+    images,
+    size: openaiSize,
+    quality: "high",
+  };
+
+  const resp = await fetch("https://api.openai.com/v1/images/edits", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    console.error(`[chatgpt_image_edit] OpenAI API error ${resp.status}:`, errText);
+    throw new Error(`OpenAI Images Edit API error: ${resp.status} - ${errText.substring(0, 200)}`);
+  }
+
+  const result = await resp.json();
+  const b64 = result.data?.[0]?.b64_json;
+  if (!b64) throw new Error("No image returned from OpenAI Edit");
+
+  let imageUrl = `data:image/png;base64,${b64}`;
+  const publicUrl = await uploadBase64ToStorage(imageUrl);
+  if (publicUrl) imageUrl = publicUrl;
+
+  return { imageUrl, text: result.data?.[0]?.revised_prompt || "" };
+}
+
+// Helper: generate image via OpenAI Images API (for chatgpt_image provider, no reference images)
 async function generateImageChatGPT(apiKey: string, prompt: string, model: string, size?: string): Promise<{ imageUrl: string; text: string }> {
   // Map model names
   const openaiModel = model === "chatgpt_image/gpt-image-1" ? "gpt-image-1" : "dall-e-3";
