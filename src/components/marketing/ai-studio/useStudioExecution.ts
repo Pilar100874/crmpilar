@@ -874,10 +874,11 @@ export function useStudioExecution() {
         
         // Inject visual identity for compose
         const viComposeId = localStorage.getItem('estabelecimentoId') || '';
-        const viComposeImages = await getActiveVisualIdentityImages(viComposeId);
-        if (viComposeImages.length > 0) {
-          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais da marca para manter consistência de estilo.`;
-          for (const viUrl of viComposeImages) {
+        const viCompose = await getActiveVisualIdentity(viComposeId);
+        if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
+          const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.${viPText}`;
+          for (const viUrl of viCompose.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
           }
