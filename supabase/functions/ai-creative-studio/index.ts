@@ -1611,7 +1611,7 @@ Deno.serve(async (req) => {
           console.log(`[generate_image] PANORAMIC MODE — generating SINGLE image at ${fullW}x${fullH}px, will slice into ${totalSlides} slides of ${slideW}x${slideH}px`);
           
           const basePrompt = params.prompt as string;
-          const panoramicDimInstruction = `\n\nOUTPUT FORMAT: Generate EXACTLY ONE SINGLE image at ${fullW}x${fullH} pixels. This is a WIDE PANORAMIC image. Fill the ENTIRE ${fullW}x${fullH} canvas. Do NOT generate multiple images. Do NOT add black bars or padding.`;
+          const panoramicDimInstruction = `\n\nOUTPUT FORMAT: Generate EXACTLY ONE SINGLE SEAMLESS CONTINUOUS image at ${fullW}x${fullH} pixels. This is a WIDE PANORAMIC image — like a single photograph taken with a panoramic camera. The scene MUST flow continuously from left edge to right edge with NO visible cuts, NO frames, NO borders, NO card-like overlays, NO collage effects, and NO split panels. The entire ${fullW}x${fullH} canvas must be ONE unified, uninterrupted scene. Do NOT generate multiple images or compose separate frames together.`;
           
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
@@ -1633,7 +1633,7 @@ Deno.serve(async (req) => {
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE PANORAMIC image. Preserve all reference subjects IDENTICALLY." + panoramicDimInstruction },
+                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene with no cuts, frames, borders, or collage effects. The subject must appear naturally within the scene, not in separate overlaid frames. Preserve all reference subjects IDENTICALLY but integrate them naturally into ONE continuous composition." + panoramicDimInstruction },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1651,7 +1651,7 @@ Deno.serve(async (req) => {
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: "You are an image generator. Create a SINGLE WIDE PANORAMIC image." + panoramicDimInstruction },
+                { role: "system", content: "You are an image generator. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene like a panoramic photograph. NO cuts, NO frames, NO borders, NO collage effects, NO card overlays. The entire canvas must be ONE uninterrupted scene." + panoramicDimInstruction },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
