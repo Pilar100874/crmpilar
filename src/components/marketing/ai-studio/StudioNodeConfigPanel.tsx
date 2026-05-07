@@ -1097,14 +1097,21 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             )}
             <SectionTitle>Estilo & Tamanho</SectionTitle>
             <ConfigField label="Estilo Visual">
-              <Select value={config.imageStyle || 'natural'} onValueChange={(v) => update('imageStyle', v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {IMAGE_STYLES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {viActive ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                  <Palette className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span className="text-[11px] text-amber-300">Desativado — Identidade Visual ativa</span>
+                </div>
+              ) : (
+                <Select value={config.imageStyle || 'natural'} onValueChange={(v) => update('imageStyle', v)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_STYLES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </ConfigField>
             <ConfigField label="Tamanho">
               {currentImgPreset !== 'custom' ? (
