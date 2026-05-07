@@ -19,6 +19,7 @@ interface VisualIdentityData {
   id?: string;
   is_active: boolean;
   name: string;
+  prompt: string;
   images: string[];
 }
 
