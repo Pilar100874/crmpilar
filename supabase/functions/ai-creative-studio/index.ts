@@ -1019,16 +1019,16 @@ const WAVESPEED_VIDEO_MODEL_MAP: Record<string, string> = {
 
 // Image model mapping for wavespeed
 const WAVESPEED_IMAGE_MODEL_MAP: Record<string, string> = {
-  "flux-dev": "wavespeed-ai/flux-dev",
-  "flux-schnell": "wavespeed-ai/flux-schnell",
-  "flux-pro": "wavespeed-ai/flux-pro",
-  "gpt-image-2": "openai/gpt-image-2",
-  "nano-banana-2": "wavespeed-ai/nano-banana-2",
-  "seedream-3": "bytedance/seedream-3.0",
-  "recraft-v3": "recraft/v3",
-  "sd3.5-turbo": "stabilityai/sd3.5-turbo",
-  "ideogram-v3": "ideogram/v3",
-  "kolors": "kwai/kolors",
+  "flux-dev": "wavespeed-ai/flux-dev/text-to-image",
+  "flux-schnell": "wavespeed-ai/flux-schnell/text-to-image",
+  "flux-pro": "wavespeed-ai/flux-pro/text-to-image",
+  "gpt-image-2": "openai/gpt-image-2/text-to-image",
+  "nano-banana-2": "wavespeed-ai/nano-banana-2/text-to-image",
+  "seedream-3": "bytedance/seedream-3.0/text-to-image",
+  "recraft-v3": "recraft/v3/text-to-image",
+  "sd3.5-turbo": "stabilityai/sd3.5-turbo/text-to-image",
+  "ideogram-v3": "ideogram/v3/text-to-image",
+  "kolors": "kwai/kolors/text-to-image",
 };
 
 async function startVideoWavespeed(estabelecimentoId: string, params: any): Promise<{ taskId?: string; videoUrl?: string; error?: string }> {
