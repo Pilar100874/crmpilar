@@ -899,7 +899,7 @@ export function useStudioExecution() {
 
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
-          model: config.model || 'google/gemini-2.5-flash-image',
+          model: (viCompose?.preferredModel) || config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           estabelecimentoId: viComposeId || undefined,
