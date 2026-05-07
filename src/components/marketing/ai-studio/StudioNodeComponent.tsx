@@ -1677,58 +1677,50 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                      e.stopPropagation();
                      try {
                        const targetW = activeResult.slideWidth || 0;
-                       const targetH = activeResult.slideHeight || 0;
-                       
-                        // Download source image
-                        const blob = await downloadAsBlob(activeResult.imageUrl);
-                        const bmp = await createImageBitmap(blob);
+                        const targetH = activeResult.slideHeight || 0;
                         
-                        // Scale the panoramic image directly to target dimensions
-                        // The image was generated at the panoramic aspect ratio, so just scale it
-                        const canvas = document.createElement('canvas');
-                        canvas.width = targetW;
-                        canvas.height = targetH;
-                        const ctx = canvas.getContext('2d')!;
+                         const blob = await downloadAsBlob(activeResult.imageUrl);
+                         const bmp = await createImageBitmap(blob);
+                         
+                         // Extract the safe zone strip from the square image
+                         const safeTopPct = (activeResult as any).safeZoneTopPct;
+                         const safeHPct = (activeResult as any).safeZoneHeightPct;
+                         
+                         let cropY: number, cropH: number;
+                         if (typeof safeTopPct === 'number' && typeof safeHPct === 'number') {
+                           cropY = Math.round(bmp.height * safeTopPct / 100);
+                           cropH = Math.round(bmp.height * safeHPct / 100);
+                         } else {
+                           // Fallback: calculate from aspect ratio
+                           const aspectRatio = targetW / targetH;
+                           cropH = Math.round(bmp.width / aspectRatio);
+                           if (cropH > bmp.height) cropH = bmp.height;
+                           cropY = Math.round((bmp.height - cropH) / 2);
+                         }
+                         
+                         // Crop the strip and scale to panoramic dimensions
+                         const canvas = document.createElement('canvas');
+                         canvas.width = targetW;
+                         canvas.height = targetH;
+                         const ctx = canvas.getContext('2d')!;
+                         
+                         // Draw the cropped strip scaled to fill the panoramic canvas
+                         ctx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
+                         bmp.close();
                         
-                        // Fill with white background first (for any gaps)
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, targetW, targetH);
+                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+                        if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
+                         const url = URL.createObjectURL(croppedBlob);
+                         const link = document.createElement('a');
+                         link.href = url;
+                         link.download = `panoramic_${targetW}x${targetH}.png`;
+                         link.style.display = 'none';
+                         document.body.appendChild(link);
+                         link.click();
+                         document.body.removeChild(link);
+                         setTimeout(() => URL.revokeObjectURL(url), 5000);
                         
-                        // Calculate scaling to fit the image within target dimensions preserving aspect ratio
-                        const imgAspect = bmp.width / bmp.height;
-                        const targetAspect = targetW / targetH;
-                        
-                        let drawW: number, drawH: number, drawX: number, drawY: number;
-                        if (imgAspect >= targetAspect) {
-                          // Image is wider or same — fit by width
-                          drawW = targetW;
-                          drawH = Math.round(targetW / imgAspect);
-                          drawX = 0;
-                          drawY = Math.round((targetH - drawH) / 2);
-                        } else {
-                          // Image is taller — fit by height
-                          drawH = targetH;
-                          drawW = Math.round(targetH * imgAspect);
-                          drawX = Math.round((targetW - drawW) / 2);
-                          drawY = 0;
-                        }
-                        
-                        ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
-                        bmp.close();
-                       
-                       const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
-                       if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
-                        const url = URL.createObjectURL(croppedBlob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `panoramic_${targetW}x${targetH}.png`;
-                        link.style.display = 'none';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => URL.revokeObjectURL(url), 5000);
-                       
-                       toast.success(`✅ Imagem panorâmica ${targetW}x${targetH} baixada!`);
+                        toast.success(`✅ Imagem panorâmica ${targetW}x${targetH} baixada!`);
                      } catch (err) {
                        console.error('Download error:', err);
                        toast.error('Erro ao baixar imagem panorâmica');
