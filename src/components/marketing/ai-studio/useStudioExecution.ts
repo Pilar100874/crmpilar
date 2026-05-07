@@ -647,6 +647,8 @@ export function useStudioExecution() {
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
         const viIsActive = !!(viCheck && (viCheck.images.length > 0 || viCheck.prompt));
+        // If VI has a preferred model, override the block's model
+        const viModelOverride = viIsActive && viCheck?.preferredModel ? viCheck.preferredModel : null;
 
         // Inject imageStyle into the prompt (only when VI is NOT active)
         const imageStyleValue = config.imageStyle || 'natural';
