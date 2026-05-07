@@ -1640,14 +1640,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-           {/* Panoramic segments or single wide image */}
+           {/* Panoramic safe-zone crop preview */}
            {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (
               <div className="px-3 pb-3 pt-1 space-y-2">
                 <p className="text-[10px] font-semibold text-muted-foreground text-center">
-                  🖼️ Panorâmica {activeResult.originalTotalSlides ? `— ${activeResult.originalTotalSlides} slides` : ''}
-                  {(activeResult as any).segmentMode ? ` (${activeResult.slideImages?.length || 1} segmentos)` : ''}
+                  🖼️ Panorâmica {activeResult.slideWidth}x{activeResult.slideHeight}
+                  {(activeResult as any).safeZoneMode ? ' (zona segura)' : ''}
                 </p>
-                {/* Preview: show segments side by side */}
+                {/* Preview: show image cropped to center strip via CSS */}
                 <div 
                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
                   style={{ 
@@ -1658,15 +1658,31 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   }}
                   onClick={() => setImageExpanded(!imageExpanded)}
                 >
-                  {(activeResult as any).segmentMode && activeResult.slideImages && activeResult.slideImages.length > 1 ? (
-                    <div className="flex h-full w-full">
-                      {activeResult.slideImages.map((url: string, idx: number) => (
-                        <img key={idx} src={url} alt={`Segmento ${idx + 1}`} className="h-full flex-1 object-cover" style={{ minWidth: 0 }} loading="eager" />
-                      ))}
-                    </div>
-                  ) : (
-                    <img src={activeResult.imageUrl} alt="Panorâmica" className="w-full h-full object-contain" loading="eager" />
-                  )}
+                  {(() => {
+                    const tw = activeResult.slideWidth || 1;
+                    const th = activeResult.slideHeight || 1;
+                    const ratio = tw / th;
+                    // Scale factor: how much of the source height is visible
+                    // For 5:1 ratio from a square, visible = 1/5 = 20%
+                    const visiblePct = (1 / ratio) * 100;
+                    // Use object-fit:cover + scale to zoom into center strip
+                    return (
+                      <img 
+                        src={activeResult.imageUrl} 
+                        alt="Panorâmica" 
+                        className="w-full" 
+                        style={{ 
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center center',
+                          // Scale the image so only the center strip is visible
+                          transform: `scaleY(${ratio})`,
+                          transformOrigin: 'center center',
+                        }} 
+                        loading="eager" 
+                      />
+                    );
+                  })()}
                 </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
@@ -1676,45 +1692,31 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                      try {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
-                       const segments = activeResult.slideImages || [];
-                       const isSegmentMode = !!(activeResult as any).segmentMode && segments.length > 1;
                        
-                       if (isSegmentMode) {
-                         // Stitch multiple segments into one panoramic canvas
-                         const segBlobs = await Promise.all(segments.map((url: string) => downloadAsBlob(url)));
-                         const segBmps = await Promise.all(segBlobs.map((b: Blob) => createImageBitmap(b)));
-                         
-                         const canvas = document.createElement('canvas');
-                         canvas.width = targetW;
-                         canvas.height = targetH;
-                         const ctx = canvas.getContext('2d')!;
-                         
-                         const segWidth = targetW / segBmps.length;
-                         for (let i = 0; i < segBmps.length; i++) {
-                           const bmp = segBmps[i];
-                           // Draw each segment into its slot, scaling to fit
-                           ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, segWidth * i, 0, segWidth, targetH);
-                           bmp.close();
-                         }
-                         
-                         const stitchedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
-                         if (!stitchedBlob) throw new Error('Falha ao costurar segmentos');
-                         const url = URL.createObjectURL(stitchedBlob);
-                         const link = document.createElement('a');
-                         link.href = url;
-                         link.download = `panoramic_${targetW}x${targetH}.png`;
-                         link.click();
-                         URL.revokeObjectURL(url);
-                       } else {
-                         // Single image mode — download directly
-                         const blob = await downloadAsBlob(activeResult.imageUrl);
-                         const url = URL.createObjectURL(blob);
-                         const link = document.createElement('a');
-                         link.href = url;
-                         link.download = `panoramic_${targetW || 'full'}x${targetH || 'full'}.png`;
-                         link.click();
-                         URL.revokeObjectURL(url);
-                       }
+                       // Download source image and crop center strip
+                       const blob = await downloadAsBlob(activeResult.imageUrl);
+                       const bmp = await createImageBitmap(blob);
+                       
+                       const aspectRatio = targetW / targetH;
+                       const cropH = Math.round(bmp.width / aspectRatio);
+                       const cropY = Math.round((bmp.height - cropH) / 2);
+                       
+                       const canvas = document.createElement('canvas');
+                       canvas.width = targetW;
+                       canvas.height = targetH;
+                       const ctx = canvas.getContext('2d')!;
+                       ctx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
+                       bmp.close();
+                       
+                       const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+                       if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
+                       const url = URL.createObjectURL(croppedBlob);
+                       const link = document.createElement('a');
+                       link.href = url;
+                       link.download = `panoramic_${targetW}x${targetH}.png`;
+                       link.click();
+                       URL.revokeObjectURL(url);
+                       
                        toast.success(`✅ Imagem panorâmica ${targetW}x${targetH} baixada!`);
                      } catch (err) {
                        console.error('Download error:', err);
