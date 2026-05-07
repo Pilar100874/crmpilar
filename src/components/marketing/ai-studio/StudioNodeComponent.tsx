@@ -1709,12 +1709,15 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        
                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
                        if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
-                       const url = URL.createObjectURL(croppedBlob);
-                       const link = document.createElement('a');
-                       link.href = url;
-                       link.download = `panoramic_${targetW}x${targetH}.png`;
-                       link.click();
-                       URL.revokeObjectURL(url);
+                        const url = URL.createObjectURL(croppedBlob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `panoramic_${targetW}x${targetH}.png`;
+                        link.style.display = 'none';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(url), 5000);
                        
                        toast.success(`✅ Imagem panorâmica ${targetW}x${targetH} baixada!`);
                      } catch (err) {
