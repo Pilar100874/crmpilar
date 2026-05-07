@@ -580,7 +580,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
       // Check if Visual Identity is active
       const vi = await getActiveVisualIdentity(estabId);
-      if (mounted) setViActive(!!vi);
+      if (mounted) {
+        setViActive(!!vi);
+        setViPreferredModel(vi?.preferredModel || null);
+      }
     })();
 
     return () => {
