@@ -1926,6 +1926,7 @@ Deno.serve(async (req) => {
         }
 
         const isCarousel = imagePlatformPreset.startsWith('ig-carousel-');
+        const isGrid = imagePlatformPreset.startsWith('ig-grid-');
         let totalSlides = 1;
         let slideW = 0;
         let slideH = 0;
