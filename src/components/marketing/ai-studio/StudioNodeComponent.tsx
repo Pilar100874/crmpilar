@@ -1656,34 +1656,33 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                    🖼️ Panorâmica {panoW}x{panoH}
                    {(activeResult as any).safeZoneMode ? ` (zona segura ${Math.round(cropPct)}%)` : ''}
                  </p>
-                  {/* Preview: show cropped center strip in panoramic aspect ratio */}
-                  <div 
-                    className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
-                    style={{ 
-                      boxShadow: `0 4px 20px -4px ${accent}20`,
-                      width: '100%',
-                      position: 'relative',
-                      // Use padding-bottom to maintain the panoramic aspect ratio
-                      paddingBottom: `${(panoH / panoW) * 100}%`,
-                      backgroundColor: 'hsl(var(--muted))',
-                    }}
-                    onClick={() => setImageExpanded(!imageExpanded)}
-                  >
-                    <img 
-                      src={activeResult.imageUrl} 
-                      alt="Panorâmica" 
-                      style={{ 
-                        position: 'absolute',
-                        top: `-${cropTopPct}%`,
-                        left: 0,
-                        width: '100%',
-                        height: `${panoAspect * 100}%`,
-                        objectFit: 'cover',
-                        objectPosition: 'center center',
-                      }} 
-                      loading="eager" 
-                    />
-                  </div>
+                   {/* Preview: show cropped center strip in panoramic aspect ratio */}
+                   <div 
+                     className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
+                     style={{ 
+                       boxShadow: `0 4px 20px -4px ${accent}20`,
+                       width: '100%',
+                       aspectRatio: `${panoW} / ${panoH}`,
+                       backgroundColor: 'hsl(var(--muted))',
+                       position: 'relative',
+                     }}
+                     onClick={() => setImageExpanded(!imageExpanded)}
+                   >
+                     <img 
+                       src={activeResult.imageUrl} 
+                       alt="Panorâmica" 
+                       style={{ 
+                         position: 'absolute',
+                         left: 0,
+                         width: '100%',
+                         height: `${panoAspect * 100}%`,
+                         top: `${-cropTopPct}%`,
+                         objectFit: 'cover',
+                         objectPosition: 'center center',
+                       }} 
+                       loading="eager" 
+                     />
+                   </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
