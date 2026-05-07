@@ -804,10 +804,11 @@ export function useStudioExecution() {
         enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
 
         // Inject visual identity references if active
-        const viImages = await getActiveVisualIdentityImages(imgEstabId);
-        if (viImages.length > 0) {
-          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding em toda a imagem gerada.`;
-          for (const viUrl of viImages) {
+        const vi = await getActiveVisualIdentity(imgEstabId);
+        if (vi && (vi.images.length > 0 || vi.prompt)) {
+          const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.${viPromptText}`;
+          for (const viUrl of vi.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
           }
