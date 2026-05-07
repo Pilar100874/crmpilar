@@ -12647,6 +12647,7 @@ export type Database = {
           images: Json
           is_active: boolean
           name: string | null
+          preferred_model: string | null
           prompt: string | null
           selected_images: Json
           updated_at: string
@@ -12660,6 +12661,7 @@ export type Database = {
           images?: Json
           is_active?: boolean
           name?: string | null
+          preferred_model?: string | null
           prompt?: string | null
           selected_images?: Json
           updated_at?: string
@@ -12673,6 +12675,7 @@ export type Database = {
           images?: Json
           is_active?: boolean
           name?: string | null
+          preferred_model?: string | null
           prompt?: string | null
           selected_images?: Json
           updated_at?: string

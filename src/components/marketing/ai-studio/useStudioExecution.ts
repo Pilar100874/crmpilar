@@ -647,6 +647,8 @@ export function useStudioExecution() {
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
         const viIsActive = !!(viCheck && (viCheck.images.length > 0 || viCheck.prompt));
+        // If VI has a preferred model, override the block's model
+        const viModelOverride = viIsActive && viCheck?.preferredModel ? viCheck.preferredModel : null;
 
         // Inject imageStyle into the prompt (only when VI is NOT active)
         const imageStyleValue = config.imageStyle || 'natural';
@@ -827,7 +829,7 @@ export function useStudioExecution() {
 
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
-          model: config.model,
+          model: viModelOverride || config.model,
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           imageSize: cfgImageSize || undefined,
@@ -897,7 +899,7 @@ export function useStudioExecution() {
 
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
-          model: config.model || 'google/gemini-2.5-flash-image',
+          model: (viCompose?.preferredModel) || config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           estabelecimentoId: viComposeId || undefined,

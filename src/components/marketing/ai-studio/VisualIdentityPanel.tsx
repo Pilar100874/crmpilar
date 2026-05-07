@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, Upload, Trash2, Palette, Image as ImageIcon, Loader2, AlertCircle, Type, Images } from 'lucide-react';
+import { X, Upload, Trash2, Palette, Image as ImageIcon, Loader2, AlertCircle, Type, Images, Cpu } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
@@ -26,14 +27,35 @@ interface VisualIdentityData {
   use_prompt: boolean;
   use_images: boolean;
   selected_images: number[];
+  preferred_model: string;
 }
 
+const VI_IMAGE_MODELS = [
+  { value: '', label: 'Usar modelo do bloco (padrão)' },
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image' },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image' },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4' },
+  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3' },
+  { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo' },
+  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3' },
+  { value: 'midjourney/v7', label: '🔵 Midjourney v7' },
+  { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro' },
+  { value: 'flux/schnell', label: '⚡ Flux Schnell' },
+  { value: 'ideogram/v3', label: '🎨 Ideogram v3' },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image' },
+  { value: 'apiframe/midjourney', label: '⚡ AF: Midjourney' },
+  { value: 'wavespeed/gpt-image-2', label: '🌊 WS: GPT Image 2' },
+  { value: 'wavespeed/flux-pro', label: '🌊 WS: Flux Pro' },
+  { value: 'wavespeed/seedream-3', label: '🌊 WS: Seedream 3' },
+  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1' },
+];
 const MAX_IMAGES = 10;
+
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
   const [data, setData] = useState<VisualIdentityData>({
     is_active: false, name: 'Identidade Visual', prompt: '', images: [],
-    use_prompt: true, use_images: true, selected_images: [],
+    use_prompt: true, use_images: true, selected_images: [], preferred_model: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,6 +87,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           use_prompt: row.use_prompt ?? true,
           use_images: row.use_images ?? true,
           selected_images: selected,
+          preferred_model: (row as any).preferred_model || '',
         });
       }
     } catch (err) {
@@ -91,6 +114,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         use_prompt: newData.use_prompt,
         use_images: newData.use_images,
         selected_images: newData.selected_images,
+        preferred_model: newData.preferred_model || null,
       };
 
       if (newData.id) {
@@ -280,6 +304,37 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                     placeholder="Ex: Marca Principal"
                     className="mt-1 h-8 text-sm"
                   />
+                </div>
+
+                {/* Preferred Model */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Modelo Preferido</Label>
+                  </div>
+                  <Select
+                    value={data.preferred_model || '_default'}
+                    onValueChange={(val) => {
+                      const newData = { ...data, preferred_model: val === '_default' ? '' : val };
+                      setData(newData);
+                      save(newData);
+                    }}
+                    disabled={saving || !data.is_active}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Usar modelo do bloco (padrão)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VI_IMAGE_MODELS.map((m) => (
+                        <SelectItem key={m.value || '_default'} value={m.value || '_default'}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Quando definido, este modelo será usado automaticamente em todas as gerações de imagem com a identidade visual ativa.
+                  </p>
                 </div>
 
                 {/* Prompt Section with Toggle */}
@@ -517,6 +572,7 @@ export default VisualIdentityPanel;
 export interface VisualIdentityResult {
   images: string[];
   prompt: string;
+  preferredModel?: string;
 }
 
 export async function getActiveVisualIdentity(estabelecimentoId: string): Promise<VisualIdentityResult | null> {
@@ -524,7 +580,7 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
   try {
     const { data } = await supabase
       .from('studio_visual_identity')
-      .select('is_active, images, prompt, use_prompt, use_images, selected_images')
+      .select('is_active, images, prompt, use_prompt, use_images, selected_images, preferred_model')
       .eq('estabelecimento_id', estabelecimentoId)
       .eq('is_active', true)
       .maybeSingle();
@@ -534,25 +590,22 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
       const useImages = data.use_images ?? true;
       const selectedIndices = Array.isArray(data.selected_images) ? data.selected_images as number[] : [];
 
-      // Filter images based on flags
       let finalImages: string[] = [];
       if (useImages && allImages.length > 0) {
         if (selectedIndices.length > 0) {
-          // Only include selected images
           finalImages = selectedIndices
             .filter(i => i >= 0 && i < allImages.length)
             .map(i => allImages[i]);
         } else {
-          // If no selection saved, use all (backwards compat)
           finalImages = allImages;
         }
       }
 
       const finalPrompt = usePrompt ? ((data.prompt as string) || '') : '';
+      const preferredModel = (data as any).preferred_model || '';
 
-      // Only return if there's something to use
       if (finalImages.length > 0 || finalPrompt) {
-        return { images: finalImages, prompt: finalPrompt };
+        return { images: finalImages, prompt: finalPrompt, preferredModel: preferredModel || undefined };
       }
     }
   } catch (err) {
@@ -560,6 +613,8 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
   }
   return null;
 }
+
+
 
 // Legacy helper (backwards compat)
 export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {

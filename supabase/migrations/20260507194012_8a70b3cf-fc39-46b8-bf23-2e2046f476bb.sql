@@ -1,0 +1,1 @@
+ALTER TABLE public.studio_visual_identity ADD COLUMN preferred_model TEXT DEFAULT NULL;
