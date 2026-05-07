@@ -1640,21 +1640,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-            {/* Panoramic safe-zone crop preview — shows cropped final format */}
+            {/* Panoramic preview — image generated directly at panoramic aspect ratio */}
             {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (() => {
               const panoW = activeResult.slideWidth || 1;
               const panoH = activeResult.slideHeight || 1;
-              const panoAspect = panoW / panoH; // e.g. 5 for 5400x1080
-              // The generated image is 1080x1080 square. The safe zone is the center strip.
-              // To preview as the final panoramic, we use object-fit:cover with the panoramic aspect ratio.
-              // cropPercent = percentage of height to show (center strip)
-              const cropPct = (1 / panoAspect) * 100; // e.g. 20% for 5:1
-              const cropTopPct = (100 - cropPct) / 2;
               return (
                <div className="px-3 pb-3 pt-1 space-y-2">
                  <p className="text-[10px] font-semibold text-muted-foreground text-center">
-                   🖼️ Panorâmica {panoW}x{panoH}
-                   {(activeResult as any).safeZoneMode ? ` (zona segura ${Math.round(cropPct)}%)` : ''}
+                   🖼️ Panorâmica {panoW}x{panoH} (formato direto)
                  </p>
                    {/* Preview: show full image scaled to fit inside block */}
                    <div 
@@ -1686,27 +1679,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
                        
-                       // Download source image
-                       const blob = await downloadAsBlob(activeResult.imageUrl);
-                       const bmp = await createImageBitmap(blob);
-                       
-                       // Always calculate crop from actual image dimensions and target aspect ratio
-                       // This handles cases where AI returns non-square images
-                       const panoAspectRatio = targetW / targetH;
-                       let cropY: number, cropH: number;
-                       // The safe zone is the center horizontal strip whose aspect matches the panoramic target
-                       // cropH = image width / panoramic aspect ratio (how tall the strip should be)
-                       cropH = Math.round(bmp.width / panoAspectRatio);
-                       if (cropH > bmp.height) cropH = bmp.height;
-                       cropY = Math.round((bmp.height - cropH) / 2);
-                       
-                       const canvas = document.createElement('canvas');
-                       canvas.width = targetW;
-                       canvas.height = targetH;
-                       const ctx = canvas.getContext('2d')!;
-                       // Draw the safe zone strip stretched to fill the panoramic canvas
-                       ctx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
-                       bmp.close();
+                        // Download source image
+                        const blob = await downloadAsBlob(activeResult.imageUrl);
+                        const bmp = await createImageBitmap(blob);
+                        
+                        // Scale the panoramic image directly to target dimensions
+                        // The image was generated at the panoramic aspect ratio, so just scale it
+                        const canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        const ctx = canvas.getContext('2d')!;
+                        
+                        // Fill with white background first (for any gaps)
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, targetW, targetH);
+                        
+                        // Calculate scaling to fit the image within target dimensions preserving aspect ratio
+                        const imgAspect = bmp.width / bmp.height;
+                        const targetAspect = targetW / targetH;
+                        
+                        let drawW: number, drawH: number, drawX: number, drawY: number;
+                        if (imgAspect >= targetAspect) {
+                          // Image is wider or same — fit by width
+                          drawW = targetW;
+                          drawH = Math.round(targetW / imgAspect);
+                          drawX = 0;
+                          drawY = Math.round((targetH - drawH) / 2);
+                        } else {
+                          // Image is taller — fit by height
+                          drawH = targetH;
+                          drawW = Math.round(targetH * imgAspect);
+                          drawX = Math.round((targetW - drawW) / 2);
+                          drawY = 0;
+                        }
+                        
+                        ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
+                        bmp.close();
                        
                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
                        if (!croppedBlob) throw new Error('Falha ao recortar panorâmica');
@@ -1743,19 +1751,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                          const blob = await downloadAsBlob(activeResult.imageUrl);
                          const bmp = await createImageBitmap(blob);
                          
-                         // Always calculate crop from actual image dimensions
-                         const panoAspectRatio = targetW / targetH;
-                         let cropY: number, cropH: number;
-                         cropH = Math.round(bmp.width / panoAspectRatio);
-                         if (cropH > bmp.height) cropH = bmp.height;
-                         cropY = Math.round((bmp.height - cropH) / 2);
-                         
-                         // Create full panoramic canvas from the safe zone strip
+                         // Scale image to panoramic dimensions preserving content
                          const fullCanvas = document.createElement('canvas');
                          fullCanvas.width = targetW;
                          fullCanvas.height = targetH;
                          const fullCtx = fullCanvas.getContext('2d')!;
-                         fullCtx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
+                         
+                         // Fill with white background
+                         fullCtx.fillStyle = '#FFFFFF';
+                         fullCtx.fillRect(0, 0, targetW, targetH);
+                         
+                         // Scale preserving aspect ratio
+                         const imgAspect = bmp.width / bmp.height;
+                         const targetAspect = targetW / targetH;
+                         let drawW: number, drawH: number, drawX: number, drawY: number;
+                         if (imgAspect >= targetAspect) {
+                           drawW = targetW;
+                           drawH = Math.round(targetW / imgAspect);
+                           drawX = 0;
+                           drawY = Math.round((targetH - drawH) / 2);
+                         } else {
+                           drawH = targetH;
+                           drawW = Math.round(targetH * imgAspect);
+                           drawX = Math.round((targetW - drawW) / 2);
+                           drawY = 0;
+                         }
+                         fullCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
                          bmp.close();
                         
                         // Calculate number of slides (square slides based on height)
