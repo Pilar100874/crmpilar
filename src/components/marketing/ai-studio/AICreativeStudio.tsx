@@ -34,6 +34,7 @@ import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel, { getStudioDefaults } from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
+import VisualIdentityPanel from './VisualIdentityPanel';
 import ExecutionLogPanel from './ExecutionLogPanel';
 import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
