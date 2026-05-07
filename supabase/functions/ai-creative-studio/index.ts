@@ -1691,12 +1691,51 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             }
           }
           
-          if (panoImageUrl && panoImageUrl.startsWith('data:')) {
-            const publicUrl = await uploadBase64ToStorage(panoImageUrl);
-            if (publicUrl) panoImageUrl = publicUrl;
-          }
-          
-          console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
+           // POST-PROCESS: Use a second AI call to shrink the full image into the safe zone strip
+           // This guarantees ALL content fits within the crop area regardless of what the AI generated
+           if (panoImageUrl) {
+             console.log(`[generate_image] Post-processing: compositing image into safe zone strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of 1080x1080)`);
+             try {
+               const compositePrompt = `Take this image and resize it to fit ENTIRELY within a narrow horizontal band in the center of a NEW 1080x1080 white canvas. The band starts at ${safeZoneTopPct}% from the top and is ${safeZoneHeightPct}% of the total height (${safeZoneH}px tall). The image must be SCALED DOWN proportionally to fit completely within this ${safeZoneH}px tall strip, centered horizontally. The areas above and below the strip must be PURE WHITE (#FFFFFF) with absolutely no content. DO NOT crop any part of the original image - scale the ENTIRE image to fit within the strip.`;
+               
+               const compositeData = await callGateway(LOVABLE_API_KEY, {
+                 model,
+                 messages: [
+                   { role: "system", content: `You are an image compositor. Your ONLY job is to take the provided image and place it SCALED DOWN into a specific horizontal strip of a 1080x1080 white canvas. The strip is ${safeZoneH}px tall, starting at ${safeZoneTop}px from the top. Everything outside the strip must be pure white. Do NOT add, remove, or modify any content - just resize and reposition.` },
+                   { role: "user", content: [
+                     { type: "image_url", image_url: { url: panoImageUrl } },
+                     { type: "text", text: compositePrompt }
+                   ] },
+                 ],
+                 modalities: ["image", "text"],
+               });
+               
+               const compositeMsg = compositeData.choices?.[0]?.message;
+               let compositeUrl = compositeMsg?.images?.[0]?.image_url?.url;
+               if (!compositeUrl && Array.isArray(compositeMsg?.content)) {
+                 for (const part of compositeMsg.content) {
+                   if (part.type === 'image_url' && part.image_url?.url) { compositeUrl = part.image_url.url; break; }
+                   if (part.inline_data?.mime_type?.startsWith('image/')) { compositeUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+                 }
+               }
+               
+               if (compositeUrl) {
+                 panoImageUrl = compositeUrl;
+                 console.log(`[generate_image] Post-processing successful - image composited into safe zone`);
+               } else {
+                 console.log(`[generate_image] Post-processing returned no image, using original`);
+               }
+             } catch (compErr) {
+               console.error(`[generate_image] Post-processing failed, using original:`, compErr);
+             }
+           }
+           
+           if (panoImageUrl && panoImageUrl.startsWith('data:')) {
+             const publicUrl = await uploadBase64ToStorage(panoImageUrl);
+             if (publicUrl) panoImageUrl = publicUrl;
+           }
+           
+           console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
           
           return new Response(JSON.stringify({ 
             result: { 
