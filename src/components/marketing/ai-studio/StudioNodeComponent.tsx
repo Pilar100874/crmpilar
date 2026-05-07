@@ -1751,19 +1751,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                          const blob = await downloadAsBlob(activeResult.imageUrl);
                          const bmp = await createImageBitmap(blob);
                          
-                         // Always calculate crop from actual image dimensions
-                         const panoAspectRatio = targetW / targetH;
-                         let cropY: number, cropH: number;
-                         cropH = Math.round(bmp.width / panoAspectRatio);
-                         if (cropH > bmp.height) cropH = bmp.height;
-                         cropY = Math.round((bmp.height - cropH) / 2);
-                         
-                         // Create full panoramic canvas from the safe zone strip
+                         // Scale image to panoramic dimensions preserving content
                          const fullCanvas = document.createElement('canvas');
                          fullCanvas.width = targetW;
                          fullCanvas.height = targetH;
                          const fullCtx = fullCanvas.getContext('2d')!;
-                         fullCtx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
+                         
+                         // Fill with white background
+                         fullCtx.fillStyle = '#FFFFFF';
+                         fullCtx.fillRect(0, 0, targetW, targetH);
+                         
+                         // Scale preserving aspect ratio
+                         const imgAspect = bmp.width / bmp.height;
+                         const targetAspect = targetW / targetH;
+                         let drawW: number, drawH: number, drawX: number, drawY: number;
+                         if (imgAspect >= targetAspect) {
+                           drawW = targetW;
+                           drawH = Math.round(targetW / imgAspect);
+                           drawX = 0;
+                           drawY = Math.round((targetH - drawH) / 2);
+                         } else {
+                           drawH = targetH;
+                           drawW = Math.round(targetH * imgAspect);
+                           drawX = Math.round((targetW - drawW) / 2);
+                           drawY = 0;
+                         }
+                         fullCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height, drawX, drawY, drawW, drawH);
                          bmp.close();
                         
                         // Calculate number of slides (square slides based on height)
