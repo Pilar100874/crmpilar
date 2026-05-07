@@ -1060,10 +1060,11 @@ export function useStudioExecution() {
         // Inject visual identity references for video generation
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
-          const viImagesVideo = await getActiveVisualIdentityImages(viEstabId);
-          if (viImagesVideo.length > 0) {
-            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding no vídeo gerado.`;
-            for (const viUrl of viImagesVideo) {
+          const viVideo = await getActiveVisualIdentity(viEstabId);
+          if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
+            const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.${viVText}`;
+            for (const viUrl of viVideo.images) {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
             }
