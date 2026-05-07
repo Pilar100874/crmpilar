@@ -4,7 +4,7 @@ import { StudioNode, StudioEdge, StudioNodeData, StudioNodeType } from './types'
 import { nodeResultStore } from './useNodeResults';
 import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
-import { getActiveVisualIdentityImages } from './VisualIdentityPanel';
+import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
 export interface ExecutionLogEntry {
   nodeId: string;
