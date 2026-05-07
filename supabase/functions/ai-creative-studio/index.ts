@@ -1653,7 +1653,7 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Place ALL subjects in the center ${safeHPct}% horizontal band. Top and bottom areas should be simple background. Generate a 1:1 square image.` },
+                { role: "system", content: `You are a professional photo compositor. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) in the center ${safeHPct}% horizontal band. Scale subjects down if necessary so nothing is cut off. Top and bottom areas should be simple background. Generate a 1:1 square image.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
