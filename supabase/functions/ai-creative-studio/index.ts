@@ -1896,21 +1896,32 @@ Deno.serve(async (req) => {
         }
 
         // === WaveSpeed Image: route to wavespeed-proxy ===
+        // IMPORTANT: WaveSpeed is TEXT-TO-IMAGE only — it does NOT accept reference images.
+        // When strict references exist (product/influencer), we MUST skip WaveSpeed and use 
+        // the Lovable AI Gateway which supports image editing with actual reference inputs.
         if (model.startsWith("wavespeed/")) {
-          const estabId = params.estabelecimentoId || params.estabelecimento_id;
-          if (!estabId) {
-            return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para WaveSpeed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          }
-          try {
-            const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
-            // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
-            if (result.wavespeedTaskId) {
-              return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          const wsStrictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+          const hasStrictRefs = refImages.length > 0 && refImages.some((_, i) => wsStrictRoles.includes(imageRoles[i] || ''));
+          
+          if (hasStrictRefs) {
+            console.log(`[generate_image] WaveSpeed model requested but ${refImages.length} strict reference images found — redirecting to Lovable AI Gateway for proper image compositing`);
+            // Fall through to Lovable AI Gateway path below which handles reference images properly
+          } else {
+            const estabId = params.estabelecimentoId || params.estabelecimento_id;
+            if (!estabId) {
+              return new Response(JSON.stringify({ error: "estabelecimentoId é obrigatório para WaveSpeed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
-            return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          } catch (err: any) {
-            console.error("[wavespeed-image] Error:", err.message);
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            try {
+              const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
+              // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
+              if (result.wavespeedTaskId) {
+                return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              }
+              return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            } catch (err: any) {
+              console.error("[wavespeed-image] Error:", err.message);
+              return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
           }
         }
 
