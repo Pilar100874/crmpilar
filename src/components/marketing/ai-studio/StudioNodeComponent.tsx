@@ -1640,21 +1640,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-            {/* Panoramic safe-zone crop preview — shows cropped final format */}
+            {/* Panoramic preview — image generated directly at panoramic aspect ratio */}
             {activeResult?.carouselMode === 'panoramic' && activeResult?.imageUrl && (() => {
               const panoW = activeResult.slideWidth || 1;
               const panoH = activeResult.slideHeight || 1;
-              const panoAspect = panoW / panoH; // e.g. 5 for 5400x1080
-              // The generated image is 1080x1080 square. The safe zone is the center strip.
-              // To preview as the final panoramic, we use object-fit:cover with the panoramic aspect ratio.
-              // cropPercent = percentage of height to show (center strip)
-              const cropPct = (1 / panoAspect) * 100; // e.g. 20% for 5:1
-              const cropTopPct = (100 - cropPct) / 2;
               return (
                <div className="px-3 pb-3 pt-1 space-y-2">
                  <p className="text-[10px] font-semibold text-muted-foreground text-center">
-                   🖼️ Panorâmica {panoW}x{panoH}
-                   {(activeResult as any).safeZoneMode ? ` (zona segura ${Math.round(cropPct)}%)` : ''}
+                   🖼️ Panorâmica {panoW}x{panoH} (formato direto)
                  </p>
                    {/* Preview: show full image scaled to fit inside block */}
                    <div 
