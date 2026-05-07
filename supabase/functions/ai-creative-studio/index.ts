@@ -1449,7 +1449,11 @@ async function generateImageChatGPT(apiKey: string, prompt: string, model: strin
     }
   }
 
-  console.log(`[chatgpt_image] Calling OpenAI Images API: model=${openaiModel}, size=${openaiSize}`);
+  // DALL-E 3 has a 4000 char prompt limit, gpt-image-1 has 32k
+  const maxLen = openaiModel === "dall-e-3" ? 4000 : 32000;
+  const finalPrompt = prompt.length > maxLen ? prompt.substring(0, maxLen) : prompt;
+
+  console.log(`[chatgpt_image] Calling OpenAI Images API: model=${openaiModel}, size=${openaiSize}, promptLen=${finalPrompt.length}`);
 
   const resp = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -1459,7 +1463,7 @@ async function generateImageChatGPT(apiKey: string, prompt: string, model: strin
     },
     body: JSON.stringify({
       model: openaiModel,
-      prompt,
+      prompt: finalPrompt,
       n: 1,
       size: openaiSize,
       response_format: "b64_json",
