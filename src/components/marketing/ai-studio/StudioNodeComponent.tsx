@@ -1743,18 +1743,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                          const blob = await downloadAsBlob(activeResult.imageUrl);
                          const bmp = await createImageBitmap(blob);
                          
-                         // Use safeZone percentages from backend if available
-                         const safeTopPct = (activeResult as any).safeZoneTopPct;
-                         const safeHPct = (activeResult as any).safeZoneHeightPct;
+                         // Always calculate crop from actual image dimensions
+                         const panoAspectRatio = targetW / targetH;
                          let cropY: number, cropH: number;
-                         if (typeof safeTopPct === 'number' && typeof safeHPct === 'number') {
-                           cropY = Math.round(bmp.height * safeTopPct / 100);
-                           cropH = Math.round(bmp.height * safeHPct / 100);
-                         } else {
-                           const aspectRatio = targetW / targetH;
-                           cropH = Math.round(bmp.height / aspectRatio);
-                           cropY = Math.round((bmp.height - cropH) / 2);
-                         }
+                         cropH = Math.round(bmp.width / panoAspectRatio);
+                         if (cropH > bmp.height) cropH = bmp.height;
+                         cropY = Math.round((bmp.height - cropH) / 2);
                          
                          // Create full panoramic canvas from the safe zone strip
                          const fullCanvas = document.createElement('canvas');
