@@ -1647,59 +1647,43 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   🖼️ Panorâmica {activeResult.slideWidth}x{activeResult.slideHeight}
                   {(activeResult as any).safeZoneMode ? ' (zona segura)' : ''}
                 </p>
-                {/* Preview: show cropped panoramic result via canvas */}
-                {(() => {
-                  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-                  const [previewReady, setPreviewReady] = React.useState(false);
-                  
-                  React.useEffect(() => {
-                    const canvas = canvasRef.current;
-                    if (!canvas || !activeResult?.imageUrl) return;
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    img.onload = () => {
-                      const targetW = activeResult.slideWidth || 1080;
-                      const targetH = activeResult.slideHeight || 1080;
-                      const aspectRatio = targetW / targetH;
-                      // Crop center horizontal strip from source
-                      const srcW = img.width;
-                      const srcH = img.height;
-                      const cropH = Math.round(srcW / aspectRatio);
-                      const cropY = Math.round((srcH - cropH) / 2);
-                      // Draw cropped strip scaled to target
-                      canvas.width = targetW;
-                      canvas.height = targetH;
-                      const ctx = canvas.getContext('2d')!;
-                      ctx.drawImage(img, 0, Math.max(0, cropY), srcW, cropH, 0, 0, targetW, targetH);
-                      setPreviewReady(true);
-                    };
-                    img.src = activeResult.imageUrl;
-                  }, [activeResult?.imageUrl, activeResult?.slideWidth, activeResult?.slideHeight]);
-                  
-                  return (
-                    <div 
-                      className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
-                      style={{ 
-                        boxShadow: `0 4px 20px -4px ${accent}20`,
-                        height: imageExpanded ? 400 : 200,
-                        width: '100%',
-                        backgroundColor: 'hsl(var(--muted))',
-                      }}
-                      onClick={() => setImageExpanded(!imageExpanded)}
-                    >
-                      <canvas 
-                        ref={canvasRef} 
-                        className="w-full h-full" 
-                        style={{ objectFit: 'contain', display: previewReady ? 'block' : 'none' }} 
+                {/* Preview: show image cropped to center strip via CSS */}
+                <div 
+                  className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
+                  style={{ 
+                    boxShadow: `0 4px 20px -4px ${accent}20`,
+                    height: imageExpanded ? 400 : 200,
+                    width: '100%',
+                    backgroundColor: 'hsl(var(--muted))',
+                  }}
+                  onClick={() => setImageExpanded(!imageExpanded)}
+                >
+                  {(() => {
+                    const tw = activeResult.slideWidth || 1;
+                    const th = activeResult.slideHeight || 1;
+                    const ratio = tw / th;
+                    // Scale factor: how much of the source height is visible
+                    // For 5:1 ratio from a square, visible = 1/5 = 20%
+                    const visiblePct = (1 / ratio) * 100;
+                    // Use object-fit:cover + scale to zoom into center strip
+                    return (
+                      <img 
+                        src={activeResult.imageUrl} 
+                        alt="Panorâmica" 
+                        className="w-full" 
+                        style={{ 
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center center',
+                          // Scale the image so only the center strip is visible
+                          transform: `scaleY(${ratio})`,
+                          transformOrigin: 'center center',
+                        }} 
+                        loading="eager" 
                       />
-                      {!previewReady && (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
+                </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
