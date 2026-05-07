@@ -1063,7 +1063,7 @@ export function useStudioExecution() {
           const viVideo = await getActiveVisualIdentity(viEstabId);
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
-            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.${viVText}`;
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
             for (const viUrl of viVideo.images) {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
