@@ -86,8 +86,8 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'polloai/kolors', label: '🐔 PL: Kolors', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
   { value: 'polloai/sdxl', label: '🐔 PL: SDXL', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI' },
   // ChatGPT Image Creator (usa chave própria do usuário)
-  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1', provider: 'ChatGPT Image', cost: '$$', quality: 5, tip: 'GPT-Image-1 via sua chave OpenAI', supportsMultiRef: true },
-  { value: 'chatgpt_image/dall-e-3', label: '🖼️ ChatGPT DALL·E 3', provider: 'ChatGPT Image', cost: '$$', quality: 4, tip: 'DALL·E 3 via sua chave OpenAI', supportsMultiRef: false },
+  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1 (Edit)', provider: 'ChatGPT Image', cost: '$$', quality: 5, tip: 'GPT-Image-1 com edição — envia imagens de referência para a OpenAI preservar o produto', supportsMultiRef: true },
+  { value: 'chatgpt_image/dall-e-3', label: '🖼️ ChatGPT DALL·E 3', provider: 'ChatGPT Image', cost: '$$', quality: 4, tip: 'DALL·E 3 via sua chave OpenAI (apenas geração, sem referência)', supportsMultiRef: false },
 ];
 
 // Models that support composing multiple distinct visual references (product + person) in one video.
