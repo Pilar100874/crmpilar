@@ -2471,6 +2471,21 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         });
       }
 
+      case "start_wavespeed_video": {
+        const estabId = params.estabelecimentoId;
+        const started = await startVideoWavespeed(estabId, params);
+        return new Response(JSON.stringify({ result: started }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "fetch_wavespeed_video": {
+        const result = await fetchVideoWavespeed(params.estabelecimentoId, params.taskId);
+        return new Response(JSON.stringify({ result }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       case "generate_audio": {
         const provider = (params.provider || "elevenlabs") as string;
         const text = params.text as string;
