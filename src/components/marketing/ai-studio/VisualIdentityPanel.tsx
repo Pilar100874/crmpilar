@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Upload, Trash2, Palette, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { X, Upload, Trash2, Palette, Image as ImageIcon, Loader2, AlertCircle, Type, Images } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
@@ -22,12 +23,18 @@ interface VisualIdentityData {
   name: string;
   prompt: string;
   images: string[];
+  use_prompt: boolean;
+  use_images: boolean;
+  selected_images: number[];
 }
 
 const MAX_IMAGES = 10;
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
-  const [data, setData] = useState<VisualIdentityData>({ is_active: false, name: 'Identidade Visual', prompt: '', images: [] });
+  const [data, setData] = useState<VisualIdentityData>({
+    is_active: false, name: 'Identidade Visual', prompt: '', images: [],
+    use_prompt: true, use_images: true, selected_images: [],
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -45,12 +52,19 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
       if (row) {
+        const images = Array.isArray(row.images) ? row.images as string[] : [];
+        const selectedRaw = Array.isArray(row.selected_images) ? row.selected_images as number[] : [];
+        // If no selection saved yet, select all by default
+        const selected = selectedRaw.length > 0 ? selectedRaw : images.map((_, i) => i);
         setData({
           id: row.id,
           is_active: row.is_active,
           name: row.name || 'Identidade Visual',
           prompt: row.prompt || '',
-          images: Array.isArray(row.images) ? row.images as string[] : [],
+          images,
+          use_prompt: row.use_prompt ?? true,
+          use_images: row.use_images ?? true,
+          selected_images: selected,
         });
       }
     } catch (err) {
@@ -74,6 +88,9 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         name: newData.name,
         prompt: newData.prompt,
         images: newData.images,
+        use_prompt: newData.use_prompt,
+        use_images: newData.use_images,
+        selected_images: newData.selected_images,
       };
 
       if (newData.id) {
@@ -107,6 +124,40 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
     save(newData);
   };
 
+  const handleTogglePrompt = (checked: boolean) => {
+    const newData = { ...data, use_prompt: checked };
+    setData(newData);
+    save(newData);
+  };
+
+  const handleToggleImages = (checked: boolean) => {
+    const newData = { ...data, use_images: checked };
+    setData(newData);
+    save(newData);
+  };
+
+  const handleToggleImageSelection = (idx: number, checked: boolean) => {
+    const newSelected = checked
+      ? [...data.selected_images, idx].sort((a, b) => a - b)
+      : data.selected_images.filter(i => i !== idx);
+    const newData = { ...data, selected_images: newSelected };
+    setData(newData);
+    save(newData);
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = data.images.map((_, i) => i);
+    const newData = { ...data, selected_images: allSelected };
+    setData(newData);
+    save(newData);
+  };
+
+  const handleDeselectAll = () => {
+    const newData = { ...data, selected_images: [] };
+    setData(newData);
+    save(newData);
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -117,6 +168,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
 
     setUploading(true);
     const newImages = [...data.images];
+    const newSelected = [...data.selected_images];
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) {
@@ -141,6 +193,8 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           .getPublicUrl(fileName);
         
         if (publicData?.publicUrl) {
+          // Auto-select newly uploaded images
+          newSelected.push(newImages.length);
           newImages.push(publicData.publicUrl);
         }
       } catch (err: any) {
@@ -149,7 +203,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
       }
     }
 
-    const newData = { ...data, images: newImages };
+    const newData = { ...data, images: newImages, selected_images: newSelected };
     setData(newData);
     await save(newData);
     setUploading(false);
@@ -159,12 +213,19 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
   const handleRemoveImage = async () => {
     if (deleteIdx === null) return;
     const newImages = data.images.filter((_, i) => i !== deleteIdx);
-    const newData = { ...data, images: newImages };
+    // Adjust selected_images: remove the deleted index and shift higher indices down
+    const newSelected = data.selected_images
+      .filter(i => i !== deleteIdx)
+      .map(i => i > deleteIdx ? i - 1 : i);
+    const newData = { ...data, images: newImages, selected_images: newSelected };
     await save(newData);
     setDeleteIdx(null);
   };
 
   if (!open) return null;
+
+  const selectedCount = data.selected_images.length;
+  const allSelected = selectedCount === data.images.length && data.images.length > 0;
 
   return (
     <>
@@ -194,12 +255,12 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           ) : (
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-5">
-                {/* Toggle */}
+                {/* Main Toggle */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                   <div>
                     <Label className="text-sm font-medium">Ativar Identidade Visual</Label>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Quando ativada, será usada em todas as gerações de imagens e vídeos
+                      Quando ativada, será usada nas gerações
                     </p>
                   </div>
                   <Switch
@@ -221,18 +282,34 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   />
                 </div>
 
-                {/* Prompt */}
-                <div>
-                  <Label className="text-xs text-muted-foreground">Prompt da Identidade Visual</Label>
+                {/* Prompt Section with Toggle */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Type className="h-3.5 w-3.5 text-muted-foreground" />
+                      <Label className="text-xs text-muted-foreground">Prompt da Identidade Visual</Label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">{data.use_prompt ? 'Ativo' : 'Inativo'}</span>
+                      <Switch
+                        checked={data.use_prompt}
+                        onCheckedChange={handleTogglePrompt}
+                        disabled={saving || !data.is_active}
+                        className="scale-75"
+                      />
+                    </div>
+                  </div>
                   <Textarea
                     value={data.prompt}
                     onChange={(e) => setData(prev => ({ ...prev, prompt: e.target.value }))}
                     onBlur={() => save(data)}
-                    placeholder="Ex: Use cores vibrantes com tons de azul e laranja. Estilo moderno e minimalista. Tipografia sans-serif. Mantenha o logotipo sempre visível no canto inferior direito..."
-                    className="mt-1 text-sm min-h-[100px] resize-y"
+                    placeholder="Ex: Use cores vibrantes com tons de azul e laranja. Estilo moderno e minimalista..."
+                    className={`text-sm min-h-[100px] resize-y transition-opacity ${!data.use_prompt ? 'opacity-50' : ''}`}
+                    disabled={!data.use_prompt}
                   />
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">
-                    Descreva o estilo visual, cores, tipografia e regras de branding que devem ser aplicados em todas as gerações.
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Descreva o estilo visual, cores, tipografia e regras de branding.
+                    {!data.use_prompt && ' (Desativado — não será usado nas gerações)'}
                   </p>
                 </div>
 
@@ -240,19 +317,135 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Adicione imagens de referência da sua marca (logotipo, paleta de cores, exemplos de design, produtos).
-                    Quando ativada, essas referências serão automaticamente incluídas em <strong>todas</strong> as gerações de imagens e vídeos.
+                    Adicione imagens de referência da sua marca. Use os checkboxes para selecionar quais imagens serão enviadas nas gerações.
                   </p>
                 </div>
 
-                {/* Images */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-xs text-muted-foreground">
-                      Imagens de Referência ({data.images.length}/{MAX_IMAGES})
-                    </Label>
-                    {data.images.length < MAX_IMAGES && (
-                      <label className="cursor-pointer">
+                {/* Images Section with Toggle */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Images className="h-3.5 w-3.5 text-muted-foreground" />
+                      <Label className="text-xs text-muted-foreground">
+                        Imagens de Referência ({data.images.length}/{MAX_IMAGES})
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">{data.use_images ? 'Ativo' : 'Inativo'}</span>
+                      <Switch
+                        checked={data.use_images}
+                        onCheckedChange={handleToggleImages}
+                        disabled={saving || !data.is_active}
+                        className="scale-75"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Select all / deselect all */}
+                  {data.images.length > 0 && data.use_images && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">
+                        {selectedCount} de {data.images.length} selecionada(s)
+                      </span>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 text-[10px] px-1.5"
+                          onClick={handleSelectAll}
+                          disabled={allSelected || saving}
+                        >
+                          Todas
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 text-[10px] px-1.5"
+                          onClick={handleDeselectAll}
+                          disabled={selectedCount === 0 || saving}
+                        >
+                          Nenhuma
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`transition-opacity ${!data.use_images ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {data.images.length === 0 ? (
+                      <label className="cursor-pointer block">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleUpload}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                        <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-primary/5 transition-all">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">
+                            Clique ou arraste imagens aqui
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-1">
+                            PNG, JPG, WEBP — máx 5MB cada
+                          </p>
+                        </div>
+                      </label>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {data.images.map((url, idx) => {
+                          const isSelected = data.selected_images.includes(idx);
+                          return (
+                            <div
+                              key={idx}
+                              className={`relative group aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-primary shadow-sm shadow-primary/20'
+                                  : 'border-border opacity-60'
+                              }`}
+                              onClick={() => handleToggleImageSelection(idx, !isSelected)}
+                            >
+                              <img
+                                src={url}
+                                alt={`Ref ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              {/* Checkbox overlay */}
+                              <div className="absolute top-1 left-1 z-10">
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={(checked) => {
+                                    handleToggleImageSelection(idx, checked === true);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-4 w-4 bg-background/80 border-border"
+                                />
+                              </div>
+                              {/* Delete on hover */}
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteIdx(idx);
+                                  }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                              <span className="absolute bottom-1 left-1 text-[9px] bg-black/60 text-white px-1.5 py-0.5 rounded">
+                                {idx + 1}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {data.images.length > 0 && data.images.length < MAX_IMAGES && (
+                      <label className="cursor-pointer mt-2 block">
                         <input
                           type="file"
                           accept="image/*"
@@ -264,77 +457,40 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 text-[11px] gap-1.5 pointer-events-none"
+                          className="h-7 text-[11px] gap-1.5 pointer-events-none w-full"
                           disabled={uploading}
                         >
                           {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                          {uploading ? 'Enviando...' : 'Adicionar'}
+                          {uploading ? 'Enviando...' : 'Adicionar Imagem'}
                         </Button>
                       </label>
                     )}
                   </div>
-
-                  {data.images.length === 0 ? (
-                    <label className="cursor-pointer block">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleUpload}
-                        className="hidden"
-                        disabled={uploading}
-                      />
-                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-primary/5 transition-all">
-                        <ImageIcon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                        <p className="text-xs text-muted-foreground">
-                          Clique ou arraste imagens aqui
-                        </p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          PNG, JPG, WEBP — máx 5MB cada
-                        </p>
-                      </div>
-                    </label>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {data.images.map((url, idx) => (
-                        <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/30">
-                          <img
-                            src={url}
-                            alt={`Ref ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => setDeleteIdx(idx)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                          <span className="absolute bottom-1 left-1 text-[9px] bg-black/60 text-white px-1.5 py-0.5 rounded">
-                            {idx + 1}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Status */}
-                {data.is_active && data.images.length > 0 && (
+                {data.is_active && (data.use_images || data.use_prompt) && (
                   <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                     <p className="text-[11px] text-green-600 dark:text-green-400 font-medium">
-                      ✅ Identidade visual ativa — {data.images.length} referência(s) serão incluídas em todas as gerações
+                      ✅ Identidade visual ativa
+                      {data.use_prompt && data.prompt ? ' — prompt ativo' : ''}
+                      {data.use_images && selectedCount > 0 ? ` — ${selectedCount} imagem(ns) selecionada(s)` : ''}
                     </p>
                   </div>
                 )}
 
-                {data.is_active && data.images.length === 0 && (
+                {data.is_active && !data.use_images && !data.use_prompt && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                     <p className="text-[11px] text-yellow-600 dark:text-yellow-400 font-medium">
-                      ⚠️ Identidade visual ativa, mas sem imagens. Adicione referências acima.
+                      ⚠️ Identidade visual ativa, mas prompt e imagens estão desativados.
+                    </p>
+                  </div>
+                )}
+
+                {data.is_active && data.use_images && data.images.length > 0 && selectedCount === 0 && (
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <p className="text-[11px] text-yellow-600 dark:text-yellow-400 font-medium">
+                      ⚠️ Imagens ativadas, mas nenhuma selecionada. Selecione as que deseja usar.
                     </p>
                   </div>
                 )}
@@ -368,15 +524,36 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
   try {
     const { data } = await supabase
       .from('studio_visual_identity')
-      .select('is_active, images, prompt')
+      .select('is_active, images, prompt, use_prompt, use_images, selected_images')
       .eq('estabelecimento_id', estabelecimentoId)
       .eq('is_active', true)
       .maybeSingle();
     if (data) {
-      return {
-        images: Array.isArray(data.images) ? data.images as string[] : [],
-        prompt: (data.prompt as string) || '',
-      };
+      const allImages = Array.isArray(data.images) ? data.images as string[] : [];
+      const usePrompt = data.use_prompt ?? true;
+      const useImages = data.use_images ?? true;
+      const selectedIndices = Array.isArray(data.selected_images) ? data.selected_images as number[] : [];
+
+      // Filter images based on flags
+      let finalImages: string[] = [];
+      if (useImages && allImages.length > 0) {
+        if (selectedIndices.length > 0) {
+          // Only include selected images
+          finalImages = selectedIndices
+            .filter(i => i >= 0 && i < allImages.length)
+            .map(i => allImages[i]);
+        } else {
+          // If no selection saved, use all (backwards compat)
+          finalImages = allImages;
+        }
+      }
+
+      const finalPrompt = usePrompt ? ((data.prompt as string) || '') : '';
+
+      // Only return if there's something to use
+      if (finalImages.length > 0 || finalPrompt) {
+        return { images: finalImages, prompt: finalPrompt };
+      }
     }
   } catch (err) {
     console.error('[VisualIdentity] Error fetching:', err);
