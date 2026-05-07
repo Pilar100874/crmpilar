@@ -1246,6 +1246,10 @@ const AICreativeStudioInner: React.FC = () => {
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Galeria
               </Button>
+              <Button onClick={() => setShowVisualIdentity(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
+                <Palette className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+                Identidade Visual
+              </Button>
             </div>
           </motion.div>
 
