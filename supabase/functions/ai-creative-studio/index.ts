@@ -1687,12 +1687,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             if (publicUrl) panoImageUrl = publicUrl;
           }
           
-          console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
+          console.log(`[generate_image] Panoramic direct image generated: ${!!panoImageUrl}`);
           
           return new Response(JSON.stringify({ 
             result: { 
               imageUrl: panoImageUrl || '', 
-              text: `Panorâmica gerada — recorte automático para ${fullW}x${fullH}px`,
+              text: `Panorâmica gerada diretamente em formato ${fullW}x${fullH}px`,
               carouselMode: 'panoramic',
               slideWidth: fullW,
               slideHeight: fullH,
@@ -1704,9 +1704,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               originalTotalSlides: totalSlides,
               originalGridCols: gridCols,
               originalGridRows: gridRows,
-              safeZoneMode: true,
-              safeZoneTopPct: safeTopPct,
-              safeZoneHeightPct: safeHPct,
+              directPanoramic: true,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
