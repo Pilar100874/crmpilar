@@ -1884,6 +1884,10 @@ Deno.serve(async (req) => {
           }
           try {
             const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
+            // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
+            if (result.wavespeedTaskId) {
+              return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
             console.error("[wavespeed-image] Error:", err.message);
