@@ -1881,9 +1881,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             editContent.push({ type: "image_url", image_url: { url: s.url } });
             editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
           }
-          for (const flex of flexibleImages) {
+          // Only send non-brand-identity flexible images as actual visual inputs
+          // Brand identity images overwhelm the model and cause it to modify the product
+          const nonBrandFlex = flexibleImages.filter(f => f.role !== 'BRAND IDENTITY REFERENCE');
+          for (const flex of nonBrandFlex) {
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
-            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration.` });
+            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT let this change the product or person.` });
           }
           const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
           const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL.\n- The product PACKAGING must be IDENTICAL.\n\nScene description:\n${params.prompt}`;
