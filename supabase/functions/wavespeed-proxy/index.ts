@@ -79,6 +79,12 @@ Deno.serve(async (req) => {
       });
 
       if (!resp.ok) {
+        // 404 from /result means the task is still processing — return as "processing" not as error
+        if (resp.status === 404) {
+          return new Response(JSON.stringify({ status: "processing" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const t = await resp.text();
         return new Response(JSON.stringify({ error: mapErrorMessage(resp.status, t) }), {
           status: resp.status,
