@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,13 +20,14 @@ interface VisualIdentityData {
   id?: string;
   is_active: boolean;
   name: string;
+  prompt: string;
   images: string[];
 }
 
 const MAX_IMAGES = 10;
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
-  const [data, setData] = useState<VisualIdentityData>({ is_active: false, name: 'Identidade Visual', images: [] });
+  const [data, setData] = useState<VisualIdentityData>({ is_active: false, name: 'Identidade Visual', prompt: '', images: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -47,6 +49,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           id: row.id,
           is_active: row.is_active,
           name: row.name || 'Identidade Visual',
+          prompt: row.prompt || '',
           images: Array.isArray(row.images) ? row.images as string[] : [],
         });
       }
@@ -69,6 +72,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         estabelecimento_id: estabelecimentoId,
         is_active: newData.is_active,
         name: newData.name,
+        prompt: newData.prompt,
         images: newData.images,
       };
 
@@ -217,6 +221,21 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   />
                 </div>
 
+                {/* Prompt */}
+                <div>
+                  <Label className="text-xs text-muted-foreground">Prompt da Identidade Visual</Label>
+                  <Textarea
+                    value={data.prompt}
+                    onChange={(e) => setData(prev => ({ ...prev, prompt: e.target.value }))}
+                    onBlur={() => save(data)}
+                    placeholder="Ex: Use cores vibrantes com tons de azul e laranja. Estilo moderno e minimalista. Tipografia sans-serif. Mantenha o logotipo sempre visível no canto inferior direito..."
+                    className="mt-1 text-sm min-h-[100px] resize-y"
+                  />
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">
+                    Descreva o estilo visual, cores, tipografia e regras de branding que devem ser aplicados em todas as gerações.
+                  </p>
+                </div>
+
                 {/* Info */}
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -338,21 +357,35 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
 
 export default VisualIdentityPanel;
 
-// Helper to fetch active visual identity images (used by useStudioExecution)
-export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {
-  if (!estabelecimentoId) return [];
+// Helper to fetch active visual identity data (used by useStudioExecution)
+export interface VisualIdentityResult {
+  images: string[];
+  prompt: string;
+}
+
+export async function getActiveVisualIdentity(estabelecimentoId: string): Promise<VisualIdentityResult | null> {
+  if (!estabelecimentoId) return null;
   try {
     const { data } = await supabase
       .from('studio_visual_identity')
-      .select('is_active, images')
+      .select('is_active, images, prompt')
       .eq('estabelecimento_id', estabelecimentoId)
       .eq('is_active', true)
       .maybeSingle();
-    if (data && Array.isArray(data.images)) {
-      return data.images as string[];
+    if (data) {
+      return {
+        images: Array.isArray(data.images) ? data.images as string[] : [],
+        prompt: (data.prompt as string) || '',
+      };
     }
   } catch (err) {
     console.error('[VisualIdentity] Error fetching:', err);
   }
-  return [];
+  return null;
+}
+
+// Legacy helper (backwards compat)
+export async function getActiveVisualIdentityImages(estabelecimentoId: string): Promise<string[]> {
+  const vi = await getActiveVisualIdentity(estabelecimentoId);
+  return vi?.images || [];
 }

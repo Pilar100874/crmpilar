@@ -4,7 +4,7 @@ import { StudioNode, StudioEdge, StudioNodeData, StudioNodeType } from './types'
 import { nodeResultStore } from './useNodeResults';
 import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
-import { getActiveVisualIdentityImages } from './VisualIdentityPanel';
+import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
 export interface ExecutionLogEntry {
   nodeId: string;
@@ -804,10 +804,11 @@ export function useStudioExecution() {
         enrichedPrompt = `${enrichedPrompt}\n\n[IDIOMA] Todos os textos, legendas, títulos e elementos textuais na imagem devem estar ${imgLangSuffix}. Nunca use inglês a menos que explicitamente solicitado.`;
 
         // Inject visual identity references if active
-        const viImages = await getActiveVisualIdentityImages(imgEstabId);
-        if (viImages.length > 0) {
-          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding em toda a imagem gerada.`;
-          for (const viUrl of viImages) {
+        const vi = await getActiveVisualIdentity(imgEstabId);
+        if (vi && (vi.images.length > 0 || vi.prompt)) {
+          const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.${viPromptText}`;
+          for (const viUrl of vi.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
           }
@@ -873,10 +874,11 @@ export function useStudioExecution() {
         
         // Inject visual identity for compose
         const viComposeId = localStorage.getItem('estabelecimentoId') || '';
-        const viComposeImages = await getActiveVisualIdentityImages(viComposeId);
-        if (viComposeImages.length > 0) {
-          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais da marca para manter consistência de estilo.`;
-          for (const viUrl of viComposeImages) {
+        const viCompose = await getActiveVisualIdentity(viComposeId);
+        if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
+          const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.${viPText}`;
+          for (const viUrl of viCompose.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
           }
@@ -1058,10 +1060,11 @@ export function useStudioExecution() {
         // Inject visual identity references for video generation
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
-          const viImagesVideo = await getActiveVisualIdentityImages(viEstabId);
-          if (viImagesVideo.length > 0) {
-            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens de referência representam a identidade visual da marca. Use estas referências para manter consistência visual, cores, estilo e branding no vídeo gerado.`;
-            for (const viUrl of viImagesVideo) {
+          const viVideo = await getActiveVisualIdentity(viEstabId);
+          if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
+            const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.${viVText}`;
+            for (const viUrl of viVideo.images) {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
             }
