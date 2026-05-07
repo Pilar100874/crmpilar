@@ -1876,10 +1876,26 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           
           const editContent: any[] = [];
-          for (let i = 0; i < strictImages.length; i++) {
-            const s = strictImages[i];
+          
+          // Sort strict images: PRODUCT first, then INFLUENCER, then others
+          const priorityOrder: Record<string, number> = {
+            'PRODUCT - DO NOT MODIFY': 1,
+            'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+            'LOGO - DO NOT MODIFY': 3,
+            'CLOTHING - DO NOT MODIFY': 4,
+          };
+          const sortedStrict = [...strictImages].sort((a, b) => (priorityOrder[a.role] || 99) - (priorityOrder[b.role] || 99));
+          
+          for (let i = 0; i < sortedStrict.length; i++) {
+            const s = sortedStrict[i];
             editContent.push({ type: "image_url", image_url: { url: s.url } });
-            editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
+            if (s.role === 'PRODUCT - DO NOT MODIFY') {
+              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. This is the REAL product photo. You MUST reproduce this product PIXEL-PERFECTLY in the output: exact same packaging, label, colors, typography, logo, shape, proportions. DO NOT redesign, recolor, redraw, simplify, or modify ANY detail. Treat this as a CUT-AND-PASTE operation — copy the product exactly as-is into the scene.` });
+            } else if (s.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
+              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON/INFLUENCER. This is a REAL person. Reproduce their EXACT face, skin tone, hair, features. The person should be interacting with the product naturally.` });
+            } else {
+              editContent.push({ type: "text", text: `↑ SUBJECT (${s.role}). Preserve IDENTICALLY in output.` });
+            }
           }
           // Only send non-brand-identity flexible images as actual visual inputs
           // Brand identity images overwhelm the model and cause it to modify the product
@@ -1888,11 +1904,11 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
             editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT let this change the product or person.` });
           }
-          const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
-          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL.\n- The product PACKAGING must be IDENTICAL.\n\nScene description:\n${params.prompt}`;
+          const subjectDescriptions = sortedStrict.map((s, i) => `Priority ${i + 1}: ${s.role}`).join(', ');
+          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nPRIORITY ORDER:\n1. PRODUCT — must appear EXACTLY as in the reference photo (same packaging, label, colors, logo). This is NON-NEGOTIABLE.\n2. PERSON/INFLUENCER — must have the IDENTICAL face.\n3. Everything else is secondary.\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL." + dimensionInstruction;
+          const editSystemPrompt = `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo, typography, proportions. You are doing a CUT-AND-PASTE of the real product photo into a new scene. NEVER redesign, recolor, simplify, or artistically reinterpret the product. If the product looks even slightly different from the reference, the output is WRONG. Priority #2: The person's face must be identical to the reference.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
