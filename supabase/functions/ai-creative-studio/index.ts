@@ -1650,7 +1650,15 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ error: "Chave da API ChatGPT Image não configurada. Vá em Configurações > APIs e configure sua chave OpenAI para o ChatGPT Criador de Imagens." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
           }
           try {
-            const result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
+            // If reference images exist and model is gpt-image-1, use Edit API for compositing
+            const hasRefImages = refImages.length > 0 && model.includes('gpt-image-1');
+            let result;
+            if (hasRefImages) {
+              console.log(`[chatgpt_image] Using EDIT endpoint with ${refImages.length} reference images`);
+              result = await editImageChatGPT(chatgptKey, params.prompt as string, model, refImages, imageRoles, imageSize);
+            } else {
+              result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
+            }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
             console.error("[chatgpt_image] Error:", err.message);
