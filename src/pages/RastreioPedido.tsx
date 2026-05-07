@@ -28,11 +28,9 @@ export default function RastreioPedido() {
     setLoading(true);
     setError("");
     try {
-      const { data: pedidoData, error: pedidoError } = await supabase
-        .from("pedido_tracking")
-        .select("*")
-        .eq("token_rastreamento", tk)
-        .single();
+      const { data: pedidoArr, error: pedidoError } = await supabase
+        .rpc("lookup_pedido_by_token", { p_token: tk });
+      const pedidoData = pedidoArr?.[0] ?? null;
 
       if (pedidoError || !pedidoData) {
         setError("Pedido não encontrado. Verifique o código de rastreamento.");
