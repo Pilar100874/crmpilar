@@ -1740,23 +1740,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                    onClick={async (e) => {
                       e.stopPropagation();
                       try {
-                        const targetW = activeResult.slideWidth || 0;
-                        const targetH = activeResult.slideHeight || 0;
-                        
-                        const blob = await downloadAsBlob(activeResult.imageUrl);
-                        const bmp = await createImageBitmap(blob);
-                        
-                        const aspectRatio = targetW / targetH;
-                        const cropH = Math.round(bmp.width / aspectRatio);
-                        const cropY = Math.round((bmp.height - cropH) / 2);
-                        
-                        // Create full panoramic canvas first
-                        const fullCanvas = document.createElement('canvas');
-                        fullCanvas.width = targetW;
-                        fullCanvas.height = targetH;
-                        const fullCtx = fullCanvas.getContext('2d')!;
-                        fullCtx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
-                        bmp.close();
+                         const targetW = activeResult.slideWidth || 0;
+                         const targetH = activeResult.slideHeight || 0;
+                         
+                         const blob = await downloadAsBlob(activeResult.imageUrl);
+                         const bmp = await createImageBitmap(blob);
+                         
+                         // Use safeZone percentages from backend if available
+                         const safeTopPct = (activeResult as any).safeZoneTopPct;
+                         const safeHPct = (activeResult as any).safeZoneHeightPct;
+                         let cropY: number, cropH: number;
+                         if (typeof safeTopPct === 'number' && typeof safeHPct === 'number') {
+                           cropY = Math.round(bmp.height * safeTopPct / 100);
+                           cropH = Math.round(bmp.height * safeHPct / 100);
+                         } else {
+                           const aspectRatio = targetW / targetH;
+                           cropH = Math.round(bmp.height / aspectRatio);
+                           cropY = Math.round((bmp.height - cropH) / 2);
+                         }
+                         
+                         // Create full panoramic canvas from the safe zone strip
+                         const fullCanvas = document.createElement('canvas');
+                         fullCanvas.width = targetW;
+                         fullCanvas.height = targetH;
+                         const fullCtx = fullCanvas.getContext('2d')!;
+                         fullCtx.drawImage(bmp, 0, cropY, bmp.width, cropH, 0, 0, targetW, targetH);
+                         bmp.close();
                         
                         // Calculate number of slides (square slides based on height)
                         const slideSize = targetH;
