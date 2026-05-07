@@ -548,6 +548,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const activeResult = storeResult ?? node.data.result;
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+  const [viActive, setViActive] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   useEffect(() => {
@@ -562,7 +563,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       }
 
       if (!estabId) {
-        if (mounted) setConfiguredProviders([]);
+        if (mounted) { setConfiguredProviders([]); setViActive(false); }
         return;
       }
 
@@ -575,6 +576,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       if (mounted && data) {
         setConfiguredProviders(data.map((d) => normalizeProvider(d.provider)));
       }
+
+      // Check if Visual Identity is active
+      const vi = await getActiveVisualIdentity(estabId);
+      if (mounted) setViActive(!!vi);
     })();
 
     return () => {
