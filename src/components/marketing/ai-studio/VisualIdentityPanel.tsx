@@ -71,6 +71,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         estabelecimento_id: estabelecimentoId,
         is_active: newData.is_active,
         name: newData.name,
+        prompt: newData.prompt,
         images: newData.images,
       };
 
