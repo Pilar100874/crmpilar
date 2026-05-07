@@ -1656,15 +1656,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                    🖼️ Panorâmica {panoW}x{panoH}
                    {(activeResult as any).safeZoneMode ? ` (zona segura ${Math.round(cropPct)}%)` : ''}
                  </p>
-                   {/* Preview: show cropped center strip in panoramic aspect ratio */}
+                   {/* Preview: show full image scaled to fit inside block */}
                    <div 
                      className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
                      style={{ 
                        boxShadow: `0 4px 20px -4px ${accent}20`,
                        width: '100%',
-                       aspectRatio: `${panoW} / ${panoH}`,
                        backgroundColor: 'hsl(var(--muted))',
-                       position: 'relative',
                      }}
                      onClick={() => setImageExpanded(!imageExpanded)}
                    >
@@ -1672,13 +1670,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        src={activeResult.imageUrl} 
                        alt="Panorâmica" 
                        style={{ 
-                         position: 'absolute',
-                         left: 0,
                          width: '100%',
-                         height: `${panoAspect * 100}%`,
-                         top: `${-cropTopPct}%`,
-                         objectFit: 'cover',
-                         objectPosition: 'center center',
+                         height: 'auto',
+                         display: 'block',
                        }} 
                        loading="eager" 
                      />
