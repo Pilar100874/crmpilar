@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, StudioEdge, getNodeMeta, StudioNodeType } from './types';
 import { useNodeResult } from './useNodeResults';
+import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw, AlertTriangle } from 'lucide-react';
+import { X, Play, SkipForward, Settings2, Sparkles, RotateCcw, AlertTriangle, Palette } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -547,6 +548,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const activeResult = storeResult ?? node.data.result;
 
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+  const [viActive, setViActive] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   useEffect(() => {
@@ -561,7 +563,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       }
 
       if (!estabId) {
-        if (mounted) setConfiguredProviders([]);
+        if (mounted) { setConfiguredProviders([]); setViActive(false); }
         return;
       }
 
@@ -574,6 +576,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       if (mounted && data) {
         setConfiguredProviders(data.map((d) => normalizeProvider(d.provider)));
       }
+
+      // Check if Visual Identity is active
+      const vi = await getActiveVisualIdentity(estabId);
+      if (mounted) setViActive(!!vi);
     })();
 
     return () => {
@@ -1091,14 +1097,21 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             )}
             <SectionTitle>Estilo & Tamanho</SectionTitle>
             <ConfigField label="Estilo Visual">
-              <Select value={config.imageStyle || 'natural'} onValueChange={(v) => update('imageStyle', v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {IMAGE_STYLES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {viActive ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                  <Palette className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span className="text-[11px] text-amber-300">Desativado — Identidade Visual ativa</span>
+                </div>
+              ) : (
+                <Select value={config.imageStyle || 'natural'} onValueChange={(v) => update('imageStyle', v)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_STYLES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </ConfigField>
             <ConfigField label="Tamanho">
               {currentImgPreset !== 'custom' ? (
