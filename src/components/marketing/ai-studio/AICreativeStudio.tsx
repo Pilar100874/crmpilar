@@ -1731,6 +1731,7 @@ const AICreativeStudioInner: React.FC = () => {
       
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
+      <VisualIdentityPanel open={showVisualIdentity} onClose={() => setShowVisualIdentity(false)} />
 
 
       {/* New Workflow Dialog */}
