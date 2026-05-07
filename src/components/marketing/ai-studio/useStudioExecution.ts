@@ -838,6 +838,41 @@ export function useStudioExecution() {
           panoramicStyle: config.panoramicStyle || 'classic',
           estabelecimentoId: imgEstabId || undefined,
         });
+
+        // WaveSpeed async: poll wavespeed-proxy until done
+        if (result?.wavespeedTaskId) {
+          const wsEstabId = result.estabelecimentoId || imgEstabId;
+          console.log(`[Studio] WaveSpeed async task ${result.wavespeedTaskId}, polling...`);
+          const maxPolls = 120;
+          const pollInterval = 3000;
+          for (let i = 0; i < maxPolls; i++) {
+            if (abortRef.current?.signal.aborted) throw new Error('Execução cancelada pelo usuário.');
+            await new Promise(r => setTimeout(r, pollInterval));
+            const pollResp = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/wavespeed-proxy`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                },
+                body: JSON.stringify({ action: 'fetch', estabelecimentoId: wsEstabId, params: { task_id: result.wavespeedTaskId } }),
+              }
+            );
+            const pollData = await pollResp.json().catch(() => ({}));
+            if (pollData.status === 'completed') {
+              const url = pollData.imageUrl || pollData.outputs?.[0];
+              if (url) return { imageUrl: url, text: '' };
+              throw new Error('WaveSpeed completou sem URL da imagem.');
+            }
+            if (pollData.status === 'failed') {
+              throw new Error(pollData.error || 'Geração falhou no WaveSpeed.');
+            }
+            console.log(`[Studio] WaveSpeed poll ${i + 1}/${maxPolls}: status=${pollData.status}`);
+          }
+          throw new Error('WaveSpeed excedeu o tempo limite (6 min). Tente novamente.');
+        }
+
         return result;
       }
 
@@ -904,6 +939,40 @@ export function useStudioExecution() {
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           estabelecimentoId: viComposeId || undefined,
         });
+
+        // WaveSpeed async: poll wavespeed-proxy until done
+        if (result?.wavespeedTaskId) {
+          const wsEstabId = result.estabelecimentoId || viComposeId;
+          console.log(`[Studio] WaveSpeed compose async task ${result.wavespeedTaskId}, polling...`);
+          const maxPolls = 120;
+          const pollInterval = 3000;
+          for (let i = 0; i < maxPolls; i++) {
+            if (abortRef.current?.signal.aborted) throw new Error('Execução cancelada pelo usuário.');
+            await new Promise(r => setTimeout(r, pollInterval));
+            const pollResp = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/wavespeed-proxy`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                },
+                body: JSON.stringify({ action: 'fetch', estabelecimentoId: wsEstabId, params: { task_id: result.wavespeedTaskId } }),
+              }
+            );
+            const pollData = await pollResp.json().catch(() => ({}));
+            if (pollData.status === 'completed') {
+              const url = pollData.imageUrl || pollData.outputs?.[0];
+              if (url) return { imageUrl: url, text: '' };
+              throw new Error('WaveSpeed completou sem URL da imagem.');
+            }
+            if (pollData.status === 'failed') {
+              throw new Error(pollData.error || 'Geração falhou no WaveSpeed.');
+            }
+          }
+          throw new Error('WaveSpeed excedeu o tempo limite (6 min). Tente novamente.');
+        }
+
         return result;
       }
 

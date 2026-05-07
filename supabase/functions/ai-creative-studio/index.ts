@@ -1152,7 +1152,7 @@ async function generateVideoWavespeed(estabelecimentoId: string, params: any): P
 }
 
 // --- WaveSpeed image generation (async via proxy) ---
-async function generateImageWavespeed(estabelecimentoId: string, prompt: string, model: string, size?: string): Promise<{ imageUrl: string; text: string }> {
+async function generateImageWavespeed(estabelecimentoId: string, prompt: string, model: string, size?: string): Promise<{ imageUrl?: string; text: string; wavespeedTaskId?: string }> {
   const subModel = model.replace("wavespeed/", "");
   const wsModelPath = WAVESPEED_IMAGE_MODEL_MAP[subModel];
   if (!wsModelPath) {
@@ -1195,7 +1195,7 @@ async function generateImageWavespeed(estabelecimentoId: string, prompt: string,
     throw new Error(data?.error || `Erro WaveSpeed (${resp.status})`);
   }
 
-  // Sync response
+  // Sync response — completed immediately
   if (data.status === "completed" && (data.imageUrl || data.outputs?.[0])) {
     let imageUrl = data.imageUrl || data.outputs[0];
     const publicUrl = await uploadBase64ToStorage(imageUrl);
@@ -1203,30 +1203,10 @@ async function generateImageWavespeed(estabelecimentoId: string, prompt: string,
     return { imageUrl, text: "" };
   }
 
-  // Async: poll
+  // Async — return taskId for client-side polling
   if (data.taskId) {
-    const imageUrl = await pollUntilDone<string>(async () => {
-      const pollResp = await fetch(proxyUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ action: "fetch", estabelecimentoId, params: { task_id: data.taskId } }),
-      });
-      const pollData = await pollResp.json().catch(() => ({}));
-      if (pollData.status === "completed") {
-        const url = pollData.imageUrl || pollData.outputs?.[0];
-        if (url) return { done: true, result: url };
-        return { done: true, error: "WaveSpeed completou sem URL da imagem." };
-      }
-      if (pollData.status === "failed") {
-        return { done: true, error: pollData.error || "Geração falhou." };
-      }
-      return { done: false };
-    }, 3000, 60);
-
-    return { imageUrl, text: "" };
+    console.log(`[wavespeed-image] Task queued: ${data.taskId} — returning for client polling`);
+    return { wavespeedTaskId: data.taskId, text: "" };
   }
 
   throw new Error("WaveSpeed não retornou resultado nem taskId.");
@@ -1904,6 +1884,10 @@ Deno.serve(async (req) => {
           }
           try {
             const result = await generateImageWavespeed(estabId, params.prompt as string, model, imageSize);
+            // If async task, return wavespeedTaskId + estabelecimentoId for client-side polling
+            if (result.wavespeedTaskId) {
+              return new Response(JSON.stringify({ result: { wavespeedTaskId: result.wavespeedTaskId, estabelecimentoId: estabId } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
             console.error("[wavespeed-image] Error:", err.message);
