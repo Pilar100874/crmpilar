@@ -807,7 +807,7 @@ export function useStudioExecution() {
         const vi = await getActiveVisualIdentity(imgEstabId);
         if (vi && (vi.images.length > 0 || vi.prompt)) {
           const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
-          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.${viPromptText}`;
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}`;
           for (const viUrl of vi.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
