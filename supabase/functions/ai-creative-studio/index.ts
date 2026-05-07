@@ -1633,7 +1633,7 @@ Deno.serve(async (req) => {
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE PANORAMIC image. Preserve all reference subjects IDENTICALLY." + panoramicDimInstruction },
+                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene with no cuts, frames, borders, or collage effects. The subject must appear naturally within the scene, not in separate overlaid frames. Preserve all reference subjects IDENTICALLY but integrate them naturally into ONE continuous composition." + panoramicDimInstruction },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1651,7 +1651,7 @@ Deno.serve(async (req) => {
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: "You are an image generator. Create a SINGLE WIDE PANORAMIC image." + panoramicDimInstruction },
+                { role: "system", content: "You are an image generator. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene like a panoramic photograph. NO cuts, NO frames, NO borders, NO collage effects, NO card overlays. The entire canvas must be ONE uninterrupted scene." + panoramicDimInstruction },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
