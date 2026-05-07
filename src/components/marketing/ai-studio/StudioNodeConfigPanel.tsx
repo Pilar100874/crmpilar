@@ -149,6 +149,16 @@ const VIDEO_MODELS: ModelInfo[] = [
   { value: 'polloai/cogvideox', label: '🐔 PL: CogVideoX', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
   { value: 'polloai/pika', label: '🐔 PL: Pika', provider: 'Pollo AI', cost: '$$', quality: 4, tip: 'Via Pollo AI', supportsMultiRef: false },
   { value: 'polloai/wan-video', label: '🐔 PL: Wan Video', provider: 'Pollo AI', cost: '$', quality: 3, tip: 'Via Pollo AI', supportsMultiRef: false },
+  // WaveSpeed video models
+  { value: 'wavespeed/seedance-2.0', label: '🌊 WS: Seedance 2.0', provider: 'WaveSpeed', cost: '$$', quality: 5, tip: 'Via WaveSpeed, $0.54', supportsMultiRef: false },
+  { value: 'wavespeed/kling-2.1', label: '🌊 WS: Kling 2.1', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed, $0.35', supportsMultiRef: false },
+  { value: 'wavespeed/wan-2.1', label: '🌊 WS: Wan 2.1', provider: 'WaveSpeed', cost: '$', quality: 4, tip: 'Via WaveSpeed, $0.20', supportsMultiRef: false },
+  { value: 'wavespeed/veo-3', label: '🌊 WS: Veo 3', provider: 'WaveSpeed', cost: '$$$', quality: 5, tip: 'Via WaveSpeed, $0.50', supportsMultiRef: false },
+  { value: 'wavespeed/luma-ray-2', label: '🌊 WS: Luma Ray 2', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed, $0.30', supportsMultiRef: false },
+  { value: 'wavespeed/minimax-video', label: '🌊 WS: Minimax Video', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/hunyuan-video', label: '🌊 WS: Hunyuan Video', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/cogvideox', label: '🌊 WS: CogVideoX', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
+  { value: 'wavespeed/ltx-video', label: '🌊 WS: LTX Video', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
 ];
 
 // Helper to check if a model supports multiple reference images
