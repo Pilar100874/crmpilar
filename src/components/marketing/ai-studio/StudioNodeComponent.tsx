@@ -1647,43 +1647,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   🖼️ Panorâmica {activeResult.slideWidth}x{activeResult.slideHeight}
                   {(activeResult as any).safeZoneMode ? ' (zona segura)' : ''}
                 </p>
-                {/* Preview: show image cropped to center strip via CSS */}
-                <div 
-                  className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
-                  style={{ 
-                    boxShadow: `0 4px 20px -4px ${accent}20`,
-                    height: imageExpanded ? 400 : 200,
-                    width: '100%',
-                    backgroundColor: 'hsl(var(--muted))',
-                  }}
-                  onClick={() => setImageExpanded(!imageExpanded)}
-                >
-                  {(() => {
-                    const tw = activeResult.slideWidth || 1;
-                    const th = activeResult.slideHeight || 1;
-                    const ratio = tw / th;
-                    // Scale factor: how much of the source height is visible
-                    // For 5:1 ratio from a square, visible = 1/5 = 20%
-                    const visiblePct = (1 / ratio) * 100;
-                    // Use object-fit:cover + scale to zoom into center strip
-                    return (
-                      <img 
-                        src={activeResult.imageUrl} 
-                        alt="Panorâmica" 
-                        className="w-full" 
-                        style={{ 
-                          height: '100%',
-                          objectFit: 'cover',
-                          objectPosition: 'center center',
-                          // Scale the image so only the center strip is visible
-                          transform: `scaleY(${ratio})`,
-                          transformOrigin: 'center center',
-                        }} 
-                        loading="eager" 
-                      />
-                    );
-                  })()}
-                </div>
+                 {/* Preview: show full image without distortion, scaled down to fit */}
+                 <div 
+                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer flex items-center justify-center"
+                   style={{ 
+                     boxShadow: `0 4px 20px -4px ${accent}20`,
+                     maxHeight: imageExpanded ? 500 : 260,
+                     width: '100%',
+                     backgroundColor: 'hsl(var(--muted))',
+                   }}
+                   onClick={() => setImageExpanded(!imageExpanded)}
+                 >
+                   <img 
+                     src={activeResult.imageUrl} 
+                     alt="Panorâmica" 
+                     style={{ 
+                       width: '100%',
+                       height: 'auto',
+                       objectFit: 'contain',
+                       maxHeight: imageExpanded ? 500 : 260,
+                     }} 
+                     loading="eager" 
+                   />
+                 </div>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
