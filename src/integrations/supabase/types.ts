@@ -14084,6 +14084,32 @@ export type Database = {
         Returns: boolean
       }
       is_system_admin: { Args: never; Returns: boolean }
+      lookup_pedido_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          created_at: string
+          customer_id: string | null
+          email_cliente: string | null
+          estabelecimento_id: string
+          id: string
+          nome_cliente: string
+          notificar_email: boolean | null
+          notificar_whatsapp: boolean | null
+          numero_pedido: string
+          observacao: string | null
+          orcamento_id: string | null
+          status_atual: string
+          telefone_cliente: string | null
+          token_rastreamento: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "pedido_tracking"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       roles_present: { Args: never; Returns: boolean }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
     }
