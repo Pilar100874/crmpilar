@@ -1679,19 +1679,30 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                        const targetW = activeResult.slideWidth || 0;
                        const targetH = activeResult.slideHeight || 0;
                        
-                       // Download source image and crop center strip
-                       const blob = await downloadAsBlob(activeResult.imageUrl);
-                       const bmp = await createImageBitmap(blob);
-                       
-                       const aspectRatio = targetW / targetH;
-                       const cropH = Math.round(bmp.width / aspectRatio);
-                       const cropY = Math.round((bmp.height - cropH) / 2);
-                       
-                       const canvas = document.createElement('canvas');
-                       canvas.width = targetW;
-                       canvas.height = targetH;
-                       const ctx = canvas.getContext('2d')!;
-                       ctx.drawImage(bmp, 0, Math.max(0, cropY), bmp.width, cropH, 0, 0, targetW, targetH);
+                        // Download source image and scale to target dimensions preserving content
+                        const blob = await downloadAsBlob(activeResult.imageUrl);
+                        const bmp = await createImageBitmap(blob);
+                        
+                        // Fit the generated image into the target dimensions using cover (center crop minimally)
+                        const srcAspect = bmp.width / bmp.height;
+                        const tgtAspect = targetW / targetH;
+                        
+                        let sx = 0, sy = 0, sw = bmp.width, sh = bmp.height;
+                        if (srcAspect > tgtAspect) {
+                          // Source is wider than target — crop sides slightly
+                          sw = Math.round(bmp.height * tgtAspect);
+                          sx = Math.round((bmp.width - sw) / 2);
+                        } else {
+                          // Source is taller than target — crop top/bottom slightly
+                          sh = Math.round(bmp.width / tgtAspect);
+                          sy = Math.round((bmp.height - sh) / 2);
+                        }
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        const ctx = canvas.getContext('2d')!;
+                        ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, targetW, targetH);
                        bmp.close();
                        
                        const croppedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
