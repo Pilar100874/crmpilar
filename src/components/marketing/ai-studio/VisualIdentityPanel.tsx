@@ -572,6 +572,7 @@ export default VisualIdentityPanel;
 export interface VisualIdentityResult {
   images: string[];
   prompt: string;
+  preferredModel?: string;
 }
 
 export async function getActiveVisualIdentity(estabelecimentoId: string): Promise<VisualIdentityResult | null> {
@@ -579,7 +580,7 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
   try {
     const { data } = await supabase
       .from('studio_visual_identity')
-      .select('is_active, images, prompt, use_prompt, use_images, selected_images')
+      .select('is_active, images, prompt, use_prompt, use_images, selected_images, preferred_model')
       .eq('estabelecimento_id', estabelecimentoId)
       .eq('is_active', true)
       .maybeSingle();
@@ -589,27 +590,29 @@ export async function getActiveVisualIdentity(estabelecimentoId: string): Promis
       const useImages = data.use_images ?? true;
       const selectedIndices = Array.isArray(data.selected_images) ? data.selected_images as number[] : [];
 
-      // Filter images based on flags
       let finalImages: string[] = [];
       if (useImages && allImages.length > 0) {
         if (selectedIndices.length > 0) {
-          // Only include selected images
           finalImages = selectedIndices
             .filter(i => i >= 0 && i < allImages.length)
             .map(i => allImages[i]);
         } else {
-          // If no selection saved, use all (backwards compat)
           finalImages = allImages;
         }
       }
 
       const finalPrompt = usePrompt ? ((data.prompt as string) || '') : '';
+      const preferredModel = (data as any).preferred_model || '';
 
-      // Only return if there's something to use
       if (finalImages.length > 0 || finalPrompt) {
-        return { images: finalImages, prompt: finalPrompt };
+        return { images: finalImages, prompt: finalPrompt, preferredModel: preferredModel || undefined };
       }
     }
+  } catch (err) {
+    console.error('[VisualIdentity] Error fetching:', err);
+  }
+  return null;
+}
   } catch (err) {
     console.error('[VisualIdentity] Error fetching:', err);
   }
