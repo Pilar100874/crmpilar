@@ -1661,19 +1661,44 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      const link = document.createElement('a');
-                      link.href = activeResult.imageUrl;
-                      link.download = `panoramic_${activeResult.slideWidth || 'full'}x${activeResult.slideHeight || 'full'}.png`;
-                      link.target = '_blank';
-                      link.click();
-                      toast.success(`✅ Imagem panorâmica baixada!`);
-                    } catch (err) {
-                      console.error('Download error:', err);
-                      toast.error('Erro ao baixar imagem panorâmica');
-                    }
+                    onClick={async (e) => {
+                     e.stopPropagation();
+                     try {
+                       const targetW = activeResult.slideWidth || 0;
+                       const targetH = activeResult.slideHeight || 0;
+                       const blob = await downloadAsBlob(activeResult.imageUrl);
+                       const bmp = await createImageBitmap(blob);
+                       
+                       // If dimensions differ from target, resize via canvas
+                       if (targetW && targetH && (bmp.width !== targetW || bmp.height !== targetH)) {
+                         const canvas = document.createElement('canvas');
+                         canvas.width = targetW;
+                         canvas.height = targetH;
+                         const ctx = canvas.getContext('2d')!;
+                         ctx.drawImage(bmp, 0, 0, targetW, targetH);
+                         bmp.close();
+                         const resizedBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+                         if (!resizedBlob) throw new Error('Falha ao redimensionar');
+                         const url = URL.createObjectURL(resizedBlob);
+                         const link = document.createElement('a');
+                         link.href = url;
+                         link.download = `panoramic_${targetW}x${targetH}.png`;
+                         link.click();
+                         URL.revokeObjectURL(url);
+                       } else {
+                         bmp.close();
+                         const url = URL.createObjectURL(blob);
+                         const link = document.createElement('a');
+                         link.href = url;
+                         link.download = `panoramic_${targetW || 'full'}x${targetH || 'full'}.png`;
+                         link.click();
+                         URL.revokeObjectURL(url);
+                       }
+                       toast.success(`✅ Imagem panorâmica ${targetW}x${targetH} baixada!`);
+                     } catch (err) {
+                       console.error('Download error:', err);
+                       toast.error('Erro ao baixar imagem panorâmica');
+                     }
                   }}
                   className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
                 >
