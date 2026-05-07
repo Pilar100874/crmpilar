@@ -1645,7 +1645,7 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
               const role = imageRoles[i] || 'REFERENCE';
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY. Place within center ${safeHPct}% band.` });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY — do NOT crop any part. Scale down if needed to fit entirely within center ${safeHPct}% band.` });
               }
             }
             editContent.push({ type: "text", text: safeZonePrompt });
