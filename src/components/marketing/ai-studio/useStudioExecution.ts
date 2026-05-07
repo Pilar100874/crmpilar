@@ -829,7 +829,7 @@ export function useStudioExecution() {
 
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
-          model: config.model,
+          model: viModelOverride || config.model,
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
           imageSize: cfgImageSize || undefined,
