@@ -1605,93 +1605,123 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate ONE single wide image at full dimensions, then slice ===
+        // === PANORAMIC MODE: Generate multiple connected segments and stitch on frontend ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
           const [fullW, fullH] = imageSize.split('x').map(Number);
-          console.log(`[generate_image] PANORAMIC MODE — generating SINGLE image at ${fullW}x${fullH}px, will slice into ${totalSlides} slides of ${slideW}x${slideH}px`);
+          const numSegments = totalSlides; // one segment per slide
+          console.log(`[generate_image] PANORAMIC SEGMENT MODE — generating ${numSegments} connected segments to compose ${fullW}x${fullH}px`);
           
           const basePrompt = params.prompt as string;
-          const panoramicDimInstruction = `\n\nOUTPUT FORMAT: Generate EXACTLY ONE SINGLE SEAMLESS CONTINUOUS image at ${fullW}x${fullH} pixels. This is a WIDE PANORAMIC image — like a single photograph taken with a panoramic camera. The scene MUST flow continuously from left edge to right edge with NO visible cuts, NO frames, NO borders, NO card-like overlays, NO collage effects, and NO split panels. The entire ${fullW}x${fullH} canvas must be ONE unified, uninterrupted scene. Do NOT generate multiple images or compose separate frames together.`;
           
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
           
-          let panoData: any;
-          if (hasStrictPano) {
-            const editContent: any[] = [];
+          // Build reference content for each request
+          const buildRefContent = () => {
+            const parts: any[] = [];
             for (let i = 0; i < refImages.length; i++) {
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
+              parts.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "image_url", image_url: { url: safe } });
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
+                parts.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY.` });
               }
             }
-            editContent.push({ type: "text", text: basePrompt });
+            return parts;
+          };
+          
+          const segmentUrls: string[] = [];
+          let prevSegmentUrl: string | null = null;
+          
+          for (let seg = 0; seg < numSegments; seg++) {
+            const positionDesc = seg === 0 
+              ? `LEFT-MOST segment (1/${numSegments}). The RIGHT edge must have elements/scenery that can continue seamlessly into the next segment.`
+              : seg === numSegments - 1
+                ? `RIGHT-MOST segment (${seg + 1}/${numSegments}). The LEFT edge must seamlessly continue from the previous segment.`
+                : `MIDDLE segment (${seg + 1}/${numSegments}). Both LEFT and RIGHT edges must seamlessly connect to adjacent segments.`;
             
-            panoData = await callGateway(LOVABLE_API_KEY, {
-              model,
-              messages: [
-                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene with no cuts, frames, borders, or collage effects. The subject must appear naturally within the scene, not in separate overlaid frames. Preserve all reference subjects IDENTICALLY but integrate them naturally into ONE continuous composition." + panoramicDimInstruction },
-                { role: "user", content: editContent },
-              ],
-              modalities: ["image", "text"],
-            });
-          } else {
+            const segPrompt = `Create segment ${seg + 1} of ${numSegments} for a SEAMLESS PANORAMIC composition.
+${positionDesc}
+CRITICAL: This is a CONTINUOUS scene. The edges where segments meet must have matching colors, lighting, perspective, and elements so when placed side by side they look like ONE uninterrupted photograph.
+Generate a SQUARE image (1:1 aspect ratio).
+Scene description: ${basePrompt}`;
+
             const content: any[] = [];
-            for (let idx = 0; idx < refImages.length; idx++) {
-              const safe = truncateImageUrl(refImages[idx]);
-              if (safe) {
-                content.push({ type: "image_url", image_url: { url: safe } });
-              }
-            }
-            content.push({ type: "text", text: basePrompt });
             
-            panoData = await callGateway(LOVABLE_API_KEY, {
+            // Add reference images
+            if (hasStrictPano || refImages.length > 0) {
+              content.push(...buildRefContent());
+            }
+            
+            // If we have a previous segment, include it as context for continuity
+            if (prevSegmentUrl) {
+              content.push({ type: "image_url", image_url: { url: prevSegmentUrl } });
+              content.push({ type: "text", text: `↑ This is the PREVIOUS segment (${seg}/${numSegments}). Your new segment's LEFT edge MUST seamlessly continue from the RIGHT edge of this image. Match colors, lighting, perspective, and scene elements exactly at the boundary.` });
+            }
+            
+            content.push({ type: "text", text: segPrompt });
+            
+            const systemMsg = prevSegmentUrl
+              ? "You are an image generator creating one segment of a panoramic photo. You MUST match the RIGHT edge of the previous segment shown to you — your LEFT edge must be a perfect visual continuation. Same lighting, colors, perspective, horizon line. Generate a 1:1 square image."
+              : "You are an image generator creating the first segment of a panoramic photo. Create a beautiful scene that can extend rightward seamlessly. Generate a 1:1 square image.";
+            
+            console.log(`[generate_image] Generating panoramic segment ${seg + 1}/${numSegments}...`);
+            
+            const segData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: "You are an image generator. Create a SINGLE WIDE SEAMLESS PANORAMIC image — one continuous scene like a panoramic photograph. NO cuts, NO frames, NO borders, NO collage effects, NO card overlays. The entire canvas must be ONE uninterrupted scene." + panoramicDimInstruction },
+                { role: "system", content: systemMsg },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
             });
-          }
-          
-          // Extract the single panoramic image
-          const panoMsg = panoData.choices?.[0]?.message;
-          let panoImageUrl = panoMsg?.images?.[0]?.image_url?.url;
-          if (!panoImageUrl && Array.isArray(panoMsg?.content)) {
-            for (const part of panoMsg.content) {
-              if (part.type === 'image_url' && part.image_url?.url) { panoImageUrl = part.image_url.url; break; }
-              if (part.inline_data?.mime_type?.startsWith('image/')) { panoImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+            
+            const segMsg = segData.choices?.[0]?.message;
+            let segImageUrl = segMsg?.images?.[0]?.image_url?.url;
+            if (!segImageUrl && Array.isArray(segMsg?.content)) {
+              for (const part of segMsg.content) {
+                if (part.type === 'image_url' && part.image_url?.url) { segImageUrl = part.image_url.url; break; }
+                if (part.inline_data?.mime_type?.startsWith('image/')) { segImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+              }
             }
+            
+            if (segImageUrl && segImageUrl.startsWith('data:')) {
+              const publicUrl = await uploadBase64ToStorage(segImageUrl);
+              if (publicUrl) {
+                prevSegmentUrl = segImageUrl; // keep base64 for next AI call context
+                segImageUrl = publicUrl;
+              } else {
+                prevSegmentUrl = segImageUrl;
+              }
+            } else {
+              prevSegmentUrl = segImageUrl || null;
+            }
+            
+            segmentUrls.push(segImageUrl || '');
+            console.log(`[generate_image] Segment ${seg + 1}/${numSegments} generated: ${!!segImageUrl}`);
           }
           
-          if (panoImageUrl && panoImageUrl.startsWith('data:')) {
-            const publicUrl = await uploadBase64ToStorage(panoImageUrl);
-            if (publicUrl) panoImageUrl = publicUrl;
-          }
-          
-          const panoText = typeof panoMsg?.content === 'string' ? panoMsg.content : '';
-          console.log(`[generate_image] Panoramic single image generated: ${!!panoImageUrl}`);
+          const validSegments = segmentUrls.filter(u => !!u);
+          console.log(`[generate_image] Panoramic complete: ${validSegments.length}/${numSegments} segments`);
           
           return new Response(JSON.stringify({ 
             result: { 
-              imageUrl: panoImageUrl || '', 
-              slideImages: panoImageUrl ? [panoImageUrl] : [],
-              text: panoText || `Generated panoramic image at ${fullW}x${fullH}`,
+              imageUrl: validSegments[0] || '', 
+              slideImages: validSegments,
+              text: `Panorâmica gerada em ${validSegments.length} segmentos — ${fullW}x${fullH}px`,
               carouselMode: 'panoramic',
               slideWidth: fullW,
               slideHeight: fullH,
               gridCols: 1,
               gridRows: 1,
-              totalSlides: 1,
+              totalSlides: validSegments.length,
               originalSlideWidth: slideW,
               originalSlideHeight: slideH,
               originalTotalSlides: totalSlides,
               originalGridCols: gridCols,
               originalGridRows: gridRows,
+              segmentMode: true,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
