@@ -1605,132 +1605,93 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate each slide individually with continuity, then stitch ===
+        // === PANORAMIC MODE: Generate ONE single wide image at full dimensions, then slice ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
-          console.log(`[generate_image] PANORAMIC MODE — ${totalSlides} slides, each ${slideW}x${slideH}px, will stitch into ${imageSize}`);
+          const [fullW, fullH] = imageSize.split('x').map(Number);
+          console.log(`[generate_image] PANORAMIC MODE — generating SINGLE image at ${fullW}x${fullH}px, will slice into ${totalSlides} slides of ${slideW}x${slideH}px`);
           
-          const slideImages: string[] = [];
           const basePrompt = params.prompt as string;
+          const panoramicDimInstruction = `\n\nOUTPUT FORMAT: Generate EXACTLY ONE SINGLE image at ${fullW}x${fullH} pixels. This is a WIDE PANORAMIC image. Fill the ENTIRE ${fullW}x${fullH} canvas. Do NOT generate multiple images. Do NOT add black bars or padding.`;
           
-          // Determine scene descriptions for continuity
-          const scenePositions = isCarousel
-            ? Array.from({ length: totalSlides }, (_, i) => {
-                if (i === 0) return 'LEFT side of a panoramic scene';
-                if (i === totalSlides - 1) return 'RIGHT side of a panoramic scene';
-                return `CENTER section ${i} of a panoramic scene`;
-              })
-            : Array.from({ length: totalSlides }, (_, i) => {
-                const row = Math.floor(i / gridCols);
-                const col = i % gridCols;
-                return `cell row ${row + 1}, column ${col + 1} of a ${gridCols}x${gridRows} panoramic grid`;
-              });
+          const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+          const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
           
-          let previousSlideUrl: string | null = null;
-          
-          for (let slideIdx = 0; slideIdx < totalSlides; slideIdx++) {
-            const slideNum = slideIdx + 1;
-            const position = scenePositions[slideIdx];
-            
-            const continuityRef = previousSlideUrl 
-              ? `\n- CRITICAL: I am providing the PREVIOUS SLIDE as a reference image. Your image MUST continue seamlessly from the RIGHT EDGE of that previous slide. Match its colors, lighting, horizon line, and scene elements exactly at the LEFT edge of your output.`
-              : '';
-            
-            const slidePrompt = `[PANORAMIC SLIDE ${slideNum} of ${totalSlides} — ${position}]\n\n${basePrompt}\n\n[CONTINUITY INSTRUCTIONS] This image is part of a ${totalSlides}-part CONTINUOUS PANORAMIC scene. You are generating the ${position}. The FULL scene should flow seamlessly when all ${totalSlides} images are placed side by side.\n- Use CONSISTENT lighting, color palette, atmosphere, and horizon line across all parts\n- The background/scenery at the EDGES of this image should be designed to CONNECT smoothly with adjacent slides\n- ${slideIdx === 0 ? 'The LEFT edge is the start of the panorama.' : 'The LEFT edge MUST seamlessly continue from the previous slide.'}\n- ${slideIdx === totalSlides - 1 ? 'The RIGHT edge is the end of the panorama.' : 'The RIGHT edge should be designed to connect with the next slide.'}${continuityRef}\n- This individual slide must ALSO be a beautiful, well-composed image on its own.\n\n[FORMAT] Generate at ${slideW}x${slideH}px. Fill the ENTIRE canvas.`;
-            
-            const slideDimInstruction = `\n\nOUTPUT FORMAT: Generate the image at ${slideW}x${slideH} pixels. SINGLE image filling the entire canvas.`;
-            
-            const strictRolesSlide = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
-            const hasStrict = refImages.some((_, i) => strictRolesSlide.includes(imageRoles[i] || ''));
-            
-            let slideData: any;
-            if (hasStrict) {
-              const editContent: any[] = [];
-              
-              // Add previous slide as visual continuity reference
-              if (previousSlideUrl) {
-                editContent.push({ type: "image_url", image_url: { url: previousSlideUrl } });
-                editContent.push({ type: "text", text: "↑ PREVIOUS SLIDE — Your new image MUST continue seamlessly from the RIGHT EDGE of this image. Match colors, lighting, horizon, and scene." });
-              }
-              
-              for (let i = 0; i < refImages.length; i++) {
-                const safe = truncateImageUrl(refImages[i]);
-                if (!safe) continue;
-                const role = imageRoles[i] || 'REFERENCE';
-                if (strictRolesSlide.includes(role)) {
-                  editContent.push({ type: "image_url", image_url: { url: safe } });
-                  editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
-                }
-              }
-              editContent.push({ type: "text", text: slidePrompt });
-              
-              slideData = await callGateway(LOVABLE_API_KEY, {
-                model,
-                messages: [
-                  { role: "system", content: "You are a professional photo compositor creating a CONTINUOUS PANORAMIC scene. Each slide MUST visually connect to the previous one — same horizon, same lighting, same atmosphere, same color palette. The viewer should see ONE unified scene when slides are placed side by side." + slideDimInstruction },
-                  { role: "user", content: editContent },
-                ],
-                modalities: ["image", "text"],
-              });
-            } else {
-              const content: any[] = [];
-              
-              // Add previous slide as visual continuity reference
-              if (previousSlideUrl) {
-                content.push({ type: "image_url", image_url: { url: previousSlideUrl } });
-                content.push({ type: "text", text: "↑ PREVIOUS SLIDE — Your new image MUST continue seamlessly from the RIGHT EDGE of this image. Match colors, lighting, horizon, and scene." });
-              }
-              
-              for (let idx = 0; idx < refImages.length; idx++) {
-                const safe = truncateImageUrl(refImages[idx]);
-                if (safe) {
-                  content.push({ type: "image_url", image_url: { url: safe } });
-                }
-              }
-              content.push({ type: "text", text: slidePrompt });
-              
-              slideData = await callGateway(LOVABLE_API_KEY, {
-                model,
-                messages: [
-                  { role: "system", content: "You are an image generator creating a CONTINUOUS PANORAMIC scene. Each slide MUST visually connect to the previous one — same horizon, same lighting, same atmosphere, same color palette. The viewer should see ONE unified scene when slides are placed side by side." + slideDimInstruction },
-                  { role: "user", content },
-                ],
-                modalities: ["image", "text"],
-              });
-            }
-            
-            const slideMsg = slideData.choices?.[0]?.message;
-            let slideImageUrl = slideMsg?.images?.[0]?.image_url?.url;
-            if (!slideImageUrl && Array.isArray(slideMsg?.content)) {
-              for (const part of slideMsg.content) {
-                if (part.type === 'image_url' && part.image_url?.url) { slideImageUrl = part.image_url.url; break; }
-                if (part.inline_data?.mime_type?.startsWith('image/')) { slideImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+          let panoData: any;
+          if (hasStrictPano) {
+            const editContent: any[] = [];
+            for (let i = 0; i < refImages.length; i++) {
+              const safe = truncateImageUrl(refImages[i]);
+              if (!safe) continue;
+              const role = imageRoles[i] || 'REFERENCE';
+              if (strictRolesPano.includes(role)) {
+                editContent.push({ type: "image_url", image_url: { url: safe } });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
               }
             }
+            editContent.push({ type: "text", text: basePrompt });
             
-            if (slideImageUrl) {
-              if (slideImageUrl.startsWith('data:')) {
-                const publicUrl = await uploadBase64ToStorage(slideImageUrl);
-                if (publicUrl) slideImageUrl = publicUrl;
+            panoData = await callGateway(LOVABLE_API_KEY, {
+              model,
+              messages: [
+                { role: "system", content: "You are a professional photo compositor. Create a SINGLE WIDE PANORAMIC image. Preserve all reference subjects IDENTICALLY." + panoramicDimInstruction },
+                { role: "user", content: editContent },
+              ],
+              modalities: ["image", "text"],
+            });
+          } else {
+            const content: any[] = [];
+            for (let idx = 0; idx < refImages.length; idx++) {
+              const safe = truncateImageUrl(refImages[idx]);
+              if (safe) {
+                content.push({ type: "image_url", image_url: { url: safe } });
               }
-              slideImages.push(slideImageUrl);
-              previousSlideUrl = slideImageUrl; // Pass to next iteration for visual continuity
-              console.log(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} generated OK`);
-            } else {
-              console.warn(`[generate_image] Panoramic slide ${slideNum}/${totalSlides} failed to generate`);
+            }
+            content.push({ type: "text", text: basePrompt });
+            
+            panoData = await callGateway(LOVABLE_API_KEY, {
+              model,
+              messages: [
+                { role: "system", content: "You are an image generator. Create a SINGLE WIDE PANORAMIC image." + panoramicDimInstruction },
+                { role: "user", content },
+              ],
+              modalities: ["image", "text"],
+            });
+          }
+          
+          // Extract the single panoramic image
+          const panoMsg = panoData.choices?.[0]?.message;
+          let panoImageUrl = panoMsg?.images?.[0]?.image_url?.url;
+          if (!panoImageUrl && Array.isArray(panoMsg?.content)) {
+            for (const part of panoMsg.content) {
+              if (part.type === 'image_url' && part.image_url?.url) { panoImageUrl = part.image_url.url; break; }
+              if (part.inline_data?.mime_type?.startsWith('image/')) { panoImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
             }
           }
           
+          if (panoImageUrl && panoImageUrl.startsWith('data:')) {
+            const publicUrl = await uploadBase64ToStorage(panoImageUrl);
+            if (publicUrl) panoImageUrl = publicUrl;
+          }
+          
+          const panoText = typeof panoMsg?.content === 'string' ? panoMsg.content : '';
+          console.log(`[generate_image] Panoramic single image generated: ${!!panoImageUrl}`);
+          
           return new Response(JSON.stringify({ 
             result: { 
-              imageUrl: slideImages[0] || '', 
-              slideImages,
-              text: `Generated ${slideImages.length} panoramic slides for stitching`,
+              imageUrl: panoImageUrl || '', 
+              slideImages: panoImageUrl ? [panoImageUrl] : [],
+              text: panoText || `Generated panoramic image at ${fullW}x${fullH}`,
               carouselMode: 'panoramic',
-              slideWidth: slideW,
-              slideHeight: slideH,
-              gridCols,
-              gridRows,
-              totalSlides,
+              slideWidth: fullW,
+              slideHeight: fullH,
+              gridCols: 1,
+              gridRows: 1,
+              totalSlides: 1,
+              originalSlideWidth: slideW,
+              originalSlideHeight: slideH,
+              originalTotalSlides: totalSlides,
+              originalGridCols: gridCols,
+              originalGridRows: gridRows,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
