@@ -1605,123 +1605,111 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate multiple connected segments and stitch on frontend ===
+        // === PANORAMIC MODE: Generate 1080x1080 with safe-zone, crop on frontend ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
           const [fullW, fullH] = imageSize.split('x').map(Number);
-          const numSegments = totalSlides; // one segment per slide
-          console.log(`[generate_image] PANORAMIC SEGMENT MODE — generating ${numSegments} connected segments to compose ${fullW}x${fullH}px`);
+          const aspectRatio = fullW / fullH; // e.g. 5400/1080 = 5
+          // Safe zone: the center horizontal strip in a 1080x1080 image
+          // safeH = 1080 / aspectRatio  (e.g. 1080/5 = 216px)
+          const genSize = 1080;
+          const safeH = Math.round(genSize / aspectRatio);
+          const safeTopPct = Math.round(((genSize - safeH) / 2 / genSize) * 100);
+          const safeBotPct = 100 - safeTopPct;
+          const safeHPct = Math.round((safeH / genSize) * 100);
+          
+          console.log(`[generate_image] PANORAMIC SAFE-ZONE MODE — 1080x1080, safe band ${safeH}px (${safeHPct}% center), target ${fullW}x${fullH}`);
           
           const basePrompt = params.prompt as string;
           
+          const safeZonePrompt = `${basePrompt}
+
+CRITICAL COMPOSITION RULE: This image will be cropped to a WIDE PANORAMIC format (${fullW}x${fullH}, ratio ${aspectRatio}:1).
+Place ALL important content (subjects, text, objects, focal points) ONLY in the CENTER HORIZONTAL BAND between ${safeTopPct}% and ${safeBotPct}% of the image height.
+The top ${safeTopPct}% and bottom ${safeTopPct}% will be CROPPED AWAY — use those areas ONLY for simple, expendable background (sky, gradient, blurred scenery).
+Think of a WIDE CINEMATIC LANDSCAPE — the action happens in the middle strip.
+Generate a 1:1 SQUARE image (1080x1080px).`;
+
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
           
-          // Build reference content for each request
-          const buildRefContent = () => {
-            const parts: any[] = [];
+          let panoData: any;
+          
+          if (hasStrictPano) {
+            const editContent: any[] = [];
             for (let i = 0; i < refImages.length; i++) {
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
-              parts.push({ type: "image_url", image_url: { url: safe } });
+              editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                parts.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY.` });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY. Place within center ${safeHPct}% band.` });
               }
             }
-            return parts;
-          };
-          
-          const segmentUrls: string[] = [];
-          let prevSegmentUrl: string | null = null;
-          
-          for (let seg = 0; seg < numSegments; seg++) {
-            const positionDesc = seg === 0 
-              ? `LEFT-MOST segment (1/${numSegments}). The RIGHT edge must have elements/scenery that can continue seamlessly into the next segment.`
-              : seg === numSegments - 1
-                ? `RIGHT-MOST segment (${seg + 1}/${numSegments}). The LEFT edge must seamlessly continue from the previous segment.`
-                : `MIDDLE segment (${seg + 1}/${numSegments}). Both LEFT and RIGHT edges must seamlessly connect to adjacent segments.`;
+            editContent.push({ type: "text", text: safeZonePrompt });
             
-            const segPrompt = `Create segment ${seg + 1} of ${numSegments} for a SEAMLESS PANORAMIC composition.
-${positionDesc}
-CRITICAL: This is a CONTINUOUS scene. The edges where segments meet must have matching colors, lighting, perspective, and elements so when placed side by side they look like ONE uninterrupted photograph.
-Generate a SQUARE image (1:1 aspect ratio).
-Scene description: ${basePrompt}`;
-
-            const content: any[] = [];
-            
-            // Add reference images
-            if (hasStrictPano || refImages.length > 0) {
-              content.push(...buildRefContent());
-            }
-            
-            // If we have a previous segment, include it as context for continuity
-            if (prevSegmentUrl) {
-              content.push({ type: "image_url", image_url: { url: prevSegmentUrl } });
-              content.push({ type: "text", text: `↑ This is the PREVIOUS segment (${seg}/${numSegments}). Your new segment's LEFT edge MUST seamlessly continue from the RIGHT edge of this image. Match colors, lighting, perspective, and scene elements exactly at the boundary.` });
-            }
-            
-            content.push({ type: "text", text: segPrompt });
-            
-            const systemMsg = prevSegmentUrl
-              ? "You are an image generator creating one segment of a panoramic photo. You MUST match the RIGHT edge of the previous segment shown to you — your LEFT edge must be a perfect visual continuation. Same lighting, colors, perspective, horizon line. Generate a 1:1 square image."
-              : "You are an image generator creating the first segment of a panoramic photo. Create a beautiful scene that can extend rightward seamlessly. Generate a 1:1 square image.";
-            
-            console.log(`[generate_image] Generating panoramic segment ${seg + 1}/${numSegments}...`);
-            
-            const segData = await callGateway(LOVABLE_API_KEY, {
+            panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: systemMsg },
+                { role: "system", content: `You are a professional photo compositor. Place ALL subjects in the center ${safeHPct}% horizontal band. Top and bottom areas should be simple background. Generate a 1:1 square image.` },
+                { role: "user", content: editContent },
+              ],
+              modalities: ["image", "text"],
+            });
+          } else {
+            const content: any[] = [];
+            for (let i = 0; i < refImages.length; i++) {
+              const safe = truncateImageUrl(refImages[i]);
+              if (safe) {
+                content.push({ type: "image_url", image_url: { url: safe } });
+                content.push({ type: "text", text: `[${imageRoles[i] || 'REFERENCE'}]` });
+              }
+            }
+            content.push({ type: "text", text: safeZonePrompt });
+            
+            panoData = await callGateway(LOVABLE_API_KEY, {
+              model,
+              messages: [
+                { role: "system", content: `You are an image generator. Create a square 1080x1080 image where ALL important content is concentrated in the center ${safeHPct}% horizontal strip. The top and bottom edges are expendable background.` },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
             });
-            
-            const segMsg = segData.choices?.[0]?.message;
-            let segImageUrl = segMsg?.images?.[0]?.image_url?.url;
-            if (!segImageUrl && Array.isArray(segMsg?.content)) {
-              for (const part of segMsg.content) {
-                if (part.type === 'image_url' && part.image_url?.url) { segImageUrl = part.image_url.url; break; }
-                if (part.inline_data?.mime_type?.startsWith('image/')) { segImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
-              }
-            }
-            
-            if (segImageUrl && segImageUrl.startsWith('data:')) {
-              const publicUrl = await uploadBase64ToStorage(segImageUrl);
-              if (publicUrl) {
-                prevSegmentUrl = segImageUrl; // keep base64 for next AI call context
-                segImageUrl = publicUrl;
-              } else {
-                prevSegmentUrl = segImageUrl;
-              }
-            } else {
-              prevSegmentUrl = segImageUrl || null;
-            }
-            
-            segmentUrls.push(segImageUrl || '');
-            console.log(`[generate_image] Segment ${seg + 1}/${numSegments} generated: ${!!segImageUrl}`);
           }
           
-          const validSegments = segmentUrls.filter(u => !!u);
-          console.log(`[generate_image] Panoramic complete: ${validSegments.length}/${numSegments} segments`);
+          const panoMsg = panoData.choices?.[0]?.message;
+          let panoImageUrl = panoMsg?.images?.[0]?.image_url?.url;
+          if (!panoImageUrl && Array.isArray(panoMsg?.content)) {
+            for (const part of panoMsg.content) {
+              if (part.type === 'image_url' && part.image_url?.url) { panoImageUrl = part.image_url.url; break; }
+              if (part.inline_data?.mime_type?.startsWith('image/')) { panoImageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`; break; }
+            }
+          }
+          
+          if (panoImageUrl && panoImageUrl.startsWith('data:')) {
+            const publicUrl = await uploadBase64ToStorage(panoImageUrl);
+            if (publicUrl) panoImageUrl = publicUrl;
+          }
+          
+          console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
           
           return new Response(JSON.stringify({ 
             result: { 
-              imageUrl: validSegments[0] || '', 
-              slideImages: validSegments,
-              text: `Panorâmica gerada em ${validSegments.length} segmentos — ${fullW}x${fullH}px`,
+              imageUrl: panoImageUrl || '', 
+              text: `Panorâmica gerada — recorte automático para ${fullW}x${fullH}px`,
               carouselMode: 'panoramic',
               slideWidth: fullW,
               slideHeight: fullH,
               gridCols: 1,
               gridRows: 1,
-              totalSlides: validSegments.length,
+              totalSlides: totalSlides,
               originalSlideWidth: slideW,
               originalSlideHeight: slideH,
               originalTotalSlides: totalSlides,
               originalGridCols: gridCols,
               originalGridRows: gridRows,
-              segmentMode: true,
+              safeZoneMode: true,
+              safeZoneTopPct: safeTopPct,
+              safeZoneHeightPct: safeHPct,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
