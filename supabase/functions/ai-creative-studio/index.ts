@@ -1605,32 +1605,24 @@ Deno.serve(async (req) => {
           });
         }
 
-        // === PANORAMIC MODE: Generate 1080x1080 with safe-zone, crop on frontend ===
+         // === PANORAMIC MODE: Generate WIDE image directly, scale on frontend ===
         if ((isGrid || isCarousel) && totalSlides > 1) {
           const [fullW, fullH] = imageSize.split('x').map(Number);
           const aspectRatio = fullW / fullH; // e.g. 5400/1080 = 5
-          // Safe zone: the center horizontal strip in a 1080x1080 image
-          // safeH = 1080 / aspectRatio  (e.g. 1080/5 = 216px)
-          const genSize = 1080;
-          const safeH = Math.round(genSize / aspectRatio);
-          const safeTopPct = Math.round(((genSize - safeH) / 2 / genSize) * 100);
-          const safeBotPct = 100 - safeTopPct;
-          const safeHPct = Math.round((safeH / genSize) * 100);
           
-          console.log(`[generate_image] PANORAMIC SAFE-ZONE MODE — 1080x1080, safe band ${safeH}px (${safeHPct}% center), target ${fullW}x${fullH}`);
+          console.log(`[generate_image] PANORAMIC WIDE MODE — target ${fullW}x${fullH}, ratio ${aspectRatio}:1`);
           
           const basePrompt = params.prompt as string;
           
-          const safeZonePrompt = `${basePrompt}
+          const widePrompt = `${basePrompt}
 
-CRITICAL COMPOSITION RULE: This image will be cropped to a WIDE PANORAMIC format (${fullW}x${fullH}, ratio ${aspectRatio}:1).
-Place ALL important content (subjects, text, objects, focal points) ONLY in the CENTER HORIZONTAL BAND between ${safeTopPct}% and ${safeBotPct}% of the image height.
-The top ${safeTopPct}% and bottom ${safeTopPct}% will be CROPPED AWAY — use those areas ONLY for simple, expendable background (sky, gradient, blurred scenery).
+CRITICAL COMPOSITION RULE: Generate a WIDE PANORAMIC image with aspect ratio ${aspectRatio}:1 (width is ${aspectRatio} times the height).
+The image MUST be significantly wider than it is tall — like a cinematic widescreen banner.
 
-REFERENCE IMAGE PRESERVATION RULE: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED inside the safe center band. Do NOT cut off any part of the reference subjects — show them head-to-toe (for people) or in full (for products/logos). Scale them down if needed so they fit entirely within the center ${safeHPct}% strip WITHOUT any part being cropped.
+REFERENCE IMAGE PRESERVATION RULE: Any reference images provided (product, influencer, person, logo, clothing) MUST appear FULLY VISIBLE and UNCROPPED. Show people head-to-toe, products in full, logos complete. Scale them down if needed so they fit entirely WITHOUT any part being cropped. NEVER cut off heads, feet, or any edges of reference subjects.
 
-Think of a WIDE CINEMATIC LANDSCAPE — the action happens in the middle strip.
-Generate a 1:1 SQUARE image (1080x1080px).`;
+Distribute subjects across the wide composition. Use the full width. Think of a wide cinematic movie frame or a billboard banner.
+Generate a WIDE PANORAMIC image (aspect ratio approximately ${aspectRatio}:1). DO NOT generate a square image.`;
 
           const strictRolesPano = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
           const hasStrictPano = refImages.some((_, i) => strictRolesPano.includes(imageRoles[i] || ''));
@@ -1645,15 +1637,15 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
               const role = imageRoles[i] || 'REFERENCE';
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY — do NOT crop any part. Scale down if needed to fit entirely within center ${safeHPct}% band.` });
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and show FULLY VISIBLE — do NOT crop any part. Show head-to-toe for people, complete for products.` });
               }
             }
-            editContent.push({ type: "text", text: safeZonePrompt });
+            editContent.push({ type: "text", text: widePrompt });
             
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Place ALL subjects FULLY VISIBLE (uncropped, head-to-toe for people, complete for products) in the center ${safeHPct}% horizontal band. Scale subjects down if necessary so nothing is cut off. Top and bottom areas should be simple background. Generate a 1:1 square image.` },
+                { role: "system", content: `You are a professional photo compositor. Generate a WIDE PANORAMIC image (aspect ratio ${aspectRatio}:1). ALL subjects must be FULLY VISIBLE (uncropped, head-to-toe for people, complete for products). Distribute content across the wide frame. NEVER generate a square image — the output must be significantly wider than tall.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -1667,12 +1659,12 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
                 content.push({ type: "text", text: `[${imageRoles[i] || 'REFERENCE'}]` });
               }
             }
-            content.push({ type: "text", text: safeZonePrompt });
+            content.push({ type: "text", text: widePrompt });
             
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are an image generator. Create a square 1080x1080 image where ALL important content (including reference subjects like products, people, logos) is concentrated FULLY VISIBLE and UNCROPPED in the center ${safeHPct}% horizontal strip. Scale subjects down if needed — never crop them. The top and bottom edges are expendable background.` },
+                { role: "system", content: `You are an image generator. Generate a WIDE PANORAMIC image (aspect ratio ${aspectRatio}:1, width much greater than height). ALL important content (including reference subjects like products, people, logos) must be FULLY VISIBLE and UNCROPPED. NEVER generate a square image.` },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
@@ -1710,9 +1702,7 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
               originalTotalSlides: totalSlides,
               originalGridCols: gridCols,
               originalGridRows: gridRows,
-              safeZoneMode: true,
-              safeZoneTopPct: safeTopPct,
-              safeZoneHeightPct: safeHPct,
+              wideMode: true,
             } 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
