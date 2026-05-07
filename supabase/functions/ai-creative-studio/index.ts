@@ -1737,8 +1737,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               // Skip brand identity images — they confuse the model and override the product
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
-              if (strictRolesPano.includes(role)) {
-                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and place FULLY within the center horizontal strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Scale to fit within the strip — do NOT crop.` });
+              if (role === 'PRODUCT - DO NOT MODIFY') {
+                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy EXACTLY into scene. Same packaging, label, colors, logo. DO NOT redesign. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
+                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (strictRolesPano.includes(role)) {
+                editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY within center strip.` });
               }
             }
             editContent.push({ type: "text", text: panoramicPrompt });
