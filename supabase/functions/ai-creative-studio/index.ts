@@ -1672,7 +1672,7 @@ Generate a 1:1 SQUARE image (1080x1080px).`;
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are an image generator. Create a square 1080x1080 image where ALL important content is concentrated in the center ${safeHPct}% horizontal strip. The top and bottom edges are expendable background.` },
+                { role: "system", content: `You are an image generator. Create a square 1080x1080 image where ALL important content (including reference subjects like products, people, logos) is concentrated FULLY VISIBLE and UNCROPPED in the center ${safeHPct}% horizontal strip. Scale subjects down if needed — never crop them. The top and bottom edges are expendable background.` },
                 { role: "user", content },
               ],
               modalities: ["image", "text"],
