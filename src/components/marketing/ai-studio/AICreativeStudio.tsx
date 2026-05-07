@@ -1562,6 +1562,13 @@ const AICreativeStudioInner: React.FC = () => {
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
           </Button>
+          <Button size="icon" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="h-7 w-7 sm:hidden shrink-0" title="Identidade Visual">
+            <Palette className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
+            <Palette className="h-3.5 w-3.5" />
+            Identidade Visual
+          </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
             size="icon"
