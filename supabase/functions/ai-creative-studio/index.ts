@@ -1728,6 +1728,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
+              // Skip brand identity images — they confuse the model and override the product
+              if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (strictRolesPano.includes(role)) {
                 editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY and place FULLY within the center horizontal strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Scale to fit within the strip — do NOT crop.` });
