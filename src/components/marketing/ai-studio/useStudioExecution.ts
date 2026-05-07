@@ -811,6 +811,7 @@ export function useStudioExecution() {
           imagePlatformPreset: imgPresetKey || undefined,
           carouselMode: config.carouselMode || 'panoramic',
           panoramicStyle: config.panoramicStyle || 'classic',
+          estabelecimentoId: imgEstabId || undefined,
         });
         return result;
       }
