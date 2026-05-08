@@ -9,7 +9,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2, Wand2 } from "lucide-react";
+import { Sparkles, Loader2, Wand2, HelpCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Node, Edge } from "@xyflow/react";
@@ -190,6 +192,54 @@ export function WorkflowAIGenerator({
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-violet-500" />
               Gerar Workflow com IA
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" aria-label="Ajuda">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-96 p-0">
+                  <div className="p-4 border-b">
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <HelpCircle className="h-4 w-4 text-violet-500" />
+                      Como usar o gerador
+                    </p>
+                  </div>
+                  <ScrollArea className="max-h-80">
+                    <div className="p-4 space-y-3 text-xs text-muted-foreground">
+                      <div>
+                        <p className="font-medium text-foreground mb-1">1. Descreva a regra com clareza</p>
+                        <p>Diga o que deve acontecer, em que ordem e quais condições. Quanto mais específico, melhor o resultado.</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">2. Mencione canais e ações</p>
+                        <p>Ex.: "envie WhatsApp", "publique no Instagram e Facebook", "gere 4 variações de imagem com identidade visual".</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">3. Use condições e ramificações</p>
+                        <p>Frases como "se cliente novo", "caso o valor seja maior que X", "senão" são reconhecidas como decisões (Sim/Não).</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">4. Revise no canvas</p>
+                        <p>O resultado é adicionado ao fluxo atual. Você pode reposicionar, reconfigurar e conectar blocos manualmente depois.</p>
+                      </div>
+                      <div className="pt-2 border-t">
+                        <p className="font-medium text-foreground mb-1">Blocos disponíveis ({blockDefinitions.length})</p>
+                        <div className="flex flex-wrap gap-1">
+                          {blockDefinitions.map((b) => (
+                            <span key={b.type} className="px-1.5 py-0.5 rounded bg-muted text-[10px] text-foreground">
+                              {b.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t">
+                        <p className="text-[11px] italic">Dica: a IA usa apenas os blocos listados acima. Se precisar de algo novo, crie o bloco antes de gerar.</p>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </DialogTitle>
             <DialogDescription>
               Descreva a regra de negócio em linguagem natural e a IA montará os blocos automaticamente.
