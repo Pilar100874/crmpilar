@@ -29,7 +29,8 @@ import {
   Shield,
   Activity,
   Bot,
-  HardDrive
+  HardDrive,
+  Share2
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,6 +69,7 @@ import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
+import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -108,6 +110,7 @@ const tabItems: TabItem[] = [
   { id: 'softphone', label: 'Softphone', icon: Phone },
   { id: 'videochamada', label: 'Videochamada', icon: Video },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
+  { id: 'conectores-sociais', label: 'Conectores de Redes Sociais', icon: Share2 },
 ];
 
 // Skills Manager Component (embedded)
@@ -710,6 +713,16 @@ export default function AtendimentoConfig() {
                   <CardDescription className="text-xs sm:text-sm">Configure o prazo de retenção de conversas e monitore o uso do banco de dados</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatRetencaoCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="conectores-sociais" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Share2 className="h-4 w-4 sm:h-5 sm:w-5" />Conectores de Redes Sociais</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Conecte Instagram, Facebook, TikTok, LinkedIn, X e YouTube para publicar posts pelo bot</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6"><ConectoresRedesSociaisCRUD /></CardContent>
               </Card>
             </TabsContent>
           </div>
