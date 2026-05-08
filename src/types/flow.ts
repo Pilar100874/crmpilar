@@ -42,7 +42,8 @@ export type NodeType =
   | "definir_prioridade"
   | "enviar_aviso_sistema"
   | "enviar_mensagem_interna"
-  | "publish_social_post";
+  | "publish_social_post"
+  | "generate_ai_media";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -472,6 +473,25 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       hashtags: "",
       scheduledAt: "",
       outputVariable: "post_publicado",
+    },
+  },
+  {
+    type: "generate_ai_media",
+    label: "Gerar Mídia IA",
+    description: "Gera imagens ou vídeos via IA para o usuário escolher",
+    icon: "Sparkles",
+    color: "text-purple-600",
+    defaultData: {
+      mediaType: "image",
+      styleSource: "visual_identity",
+      preset: "",
+      acceptText: true,
+      acceptImageRef: false,
+      textPrompt: "Descreva o que você quer gerar:",
+      imagePrompt: "Envie uma imagem de referência:",
+      basePrompt: "",
+      variations: 4,
+      outputVariable: "midia_selecionada",
     },
   },
 ];

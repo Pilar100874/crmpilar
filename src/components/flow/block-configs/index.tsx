@@ -99,3 +99,6 @@ export { EnviarMensagemInternaConfig } from './EnviarMensagemInternaConfig';
 
 // Redes Sociais
 export { PublishSocialPostConfig } from './PublishSocialPostConfig';
+
+// IA - Geração de Mídia
+export { GenerateAIMediaConfig } from './GenerateAIMediaConfig';

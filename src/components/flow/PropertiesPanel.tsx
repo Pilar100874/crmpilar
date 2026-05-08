@@ -378,6 +378,10 @@ export const PropertiesPanel = ({
       case "publish_social_post":
         return <BlockConfigs.PublishSocialPostConfig {...configProps} />;
 
+      // IA - Geração de Mídia
+      case "generate_ai_media":
+        return <BlockConfigs.GenerateAIMediaConfig {...configProps} />;
+
       case "start":
         return (
           <div className="space-y-4">
