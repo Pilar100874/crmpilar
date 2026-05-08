@@ -41,7 +41,8 @@ export type NodeType =
   | "atribuir_atendente"
   | "definir_prioridade"
   | "enviar_aviso_sistema"
-  | "enviar_mensagem_interna";
+  | "enviar_mensagem_interna"
+  | "publish_social_post";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -454,6 +455,23 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       roles: [],
       mensagem: "",
       titulo_conversa: ""
+    },
+  },
+  // Redes Sociais
+  {
+    type: "publish_social_post",
+    label: "Publicar nas Redes Sociais",
+    description: "Publica post no Instagram, Facebook, TikTok, LinkedIn etc.",
+    icon: "Share2",
+    color: "text-pink-600",
+    defaultData: {
+      platforms: ["instagram"],
+      postType: "image",
+      mediaUrl: "",
+      caption: "",
+      hashtags: "",
+      scheduledAt: "",
+      outputVariable: "post_publicado",
     },
   },
 ];
