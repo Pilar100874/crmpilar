@@ -29,8 +29,7 @@ import {
   Shield,
   Activity,
   Bot,
-  HardDrive,
-  Share2
+  HardDrive
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,7 +68,6 @@ import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 import ChatAgentsCRUD from '@/components/config/ChatAgentsCRUD';
 import KbLacunasCRUD from '@/components/config/KbLacunasCRUD';
 import ChatRetencaoCRUD from '@/components/config/ChatRetencaoCRUD';
-import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -110,7 +108,6 @@ const tabItems: TabItem[] = [
   { id: 'softphone', label: 'Softphone', icon: Phone },
   { id: 'videochamada', label: 'Videochamada', icon: Video },
   { id: 'retencao-dados', label: 'Retenção de Dados', icon: HardDrive },
-  { id: 'conectores-sociais', label: 'Conectores de Redes Sociais', icon: Share2 },
 ];
 
 // Skills Manager Component (embedded)
