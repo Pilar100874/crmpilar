@@ -374,6 +374,10 @@ export const PropertiesPanel = ({
       case "definir_prioridade":
         return <BlockConfigs.DefinirPrioridadeConfig {...configProps} />;
 
+      // Redes Sociais
+      case "publish_social_post":
+        return <BlockConfigs.PublishSocialPostConfig {...configProps} />;
+
       case "start":
         return (
           <div className="space-y-4">

@@ -96,3 +96,6 @@ export {
 // Chat e Avisos Blocks
 export { EnviarAvisoSistemaConfig } from './EnviarAvisoSistemaConfig';
 export { EnviarMensagemInternaConfig } from './EnviarMensagemInternaConfig';
+
+// Redes Sociais
+export { PublishSocialPostConfig } from './PublishSocialPostConfig';

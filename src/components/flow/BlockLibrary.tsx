@@ -112,6 +112,18 @@ const blockCategories = [
     textHover: "group-hover:text-cyan-700",
     blocks: ["transferir_omnichannel", "enviar_fila", "atribuir_atendente", "definir_prioridade"] as NodeType[],
   },
+  {
+    name: "Redes Sociais",
+    icon: "Share2",
+    color: "pink",
+    gradient: "from-pink-500/10 to-rose-500/10",
+    border: "border-pink-500/20",
+    borderHover: "hover:border-pink-500/40",
+    iconColor: "text-pink-600",
+    iconHover: "group-hover:text-pink-700",
+    textHover: "group-hover:text-pink-700",
+    blocks: ["publish_social_post"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {
