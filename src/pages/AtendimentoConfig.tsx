@@ -712,16 +712,6 @@ export default function AtendimentoConfig() {
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <ChatRetencaoCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
             </TabsContent>
-
-            <TabsContent value="conectores-sociais" className="mt-0 h-full overflow-y-auto">
-              <Card className="h-full">
-                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Share2 className="h-4 w-4 sm:h-5 sm:w-5" />Conectores de Redes Sociais</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Conecte Instagram, Facebook, TikTok, LinkedIn, X e YouTube para publicar posts pelo bot</CardDescription>
-                </CardHeader>
-                <CardContent className="px-3 sm:px-6"><ConectoresRedesSociaisCRUD /></CardContent>
-              </Card>
-            </TabsContent>
           </div>
         </Tabs>
       </div>
