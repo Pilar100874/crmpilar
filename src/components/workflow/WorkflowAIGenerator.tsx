@@ -189,23 +189,23 @@ export function WorkflowAIGenerator({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 pr-8">
               <Sparkles className="h-5 w-5 text-violet-500" />
-              Gerar Workflow com IA
+              <span>Gerar Workflow com IA</span>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto" aria-label="Ajuda">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Ajuda">
                     <HelpCircle className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-96 p-0">
+                <PopoverContent align="start" className="w-96 p-0">
                   <div className="p-4 border-b">
                     <p className="text-sm font-semibold flex items-center gap-1.5">
                       <HelpCircle className="h-4 w-4 text-violet-500" />
                       Como usar o gerador
                     </p>
                   </div>
-                  <ScrollArea className="max-h-80">
+                  <ScrollArea className="h-80">
                     <div className="p-4 space-y-3 text-xs text-muted-foreground">
                       <div>
                         <p className="font-medium text-foreground mb-1">1. Descreva a regra com clareza</p>
