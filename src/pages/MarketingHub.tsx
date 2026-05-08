@@ -20,6 +20,7 @@ import {
   Clapperboard,
   Brain,
   Globe,
+  Share2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,6 +47,7 @@ import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 import AISettingsPage from '@/components/marketing/ai-studio/AISettingsPage';
 import { StrategyEngine } from '@/components/marketing/strategy-engine';
 import PageBuilder from '@/components/marketing/page-builder/PageBuilder';
+import { ConectoresRedesSociaisCRUD } from '@/components/config/ConectoresRedesSociaisCRUD';
 
 interface TabItem {
   id: string;
@@ -67,6 +69,7 @@ const tabItems: TabItem[] = [
   { id: 'page-builder', label: 'Page Builder', icon: Globe, description: 'Crie sites de página única com drag-and-drop' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
+  { id: 'conectores-sociais', label: 'Conectores de Redes Sociais', icon: Share2, description: 'Conecte Instagram, Facebook, TikTok, LinkedIn, X e YouTube' },
 
 ];
 
@@ -117,6 +120,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingCampanhas />;
       case 'integrations':
         return <IntegrationCredentialsManager />;
+      case 'conectores-sociais':
+        return <ConectoresRedesSociaisCRUD />;
       case 'n8n-editor':
         return <N8nWorkflowEditor />;
       default:
