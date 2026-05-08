@@ -679,6 +679,42 @@ function BotBuilderContent() {
         
         if (!silent) {
           toast.success("✓ Bot salvo com sucesso!", { duration: 3000 });
+
+          // Avisar sobre conectores de redes sociais não configurados
+          try {
+            const PLATFORM_REQUIRED_FIELDS: Record<string, { label: string; fields: string[] }> = {
+              instagram: { label: 'Instagram', fields: ['access_token', 'page_id'] },
+              facebook: { label: 'Facebook', fields: ['access_token', 'page_id'] },
+              tiktok: { label: 'TikTok', fields: ['client_key', 'access_token'] },
+              linkedin: { label: 'LinkedIn', fields: ['access_token', 'organization_id'] },
+              twitter: { label: 'X (Twitter)', fields: ['api_key', 'api_secret', 'access_token', 'access_secret'] },
+              youtube: { label: 'YouTube', fields: ['client_id', 'client_secret', 'refresh_token'] },
+            };
+            const stored = JSON.parse(localStorage.getItem('social_connectors_config_v1') || '{}');
+            const usedPlatforms = new Set<string>();
+            nodesToSave.forEach((n: any) => {
+              if (n?.data?.type === 'publish_social_post' || n?.type === 'publish_social_post') {
+                const plats: string[] = n?.data?.config?.platforms || [];
+                plats.forEach((p) => usedPlatforms.add(p));
+              }
+            });
+            const missing: string[] = [];
+            usedPlatforms.forEach((p) => {
+              const def = PLATFORM_REQUIRED_FIELDS[p];
+              if (!def) return;
+              const c = stored[p] || {};
+              const ok = def.fields.every((f) => c[f] && String(c[f]).trim() !== '');
+              if (!ok) missing.push(def.label);
+            });
+            if (missing.length > 0) {
+              toast.warning(
+                `Atenção: o bot só publicará nestas plataformas após configurar o conector: ${missing.join(', ')}. Acesse Marketing → Conectores de Redes Sociais.`,
+                { duration: 8000 }
+              );
+            }
+          } catch (e) {
+            console.warn('[BotBuilder] Falha ao validar conectores sociais', e);
+          }
         }
         
         console.log("[BotBuilder] Salvo com sucesso", { signature: newSignature });
