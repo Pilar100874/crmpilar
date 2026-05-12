@@ -66,6 +66,13 @@ export default function NovaAutomacaoDialog({
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [webhookSelecionado, setWebhookSelecionado] = useState("");
   const [variaveisWebhook, setVariaveisWebhook] = useState<Record<string, string>>({});
+
+  // Modo de webhook: reutilizar existente ou criar novo aqui mesmo
+  const [webhookMode, setWebhookMode] = useState<"existente" | "novo">("existente");
+  const [novoWebhookNome, setNovoWebhookNome] = useState("");
+  const [novoWebhookUrl, setNovoWebhookUrl] = useState("");
+  const [novoWebhookMetodo, setNovoWebhookMetodo] = useState("POST");
+  const [novoWebhookVars, setNovoWebhookVars] = useState<WebhookVariable[]>([]);
   
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
@@ -85,6 +92,16 @@ export default function NovaAutomacaoDialog({
   }, [open]);
 
   useEffect(() => {
+    if (webhookMode === "novo") {
+      // Sincroniza chaves de variaveisWebhook com as definidas no novo webhook
+      const initial: Record<string, string> = {};
+      novoWebhookVars.forEach((v) => {
+        const k = (v.name || "").trim();
+        if (k) initial[k] = variaveisWebhook[k] || "";
+      });
+      setVariaveisWebhook(initial);
+      return;
+    }
     if (webhookSelecionado) {
       const webhook = webhooks.find(w => w.id === webhookSelecionado);
       if (webhook?.variables) {
@@ -97,7 +114,8 @@ export default function NovaAutomacaoDialog({
     } else {
       setVariaveisWebhook({});
     }
-  }, [webhookSelecionado, webhooks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webhookSelecionado, webhooks, webhookMode, JSON.stringify(novoWebhookVars.map(v => v.name))]);
 
   useEffect(() => {
     if (open && automationToEdit) {
@@ -142,6 +160,11 @@ export default function NovaAutomacaoDialog({
       setBotSelecionado("");
       setVariaveisCustom([]);
       setFormatoSaida("json");
+      setWebhookMode("existente");
+      setNovoWebhookNome("");
+      setNovoWebhookUrl("");
+      setNovoWebhookMetodo("POST");
+      setNovoWebhookVars([]);
     }
   }, [open, automationToEdit]);
 
@@ -210,9 +233,21 @@ export default function NovaAutomacaoDialog({
       return;
     }
 
-    if (metodoDisparo === "webhook" && !webhookSelecionado) {
-      toast.error("Por favor, selecione um webhook");
-      return;
+    if (metodoDisparo === "webhook") {
+      if (webhookMode === "existente" && !webhookSelecionado) {
+        toast.error("Por favor, selecione um webhook ou crie um novo");
+        return;
+      }
+      if (webhookMode === "novo") {
+        if (!novoWebhookNome.trim()) {
+          toast.error("Informe o nome do novo webhook");
+          return;
+        }
+        if (!novoWebhookUrl.trim()) {
+          toast.error("Informe a URL do novo webhook");
+          return;
+        }
+      }
     }
 
     if (metodoDisparo === "bot" && !botSelecionado) {
@@ -236,7 +271,34 @@ export default function NovaAutomacaoDialog({
       };
 
       if (metodoDisparo === "webhook") {
-        config.webhook_id = webhookSelecionado;
+        let finalWebhookId = webhookSelecionado;
+
+        // Criar novo webhook reutilizável se solicitado
+        if (webhookMode === "novo") {
+          const cleanVars = novoWebhookVars
+            .map((v) => ({ ...v, name: (v.name || "").trim() }))
+            .filter((v) => v.name);
+          const { data: createdWh, error: whErr } = await supabase
+            .from("webhooks")
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              name: novoWebhookNome.trim(),
+              url: novoWebhookUrl.trim(),
+              method: novoWebhookMetodo,
+              type: "automacoes",
+              usage_locations: ["automacoes"],
+              has_variables: cleanVars.length > 0,
+              variables: cleanVars as any,
+              active: true,
+            })
+            .select("id")
+            .single();
+          if (whErr) throw whErr;
+          finalWebhookId = (createdWh as any).id;
+          toast.success("Webhook criado e disponível para reutilização");
+        }
+
+        config.webhook_id = finalWebhookId;
         config.variaveis = variaveisWebhook;
       } else {
         config.bot_id = botSelecionado;
@@ -340,9 +402,25 @@ export default function NovaAutomacaoDialog({
     setBotSelecionado("");
     setVariaveisCustom([]);
     setFormatoSaida("json");
+    setWebhookMode("existente");
+    setNovoWebhookNome("");
+    setNovoWebhookUrl("");
+    setNovoWebhookMetodo("POST");
+    setNovoWebhookVars([]);
   };
 
-  const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
+  const existingWebhook = webhooks.find(w => w.id === webhookSelecionado);
+  // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
+  const selectedWebhook: Webhook | undefined =
+    metodoDisparo === "webhook" && webhookMode === "novo"
+      ? {
+          id: "__novo__",
+          name: novoWebhookNome,
+          url: novoWebhookUrl,
+          method: novoWebhookMetodo,
+          variables: novoWebhookVars.filter(v => (v.name || "").trim()),
+        }
+      : existingWebhook;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -516,26 +594,158 @@ export default function NovaAutomacaoDialog({
             </RadioGroup>
           </div>
 
-          {/* Seleção de Webhook */}
+          {/* Configuração de Webhook (criar novo ou reutilizar) */}
           {metodoDisparo === "webhook" && (
-            <div className="space-y-2">
-              <Label>Webhook</Label>
-              <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um webhook" />
-                </SelectTrigger>
-                <SelectContent>
-                  {webhooks.map((webhook) => (
-                    <SelectItem key={webhook.id} value={webhook.id}>
-                      {webhook.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {webhooks.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum webhook ativo encontrado. Configure webhooks primeiro.
-                </p>
+            <div className="space-y-3 p-4 bg-muted/30 border rounded-lg">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-semibold">Configuração do Webhook</Label>
+                <RadioGroup
+                  value={webhookMode}
+                  onValueChange={(v: any) => {
+                    setWebhookMode(v);
+                    setWebhookSelecionado("");
+                  }}
+                  className="flex gap-3"
+                >
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="existente" id="wh-existente" />
+                    <Label htmlFor="wh-existente" className="font-normal cursor-pointer text-sm">Reutilizar existente</Label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="novo" id="wh-novo" />
+                    <Label htmlFor="wh-novo" className="font-normal cursor-pointer text-sm">Criar novo</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Webhooks criados aqui ficam salvos e podem ser reutilizados em outras automações.
+              </p>
+
+              {webhookMode === "existente" && (
+                <div className="space-y-2">
+                  <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um webhook salvo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {webhooks.map((webhook) => (
+                        <SelectItem key={webhook.id} value={webhook.id}>
+                          {webhook.name} <span className="text-muted-foreground ml-1">({webhook.method})</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {webhooks.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum webhook salvo ainda. Use "Criar novo" para começar.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {webhookMode === "novo" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-[1fr,120px] gap-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Nome do Webhook</Label>
+                      <Input
+                        value={novoWebhookNome}
+                        onChange={(e) => setNovoWebhookNome(e.target.value)}
+                        placeholder="Ex: Notificar CRM"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Método</Label>
+                      <Select value={novoWebhookMetodo} onValueChange={setNovoWebhookMetodo}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">URL</Label>
+                    <Input
+                      value={novoWebhookUrl}
+                      onChange={(e) => setNovoWebhookUrl(e.target.value)}
+                      placeholder="https://exemplo.com/webhook/{{id}}"
+                    />
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Variáveis do Webhook</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNovoWebhookVars((prev) => [...prev, { name: "", type: "string", required: false }])}
+                      >
+                        + Adicionar
+                      </Button>
+                    </div>
+                    {novoWebhookVars.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Nenhuma variável definida.</p>
+                    ) : (
+                      novoWebhookVars.map((v, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                          <Input
+                            value={v.name}
+                            onChange={(e) => {
+                              const next = [...novoWebhookVars];
+                              next[idx] = { ...next[idx], name: e.target.value };
+                              setNovoWebhookVars(next);
+                            }}
+                            placeholder="nome_variavel"
+                            className="flex-1"
+                          />
+                          <Select
+                            value={v.type}
+                            onValueChange={(t) => {
+                              const next = [...novoWebhookVars];
+                              next[idx] = { ...next[idx], type: t };
+                              setNovoWebhookVars(next);
+                            }}
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="string">string</SelectItem>
+                              <SelectItem value="number">number</SelectItem>
+                              <SelectItem value="boolean">boolean</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <label className="flex items-center gap-1.5 text-xs">
+                            <Checkbox
+                              checked={v.required}
+                              onCheckedChange={(c) => {
+                                const next = [...novoWebhookVars];
+                                next[idx] = { ...next[idx], required: !!c };
+                                setNovoWebhookVars(next);
+                              }}
+                            />
+                            obrig.
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setNovoWebhookVars((prev) => prev.filter((_, i) => i !== idx))}
+                            className="text-destructive shrink-0"
+                          >
+                            X
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -652,7 +862,7 @@ export default function NovaAutomacaoDialog({
           )}
 
           {/* Preview da Requisição */}
-          {((metodoDisparo === "webhook" && webhookSelecionado) || (metodoDisparo === "bot" && botSelecionado)) && (() => {
+          {((metodoDisparo === "webhook" && (webhookSelecionado || (webhookMode === "novo" && novoWebhookUrl))) || (metodoDisparo === "bot" && botSelecionado)) && (() => {
             const customMap: Record<string, string> = {};
             variaveisCustom.forEach((v) => {
               const k = (v.nome || "").trim();
