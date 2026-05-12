@@ -26,7 +26,7 @@ export default function MarketingAutomacoes() {
   const [selectedAutomacao, setSelectedAutomacao] = useState<any>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
-  const [variablesDialogOpen, setVariablesDialogOpen] = useState(false);
+  
   const [renameName, setRenameName] = useState("");
   const [renameDescription, setRenameDescription] = useState("");
   const [duplicateName, setDuplicateName] = useState("");
@@ -331,15 +331,8 @@ export default function MarketingAutomacoes() {
                       <Plus className="w-4 h-4 mr-2" />
                       Duplicar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId(null);
-                      setSelectedAutomacao(automacao);
-                      setVariablesDialogOpen(true);
-                    }}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Gerenciar Variáveis
-                    </DropdownMenuItem>
+
+
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setOpenMenuId(null);
@@ -532,63 +525,8 @@ export default function MarketingAutomacoes() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Gerenciar Variáveis */}
-      <Dialog open={variablesDialogOpen} onOpenChange={setVariablesDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Gerenciar Variáveis do Webhook</DialogTitle>
-            <DialogDescription>
-              Configure os valores das variáveis de entrada e saída
-            </DialogDescription>
-          </DialogHeader>
-          {selectedAutomacao && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Automação: {selectedAutomacao.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Webhook ID: {selectedAutomacao.config?.webhook_id || "Não configurado"}
-                </p>
-              </div>
 
-              {/* Seção de Variáveis de Entrada */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">Variáveis de Entrada</h4>
-                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                  {selectedAutomacao.config?.variaveis && Object.keys(selectedAutomacao.config.variaveis).length > 0 ? (
-                    Object.entries(selectedAutomacao.config.variaveis).map(([key, value]: [string, any]) => (
-                      <div key={key} className="space-y-2">
-                        <Label className="text-sm">{key}</Label>
-                        <Input
-                          value={value || ""}
-                          disabled
-                          className="bg-background"
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Nenhuma variável de entrada configurada</p>
-                  )}
-                </div>
-              </div>
 
-              {/* Seção de Variáveis de Saída */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">Variáveis de Saída</h4>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    As variáveis de saída são definidas pelo webhook e estarão disponíveis após a execução
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setVariablesDialogOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog de Confirmação de Execução */}
       <Dialog open={executeDialogOpen} onOpenChange={setExecuteDialogOpen}>
