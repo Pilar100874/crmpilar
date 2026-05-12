@@ -646,6 +646,78 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
+          {/* Preview da Requisição */}
+          {((metodoDisparo === "webhook" && webhookSelecionado) || (metodoDisparo === "bot" && botSelecionado)) && (() => {
+            const customMap: Record<string, string> = {};
+            variaveisCustom.forEach((v) => {
+              const k = (v.nome || "").trim();
+              if (k) customMap[k] = v.valor ?? "";
+            });
+
+            if (metodoDisparo === "webhook" && selectedWebhook) {
+              const allVars = { ...variaveisWebhook, ...customMap };
+              const method = (selectedWebhook.method || "POST").toUpperCase();
+              let urlPreview = selectedWebhook.url || "";
+              let bodyPreview: string | null = null;
+
+              if (method === "GET" || method === "DELETE") {
+                const qs = Object.entries(allVars)
+                  .filter(([k]) => k)
+                  .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v || "")}`)
+                  .join("&");
+                if (qs) urlPreview += (urlPreview.includes("?") ? "&" : "?") + qs;
+              } else {
+                bodyPreview = JSON.stringify(allVars, null, 2);
+              }
+
+              return (
+                <div className="space-y-2 p-4 bg-muted/40 border rounded-lg">
+                  <Label className="text-sm font-semibold">Pré-visualização da requisição</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Exemplo do que será enviado ao executar esta automação.
+                  </p>
+                  <div className="text-xs font-mono bg-background border rounded p-3 break-all">
+                    <span className="font-semibold text-primary">{method}</span>{" "}
+                    <span>{urlPreview || "(URL não definida)"}</span>
+                  </div>
+                  {bodyPreview && (
+                    <div>
+                      <p className="text-xs font-semibold mb-1">Body (JSON)</p>
+                      <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{bodyPreview}</pre>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            if (metodoDisparo === "bot") {
+              const selBot = bots.find((b) => b.id === botSelecionado);
+              const payload = {
+                bot_id: botSelecionado,
+                bot_name: selBot?.name,
+                variaveis: customMap,
+              };
+              return (
+                <div className="space-y-2 p-4 bg-muted/40 border rounded-lg">
+                  <Label className="text-sm font-semibold">Pré-visualização do disparo</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Exemplo do payload que será enviado ao bot ao executar esta automação.
+                  </p>
+                  <div className="text-xs font-mono bg-background border rounded p-3 break-all">
+                    <span className="font-semibold text-primary">POST</span>{" "}
+                    <span>/functions/v1/marketing-automation-execute</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold mb-1">Body (JSON)</p>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(payload, null, 2)}</pre>
+                  </div>
+                </div>
+              );
+            }
+
+            return null;
+          })()}
+
         </div>
 
         <DialogFooter>
