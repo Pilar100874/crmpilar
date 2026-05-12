@@ -165,14 +165,41 @@ export default function NovaAutomacaoDialog({
     }
   };
 
+  const loadBots = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from("bots" as any)
+        .select("id, name, canais")
+        .eq("estabelecimento_id", estabelecimentoId);
+
+      if (error) throw error;
+
+      const filtered = (data || []).filter((b: any) =>
+        Array.isArray(b.canais) && b.canais.includes("marketing_automation")
+      );
+
+      setBots(filtered.map((b: any) => ({ id: b.id, name: b.name })));
+    } catch (error) {
+      console.error("Erro ao carregar bots:", error);
+    }
+  };
+
   const handleCreate = async () => {
     if (!nome.trim()) {
       toast.error("Por favor, informe um nome para a automação");
       return;
     }
 
-    if (!webhookSelecionado) {
+    if (metodoDisparo === "webhook" && !webhookSelecionado) {
       toast.error("Por favor, selecione um webhook");
+      return;
+    }
+
+    if (metodoDisparo === "bot" && !botSelecionado) {
+      toast.error("Por favor, selecione um bot");
       return;
     }
 
@@ -188,19 +215,23 @@ export default function NovaAutomacaoDialog({
       // Montar configuração baseado no tipo
       let config: any = {
         tipo_disparo: tipoDisparo,
-        webhook_id: webhookSelecionado,
-        variaveis: variaveisWebhook,
+        metodo_disparo: metodoDisparo,
       };
+
+      if (metodoDisparo === "webhook") {
+        config.webhook_id = webhookSelecionado;
+        config.variaveis = variaveisWebhook;
+      } else {
+        config.bot_id = botSelecionado;
+      }
 
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
-      } else if (tipoDisparo === "automatico") {
-        config.area = areaAutomatica;
-        config.evento = eventoAutomatico;
       } else if (tipoDisparo === "data") {
         config.periodicidade = periodicidade;
         config.dia_semana = diaSemana;
         config.dia_mes = diaMes;
+        config.data_especifica = dataEspecifica;
         config.horario = horario;
       }
 
@@ -247,14 +278,15 @@ export default function NovaAutomacaoDialog({
     setDescricao("");
     setTipoDisparo("manual");
     setLocalDisponivel("");
-    setAreaAutomatica("");
-    setEventoAutomatico("");
     setPeriodicidade("");
     setDiaSemana("");
     setDiaMes("");
+    setDataEspecifica("");
     setHorario("");
+    setMetodoDisparo("webhook");
     setWebhookSelecionado("");
     setVariaveisWebhook({});
+    setBotSelecionado("");
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
