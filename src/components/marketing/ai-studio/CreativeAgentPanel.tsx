@@ -201,7 +201,7 @@ const CreativeAgentPanel: React.FC<Props> = ({ open, onClose, onCreateWorkflow }
         {/* Content */}
         <ScrollArea className="flex-1 overflow-auto">
           {step === 'input' ? (
-            <div className="p-6 space-y-6">
+            <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
               {/* Theme */}
               <div className="space-y-2">
                 <Label className="text-sm text-white/80 font-medium">🎬 Tema do Vídeo</Label>
