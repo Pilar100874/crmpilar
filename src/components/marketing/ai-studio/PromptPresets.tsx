@@ -606,13 +606,13 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
 
       {/* Prompt Detail Popup */}
       <Dialog open={!!detailPreset} onOpenChange={(v) => { if (!v) setDetailPreset(null); }}>
-        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-full max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
           {detailPreset && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-base">
-                  <Eye className="h-4 w-4 text-primary" />
-                  {detailPreset.name}
+                <DialogTitle className="flex items-center gap-2 text-base pr-6">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="break-words">{detailPreset.name}</span>
                 </DialogTitle>
                 <DialogDescription className="flex gap-1.5 flex-wrap mt-1">
                   <Badge variant="outline" className="text-[10px]">
@@ -625,7 +625,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                     <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
                   )}
                   {detailPreset.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                    <Badge key={tag} variant="secondary" className="text-[10px] max-w-full break-all">{tag}</Badge>
                   ))}
                 </DialogDescription>
               </DialogHeader>
@@ -655,24 +655,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
               )}
 
               {/* Prompt */}
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
-                <div className="bg-muted/50 rounded-lg p-3 border">
-                  <pre className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap text-foreground/80">
+                <div className="bg-muted/50 rounded-lg p-3 border max-h-[40vh] overflow-y-auto">
+                  <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/80">
                     {detailPreset.prompt}
-                  </pre>
+                  </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-2 border-t">
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { navigator.clipboard.writeText(detailPreset.prompt); toast({ title: 'Copiado!' }); }}>
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1 sm:flex-none" onClick={() => { navigator.clipboard.writeText(detailPreset.prompt); toast({ title: 'Copiado!' }); }}>
                   <Copy className="h-3.5 w-3.5" /> Copiar
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { setDetailPreset(null); handleEditPreset(detailPreset); }}>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1 sm:flex-none" onClick={() => { setDetailPreset(null); handleEditPreset(detailPreset); }}>
                   <Sparkles className="h-3.5 w-3.5" /> Editar
                 </Button>
-                <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => { setDetailPreset(null); onSelect(detailPreset); }}>
+                <Button size="sm" className="w-full sm:flex-1 gap-1.5 text-xs" onClick={() => { setDetailPreset(null); onSelect(detailPreset); }}>
                   <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
                 </Button>
               </div>
