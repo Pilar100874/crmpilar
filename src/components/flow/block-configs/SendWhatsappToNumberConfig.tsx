@@ -12,23 +12,62 @@ interface ConfigProps {
 }
 
 export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: ConfigProps) => {
+  const phoneNumbers: string[] = Array.isArray(config.phoneNumbers)
+    ? config.phoneNumbers
+    : config.phoneNumber
+      ? [config.phoneNumber]
+      : [""];
+
+  const updateNumbers = (next: string[]) => {
+    handleConfigChange("phoneNumbers", next);
+    handleConfigChange("phoneNumber", next[0] || "");
+  };
+
   return (
     <div className="space-y-4">
       <Alert>
         <MessageCircle className="h-4 w-4" />
         <AlertDescription className="text-xs">
-          Envia uma mensagem WhatsApp para o número informado. Você pode usar variáveis (ex.: <code>{"{{telefone}}"}</code>, <code>{"{{nome}}"}</code>) tanto no número quanto no texto.
+          Envia uma mensagem WhatsApp para um ou mais números. Você pode usar variáveis (ex.: <code>{"{{telefone}}"}</code>, <code>{"{{nome}}"}</code>) tanto nos números quanto no texto.
         </AlertDescription>
       </Alert>
 
       <div className="space-y-2">
-        <Label>Número de destino (com DDI)</Label>
-        <Input
-          value={config.phoneNumber || ""}
-          onChange={(e) => handleConfigChange("phoneNumber", e.target.value)}
-          placeholder="Ex: 5511999999999 ou {{telefone}}"
-        />
-        <p className="text-[11px] text-muted-foreground">Use o formato internacional sem +, espaços ou traços.</p>
+        <Label>Números de destino (com DDI)</Label>
+        {phoneNumbers.map((num, idx) => (
+          <div key={idx} className="flex gap-2">
+            <Input
+              value={num}
+              onChange={(e) => {
+                const next = [...phoneNumbers];
+                next[idx] = e.target.value;
+                updateNumbers(next);
+              }}
+              placeholder="Ex: 5511999999999 ou {{telefone}}"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const next = phoneNumbers.filter((_, i) => i !== idx);
+                updateNumbers(next.length ? next : [""]);
+              }}
+              disabled={phoneNumbers.length === 1 && !phoneNumbers[0]}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => updateNumbers([...phoneNumbers, ""])}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Adicionar número
+        </Button>
+        <p className="text-[11px] text-muted-foreground">Use o formato internacional sem +, espaços ou traços. A mensagem será enviada para cada número da lista.</p>
       </div>
 
       <div className="space-y-2">
