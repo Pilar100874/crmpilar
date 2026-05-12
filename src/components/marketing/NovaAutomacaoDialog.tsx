@@ -171,9 +171,10 @@ export default function NovaAutomacaoDialog({
       if (!estabelecimentoId) return;
 
       const { data, error } = await supabase
-        .from("bots" as any)
-        .select("id, name, canais")
-        .eq("estabelecimento_id", estabelecimentoId);
+        .from("bot_flows")
+        .select("id, name, canais, active")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("active", true);
 
       if (error) throw error;
 
