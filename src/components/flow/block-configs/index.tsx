@@ -102,3 +102,7 @@ export { PublishSocialPostConfig } from './PublishSocialPostConfig';
 
 // IA - Geração de Mídia
 export { GenerateAIMediaConfig } from './GenerateAIMediaConfig';
+
+// Disparo direto / Loops
+export { SendWhatsappToNumberConfig } from './SendWhatsappToNumberConfig';
+export { ApiLoopConfig } from './ApiLoopConfig';

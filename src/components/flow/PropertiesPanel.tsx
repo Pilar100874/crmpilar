@@ -382,6 +382,12 @@ export const PropertiesPanel = ({
       case "generate_ai_media":
         return <BlockConfigs.GenerateAIMediaConfig {...configProps} />;
 
+      // Disparo direto / Loops
+      case "send_whatsapp_to_number":
+        return <BlockConfigs.SendWhatsappToNumberConfig {...configProps} />;
+      case "api_loop":
+        return <BlockConfigs.ApiLoopConfig {...configProps} />;
+
       case "start":
         return (
           <div className="space-y-4">

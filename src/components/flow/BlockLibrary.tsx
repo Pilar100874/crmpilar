@@ -124,6 +124,18 @@ const blockCategories = [
     textHover: "group-hover:text-pink-700",
     blocks: ["publish_social_post"] as NodeType[],
   },
+  {
+    name: "Disparo & Loops",
+    icon: "Send",
+    color: "emerald",
+    gradient: "from-emerald-500/10 to-indigo-500/10",
+    border: "border-emerald-500/20",
+    borderHover: "hover:border-emerald-500/40",
+    iconColor: "text-emerald-600",
+    iconHover: "group-hover:text-emerald-700",
+    textHover: "group-hover:text-emerald-700",
+    blocks: ["send_whatsapp_to_number", "api_loop"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {
