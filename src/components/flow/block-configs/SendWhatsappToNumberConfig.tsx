@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Plus, Trash2 } from "lucide-react";
 
 interface ConfigProps {
   config: any;
