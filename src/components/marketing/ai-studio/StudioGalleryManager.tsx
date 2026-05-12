@@ -391,28 +391,28 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-background border border-border rounded-2xl w-full max-w-5xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-background border border-border rounded-2xl w-full max-w-5xl max-h-[92vh] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden mx-2 sm:mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Images className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-primary/10 shrink-0">
+              <Images className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">Galeria de Referências</h2>
-              <p className="text-xs text-muted-foreground">Organize imagens e vídeos por categoria para usar nos workflows</p>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-lg font-semibold truncate">Galeria de Referências</h2>
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Organize imagens e vídeos por categoria para usar nos workflows</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" onClick={onClose}>
+          <Button size="icon" variant="ghost" onClick={onClose} className="shrink-0">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* Sidebar - Categories + Folders */}
-          <div className="w-56 border-r border-border p-3 space-y-1 overflow-y-auto shrink-0">
+          <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border p-2 sm:p-3 flex md:block gap-1 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto shrink-0 scrollbar-hide">
             {GALLERY_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isActive = activeCategory === cat.id;
@@ -420,7 +420,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <button
                   key={cat.id}
                   onClick={() => { setActiveCategory(cat.id); setActiveFolder(null); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-sm ${
+                  className={`shrink-0 md:w-full flex items-center gap-2 md:gap-2.5 px-3 py-2 md:py-2.5 rounded-xl text-left transition-all text-xs md:text-sm whitespace-nowrap ${
                     isActive 
                       ? 'bg-primary/10 text-primary font-medium' 
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -435,7 +435,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
             {/* Folder section - only for non-salvas categories */}
             {activeCategory !== 'salvas' && (
               <>
-                <div className="border-t border-border my-2 pt-2">
+                <div className="border-t border-border my-2 pt-2 hidden md:block">
                   <div className="flex items-center justify-between px-2 mb-1">
                     <span className="text-[10px] font-medium uppercase text-muted-foreground tracking-wider">Pastas</span>
                     <button
@@ -529,18 +529,18 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           {/* Content */}
           <div className="flex-1 flex flex-col min-h-0">
             {/* Toolbar */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r ${activeCat.gradient} text-xs font-medium`}>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-border">
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r ${activeCat.gradient} text-[10px] sm:text-xs font-medium`}>
                 {React.createElement(activeCat.icon, { className: 'h-3 w-3' })}
                 {activeCat.label}
               </div>
               {activeFolder && (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-[10px] sm:text-xs text-muted-foreground">
                   <Folder className="h-3 w-3" />
                   {activeFolder}
                 </div>
               )}
-              <div className="relative flex-1 max-w-xs">
+              <div className="relative w-full sm:flex-1 sm:max-w-xs order-last sm:order-none">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={search}
@@ -549,7 +549,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   className="h-8 pl-8 text-xs"
                 />
               </div>
-              <div className="flex-1" />
+              <div className="hidden sm:block flex-1" />
               {activeCategory !== 'salvas' && (
                 <label className="cursor-pointer">
                   <input
@@ -602,7 +602,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">
                   {filtered.map((img) => {
                     const isVideo = isVideoUrl(img.image_url, img.tipo);
                     const isDraggable = activeCategory !== 'salvas';

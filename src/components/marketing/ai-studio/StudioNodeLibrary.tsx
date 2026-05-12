@@ -26,6 +26,11 @@ const StudioNodeLibrary: React.FC = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  const handleAddNode = (nodeType: string) => {
+    window.dispatchEvent(new CustomEvent('ai-studio:add-node', { detail: { type: nodeType } }));
+    setIsOpen(false);
+  };
+
   const filteredCategories = NODE_CATEGORIES.map(cat => ({
     ...cat,
     nodes: cat.nodes.filter(n =>
@@ -59,12 +64,9 @@ const StudioNodeLibrary: React.FC = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute top-3 left-3 z-20 w-[calc(100%-24px)] sm:w-[280px] max-w-[320px] flex flex-col overflow-hidden rounded-2xl border border-border/50"
+            className="absolute top-3 left-3 z-20 w-[calc(100%-24px)] sm:w-[300px] max-w-[340px] flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl"
             style={{
               maxHeight: 'calc(100% - 24px)',
-              background: 'rgba(255,255,255,0.95)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.6) inset',
             }}
           >
             {/* Header */}
@@ -131,9 +133,10 @@ const StudioNodeLibrary: React.FC = () => {
                             key={node.type}
                             draggable
                             onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
+                            onClick={() => handleAddNode(node.type)}
                             whileHover={{ x: 3 }}
                             whileTap={{ scale: 0.97 }}
-                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer md:cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
                             style={{
                               background: colors.bg,
                               border: `1px solid ${colors.border}`,
@@ -156,7 +159,8 @@ const StudioNodeLibrary: React.FC = () => {
                                 {node.description}
                               </p>
                             </div>
-                            <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors" />
+                            <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/node:text-primary md:hidden shrink-0" />
+                            <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors hidden md:block" />
                           </motion.div>
                         ))}
                       </div>

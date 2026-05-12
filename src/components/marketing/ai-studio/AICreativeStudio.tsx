@@ -219,6 +219,29 @@ const AICreativeStudioInner: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [screenToFlowPosition, setNodes]);
 
+  // Tap-to-add support (mobile/tablet) — listens to events dispatched by StudioNodeLibrary
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type as string | undefined;
+      if (!type) return;
+      const meta = getNodeMeta(type as any);
+      if (!meta) return;
+      const offsetX = 80 + Math.random() * 80;
+      const offsetY = 80 + Math.random() * 80;
+      const position = screenToFlowPosition({ x: window.innerWidth / 2 + offsetX, y: window.innerHeight / 2 + offsetY });
+      const newNode: StudioNode = {
+        id: `${type}_${Date.now()}`,
+        type: 'studioNode',
+        position,
+        data: { label: meta.label, type: type as any, config: applyNegativeDefaults(type, { ...meta.defaultConfig }) },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      toast.success(`${meta.label} adicionado`);
+    };
+    window.addEventListener('ai-studio:add-node', handler as EventListener);
+    return () => window.removeEventListener('ai-studio:add-node', handler as EventListener);
+  }, [screenToFlowPosition, setNodes]);
+
   const onNodeClick = useCallback((_: any, node: any) => {
     setSelectedNode(node as StudioNode);
   }, []);
@@ -1620,19 +1643,19 @@ const AICreativeStudioInner: React.FC = () => {
               className="!bg-card/80 !backdrop-blur-md !border-border/50 !shadow-lg !rounded-xl [&>button]:!bg-transparent [&>button]:!border-border/30 [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent/50 [&>button]:!rounded-lg [&>button]:!transition-colors"
             />
             <MiniMap
-              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg"
+              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg !hidden md:!block"
               nodeColor={() => 'hsl(var(--primary))'}
               maskColor="hsl(var(--background) / 0.75)"
             />
 
             {/* Empty state */}
             {nodes.length === 0 && (
-              <Panel position="top-center" className="!top-1/2 !-translate-y-1/2 !left-1/2 !-translate-x-1/2">
-                <div className="text-center p-8 flex flex-col items-center justify-center">
-                  <div className="text-6xl mb-4">🎬</div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground/80">Arraste blocos para começar</h3>
-                  <p className="text-sm max-w-md text-muted-foreground">
-                    Clique no botão <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">+</span> para adicionar blocos ao canvas.
+              <Panel position="top-center" className="!top-1/2 !-translate-y-1/2 !left-1/2 !-translate-x-1/2 !w-[90%] sm:!w-auto">
+                <div className="text-center p-4 sm:p-8 flex flex-col items-center justify-center">
+                  <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🎬</div>
+                  <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-foreground/80">Arraste blocos para começar</h3>
+                  <p className="text-xs sm:text-sm max-w-md text-muted-foreground">
+                    <span className="hidden sm:inline">Clique no botão </span><span className="sm:hidden">Toque em </span><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">+</span> para adicionar blocos<span className="hidden sm:inline"> ao canvas</span>.
                   </p>
                 </div>
               </Panel>
