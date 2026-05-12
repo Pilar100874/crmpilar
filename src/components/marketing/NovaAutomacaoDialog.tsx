@@ -572,26 +572,158 @@ export default function NovaAutomacaoDialog({
             </RadioGroup>
           </div>
 
-          {/* Seleção de Webhook */}
+          {/* Configuração de Webhook (criar novo ou reutilizar) */}
           {metodoDisparo === "webhook" && (
-            <div className="space-y-2">
-              <Label>Webhook</Label>
-              <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um webhook" />
-                </SelectTrigger>
-                <SelectContent>
-                  {webhooks.map((webhook) => (
-                    <SelectItem key={webhook.id} value={webhook.id}>
-                      {webhook.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {webhooks.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum webhook ativo encontrado. Configure webhooks primeiro.
-                </p>
+            <div className="space-y-3 p-4 bg-muted/30 border rounded-lg">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-semibold">Configuração do Webhook</Label>
+                <RadioGroup
+                  value={webhookMode}
+                  onValueChange={(v: any) => {
+                    setWebhookMode(v);
+                    setWebhookSelecionado("");
+                  }}
+                  className="flex gap-3"
+                >
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="existente" id="wh-existente" />
+                    <Label htmlFor="wh-existente" className="font-normal cursor-pointer text-sm">Reutilizar existente</Label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="novo" id="wh-novo" />
+                    <Label htmlFor="wh-novo" className="font-normal cursor-pointer text-sm">Criar novo</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Webhooks criados aqui ficam salvos e podem ser reutilizados em outras automações.
+              </p>
+
+              {webhookMode === "existente" && (
+                <div className="space-y-2">
+                  <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um webhook salvo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {webhooks.map((webhook) => (
+                        <SelectItem key={webhook.id} value={webhook.id}>
+                          {webhook.name} <span className="text-muted-foreground ml-1">({webhook.method})</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {webhooks.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Nenhum webhook salvo ainda. Use "Criar novo" para começar.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {webhookMode === "novo" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-[1fr,120px] gap-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Nome do Webhook</Label>
+                      <Input
+                        value={novoWebhookNome}
+                        onChange={(e) => setNovoWebhookNome(e.target.value)}
+                        placeholder="Ex: Notificar CRM"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Método</Label>
+                      <Select value={novoWebhookMetodo} onValueChange={setNovoWebhookMetodo}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">URL</Label>
+                    <Input
+                      value={novoWebhookUrl}
+                      onChange={(e) => setNovoWebhookUrl(e.target.value)}
+                      placeholder="https://exemplo.com/webhook/{{id}}"
+                    />
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Variáveis do Webhook</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNovoWebhookVars((prev) => [...prev, { name: "", type: "string", required: false }])}
+                      >
+                        + Adicionar
+                      </Button>
+                    </div>
+                    {novoWebhookVars.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Nenhuma variável definida.</p>
+                    ) : (
+                      novoWebhookVars.map((v, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                          <Input
+                            value={v.name}
+                            onChange={(e) => {
+                              const next = [...novoWebhookVars];
+                              next[idx] = { ...next[idx], name: e.target.value };
+                              setNovoWebhookVars(next);
+                            }}
+                            placeholder="nome_variavel"
+                            className="flex-1"
+                          />
+                          <Select
+                            value={v.type}
+                            onValueChange={(t) => {
+                              const next = [...novoWebhookVars];
+                              next[idx] = { ...next[idx], type: t };
+                              setNovoWebhookVars(next);
+                            }}
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="string">string</SelectItem>
+                              <SelectItem value="number">number</SelectItem>
+                              <SelectItem value="boolean">boolean</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <label className="flex items-center gap-1.5 text-xs">
+                            <Checkbox
+                              checked={v.required}
+                              onCheckedChange={(c) => {
+                                const next = [...novoWebhookVars];
+                                next[idx] = { ...next[idx], required: !!c };
+                                setNovoWebhookVars(next);
+                              }}
+                            />
+                            obrig.
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setNovoWebhookVars((prev) => prev.filter((_, i) => i !== idx))}
+                            className="text-destructive shrink-0"
+                          >
+                            X
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
