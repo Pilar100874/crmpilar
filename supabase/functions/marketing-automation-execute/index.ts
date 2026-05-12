@@ -7,6 +7,36 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function escXml(s: string) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function applyUrlPlaceholders(url: string, vars: Record<string, string>) {
+  let out = url;
+  const used = new Set<string>();
+  for (const [k, v] of Object.entries(vars)) {
+    if (!k) continue;
+    const val = encodeURIComponent(String(v ?? ""));
+    const patterns = [
+      new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, "g"),
+      new RegExp(`\\{\\s*${k}\\s*\\}`, "g"),
+      new RegExp(`(?<![A-Za-z0-9_]):${k}(?![A-Za-z0-9_])`, "g"),
+    ];
+    for (const re of patterns) {
+      if (re.test(out)) {
+        out = out.replace(re, val);
+        used.add(k);
+      }
+    }
+  }
+  return { url: out, used };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -37,8 +67,16 @@ serve(async (req) => {
 
     const config = (automation.config || {}) as any;
     const metodo = config.metodo_disparo || (config.bot_id ? "bot" : "webhook");
+    const formato = (config.formato_saida || "json") as
+      | "json" | "form" | "multipart" | "xml" | "text" | "query";
 
-    console.log(`▶️ Executando automação ${automation.name} (${metodo})`);
+    // Variáveis: webhook (variaveis) + custom (variaveis_custom)
+    const allVars: Record<string, string> = {
+      ...(config.variaveis || {}),
+      ...(config.variaveis_custom || {}),
+    };
+
+    console.log(`▶️ Executando automação ${automation.name} (${metodo}) formato=${formato}`);
 
     let result: any = {};
 
@@ -54,15 +92,63 @@ serve(async (req) => {
 
       if (whErr || !webhook) throw new Error("Webhook não encontrado");
 
-      const variables = config.variaveis || {};
-      const resp = await fetch(webhook.url, {
-        method: webhook.method || "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...variables, automation_id: automationId }),
+      const method = (webhook.method || "POST").toUpperCase();
+      const isBodyMethod = !(method === "GET" || method === "DELETE");
+
+      // 1) Aplica placeholders na URL
+      const { url: urlWithPlaceholders, used } = applyUrlPlaceholders(webhook.url, allVars);
+      let finalUrl = urlWithPlaceholders;
+      const remaining: [string, string][] = Object.entries(allVars).filter(
+        ([k]) => k && !used.has(k),
+      ) as [string, string][];
+
+      const headers: Record<string, string> = {
+        "Accept": "application/json",
+        "User-Agent": "MarketingAutomation/1.0",
+      };
+      let body: BodyInit | undefined = undefined;
+
+      if (formato === "query" || !isBodyMethod) {
+        const qs = remaining
+          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v ?? "")}`)
+          .join("&");
+        if (qs) finalUrl += (finalUrl.includes("?") ? "&" : "?") + qs;
+      } else if (remaining.length > 0) {
+        if (formato === "json") {
+          headers["Content-Type"] = "application/json";
+          body = JSON.stringify(Object.fromEntries(remaining));
+        } else if (formato === "form") {
+          headers["Content-Type"] = "application/x-www-form-urlencoded";
+          body = remaining
+            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v ?? "")}`)
+            .join("&");
+        } else if (formato === "multipart") {
+          const fd = new FormData();
+          remaining.forEach(([k, v]) => fd.append(k, String(v ?? "")));
+          body = fd; // browser/Deno define Content-Type com boundary
+        } else if (formato === "xml") {
+          headers["Content-Type"] = "application/xml";
+          body =
+            `<?xml version="1.0" encoding="UTF-8"?>\n<request>\n` +
+            remaining.map(([k, v]) => `  <${k}>${escXml(v)}</${k}>`).join("\n") +
+            `\n</request>`;
+        } else if (formato === "text") {
+          headers["Content-Type"] = "text/plain";
+          body = remaining.map(([k, v]) => `${k}: ${v ?? ""}`).join("\n");
+        }
+      }
+
+      const resp = await fetch(finalUrl, {
+        method,
+        headers,
+        body: isBodyMethod ? body : undefined,
       });
 
       result = {
         type: "webhook",
+        url: finalUrl,
+        method,
+        formato,
         status: resp.status,
         ok: resp.ok,
       };
@@ -79,7 +165,7 @@ serve(async (req) => {
 
       if (botErr || !bot) throw new Error("Bot não encontrado");
 
-      // Disparar fluxo do bot via executor omnichannel
+      // Disponibiliza as variáveis personalizadas no contexto do bot
       const { data: execData, error: execErr } = await supabase.functions.invoke(
         "executar-fluxo-omnichannel",
         {
@@ -89,6 +175,8 @@ serve(async (req) => {
             canal: "marketing_automation",
             triggerSource: "marketing_automation",
             automationId,
+            variaveis: allVars,
+            contexto: { variaveis: allVars, automationId, automationName: automation.name },
           },
         },
       );
@@ -97,13 +185,13 @@ serve(async (req) => {
         type: "bot",
         botName: bot.name,
         invoked: !execErr,
+        variaveis: allVars,
         details: execData ?? execErr?.message,
       };
     } else {
       throw new Error(`Método de disparo desconhecido: ${metodo}`);
     }
 
-    // Atualizar última execução
     await supabase
       .from("marketing_automations")
       .update({
