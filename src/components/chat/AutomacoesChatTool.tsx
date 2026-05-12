@@ -102,7 +102,6 @@ export default function AutomacoesChatTool({ disabled }: Props) {
               className={btnClass}
             >
               <Zap size={16} className="text-primary" />
-              <span>Automação</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>
