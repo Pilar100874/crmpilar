@@ -1263,11 +1263,10 @@ export default function ChatInput({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className={`${toolbarBtnClass} !w-auto px-3 gap-2`}
+                className={toolbarBtnClass}
                 onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
               >
                 <span className="text-base leading-none">{agent.icone}</span>
-                <span className="text-sm font-medium truncate max-w-[140px]">{agent.nome}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent><p>{agent.nome}</p></TooltipContent>
