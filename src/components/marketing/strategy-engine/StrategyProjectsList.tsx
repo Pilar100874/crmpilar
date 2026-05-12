@@ -72,11 +72,11 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
     setShowCreate(true);
   };
 
-  const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode }> = {
-    draft: { label: 'Rascunho', variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
-    processing: { label: 'Processando', variant: 'default', icon: <Loader2 className="h-3 w-3 animate-spin" /> },
-    completed: { label: 'Concluído', variant: 'outline', icon: <CheckCircle2 className="h-3 w-3 text-green-500" /> },
-    failed: { label: 'Falhou', variant: 'destructive', icon: <AlertCircle className="h-3 w-3" /> },
+  const statusConfig: Record<string, { label: string; className: string; icon: React.ReactNode; ringColor: string }> = {
+    draft: { label: 'Rascunho', className: 'bg-muted text-muted-foreground border-border', ringColor: 'from-muted-foreground/20 to-muted-foreground/5', icon: <Clock className="h-3 w-3" /> },
+    processing: { label: 'Processando', className: 'bg-primary/15 text-primary border-primary/30', ringColor: 'from-primary/30 to-primary/5', icon: <Loader2 className="h-3 w-3 animate-spin" /> },
+    completed: { label: 'Concluído', className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30', ringColor: 'from-emerald-500/30 to-emerald-500/5', icon: <CheckCircle2 className="h-3 w-3" /> },
+    failed: { label: 'Falhou', className: 'bg-destructive/15 text-destructive border-destructive/30', ringColor: 'from-destructive/30 to-destructive/5', icon: <AlertCircle className="h-3 w-3" /> },
   };
 
   return (
