@@ -124,6 +124,7 @@ export default function NovaAutomacaoDialog({
       } else {
         setVariaveisCustom([]);
       }
+      setFormatoSaida(cfg.formato_saida || "json");
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
