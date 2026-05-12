@@ -73,6 +73,14 @@ export default function NovaAutomacaoDialog({
   const [novoWebhookUrl, setNovoWebhookUrl] = useState("");
   const [novoWebhookMetodo, setNovoWebhookMetodo] = useState("POST");
   const [novoWebhookVars, setNovoWebhookVars] = useState<WebhookVariable[]>([]);
+
+  // Edição inline de webhook existente
+  const [editandoWebhook, setEditandoWebhook] = useState(false);
+  const [editWhNome, setEditWhNome] = useState("");
+  const [editWhUrl, setEditWhUrl] = useState("");
+  const [editWhMetodo, setEditWhMetodo] = useState("POST");
+  const [editWhVars, setEditWhVars] = useState<WebhookVariable[]>([]);
+  const [salvandoEdicaoWh, setSalvandoEdicaoWh] = useState(false);
   
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
@@ -410,6 +418,51 @@ export default function NovaAutomacaoDialog({
   };
 
   const existingWebhook = webhooks.find(w => w.id === webhookSelecionado);
+
+  // Sincroniza estado de edição quando seleciona outro webhook
+  useEffect(() => {
+    if (existingWebhook) {
+      setEditWhNome(existingWebhook.name);
+      setEditWhUrl(existingWebhook.url);
+      setEditWhMetodo(existingWebhook.method);
+      setEditWhVars(Array.isArray(existingWebhook.variables) ? existingWebhook.variables : []);
+    }
+    setEditandoWebhook(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webhookSelecionado]);
+
+  const handleSalvarEdicaoWebhook = async () => {
+    if (!existingWebhook) return;
+    if (!editWhNome.trim() || !editWhUrl.trim()) {
+      toast.error("Nome e URL do webhook são obrigatórios");
+      return;
+    }
+    setSalvandoEdicaoWh(true);
+    try {
+      const cleanVars = editWhVars
+        .map((v) => ({ ...v, name: (v.name || "").trim() }))
+        .filter((v) => v.name);
+      const { error } = await supabase
+        .from("webhooks")
+        .update({
+          name: editWhNome.trim(),
+          url: editWhUrl.trim(),
+          method: editWhMetodo,
+          has_variables: cleanVars.length > 0,
+          variables: cleanVars as any,
+        })
+        .eq("id", existingWebhook.id);
+      if (error) throw error;
+      toast.success("Webhook atualizado");
+      setEditandoWebhook(false);
+      await loadWebhooks();
+    } catch (e: any) {
+      toast.error(`Erro ao atualizar webhook: ${e?.message ?? e}`);
+    } finally {
+      setSalvandoEdicaoWh(false);
+    }
+  };
+
   // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
   const selectedWebhook: Webhook | undefined =
     metodoDisparo === "webhook" && webhookMode === "novo"
@@ -419,6 +472,14 @@ export default function NovaAutomacaoDialog({
           url: novoWebhookUrl,
           method: novoWebhookMetodo,
           variables: novoWebhookVars.filter(v => (v.name || "").trim()),
+        }
+      : editandoWebhook && existingWebhook
+      ? {
+          id: existingWebhook.id,
+          name: editWhNome,
+          url: editWhUrl,
+          method: editWhMetodo,
+          variables: editWhVars.filter(v => (v.name || "").trim()),
         }
       : existingWebhook;
 
@@ -623,22 +684,129 @@ export default function NovaAutomacaoDialog({
 
               {webhookMode === "existente" && (
                 <div className="space-y-2">
-                  <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um webhook salvo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {webhooks.map((webhook) => (
-                        <SelectItem key={webhook.id} value={webhook.id}>
-                          {webhook.name} <span className="text-muted-foreground ml-1">({webhook.method})</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione um webhook salvo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {webhooks.map((webhook) => (
+                          <SelectItem key={webhook.id} value={webhook.id}>
+                            {webhook.name} <span className="text-muted-foreground ml-1">({webhook.method})</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {existingWebhook && !editandoWebhook && (
+                      <Button type="button" variant="outline" size="sm" onClick={() => setEditandoWebhook(true)}>
+                        Editar
+                      </Button>
+                    )}
+                  </div>
                   {webhooks.length === 0 && (
                     <p className="text-xs text-muted-foreground">
                       Nenhum webhook salvo ainda. Use "Criar novo" para começar.
                     </p>
+                  )}
+
+                  {existingWebhook && editandoWebhook && (
+                    <div className="space-y-3 mt-3 p-3 border rounded-md bg-background">
+                      <div className="grid grid-cols-[1fr,120px] gap-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Nome</Label>
+                          <Input value={editWhNome} onChange={(e) => setEditWhNome(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Método</Label>
+                          <Select value={editWhMetodo} onValueChange={setEditWhMetodo}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">URL</Label>
+                        <Input value={editWhUrl} onChange={(e) => setEditWhUrl(e.target.value)} />
+                      </div>
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-semibold">Variáveis do Webhook</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditWhVars((prev) => [...prev, { name: "", type: "string", required: false }])}
+                          >
+                            + Adicionar
+                          </Button>
+                        </div>
+                        {editWhVars.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic">Nenhuma variável definida.</p>
+                        ) : (
+                          editWhVars.map((v, idx) => (
+                            <div key={idx} className="flex gap-2 items-center">
+                              <Input
+                                value={v.name}
+                                onChange={(e) => {
+                                  const next = [...editWhVars];
+                                  next[idx] = { ...next[idx], name: e.target.value };
+                                  setEditWhVars(next);
+                                }}
+                                placeholder="nome_variavel"
+                                className="flex-1"
+                              />
+                              <Select
+                                value={v.type}
+                                onValueChange={(t) => {
+                                  const next = [...editWhVars];
+                                  next[idx] = { ...next[idx], type: t };
+                                  setEditWhVars(next);
+                                }}
+                              >
+                                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">string</SelectItem>
+                                  <SelectItem value="number">number</SelectItem>
+                                  <SelectItem value="boolean">boolean</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <label className="flex items-center gap-1.5 text-xs">
+                                <Checkbox
+                                  checked={v.required}
+                                  onCheckedChange={(c) => {
+                                    const next = [...editWhVars];
+                                    next[idx] = { ...next[idx], required: !!c };
+                                    setEditWhVars(next);
+                                  }}
+                                />
+                                obrig.
+                              </label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditWhVars((prev) => prev.filter((_, i) => i !== idx))}
+                                className="text-destructive shrink-0"
+                              >
+                                X
+                              </Button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="flex justify-end gap-2 pt-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditandoWebhook(false)} disabled={salvandoEdicaoWh}>
+                          Cancelar
+                        </Button>
+                        <Button type="button" size="sm" onClick={handleSalvarEdicaoWebhook} disabled={salvandoEdicaoWh}>
+                          {salvandoEdicaoWh ? "Salvando..." : "Salvar alterações"}
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -799,8 +967,8 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Variáveis Personalizadas (Bot ou Webhook) */}
-          {(metodoDisparo === "bot" || metodoDisparo === "webhook") && (
+          {/* Variáveis Personalizadas (somente Bot) */}
+          {metodoDisparo === "bot" && (
             <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center justify-between gap-2">
                 <div>
