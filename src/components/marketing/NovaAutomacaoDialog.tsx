@@ -81,6 +81,9 @@ export default function NovaAutomacaoDialog({
   const [editWhMetodo, setEditWhMetodo] = useState("POST");
   const [editWhVars, setEditWhVars] = useState<WebhookVariable[]>([]);
   const [salvandoEdicaoWh, setSalvandoEdicaoWh] = useState(false);
+  const [excluindoWebhook, setExcluindoWebhook] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [automacoesUsando, setAutomacoesUsando] = useState<Array<{ id: string; name: string }>>([]);
   
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
