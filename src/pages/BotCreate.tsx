@@ -715,6 +715,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                   <SelectItem value="telegram">Telegram</SelectItem>
                   <SelectItem value="facebook">Facebook</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="marketing_automation">Automação de Marketing</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
