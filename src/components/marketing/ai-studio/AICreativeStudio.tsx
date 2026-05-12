@@ -1620,7 +1620,7 @@ const AICreativeStudioInner: React.FC = () => {
               className="!bg-card/80 !backdrop-blur-md !border-border/50 !shadow-lg !rounded-xl [&>button]:!bg-transparent [&>button]:!border-border/30 [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent/50 [&>button]:!rounded-lg [&>button]:!transition-colors"
             />
             <MiniMap
-              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg"
+              className="!bg-card/60 !backdrop-blur-md !border-border/30 !rounded-xl !shadow-lg !hidden md:!block"
               nodeColor={() => 'hsl(var(--primary))'}
               maskColor="hsl(var(--background) / 0.75)"
             />
