@@ -26,6 +26,11 @@ const StudioNodeLibrary: React.FC = () => {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+  const handleAddNode = (nodeType: string) => {
+    window.dispatchEvent(new CustomEvent('ai-studio:add-node', { detail: { type: nodeType } }));
+    setIsOpen(false);
+  };
+
   const filteredCategories = NODE_CATEGORIES.map(cat => ({
     ...cat,
     nodes: cat.nodes.filter(n =>
