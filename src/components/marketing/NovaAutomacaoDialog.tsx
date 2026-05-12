@@ -563,21 +563,6 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Info do Webhook Selecionado */}
-          {selectedWebhook && (
-            <div className="p-3 bg-primary/5 rounded-lg text-sm space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Método:</span>
-                <code className="px-2 py-0.5 bg-background rounded text-xs">{selectedWebhook.method}</code>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold">URL:</span>
-                <code className="px-2 py-0.5 bg-background rounded text-xs break-all flex-1">
-                  {selectedWebhook.url}
-                </code>
-              </div>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
