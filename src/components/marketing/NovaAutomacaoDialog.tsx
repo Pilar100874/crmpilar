@@ -73,6 +73,7 @@ export default function NovaAutomacaoDialog({
 
   // Variáveis personalizadas (Bot ou Webhook)
   const [variaveisCustom, setVariaveisCustom] = useState<Array<{ nome: string; valor: string }>>([]);
+  const [formatoSaida, setFormatoSaida] = useState<"json" | "form" | "multipart" | "xml" | "text" | "query">("json");
 
   const [isCreating, setIsCreating] = useState(false);
 
