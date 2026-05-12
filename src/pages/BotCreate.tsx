@@ -495,7 +495,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     webchat: 'WebChat',
     telegram: 'Telegram',
     facebook: 'Facebook',
-    instagram: 'Instagram'
+    instagram: 'Instagram',
+    marketing_automation: 'Automação de Marketing'
   };
 
   return (
