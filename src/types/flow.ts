@@ -43,7 +43,9 @@ export type NodeType =
   | "enviar_aviso_sistema"
   | "enviar_mensagem_interna"
   | "publish_social_post"
-  | "generate_ai_media";
+  | "generate_ai_media"
+  | "send_whatsapp_to_number"
+  | "api_loop";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -492,6 +494,42 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       basePrompt: "",
       variations: 4,
       outputVariable: "midia_selecionada",
+    },
+  },
+  // Disparo direto WhatsApp
+  {
+    type: "send_whatsapp_to_number",
+    label: "Enviar WhatsApp para número",
+    description: "Dispara mensagem WhatsApp para um número específico",
+    icon: "Send",
+    color: "text-emerald-600",
+    defaultData: {
+      phoneNumber: "",
+      message: "",
+      mediaUrl: "",
+      waitForReply: false,
+      outputVariable: "envio_whatsapp_status",
+    },
+  },
+  // Loop API
+  {
+    type: "api_loop",
+    label: "Loop por API",
+    description: "Consulta API, armazena colunas e itera linha a linha",
+    icon: "RotateCw",
+    color: "text-indigo-600",
+    defaultData: {
+      method: "GET",
+      url: "",
+      headers: [],
+      body: "",
+      arrayPath: "",
+      columns: [],
+      itemVariable: "item",
+      delaySeconds: 2,
+      maxRows: 0,
+      onError: "continue",
+      outputVariable: "loop_resultado",
     },
   },
 ];
