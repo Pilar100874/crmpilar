@@ -4,7 +4,7 @@ import { useStrategyEngine } from './hooks/useStrategyEngine';
 import { useCustomAgents } from './hooks/useCustomAgents';
 import { AGENT_INFO, AGENT_ORDER, getMergedAgentInfo, getMergedAgentOrder, getMergedDependencies } from './types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArrowLeft, Loader2, MessageSquare, FileText, Clock, Rocket, LayoutDashboard, Download, ChevronDown } from 'lucide-react';
