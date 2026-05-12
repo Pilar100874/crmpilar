@@ -171,9 +171,10 @@ export default function NovaAutomacaoDialog({
       if (!estabelecimentoId) return;
 
       const { data, error } = await supabase
-        .from("bots" as any)
-        .select("id, name, canais")
-        .eq("estabelecimento_id", estabelecimentoId);
+        .from("bot_flows")
+        .select("id, name, canais, active")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("active", true);
 
       if (error) throw error;
 
@@ -235,6 +236,9 @@ export default function NovaAutomacaoDialog({
         config.horario = horario;
       }
 
+      let savedId: string | null = null;
+      let isNew = false;
+
       if (automationToEdit?.id) {
         const { error } = await supabase
           .from("marketing_automations" as any)
@@ -246,9 +250,10 @@ export default function NovaAutomacaoDialog({
           .eq("id", automationToEdit.id);
 
         if (error) throw error;
+        savedId = automationToEdit.id;
         toast.success("Automação atualizada com sucesso!");
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from("marketing_automations" as any)
           .insert({
             name: nome.trim(),
@@ -256,10 +261,31 @@ export default function NovaAutomacaoDialog({
             config: config,
             active: true,
             estabelecimento_id: estabelecimentoId,
-          });
+          })
+          .select("id")
+          .single();
 
         if (error) throw error;
+        savedId = (inserted as any)?.id ?? null;
+        isNew = true;
         toast.success("Automação criada com sucesso!");
+      }
+
+      // Disparar imediatamente após criação (webhook ou bot vinculado)
+      if (isNew && savedId) {
+        try {
+          const { error: execErr } = await supabase.functions.invoke(
+            "marketing-automation-execute",
+            { body: { automationId: savedId } },
+          );
+          if (execErr) {
+            toast.error(`Automação criada, mas falha ao disparar: ${execErr.message}`);
+          } else {
+            toast.success(`Disparo ${metodoDisparo === "bot" ? "do bot" : "do webhook"} iniciado!`);
+          }
+        } catch (e: any) {
+          toast.error(`Falha ao disparar: ${e?.message ?? e}`);
+        }
       }
 
       // Resetar estado e fechar

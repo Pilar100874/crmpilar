@@ -1,5 +1,11 @@
 project_id = "ioxugupvxlcdweldocmq"
 
+[functions.marketing-automation-execute]
+verify_jwt = false
+
+[functions.marketing-automation-scheduler]
+verify_jwt = false
+
 [functions.api-produtos]
 verify_jwt = false
 
