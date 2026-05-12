@@ -46,31 +46,36 @@ export default function NovaAutomacaoDialog({
 }: NovaAutomacaoDialogProps) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [tipoDisparo, setTipoDisparo] = useState<"manual" | "automatico" | "data">("manual");
+  const [tipoDisparo, setTipoDisparo] = useState<"manual" | "data">("manual");
   
   // Manual
   const [localDisponivel, setLocalDisponivel] = useState("");
-  
-  // Automático
-  const [areaAutomatica, setAreaAutomatica] = useState("");
-  const [eventoAutomatico, setEventoAutomatico] = useState("");
   
   // Por data
   const [periodicidade, setPeriodicidade] = useState("");
   const [diaSemana, setDiaSemana] = useState("");
   const [diaMes, setDiaMes] = useState("");
+  const [dataEspecifica, setDataEspecifica] = useState("");
   const [horario, setHorario] = useState("");
+  
+  // Método de disparo
+  const [metodoDisparo, setMetodoDisparo] = useState<"webhook" | "bot">("webhook");
   
   // Webhook
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [webhookSelecionado, setWebhookSelecionado] = useState("");
   const [variaveisWebhook, setVariaveisWebhook] = useState<Record<string, string>>({});
   
+  // Bot
+  const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
+  const [botSelecionado, setBotSelecionado] = useState("");
+  
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadWebhooks();
+      loadBots();
     }
   }, [open]);
 
@@ -94,30 +99,33 @@ export default function NovaAutomacaoDialog({
       setNome(automationToEdit.name || "");
       setDescricao(automationToEdit.description || "");
       const cfg = automationToEdit.config || {};
-      setTipoDisparo(cfg.tipo_disparo || "manual");
+      const tipo = cfg.tipo_disparo === "automatico" ? "manual" : (cfg.tipo_disparo || "manual");
+      setTipoDisparo(tipo);
       setLocalDisponivel(cfg.local_disponivel || "");
-      setAreaAutomatica(cfg.area || "");
-      setEventoAutomatico(cfg.evento || "");
       setPeriodicidade(cfg.periodicidade || "");
       setDiaSemana(cfg.dia_semana || "");
       setDiaMes(cfg.dia_mes || "");
+      setDataEspecifica(cfg.data_especifica || "");
       setHorario(cfg.horario || "");
+      setMetodoDisparo(cfg.metodo_disparo || (cfg.bot_id ? "bot" : "webhook"));
       setWebhookSelecionado(cfg.webhook_id || "");
       setVariaveisWebhook(cfg.variaveis || {});
+      setBotSelecionado(cfg.bot_id || "");
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
       setDescricao("");
       setTipoDisparo("manual");
       setLocalDisponivel("");
-      setAreaAutomatica("");
-      setEventoAutomatico("");
       setPeriodicidade("");
       setDiaSemana("");
       setDiaMes("");
+      setDataEspecifica("");
       setHorario("");
+      setMetodoDisparo("webhook");
       setWebhookSelecionado("");
       setVariaveisWebhook({});
+      setBotSelecionado("");
     }
   }, [open, automationToEdit]);
 
@@ -157,14 +165,41 @@ export default function NovaAutomacaoDialog({
     }
   };
 
+  const loadBots = async () => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from("bots" as any)
+        .select("id, name, canais")
+        .eq("estabelecimento_id", estabelecimentoId);
+
+      if (error) throw error;
+
+      const filtered = (data || []).filter((b: any) =>
+        Array.isArray(b.canais) && b.canais.includes("marketing_automation")
+      );
+
+      setBots(filtered.map((b: any) => ({ id: b.id, name: b.name })));
+    } catch (error) {
+      console.error("Erro ao carregar bots:", error);
+    }
+  };
+
   const handleCreate = async () => {
     if (!nome.trim()) {
       toast.error("Por favor, informe um nome para a automação");
       return;
     }
 
-    if (!webhookSelecionado) {
+    if (metodoDisparo === "webhook" && !webhookSelecionado) {
       toast.error("Por favor, selecione um webhook");
+      return;
+    }
+
+    if (metodoDisparo === "bot" && !botSelecionado) {
+      toast.error("Por favor, selecione um bot");
       return;
     }
 
@@ -180,19 +215,23 @@ export default function NovaAutomacaoDialog({
       // Montar configuração baseado no tipo
       let config: any = {
         tipo_disparo: tipoDisparo,
-        webhook_id: webhookSelecionado,
-        variaveis: variaveisWebhook,
+        metodo_disparo: metodoDisparo,
       };
+
+      if (metodoDisparo === "webhook") {
+        config.webhook_id = webhookSelecionado;
+        config.variaveis = variaveisWebhook;
+      } else {
+        config.bot_id = botSelecionado;
+      }
 
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
-      } else if (tipoDisparo === "automatico") {
-        config.area = areaAutomatica;
-        config.evento = eventoAutomatico;
       } else if (tipoDisparo === "data") {
         config.periodicidade = periodicidade;
         config.dia_semana = diaSemana;
         config.dia_mes = diaMes;
+        config.data_especifica = dataEspecifica;
         config.horario = horario;
       }
 
@@ -239,14 +278,15 @@ export default function NovaAutomacaoDialog({
     setDescricao("");
     setTipoDisparo("manual");
     setLocalDisponivel("");
-    setAreaAutomatica("");
-    setEventoAutomatico("");
     setPeriodicidade("");
     setDiaSemana("");
     setDiaMes("");
+    setDataEspecifica("");
     setHorario("");
+    setMetodoDisparo("webhook");
     setWebhookSelecionado("");
     setVariaveisWebhook({});
+    setBotSelecionado("");
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
@@ -294,10 +334,6 @@ export default function NovaAutomacaoDialog({
                 <Label htmlFor="manual" className="font-normal cursor-pointer">Manual</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="automatico" id="automatico" />
-                <Label htmlFor="automatico" className="font-normal cursor-pointer">Automático</Label>
-              </div>
-              <div className="flex items-center space-x-2">
                 <RadioGroupItem value="data" id="data" />
                 <Label htmlFor="data" className="font-normal cursor-pointer">Por Data</Label>
               </div>
@@ -324,44 +360,6 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Condicional: Automático */}
-          {tipoDisparo === "automatico" && (
-            <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
-              <div className="space-y-2">
-                <Label>Selecione a área</Label>
-                <Select value={areaAutomatica} onValueChange={setAreaAutomatica}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a área" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="calendario">Calendário</SelectItem>
-                    <SelectItem value="orcamento">Orçamento</SelectItem>
-                    <SelectItem value="empresas">Empresas</SelectItem>
-                    <SelectItem value="contatos">Contatos</SelectItem>
-                    <SelectItem value="agenda">Agenda</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {areaAutomatica && (
-                <div className="space-y-2">
-                  <Label>Quando executar</Label>
-                  <Select value={eventoAutomatico} onValueChange={setEventoAutomatico}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o evento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="criar">Ao criar</SelectItem>
-                      <SelectItem value="modificar">Ao modificar</SelectItem>
-                      <SelectItem value="mudar_status">Ao mudar status</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Condicional: Por Data */}
           {tipoDisparo === "data" && (
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
@@ -372,6 +370,7 @@ export default function NovaAutomacaoDialog({
                     <SelectValue placeholder="Selecione a periodicidade" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="data_especifica">Data específica</SelectItem>
                     <SelectItem value="diario">Todo dia</SelectItem>
                     <SelectItem value="semanal">1 vez por semana</SelectItem>
                     <SelectItem value="quinzenal">A cada 15 dias</SelectItem>
@@ -380,6 +379,17 @@ export default function NovaAutomacaoDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {periodicidade === "data_especifica" && (
+                <div className="space-y-2">
+                  <Label>Data</Label>
+                  <Input
+                    type="date"
+                    value={dataEspecifica}
+                    onChange={(e) => setDataEspecifica(e.target.value)}
+                  />
+                </div>
+              )}
 
               {periodicidade === "semanal" && (
                 <div className="space-y-2">
@@ -426,27 +436,68 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Seleção de Webhook */}
-          <div className="space-y-2">
-            <Label>Webhook</Label>
-            <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um webhook" />
-              </SelectTrigger>
-              <SelectContent>
-                {webhooks.map((webhook) => (
-                  <SelectItem key={webhook.id} value={webhook.id}>
-                    {webhook.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {webhooks.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhum webhook ativo encontrado. Configure webhooks primeiro.
-              </p>
-            )}
+          {/* Método de Disparo */}
+          <div className="space-y-3">
+            <Label>Método de Disparo</Label>
+            <RadioGroup value={metodoDisparo} onValueChange={(value: any) => setMetodoDisparo(value)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="webhook" id="metodo-webhook" />
+                <Label htmlFor="metodo-webhook" className="font-normal cursor-pointer">Webhook</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="bot" id="metodo-bot" />
+                <Label htmlFor="metodo-bot" className="font-normal cursor-pointer">Bot</Label>
+              </div>
+            </RadioGroup>
           </div>
+
+          {/* Seleção de Webhook */}
+          {metodoDisparo === "webhook" && (
+            <div className="space-y-2">
+              <Label>Webhook</Label>
+              <Select value={webhookSelecionado} onValueChange={setWebhookSelecionado}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um webhook" />
+                </SelectTrigger>
+                <SelectContent>
+                  {webhooks.map((webhook) => (
+                    <SelectItem key={webhook.id} value={webhook.id}>
+                      {webhook.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {webhooks.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum webhook ativo encontrado. Configure webhooks primeiro.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Seleção de Bot */}
+          {metodoDisparo === "bot" && (
+            <div className="space-y-2">
+              <Label>Bot</Label>
+              <Select value={botSelecionado} onValueChange={setBotSelecionado}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um bot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bots.map((bot) => (
+                    <SelectItem key={bot.id} value={bot.id}>
+                      {bot.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {bots.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum bot encontrado com Setor de Disparo "Automação de Marketing". Crie um bot com este setor primeiro.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Variáveis do Webhook */}
           {selectedWebhook && selectedWebhook.variables && selectedWebhook.variables.length > 0 && (

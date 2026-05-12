@@ -704,7 +704,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="bot-canal">Canal de Atendimento *</Label>
+              <Label htmlFor="bot-canal">Setor de Disparo *</Label>
               <Select value={selectedCanal} onValueChange={setSelectedCanal}>
                 <SelectTrigger id="bot-canal">
                   <SelectValue />
@@ -815,7 +815,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="duplicate-canal">Canal de Atendimento *</Label>
+              <Label htmlFor="duplicate-canal">Setor de Disparo *</Label>
               <Select value={duplicateCanal} onValueChange={setDuplicateCanal}>
                 <SelectTrigger id="duplicate-canal">
                   <SelectValue />
