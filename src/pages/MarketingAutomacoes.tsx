@@ -36,6 +36,9 @@ export default function MarketingAutomacoes() {
   const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
   const [automacaoToExecute, setAutomacaoToExecute] = useState<any>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [automacaoToDelete, setAutomacaoToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadAutomacoes();
@@ -94,21 +97,25 @@ export default function MarketingAutomacoes() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Tem certeza que deseja excluir a automação "${name}"?`)) return;
-
+  const handleDelete = async () => {
+    if (!automacaoToDelete) return;
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("marketing_automations" as any)
         .delete()
-        .eq("id", id);
+        .eq("id", automacaoToDelete.id);
 
       if (error) throw error;
       toast.success("Automação excluída com sucesso!");
+      setDeleteDialogOpen(false);
+      setAutomacaoToDelete(null);
       loadAutomacoes();
     } catch (error) {
       console.error("Erro ao excluir automação:", error);
       toast.error("Erro ao excluir automação");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -195,48 +202,28 @@ export default function MarketingAutomacoes() {
 
   const handleExecute = async () => {
     if (!automacaoToExecute) return;
-    
+
     setIsExecuting(true);
     try {
-      const webhookId = automacaoToExecute.config?.webhook_id;
-      if (!webhookId) {
-        toast.error("Webhook não configurado para esta automação");
-        return;
-      }
+      const { data, error } = await supabase.functions.invoke(
+        "marketing-automation-execute",
+        { body: { automationId: automacaoToExecute.id } },
+      );
 
-      // Buscar o webhook para pegar URL e método
-      const { data: webhook, error: webhookError } = await supabase
-        .from("webhooks")
-        .select("url, method")
-        .eq("id", webhookId)
-        .single();
+      if (error) throw error;
+      if (data && data.success === false) throw new Error(data.error || "Falha");
 
-      if (webhookError || !webhook) {
-        toast.error("Webhook não encontrado");
-        return;
-      }
-
-      // Executar o webhook com as variáveis configuradas
-      const variables = automacaoToExecute.config?.variaveis || {};
-      
-      const response = await fetch(webhook.url, {
-        method: webhook.method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(variables),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro na execução: ${response.statusText}`);
-      }
-
-      toast.success("Automação executada com sucesso!");
+      const metodo = automacaoToExecute.config?.metodo_disparo
+        || (automacaoToExecute.config?.bot_id ? "bot" : "webhook");
+      toast.success(
+        metodo === "bot" ? "Bot disparado com sucesso!" : "Webhook executado com sucesso!",
+      );
       setExecuteDialogOpen(false);
       setAutomacaoToExecute(null);
-    } catch (error) {
+      loadAutomacoes();
+    } catch (error: any) {
       console.error("Erro ao executar automação:", error);
-      toast.error("Erro ao executar automação");
+      toast.error(`Erro ao executar: ${error?.message ?? error}`);
     } finally {
       setIsExecuting(false);
     }
