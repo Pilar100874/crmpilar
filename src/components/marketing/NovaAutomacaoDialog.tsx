@@ -75,6 +75,7 @@ export default function NovaAutomacaoDialog({
   useEffect(() => {
     if (open) {
       loadWebhooks();
+      loadBots();
     }
   }, [open]);
 
