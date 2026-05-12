@@ -50,21 +50,21 @@ export interface ChatMessage {
 }
 
 export const AGENT_INFO: Record<string, { name: string; icon: string; color: string; description: string }> = {
-  vox: { name: 'Voz do Cliente', icon: '🎙️', color: '#8B5CF6', description: 'Insights da voz do cliente' },
-  cipher: { name: 'Inteligência Competitiva', icon: '🔍', color: '#3B82F6', description: 'Análise de concorrentes' },
-  positioning: { name: 'Posicionamento', icon: '🎯', color: '#10B981', description: 'Posicionamento estratégico' },
-  funnel: { name: 'Arquiteto de Funil', icon: '📊', color: '#F59E0B', description: 'Arquitetura do funil' },
-  vsl: { name: 'Roteirista de Vídeo', icon: '🎬', color: '#EF4444', description: 'Roteiro de vídeo de vendas' },
-  landing_page: { name: 'Landing Page', icon: '🏗️', color: '#6366F1', description: 'Estrutura da landing page' },
-  creative: { name: 'Criativos', icon: '🎨', color: '#EC4899', description: 'Criativos de anúncios' },
-  email: { name: 'Email Marketing', icon: '📧', color: '#14B8A6', description: 'Sequências de email' },
-  reel: { name: 'Roteirista de Reels', icon: '📱', color: '#F97316', description: 'Scripts de vídeos curtos' },
-  seo: { name: 'SEO & Conteúdo', icon: '🔎', color: '#059669', description: 'Estratégia de SEO e conteúdo orgânico' },
-  paid_media: { name: 'Mídia Paga', icon: '💰', color: '#DC2626', description: 'Estrutura de campanhas e tráfego pago' },
-  social_media: { name: 'Social Media', icon: '📲', color: '#7C3AED', description: 'Calendário e estratégia de redes sociais' },
-  site_builder: { name: 'Site Builder', icon: '🌐', color: '#0EA5E9', description: 'Criação de site de página única completo' },
-  video_producer: { name: 'Produtor de Vídeo', icon: '🎥', color: '#A855F7', description: 'Direção criativa e storyboard de vídeos' },
-  influencer_content: { name: 'Influencer & Imagens', icon: '🤳', color: '#E11D48', description: 'Conteúdo visual e estratégia com influenciadores' },
+  vox: { name: 'Voz do Cliente', icon: '🎙️', color: '#8B5CF6', description: 'Coleta dores, desejos e objeções reais do público para guiar toda a estratégia.' },
+  cipher: { name: 'Inteligência Competitiva', icon: '🔍', color: '#3B82F6', description: 'Mapeia concorrentes, ofertas e brechas de mercado para identificar oportunidades.' },
+  positioning: { name: 'Posicionamento', icon: '🎯', color: '#10B981', description: 'Define proposta de valor, diferenciais e mensagem central da marca.' },
+  funnel: { name: 'Arquiteto de Funil', icon: '📊', color: '#F59E0B', description: 'Desenha o funil de vendas completo, do topo à conversão final.' },
+  vsl: { name: 'Roteirista de Vídeo', icon: '🎬', color: '#EF4444', description: 'Cria roteiro de VSL persuasivo com gancho, história, oferta e CTA.' },
+  landing_page: { name: 'Landing Page', icon: '🏗️', color: '#6366F1', description: 'Estrutura seções, copy e CTAs de uma landing page de alta conversão.' },
+  creative: { name: 'Criativos', icon: '🎨', color: '#EC4899', description: 'Gera conceitos de anúncios com headlines, ângulos e variações criativas.' },
+  email: { name: 'Email Marketing', icon: '📧', color: '#14B8A6', description: 'Cria sequências de e-mail de nutrição, vendas e reengajamento.' },
+  reel: { name: 'Roteirista de Reels', icon: '📱', color: '#F97316', description: 'Escreve roteiros de vídeos curtos para Reels, TikTok e Shorts.' },
+  seo: { name: 'SEO & Conteúdo', icon: '🔎', color: '#059669', description: 'Define palavras-chave, pautas e estratégia de conteúdo orgânico.' },
+  paid_media: { name: 'Mídia Paga', icon: '💰', color: '#DC2626', description: 'Planeja campanhas, públicos e estrutura de tráfego pago.' },
+  social_media: { name: 'Social Media', icon: '📲', color: '#7C3AED', description: 'Monta calendário editorial e linha de conteúdo das redes sociais.' },
+  site_builder: { name: 'Site Builder', icon: '🌐', color: '#0EA5E9', description: 'Constrói site one-page completo com todas as seções estratégicas.' },
+  video_producer: { name: 'Produtor de Vídeo', icon: '🎥', color: '#A855F7', description: 'Cria direção criativa, storyboards e referências visuais para vídeos.' },
+  influencer_content: { name: 'Influencer & Imagens', icon: '🤳', color: '#E11D48', description: 'Define briefings de influenciadores e conteúdo visual da marca.' },
 };
 
 export const AGENT_ORDER = ['vox', 'cipher', 'positioning', 'funnel', 'vsl', 'landing_page', 'creative', 'email', 'reel', 'seo', 'paid_media', 'social_media', 'site_builder', 'video_producer', 'influencer_content'];
