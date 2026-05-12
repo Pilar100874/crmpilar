@@ -26,7 +26,7 @@ export default function MarketingAutomacoes() {
   const [selectedAutomacao, setSelectedAutomacao] = useState<any>(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
-  const [variablesDialogOpen, setVariablesDialogOpen] = useState(false);
+  
   const [renameName, setRenameName] = useState("");
   const [renameDescription, setRenameDescription] = useState("");
   const [duplicateName, setDuplicateName] = useState("");
