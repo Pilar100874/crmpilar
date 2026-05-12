@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, X, Search, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
-import { Input } from '@/components/ui/input';
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string }> = {
   input: { bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.15)', dot: '#6366f1' },
