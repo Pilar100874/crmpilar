@@ -529,18 +529,18 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
           {/* Content */}
           <div className="flex-1 flex flex-col min-h-0">
             {/* Toolbar */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r ${activeCat.gradient} text-xs font-medium`}>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-border">
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r ${activeCat.gradient} text-[10px] sm:text-xs font-medium`}>
                 {React.createElement(activeCat.icon, { className: 'h-3 w-3' })}
                 {activeCat.label}
               </div>
               {activeFolder && (
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-[10px] sm:text-xs text-muted-foreground">
                   <Folder className="h-3 w-3" />
                   {activeFolder}
                 </div>
               )}
-              <div className="relative flex-1 max-w-xs">
+              <div className="relative w-full sm:flex-1 sm:max-w-xs order-last sm:order-none">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={search}
@@ -549,7 +549,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                   className="h-8 pl-8 text-xs"
                 />
               </div>
-              <div className="flex-1" />
+              <div className="hidden sm:block flex-1" />
               {activeCategory !== 'salvas' && (
                 <label className="cursor-pointer">
                   <input
