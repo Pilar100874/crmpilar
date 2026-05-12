@@ -20,7 +20,6 @@ export const SendWhatsappToNumberConfig = ({ config, handleConfigChange }: Confi
 
   const updateNumbers = (next: string[]) => {
     handleConfigChange("phoneNumbers", next);
-    handleConfigChange("phoneNumber", next[0] || "");
   };
 
   return (
