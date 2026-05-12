@@ -373,6 +373,10 @@ export const PropertiesPanel = ({
         return <BlockConfigs.AtribuirAtendenteConfig {...configProps} />;
       case "definir_prioridade":
         return <BlockConfigs.DefinirPrioridadeConfig {...configProps} />;
+      case "enviar_aviso_sistema":
+        return <BlockConfigs.EnviarAvisoSistemaConfig {...configProps} />;
+      case "enviar_mensagem_interna":
+        return <BlockConfigs.EnviarMensagemInternaConfig {...configProps} />;
 
       // Redes Sociais
       case "publish_social_post":
