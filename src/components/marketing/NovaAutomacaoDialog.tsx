@@ -70,7 +70,10 @@ export default function NovaAutomacaoDialog({
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
   const [botSelecionado, setBotSelecionado] = useState("");
-  
+
+  // Variáveis personalizadas (Bot ou Webhook)
+  const [variaveisCustom, setVariaveisCustom] = useState<Array<{ nome: string; valor: string }>>([]);
+
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
