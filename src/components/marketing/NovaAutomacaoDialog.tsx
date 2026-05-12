@@ -660,14 +660,33 @@ export default function NovaAutomacaoDialog({
               let urlPreview = selectedWebhook.url || "";
               let bodyPreview: string | null = null;
 
+              // 1) Substitui placeholders na própria URL: {{var}}, {var}, :var
+              const usedKeys = new Set<string>();
+              Object.entries(allVars).forEach(([k, v]) => {
+                if (!k) return;
+                const val = encodeURIComponent(v ?? "");
+                const patterns = [
+                  new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, "g"),
+                  new RegExp(`\\{\\s*${k}\\s*\\}`, "g"),
+                  new RegExp(`(?<![A-Za-z0-9_]):${k}(?![A-Za-z0-9_])`, "g"),
+                ];
+                patterns.forEach((re) => {
+                  if (re.test(urlPreview)) {
+                    urlPreview = urlPreview.replace(re, val);
+                    usedKeys.add(k);
+                  }
+                });
+              });
+
+              // 2) Variáveis restantes vão para query string (GET/DELETE) ou body (demais)
+              const remaining = Object.entries(allVars).filter(([k]) => k && !usedKeys.has(k));
               if (method === "GET" || method === "DELETE") {
-                const qs = Object.entries(allVars)
-                  .filter(([k]) => k)
+                const qs = remaining
                   .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v || "")}`)
                   .join("&");
                 if (qs) urlPreview += (urlPreview.includes("?") ? "&" : "?") + qs;
-              } else {
-                bodyPreview = JSON.stringify(allVars, null, 2);
+              } else if (remaining.length > 0) {
+                bodyPreview = JSON.stringify(Object.fromEntries(remaining), null, 2);
               }
 
               const headers: Record<string, string> = {
