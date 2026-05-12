@@ -73,6 +73,7 @@ export default function NovaAutomacaoDialog({
 
   // Variáveis personalizadas (Bot ou Webhook)
   const [variaveisCustom, setVariaveisCustom] = useState<Array<{ nome: string; valor: string }>>([]);
+  const [formatoSaida, setFormatoSaida] = useState<"json" | "form" | "multipart" | "xml" | "text" | "query">("json");
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -123,6 +124,7 @@ export default function NovaAutomacaoDialog({
       } else {
         setVariaveisCustom([]);
       }
+      setFormatoSaida(cfg.formato_saida || "json");
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
@@ -139,6 +141,7 @@ export default function NovaAutomacaoDialog({
       setVariaveisWebhook({});
       setBotSelecionado("");
       setVariaveisCustom([]);
+      setFormatoSaida("json");
     }
   }, [open, automationToEdit]);
 
@@ -246,6 +249,7 @@ export default function NovaAutomacaoDialog({
         if (k) customMap[k] = v.valor ?? "";
       });
       config.variaveis_custom = customMap;
+      config.formato_saida = formatoSaida;
 
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
@@ -335,6 +339,7 @@ export default function NovaAutomacaoDialog({
     setVariaveisWebhook({});
     setBotSelecionado("");
     setVariaveisCustom([]);
+    setFormatoSaida("json");
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
@@ -678,30 +683,75 @@ export default function NovaAutomacaoDialog({
                 });
               });
 
-              // 2) Variáveis restantes vão para query string (GET/DELETE) ou body (demais)
+              // 2) Variáveis restantes serializadas no formato escolhido
               const remaining = Object.entries(allVars).filter(([k]) => k && !usedKeys.has(k));
-              if (method === "GET" || method === "DELETE") {
+              const remainingObj = Object.fromEntries(remaining);
+
+              let contentType = "";
+              const escXml = (s: string) => String(s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+              const isBodyMethod = !(method === "GET" || method === "DELETE");
+
+              if (formatoSaida === "query" || !isBodyMethod) {
                 const qs = remaining
                   .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v || "")}`)
                   .join("&");
                 if (qs) urlPreview += (urlPreview.includes("?") ? "&" : "?") + qs;
               } else if (remaining.length > 0) {
-                bodyPreview = JSON.stringify(Object.fromEntries(remaining), null, 2);
+                if (formatoSaida === "json") {
+                  bodyPreview = JSON.stringify(remainingObj, null, 2);
+                  contentType = "application/json";
+                } else if (formatoSaida === "form") {
+                  bodyPreview = remaining
+                    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v || "")}`)
+                    .join("&");
+                  contentType = "application/x-www-form-urlencoded";
+                } else if (formatoSaida === "multipart") {
+                  const boundary = "----FormBoundary7MA4YWxkTrZu0gW";
+                  bodyPreview = remaining
+                    .map(([k, v]) =>
+                      `--${boundary}\nContent-Disposition: form-data; name="${k}"\n\n${v ?? ""}`
+                    )
+                    .join("\n") + `\n--${boundary}--`;
+                  contentType = `multipart/form-data; boundary=${boundary}`;
+                } else if (formatoSaida === "xml") {
+                  bodyPreview =
+                    `<?xml version="1.0" encoding="UTF-8"?>\n<request>\n` +
+                    remaining
+                      .map(([k, v]) => `  <${k}>${escXml(v ?? "")}</${k}>`)
+                      .join("\n") +
+                    `\n</request>`;
+                  contentType = "application/xml";
+                } else if (formatoSaida === "text") {
+                  bodyPreview = remaining.map(([k, v]) => `${k}: ${v ?? ""}`).join("\n");
+                  contentType = "text/plain";
+                }
               }
 
               const headers: Record<string, string> = {
                 "Accept": "application/json",
                 "User-Agent": "MarketingAutomation/1.0",
               };
-              if (bodyPreview) headers["Content-Type"] = "application/json";
+              if (bodyPreview && contentType) headers["Content-Type"] = contentType;
               const headersText = Object.entries(headers)
                 .map(([k, v]) => `${k}: ${v}`)
                 .join("\n");
 
               const curlLines = [`curl -X ${method} "${urlPreview}"`];
               Object.entries(headers).forEach(([k, v]) => curlLines.push(`  -H "${k}: ${v}"`));
-              if (bodyPreview) curlLines.push(`  -d '${bodyPreview.replace(/'/g, "'\\''")}'`);
+              if (bodyPreview) curlLines.push(`  --data-raw '${bodyPreview.replace(/'/g, "'\\''")}'`);
               const curlText = curlLines.join(" \\\n");
+
+              const bodyLabel: Record<string, string> = {
+                json: "Body (JSON)",
+                form: "Body (x-www-form-urlencoded)",
+                multipart: "Body (multipart/form-data)",
+                xml: "Body (XML)",
+                text: "Body (Texto)",
+                query: "Body (vazio — variáveis na URL)",
+              };
 
               return (
                 <div className="space-y-3 p-4 bg-muted/40 border rounded-lg">
@@ -709,6 +759,28 @@ export default function NovaAutomacaoDialog({
                   <p className="text-xs text-muted-foreground">
                     Exemplo completo do que será enviado ao executar esta automação.
                   </p>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Formato de saída</Label>
+                    <Select value={formatoSaida} onValueChange={(v: any) => setFormatoSaida(v)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="json">JSON (application/json)</SelectItem>
+                        <SelectItem value="form">Form URL-encoded (application/x-www-form-urlencoded)</SelectItem>
+                        <SelectItem value="multipart">Multipart Form (multipart/form-data)</SelectItem>
+                        <SelectItem value="xml">XML (application/xml)</SelectItem>
+                        <SelectItem value="text">Texto puro (text/plain)</SelectItem>
+                        <SelectItem value="query">Apenas Query String (sem body)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {!isBodyMethod && formatoSaida !== "query" && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Métodos {method} não enviam body — variáveis serão anexadas como query string.
+                      </p>
+                    )}
+                  </div>
 
                   <div>
                     <p className="text-xs font-semibold mb-1">Request Line</p>
@@ -725,7 +797,7 @@ export default function NovaAutomacaoDialog({
 
                   {bodyPreview && (
                     <div>
-                      <p className="text-xs font-semibold mb-1">Body (JSON)</p>
+                      <p className="text-xs font-semibold mb-1">{bodyLabel[formatoSaida]}</p>
                       <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{bodyPreview}</pre>
                     </div>
                   )}
