@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -49,7 +50,7 @@ export default function NovaAutomacaoDialog({
   const [tipoDisparo, setTipoDisparo] = useState<"manual" | "data">("manual");
   
   // Manual
-  const [localDisponivel, setLocalDisponivel] = useState("");
+  const [localDisponivel, setLocalDisponivel] = useState<string[]>([]);
   
   // Por data
   const [periodicidade, setPeriodicidade] = useState("");
@@ -101,7 +102,7 @@ export default function NovaAutomacaoDialog({
       const cfg = automationToEdit.config || {};
       const tipo = cfg.tipo_disparo === "automatico" ? "manual" : (cfg.tipo_disparo || "manual");
       setTipoDisparo(tipo);
-      setLocalDisponivel(cfg.local_disponivel || "");
+      setLocalDisponivel(Array.isArray(cfg.local_disponivel) ? cfg.local_disponivel : (cfg.local_disponivel ? [cfg.local_disponivel] : []));
       setPeriodicidade(cfg.periodicidade || "");
       setDiaSemana(cfg.dia_semana || "");
       setDiaMes(cfg.dia_mes || "");
@@ -116,7 +117,7 @@ export default function NovaAutomacaoDialog({
       setNome("");
       setDescricao("");
       setTipoDisparo("manual");
-      setLocalDisponivel("");
+      setLocalDisponivel([]);
       setPeriodicidade("");
       setDiaSemana("");
       setDiaMes("");
@@ -303,7 +304,7 @@ export default function NovaAutomacaoDialog({
     setNome("");
     setDescricao("");
     setTipoDisparo("manual");
-    setLocalDisponivel("");
+    setLocalDisponivel([]);
     setPeriodicidade("");
     setDiaSemana("");
     setDiaMes("");
@@ -368,21 +369,33 @@ export default function NovaAutomacaoDialog({
 
           {/* Condicional: Manual */}
           {tipoDisparo === "manual" && (
-            <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
               <Label>Local onde vai ficar disponível</Label>
-              <Select value={localDisponivel} onValueChange={setLocalDisponivel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o local" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bot">Bot</SelectItem>
-                  <SelectItem value="orcamento">Tela de Orçamento</SelectItem>
-                  <SelectItem value="calendario">Calendário</SelectItem>
-                  <SelectItem value="marketing">Tela Marketing</SelectItem>
-                  <SelectItem value="empresa">Tela Empresa</SelectItem>
-                  <SelectItem value="contatos">Tela Contatos</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-xs text-muted-foreground">Selecione um ou mais locais</p>
+              <div className="space-y-2">
+                {[
+                  { value: "chat", label: "Tela de Chat" },
+                  { value: "orcamento", label: "Tela de Orçamento" },
+                ].map((opt) => {
+                  const checked = localDisponivel.includes(opt.value);
+                  return (
+                    <div key={opt.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`local-${opt.value}`}
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setLocalDisponivel((prev) =>
+                            v ? Array.from(new Set([...prev, opt.value])) : prev.filter((x) => x !== opt.value)
+                          );
+                        }}
+                      />
+                      <Label htmlFor={`local-${opt.value}`} className="font-normal cursor-pointer">
+                        {opt.label}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
