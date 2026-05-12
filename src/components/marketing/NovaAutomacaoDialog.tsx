@@ -369,21 +369,33 @@ export default function NovaAutomacaoDialog({
 
           {/* Condicional: Manual */}
           {tipoDisparo === "manual" && (
-            <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
               <Label>Local onde vai ficar disponível</Label>
-              <Select value={localDisponivel} onValueChange={setLocalDisponivel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o local" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bot">Bot</SelectItem>
-                  <SelectItem value="orcamento">Tela de Orçamento</SelectItem>
-                  <SelectItem value="calendario">Calendário</SelectItem>
-                  <SelectItem value="marketing">Tela Marketing</SelectItem>
-                  <SelectItem value="empresa">Tela Empresa</SelectItem>
-                  <SelectItem value="contatos">Tela Contatos</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-xs text-muted-foreground">Selecione um ou mais locais</p>
+              <div className="space-y-2">
+                {[
+                  { value: "chat", label: "Tela de Chat" },
+                  { value: "orcamento", label: "Tela de Orçamento" },
+                ].map((opt) => {
+                  const checked = localDisponivel.includes(opt.value);
+                  return (
+                    <div key={opt.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`local-${opt.value}`}
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setLocalDisponivel((prev) =>
+                            v ? Array.from(new Set([...prev, opt.value])) : prev.filter((x) => x !== opt.value)
+                          );
+                        }}
+                      />
+                      <Label htmlFor={`local-${opt.value}`} className="font-normal cursor-pointer">
+                        {opt.label}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
