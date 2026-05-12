@@ -418,6 +418,51 @@ export default function NovaAutomacaoDialog({
   };
 
   const existingWebhook = webhooks.find(w => w.id === webhookSelecionado);
+
+  // Sincroniza estado de edição quando seleciona outro webhook
+  useEffect(() => {
+    if (existingWebhook) {
+      setEditWhNome(existingWebhook.name);
+      setEditWhUrl(existingWebhook.url);
+      setEditWhMetodo(existingWebhook.method);
+      setEditWhVars(Array.isArray(existingWebhook.variables) ? existingWebhook.variables : []);
+    }
+    setEditandoWebhook(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webhookSelecionado]);
+
+  const handleSalvarEdicaoWebhook = async () => {
+    if (!existingWebhook) return;
+    if (!editWhNome.trim() || !editWhUrl.trim()) {
+      toast.error("Nome e URL do webhook são obrigatórios");
+      return;
+    }
+    setSalvandoEdicaoWh(true);
+    try {
+      const cleanVars = editWhVars
+        .map((v) => ({ ...v, name: (v.name || "").trim() }))
+        .filter((v) => v.name);
+      const { error } = await supabase
+        .from("webhooks")
+        .update({
+          name: editWhNome.trim(),
+          url: editWhUrl.trim(),
+          method: editWhMetodo,
+          has_variables: cleanVars.length > 0,
+          variables: cleanVars as any,
+        })
+        .eq("id", existingWebhook.id);
+      if (error) throw error;
+      toast.success("Webhook atualizado");
+      setEditandoWebhook(false);
+      await loadWebhooks();
+    } catch (e: any) {
+      toast.error(`Erro ao atualizar webhook: ${e?.message ?? e}`);
+    } finally {
+      setSalvandoEdicaoWh(false);
+    }
+  };
+
   // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
   const selectedWebhook: Webhook | undefined =
     metodoDisparo === "webhook" && webhookMode === "novo"
@@ -427,6 +472,14 @@ export default function NovaAutomacaoDialog({
           url: novoWebhookUrl,
           method: novoWebhookMetodo,
           variables: novoWebhookVars.filter(v => (v.name || "").trim()),
+        }
+      : editandoWebhook && existingWebhook
+      ? {
+          id: existingWebhook.id,
+          name: editWhNome,
+          url: editWhUrl,
+          method: editWhMetodo,
+          variables: editWhVars.filter(v => (v.name || "").trim()),
         }
       : existingWebhook;
 
