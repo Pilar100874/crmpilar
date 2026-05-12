@@ -398,7 +398,18 @@ export default function NovaAutomacaoDialog({
     setNovoWebhookVars([]);
   };
 
-  const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
+  const existingWebhook = webhooks.find(w => w.id === webhookSelecionado);
+  // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
+  const selectedWebhook: Webhook | undefined =
+    metodoDisparo === "webhook" && webhookMode === "novo"
+      ? {
+          id: "__novo__",
+          name: novoWebhookNome,
+          url: novoWebhookUrl,
+          method: novoWebhookMetodo,
+          variables: novoWebhookVars.filter(v => (v.name || "").trim()),
+        }
+      : existingWebhook;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
