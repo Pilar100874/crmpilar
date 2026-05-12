@@ -99,30 +99,33 @@ export default function NovaAutomacaoDialog({
       setNome(automationToEdit.name || "");
       setDescricao(automationToEdit.description || "");
       const cfg = automationToEdit.config || {};
-      setTipoDisparo(cfg.tipo_disparo || "manual");
+      const tipo = cfg.tipo_disparo === "automatico" ? "manual" : (cfg.tipo_disparo || "manual");
+      setTipoDisparo(tipo);
       setLocalDisponivel(cfg.local_disponivel || "");
-      setAreaAutomatica(cfg.area || "");
-      setEventoAutomatico(cfg.evento || "");
       setPeriodicidade(cfg.periodicidade || "");
       setDiaSemana(cfg.dia_semana || "");
       setDiaMes(cfg.dia_mes || "");
+      setDataEspecifica(cfg.data_especifica || "");
       setHorario(cfg.horario || "");
+      setMetodoDisparo(cfg.metodo_disparo || (cfg.bot_id ? "bot" : "webhook"));
       setWebhookSelecionado(cfg.webhook_id || "");
       setVariaveisWebhook(cfg.variaveis || {});
+      setBotSelecionado(cfg.bot_id || "");
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
       setDescricao("");
       setTipoDisparo("manual");
       setLocalDisponivel("");
-      setAreaAutomatica("");
-      setEventoAutomatico("");
       setPeriodicidade("");
       setDiaSemana("");
       setDiaMes("");
+      setDataEspecifica("");
       setHorario("");
+      setMetodoDisparo("webhook");
       setWebhookSelecionado("");
       setVariaveisWebhook({});
+      setBotSelecionado("");
     }
   }, [open, automationToEdit]);
 
