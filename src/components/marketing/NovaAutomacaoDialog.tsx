@@ -92,6 +92,16 @@ export default function NovaAutomacaoDialog({
   }, [open]);
 
   useEffect(() => {
+    if (webhookMode === "novo") {
+      // Sincroniza chaves de variaveisWebhook com as definidas no novo webhook
+      const initial: Record<string, string> = {};
+      novoWebhookVars.forEach((v) => {
+        const k = (v.name || "").trim();
+        if (k) initial[k] = variaveisWebhook[k] || "";
+      });
+      setVariaveisWebhook(initial);
+      return;
+    }
     if (webhookSelecionado) {
       const webhook = webhooks.find(w => w.id === webhookSelecionado);
       if (webhook?.variables) {
@@ -104,7 +114,8 @@ export default function NovaAutomacaoDialog({
     } else {
       setVariaveisWebhook({});
     }
-  }, [webhookSelecionado, webhooks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webhookSelecionado, webhooks, webhookMode, JSON.stringify(novoWebhookVars.map(v => v.name))]);
 
   useEffect(() => {
     if (open && automationToEdit) {
