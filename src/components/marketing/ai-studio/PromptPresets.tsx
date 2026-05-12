@@ -845,7 +845,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
         <DialogPrimitive.Content
           onPointerDownOutside={(e) => { if (isGenerating) e.preventDefault(); }}
           onEscapeKeyDown={(e) => { if (isGenerating) e.preventDefault(); }}
-          className="fixed left-[50%] top-[50%] z-[10000] w-full max-w-2xl max-h-[90vh] overflow-y-auto translate-x-[-50%] translate-y-[-50%] rounded-2xl border-2 border-border bg-background p-8 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          className="fixed left-[50%] top-[50%] z-[10000] w-[calc(100vw-1rem)] sm:w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden translate-x-[-50%] translate-y-[-50%] rounded-2xl border-2 border-border bg-background p-4 sm:p-6 md:p-8 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5 text-primary" /> {isEditing ? 'Editar Prompt' : 'Criar Prompt Personalizado'}
