@@ -495,7 +495,8 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
     webchat: 'WebChat',
     telegram: 'Telegram',
     facebook: 'Facebook',
-    instagram: 'Instagram'
+    instagram: 'Instagram',
+    marketing_automation: 'Automação de Marketing'
   };
 
   return (
@@ -551,7 +552,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         {/* Agrupamento por canais */}
         {!loading && bots.length > 0 && (
           <>
-            {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram'].map((canal) => {
+            {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram', 'marketing_automation'].map((canal) => {
               const canalBots = bots.filter(bot => bot.canais?.includes(canal));
               if (canalBots.length === 0) return null;
 
@@ -714,6 +715,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                   <SelectItem value="telegram">Telegram</SelectItem>
                   <SelectItem value="facebook">Facebook</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="marketing_automation">Automação de Marketing</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -824,6 +826,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                   <SelectItem value="telegram">Telegram</SelectItem>
                   <SelectItem value="facebook">Facebook</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="marketing_automation">Automação de Marketing</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
