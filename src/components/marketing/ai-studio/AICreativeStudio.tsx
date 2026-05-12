@@ -219,6 +219,29 @@ const AICreativeStudioInner: React.FC = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [screenToFlowPosition, setNodes]);
 
+  // Tap-to-add support (mobile/tablet) — listens to events dispatched by StudioNodeLibrary
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type as string | undefined;
+      if (!type) return;
+      const meta = getNodeMeta(type as any);
+      if (!meta) return;
+      const offsetX = 80 + Math.random() * 80;
+      const offsetY = 80 + Math.random() * 80;
+      const position = screenToFlowPosition({ x: window.innerWidth / 2 + offsetX, y: window.innerHeight / 2 + offsetY });
+      const newNode: StudioNode = {
+        id: `${type}_${Date.now()}`,
+        type: 'studioNode',
+        position,
+        data: { label: meta.label, type: type as any, config: applyNegativeDefaults(type, { ...meta.defaultConfig }) },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      toast.success(`${meta.label} adicionado`);
+    };
+    window.addEventListener('ai-studio:add-node', handler as EventListener);
+    return () => window.removeEventListener('ai-studio:add-node', handler as EventListener);
+  }, [screenToFlowPosition, setNodes]);
+
   const onNodeClick = useCallback((_: any, node: any) => {
     setSelectedNode(node as StudioNode);
   }, []);
