@@ -12223,6 +12223,36 @@ export type Database = {
           },
         ]
       }
+      social_media_credentials: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          credentials: Json
+          estabelecimento_id: string
+          id: string
+          platform: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          credentials?: Json
+          estabelecimento_id: string
+          id?: string
+          platform: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          credentials?: Json
+          estabelecimento_id?: string
+          id?: string
+          platform?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       strategy_agent_configs: {
         Row: {
           agent_card_json: Json | null
