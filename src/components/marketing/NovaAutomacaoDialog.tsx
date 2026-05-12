@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface NovaAutomacaoDialogProps {
   open: boolean;
