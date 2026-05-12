@@ -126,16 +126,21 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Rocket className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum projeto criado</h3>
-            <p className="text-muted-foreground text-sm max-w-md mb-4">
+        <Card className="border-dashed border-2 bg-gradient-to-br from-card via-card to-primary/[0.03]">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="relative mb-5">
+              <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+              <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-xl shadow-primary/30">
+                <Rocket className="h-8 w-8 text-primary-foreground" />
+              </div>
+            </div>
+            <h3 className="text-lg font-bold mb-2">Nenhum projeto criado</h3>
+            <p className="text-muted-foreground text-sm max-w-md mb-5">
               Descreva seu negócio e nossa IA criará uma estratégia completa de marketing.
             </p>
             <div className="flex gap-2">
               <NicheTemplates onSelectTemplate={handleTemplateSelect} />
-              <Button onClick={() => setShowCreate(true)}>
+              <Button onClick={() => setShowCreate(true)} className="shadow-md shadow-primary/20">
                 <Plus className="h-4 w-4 mr-1" />
                 Criar Primeiro Projeto
               </Button>
@@ -152,18 +157,23 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
             return (
               <Card
                 key={project.id}
-                className="cursor-pointer hover:border-primary/50 transition-colors group"
+                className="relative cursor-pointer overflow-hidden border-border/60 hover:border-primary/50 transition-all duration-300 group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5 bg-gradient-to-br from-card to-card/60"
                 onClick={() => onSelectProject(project.id)}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base line-clamp-1">{project.nome}</CardTitle>
+                {/* Decorative glow */}
+                <div className={`absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br ${st.ringColor} blur-2xl opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none`} />
+                {/* Top accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <CardHeader className="pb-2 relative">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base line-clamp-1 group-hover:text-primary transition-colors">{project.nome}</CardTitle>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"
                           onClick={e => e.stopPropagation()}
                         >
                           <MoreVertical className="h-3.5 w-3.5" />
@@ -187,17 +197,17 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <CardDescription className="line-clamp-2 text-xs">
+                  <CardDescription className="line-clamp-2 text-xs leading-relaxed">
                     {project.descricao_negocio}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 relative">
                   <div className="flex items-center justify-between">
-                    <Badge variant={st.variant} className="text-xs flex items-center gap-1">
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${st.className}`}>
                       {st.icon}
                       {st.label}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-medium">
                       {format(new Date(project.created_at), "dd MMM yyyy", { locale: ptBR })}
                     </span>
                   </div>
