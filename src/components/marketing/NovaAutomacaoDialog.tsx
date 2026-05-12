@@ -723,9 +723,21 @@ export default function NovaAutomacaoDialog({
                       </SelectContent>
                     </Select>
                     {existingWebhook && !editandoWebhook && (
-                      <Button type="button" variant="outline" size="sm" onClick={() => setEditandoWebhook(true)}>
-                        Editar
-                      </Button>
+                      <>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setEditandoWebhook(true)}>
+                          Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleSolicitarExclusaoWebhook()}
+                          disabled={excluindoWebhook}
+                        >
+                          Excluir
+                        </Button>
+                      </>
                     )}
                   </div>
                   {webhooks.length === 0 && (
