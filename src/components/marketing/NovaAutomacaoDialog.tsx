@@ -492,6 +492,51 @@ export default function NovaAutomacaoDialog({
     }
   };
 
+  const handleSolicitarExclusaoWebhook = async () => {
+    if (!existingWebhook) return;
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+      const { data, error } = await supabase
+        .from("marketing_automations" as any)
+        .select("id, name, config")
+        .eq("estabelecimento_id", estabelecimentoId);
+      if (error) throw error;
+      const usando = (data || [])
+        .filter((a: any) => {
+          const wid = a?.config?.webhook_id;
+          if (automationToEdit?.id && a.id === automationToEdit.id) return false;
+          return wid === existingWebhook.id;
+        })
+        .map((a: any) => ({ id: a.id, name: a.name }));
+      setAutomacoesUsando(usando);
+      setConfirmDeleteOpen(true);
+    } catch (e: any) {
+      toast.error(`Erro ao verificar uso do webhook: ${e?.message ?? e}`);
+    }
+  };
+
+  const handleConfirmarExclusaoWebhook = async () => {
+    if (!existingWebhook) return;
+    setExcluindoWebhook(true);
+    try {
+      const { error } = await supabase
+        .from("webhooks")
+        .delete()
+        .eq("id", existingWebhook.id);
+      if (error) throw error;
+      toast.success("Webhook excluído");
+      setConfirmDeleteOpen(false);
+      setWebhookSelecionado("");
+      setEditandoWebhook(false);
+      await loadWebhooks();
+    } catch (e: any) {
+      toast.error(`Erro ao excluir webhook: ${e?.message ?? e}`);
+    } finally {
+      setExcluindoWebhook(false);
+    }
+  };
+
   // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
   const selectedWebhook: Webhook | undefined =
     metodoDisparo === "webhook" && webhookMode === "novo"
