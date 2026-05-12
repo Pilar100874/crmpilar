@@ -239,6 +239,14 @@ export default function NovaAutomacaoDialog({
         config.bot_id = botSelecionado;
       }
 
+      // Variáveis personalizadas (válidas para Bot ou Webhook)
+      const customMap: Record<string, string> = {};
+      variaveisCustom.forEach((v) => {
+        const k = (v.nome || "").trim();
+        if (k) customMap[k] = v.valor ?? "";
+      });
+      config.variaveis_custom = customMap;
+
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
       } else if (tipoDisparo === "data") {
