@@ -281,6 +281,31 @@ export default function NovaAutomacaoDialog({
       if (metodoDisparo === "webhook") {
         let finalWebhookId = webhookSelecionado;
 
+        // Persistir edições inline do webhook existente, se houver
+        if (webhookMode === "existente" && editandoWebhook && existingWebhook) {
+          if (!editWhNome.trim() || !editWhUrl.trim()) {
+            toast.error("Nome e URL do webhook são obrigatórios");
+            setIsCreating(false);
+            return;
+          }
+          const cleanEditVars = editWhVars
+            .map((v) => ({ ...v, name: (v.name || "").trim() }))
+            .filter((v) => v.name);
+          const { error: updWhErr } = await supabase
+            .from("webhooks")
+            .update({
+              name: editWhNome.trim(),
+              url: editWhUrl.trim(),
+              method: editWhMetodo,
+              has_variables: cleanEditVars.length > 0,
+              variables: cleanEditVars as any,
+            })
+            .eq("id", existingWebhook.id);
+          if (updWhErr) throw updWhErr;
+          finalWebhookId = existingWebhook.id;
+          setEditandoWebhook(false);
+        }
+
         // Criar novo webhook reutilizável se solicitado
         if (webhookMode === "novo") {
           const cleanVars = novoWebhookVars
