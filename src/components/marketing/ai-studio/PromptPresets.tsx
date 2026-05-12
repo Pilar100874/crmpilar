@@ -924,7 +924,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
           {/* Reference Image */}
           <div>
             <Label className="text-xs mb-2 block">🖼️ Imagem de Referência</Label>
-            <div className="flex gap-3 items-start">
+            <div className="flex flex-col sm:flex-row gap-3 items-start">
               <div className="w-32 h-32 rounded-lg border overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
                 {generatedImage ? (
                   <img src={generatedImage} alt="Reference" className="w-full h-full object-cover" />
