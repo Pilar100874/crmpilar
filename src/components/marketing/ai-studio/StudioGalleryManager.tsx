@@ -435,7 +435,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
             {/* Folder section - only for non-salvas categories */}
             {activeCategory !== 'salvas' && (
               <>
-                <div className="border-t border-border my-2 pt-2">
+                <div className="border-t border-border my-2 pt-2 hidden md:block">
                   <div className="flex items-center justify-between px-2 mb-1">
                     <span className="text-[10px] font-medium uppercase text-muted-foreground tracking-wider">Pastas</span>
                     <button
