@@ -33,9 +33,23 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { flowId, conversationId, customerId, estabelecimentoId, canal } = await req.json();
+    const reqBody = await req.json();
+    const {
+      flowId,
+      conversationId,
+      customerId,
+      estabelecimentoId,
+      canal,
+      triggerSource,
+      automationId,
+      variaveis,
+      contexto,
+    } = reqBody;
 
-    console.log("Executando fluxo omnichannel:", { flowId, conversationId, customerId, estabelecimentoId, canal });
+    console.log("Executando fluxo omnichannel:", {
+      flowId, conversationId, customerId, estabelecimentoId, canal, triggerSource, automationId,
+      varKeys: variaveis ? Object.keys(variaveis) : [],
+    });
 
     // Buscar o fluxo
     const { data: flow, error: flowError } = await supabase
@@ -50,19 +64,23 @@ serve(async (req) => {
     }
 
     const flowData = flow.flow_data as { nodes: FlowNode[]; edges: FlowEdge[] };
-    
+
     // Encontrar o nó de início
     const startNode = flowData.nodes.find(node => node.data.type === "inicio");
     if (!startNode) {
       throw new Error("Nó de início não encontrado");
     }
 
-    // Executar o fluxo
+    // Executar o fluxo expondo as variáveis personalizadas no contexto
     const result = await executeFlow(supabase, flowData, startNode, {
       conversationId,
       customerId,
       estabelecimentoId,
       canal,
+      triggerSource,
+      automationId,
+      variaveis: variaveis || contexto?.variaveis || {},
+      contexto: contexto || {},
     });
 
     // Registrar log de execução
