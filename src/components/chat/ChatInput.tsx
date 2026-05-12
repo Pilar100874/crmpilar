@@ -1254,45 +1254,26 @@ export default function ChatInput({
     );
   }
 
-  // === AGENTES ===
-  const activeAgents = chatAgents.filter((a: any) => a.ativo);
+  // === AGENTES === (somente orquestradores, igual à tela de Agente IA)
+  const activeAgents = chatAgents.filter((a: any) => a.ativo && a.tipo_agente === 'orquestrador');
   if (activeAgents.length > 0 && onSelectAgent) {
     for (const agent of activeAgents) {
-      if (agent.permite_cliente) {
-        // Always open private chat on click
-        groupAgentes.push(
-          <TooltipProvider key={`agent-${agent.id}`} delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className={toolbarBtnClass}
-                  onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
-                >
-                  <span className="text-base leading-none">{agent.icone}</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent><p>{agent.nome}</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      } else {
-        // Agent only supports private mode — open directly on click
-        groupAgentes.push(
-          <TooltipProvider key={`agent-${agent.id}`} delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className={toolbarBtnClass}
-                  onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
-                >
-                  <span className="text-base leading-none">{agent.icone}</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent><p>{agent.nome}</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      }
+      groupAgentes.push(
+        <TooltipProvider key={`agent-${agent.id}`} delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={`${toolbarBtnClass} !w-auto px-3 gap-2`}
+                onClick={() => { onSelectAgent(agent, 'privado'); setShowToolsMenu(false); }}
+              >
+                <span className="text-base leading-none">{agent.icone}</span>
+                <span className="text-sm font-medium truncate max-w-[140px]">{agent.nome}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent><p>{agent.nome}</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     }
   }
 
