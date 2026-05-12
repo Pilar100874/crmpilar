@@ -690,7 +690,6 @@ function BotBuilderContent() {
               twitter: { label: 'X (Twitter)', fields: ['api_key', 'api_secret', 'access_token', 'access_secret'] },
               youtube: { label: 'YouTube', fields: ['client_id', 'client_secret', 'refresh_token'] },
             };
-            const stored = JSON.parse(localStorage.getItem('social_connectors_config_v1') || '{}');
             const usedPlatforms = new Set<string>();
             nodesToSave.forEach((n: any) => {
               if (n?.data?.type === 'publish_social_post' || n?.type === 'publish_social_post') {
@@ -698,19 +697,27 @@ function BotBuilderContent() {
                 plats.forEach((p) => usedPlatforms.add(p));
               }
             });
-            const missing: string[] = [];
-            usedPlatforms.forEach((p) => {
-              const def = PLATFORM_REQUIRED_FIELDS[p];
-              if (!def) return;
-              const c = stored[p] || {};
-              const ok = def.fields.every((f) => c[f] && String(c[f]).trim() !== '');
-              if (!ok) missing.push(def.label);
-            });
-            if (missing.length > 0) {
-              toast.warning(
-                `Atenção: o bot só publicará nestas plataformas após configurar o conector: ${missing.join(', ')}. Acesse Marketing → Conectores de Redes Sociais.`,
-                { duration: 8000 }
-              );
+            if (usedPlatforms.size > 0) {
+              const { data: rows } = await supabase
+                .from('social_media_credentials')
+                .select('platform, credentials')
+                .in('platform', Array.from(usedPlatforms));
+              const stored: Record<string, any> = {};
+              (rows || []).forEach((r: any) => { stored[r.platform] = r.credentials || {}; });
+              const missing: string[] = [];
+              usedPlatforms.forEach((p) => {
+                const def = PLATFORM_REQUIRED_FIELDS[p];
+                if (!def) return;
+                const c = stored[p] || {};
+                const ok = def.fields.every((f) => c[f] && String(c[f]).trim() !== '');
+                if (!ok) missing.push(def.label);
+              });
+              if (missing.length > 0) {
+                toast.warning(
+                  `Atenção: o bot só publicará nestas plataformas após configurar o conector: ${missing.join(', ')}. Acesse Marketing → Conectores de Redes Sociais.`,
+                  { duration: 8000 }
+                );
+              }
             }
           } catch (e) {
             console.warn('[BotBuilder] Falha ao validar conectores sociais', e);
