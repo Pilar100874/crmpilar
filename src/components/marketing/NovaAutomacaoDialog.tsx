@@ -861,7 +861,6 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Preview da Requisição */}
           {((metodoDisparo === "webhook" && (webhookSelecionado || (webhookMode === "novo" && novoWebhookUrl))) || (metodoDisparo === "bot" && botSelecionado)) && (() => {
             const customMap: Record<string, string> = {};
             variaveisCustom.forEach((v) => {
