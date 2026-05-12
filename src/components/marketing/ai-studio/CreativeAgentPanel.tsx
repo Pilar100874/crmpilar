@@ -411,7 +411,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, isExpanded, onToggleExpand
           >
             <div className="px-4 pb-4 space-y-4 border-t border-white/5 pt-4">
               {/* Title & Description */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-white/60">Título da Cena</Label>
                   <Input
