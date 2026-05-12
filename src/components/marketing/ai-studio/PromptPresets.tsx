@@ -903,7 +903,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
           {/* Reference Blocks */}
           <div>
             <Label className="text-xs mb-2 block">🧩 Blocos de Referência (serão inseridos no canvas)</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ALL_REF_BLOCKS.map(block => (
                 <label
                   key={block.id}
