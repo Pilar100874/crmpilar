@@ -334,6 +334,7 @@ export default function NovaAutomacaoDialog({
     setWebhookSelecionado("");
     setVariaveisWebhook({});
     setBotSelecionado("");
+    setVariaveisCustom([]);
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
