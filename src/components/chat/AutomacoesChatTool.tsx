@@ -13,6 +13,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Automacao {
@@ -30,6 +37,7 @@ const btnClass =
 
 export default function AutomacoesChatTool({ disabled }: Props) {
   const [automacoes, setAutomacoes] = useState<Automacao[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [pending, setPending] = useState<Automacao | null>(null);
   const [running, setRunning] = useState(false);
 
@@ -58,6 +66,11 @@ export default function AutomacoesChatTool({ disabled }: Props) {
     })();
   }, []);
 
+  const handlePick = (a: Automacao) => {
+    setPickerOpen(false);
+    setPending(a);
+  };
+
   const handleRun = async () => {
     if (!pending) return;
     setRunning(true);
@@ -79,26 +92,53 @@ export default function AutomacoesChatTool({ disabled }: Props) {
 
   return (
     <>
-      {automacoes.map((a) => (
-        <TooltipProvider key={a.id} delayDuration={200}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setPickerOpen(true)}
+              className={btnClass}
+            >
+              <Zap size={16} className="text-primary" />
+              <span>Automação</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Executar uma automação</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Selecione a automação</DialogTitle>
+            <DialogDescription>
+              Escolha qual automação deseja executar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+            {automacoes.map((a) => (
               <button
+                key={a.id}
                 type="button"
-                disabled={disabled}
-                onClick={() => setPending(a)}
-                className={btnClass}
+                onClick={() => handlePick(a)}
+                className="text-left p-3 rounded-lg border border-border/40 hover:bg-muted hover:border-border transition-all flex items-start gap-3"
               >
-                <Zap size={16} className="text-primary" />
-                <span className="max-w-[120px] truncate">{a.name}</span>
+                <Zap size={16} className="text-primary mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{a.name}</div>
+                  {a.description ? (
+                    <div className="text-xs text-muted-foreground line-clamp-2">{a.description}</div>
+                  ) : null}
+                </div>
               </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Executar automação: {a.name}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ))}
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <AlertDialogContent>
