@@ -352,6 +352,11 @@ export default function NovaAutomacaoDialog({
     setBotSelecionado("");
     setVariaveisCustom([]);
     setFormatoSaida("json");
+    setWebhookMode("existente");
+    setNovoWebhookNome("");
+    setNovoWebhookUrl("");
+    setNovoWebhookMetodo("POST");
+    setNovoWebhookVars([]);
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
