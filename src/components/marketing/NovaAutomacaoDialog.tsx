@@ -102,7 +102,7 @@ export default function NovaAutomacaoDialog({
       const cfg = automationToEdit.config || {};
       const tipo = cfg.tipo_disparo === "automatico" ? "manual" : (cfg.tipo_disparo || "manual");
       setTipoDisparo(tipo);
-      setLocalDisponivel(cfg.local_disponivel || "");
+      setLocalDisponivel(Array.isArray(cfg.local_disponivel) ? cfg.local_disponivel : (cfg.local_disponivel ? [cfg.local_disponivel] : []));
       setPeriodicidade(cfg.periodicidade || "");
       setDiaSemana(cfg.dia_semana || "");
       setDiaMes(cfg.dia_mes || "");
