@@ -115,6 +115,14 @@ export default function NovaAutomacaoDialog({
       setWebhookSelecionado(cfg.webhook_id || "");
       setVariaveisWebhook(cfg.variaveis || {});
       setBotSelecionado(cfg.bot_id || "");
+      const vc = cfg.variaveis_custom;
+      if (Array.isArray(vc)) {
+        setVariaveisCustom(vc);
+      } else if (vc && typeof vc === "object") {
+        setVariaveisCustom(Object.entries(vc).map(([nome, valor]) => ({ nome, valor: String(valor ?? "") })));
+      } else {
+        setVariaveisCustom([]);
+      }
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
