@@ -967,8 +967,8 @@ export default function NovaAutomacaoDialog({
             </div>
           )}
 
-          {/* Variáveis Personalizadas (Bot ou Webhook) */}
-          {(metodoDisparo === "bot" || metodoDisparo === "webhook") && (
+          {/* Variáveis Personalizadas (somente Bot) */}
+          {metodoDisparo === "bot" && (
             <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center justify-between gap-2">
                 <div>
