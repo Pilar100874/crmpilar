@@ -20,6 +20,7 @@ import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import OrcamentoAttachmentSelector from "./OrcamentoAttachmentSelector";
 import CatalogAttachmentSelector from "./CatalogAttachmentSelector";
 import AgendaTrackingTool from "./AgendaTrackingTool";
+import AutomacoesChatTool from "./AutomacoesChatTool";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
