@@ -391,28 +391,28 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-background border border-border rounded-2xl w-full max-w-5xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-background border border-border rounded-2xl w-full max-w-5xl max-h-[92vh] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden mx-2 sm:mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Images className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-primary/10 shrink-0">
+              <Images className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">Galeria de Referências</h2>
-              <p className="text-xs text-muted-foreground">Organize imagens e vídeos por categoria para usar nos workflows</p>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-lg font-semibold truncate">Galeria de Referências</h2>
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Organize imagens e vídeos por categoria para usar nos workflows</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" onClick={onClose}>
+          <Button size="icon" variant="ghost" onClick={onClose} className="shrink-0">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* Sidebar - Categories + Folders */}
-          <div className="w-56 border-r border-border p-3 space-y-1 overflow-y-auto shrink-0">
+          <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border p-2 sm:p-3 flex md:block gap-1 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto shrink-0 scrollbar-hide">
             {GALLERY_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isActive = activeCategory === cat.id;
