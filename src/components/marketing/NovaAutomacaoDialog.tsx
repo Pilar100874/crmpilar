@@ -943,7 +943,7 @@ export default function NovaAutomacaoDialog({
           )}
 
           {/* Variáveis do Webhook */}
-          {selectedWebhook && selectedWebhook.variables && selectedWebhook.variables.length > 0 && (
+          {metodoDisparo === "webhook" && selectedWebhook && selectedWebhook.variables && selectedWebhook.variables.length > 0 && (
             <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
               <Label className="text-sm font-semibold">Variáveis do Webhook</Label>
               {selectedWebhook.variables.map((variable) => (
