@@ -552,7 +552,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
         {/* Agrupamento por canais */}
         {!loading && bots.length > 0 && (
           <>
-            {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram'].map((canal) => {
+            {['whatsapp', 'webchat', 'telegram', 'facebook', 'instagram', 'marketing_automation'].map((canal) => {
               const canalBots = bots.filter(bot => bot.canais?.includes(canal));
               if (canalBots.length === 0) return null;
 
