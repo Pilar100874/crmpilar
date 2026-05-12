@@ -159,17 +159,17 @@ const CreativeAgentPanel: React.FC<Props> = ({ open, onClose, onCreateWorkflow }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-5xl max-h-[90vh] bg-[#0f0f1a] border border-white/10 rounded-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] bg-[#0f0f1a] border border-white/10 rounded-2xl overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-gradient-to-r from-purple-500/10 to-indigo-500/10">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-gradient-to-r from-purple-500/10 to-indigo-500/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
               <Wand2 className="h-5 w-5 text-white" />
