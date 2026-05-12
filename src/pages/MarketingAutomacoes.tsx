@@ -331,15 +331,8 @@ export default function MarketingAutomacoes() {
                       <Plus className="w-4 h-4 mr-2" />
                       Duplicar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId(null);
-                      setSelectedAutomacao(automacao);
-                      setVariablesDialogOpen(true);
-                    }}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Gerenciar Variáveis
-                    </DropdownMenuItem>
+
+
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setOpenMenuId(null);
