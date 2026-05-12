@@ -70,7 +70,10 @@ export default function NovaAutomacaoDialog({
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
   const [botSelecionado, setBotSelecionado] = useState("");
-  
+
+  // Variáveis personalizadas (Bot ou Webhook)
+  const [variaveisCustom, setVariaveisCustom] = useState<Array<{ nome: string; valor: string }>>([]);
+
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -112,6 +115,14 @@ export default function NovaAutomacaoDialog({
       setWebhookSelecionado(cfg.webhook_id || "");
       setVariaveisWebhook(cfg.variaveis || {});
       setBotSelecionado(cfg.bot_id || "");
+      const vc = cfg.variaveis_custom;
+      if (Array.isArray(vc)) {
+        setVariaveisCustom(vc);
+      } else if (vc && typeof vc === "object") {
+        setVariaveisCustom(Object.entries(vc).map(([nome, valor]) => ({ nome, valor: String(valor ?? "") })));
+      } else {
+        setVariaveisCustom([]);
+      }
     } else if (open && !automationToEdit) {
       // Resetar ao abrir para criar nova
       setNome("");
@@ -127,6 +138,7 @@ export default function NovaAutomacaoDialog({
       setWebhookSelecionado("");
       setVariaveisWebhook({});
       setBotSelecionado("");
+      setVariaveisCustom([]);
     }
   }, [open, automationToEdit]);
 
@@ -227,6 +239,14 @@ export default function NovaAutomacaoDialog({
         config.bot_id = botSelecionado;
       }
 
+      // Variáveis personalizadas (válidas para Bot ou Webhook)
+      const customMap: Record<string, string> = {};
+      variaveisCustom.forEach((v) => {
+        const k = (v.nome || "").trim();
+        if (k) customMap[k] = v.valor ?? "";
+      });
+      config.variaveis_custom = customMap;
+
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
       } else if (tipoDisparo === "data") {
@@ -314,6 +334,7 @@ export default function NovaAutomacaoDialog({
     setWebhookSelecionado("");
     setVariaveisWebhook({});
     setBotSelecionado("");
+    setVariaveisCustom([]);
   };
 
   const selectedWebhook = webhooks.find(w => w.id === webhookSelecionado);
@@ -560,6 +581,68 @@ export default function NovaAutomacaoDialog({
                   />
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Variáveis Personalizadas (Bot ou Webhook) */}
+          {(metodoDisparo === "bot" || metodoDisparo === "webhook") && (
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-sm font-semibold">Variáveis Personalizadas</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Defina variáveis dinâmicas (ex: {"{{nome_cliente}}"}) que poderão ser usadas no {metodoDisparo === "bot" ? "bot" : "webhook"} desta automação.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setVariaveisCustom((prev) => [...prev, { nome: "", valor: "" }])}
+                >
+                  + Adicionar
+                </Button>
+              </div>
+
+              {variaveisCustom.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhuma variável personalizada definida.</p>
+              ) : (
+                <div className="space-y-2">
+                  {variaveisCustom.map((v, idx) => (
+                    <div key={idx} className="flex gap-2 items-start">
+                      <Input
+                        value={v.nome}
+                        onChange={(e) => {
+                          const next = [...variaveisCustom];
+                          next[idx] = { ...next[idx], nome: e.target.value };
+                          setVariaveisCustom(next);
+                        }}
+                        placeholder="nome_variavel"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={v.valor}
+                        onChange={(e) => {
+                          const next = [...variaveisCustom];
+                          next[idx] = { ...next[idx], valor: e.target.value };
+                          setVariaveisCustom(next);
+                        }}
+                        placeholder="valor"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setVariaveisCustom((prev) => prev.filter((_, i) => i !== idx))}
+                        className="text-destructive shrink-0"
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
