@@ -1127,6 +1127,19 @@ export default function NovaAutomacaoDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <DeleteConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleConfirmarExclusaoWebhook}
+        isLoading={excluindoWebhook}
+        title="Excluir Webhook"
+        itemName={existingWebhook?.name}
+        description={
+          automacoesUsando.length > 0
+            ? `Atenção: este webhook está sendo usado em ${automacoesUsando.length} outra(s) automação(ões): ${automacoesUsando.map(a => a.name).join(", ")}. Se excluir, essas automações deixarão de funcionar. Deseja realmente excluir "${existingWebhook?.name}"?`
+            : `Tem certeza que deseja excluir o webhook "${existingWebhook?.name}"? Esta ação não pode ser desfeita.`
+        }
+      />
     </Dialog>
   );
 }
