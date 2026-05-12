@@ -456,7 +456,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, isExpanded, onToggleExpand
               </div>
 
               {/* Camera & Mood */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-white/60">Movimento de Câmera</Label>
                   <Select value={scene.cameraMovement} onValueChange={(v) => onUpdate({ cameraMovement: v })}>
