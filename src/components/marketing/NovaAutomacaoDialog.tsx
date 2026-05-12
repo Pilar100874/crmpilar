@@ -46,25 +46,29 @@ export default function NovaAutomacaoDialog({
 }: NovaAutomacaoDialogProps) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [tipoDisparo, setTipoDisparo] = useState<"manual" | "automatico" | "data">("manual");
+  const [tipoDisparo, setTipoDisparo] = useState<"manual" | "data">("manual");
   
   // Manual
   const [localDisponivel, setLocalDisponivel] = useState("");
-  
-  // Automático
-  const [areaAutomatica, setAreaAutomatica] = useState("");
-  const [eventoAutomatico, setEventoAutomatico] = useState("");
   
   // Por data
   const [periodicidade, setPeriodicidade] = useState("");
   const [diaSemana, setDiaSemana] = useState("");
   const [diaMes, setDiaMes] = useState("");
+  const [dataEspecifica, setDataEspecifica] = useState("");
   const [horario, setHorario] = useState("");
+  
+  // Método de disparo
+  const [metodoDisparo, setMetodoDisparo] = useState<"webhook" | "bot">("webhook");
   
   // Webhook
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [webhookSelecionado, setWebhookSelecionado] = useState("");
   const [variaveisWebhook, setVariaveisWebhook] = useState<Record<string, string>>({});
+  
+  // Bot
+  const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
+  const [botSelecionado, setBotSelecionado] = useState("");
   
   const [isCreating, setIsCreating] = useState(false);
 
