@@ -50,7 +50,7 @@ export default function NovaAutomacaoDialog({
   const [tipoDisparo, setTipoDisparo] = useState<"manual" | "data">("manual");
   
   // Manual
-  const [localDisponivel, setLocalDisponivel] = useState("");
+  const [localDisponivel, setLocalDisponivel] = useState<string[]>([]);
   
   // Por data
   const [periodicidade, setPeriodicidade] = useState("");
