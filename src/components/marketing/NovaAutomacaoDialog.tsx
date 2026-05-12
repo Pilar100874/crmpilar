@@ -117,7 +117,7 @@ export default function NovaAutomacaoDialog({
       setNome("");
       setDescricao("");
       setTipoDisparo("manual");
-      setLocalDisponivel("");
+      setLocalDisponivel([]);
       setPeriodicidade("");
       setDiaSemana("");
       setDiaMes("");
