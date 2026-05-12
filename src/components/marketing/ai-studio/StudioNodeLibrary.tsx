@@ -3,8 +3,7 @@ import { NODE_CATEGORIES } from './types';
 import { Button } from '@/components/ui/button';
 import { Plus, X, Search, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useReactFlow } from '@xyflow/react';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 import { Input } from '@/components/ui/input';
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string }> = {
