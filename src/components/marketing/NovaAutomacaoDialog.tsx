@@ -73,6 +73,14 @@ export default function NovaAutomacaoDialog({
   const [novoWebhookUrl, setNovoWebhookUrl] = useState("");
   const [novoWebhookMetodo, setNovoWebhookMetodo] = useState("POST");
   const [novoWebhookVars, setNovoWebhookVars] = useState<WebhookVariable[]>([]);
+
+  // Edição inline de webhook existente
+  const [editandoWebhook, setEditandoWebhook] = useState(false);
+  const [editWhNome, setEditWhNome] = useState("");
+  const [editWhUrl, setEditWhUrl] = useState("");
+  const [editWhMetodo, setEditWhMetodo] = useState("POST");
+  const [editWhVars, setEditWhVars] = useState<WebhookVariable[]>([]);
+  const [salvandoEdicaoWh, setSalvandoEdicaoWh] = useState(false);
   
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
