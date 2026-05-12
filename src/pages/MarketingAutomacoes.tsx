@@ -342,7 +342,8 @@ export default function MarketingAutomacoes() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenMenuId(null);
-                        handleDelete(automacao.id, automacao.name);
+                        setAutomacaoToDelete(automacao);
+                        setDeleteDialogOpen(true);
                       }}
                       className="text-destructive"
                     >
