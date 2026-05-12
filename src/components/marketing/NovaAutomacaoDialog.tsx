@@ -222,9 +222,21 @@ export default function NovaAutomacaoDialog({
       return;
     }
 
-    if (metodoDisparo === "webhook" && !webhookSelecionado) {
-      toast.error("Por favor, selecione um webhook");
-      return;
+    if (metodoDisparo === "webhook") {
+      if (webhookMode === "existente" && !webhookSelecionado) {
+        toast.error("Por favor, selecione um webhook ou crie um novo");
+        return;
+      }
+      if (webhookMode === "novo") {
+        if (!novoWebhookNome.trim()) {
+          toast.error("Informe o nome do novo webhook");
+          return;
+        }
+        if (!novoWebhookUrl.trim()) {
+          toast.error("Informe a URL do novo webhook");
+          return;
+        }
+      }
     }
 
     if (metodoDisparo === "bot" && !botSelecionado) {
@@ -248,7 +260,34 @@ export default function NovaAutomacaoDialog({
       };
 
       if (metodoDisparo === "webhook") {
-        config.webhook_id = webhookSelecionado;
+        let finalWebhookId = webhookSelecionado;
+
+        // Criar novo webhook reutilizável se solicitado
+        if (webhookMode === "novo") {
+          const cleanVars = novoWebhookVars
+            .map((v) => ({ ...v, name: (v.name || "").trim() }))
+            .filter((v) => v.name);
+          const { data: createdWh, error: whErr } = await supabase
+            .from("webhooks")
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              name: novoWebhookNome.trim(),
+              url: novoWebhookUrl.trim(),
+              method: novoWebhookMetodo,
+              type: "automacoes",
+              usage_locations: ["automacoes"],
+              has_variables: cleanVars.length > 0,
+              variables: cleanVars as any,
+              active: true,
+            })
+            .select("id")
+            .single();
+          if (whErr) throw whErr;
+          finalWebhookId = (createdWh as any).id;
+          toast.success("Webhook criado e disponível para reutilização");
+        }
+
+        config.webhook_id = finalWebhookId;
         config.variaveis = variaveisWebhook;
       } else {
         config.bot_id = botSelecionado;
