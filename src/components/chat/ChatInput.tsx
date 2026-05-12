@@ -992,6 +992,10 @@ export default function ChatInput({
     />
   );
 
+  groupAtendimento.push(
+    <AutomacoesChatTool key="automacoes-chat" disabled={disabled} />
+  );
+
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
     groupAtendimento.push(
       <TooltipProvider key="bot" delayDuration={200}>
