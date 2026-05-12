@@ -147,12 +147,19 @@ export function StrategyArtifactViewer({ artifacts, projectId, onApprove, onReje
           return (
             <Card key={artifact.id} className={`hover:border-primary/30 transition-colors ${artifact.status === 'approved' ? 'border-green-500/30' : artifact.status === 'rejected' ? 'border-red-500/30' : ''}`}>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                     <span className="text-lg">{info?.icon || '📄'}</span>
-                    <CardTitle className="text-sm">{info?.name || artifact.titulo}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <span className="text-lg leading-none mt-0.5">{info?.icon || '📄'}</span>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-sm truncate">{info?.name || artifact.titulo}</CardTitle>
+                      {info?.description && (
+                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+                          {info.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     {avgScore !== null && (
                       <Badge
                         variant={avgScore >= 80 ? 'default' : avgScore >= 60 ? 'secondary' : 'destructive'}
