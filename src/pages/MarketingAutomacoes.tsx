@@ -637,6 +637,17 @@ export default function MarketingAutomacoes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setAutomacaoToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        itemName={automacaoToDelete?.name}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
