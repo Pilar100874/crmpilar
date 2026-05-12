@@ -420,7 +420,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 <button
                   key={cat.id}
                   onClick={() => { setActiveCategory(cat.id); setActiveFolder(null); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-sm ${
+                  className={`shrink-0 md:w-full flex items-center gap-2 md:gap-2.5 px-3 py-2 md:py-2.5 rounded-xl text-left transition-all text-xs md:text-sm whitespace-nowrap ${
                     isActive 
                       ? 'bg-primary/10 text-primary font-medium' 
                       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
