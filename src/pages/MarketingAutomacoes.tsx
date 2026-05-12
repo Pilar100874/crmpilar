@@ -244,24 +244,25 @@ export default function MarketingAutomacoes() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        <Card 
-          className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
+      <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <Card
+          className="group relative overflow-hidden cursor-pointer border-2 border-dashed border-primary/30 hover:border-primary/60 bg-gradient-to-br from-primary/5 via-background to-background hover:-translate-y-1 hover:shadow-xl transition-all duration-300 h-full flex flex-col"
           onClick={() => setDialogOpen(true)}
         >
-          <CardHeader className="flex-1 p-3 sm:p-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl group-hover:bg-primary/20 transition-all" />
+          <CardHeader className="flex-1 p-4 sm:p-5 relative">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center mb-3 shadow-md shadow-primary/20 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <CardTitle className="text-base sm:text-lg">Criar Nova Automação</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Configure uma nova automação de marketing com webhooks e triggers personalizados
+              Configure disparos por webhook ou bot, manuais ou agendados
             </CardDescription>
           </CardHeader>
-          <CardContent className="mt-auto p-3 sm:p-4 pt-0">
-            <Button className="w-full text-sm sm:text-base h-9 sm:h-10">
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              Criar Automação
+          <CardContent className="mt-auto p-4 sm:p-5 pt-0">
+            <Button className="w-full h-9 sm:h-10 shadow-sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Automação
             </Button>
           </CardContent>
         </Card>
@@ -277,16 +278,25 @@ export default function MarketingAutomacoes() {
             </Card>
           ))
         ) : (
-          automacoes.map((automacao) => (
+          automacoes.map((automacao) => {
+            const cfg = automacao.config || {};
+            const metodo = cfg.metodo_disparo || (cfg.bot_id ? "bot" : "webhook");
+            const tipoLabel = getTipoDisparoLabel(cfg.tipo_disparo);
+            const TipoIcon = cfg.tipo_disparo === "data" ? Calendar : Zap;
+            const MetodoIcon = metodo === "bot" ? Bot : Webhook;
+            return (
             <Card
               key={automacao.id}
-              className="hover:shadow-lg transition-all relative group h-full flex flex-col"
+              className="group relative overflow-hidden h-full flex flex-col hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border bg-card"
             >
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+              {/* Gradient header strip */}
+              <div className={`h-1.5 w-full ${automacao.active ? "bg-gradient-to-r from-primary via-primary/70 to-primary/40" : "bg-muted"}`} />
+
+              <div className="absolute top-2 right-2 z-10">
                 <DropdownMenu open={openMenuId === automacao.id} onOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
-                      <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-muted">
+                      <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -354,46 +364,74 @@ export default function MarketingAutomacoes() {
                 </DropdownMenu>
               </div>
 
-              <CardHeader className="flex-1 p-3 sm:p-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
-                  <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <CardHeader className="flex-1 p-4 sm:p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${
+                    automacao.active
+                      ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-primary/20"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0 pr-8">
+                    <CardTitle className="text-base sm:text-lg leading-tight truncate">{automacao.name}</CardTitle>
+                    {automacao.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{automacao.description}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <CardTitle className="flex-1 text-base sm:text-lg">{automacao.name}</CardTitle>
-                  {automacao.active && (
-                    <Badge variant="default" className="bg-green-500 text-xs">
+
+                <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1 font-medium">
+                    <TipoIcon className="w-3 h-3" />
+                    {tipoLabel}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] sm:text-xs gap-1 font-medium">
+                    <MetodoIcon className="w-3 h-3" />
+                    {metodo === "bot" ? "Bot" : "Webhook"}
+                  </Badge>
+                  {automacao.active ? (
+                    <Badge className="text-[10px] sm:text-xs bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
                       Ativa
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
+                      Inativa
                     </Badge>
                   )}
                 </div>
-                {automacao.description && (
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">{automacao.description}</p>
+
+                {cfg.tipo_disparo === "data" && cfg.horario && (
+                  <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {cfg.periodicidade === "data_especifica" && cfg.data_especifica
+                      ? `${cfg.data_especifica} às ${cfg.horario}`
+                      : `Agendada para ${cfg.horario}`}
+                  </p>
                 )}
-                <CardDescription className="text-xs sm:text-sm">
-                  {getTipoDisparoLabel(automacao.config?.tipo_disparo)} • 
-                  Criada {formatDistanceToNow(new Date(automacao.created_at), { 
-                    addSuffix: true, 
-                    locale: ptBR 
-                  })}
-                </CardDescription>
+                <p className="text-[11px] text-muted-foreground/80 mt-1">
+                  Criada {formatDistanceToNow(new Date(automacao.created_at), { addSuffix: true, locale: ptBR })}
+                </p>
               </CardHeader>
+
               {automacao.active && (
-                <CardContent className="mt-auto p-3 sm:p-4 pt-0">
-                  <Button 
-                    className="w-full text-sm sm:text-base h-9 sm:h-10"
+                <CardContent className="mt-auto p-4 sm:p-5 pt-0">
+                  <Button
+                    className="w-full h-9 sm:h-10 shadow-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setAutomacaoToExecute(automacao);
                       setExecuteDialogOpen(true);
                     }}
                   >
-                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Executar Automação
+                    <Zap className="w-4 h-4 mr-2" />
+                    Executar agora
                   </Button>
                 </CardContent>
               )}
             </Card>
-          ))
+          );
+          })
         )}
       </div>
 
