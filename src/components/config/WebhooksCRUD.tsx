@@ -1185,6 +1185,81 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                             </div>
                           </div>
                         )}
+
+                        {/* Pré-visualização da requisição */}
+                        {(() => {
+                          const vars = formData.variables || [];
+                          const sample = (v: WebhookVariable) => {
+                            const val = v.defaultValue && v.defaultValue.trim() ? v.defaultValue : `{{${v.name}}}`;
+                            if (v.format === "number") return Number.isFinite(Number(val)) ? Number(val) : val;
+                            if (v.format === "boolean") return val === "true" || val === "1";
+                            if (v.format === "object" || v.format === "array") {
+                              try { return JSON.parse(val); } catch { return val; }
+                            }
+                            return val;
+                          };
+
+                          let urlPreview = formData.url || "https://exemplo.com/webhook";
+                          vars.filter(v => v.type === "path").forEach(v => {
+                            const re = new RegExp(`(:${v.name}\\b|\\{${v.name}\\})`, "g");
+                            const s = String(sample(v));
+                            if (re.test(urlPreview)) urlPreview = urlPreview.replace(re, encodeURIComponent(s));
+                            else urlPreview = urlPreview.replace(/\/?$/, `/${encodeURIComponent(s)}`);
+                          });
+                          const queryVars = vars.filter(v => v.type === "query");
+                          if (queryVars.length) {
+                            const qs = queryVars.map(v => `${encodeURIComponent(v.name)}=${encodeURIComponent(String(sample(v)))}`).join("&");
+                            urlPreview += (urlPreview.includes("?") ? "&" : "?") + qs;
+                          }
+
+                          const headers: Record<string, string> = {};
+                          vars.filter(v => v.type === "header").forEach(v => { headers[v.name] = String(sample(v)); });
+
+                          const jsonVars = vars.filter(v => v.type === "json");
+                          const formVars = vars.filter(v => v.type === "form-data");
+                          let bodyLabel = "";
+                          let bodyContent = "";
+                          if (jsonVars.length) {
+                            headers["Content-Type"] = headers["Content-Type"] || "application/json";
+                            const obj: Record<string, any> = {};
+                            jsonVars.forEach(v => { obj[v.name] = sample(v); });
+                            bodyLabel = "Body (JSON)";
+                            bodyContent = JSON.stringify(obj, null, 2);
+                          } else if (formVars.length) {
+                            headers["Content-Type"] = headers["Content-Type"] || "multipart/form-data";
+                            bodyLabel = "Body (form-data)";
+                            bodyContent = formVars.map(v => `${v.name}=${sample(v)}`).join("\n");
+                          }
+
+                          return (
+                            <Card className="p-4 bg-muted/40">
+                              <h4 className="text-sm font-semibold mb-3">Pré-visualização da Requisição</h4>
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">URL ({formData.method})</Label>
+                                  <pre className="mt-1 p-2 rounded bg-background border font-mono text-xs whitespace-pre-wrap break-all">{formData.method} {urlPreview}</pre>
+                                </div>
+                                {Object.keys(headers).length > 0 && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">Headers</Label>
+                                    <pre className="mt-1 p-2 rounded bg-background border font-mono text-xs whitespace-pre-wrap break-all">
+{Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join("\n")}
+                                    </pre>
+                                  </div>
+                                )}
+                                {bodyContent && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">{bodyLabel}</Label>
+                                    <pre className="mt-1 p-2 rounded bg-background border font-mono text-xs whitespace-pre-wrap break-all">{bodyContent}</pre>
+                                  </div>
+                                )}
+                                {!bodyContent && Object.keys(headers).length === 0 && queryVars.length === 0 && vars.filter(v => v.type === "path").length === 0 && (
+                                  <p className="text-xs text-muted-foreground italic">Adicione variáveis acima para ver o conteúdo que será enviado.</p>
+                                )}
+                              </div>
+                            </Card>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
