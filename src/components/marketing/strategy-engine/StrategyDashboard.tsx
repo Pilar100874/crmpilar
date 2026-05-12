@@ -127,7 +127,7 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
           <CardTitle className="text-sm">Status dos Agentes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
             {resolvedOrder.map(agentKey => {
               const info = resolvedInfo[agentKey] || { name: agentKey, icon: '🤖', color: '#888', description: '' };
               const exec = latestExecMap.get(agentKey);
@@ -138,24 +138,31 @@ export function StrategyDashboard({ project, executions, artifacts, agentOrder, 
               return (
                 <div
                   key={agentKey}
-                  className={`rounded-lg p-2.5 text-center border transition-all ${
+                  className={`rounded-lg p-3 border transition-all flex gap-2.5 ${
                     isCompleted ? 'border-primary/30 bg-primary/5' :
                     isFailed ? 'border-destructive/30 bg-destructive/5' :
                     isRunning ? 'border-primary/50 animate-pulse' :
                     'border-border'
                   }`}
                 >
-                  <span className="text-lg">{info.icon}</span>
-                  <p className="text-[10px] font-medium mt-1 truncate">{info.name.split(' ')[0]}</p>
-                  <div className="mt-1">
-                    {isCompleted ? <CheckCircle2 className="h-3 w-3 text-primary mx-auto" /> :
-                     isFailed ? <XCircle className="h-3 w-3 text-destructive mx-auto" /> :
-                     isRunning ? <Loader2 className="h-3 w-3 text-primary mx-auto animate-spin" /> :
-                     <Clock className="h-3 w-3 text-muted-foreground mx-auto" />}
+                  <span className="text-xl shrink-0 leading-none mt-0.5">{info.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold truncate">{info.name}</p>
+                      {isCompleted ? <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> :
+                       isFailed ? <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" /> :
+                       isRunning ? <Loader2 className="h-3.5 w-3.5 text-primary animate-spin shrink-0" /> :
+                       <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                    </div>
+                    {info.description && (
+                      <p className="text-[10.5px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+                        {info.description}
+                      </p>
+                    )}
+                    {exec?.duration_ms && (
+                      <p className="text-[9px] text-muted-foreground mt-1">{(exec.duration_ms / 1000).toFixed(1)}s</p>
+                    )}
                   </div>
-                  {exec?.duration_ms && (
-                    <p className="text-[9px] text-muted-foreground mt-0.5">{(exec.duration_ms / 1000).toFixed(1)}s</p>
-                  )}
                 </div>
               );
             })}
