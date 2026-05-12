@@ -138,6 +138,7 @@ export default function NovaAutomacaoDialog({
       setWebhookSelecionado("");
       setVariaveisWebhook({});
       setBotSelecionado("");
+      setVariaveisCustom([]);
     }
   }, [open, automationToEdit]);
 
