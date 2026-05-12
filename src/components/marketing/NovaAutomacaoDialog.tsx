@@ -249,6 +249,7 @@ export default function NovaAutomacaoDialog({
         if (k) customMap[k] = v.valor ?? "";
       });
       config.variaveis_custom = customMap;
+      config.formato_saida = formatoSaida;
 
       if (tipoDisparo === "manual") {
         config.local_disponivel = localDisponivel;
