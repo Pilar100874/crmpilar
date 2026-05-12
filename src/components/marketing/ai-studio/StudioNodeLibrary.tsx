@@ -133,9 +133,10 @@ const StudioNodeLibrary: React.FC = () => {
                             key={node.type}
                             draggable
                             onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
+                            onClick={() => handleAddNode(node.type)}
                             whileHover={{ x: 3 }}
                             whileTap={{ scale: 0.97 }}
-                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer md:cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
                             style={{
                               background: colors.bg,
                               border: `1px solid ${colors.border}`,
@@ -158,7 +159,8 @@ const StudioNodeLibrary: React.FC = () => {
                                 {node.description}
                               </p>
                             </div>
-                            <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors" />
+                            <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/node:text-primary md:hidden shrink-0" />
+                            <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors hidden md:block" />
                           </motion.div>
                         ))}
                       </div>
