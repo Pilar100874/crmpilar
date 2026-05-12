@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, Link2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Instagram, Facebook, Music2, Linkedin, Twitter, Youtube, Link2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast-config';
+import { supabase } from '@/integrations/supabase/client';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 
 interface PlatformConfig {
   id: string;
@@ -27,7 +29,7 @@ const PLATFORMS: PlatformConfig[] = [
     description: 'Publique posts, reels e stories através da Graph API.',
     fields: [
       { key: 'access_token', label: 'Access Token', placeholder: 'EAAG...', type: 'password' },
-      { key: 'page_id', label: 'ID da Conta Instagram', placeholder: '17841...' },
+      { key: 'page_id', label: 'ID da Conta Instagram (IG Business)', placeholder: '17841...' },
     ],
     docsUrl: 'https://developers.facebook.com/docs/instagram-api',
   },
@@ -96,17 +98,61 @@ const PLATFORMS: PlatformConfig[] = [
   },
 ];
 
-const STORAGE_KEY = 'social_connectors_config_v1';
-
 export const ConectoresRedesSociaisCRUD = () => {
-  const [configs, setConfigs] = useState<Record<string, Record<string, string>>>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [configs, setConfigs] = useState<Record<string, Record<string, string>>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<PlatformConfig | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
+
+        const { data: usuario } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('auth_user_id', user.id)
+          .single();
+
+        if (!usuario?.estabelecimento_id) { setLoading(false); return; }
+        setEstabelecimentoId(usuario.estabelecimento_id);
+
+        const { data: rows } = await supabase
+          .from('social_media_credentials')
+          .select('platform, credentials')
+          .eq('estabelecimento_id', usuario.estabelecimento_id);
+
+        const map: Record<string, Record<string, string>> = {};
+        (rows || []).forEach((r: any) => { map[r.platform] = r.credentials || {}; });
+        setConfigs(map);
+
+        // Migração one-shot do localStorage antigo
+        try {
+          const legacy = localStorage.getItem('social_connectors_config_v1');
+          if (legacy) {
+            const parsed = JSON.parse(legacy);
+            for (const [platform, creds] of Object.entries(parsed)) {
+              if (!map[platform] && creds && typeof creds === 'object') {
+                await supabase.from('social_media_credentials').upsert({
+                  estabelecimento_id: usuario.estabelecimento_id,
+                  platform,
+                  credentials: creds as any,
+                }, { onConflict: 'estabelecimento_id,platform' });
+                map[platform] = creds as any;
+              }
+            }
+            localStorage.removeItem('social_connectors_config_v1');
+            setConfigs({ ...map });
+          }
+        } catch {}
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const updateField = (platform: string, key: string, value: string) => {
     setConfigs((prev) => ({
@@ -115,30 +161,69 @@ export const ConectoresRedesSociaisCRUD = () => {
     }));
   };
 
-  const isConnected = (platform: PlatformConfig) => {
+  const isComplete = (platform: PlatformConfig) => {
     const c = configs[platform.id];
     if (!c) return false;
-    return platform.fields.every((f) => c[f.key] && c[f.key].trim() !== '');
+    return platform.fields.every((f) => c[f.key] && String(c[f.key]).trim() !== '');
   };
 
-  const handleSave = (platform: PlatformConfig) => {
-    if (!isConnected(platform)) {
+  const handleSave = async (platform: PlatformConfig) => {
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não identificado');
+      return;
+    }
+    if (!isComplete(platform)) {
       toast.error(`Preencha todos os campos do ${platform.label}`);
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
-    toast.success(`${platform.label} conectado com sucesso`);
+    setSaving(platform.id);
+    try {
+      const { error } = await supabase
+        .from('social_media_credentials')
+        .upsert({
+          estabelecimento_id: estabelecimentoId,
+          platform: platform.id,
+          credentials: configs[platform.id],
+          ativo: true,
+        }, { onConflict: 'estabelecimento_id,platform' });
+      if (error) throw error;
+      toast.success(`${platform.label} conectado com sucesso`);
+    } catch (e: any) {
+      toast.error(`Erro ao salvar: ${e.message}`);
+    } finally {
+      setSaving(null);
+    }
   };
 
-  const handleDisconnect = (platform: PlatformConfig) => {
-    setConfigs((prev) => {
-      const next = { ...prev };
-      delete next[platform.id];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-    toast.success(`${platform.label} desconectado`);
+  const handleDisconnect = async (platform: PlatformConfig) => {
+    if (!estabelecimentoId) return;
+    try {
+      const { error } = await supabase
+        .from('social_media_credentials')
+        .delete()
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('platform', platform.id);
+      if (error) throw error;
+      setConfigs((prev) => {
+        const next = { ...prev };
+        delete next[platform.id];
+        return next;
+      });
+      toast.success(`${platform.label} desconectado`);
+    } catch (e: any) {
+      toast.error(`Erro ao desconectar: ${e.message}`);
+    } finally {
+      setConfirmDelete(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -147,16 +232,17 @@ export const ConectoresRedesSociaisCRUD = () => {
         <div className="text-xs text-muted-foreground">
           Configure as credenciais de cada rede social para que o bloco{' '}
           <strong className="text-foreground">"Publicar nas Redes Sociais"</strong> consiga publicar
-          posts automaticamente. As credenciais ficam armazenadas com segurança neste
-          estabelecimento.
+          posts automaticamente. As credenciais são armazenadas com segurança no banco do estabelecimento
+          (acessíveis apenas a este estabelecimento).
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {PLATFORMS.map((platform) => {
           const Icon = platform.icon;
-          const connected = isConnected(platform);
+          const connected = isComplete(platform);
           const c = configs[platform.id] || {};
+          const isSaving = saving === platform.id;
 
           return (
             <Card key={platform.id} className="relative">
@@ -214,12 +300,14 @@ export const ConectoresRedesSociaisCRUD = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDisconnect(platform)}
+                        onClick={() => setConfirmDelete(platform)}
+                        disabled={isSaving}
                       >
                         Desconectar
                       </Button>
                     )}
-                    <Button size="sm" onClick={() => handleSave(platform)}>
+                    <Button size="sm" onClick={() => handleSave(platform)} disabled={isSaving}>
+                      {isSaving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                       Salvar
                     </Button>
                   </div>
@@ -229,6 +317,14 @@ export const ConectoresRedesSociaisCRUD = () => {
           );
         })}
       </div>
+
+      <DeleteConfirmDialog
+        open={!!confirmDelete}
+        onOpenChange={(o) => !o && setConfirmDelete(null)}
+        onConfirm={() => confirmDelete && handleDisconnect(confirmDelete)}
+        title={`Desconectar ${confirmDelete?.label || ''}`}
+        description={`Tem certeza que deseja remover as credenciais de ${confirmDelete?.label || ''}? O bot deixará de publicar nesta plataforma até você reconfigurar.`}
+      />
     </div>
   );
 };
