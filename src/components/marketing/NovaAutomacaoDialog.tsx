@@ -670,22 +670,51 @@ export default function NovaAutomacaoDialog({
                 bodyPreview = JSON.stringify(allVars, null, 2);
               }
 
+              const headers: Record<string, string> = {
+                "Accept": "application/json",
+                "User-Agent": "MarketingAutomation/1.0",
+              };
+              if (bodyPreview) headers["Content-Type"] = "application/json";
+              const headersText = Object.entries(headers)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join("\n");
+
+              const curlLines = [`curl -X ${method} "${urlPreview}"`];
+              Object.entries(headers).forEach(([k, v]) => curlLines.push(`  -H "${k}: ${v}"`));
+              if (bodyPreview) curlLines.push(`  -d '${bodyPreview.replace(/'/g, "'\\''")}'`);
+              const curlText = curlLines.join(" \\\n");
+
               return (
-                <div className="space-y-2 p-4 bg-muted/40 border rounded-lg">
-                  <Label className="text-sm font-semibold">Pré-visualização da requisição</Label>
+                <div className="space-y-3 p-4 bg-muted/40 border rounded-lg">
+                  <Label className="text-sm font-semibold">Pré-visualização da requisição HTTP</Label>
                   <p className="text-xs text-muted-foreground">
-                    Exemplo do que será enviado ao executar esta automação.
+                    Exemplo completo do que será enviado ao executar esta automação.
                   </p>
-                  <div className="text-xs font-mono bg-background border rounded p-3 break-all">
-                    <span className="font-semibold text-primary">{method}</span>{" "}
-                    <span>{urlPreview || "(URL não definida)"}</span>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">Request Line</p>
+                    <div className="text-xs font-mono bg-background border rounded p-3 break-all">
+                      <span className="font-semibold text-primary">{method}</span>{" "}
+                      <span>{urlPreview || "(URL não definida)"}</span>
+                    </div>
                   </div>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">Headers</p>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{headersText}</pre>
+                  </div>
+
                   {bodyPreview && (
                     <div>
                       <p className="text-xs font-semibold mb-1">Body (JSON)</p>
                       <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{bodyPreview}</pre>
                     </div>
                   )}
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">cURL equivalente</p>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{curlText}</pre>
+                  </div>
                 </div>
               );
             }
@@ -697,19 +726,51 @@ export default function NovaAutomacaoDialog({
                 bot_name: selBot?.name,
                 variaveis: customMap,
               };
+              const supaUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL || "https://<projeto>.supabase.co";
+              const fullUrl = `${supaUrl}/functions/v1/marketing-automation-execute`;
+              const headers: Record<string, string> = {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": "Bearer <SUPABASE_ANON_KEY>",
+              };
+              const headersText = Object.entries(headers)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join("\n");
+              const bodyText = JSON.stringify(payload, null, 2);
+              const curlText = [
+                `curl -X POST "${fullUrl}"`,
+                ...Object.entries(headers).map(([k, v]) => `  -H "${k}: ${v}"`),
+                `  -d '${bodyText.replace(/'/g, "'\\''")}'`,
+              ].join(" \\\n");
+
               return (
-                <div className="space-y-2 p-4 bg-muted/40 border rounded-lg">
-                  <Label className="text-sm font-semibold">Pré-visualização do disparo</Label>
+                <div className="space-y-3 p-4 bg-muted/40 border rounded-lg">
+                  <Label className="text-sm font-semibold">Pré-visualização da requisição HTTP</Label>
                   <p className="text-xs text-muted-foreground">
-                    Exemplo do payload que será enviado ao bot ao executar esta automação.
+                    Exemplo completo do disparo que será enviado ao bot.
                   </p>
-                  <div className="text-xs font-mono bg-background border rounded p-3 break-all">
-                    <span className="font-semibold text-primary">POST</span>{" "}
-                    <span>/functions/v1/marketing-automation-execute</span>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">Request Line</p>
+                    <div className="text-xs font-mono bg-background border rounded p-3 break-all">
+                      <span className="font-semibold text-primary">POST</span>{" "}
+                      <span>{fullUrl}</span>
+                    </div>
                   </div>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">Headers</p>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{headersText}</pre>
+                  </div>
+
                   <div>
                     <p className="text-xs font-semibold mb-1">Body (JSON)</p>
-                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(payload, null, 2)}</pre>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{bodyText}</pre>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold mb-1">cURL equivalente</p>
+                    <pre className="text-xs font-mono bg-background border rounded p-3 overflow-x-auto whitespace-pre-wrap">{curlText}</pre>
                   </div>
                 </div>
               );
