@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface NovaAutomacaoDialogProps {
   open: boolean;
@@ -81,6 +82,9 @@ export default function NovaAutomacaoDialog({
   const [editWhMetodo, setEditWhMetodo] = useState("POST");
   const [editWhVars, setEditWhVars] = useState<WebhookVariable[]>([]);
   const [salvandoEdicaoWh, setSalvandoEdicaoWh] = useState(false);
+  const [excluindoWebhook, setExcluindoWebhook] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [automacoesUsando, setAutomacoesUsando] = useState<Array<{ id: string; name: string }>>([]);
   
   // Bot
   const [bots, setBots] = useState<Array<{ id: string; name: string }>>([]);
@@ -488,6 +492,51 @@ export default function NovaAutomacaoDialog({
     }
   };
 
+  const handleSolicitarExclusaoWebhook = async () => {
+    if (!existingWebhook) return;
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+      const { data, error } = await supabase
+        .from("marketing_automations" as any)
+        .select("id, name, config")
+        .eq("estabelecimento_id", estabelecimentoId);
+      if (error) throw error;
+      const usando = (data || [])
+        .filter((a: any) => {
+          const wid = a?.config?.webhook_id;
+          if (automationToEdit?.id && a.id === automationToEdit.id) return false;
+          return wid === existingWebhook.id;
+        })
+        .map((a: any) => ({ id: a.id, name: a.name }));
+      setAutomacoesUsando(usando);
+      setConfirmDeleteOpen(true);
+    } catch (e: any) {
+      toast.error(`Erro ao verificar uso do webhook: ${e?.message ?? e}`);
+    }
+  };
+
+  const handleConfirmarExclusaoWebhook = async () => {
+    if (!existingWebhook) return;
+    setExcluindoWebhook(true);
+    try {
+      const { error } = await supabase
+        .from("webhooks")
+        .delete()
+        .eq("id", existingWebhook.id);
+      if (error) throw error;
+      toast.success("Webhook excluído");
+      setConfirmDeleteOpen(false);
+      setWebhookSelecionado("");
+      setEditandoWebhook(false);
+      await loadWebhooks();
+    } catch (e: any) {
+      toast.error(`Erro ao excluir webhook: ${e?.message ?? e}`);
+    } finally {
+      setExcluindoWebhook(false);
+    }
+  };
+
   // Webhook "efetivo": existente selecionado OU rascunho do novo webhook
   const selectedWebhook: Webhook | undefined =
     metodoDisparo === "webhook" && webhookMode === "novo"
@@ -723,9 +772,21 @@ export default function NovaAutomacaoDialog({
                       </SelectContent>
                     </Select>
                     {existingWebhook && !editandoWebhook && (
-                      <Button type="button" variant="outline" size="sm" onClick={() => setEditandoWebhook(true)}>
-                        Editar
-                      </Button>
+                      <>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setEditandoWebhook(true)}>
+                          Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleSolicitarExclusaoWebhook()}
+                          disabled={excluindoWebhook}
+                        >
+                          Excluir
+                        </Button>
+                      </>
                     )}
                   </div>
                   {webhooks.length === 0 && (
@@ -1066,6 +1127,19 @@ export default function NovaAutomacaoDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <DeleteConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        onConfirm={handleConfirmarExclusaoWebhook}
+        isLoading={excluindoWebhook}
+        title="Excluir Webhook"
+        itemName={existingWebhook?.name}
+        description={
+          automacoesUsando.length > 0
+            ? `Atenção: este webhook está sendo usado em ${automacoesUsando.length} outra(s) automação(ões): ${automacoesUsando.map(a => a.name).join(", ")}. Se excluir, essas automações deixarão de funcionar. Deseja realmente excluir "${existingWebhook?.name}"?`
+            : `Tem certeza que deseja excluir o webhook "${existingWebhook?.name}"? Esta ação não pode ser desfeita.`
+        }
+      />
     </Dialog>
   );
 }
