@@ -1452,6 +1452,76 @@ async function executeNode(
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+      case "publish_social_post": {
+        console.log(`[FLOW] publish_social_post - config:`, JSON.stringify(cfg));
+        try {
+          const platforms: string[] = Array.isArray(cfg.platforms) && cfg.platforms.length
+            ? cfg.platforms
+            : ["instagram"];
+          const postType = cfg.postType || "image";
+          const mediaUrlRaw = itp(cfg.mediaUrl || "");
+          const captionTxt = itp(cfg.caption || "");
+          const hashtagsTxt = itp(cfg.hashtags || "");
+          const scheduledAt = itp(cfg.scheduledAt || "");
+          const fullCaption = [captionTxt, hashtagsTxt].filter(Boolean).join("\n\n");
+
+          // Suporta múltiplas mídias separadas por vírgula (carrossel)
+          const medias = mediaUrlRaw
+            .split(",")
+            .map((u: string) => u.trim())
+            .filter(Boolean);
+
+          const estabId = context.vars.estabelecimento_id;
+          if (!estabId) {
+            await onResponse("❌ Não foi possível publicar: estabelecimento não identificado.");
+          } else if (!medias.length && postType !== "text") {
+            await onResponse("❌ Não foi possível publicar: nenhuma mídia informada.");
+          } else {
+            const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+            const results: any[] = [];
+            for (const platform of platforms) {
+              const { data: pubResult, error: pubError } = await supabase.functions.invoke(
+                "publish-social-media",
+                {
+                  body: {
+                    estabelecimento_id: estabId,
+                    platform,
+                    postType,
+                    medias,
+                    caption: fullCaption,
+                    scheduledAt: scheduledAt || undefined,
+                  },
+                },
+              );
+              if (pubError || pubResult?.error) {
+                const errMsg = pubError?.message || pubResult?.error || "Erro desconhecido";
+                console.error(`[FLOW] Erro ao publicar em ${platform}:`, errMsg);
+                await onResponse(`❌ Falha ao publicar em ${platform}: ${errMsg}`);
+                results.push({ platform, success: false, error: errMsg });
+              } else {
+                console.log(`[FLOW] ✅ Publicado em ${platform}:`, pubResult);
+                results.push({ platform, success: true, ...pubResult });
+                if (pubResult?.permalink) {
+                  await onResponse(`✅ Publicado em ${platform}!\n🔗 ${pubResult.permalink}`);
+                } else {
+                  await onResponse(`✅ Publicado em ${platform}!`);
+                }
+              }
+            }
+            const outVar = cfg.outputVariable || "post_publicado";
+            const firstOk = results.find((r) => r.success);
+            context.vars[outVar] = firstOk || results[0] || {};
+            context.vars[`${outVar}_resultados`] = results;
+            if (firstOk?.permalink) context.vars[`${outVar}_permalink`] = firstOk.permalink;
+            if (firstOk?.post_id) context.vars[`${outVar}_id`] = firstOk.post_id;
+          }
+        } catch (err) {
+          console.error(`[FLOW] Exception ao publicar nas redes sociais:`, err);
+          await onResponse("❌ Erro ao publicar nas redes sociais.");
+        }
+        for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+        break;
+      }
       default: {
         console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
