@@ -306,6 +306,7 @@ serve(async (req) => {
     context.vars.from = from;
     context.vars.phoneNumber = from;
     context.vars.session = wahaSession;
+    if (estabelecimentoId) context.vars.estabelecimento_id = estabelecimentoId;
 
     // ====== Buscar ou criar customer e conversation ======
     let conversationId: string | null = null;
