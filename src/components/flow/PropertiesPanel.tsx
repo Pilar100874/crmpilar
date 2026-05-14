@@ -391,6 +391,8 @@ export const PropertiesPanel = ({
         return <BlockConfigs.SendWhatsappToNumberConfig {...configProps} />;
       case "api_loop":
         return <BlockConfigs.ApiLoopConfig {...configProps} />;
+      case "product_search_select":
+        return <BlockConfigs.ProductSearchSelectConfig {...configProps} />;
 
       case "start":
         return (
