@@ -1556,6 +1556,96 @@ async function executeNode(
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
         break;
       }
+      case "product_search_select": {
+        console.log(`[FLOW] product_search_select - config:`, JSON.stringify(cfg));
+        const stateKey = `__product_search_${node.id}`;
+        const state = context.vars[stateKey];
+        const sourceVar = (cfg.sourceVariable || "").trim();
+        const askText = itp(cfg.askText || "Qual produto você está procurando?");
+        const limit = Math.max(1, Math.min(10, parseInt(cfg.limit) || 5));
+        const estId = context.vars.estabelecimento_id;
+
+        // Determina o termo de busca
+        let query: string | null = null;
+        if (sourceVar && context.vars[sourceVar]) {
+          query = String(context.vars[sourceVar]).trim();
+        } else if (state?.stage === "search_query_received") {
+          query = String(state.query || "").trim();
+        }
+
+        if (!query) {
+          // Pergunta o nome do produto e aguarda resposta
+          await onResponse(askText);
+          context.vars[stateKey] = { stage: "awaiting_query" };
+          context.pendingNodeId = node.id;
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+          await supabase.from("chat_sessions").upsert(
+            { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+            { onConflict: "session_id" },
+          );
+          return;
+        }
+
+        // Realiza a busca no catálogo
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        let q = supabase
+          .from("produtos")
+          .select("id,nome,codigo,foto_url")
+          .eq("ativo", true)
+          .ilike("nome", `%${query}%`)
+          .limit(limit);
+        if (estId) q = q.eq("estabelecimento_id", estId);
+        const { data: produtos, error: prodErr } = await q;
+
+        if (prodErr) {
+          console.error("[FLOW] Erro buscando produtos:", prodErr);
+          await onResponse("❌ Erro ao buscar produtos no catálogo.");
+          delete context.vars[stateKey];
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+
+        if (!produtos || produtos.length === 0) {
+          await onResponse(itp(cfg.notFoundMessage || "Nenhum produto encontrado com esse nome."));
+          delete context.vars[stateKey];
+          // Permite re-perguntar se o termo veio da pergunta interativa (não da variável)
+          if (!sourceVar) {
+            await onResponse(askText);
+            context.vars[stateKey] = { stage: "awaiting_query" };
+            context.pendingNodeId = node.id;
+            const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+            await supabase.from("chat_sessions").upsert(
+              { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+              { onConflict: "session_id" },
+            );
+            return;
+          }
+          for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
+          break;
+        }
+
+        // Envia cada produto (imagem + nome numerado)
+        for (let i = 0; i < produtos.length; i++) {
+          const p = produtos[i];
+          const caption = `${i + 1}. ${p.nome}${p.codigo ? ` (${p.codigo})` : ""}`;
+          if (p.foto_url) {
+            await onResponse(caption, p.foto_url, "image");
+          } else {
+            await onResponse(`${caption}\n(sem imagem)`);
+          }
+        }
+        await onResponse(itp(cfg.selectionPrompt || "Responda com o número do produto desejado:"));
+
+        context.vars[stateKey] = { stage: "awaiting_selection", candidates: produtos };
+        context.pendingNodeId = node.id;
+        const sessionKey = `whatsapp_${context?.vars?.session || "default"}_${context?.vars?.from || ""}`;
+        await supabase.from("chat_sessions").upsert(
+          { session_id: sessionKey, context, updated_at: new Date().toISOString() },
+          { onConflict: "session_id" },
+        );
+        return;
+      }
       default: {
         console.log(`[FLOW] Unknown node type: ${data.type} - moving to next nodes`);
         for (const nx of nexts(node.id)) await executeNode(nx, nodes, edges, context, onResponse);
