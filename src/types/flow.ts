@@ -45,7 +45,8 @@ export type NodeType =
   | "publish_social_post"
   | "generate_ai_media"
   | "send_whatsapp_to_number"
-  | "api_loop";
+  | "api_loop"
+  | "product_search_select";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -530,6 +531,23 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       maxRows: 0,
       onError: "continue",
       outputVariable: "loop_resultado",
+    },
+  },
+  // Buscar produto no catálogo
+  {
+    type: "product_search_select",
+    label: "Buscar Produto (Catálogo)",
+    description: "Pergunta nome do produto, mostra os N primeiros do catálogo e usuário escolhe um (imagem vira referência para Gerar Mídia IA).",
+    icon: "Package",
+    color: "text-amber-600",
+    defaultData: {
+      askText: "Qual produto você está procurando?",
+      limit: 5,
+      sourceVariable: "",
+      outputVariable: "produto_selecionado",
+      imageUrlVariable: "produto_imagem_url",
+      notFoundMessage: "Nenhum produto encontrado com esse nome.",
+      selectionPrompt: "Responda com o número do produto desejado:",
     },
   },
 ];

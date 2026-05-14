@@ -136,6 +136,18 @@ const blockCategories = [
     textHover: "group-hover:text-emerald-700",
     blocks: ["send_whatsapp_to_number", "api_loop"] as NodeType[],
   },
+  {
+    name: "Catálogo",
+    icon: "Package",
+    color: "amber",
+    gradient: "from-amber-500/10 to-yellow-500/10",
+    border: "border-amber-500/20",
+    borderHover: "hover:border-amber-500/40",
+    iconColor: "text-amber-600",
+    iconHover: "group-hover:text-amber-700",
+    textHover: "group-hover:text-amber-700",
+    blocks: ["product_search_select"] as NodeType[],
+  },
 ];
 
 export const BlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: BlockLibraryProps) => {
