@@ -45,7 +45,8 @@ export type NodeType =
   | "publish_social_post"
   | "generate_ai_media"
   | "send_whatsapp_to_number"
-  | "api_loop";
+  | "api_loop"
+  | "product_search_select";
 
 export interface BlockDefinition {
   type: NodeType;
