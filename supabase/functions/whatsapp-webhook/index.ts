@@ -538,6 +538,40 @@ serve(async (req) => {
           if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
         }
       }
+      // Processa resposta para product_search_select
+      else if (pendingNode?.data?.type === "product_search_select") {
+        const cfg = pendingNode.data.config || {};
+        const userResponse = (context.vars.userMessage || "").trim();
+        const stateKey = `__product_search_${pendingNode.id}`;
+        const state = context.vars[stateKey] || { stage: "awaiting_query" };
+
+        if (state.stage === "awaiting_query") {
+          // Usuário acabou de informar o termo de busca
+          context.vars[stateKey] = { stage: "search_query_received", query: userResponse };
+          // Re-executa o nó para realizar a busca
+          await executeNode(pendingNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+        } else if (state.stage === "awaiting_selection") {
+          const candidates: any[] = state.candidates || [];
+          const idx = parseInt(userResponse) - 1;
+          if (idx < 0 || idx >= candidates.length) {
+            await respond(`Por favor, responda com um número entre 1 e ${candidates.length}.`);
+            shouldReturn = true;
+          } else {
+            const chosen = candidates[idx];
+            const outVar = cfg.outputVariable || "produto_selecionado";
+            const imgVar = cfg.imageUrlVariable || "produto_imagem_url";
+            context.vars[outVar] = chosen;
+            context.vars[imgVar] = chosen.foto_url || "";
+            delete context.vars[stateKey];
+            delete context.pendingNodeId;
+            const nextEdge = flowData.flow_data.edges.find((e: any) => e.source === pendingNode.id);
+            if (nextEdge) {
+              const nextNode = flowData.flow_data.nodes.find((n: any) => n.id === nextEdge.target);
+              if (nextNode) await executeNode(nextNode, flowData.flow_data.nodes, flowData.flow_data.edges, context, onResponse);
+            }
+          }
+        }
+      }
       // Processa resposta para blocos ask_*
       else if (pendingNode?.data?.type?.startsWith("ask_")) {
         const cfg = pendingNode.data.config || {};
