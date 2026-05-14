@@ -106,3 +106,6 @@ export { GenerateAIMediaConfig } from './GenerateAIMediaConfig';
 // Disparo direto / Loops
 export { SendWhatsappToNumberConfig } from './SendWhatsappToNumberConfig';
 export { ApiLoopConfig } from './ApiLoopConfig';
+
+// Catálogo de produtos
+export { ProductSearchSelectConfig } from './ProductSearchSelectConfig';
