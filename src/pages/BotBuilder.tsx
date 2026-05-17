@@ -1339,6 +1339,7 @@ function BotBuilderContent() {
                 type: 'smoothstep',
               }))}
               onNodesChange={onNodesChange}
+              onNodesDelete={handleNodesDelete}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onReconnect={onReconnect}
