@@ -1663,6 +1663,64 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     addUserMessage(input);
 
+    // === Multi-step: blocos novos ===
+    if (currentBlockType === "product_search_query" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const q = input.trim();
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setInput("");
+      if (node) await runProductSearch(node, q);
+      return;
+    }
+    if (currentBlockType === "product_search_select" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId];
+      const idx = parseInt(input.trim()) - 1;
+      if (!state || isNaN(idx) || idx < 0 || idx >= state.candidates.length) {
+        addSystemMessage("⚠️ Número inválido. Digite o número do produto.");
+        setInput(""); return;
+      }
+      const selected = state.candidates[idx];
+      const cfg = (node!.data as any).config || {};
+      const outVar = normalizeVarName(cfg.outputVariable || "produto_selecionado");
+      const imgVar = normalizeVarName(cfg.imageUrlVariable || "produto_imagem_url");
+      const newCtx = { ...contextRef.current, [outVar]: selected, [imgVar]: selected.foto_url || "" };
+      contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+      addSuccessMessage(`✅ Produto selecionado: ${selected.nome}`);
+      delete simNodeStateRef.current[currentNodeId];
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      const nextNode = getNextNode(currentNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      setInput(""); return;
+    }
+    if (currentBlockType === "ai_media_prompt" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const p = input.trim();
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setInput("");
+      if (node) await runAIMediaGeneration(node, p);
+      return;
+    }
+    if (currentBlockType === "ai_media_select" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId];
+      const idx = parseInt(input.trim()) - 1;
+      if (!state || isNaN(idx) || idx < 0 || idx >= state.items.length) {
+        addSystemMessage("⚠️ Número inválido."); setInput(""); return;
+      }
+      const sel = state.items[idx];
+      const cfg = (node!.data as any).config || {};
+      const outVar = normalizeVarName(cfg.outputVariable || "midia_selecionada");
+      const newCtx = { ...contextRef.current, [outVar]: sel.url };
+      contextRef.current = newCtx; setContext(newCtx); onContextChange?.(newCtx);
+      addSuccessMessage(`✅ Mídia ${sel.index} selecionada`);
+      delete simNodeStateRef.current[currentNodeId];
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      const nextNode = getNextNode(currentNodeId);
+      if (nextNode) safeSetTimeout(() => { setCurrentNodeId(nextNode.id); executeNode(nextNode); }, 400);
+      setInput(""); return;
+    }
+
     if (pendingVariable) {
       const cleanVarName = normalizeVarName(pendingVariable);
       
