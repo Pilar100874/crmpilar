@@ -1417,9 +1417,9 @@ function BotBuilderContent() {
             </div>
           )}
 
-          {!showSimulator && selectedNode && (
+          {!showSimulator && selectedNode && nodes.some(n => n.id === selectedNode.id) && (
             <PropertiesPanel
-              selectedNode={nodes.find(n => n.id === selectedNode.id) || selectedNode}
+              selectedNode={nodes.find(n => n.id === selectedNode.id)!}
               onUpdateNode={handleUpdateNode}
               onDeleteNode={handleDeleteNode}
               nodes={nodes}
