@@ -406,9 +406,10 @@ function BotBuilderContent() {
     [setNodes]
   );
 
+  const [deleteNodeConfirm, setDeleteNodeConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
-      // Não permitir deletar o bloco Start
       const nodeToDelete = nodes.find(n => n.id === nodeId);
       if (nodeToDelete && (nodeToDelete.data as any).type === "start") {
         setErrorDialog({
@@ -418,13 +419,28 @@ function BotBuilderContent() {
         });
         return;
       }
-      
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-      setSelectedNode(null);
-      toast.success("Bloco excluído!");
+      setDeleteNodeConfirm({ open: true, nodeId });
     },
-    [setNodes, setEdges, nodes]
+    [nodes]
+  );
+
+  const confirmDeleteNode = useCallback(() => {
+    const nodeId = deleteNodeConfirm.nodeId;
+    if (!nodeId) return;
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
+    setDeleteNodeConfirm({ open: false, nodeId: null });
+    toast.success("Bloco excluído!");
+  }, [deleteNodeConfirm.nodeId, setNodes, setEdges]);
+
+  const handleNodesDelete = useCallback(
+    (deleted: Node[]) => {
+      if (!deleted || deleted.length === 0) return;
+      const deletedIds = new Set(deleted.map((n) => n.id));
+      setSelectedNode((prev) => (prev && deletedIds.has(prev.id) ? null : prev));
+    },
+    []
   );
 
   const handleAddNote = useCallback(
