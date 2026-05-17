@@ -406,9 +406,10 @@ function BotBuilderContent() {
     [setNodes]
   );
 
+  const [deleteNodeConfirm, setDeleteNodeConfirm] = useState<{ open: boolean; nodeId: string | null }>({ open: false, nodeId: null });
+
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
-      // Não permitir deletar o bloco Start
       const nodeToDelete = nodes.find(n => n.id === nodeId);
       if (nodeToDelete && (nodeToDelete.data as any).type === "start") {
         setErrorDialog({
@@ -418,13 +419,28 @@ function BotBuilderContent() {
         });
         return;
       }
-      
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-      setSelectedNode(null);
-      toast.success("Bloco excluído!");
+      setDeleteNodeConfirm({ open: true, nodeId });
     },
-    [setNodes, setEdges, nodes]
+    [nodes]
+  );
+
+  const confirmDeleteNode = useCallback(() => {
+    const nodeId = deleteNodeConfirm.nodeId;
+    if (!nodeId) return;
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    setSelectedNode((prev) => (prev && prev.id === nodeId ? null : prev));
+    setDeleteNodeConfirm({ open: false, nodeId: null });
+    toast.success("Bloco excluído!");
+  }, [deleteNodeConfirm.nodeId, setNodes, setEdges]);
+
+  const handleNodesDelete = useCallback(
+    (deleted: Node[]) => {
+      if (!deleted || deleted.length === 0) return;
+      const deletedIds = new Set(deleted.map((n) => n.id));
+      setSelectedNode((prev) => (prev && deletedIds.has(prev.id) ? null : prev));
+    },
+    []
   );
 
   const handleAddNote = useCallback(
@@ -1323,6 +1339,7 @@ function BotBuilderContent() {
                 type: 'smoothstep',
               }))}
               onNodesChange={onNodesChange}
+              onNodesDelete={handleNodesDelete}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onReconnect={onReconnect}
@@ -1400,9 +1417,9 @@ function BotBuilderContent() {
             </div>
           )}
 
-          {!showSimulator && selectedNode && (
+          {!showSimulator && selectedNode && nodes.some(n => n.id === selectedNode.id) && (
             <PropertiesPanel
-              selectedNode={nodes.find(n => n.id === selectedNode.id) || selectedNode}
+              selectedNode={nodes.find(n => n.id === selectedNode.id)!}
               onUpdateNode={handleUpdateNode}
               onDeleteNode={handleDeleteNode}
               nodes={nodes}
@@ -1427,6 +1444,15 @@ function BotBuilderContent() {
           onConfirm={confirmDeleteBot}
           title="Confirmar exclusão"
           description="Tem certeza que deseja excluir este bot? Esta ação não pode ser desfeita."
+        />
+
+        {/* Dialog de confirmação de exclusão de bloco */}
+        <DeleteConfirmDialog
+          open={deleteNodeConfirm.open}
+          onOpenChange={(open) => setDeleteNodeConfirm((prev) => ({ ...prev, open }))}
+          onConfirm={confirmDeleteNode}
+          title="Excluir bloco"
+          description="Tem certeza que deseja excluir este bloco? As conexões com ele também serão removidas."
         />
 
         {/* Dialog de confirmação ao sair */}
