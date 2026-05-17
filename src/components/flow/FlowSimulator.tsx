@@ -258,6 +258,61 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return nodes.find((node) => node.id === nextEdge.target);
   };
 
+  const runProductSearch = async (node: Node, query: string) => {
+    const config = (node.data as any).config || {};
+    const limit = Math.max(1, Math.min(10, parseInt(config.limit) || 5));
+    addSystemMessage(`🔍 Buscando "${query}" no catálogo...`);
+    try {
+      const estId = await getEstabelecimentoId();
+      let q = supabase.from("produtos").select("id,nome,codigo,foto_url").eq("ativo", true).ilike("nome", `%${query}%`).limit(limit);
+      if (estId) q = q.eq("estabelecimento_id", estId);
+      const { data: produtos, error } = await q;
+      if (error) throw error;
+      if (!produtos || produtos.length === 0) {
+        addSystemMessage(interpolateVariables(config.notFoundMessage || "Nenhum produto encontrado.", context));
+        addBotMessage(interpolateVariables(config.askText || "Qual produto?", context), node.id);
+        setIsWaitingInput(true);
+        setCurrentBlockType("product_search_query");
+        setPendingVariable(`__psq_${node.id}`);
+        setCurrentNodeId(node.id);
+        return;
+      }
+      produtos.forEach((p: any, i: number) => {
+        const caption = `${i + 1}. ${p.nome}${p.codigo ? ` (${p.codigo})` : ""}`;
+        if (p.foto_url) addBotMediaMessage(p.foto_url, "image", caption, node.id);
+        else addBotMessage(`${caption}\n(sem imagem)`, node.id);
+      });
+      addBotMessage(interpolateVariables(config.selectionPrompt || "Responda com o número do produto desejado:", context), node.id);
+      simNodeStateRef.current[node.id] = { candidates: produtos };
+      setIsWaitingInput(true);
+      setCurrentBlockType("product_search_select");
+      setPendingVariable(`__pss_${node.id}`);
+      setCurrentNodeId(node.id);
+    } catch (e: any) {
+      addSystemMessage(`❌ Erro ao buscar produtos: ${e?.message || e}`);
+    }
+  };
+
+  const runAIMediaGeneration = async (node: Node, prompt: string) => {
+    const config = (node.data as any).config || {};
+    const variations = Math.max(1, Math.min(8, parseInt(config.variations) || 4));
+    const mediaType = config.mediaType === "video" ? "vídeos" : "imagens";
+    addSystemMessage(`🎨 Gerando ${variations} ${mediaType} (simulado) com prompt: "${prompt}"`);
+    safeSetTimeout(() => {
+      const items = Array.from({ length: variations }, (_, i) => ({
+        url: `https://picsum.photos/seed/${encodeURIComponent(prompt + "_" + i)}/400`,
+        index: i + 1,
+      }));
+      items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
+      addBotMessage("Responda com o número da opção que você gostou:", node.id);
+      simNodeStateRef.current[node.id] = { items };
+      setIsWaitingInput(true);
+      setCurrentBlockType("ai_media_select");
+      setPendingVariable(`__aims_${node.id}`);
+      setCurrentNodeId(node.id);
+    }, 1500);
+  };
+
   const executeNode = async (node: Node) => {
     const nodeData = node.data as any;
     const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === nodeData.type);
