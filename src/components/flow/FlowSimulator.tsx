@@ -1371,6 +1371,82 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         setIsWaitingInput(true);
         break;
 
+      case "product_search_select": {
+        const sourceVar = normalizeVarName(config.sourceVariable || "");
+        const askText = interpolateVariables(config.askText || "Qual produto você está procurando?", context);
+        const sourceVal = sourceVar
+          ? (contextRef.current[sourceVar] ?? contextRef.current[`@${sourceVar}`])
+          : null;
+        if (sourceVal) {
+          await runProductSearch(node, String(sourceVal));
+        } else {
+          addBotMessage(askText, node.id);
+          setIsWaitingInput(true);
+          setCurrentBlockType("product_search_query");
+          setPendingVariable(`__psq_${node.id}`);
+          setCurrentNodeId(node.id);
+        }
+        break;
+      }
+
+      case "generate_ai_media": {
+        const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
+        if (config.acceptText !== false) {
+          addBotMessage(ask, node.id);
+          setIsWaitingInput(true);
+          setCurrentBlockType("ai_media_prompt");
+          setPendingVariable(`__aim_${node.id}`);
+          setCurrentNodeId(node.id);
+        } else {
+          await runAIMediaGeneration(node, interpolateVariables(config.basePrompt || "criativo", context));
+        }
+        break;
+      }
+
+      case "publish_social_post": {
+        const platforms = (config.platforms || ["instagram"]).join(", ");
+        const caption = interpolateVariables(config.caption || "", context);
+        const mediaUrl = interpolateVariables(config.mediaUrl || "", context);
+        addSystemMessage(`📤 Publicando em: ${platforms}${mediaUrl ? "\n🖼️ " + mediaUrl : ""}${caption ? "\n📝 " + caption : ""}`);
+        safeSetTimeout(() => {
+          const outputVar = normalizeVarName(config.outputVariable || "post_publicado");
+          const fakeId = `sim_${Date.now()}`;
+          const fakeLink = `https://instagram.com/p/${fakeId}`;
+          const result = { id: fakeId, permalink: fakeLink, platforms: config.platforms };
+          const newCtx = {
+            ...contextRef.current,
+            [outputVar]: result,
+            [`${outputVar}_permalink`]: fakeLink,
+            [`${outputVar}_id`]: fakeId,
+          };
+          contextRef.current = newCtx;
+          setContext(newCtx);
+          onContextChange?.(newCtx);
+          addSuccessMessage(`✅ Publicado (simulado): ${fakeLink}`);
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 1500);
+        break;
+      }
+
+      case "send_whatsapp_to_number": {
+        const phone = interpolateVariables(config.phoneNumber || "", context);
+        const msg = interpolateVariables(config.message || "", context);
+        const mediaUrl = interpolateVariables(config.mediaUrl || "", context);
+        addSystemMessage(`📱 WhatsApp → ${phone || "(número não informado)"}`);
+        if (mediaUrl) addBotMediaMessage(mediaUrl, "image", msg, node.id);
+        else if (msg) addBotMessage(`[para ${phone}] ${msg}`, node.id);
+        const outputVar = normalizeVarName(config.outputVariable || "envio_whatsapp_status");
+        const newCtx = { ...contextRef.current, [outputVar]: "enviado" };
+        contextRef.current = newCtx;
+        setContext(newCtx);
+        safeSetTimeout(() => {
+          const nextNode = getNextNode(node.id);
+          if (nextNode) { setCurrentNodeId(nextNode.id); executeNode(nextNode); }
+        }, 1000);
+        break;
+      }
+
       default:
         addSystemMessage(`▶️ Executando: ${blockDef.label}`);
         safeSetTimeout(() => {
