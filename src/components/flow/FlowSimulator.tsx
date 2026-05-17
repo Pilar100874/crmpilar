@@ -54,6 +54,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const contextRef = useRef<Record<string, any>>({});
+  const simNodeStateRef = useRef<Record<string, any>>({});
   const uid = () => `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
 
   // Configurações visuais por canal
