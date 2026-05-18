@@ -1751,7 +1751,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const p = input.trim();
       setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
       setInput("");
-      if (node) await runAIMediaGeneration(node, p);
+      if (node) {
+        const cfg = (node.data as any).config || {};
+        const needsUserImg = cfg.acceptImageRef && (cfg.imageRefSource === "user" || cfg.imageRefSource === "both");
+        if (needsUserImg) askUserForRefImage(node, p);
+        else await runAIMediaGeneration(node, p);
+      }
+      return;
+    }
+    if (currentBlockType === "ai_media_image_ref" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const raw = input.trim();
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const textPrompt = state.pendingPrompt || "";
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setInput("");
+      let userImg: string | null = null;
+      if (raw && !/^(pular|skip|n[ãa]o)$/i.test(raw)) {
+        if (/^https?:\/\//i.test(raw)) userImg = raw;
+        else addSystemMessage("⚠️ URL inválida — gerando sem imagem do usuário.");
+      }
+      if (userImg) addBotMediaMessage(userImg, "image", "Sua referência", node!.id);
+      if (node) await runAIMediaGeneration(node, textPrompt, userImg);
       return;
     }
     if (currentBlockType === "ai_media_select" && currentNodeId) {
