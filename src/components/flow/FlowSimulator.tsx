@@ -293,14 +293,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     }
   };
 
-  const runAIMediaGeneration = async (node: Node, prompt: string) => {
+  const runAIMediaGeneration = async (node: Node, prompt: string, userRefImageUrl?: string | null) => {
     const config = (node.data as any).config || {};
-    const variations = Math.max(1, Math.min(8, parseInt(config.variations) || 4));
-    const mediaType = config.mediaType === "video" ? "vídeos" : "imagens";
+    const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
 
-    // Resolve reference image (from variable if configured)
-    let refImageUrl: string | null = null;
-    if (config.acceptImageRef && (config.imageRefSource === "variable" || config.imageRefSource === "both")) {
+    // Resolve reference image
+    let refImageUrl: string | null = userRefImageUrl || null;
+    if (!refImageUrl && config.acceptImageRef && (config.imageRefSource === "variable" || config.imageRefSource === "both")) {
       const varName = normalizeVarName(config.imageRefVariable || "produto_imagem_url");
       const raw = (contextRef.current as any)?.[varName];
       if (raw && typeof raw === "string") {
@@ -311,18 +310,38 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (refImageUrl) {
         addSystemMessage(`🖼️ Usando imagem de referência da variável {{${varName}}}`);
         addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
-      } else {
+      } else if (config.imageRefSource === "variable") {
         addSystemMessage(`⚠️ Variável {{${varName}}} vazia — gerando sem imagem de referência.`);
       }
     }
 
-    addSystemMessage(`🎨 Gerando ${variations} ${mediaType} (simulado) com prompt: "${prompt}"${refImageUrl ? " + referência visual" : ""}`);
-    safeSetTimeout(() => {
-      const seedBase = (refImageUrl ? refImageUrl + "_" : "") + prompt;
-      const items = Array.from({ length: variations }, (_, i) => ({
-        url: `https://picsum.photos/seed/${encodeURIComponent(seedBase + "_" + i)}/400`,
-        index: i + 1,
-      }));
+    const styleSource = config.styleSource || "visual_identity";
+    const styleLabel = styleSource === "visual_identity"
+      ? "Identidade Visual da marca"
+      : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
+
+    addSystemMessage(`🎨 Gerando ${variations} imagem(ns) com IA · ${styleLabel}${refImageUrl ? " · com imagem de referência" : ""}…`);
+
+    try {
+      const estId = await getEstabelecimentoId();
+      const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
+        body: {
+          prompt,
+          basePrompt: interpolateVariables(config.basePrompt || "", contextRef.current),
+          variations,
+          styleSource,
+          preset: config.preset || "",
+          referenceImageUrl: refImageUrl || "",
+          estabelecimentoId: estId || "",
+        },
+      });
+      if (error) throw error;
+      const images: string[] = data?.images || [];
+      if (!images.length) {
+        addSystemMessage(`❌ Não foi possível gerar imagens. ${(data?.errors || []).join(" | ") || data?.error || ""}`);
+        return;
+      }
+      const items = images.map((url, i) => ({ url, index: i + 1 }));
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
       addBotMessage("Responda com o número da opção que você gostou:", node.id);
       simNodeStateRef.current[node.id] = { items };
@@ -330,7 +349,21 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setCurrentBlockType("ai_media_select");
       setPendingVariable(`__aims_${node.id}`);
       setCurrentNodeId(node.id);
-    }, 1500);
+    } catch (e: any) {
+      addSystemMessage(`❌ Erro ao gerar imagens: ${e?.message || e}`);
+    }
+  };
+
+  // Ask user for reference image URL (simulator step) before generation
+  const askUserForRefImage = (node: Node, textPrompt: string) => {
+    const config = (node.data as any).config || {};
+    const ask = interpolateVariables(config.imagePrompt || "Envie a URL de uma imagem de referência (ou digite 'pular'):", contextRef.current);
+    addBotMessage(ask, node.id);
+    simNodeStateRef.current[node.id] = { ...(simNodeStateRef.current[node.id] || {}), pendingPrompt: textPrompt };
+    setIsWaitingInput(true);
+    setCurrentBlockType("ai_media_image_ref");
+    setPendingVariable(`__aimr_${node.id}`);
+    setCurrentNodeId(node.id);
   };
 
   const executeNode = async (node: Node) => {
@@ -1466,12 +1499,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
+        const needsUserImg = config.acceptImageRef && (config.imageRefSource === "user" || config.imageRefSource === "both");
         if (config.acceptText !== false) {
           addBotMessage(ask, node.id);
           setIsWaitingInput(true);
           setCurrentBlockType("ai_media_prompt");
           setPendingVariable(`__aim_${node.id}`);
           setCurrentNodeId(node.id);
+        } else if (needsUserImg) {
+          askUserForRefImage(node, interpolateVariables(config.basePrompt || "criativo", context));
         } else {
           await runAIMediaGeneration(node, interpolateVariables(config.basePrompt || "criativo", context));
         }
@@ -1718,7 +1754,28 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const p = input.trim();
       setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
       setInput("");
-      if (node) await runAIMediaGeneration(node, p);
+      if (node) {
+        const cfg = (node.data as any).config || {};
+        const needsUserImg = cfg.acceptImageRef && (cfg.imageRefSource === "user" || cfg.imageRefSource === "both");
+        if (needsUserImg) askUserForRefImage(node, p);
+        else await runAIMediaGeneration(node, p);
+      }
+      return;
+    }
+    if (currentBlockType === "ai_media_image_ref" && currentNodeId) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const raw = input.trim();
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const textPrompt = state.pendingPrompt || "";
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setInput("");
+      let userImg: string | null = null;
+      if (raw && !/^(pular|skip|n[ãa]o)$/i.test(raw)) {
+        if (/^https?:\/\//i.test(raw)) userImg = raw;
+        else addSystemMessage("⚠️ URL inválida — gerando sem imagem do usuário.");
+      }
+      if (userImg) addBotMediaMessage(userImg, "image", "Sua referência", node!.id);
+      if (node) await runAIMediaGeneration(node, textPrompt, userImg);
       return;
     }
     if (currentBlockType === "ai_media_select" && currentNodeId) {
