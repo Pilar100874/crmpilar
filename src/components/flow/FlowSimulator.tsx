@@ -1499,12 +1499,15 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
+        const needsUserImg = config.acceptImageRef && (config.imageRefSource === "user" || config.imageRefSource === "both");
         if (config.acceptText !== false) {
           addBotMessage(ask, node.id);
           setIsWaitingInput(true);
           setCurrentBlockType("ai_media_prompt");
           setPendingVariable(`__aim_${node.id}`);
           setCurrentNodeId(node.id);
+        } else if (needsUserImg) {
+          askUserForRefImage(node, interpolateVariables(config.basePrompt || "criativo", context));
         } else {
           await runAIMediaGeneration(node, interpolateVariables(config.basePrompt || "criativo", context));
         }
