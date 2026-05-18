@@ -297,10 +297,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const config = (node.data as any).config || {};
     const variations = Math.max(1, Math.min(8, parseInt(config.variations) || 4));
     const mediaType = config.mediaType === "video" ? "vídeos" : "imagens";
-    addSystemMessage(`🎨 Gerando ${variations} ${mediaType} (simulado) com prompt: "${prompt}"`);
+
+    // Resolve reference image (from variable if configured)
+    let refImageUrl: string | null = null;
+    if (config.acceptImageRef && (config.imageRefSource === "variable" || config.imageRefSource === "both")) {
+      const varName = normalizeVarName(config.imageRefVariable || "produto_imagem_url");
+      const raw = (contextRef.current as any)?.[varName];
+      if (raw && typeof raw === "string") {
+        refImageUrl = interpolateVariables(raw, contextRef.current);
+      } else if (raw && typeof raw === "object" && raw.foto_url) {
+        refImageUrl = raw.foto_url;
+      }
+      if (refImageUrl) {
+        addSystemMessage(`🖼️ Usando imagem de referência da variável {{${varName}}}`);
+        addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
+      } else {
+        addSystemMessage(`⚠️ Variável {{${varName}}} vazia — gerando sem imagem de referência.`);
+      }
+    }
+
+    addSystemMessage(`🎨 Gerando ${variations} ${mediaType} (simulado) com prompt: "${prompt}"${refImageUrl ? " + referência visual" : ""}`);
     safeSetTimeout(() => {
+      const seedBase = (refImageUrl ? refImageUrl + "_" : "") + prompt;
       const items = Array.from({ length: variations }, (_, i) => ({
-        url: `https://picsum.photos/seed/${encodeURIComponent(prompt + "_" + i)}/400`,
+        url: `https://picsum.photos/seed/${encodeURIComponent(seedBase + "_" + i)}/400`,
         index: i + 1,
       }));
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
