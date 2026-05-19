@@ -197,6 +197,16 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("bot-generate-ai-media error:", e);
+    if (e?.status === 429) {
+      return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (e?.status === 402) {
+      return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ error: e?.message || String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
