@@ -119,13 +119,14 @@ serve(async (req) => {
     if (referenceImageUrl) referenceImages.unshift(referenceImageUrl);
 
     const finalPrompt = [
-      basePrompt,
-      prompt,
-      styleGuidance ? `Estilo da marca: ${styleGuidance}` : "",
-      referenceImageUrl ? "Use a primeira imagem como referência principal de produto/cena." : "",
-      referenceImages.length > (referenceImageUrl ? 1 : 0) ? "Use as demais imagens como referência da identidade visual da marca (cores, tom, composição)." : "",
-      "Imagem publicitária de alta qualidade. Textos em Português Brasileiro se houver.",
-    ].filter(Boolean).join("\n");
+      "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
+      prompt ? `PEDIDO DO USUÁRIO — siga isto como briefing principal: ${prompt}` : "",
+      basePrompt ? `INSTRUÇÕES FIXAS DO BLOCO: ${basePrompt}` : "",
+      styleGuidance ? `IDENTIDADE VISUAL DA MARCA — preserve cores, tom, linguagem, composição, fotografia e personalidade: ${styleGuidance}` : "",
+      referenceImageUrl ? "REFERÊNCIA PRINCIPAL: a primeira imagem enviada é a referência mais importante. Preserve produto/objeto/personagem, embalagem, cores, forma e elementos visuais principais." : "",
+      referenceImages.length > (referenceImageUrl ? 1 : 0) ? "REFERÊNCIAS DA MARCA: as demais imagens definem identidade visual, paleta, iluminação, composição e acabamento." : "",
+      "Não ignore o pedido do usuário. Não crie assunto aleatório. Resultado premium, realista, pronto para marketing. Textos em Português Brasileiro se houver.",
+    ].filter(Boolean).join("\n\n");
 
     // Convert reference URLs to base64
     const refContent: any[] = [];
