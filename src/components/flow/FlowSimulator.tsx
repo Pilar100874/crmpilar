@@ -321,10 +321,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
+    const imageRefSource = config.imageRefSource || "user";
 
     // Resolve reference image
     let refImageUrl: string | null = userRefImageUrl || null;
-    if (!refImageUrl && config.acceptImageRef && (config.imageRefSource === "variable" || config.imageRefSource === "both")) {
+    if (!refImageUrl && config.acceptImageRef && (imageRefSource === "variable" || imageRefSource === "both")) {
       const varName = normalizeVarName(config.imageRefVariable || "produto_imagem_url");
       const raw = (contextRef.current as any)?.[varName];
       if (raw && typeof raw === "string") {
@@ -335,7 +336,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (refImageUrl) {
         addSystemMessage(`🖼️ Usando imagem de referência da variável {{${varName}}}`);
         addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
-      } else if (config.imageRefSource === "variable") {
+      } else if (imageRefSource === "variable") {
         addSystemMessage(`⚠️ Variável {{${varName}}} vazia — gerando sem imagem de referência.`);
       }
     }
@@ -1525,7 +1526,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
-        const needsUserImg = config.acceptImageRef && (config.imageRefSource === "user" || config.imageRefSource === "both");
+        const imageRefSource = config.imageRefSource || "user";
+        const needsUserImg = config.acceptImageRef && (imageRefSource === "user" || imageRefSource === "both");
         if (config.acceptText !== false) {
           addBotMessage(ask, node.id);
           setIsWaitingInput(true);
@@ -1782,7 +1784,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setInput("");
       if (node) {
         const cfg = (node.data as any).config || {};
-        const needsUserImg = cfg.acceptImageRef && (cfg.imageRefSource === "user" || cfg.imageRefSource === "both");
+        const imageRefSource = cfg.imageRefSource || "user";
+        const needsUserImg = cfg.acceptImageRef && (imageRefSource === "user" || imageRefSource === "both");
         if (needsUserImg) askUserForRefImage(node, p);
         else await runAIMediaGeneration(node, p);
       }
