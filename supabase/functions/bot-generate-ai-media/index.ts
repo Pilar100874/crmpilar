@@ -89,6 +89,7 @@ serve(async (req) => {
     // Build style guidance
     let styleGuidance = "";
     const referenceImages: string[] = [];
+    let selectedModel = "google/gemini-3.1-flash-image-preview";
 
     if (styleSource === "visual_identity" && estabelecimentoId) {
       const { data: vi } = await supabase
@@ -110,7 +111,9 @@ serve(async (req) => {
             if (url) referenceImages.push(url);
           }
         }
-        if (vi.preferred_model) console.log("Visual identity preferred_model:", vi.preferred_model);
+        if (["google/gemini-2.5-flash-image", "google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview"].includes(vi.preferred_model)) {
+          selectedModel = vi.preferred_model;
+        }
       }
     } else if (styleSource === "preset" && preset) {
       styleGuidance = PRESET_PROMPTS[preset] || "";
@@ -150,9 +153,10 @@ serve(async (req) => {
         ],
       }];
 
+      for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const data = await callGateway(LOVABLE_API_KEY, {
-          model: "google/gemini-3.1-flash-image-preview",
+          model: attempt === 3 && selectedModel !== "google/gemini-2.5-flash-image" ? "google/gemini-2.5-flash-image" : selectedModel,
           messages: [
             { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário, use referências visuais quando existirem e preserve a identidade visual da marca." },
             ...messages,
@@ -161,12 +165,13 @@ serve(async (req) => {
           max_tokens: 4096,
         });
         const img = extractImageUrl(data);
-        if (img) generated.push(img);
-        else errors.push(`v${i + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
+        if (img) { generated.push(img); break; }
+        if (attempt === 3) errors.push(`v${i + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
       } catch (e: any) {
         if (e?.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         if (e?.status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        errors.push(`v${i + 1}: ${e?.message || e}`);
+        if (attempt === 3) errors.push(`v${i + 1}: ${e?.message || e}`);
+      }
       }
     }
 
