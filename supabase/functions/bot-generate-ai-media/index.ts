@@ -93,19 +93,24 @@ serve(async (req) => {
     if (styleSource === "visual_identity" && estabelecimentoId) {
       const { data: vi } = await supabase
         .from("studio_visual_identity")
-        .select("prompt, selected_images, images, use_prompt, use_images")
+        .select("prompt, selected_images, images, use_prompt, use_images, preferred_model")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("is_active", true)
         .maybeSingle();
       if (vi) {
         if (vi.use_prompt && vi.prompt) styleGuidance = vi.prompt;
         if (vi.use_images) {
-          const imgs = (vi.selected_images?.length ? vi.selected_images : vi.images) || [];
+          const allImages = Array.isArray(vi.images) ? vi.images : [];
+          const selectedIndices = Array.isArray(vi.selected_images) ? vi.selected_images : [];
+          const imgs = selectedIndices.length
+            ? selectedIndices.filter((i: number) => i >= 0 && i < allImages.length).map((i: number) => allImages[i])
+            : allImages;
           for (const img of imgs.slice(0, 3)) {
             const url = typeof img === "string" ? img : img?.url;
             if (url) referenceImages.push(url);
           }
         }
+        if (vi.preferred_model) console.log("Visual identity preferred_model:", vi.preferred_model);
       }
     } else if (styleSource === "preset" && preset) {
       styleGuidance = PRESET_PROMPTS[preset] || "";
