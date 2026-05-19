@@ -17,6 +17,7 @@ const PRESET_PROMPTS: Record<string, string> = {
 
 async function fetchAsBase64(url: string): Promise<string | null> {
   try {
+    if (url.startsWith("data:image/")) return url;
     const r = await fetch(url);
     if (!r.ok) return null;
     const ct = r.headers.get("content-type") || "image/jpeg";
@@ -27,6 +28,40 @@ async function fetchAsBase64(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+async function callGateway(apiKey: string, body: Record<string, any>) {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw Object.assign(new Error(`${resp.status} ${text.slice(0, 200)}`), { status: resp.status });
+  }
+
+  return resp.json();
+}
+
+function extractImageUrl(data: any): string | null {
+  const msg = data?.choices?.[0]?.message;
+  const direct = msg?.images?.[0]?.image_url?.url;
+  if (direct) return direct;
+  if (Array.isArray(msg?.content)) {
+    for (const part of msg.content) {
+      if (part?.type === "image_url" && part?.image_url?.url) return part.image_url.url;
+      if (part?.inline_data?.mime_type?.startsWith("image/") && part?.inline_data?.data) {
+        return `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+      }
+    }
+  }
+  return null;
 }
 
 serve(async (req) => {
