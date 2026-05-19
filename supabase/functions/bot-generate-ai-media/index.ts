@@ -141,7 +141,7 @@ serve(async (req) => {
     const errors: string[] = [];
 
     for (let i = 0; i < variationsCount; i++) {
-      const varyHint = i === 0 ? "" : ` Variação ${i + 1}: traga um ângulo/composição diferente das anteriores.`;
+      const varyHint = `\n\nVARIAÇÃO ${i + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento, pose ou composição para criar uma opção distinta.`;
       const messages = [{
         role: "user",
         content: [
@@ -151,30 +151,21 @@ serve(async (req) => {
       }];
 
       try {
-        const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages,
-            modalities: ["image", "text"],
-          }),
+        const data = await callGateway(LOVABLE_API_KEY, {
+          model: "google/gemini-3.1-flash-image-preview",
+          messages: [
+            { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário, use referências visuais quando existirem e preserve a identidade visual da marca." },
+            ...messages,
+          ],
+          modalities: ["image", "text"],
+          max_tokens: 4096,
         });
-        if (!resp.ok) {
-          const t = await resp.text();
-          if (resp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          if (resp.status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          errors.push(`v${i + 1}: ${resp.status} ${t.slice(0, 120)}`);
-          continue;
-        }
-        const data = await resp.json();
-        const img = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        const img = extractImageUrl(data);
         if (img) generated.push(img);
-        else errors.push(`v${i + 1}: sem imagem retornada`);
+        else errors.push(`v${i + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
       } catch (e: any) {
+        if (e?.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (e?.status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         errors.push(`v${i + 1}: ${e?.message || e}`);
       }
     }
