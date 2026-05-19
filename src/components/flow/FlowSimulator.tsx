@@ -224,6 +224,29 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return name.trim().replace(/^@/, "").replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "");
   };
 
+  const readFileAsDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Falha ao ler imagem"));
+    reader.readAsDataURL(file);
+  });
+
+  const uploadSimulatorReferenceImage = async (file: File): Promise<string> => {
+    const safeExt = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
+    const path = `simulator-references/${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
+    const { error } = await supabase.storage
+      .from("marketing-images")
+      .upload(path, file, { contentType: file.type || "image/jpeg", upsert: true });
+
+    if (!error) {
+      const { data } = supabase.storage.from("marketing-images").getPublicUrl(path);
+      if (data.publicUrl) return data.publicUrl;
+    }
+
+    console.warn("Falha ao enviar referência para storage, usando data URL:", error?.message);
+    return readFileAsDataUrl(file);
+  };
+
   const evaluateExpression = (expression: string, context: Record<string, any>): boolean => {
     try {
       const interpolated = interpolateVariables(expression, context);
@@ -296,10 +319,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const runAIMediaGeneration = async (node: Node, prompt: string, userRefImageUrl?: string | null) => {
     const config = (node.data as any).config || {};
     const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
+    const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
+    const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
+    const imageRefSource = config.imageRefSource || "user";
 
     // Resolve reference image
     let refImageUrl: string | null = userRefImageUrl || null;
-    if (!refImageUrl && config.acceptImageRef && (config.imageRefSource === "variable" || config.imageRefSource === "both")) {
+    if (!refImageUrl && config.acceptImageRef && (imageRefSource === "variable" || imageRefSource === "both")) {
       const varName = normalizeVarName(config.imageRefVariable || "produto_imagem_url");
       const raw = (contextRef.current as any)?.[varName];
       if (raw && typeof raw === "string") {
@@ -310,7 +336,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       if (refImageUrl) {
         addSystemMessage(`🖼️ Usando imagem de referência da variável {{${varName}}}`);
         addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
-      } else if (config.imageRefSource === "variable") {
+      } else if (imageRefSource === "variable") {
         addSystemMessage(`⚠️ Variável {{${varName}}} vazia — gerando sem imagem de referência.`);
       }
     }
@@ -321,13 +347,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
 
     addSystemMessage(`🎨 Gerando ${variations} imagem(ns) com IA · ${styleLabel}${refImageUrl ? " · com imagem de referência" : ""}…`);
+    addSystemMessage(`📝 Texto usado: ${userPrompt}`);
 
     try {
       const estId = await getEstabelecimentoId();
       const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
         body: {
-          prompt,
-          basePrompt: interpolateVariables(config.basePrompt || "", contextRef.current),
+          prompt: userPrompt,
+          basePrompt,
           variations,
           styleSource,
           preset: config.preset || "",
@@ -1499,7 +1526,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
       case "generate_ai_media": {
         const ask = interpolateVariables(config.textPrompt || "Descreva o que você quer gerar:", context);
-        const needsUserImg = config.acceptImageRef && (config.imageRefSource === "user" || config.imageRefSource === "both");
+        const imageRefSource = config.imageRefSource || "user";
+        const needsUserImg = config.acceptImageRef && (imageRefSource === "user" || imageRefSource === "both");
         if (config.acceptText !== false) {
           addBotMessage(ask, node.id);
           setIsWaitingInput(true);
@@ -1756,9 +1784,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       setInput("");
       if (node) {
         const cfg = (node.data as any).config || {};
-        const needsUserImg = cfg.acceptImageRef && (cfg.imageRefSource === "user" || cfg.imageRefSource === "both");
+        const imageRefSource = cfg.imageRefSource || "user";
+        const needsUserImg = cfg.acceptImageRef && (imageRefSource === "user" || imageRefSource === "both");
         if (needsUserImg) askUserForRefImage(node, p);
         else await runAIMediaGeneration(node, p);
+      }
+      return;
+    }
+    if (currentBlockType === "ai_media_image_ref" && currentNodeId && selectedFile) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const textPrompt = state.pendingPrompt || "";
+      const file = selectedFile;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setSelectedFile(null);
+      setInput("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      try {
+        const userImg = await uploadSimulatorReferenceImage(file);
+        addSuccessMessage(`Imagem de referência recebida: ${file.name}`);
+        addBotMediaMessage(userImg, "image", "Sua referência", node?.id);
+        if (node) await runAIMediaGeneration(node, textPrompt, userImg);
+      } catch (e: any) {
+        addSystemMessage(`❌ Erro ao processar imagem de referência: ${e?.message || e}`);
+        if (node) await runAIMediaGeneration(node, textPrompt, null);
       }
       return;
     }

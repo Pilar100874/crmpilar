@@ -17,6 +17,7 @@ const PRESET_PROMPTS: Record<string, string> = {
 
 async function fetchAsBase64(url: string): Promise<string | null> {
   try {
+    if (url.startsWith("data:image/")) return url;
     const r = await fetch(url);
     if (!r.ok) return null;
     const ct = r.headers.get("content-type") || "image/jpeg";
@@ -27,6 +28,40 @@ async function fetchAsBase64(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+async function callGateway(apiKey: string, body: Record<string, any>) {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw Object.assign(new Error(`${resp.status} ${text.slice(0, 200)}`), { status: resp.status });
+  }
+
+  return resp.json();
+}
+
+function extractImageUrl(data: any): string | null {
+  const msg = data?.choices?.[0]?.message;
+  const direct = msg?.images?.[0]?.image_url?.url;
+  if (direct) return direct;
+  if (Array.isArray(msg?.content)) {
+    for (const part of msg.content) {
+      if (part?.type === "image_url" && part?.image_url?.url) return part.image_url.url;
+      if (part?.inline_data?.mime_type?.startsWith("image/") && part?.inline_data?.data) {
+        return `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+      }
+    }
+  }
+  return null;
 }
 
 serve(async (req) => {
@@ -54,22 +89,30 @@ serve(async (req) => {
     // Build style guidance
     let styleGuidance = "";
     const referenceImages: string[] = [];
+    let selectedModel = "google/gemini-3.1-flash-image-preview";
 
     if (styleSource === "visual_identity" && estabelecimentoId) {
       const { data: vi } = await supabase
         .from("studio_visual_identity")
-        .select("prompt, selected_images, images, use_prompt, use_images")
+        .select("prompt, selected_images, images, use_prompt, use_images, preferred_model")
         .eq("estabelecimento_id", estabelecimentoId)
         .eq("is_active", true)
         .maybeSingle();
       if (vi) {
         if (vi.use_prompt && vi.prompt) styleGuidance = vi.prompt;
         if (vi.use_images) {
-          const imgs = (vi.selected_images?.length ? vi.selected_images : vi.images) || [];
+          const allImages = Array.isArray(vi.images) ? vi.images : [];
+          const selectedIndices = Array.isArray(vi.selected_images) ? vi.selected_images : [];
+          const imgs = selectedIndices.length
+            ? selectedIndices.filter((i: number) => i >= 0 && i < allImages.length).map((i: number) => allImages[i])
+            : allImages;
           for (const img of imgs.slice(0, 3)) {
             const url = typeof img === "string" ? img : img?.url;
             if (url) referenceImages.push(url);
           }
+        }
+        if (["google/gemini-2.5-flash-image", "google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview"].includes(vi.preferred_model)) {
+          selectedModel = vi.preferred_model;
         }
       }
     } else if (styleSource === "preset" && preset) {
@@ -79,13 +122,14 @@ serve(async (req) => {
     if (referenceImageUrl) referenceImages.unshift(referenceImageUrl);
 
     const finalPrompt = [
-      basePrompt,
-      prompt,
-      styleGuidance ? `Estilo da marca: ${styleGuidance}` : "",
-      referenceImageUrl ? "Use a primeira imagem como referência principal de produto/cena." : "",
-      referenceImages.length > (referenceImageUrl ? 1 : 0) ? "Use as demais imagens como referência da identidade visual da marca (cores, tom, composição)." : "",
-      "Imagem publicitária de alta qualidade. Textos em Português Brasileiro se houver.",
-    ].filter(Boolean).join("\n");
+      "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
+      prompt ? `PEDIDO DO USUÁRIO — siga isto como briefing principal: ${prompt}` : "",
+      basePrompt ? `INSTRUÇÕES FIXAS DO BLOCO: ${basePrompt}` : "",
+      styleGuidance ? `IDENTIDADE VISUAL DA MARCA — preserve cores, tom, linguagem, composição, fotografia e personalidade: ${styleGuidance}` : "",
+      referenceImageUrl ? "REFERÊNCIA PRINCIPAL: a primeira imagem enviada é a referência mais importante. Preserve produto/objeto/personagem, embalagem, cores, forma e elementos visuais principais." : "",
+      referenceImages.length > (referenceImageUrl ? 1 : 0) ? "REFERÊNCIAS DA MARCA: as demais imagens definem identidade visual, paleta, iluminação, composição e acabamento." : "",
+      "Não ignore o pedido do usuário. Não crie assunto aleatório. Resultado premium, realista, pronto para marketing. Textos em Português Brasileiro se houver.",
+    ].filter(Boolean).join("\n\n");
 
     // Convert reference URLs to base64
     const refContent: any[] = [];
@@ -99,8 +143,8 @@ serve(async (req) => {
     const generated: string[] = [];
     const errors: string[] = [];
 
-    for (let i = 0; i < variationsCount; i++) {
-      const varyHint = i === 0 ? "" : ` Variação ${i + 1}: traga um ângulo/composição diferente das anteriores.`;
+    const generateVariation = async (variationIndex: number): Promise<string | null> => {
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento, pose ou composição para criar uma opção distinta.`;
       const messages = [{
         role: "user",
         content: [
@@ -109,32 +153,38 @@ serve(async (req) => {
         ],
       }];
 
-      try {
-        const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages,
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const data = await callGateway(LOVABLE_API_KEY, {
+            model: attempt === 3 && selectedModel !== "google/gemini-2.5-flash-image" ? "google/gemini-2.5-flash-image" : selectedModel,
+            messages: [
+              { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário, use referências visuais quando existirem e preserve a identidade visual da marca." },
+              ...messages,
+            ],
             modalities: ["image", "text"],
-          }),
-        });
-        if (!resp.ok) {
-          const t = await resp.text();
-          if (resp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          if (resp.status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          errors.push(`v${i + 1}: ${resp.status} ${t.slice(0, 120)}`);
-          continue;
+            max_tokens: 4096,
+          });
+          const img = extractImageUrl(data);
+          if (img) return img;
+          if (attempt === 3) errors.push(`v${variationIndex + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
+        } catch (e: any) {
+          if (e?.status === 429 || e?.status === 402) throw e;
+          if (attempt === 3) errors.push(`v${variationIndex + 1}: ${e?.message || e}`);
         }
-        const data = await resp.json();
-        const img = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      }
+      return null;
+    };
+
+    const results = await Promise.all(Array.from({ length: variationsCount }, (_, i) => generateVariation(i)));
+    for (const img of results) {
+      if (img) generated.push(img);
+    }
+
+    if (generated.length < variationsCount) {
+      const missing = variationsCount - generated.length;
+      const retries = await Promise.all(Array.from({ length: missing }, (_, i) => generateVariation(generated.length + i)));
+      for (const img of retries) {
         if (img) generated.push(img);
-        else errors.push(`v${i + 1}: sem imagem retornada`);
-      } catch (e: any) {
-        errors.push(`v${i + 1}: ${e?.message || e}`);
       }
     }
 
@@ -147,6 +197,16 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("bot-generate-ai-media error:", e);
+    if (e?.status === 429) {
+      return new Response(JSON.stringify({ error: "Limite de requisições. Tente novamente." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (e?.status === 402) {
+      return new Response(JSON.stringify({ error: "Créditos insuficientes no workspace." }), {
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ error: e?.message || String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
