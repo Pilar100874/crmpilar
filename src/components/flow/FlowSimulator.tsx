@@ -224,6 +224,29 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     return name.trim().replace(/^@/, "").replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "");
   };
 
+  const readFileAsDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Falha ao ler imagem"));
+    reader.readAsDataURL(file);
+  });
+
+  const uploadSimulatorReferenceImage = async (file: File): Promise<string> => {
+    const safeExt = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
+    const path = `simulator-references/${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
+    const { error } = await supabase.storage
+      .from("marketing-images")
+      .upload(path, file, { contentType: file.type || "image/jpeg", upsert: true });
+
+    if (!error) {
+      const { data } = supabase.storage.from("marketing-images").getPublicUrl(path);
+      if (data.publicUrl) return data.publicUrl;
+    }
+
+    console.warn("Falha ao enviar referência para storage, usando data URL:", error?.message);
+    return readFileAsDataUrl(file);
+  };
+
   const evaluateExpression = (expression: string, context: Record<string, any>): boolean => {
     try {
       const interpolated = interpolateVariables(expression, context);
@@ -296,6 +319,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const runAIMediaGeneration = async (node: Node, prompt: string, userRefImageUrl?: string | null) => {
     const config = (node.data as any).config || {};
     const variations = Math.max(1, Math.min(6, parseInt(config.variations) || 4));
+    const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
+    const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
 
     // Resolve reference image
     let refImageUrl: string | null = userRefImageUrl || null;
@@ -321,13 +346,14 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
 
     addSystemMessage(`🎨 Gerando ${variations} imagem(ns) com IA · ${styleLabel}${refImageUrl ? " · com imagem de referência" : ""}…`);
+    addSystemMessage(`📝 Texto usado: ${userPrompt}`);
 
     try {
       const estId = await getEstabelecimentoId();
       const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
         body: {
-          prompt,
-          basePrompt: interpolateVariables(config.basePrompt || "", contextRef.current),
+          prompt: userPrompt,
+          basePrompt,
           variations,
           styleSource,
           preset: config.preset || "",
