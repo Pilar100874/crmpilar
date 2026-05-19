@@ -1788,6 +1788,26 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       }
       return;
     }
+    if (currentBlockType === "ai_media_image_ref" && currentNodeId && selectedFile) {
+      const node = nodes.find(n => n.id === currentNodeId);
+      const state = simNodeStateRef.current[currentNodeId] || {};
+      const textPrompt = state.pendingPrompt || "";
+      const file = selectedFile;
+      setIsWaitingInput(false); setCurrentBlockType(null); setPendingVariable(null);
+      setSelectedFile(null);
+      setInput("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      try {
+        const userImg = await uploadSimulatorReferenceImage(file);
+        addSuccessMessage(`Imagem de referência recebida: ${file.name}`);
+        addBotMediaMessage(userImg, "image", "Sua referência", node?.id);
+        if (node) await runAIMediaGeneration(node, textPrompt, userImg);
+      } catch (e: any) {
+        addSystemMessage(`❌ Erro ao processar imagem de referência: ${e?.message || e}`);
+        if (node) await runAIMediaGeneration(node, textPrompt, null);
+      }
+      return;
+    }
     if (currentBlockType === "ai_media_image_ref" && currentNodeId) {
       const node = nodes.find(n => n.id === currentNodeId);
       const raw = input.trim();
