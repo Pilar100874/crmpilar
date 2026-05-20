@@ -352,24 +352,42 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     try {
       const estId = await getEstabelecimentoId();
-      const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
-        body: {
-          prompt: userPrompt,
-          basePrompt,
-          variations,
-          styleSource,
-          preset: config.preset || "",
-          referenceImageUrl: refImageUrl || "",
-          estabelecimentoId: estId || "",
-        },
-      });
-      if (error) throw error;
-      const images: string[] = data?.images || [];
-      if (!images.length) {
-        addSystemMessage(`❌ Não foi possível gerar imagens. ${(data?.errors || []).join(" | ") || data?.error || ""}`);
+      const collectedImages: string[] = [];
+      const errors: string[] = [];
+
+      for (let optionIndex = 0; optionIndex < variations; optionIndex++) {
+        let optionImage = "";
+        for (let attempt = 1; !optionImage && attempt <= 3; attempt++) {
+          const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
+            body: {
+              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing e identidade visual, variando apenas ângulo, enquadramento ou composição.`,
+              basePrompt,
+              variations: 1,
+              styleSource,
+              preset: config.preset || "",
+              referenceImageUrl: refImageUrl || "",
+              estabelecimentoId: estId || "",
+            },
+          });
+          if (error) throw error;
+
+          const batchImages: string[] = Array.isArray(data?.images) ? data.images.filter(Boolean) : [];
+          optionImage = batchImages[0] || "";
+          if (Array.isArray(data?.errors)) errors.push(...data.errors);
+        }
+
+        if (!optionImage) break;
+        collectedImages.push(optionImage);
+        if (collectedImages.length < variations) {
+          addSystemMessage(`⏳ ${collectedImages.length}/${variations} opções prontas. Gerando a próxima...`);
+        }
+      }
+
+      if (collectedImages.length < variations) {
+        addSystemMessage(`❌ A IA retornou apenas ${collectedImages.length}/${variations} opções. Não enviei opções parciais para evitar pular numeração. ${errors.join(" | ")}`);
         return;
       }
-      const items = images.map((url, i) => ({ url, index: i + 1 }));
+      const items = collectedImages.slice(0, variations).map((url, i) => ({ url, index: i + 1 }));
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
       addBotMessage("Responda com o número da opção que você gostou:", node.id);
       simNodeStateRef.current[node.id] = { items };
@@ -2466,7 +2484,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const addBotMessage = (text: string, nodeId?: string) => {
     console.log("Adding bot message:", text);
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "bot",
       text,
       timestamp: new Date(),
@@ -2481,7 +2499,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const addBotMediaMessage = (mediaUrl: string, mediaType: "image" | "video" | "audio" | "file", caption: string, nodeId?: string) => {
     console.log("Adding bot media message:", { mediaUrl, mediaType, caption });
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "bot",
       text: caption || "",
       timestamp: new Date(),
@@ -2497,7 +2515,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addSystemMessage = (text: string) => {
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "system",
       text,
       timestamp: new Date(),
@@ -2507,7 +2525,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addSuccessMessage = (text: string) => {
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "success",
       text,
       timestamp: new Date(),
