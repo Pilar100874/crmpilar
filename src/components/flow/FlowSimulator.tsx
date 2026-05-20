@@ -2466,7 +2466,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const addBotMessage = (text: string, nodeId?: string) => {
     console.log("Adding bot message:", text);
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "bot",
       text,
       timestamp: new Date(),
@@ -2481,7 +2481,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
   const addBotMediaMessage = (mediaUrl: string, mediaType: "image" | "video" | "audio" | "file", caption: string, nodeId?: string) => {
     console.log("Adding bot media message:", { mediaUrl, mediaType, caption });
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "bot",
       text: caption || "",
       timestamp: new Date(),
@@ -2497,7 +2497,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addSystemMessage = (text: string) => {
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "system",
       text,
       timestamp: new Date(),
@@ -2507,7 +2507,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addSuccessMessage = (text: string) => {
     const msg: Message = {
-      id: Date.now().toString(),
+      id: uid(),
       sender: "success",
       text,
       timestamp: new Date(),
