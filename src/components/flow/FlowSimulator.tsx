@@ -347,6 +347,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
 
     addSystemMessage(`🎨 Gerando ${variations} imagem(ns) com IA · ${styleLabel}${refImageUrl ? " · com imagem de referência" : ""}…`);
+    addBotMessage(`⏳ Aguarde, estou criando ${variations} opções de imagem. Isso pode levar até 1 minuto — você receberá todas juntas quando ficarem prontas.`, node.id);
     addSystemMessage(`📝 Texto usado: ${userPrompt}`);
 
     try {

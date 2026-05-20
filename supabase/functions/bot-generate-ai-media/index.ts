@@ -143,6 +143,8 @@ serve(async (req) => {
     const generated: string[] = [];
     const errors: string[] = [];
 
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     const generateVariation = async (variationIndex: number): Promise<string | null> => {
       const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento, pose ou composição para criar uma opção distinta.`;
       const messages = [{
@@ -153,10 +155,10 @@ serve(async (req) => {
         ],
       }];
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 4; attempt++) {
         try {
           const data = await callGateway(LOVABLE_API_KEY, {
-            model: attempt === 3 && selectedModel !== "google/gemini-2.5-flash-image" ? "google/gemini-2.5-flash-image" : selectedModel,
+            model: attempt >= 3 && selectedModel !== "google/gemini-2.5-flash-image" ? "google/gemini-2.5-flash-image" : selectedModel,
             messages: [
               { role: "system", content: "Você é um diretor de arte e compositor fotográfico. Siga rigorosamente o briefing do usuário, use referências visuais quando existirem e preserve a identidade visual da marca." },
               ...messages,
@@ -166,27 +168,40 @@ serve(async (req) => {
           });
           const img = extractImageUrl(data);
           if (img) return img;
-          if (attempt === 3) errors.push(`v${variationIndex + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
+          if (attempt === 4) errors.push(`v${variationIndex + 1}: sem imagem retornada (${String(data.choices?.[0]?.finish_reason || "sem motivo")})`);
+          await sleep(1500);
         } catch (e: any) {
-          if (e?.status === 429 || e?.status === 402) throw e;
-          if (attempt === 3) errors.push(`v${variationIndex + 1}: ${e?.message || e}`);
+          if (e?.status === 402) {
+            errors.push(`v${variationIndex + 1}: créditos insuficientes`);
+            return null;
+          }
+          if (e?.status === 429) {
+            await sleep(2000 * attempt);
+            continue;
+          }
+          if (attempt === 4) errors.push(`v${variationIndex + 1}: ${e?.message || e}`);
+          await sleep(1000);
         }
       }
       return null;
     };
 
-    const results = await Promise.all(Array.from({ length: variationsCount }, (_, i) => generateVariation(i)));
-    for (const img of results) {
+    // Sequential generation to avoid rate limits and ensure ALL variations are produced
+    for (let i = 0; i < variationsCount; i++) {
+      const img = await generateVariation(i);
       if (img) generated.push(img);
+      if (i < variationsCount - 1) await sleep(800);
     }
 
-    if (generated.length < variationsCount) {
-      const missing = variationsCount - generated.length;
-      const retries = await Promise.all(Array.from({ length: missing }, (_, i) => generateVariation(generated.length + i)));
-      for (const img of retries) {
-        if (img) generated.push(img);
-      }
+    // Final fill attempt for any missing variations
+    let safety = 0;
+    while (generated.length < variationsCount && safety < variationsCount) {
+      const img = await generateVariation(generated.length + safety);
+      if (img) generated.push(img);
+      safety++;
+      await sleep(800);
     }
+
 
     return new Response(JSON.stringify({
       success: generated.length > 0,
