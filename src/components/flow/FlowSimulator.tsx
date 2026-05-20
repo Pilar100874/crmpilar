@@ -355,27 +355,31 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const collectedImages: string[] = [];
       const errors: string[] = [];
 
-      for (let attempt = 1; collectedImages.length < variations && attempt <= 3; attempt++) {
-        const missing = variations - collectedImages.length;
-        const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
-          body: {
-            prompt: userPrompt,
-            basePrompt,
-            variations: missing,
-            styleSource,
-            preset: config.preset || "",
-            referenceImageUrl: refImageUrl || "",
-            estabelecimentoId: estId || "",
-          },
-        });
-        if (error) throw error;
+      for (let optionIndex = 0; optionIndex < variations; optionIndex++) {
+        let optionImage = "";
+        for (let attempt = 1; !optionImage && attempt <= 3; attempt++) {
+          const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
+            body: {
+              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing e identidade visual, variando apenas ângulo, enquadramento ou composição.`,
+              basePrompt,
+              variations: 1,
+              styleSource,
+              preset: config.preset || "",
+              referenceImageUrl: refImageUrl || "",
+              estabelecimentoId: estId || "",
+            },
+          });
+          if (error) throw error;
 
-        const batchImages: string[] = Array.isArray(data?.images) ? data.images.filter(Boolean) : [];
-        collectedImages.push(...batchImages.slice(0, missing));
-        if (Array.isArray(data?.errors)) errors.push(...data.errors);
+          const batchImages: string[] = Array.isArray(data?.images) ? data.images.filter(Boolean) : [];
+          optionImage = batchImages[0] || "";
+          if (Array.isArray(data?.errors)) errors.push(...data.errors);
+        }
 
-        if (collectedImages.length < variations && attempt < 3) {
-          addSystemMessage(`⏳ ${collectedImages.length}/${variations} opções prontas. Continuando até completar todas...`);
+        if (!optionImage) break;
+        collectedImages.push(optionImage);
+        if (collectedImages.length < variations) {
+          addSystemMessage(`⏳ ${collectedImages.length}/${variations} opções prontas. Gerando a próxima...`);
         }
       }
 
