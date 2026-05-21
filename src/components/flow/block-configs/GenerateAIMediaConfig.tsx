@@ -165,9 +165,18 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         <Label>1. O que gerar?</Label>
         <RadioGroup
           value={mediaType}
-          onValueChange={(v) => handleConfigChange("mediaType", v)}
+          onValueChange={(v) => {
+            handleConfigChange("mediaType", v);
+            // Reseta o modelo selecionado quando troca o tipo para evitar usar um modelo incompatível
+            const valid = (v === "video" ? VIDEO_MODELS : IMAGE_MODELS).some((m) => m.value === config.model);
+            if (!valid) {
+              handleConfigChange("model", "");
+              handleConfigChange("modelOverridden", false);
+            }
+          }}
           className="grid grid-cols-2 gap-2"
         >
+
           <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${mediaType === "image" ? "border-primary bg-primary/10" : "border-border"}`}>
             <RadioGroupItem value="image" />
             <ImageIcon className="h-4 w-4" />
