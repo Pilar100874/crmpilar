@@ -12772,6 +12772,65 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          observacao: string | null
+          prioridade: string
+          resposta_admin: string | null
+          status: string
+          tela: string | null
+          tipo: string
+          titulo: string | null
+          updated_at: string
+          usuario_id: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          observacao?: string | null
+          prioridade?: string
+          resposta_admin?: string | null
+          status?: string
+          tela?: string | null
+          tipo?: string
+          titulo?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          observacao?: string | null
+          prioridade?: string
+          resposta_admin?: string | null
+          status?: string
+          tela?: string | null
+          tipo?: string
+          titulo?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_visual_config: {
         Row: {
           created_at: string
