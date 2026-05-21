@@ -988,12 +988,14 @@ interface CreatePromptDialogProps {
 const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, onSave, defaultMediaType, defaultCategory, editingPreset }) => {
   const [name, setName] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [negativePrompt, setNegativePrompt] = useState('');
   const [mediaType, setMediaType] = useState<'video' | 'image'>(defaultMediaType);
   const [category, setCategory] = useState<'produto' | 'influencer'>(defaultCategory);
   const [tags, setTags] = useState('');
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>(['productImageSelect']);
   const [generatedImage, setGeneratedImage] = useState<string>('');
-  const [suggestedModel, setSuggestedModel] = useState<string>('');
+  const [suggestedModels, setSuggestedModels] = useState<string[]>([]);
+  const [modelInput, setModelInput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -1001,26 +1003,40 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
   React.useEffect(() => {
     if (open) {
       if (editingPreset) {
+        const split = splitPromptAndNegative(editingPreset.prompt, editingPreset.negativePrompt);
         setName(editingPreset.name);
-        setPrompt(editingPreset.prompt);
+        setPrompt(split.main || editingPreset.prompt);
+        setNegativePrompt(editingPreset.negativePrompt || split.negative || NEGATIVE_BLOCK_TEXT);
         setMediaType(editingPreset.mediaType);
         setCategory(editingPreset.category);
         setTags(editingPreset.tags.join(', '));
         setSelectedBlocks(editingPreset.referenceBlocks || ['productImageSelect']);
         setGeneratedImage(editingPreset.image || '');
-        setSuggestedModel(editingPreset.originalModel || '');
+        setSuggestedModels(getSuggestedModels(editingPreset));
+        setModelInput('');
       } else {
         setName('');
         setPrompt('');
+        setNegativePrompt(NEGATIVE_BLOCK_TEXT);
         setMediaType(defaultMediaType);
         setCategory(defaultCategory);
         setTags('');
         setSelectedBlocks(['productImageSelect']);
         setGeneratedImage('');
-        setSuggestedModel('');
+        setSuggestedModels([]);
+        setModelInput('');
       }
     }
   }, [open, defaultMediaType, defaultCategory, editingPreset]);
+
+  const addModel = (m: string) => {
+    const v = m.trim();
+    if (!v) return;
+    setSuggestedModels(prev => prev.includes(v) ? prev : [...prev, v]);
+    setModelInput('');
+  };
+  const removeModel = (m: string) => setSuggestedModels(prev => prev.filter(x => x !== m));
+
 
   const toggleBlock = (blockId: string) => {
     setSelectedBlocks(prev =>
