@@ -1193,14 +1193,64 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             <div className="flex items-start gap-2">
               <span className="text-base leading-none mt-0.5">🤖</span>
               <div className="flex-1 min-w-0">
-                <Label className="text-xs font-semibold">Modelo sugerido para melhor qualidade</Label>
-                <Input
-                  list="suggested-model-options"
-                  value={suggestedModel}
-                  onChange={e => setSuggestedModel(e.target.value)}
-                  placeholder={mediaType === 'video' ? 'Ex: Veo 3, Kling 3.0, Sora 2...' : 'Ex: Nano Banana Pro, Flux Pro, Ideogram v3...'}
-                  className="mt-1.5 h-8 text-xs"
-                />
+          {/* Suggested Models (multi, chip-based) */}
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-start gap-2">
+              <span className="text-base leading-none mt-0.5">🤖</span>
+              <div className="flex-1 min-w-0">
+                <Label className="text-xs font-semibold">Modelos sugeridos para melhor qualidade</Label>
+                <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                  Liste os modelos ideais em ordem de preferência. O primeiro é o padrão.
+                </p>
+
+                {suggestedModels.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {suggestedModels.map((m, idx) => (
+                      <Badge
+                        key={m}
+                        variant={idx === 0 ? 'default' : 'secondary'}
+                        className="text-[10px] gap-1 pl-2 pr-1 py-0.5"
+                      >
+                        {idx === 0 && <span className="opacity-70">★</span>}
+                        {m}
+                        <button
+                          type="button"
+                          onClick={() => removeModel(m)}
+                          className="ml-1 rounded-full hover:bg-background/40 px-1 leading-none"
+                          aria-label={`Remover ${m}`}
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-1.5">
+                  <Input
+                    list="suggested-model-options"
+                    value={modelInput}
+                    onChange={e => setModelInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        addModel(modelInput);
+                      }
+                    }}
+                    placeholder={mediaType === 'video' ? 'Ex: Veo 3, Kling 3.0, Sora 2...' : 'Ex: Nano Banana Pro, Flux Pro, Ideogram v3...'}
+                    className="h-8 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 text-xs"
+                    onClick={() => addModel(modelInput)}
+                    disabled={!modelInput.trim()}
+                  >
+                    Adicionar
+                  </Button>
+                </div>
                 <datalist id="suggested-model-options">
                   {/* Vídeo */}
                   <option value="Google Veo (nativo)" />
@@ -1220,7 +1270,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
                   <option value="Ideogram v3" />
                 </datalist>
                 {editingPreset?.fallbackModel && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
                     Fallback nativo atual: <span className="font-medium text-foreground">{editingPreset.fallbackModel}</span>
                     {editingPreset.requiresExternalModel && ' · Requer API key externa'}
                   </p>
@@ -1229,10 +1279,6 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             </div>
           </div>
 
-
-
-
-          {/* Prompt */}
           <div>
             <Label className="text-xs">Prompt</Label>
             <Textarea
