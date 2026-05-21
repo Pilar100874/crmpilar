@@ -412,11 +412,12 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
               </Label>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Para cada item, escolha se a imagem virá de uma <strong>variável de bloco anterior</strong> (ex: bloco Buscar Produto) ou se o <strong>bot pedirá ao usuário</strong> via WhatsApp.
+              Para cada item, escolha como a imagem chega: <strong>variável</strong> de bloco anterior, <strong>galeria do Studio</strong> (fixa) ou <strong>pedida ao usuário</strong> via WhatsApp.
             </p>
             {selectedPreset.referenceBlocks.map((blockId) => {
               const def = ALL_REF_BLOCKS.find((b) => b.id === blockId);
               if (!def) return null;
+              const galleryCat = REF_BLOCK_TO_GALLERY[blockId];
               const refInputs = config.referenceInputs || {};
               const current = refInputs[blockId] || { mode: "ask" };
               const updateRef = (patch: any) => {
@@ -433,18 +434,27 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                     onValueChange={(v) => updateRef({ mode: v })}
                     className="space-y-1"
                   >
-                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
-                      <RadioGroupItem value="variable" className="mt-0.5" />
-                      <div>
-                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
-                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto / Galeria</p>
-                      </div>
-                    </label>
                     <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "ask" ? "border-primary bg-primary/10" : "border-border"}`}>
                       <RadioGroupItem value="ask" className="mt-0.5" />
                       <div>
                         <p className="text-[11px] font-medium">Pedir ao usuário no WhatsApp</p>
-                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem</p>
+                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem na conversa</p>
+                      </div>
+                    </label>
+                    {galleryCat && (
+                      <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "gallery" ? "border-primary bg-primary/10" : "border-border"}`}>
+                        <RadioGroupItem value="gallery" className="mt-0.5" />
+                        <div>
+                          <p className="text-[11px] font-medium">Selecionar da galeria do AI Studio</p>
+                          <p className="text-[10px] text-muted-foreground">Mesma biblioteca usada no Studio · categoria "{galleryCat.label}"</p>
+                        </div>
+                      </label>
+                    )}
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="variable" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
+                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto</p>
                       </div>
                     </label>
                   </RadioGroup>
@@ -465,9 +475,18 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                       className="h-8 text-xs"
                     />
                   )}
+                  {current.mode === "gallery" && galleryCat && (
+                    <GalleryRefPicker
+                      categoria={galleryCat.categoria}
+                      value={{ url: current.galleryUrl, name: current.galleryName }}
+                      onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
+                      onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
+                    />
+                  )}
                 </div>
               );
             })}
+
           </div>
         )}
 
