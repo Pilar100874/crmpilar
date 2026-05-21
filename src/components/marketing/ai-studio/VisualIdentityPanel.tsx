@@ -23,6 +23,7 @@ interface VisualIdentityData {
   is_active: boolean;
   name: string;
   prompt: string;
+  negative_prompt: string;
   images: string[];
   use_prompt: boolean;
   use_images: boolean;
