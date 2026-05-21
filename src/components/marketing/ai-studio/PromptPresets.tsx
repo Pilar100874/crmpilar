@@ -1103,28 +1103,47 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="Ex: luxury, beach, outdoor" className="mt-1" />
           </div>
 
-          {/* Suggested Model (info only) */}
-          {isEditing && editingPreset?.originalModel && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-              <div className="flex items-start gap-2">
-                <span className="text-base leading-none">🤖</span>
-                <div className="flex-1 min-w-0">
-                  <Label className="text-xs font-semibold">Modelo sugerido para melhor qualidade</Label>
-                  <p className="text-xs mt-1">
-                    <span className="font-medium text-foreground">{editingPreset.originalModel}</span>
-                    {editingPreset.fallbackModel && (
-                      <span className="text-muted-foreground"> · fallback nativo: {editingPreset.fallbackModel}</span>
-                    )}
-                  </p>
+          {/* Suggested Model (editable) */}
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-start gap-2">
+              <span className="text-base leading-none mt-0.5">🤖</span>
+              <div className="flex-1 min-w-0">
+                <Label className="text-xs font-semibold">Modelo sugerido para melhor qualidade</Label>
+                <Input
+                  list="suggested-model-options"
+                  value={suggestedModel}
+                  onChange={e => setSuggestedModel(e.target.value)}
+                  placeholder={mediaType === 'video' ? 'Ex: Veo 3, Kling 3.0, Sora 2...' : 'Ex: Nano Banana Pro, Flux Pro, Ideogram v3...'}
+                  className="mt-1.5 h-8 text-xs"
+                />
+                <datalist id="suggested-model-options">
+                  {/* Vídeo */}
+                  <option value="Google Veo (nativo)" />
+                  <option value="Veo 3" />
+                  <option value="Veo 3.1" />
+                  <option value="Kling 3.0" />
+                  <option value="Kling 2.6" />
+                  <option value="Sora 2" />
+                  <option value="Seedance 2.0" />
+                  <option value="Higgsfield Soul V2" />
+                  {/* Imagem */}
+                  <option value="Gemini 3 Pro Image (nativo)" />
+                  <option value="Nano Banana (nativo)" />
+                  <option value="Nano Banana 2" />
+                  <option value="Nano Banana Pro" />
+                  <option value="Flux Pro" />
+                  <option value="Ideogram v3" />
+                </datalist>
+                {editingPreset?.fallbackModel && (
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {editingPreset.requiresExternalModel
-                      ? 'Requer API key externa. Se não habilitado, será usado o modelo nativo equivalente.'
-                      : 'Modelo recomendado pelo autor deste prompt para o melhor resultado.'}
+                    Fallback nativo atual: <span className="font-medium text-foreground">{editingPreset.fallbackModel}</span>
+                    {editingPreset.requiresExternalModel && ' · Requer API key externa'}
                   </p>
-                </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
+
 
 
 
