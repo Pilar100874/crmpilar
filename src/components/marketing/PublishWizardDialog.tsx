@@ -1,89 +1,105 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import Cropper from 'react-easy-crop';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { CHANNEL_CONFIG, PublishChannel } from './types';
-import { Check, ChevronLeft, ChevronRight, Loader2, Rocket } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Loader2, Rocket, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface PublishFormat {
   id: string;
   label: string;
-  aspectRatio: number; // width / height
+  width: number;
+  height: number;
   description?: string;
 }
 
+const aspectOf = (f: PublishFormat) => f.width / f.height;
+
+// Mirrors AI Creative Studio's image/video presets
 const FORMATS_BY_CHANNEL: Record<PublishChannel, PublishFormat[]> = {
   instagram: [
-    { id: 'feed_square', label: 'Feed Quadrado', aspectRatio: 1, description: '1080x1080' },
-    { id: 'feed_portrait', label: 'Feed Retrato', aspectRatio: 4 / 5, description: '1080x1350' },
-    { id: 'story', label: 'Story', aspectRatio: 9 / 16, description: '1080x1920' },
-    { id: 'reel', label: 'Reel', aspectRatio: 9 / 16, description: '1080x1920' },
-    { id: 'carousel', label: 'Carrossel', aspectRatio: 1, description: '1080x1080' },
+    { id: 'feed_square', label: '📸 Feed Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'feed_portrait', label: '📸 Feed Retrato (4:5)', width: 1080, height: 1350, description: '1080×1350' },
+    { id: 'feed_landscape', label: '📸 Feed Paisagem (1.91:1)', width: 1080, height: 566, description: '1080×566' },
+    { id: 'story', label: '📖 Story (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'reel', label: '🎞️ Reel (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'carousel_sq', label: '🎠 Carrossel (1:1)', width: 1080, height: 1080, description: '1080×1080 por slide' },
+    { id: 'carousel_pt', label: '🎠 Carrossel (4:5)', width: 1080, height: 1350, description: '1080×1350 por slide' },
+    { id: 'grid_3x1', label: '📐 Grid 3×1', width: 3240, height: 1080, description: '3240×1080' },
+    { id: 'grid_3x3', label: '📐 Grid 3×3', width: 3240, height: 3240, description: '3240×3240' },
   ],
   facebook: [
-    { id: 'feed', label: 'Feed', aspectRatio: 1.91, description: '1200x628' },
-    { id: 'feed_square', label: 'Feed Quadrado', aspectRatio: 1, description: '1080x1080' },
-    { id: 'story', label: 'Story', aspectRatio: 9 / 16, description: '1080x1920' },
-    { id: 'carousel', label: 'Carrossel', aspectRatio: 1, description: '1080x1080' },
+    { id: 'feed', label: '📘 Feed (1.91:1)', width: 1200, height: 630, description: '1200×630' },
+    { id: 'feed_square', label: '📘 Feed Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'story', label: '📘 Story (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'cover', label: '📘 Capa (2.63:1)', width: 820, height: 312, description: '820×312' },
+    { id: 'carousel', label: '🎠 Carrossel (1:1)', width: 1080, height: 1080, description: '1080×1080' },
   ],
   whatsapp: [
-    { id: 'status', label: 'Status', aspectRatio: 9 / 16, description: '1080x1920' },
-    { id: 'message', label: 'Mensagem', aspectRatio: 1, description: 'Imagem padrão' },
+    { id: 'status', label: '💬 Status (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'message', label: '💬 Mensagem (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'catalog', label: '🛍️ Catálogo (1:1)', width: 1080, height: 1080, description: '1080×1080' },
   ],
   twitter: [
-    { id: 'post', label: 'Post', aspectRatio: 16 / 9, description: '1600x900' },
-    { id: 'square', label: 'Quadrado', aspectRatio: 1, description: '1080x1080' },
+    { id: 'post', label: '🐦 Post (16:9)', width: 1200, height: 675, description: '1200×675' },
+    { id: 'square', label: '🐦 Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
   ],
   linkedin: [
-    { id: 'post', label: 'Post', aspectRatio: 1.91, description: '1200x628' },
-    { id: 'square', label: 'Quadrado', aspectRatio: 1, description: '1080x1080' },
-    { id: 'carousel', label: 'Carrossel', aspectRatio: 1, description: '1080x1080' },
+    { id: 'post', label: '💼 Post (1.91:1)', width: 1200, height: 627, description: '1200×627' },
+    { id: 'square', label: '💼 Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'story', label: '💼 Story (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'carousel', label: '🎠 Carrossel (1:1)', width: 1080, height: 1080, description: '1080×1080' },
   ],
   telegram: [
-    { id: 'message', label: 'Mensagem', aspectRatio: 1, description: 'Imagem padrão' },
-    { id: 'story', label: 'Story', aspectRatio: 9 / 16, description: '1080x1920' },
+    { id: 'message', label: 'Mensagem (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'story', label: 'Story (9:16)', width: 1080, height: 1920, description: '1080×1920' },
   ],
   email: [
-    { id: 'banner', label: 'Banner', aspectRatio: 16 / 9, description: '1600x900' },
-    { id: 'square', label: 'Quadrado', aspectRatio: 1, description: '1080x1080' },
+    { id: 'banner', label: 'Banner (16:9)', width: 1600, height: 900, description: '1600×900' },
+    { id: 'square', label: 'Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+  ],
+  youtube: [
+    { id: 'thumbnail', label: '▶️ Thumbnail (16:9)', width: 1280, height: 720, description: '1280×720' },
+    { id: 'shorts', label: '⚡ Shorts (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'banner', label: '▶️ Banner (16:9)', width: 2560, height: 1440, description: '2560×1440' },
+  ],
+  pinterest: [
+    { id: 'pin', label: '📌 Pin (2:3)', width: 1000, height: 1500, description: '1000×1500' },
+    { id: 'square', label: '📌 Quadrado (1:1)', width: 1080, height: 1080, description: '1080×1080' },
+    { id: 'story', label: '📌 Story (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+  ],
+  tiktok: [
+    { id: 'video', label: '🎵 Vídeo (9:16)', width: 1080, height: 1920, description: '1080×1920' },
+    { id: 'cover', label: '🎵 Capa (1:1)', width: 1080, height: 1080, description: '1080×1080' },
   ],
 };
 
-const TARGET_DIMENSIONS: Record<string, { w: number; h: number }> = {
-  '1': { w: 1080, h: 1080 },
-  '0.5625': { w: 1080, h: 1920 }, // 9/16
-  '0.8': { w: 1080, h: 1350 }, // 4/5
-  '1.91': { w: 1200, h: 628 },
-  '1.7777777777777777': { w: 1600, h: 900 }, // 16/9
-};
+async function getCroppedBlob(
+  imageEl: HTMLImageElement,
+  pixelCrop: PixelCrop,
+  target: { w: number; h: number },
+): Promise<Blob> {
+  const scaleX = imageEl.naturalWidth / imageEl.width;
+  const scaleY = imageEl.naturalHeight / imageEl.height;
+  const sx = pixelCrop.x * scaleX;
+  const sy = pixelCrop.y * scaleY;
+  const sw = pixelCrop.width * scaleX;
+  const sh = pixelCrop.height * scaleY;
 
-interface Area {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-async function getCroppedBlob(imageSrc: string, pixelCrop: Area, target: { w: number; h: number }): Promise<Blob> {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = imageSrc;
-  });
   const canvas = document.createElement('canvas');
   canvas.width = target.w;
   canvas.height = target.h;
   const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, target.w, target.h);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(imageEl, sx, sy, sw, sh, 0, 0, target.w, target.h);
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Falha ao gerar imagem'))), 'image/jpeg', 0.92);
   });
@@ -104,19 +120,22 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
   const [step, setStep] = useState(1);
   const [channel, setChannel] = useState<PublishChannel | null>(null);
   const [format, setFormat] = useState<PublishFormat | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
+  const [lockAspect, setLockAspect] = useState(true);
   const [postUrl, setPostUrl] = useState('');
   const [publishing, setPublishing] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const isVideo = mediaType === 'video';
 
   const reset = () => {
     setStep(1);
     setChannel(null);
     setFormat(null);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setCroppedAreaPixels(null);
+    setCrop(undefined);
+    setCompletedCrop(null);
+    setLockAspect(true);
     setPostUrl('');
   };
 
@@ -127,15 +146,36 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
   };
 
   const formats = useMemo(() => (channel ? FORMATS_BY_CHANNEL[channel] : []), [channel]);
+  const aspect = format ? aspectOf(format) : 1;
 
-  const onCropComplete = useCallback((_: Area, areaPixels: Area) => {
-    setCroppedAreaPixels(areaPixels);
+  const initCropForAspect = useCallback((mediaWidth: number, mediaHeight: number, ratio: number) => {
+    return centerCrop(
+      makeAspectCrop({ unit: '%', width: 90 }, ratio, mediaWidth, mediaHeight),
+      mediaWidth,
+      mediaHeight,
+    );
   }, []);
 
-  const isVideo = mediaType === 'video';
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (!format) return;
+    const { width, height } = e.currentTarget;
+    const c = initCropForAspect(width, height, lockAspect ? aspect : 16 / 9);
+    setCrop(c);
+  };
+
+  // Re-init crop when toggling aspect or changing format
+  useEffect(() => {
+    if (step !== 2 || isVideo || !imgRef.current || !format) return;
+    const { width, height } = imgRef.current;
+    if (!width || !height) return;
+    const c = lockAspect
+      ? initCropForAspect(width, height, aspect)
+      : { unit: '%' as const, x: 5, y: 5, width: 90, height: 90 };
+    setCrop(c);
+  }, [lockAspect, format, step, isVideo, aspect, initCropForAspect]);
 
   const handlePublish = async () => {
-    if (!channel || !format || (!isVideo && !croppedAreaPixels)) {
+    if (!channel || !format || (!isVideo && (!completedCrop || !imgRef.current))) {
       toast.error('Ajuste a mídia antes de publicar');
       return;
     }
@@ -143,9 +183,8 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
     try {
       let croppedUrl = imageUrl;
       if (!isVideo) {
-        const targetKey = format.aspectRatio.toString();
-        const target = TARGET_DIMENSIONS[targetKey] || { w: 1080, h: Math.round(1080 / format.aspectRatio) };
-        const blob = await getCroppedBlob(imageUrl, croppedAreaPixels!, target);
+        const target = { w: format.width, h: format.height };
+        const blob = await getCroppedBlob(imgRef.current!, completedCrop!, target);
         const estabId = localStorage.getItem('estabelecimentoId') || 'default';
         const path = `${estabId}/published/${channel}_${format.id}_${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage.from('marketing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
@@ -181,15 +220,15 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Rocket className="h-5 w-5" />
             Publicar mídia — Etapa {step} de 3
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && 'Escolha o canal e o formato de publicação'}
-            {step === 2 && (isVideo ? 'Pré-visualização do vídeo no formato escolhido' : 'Ajuste a imagem para o formato escolhido')}
+            {step === 1 && 'Escolha o canal e o formato de publicação (mesmas opções do AI Creative Studio)'}
+            {step === 2 && (isVideo ? 'Pré-visualização do vídeo no formato escolhido' : 'Ajuste a imagem arrastando os cantos do recorte ou movendo-o')}
             {step === 3 && 'Confira e publique'}
           </DialogDescription>
         </DialogHeader>
@@ -198,13 +237,13 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
           <div className="space-y-4">
             <div>
               <Label className="mb-2 block">Canal</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((ch) => (
                   <button
                     key={ch}
                     onClick={() => { setChannel(ch); setFormat(null); }}
                     className={cn(
-                      'border rounded-lg p-3 text-center text-sm transition-all hover:border-primary',
+                      'border rounded-lg p-3 text-center text-xs transition-all hover:border-primary',
                       channel === ch ? 'border-primary bg-primary/10' : 'border-border'
                     )}
                   >
@@ -218,7 +257,7 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
             {channel && (
               <div>
                 <Label className="mb-2 block">Formato</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[340px] overflow-y-auto pr-1">
                   {formats.map((f) => (
                     <button
                       key={f.id}
@@ -255,48 +294,59 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
                 <div
                   className="relative bg-black rounded-lg overflow-hidden border-2 border-primary/50"
                   style={{
-                    aspectRatio: format.aspectRatio,
+                    aspectRatio: aspect,
                     maxHeight: 400,
-                    width: format.aspectRatio >= 1 ? 'min(100%, 640px)' : 'auto',
-                    height: format.aspectRatio < 1 ? 400 : 'auto',
+                    width: aspect >= 1 ? 'min(100%, 640px)' : 'auto',
+                    height: aspect < 1 ? 400 : 'auto',
                   }}
                 >
-                  <video
-                    src={imageUrl}
-                    controls
-                    className="w-full h-full object-cover"
-                  />
+                  <video src={imageUrl} controls className="w-full h-full object-cover" />
                 </div>
                 <p className="text-xs text-muted-foreground text-center max-w-md">
                   O vídeo será exibido recortado (cover) na proporção {format.label} ({format.description}).
-                  Para edição precisa, use o editor de vídeo antes de publicar.
                 </p>
               </div>
             ) : (
               <>
-                <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
-                  <Cropper
-                    image={imageUrl}
+                <div className="flex items-center justify-between rounded-lg border border-border p-2.5 bg-muted/30">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Move className="h-4 w-4 text-muted-foreground" />
+                    <span>Arraste os <strong>4 cantos</strong> para redimensionar ou mova o recorte</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="lockAspect" className="text-xs cursor-pointer">Travar proporção {format.width}×{format.height}</Label>
+                    <Switch id="lockAspect" checked={lockAspect} onCheckedChange={setLockAspect} />
+                  </div>
+                </div>
+                <div className="flex justify-center bg-muted/40 rounded-lg p-3 max-h-[520px] overflow-auto">
+                  <ReactCrop
                     crop={crop}
-                    zoom={zoom}
-                    aspect={format.aspectRatio}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={onCropComplete}
-                    showGrid
-                  />
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={lockAspect ? aspect : undefined}
+                    keepSelection
+                    ruleOfThirds
+                  >
+                    <img
+                      ref={imgRef}
+                      src={imageUrl}
+                      onLoad={onImageLoad}
+                      crossOrigin="anonymous"
+                      alt="Recorte"
+                      style={{ maxHeight: 460, maxWidth: '100%' }}
+                    />
+                  </ReactCrop>
                 </div>
-                <div>
-                  <Label className="mb-2 block text-xs">Zoom</Label>
-                  <Slider value={[zoom]} min={1} max={3} step={0.01} onValueChange={(v) => setZoom(v[0])} />
-                </div>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Saída final: <strong>{format.width}×{format.height}px</strong> ({format.label})
+                </p>
               </>
             )}
             <div className="flex justify-between gap-2 pt-2">
               <Button variant="outline" onClick={() => setStep(1)}>
                 <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <Button onClick={() => setStep(3)} disabled={!isVideo && !croppedAreaPixels}>
+              <Button onClick={() => setStep(3)} disabled={!isVideo && !completedCrop}>
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
