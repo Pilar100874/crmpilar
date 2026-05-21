@@ -43,7 +43,67 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) setTela(location.pathname);
-  }, [open, location.pathname]);
+    if (open && tab === "meus") loadMine();
+  }, [open, location.pathname, tab]);
+
+  const loadMine = async () => {
+    setLoadingMine(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const authId = userRes.user?.id;
+      if (!authId) return;
+      const { data: u } = await supabase.from("usuarios").select("id").eq("auth_user_id", authId).maybeSingle();
+      if (!u) return;
+      try { await (supabase.rpc as any)("auto_close_support_tickets"); } catch {}
+      const { data } = await supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("usuario_id", u.id)
+        .order("created_at", { ascending: false });
+      setMyTickets((data as any) || []);
+    } finally {
+      setLoadingMine(false);
+    }
+  };
+
+  const loadTicketMsgs = async (ticketId: string) => {
+    const { data } = await supabase
+      .from("support_ticket_mensagens")
+      .select("*")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: true });
+    setMyMsgs((p) => ({ ...p, [ticketId]: (data as any) || [] }));
+  };
+
+  const sendUserReply = async (ticketId: string) => {
+    const text = (reply[ticketId] || "").trim();
+    if (!text) return;
+    const { data: userRes } = await supabase.auth.getUser();
+    const authId = userRes.user?.id;
+    if (!authId) return;
+    const { data: u } = await supabase.from("usuarios").select("id,nome").eq("auth_user_id", authId).maybeSingle();
+    if (!u) return;
+    const { error } = await supabase.from("support_ticket_mensagens").insert({
+      ticket_id: ticketId,
+      autor_tipo: "user",
+      autor_usuario_id: u.id,
+      autor_nome: u.nome,
+      mensagem: text,
+    });
+    if (error) return toast.error(error.message);
+    setReply((p) => ({ ...p, [ticketId]: "" }));
+    await loadTicketMsgs(ticketId);
+    await loadMine();
+  };
+
+  const closeMyTicket = async (id: string) => {
+    const { error } = await supabase.from("support_tickets")
+      .update({ status: "fechado", closed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Ticket encerrado");
+    loadMine();
+  };
 
   const resetAll = () => {
     setTitulo(""); setDescricao(""); setObservacao("");
