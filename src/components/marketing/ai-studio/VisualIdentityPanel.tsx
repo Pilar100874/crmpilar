@@ -371,6 +371,25 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   </p>
                 </div>
 
+                {/* Negative Prompt */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Prompt Negativo (o que NÃO pode aparecer)</Label>
+                  </div>
+                  <Textarea
+                    value={data.negative_prompt}
+                    onChange={(e) => setData(prev => ({ ...prev, negative_prompt: e.target.value }))}
+                    onBlur={() => save(data)}
+                    placeholder="Ex: sem texto, sem logos de concorrentes, sem marca d'água, sem pessoas, sem conteúdo erótico..."
+                    className="text-sm min-h-[80px] resize-y"
+                    disabled={!data.is_active}
+                  />
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Restrições aplicadas a todas as gerações (texto, marcas, elementos proibidos).
+                  </p>
+                </div>
+
                 {/* Info */}
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
