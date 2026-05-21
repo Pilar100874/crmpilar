@@ -1,13 +1,151 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images, Search, Check, X as XIcon, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
+
+// Mapeia o bloco de referência exigido pelo preset → categoria da galeria do AI Studio
+const REF_BLOCK_TO_GALLERY: Record<string, { categoria: string; label: string }> = {
+  productImageSelect: { categoria: "salvas", label: "Produtos / Salvas" },
+  galleryInfluencer: { categoria: "influencer", label: "Influencers" },
+  galleryLogo: { categoria: "logo", label: "Logos" },
+  galleryRoupa: { categoria: "roupa", label: "Roupas" },
+  galleryPose: { categoria: "pose", label: "Poses" },
+  galleryAmbiente: { categoria: "ambiente", label: "Ambientes" },
+  galleryEstilo: { categoria: "estilo", label: "Estilos" },
+  galleryPaleta: { categoria: "paleta", label: "Paletas" },
+  galleryTextura: { categoria: "textura", label: "Texturas" },
+};
+
+// Picker inline reutilizando a mesma galeria do AI Generator Studio
+const GalleryRefPicker = ({
+  categoria,
+  value,
+  onSelect,
+  onClear,
+}: {
+  categoria: string;
+  value?: { url?: string; name?: string };
+  onSelect: (item: { id: string; url: string; name: string }) => void;
+  onClear: () => void;
+}) => {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    const estabId = localStorage.getItem("estabelecimentoId");
+    if (!estabId) return;
+    setLoading(true);
+    if (categoria === "salvas") {
+      const { data } = await supabase
+        .from("media_gallery")
+        .select("id, nome, public_url")
+        .eq("estabelecimento_id", estabId)
+        .in("tipo", ["imagem", "image", "gif"])
+        .order("created_at", { ascending: false })
+        .limit(120);
+      setItems((data || []).map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.public_url })));
+    } else {
+      const { data } = await supabase
+        .from("studio_gallery_images")
+        .select("id, nome, image_url")
+        .eq("estabelecimento_id", estabId)
+        .eq("categoria", categoria)
+        .order("created_at", { ascending: false })
+        .limit(120);
+      setItems(data || []);
+    }
+    setLoading(false);
+  }, [categoria]);
+
+  useEffect(() => { if (open && items.length === 0) fetchItems(); }, [open, items.length, fetchItems]);
+
+  const filtered = items.filter((i) => !search || i.nome?.toLowerCase().includes(search.toLowerCase()));
+
+  if (value?.url) {
+    return (
+      <div className="relative rounded-lg overflow-hidden border border-border group">
+        <img src={value.url} alt={value.name || ""} className="w-full h-24 object-cover bg-muted/30" />
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute top-1 right-1 p-1 rounded-full bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition"
+        >
+          <XIcon className="h-3 w-3" />
+        </button>
+        <p className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[10px] bg-background/80 backdrop-blur truncate">
+          {value.name}
+        </p>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex flex-col items-center gap-1 py-3 border border-dashed border-border rounded-lg hover:bg-muted/30 transition"
+      >
+        <FolderOpen className="h-4 w-4 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground">Escolher da galeria "{REF_BLOCK_TO_GALLERY[Object.keys(REF_BLOCK_TO_GALLERY).find(k => REF_BLOCK_TO_GALLERY[k].categoria === categoria) || ""]?.label || categoria}"</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <input
+          autoFocus
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar..."
+          className="w-full h-7 pl-7 pr-2 text-[11px] rounded-md bg-muted/50 border border-border focus:outline-none"
+        />
+      </div>
+      <div className="max-h-[180px] overflow-y-auto">
+        {loading && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-3">
+            Nenhuma imagem nessa galeria. Adicione no AI Studio → Galeria.
+          </p>
+        )}
+        <div className="grid grid-cols-3 gap-1">
+          {filtered.map((img) => (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => {
+                onSelect({ id: img.id, url: img.image_url, name: img.nome || "" });
+                setOpen(false);
+              }}
+              className="aspect-square rounded-md overflow-hidden border border-border hover:border-primary transition"
+            >
+              <img src={img.image_url} alt={img.nome || ""} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center py-1"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+};
+
 
 
 interface ConfigProps {
@@ -213,18 +351,48 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
 
         {styleSource === "preset" && (
           <>
-            <select
-              value={config.preset || ""}
-              onChange={(e) => handlePresetChange(e.target.value)}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Selecione um preset...</option>
-              {presetsForType.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.bestSeller ? "🏆 " : ""}{p.name} · {p.category}
-                </option>
-              ))}
-            </select>
+            {presetsForType.length === 0 && (
+              <p className="text-[10px] text-muted-foreground">Nenhum preset disponível para {mediaType === "video" ? "vídeo" : "imagem"}.</p>
+            )}
+            <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+              {presetsForType.map((p) => {
+                const isSelected = config.preset === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handlePresetChange(p.id)}
+                    className={`group relative rounded-lg overflow-hidden border-2 text-left transition ${
+                      isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="aspect-video bg-muted/40 overflow-hidden">
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                    {p.bestSeller && (
+                      <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/90 text-white">
+                        🏆 Top
+                      </span>
+                    )}
+                    {isSelected && (
+                      <span className="absolute top-1 right-1 p-1 rounded-full bg-primary text-primary-foreground">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                    <div className="p-1.5 bg-background">
+                      <p className="text-[11px] font-medium leading-tight line-clamp-1">{p.name}</p>
+                      <p className="text-[9px] text-muted-foreground line-clamp-1">{p.category}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
             {selectedPreset && (
               <p className="text-[10px] text-muted-foreground">
                 {selectedPreset.tags.slice(0, 4).map((t) => `#${t}`).join(" ")}
@@ -232,6 +400,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
             )}
           </>
         )}
+
 
         {/* Blocos de referência exigidos pelo preset */}
         {styleSource === "preset" && selectedPreset && selectedPreset.referenceBlocks?.length > 0 && (
@@ -243,11 +412,12 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
               </Label>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Para cada item, escolha se a imagem virá de uma <strong>variável de bloco anterior</strong> (ex: bloco Buscar Produto) ou se o <strong>bot pedirá ao usuário</strong> via WhatsApp.
+              Para cada item, escolha como a imagem chega: <strong>variável</strong> de bloco anterior, <strong>galeria do Studio</strong> (fixa) ou <strong>pedida ao usuário</strong> via WhatsApp.
             </p>
             {selectedPreset.referenceBlocks.map((blockId) => {
               const def = ALL_REF_BLOCKS.find((b) => b.id === blockId);
               if (!def) return null;
+              const galleryCat = REF_BLOCK_TO_GALLERY[blockId];
               const refInputs = config.referenceInputs || {};
               const current = refInputs[blockId] || { mode: "ask" };
               const updateRef = (patch: any) => {
@@ -264,18 +434,27 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                     onValueChange={(v) => updateRef({ mode: v })}
                     className="space-y-1"
                   >
-                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
-                      <RadioGroupItem value="variable" className="mt-0.5" />
-                      <div>
-                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
-                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto / Galeria</p>
-                      </div>
-                    </label>
                     <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "ask" ? "border-primary bg-primary/10" : "border-border"}`}>
                       <RadioGroupItem value="ask" className="mt-0.5" />
                       <div>
                         <p className="text-[11px] font-medium">Pedir ao usuário no WhatsApp</p>
-                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem</p>
+                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem na conversa</p>
+                      </div>
+                    </label>
+                    {galleryCat && (
+                      <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "gallery" ? "border-primary bg-primary/10" : "border-border"}`}>
+                        <RadioGroupItem value="gallery" className="mt-0.5" />
+                        <div>
+                          <p className="text-[11px] font-medium">Selecionar da galeria do AI Studio</p>
+                          <p className="text-[10px] text-muted-foreground">Mesma biblioteca usada no Studio · categoria "{galleryCat.label}"</p>
+                        </div>
+                      </label>
+                    )}
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="variable" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
+                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto</p>
                       </div>
                     </label>
                   </RadioGroup>
@@ -296,9 +475,18 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                       className="h-8 text-xs"
                     />
                   )}
+                  {current.mode === "gallery" && galleryCat && (
+                    <GalleryRefPicker
+                      categoria={galleryCat.categoria}
+                      value={{ url: current.galleryUrl, name: current.galleryName }}
+                      onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
+                      onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
+                    />
+                  )}
                 </div>
               );
             })}
+
           </div>
         )}
 
