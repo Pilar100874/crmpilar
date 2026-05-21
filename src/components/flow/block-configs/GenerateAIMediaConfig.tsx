@@ -562,8 +562,16 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                       <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "gallery" ? "border-primary bg-primary/10" : "border-border"}`}>
                         <RadioGroupItem value="gallery" className="mt-0.5" />
                         <div>
-                          <p className="text-[11px] font-medium">Selecionar da galeria do AI Studio</p>
-                          <p className="text-[10px] text-muted-foreground">Mesma biblioteca usada no Studio · categoria "{galleryCat.label}"</p>
+                          <p className="text-[11px] font-medium">
+                            {blockId === "productImageSelect"
+                              ? "Selecionar do catálogo de produtos"
+                              : "Selecionar da galeria do AI Studio"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {blockId === "productImageSelect"
+                              ? "Mesma fonte usada no AI Creative Studio · seus produtos cadastrados"
+                              : `Mesma biblioteca usada no Studio · categoria "${galleryCat.label}"`}
+                          </p>
                         </div>
                       </label>
                     )}
