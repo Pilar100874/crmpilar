@@ -97,14 +97,21 @@ export const PropertiesPanel = ({
   const nodeData = selectedNode.data as any;
   const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === nodeData.type);
 
+  const pendingConfigRef = useRef<{ nodeId: string | null; config: any }>({ nodeId: null, config: null });
+
   const handleConfigChange = (key: string, value: any) => {
     console.log("⚙️ [PropertiesPanel.handleConfigChange] key:", key, "value:", value);
-    // Get fresh config from selectedNode to avoid stale state
-    const currentConfig = (selectedNode.data as any).config || {};
+    // Per-node accumulator so multiple synchronous calls don't overwrite each other
+    // (e.g. selecting a preset updates preset + presetName + model + negativePrompt em sequência)
+    const baseConfig =
+      pendingConfigRef.current.nodeId === selectedNode.id && pendingConfigRef.current.config
+        ? pendingConfigRef.current.config
+        : (selectedNode.data as any).config || {};
     const newConfig = {
-      ...currentConfig,
+      ...baseConfig,
       [key]: value,
     };
+    pendingConfigRef.current = { nodeId: selectedNode.id, config: newConfig };
     console.log("✅ [PropertiesPanel.handleConfigChange] Novo config completo:", newConfig);
     onUpdateNode(selectedNode.id, {
       config: newConfig,
