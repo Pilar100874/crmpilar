@@ -868,15 +868,34 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                 </div>
               )}
 
-              {/* Prompt */}
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
-                <div className="bg-muted/50 rounded-lg p-3 border max-h-[40vh] overflow-y-auto">
-                  <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/80">
-                    {detailPreset.prompt}
-                  </p>
-                </div>
-              </div>
+              {/* Prompt + Negative */}
+              {(() => {
+                const { main, negative } = splitPromptAndNegative(detailPreset.prompt, detailPreset.negativePrompt);
+                const neg = detailPreset.negativePrompt || negative;
+                return (
+                  <>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
+                      <div className="bg-muted/50 rounded-lg p-3 border max-h-[40vh] overflow-y-auto">
+                        <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/80">
+                          {main || detailPreset.prompt}
+                        </p>
+                      </div>
+                    </div>
+                    {neg && (
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-destructive mb-1.5">🚫 O que NÃO pode aparecer (negative prompt)</p>
+                        <div className="bg-destructive/5 rounded-lg p-3 border border-destructive/20 max-h-[25vh] overflow-y-auto">
+                          <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/70">
+                            {neg}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2 pt-2 border-t">
