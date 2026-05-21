@@ -831,12 +831,13 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   {detailPreset.isCustom && !detailPreset.bestSeller && (
                     <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
                   )}
-                  {detailPreset.originalModel && (
-                    <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
-                      🤖 {detailPreset.originalModel}
+                  {getSuggestedModels(detailPreset).map(m => (
+                    <Badge key={m} variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                      🤖 {m}
                       {detailPreset.requiresExternalModel && <span className="text-[8px] opacity-70">(externo)</span>}
                     </Badge>
-                  )}
+                  ))}
+
                   {detailPreset.tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="text-[10px] max-w-full break-all">{tag}</Badge>
                   ))}
