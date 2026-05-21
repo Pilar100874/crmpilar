@@ -1,13 +1,151 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images, Search, Check, X as XIcon, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
+
+// Mapeia o bloco de referência exigido pelo preset → categoria da galeria do AI Studio
+const REF_BLOCK_TO_GALLERY: Record<string, { categoria: string; label: string }> = {
+  productImageSelect: { categoria: "salvas", label: "Produtos / Salvas" },
+  galleryInfluencer: { categoria: "influencer", label: "Influencers" },
+  galleryLogo: { categoria: "logo", label: "Logos" },
+  galleryRoupa: { categoria: "roupa", label: "Roupas" },
+  galleryPose: { categoria: "pose", label: "Poses" },
+  galleryAmbiente: { categoria: "ambiente", label: "Ambientes" },
+  galleryEstilo: { categoria: "estilo", label: "Estilos" },
+  galleryPaleta: { categoria: "paleta", label: "Paletas" },
+  galleryTextura: { categoria: "textura", label: "Texturas" },
+};
+
+// Picker inline reutilizando a mesma galeria do AI Generator Studio
+const GalleryRefPicker = ({
+  categoria,
+  value,
+  onSelect,
+  onClear,
+}: {
+  categoria: string;
+  value?: { url?: string; name?: string };
+  onSelect: (item: { id: string; url: string; name: string }) => void;
+  onClear: () => void;
+}) => {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    const estabId = localStorage.getItem("estabelecimentoId");
+    if (!estabId) return;
+    setLoading(true);
+    if (categoria === "salvas") {
+      const { data } = await supabase
+        .from("media_gallery")
+        .select("id, nome, public_url")
+        .eq("estabelecimento_id", estabId)
+        .in("tipo", ["imagem", "image", "gif"])
+        .order("created_at", { ascending: false })
+        .limit(120);
+      setItems((data || []).map((it: any) => ({ id: it.id, nome: it.nome, image_url: it.public_url })));
+    } else {
+      const { data } = await supabase
+        .from("studio_gallery_images")
+        .select("id, nome, image_url")
+        .eq("estabelecimento_id", estabId)
+        .eq("categoria", categoria)
+        .order("created_at", { ascending: false })
+        .limit(120);
+      setItems(data || []);
+    }
+    setLoading(false);
+  }, [categoria]);
+
+  useEffect(() => { if (open && items.length === 0) fetchItems(); }, [open, items.length, fetchItems]);
+
+  const filtered = items.filter((i) => !search || i.nome?.toLowerCase().includes(search.toLowerCase()));
+
+  if (value?.url) {
+    return (
+      <div className="relative rounded-lg overflow-hidden border border-border group">
+        <img src={value.url} alt={value.name || ""} className="w-full h-24 object-cover bg-muted/30" />
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute top-1 right-1 p-1 rounded-full bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition"
+        >
+          <XIcon className="h-3 w-3" />
+        </button>
+        <p className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[10px] bg-background/80 backdrop-blur truncate">
+          {value.name}
+        </p>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex flex-col items-center gap-1 py-3 border border-dashed border-border rounded-lg hover:bg-muted/30 transition"
+      >
+        <FolderOpen className="h-4 w-4 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground">Escolher da galeria "{REF_BLOCK_TO_GALLERY[Object.keys(REF_BLOCK_TO_GALLERY).find(k => REF_BLOCK_TO_GALLERY[k].categoria === categoria) || ""]?.label || categoria}"</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <input
+          autoFocus
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar..."
+          className="w-full h-7 pl-7 pr-2 text-[11px] rounded-md bg-muted/50 border border-border focus:outline-none"
+        />
+      </div>
+      <div className="max-h-[180px] overflow-y-auto">
+        {loading && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-3">
+            Nenhuma imagem nessa galeria. Adicione no AI Studio → Galeria.
+          </p>
+        )}
+        <div className="grid grid-cols-3 gap-1">
+          {filtered.map((img) => (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => {
+                onSelect({ id: img.id, url: img.image_url, name: img.nome || "" });
+                setOpen(false);
+              }}
+              className="aspect-square rounded-md overflow-hidden border border-border hover:border-primary transition"
+            >
+              <img src={img.image_url} alt={img.nome || ""} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center py-1"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+};
+
 
 
 interface ConfigProps {
