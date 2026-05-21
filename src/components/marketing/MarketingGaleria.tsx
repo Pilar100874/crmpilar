@@ -50,6 +50,12 @@ import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/wha
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
+interface PublishedChannelEntry {
+  channel: PublishChannel;
+  url?: string;
+  published_at: string;
+}
+
 interface MarketingContentItem {
   id: string;
   resource_id: string | null;
@@ -64,6 +70,7 @@ interface MarketingContentItem {
   _source?: 'marketing_content' | 'media_gallery';
   _folder?: string | null;
   disponivel_chat?: boolean;
+  published_channels?: PublishedChannelEntry[];
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
@@ -96,6 +103,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<MarketingContentItem | null>(null);
   const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
+  const [publishingItem, setPublishingItem] = useState<MarketingContentItem | null>(null);
+  const [publishDraft, setPublishDraft] = useState<Record<string, { enabled: boolean; url: string }>>({});
+  const [savingPublish, setSavingPublish] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   // Folder system
@@ -173,6 +183,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
             created_at: item.created_at || new Date().toISOString(),
             _source: 'media_gallery' as const,
             disponivel_chat: item.disponivel_chat || false,
+            published_channels: Array.isArray(item.published_channels) ? item.published_channels : [],
           }));
         }
       }
@@ -250,6 +261,49 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       toast.error('Erro ao atualizar');
     }
   }, []);
+
+  const openPublishDialog = useCallback((item: MarketingContentItem) => {
+    const existing = item.published_channels || [];
+    const draft: Record<string, { enabled: boolean; url: string }> = {};
+    (Object.keys(CHANNEL_CONFIG) as PublishChannel[]).forEach((ch) => {
+      const found = existing.find((e) => e.channel === ch);
+      draft[ch] = { enabled: !!found, url: found?.url || '' };
+    });
+    setPublishDraft(draft);
+    setPublishingItem(item);
+  }, []);
+
+  const handleSavePublication = useCallback(async () => {
+    if (!publishingItem) return;
+    setSavingPublish(true);
+    try {
+      const now = new Date().toISOString();
+      const previous = publishingItem.published_channels || [];
+      const next: PublishedChannelEntry[] = (Object.keys(publishDraft) as PublishChannel[])
+        .filter((ch) => publishDraft[ch].enabled)
+        .map((ch) => {
+          const prev = previous.find((p) => p.channel === ch);
+          return {
+            channel: ch,
+            url: publishDraft[ch].url.trim() || undefined,
+            published_at: prev?.published_at || now,
+          };
+        });
+      const { error } = await supabase
+        .from('media_gallery')
+        .update({ published_channels: next } as any)
+        .eq('id', publishingItem.id);
+      if (error) throw error;
+      setContent((prev) => prev.map((c) => c.id === publishingItem.id ? { ...c, published_channels: next } : c));
+      toast.success('Publicações atualizadas');
+      setPublishingItem(null);
+    } catch (err: any) {
+      console.error('Erro ao salvar publicações:', err);
+      toast.error('Erro ao salvar publicações');
+    } finally {
+      setSavingPublish(false);
+    }
+  }, [publishingItem, publishDraft]);
 
   const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
@@ -642,6 +696,28 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                           </div>
                         )}
 
+                        {item._source === 'media_gallery' && item.published_channels && item.published_channels.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">Publicado em</span>
+                            {item.published_channels.map((entry) => {
+                              const cfg = CHANNEL_CONFIG[entry.channel];
+                              const label = cfg?.label || entry.channel;
+                              const badge = (
+                                <Badge key={entry.channel} variant="outline" className="text-[10px] gap-1 cursor-pointer">
+                                  <span className={`inline-block h-2 w-2 rounded-full ${cfg?.color || 'bg-primary'}`} />
+                                  {label}
+                                  {entry.url && <ExternalLink className="h-2.5 w-2.5" />}
+                                </Badge>
+                              );
+                              return entry.url ? (
+                                <a key={entry.channel} href={entry.url} target="_blank" rel="noreferrer" title={`Ver post em ${label}`}>
+                                  {badge}
+                                </a>
+                              ) : badge;
+                            })}
+                          </div>
+                        )}
+
                         <div className="flex gap-1 flex-wrap">
                           {item.content_url && (item.content_type === 'image' || item.content_type === 'video') && (
                             <Button
@@ -692,6 +768,16 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                                 </Button>
                               )}
                             </>
+                          )}
+                          {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openPublishDialog(item)}
+                              title="Marcar onde foi publicado"
+                            >
+                              📣
+                            </Button>
                           )}
                           <Button
                             size="sm"
@@ -813,6 +899,56 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {/* Publish channels dialog */}
+      <Dialog open={!!publishingItem} onOpenChange={(open) => { if (!open) setPublishingItem(null); }}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-base">Onde esta mídia foi publicada?</h3>
+              <p className="text-xs text-muted-foreground">
+                Marque os canais e, opcionalmente, cole o link do post.
+              </p>
+            </div>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((ch) => {
+                const cfg = CHANNEL_CONFIG[ch];
+                const state = publishDraft[ch] || { enabled: false, url: '' };
+                return (
+                  <div key={ch} className="border border-border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${cfg.color}`} />
+                        <span className="text-sm font-medium">{cfg.label}</span>
+                      </div>
+                      <Switch
+                        checked={state.enabled}
+                        onCheckedChange={(v) => setPublishDraft((p) => ({ ...p, [ch]: { ...state, enabled: v } }))}
+                      />
+                    </div>
+                    {state.enabled && (
+                      <Input
+                        value={state.url}
+                        onChange={(e) => setPublishDraft((p) => ({ ...p, [ch]: { ...state, url: e.target.value } }))}
+                        placeholder={`Link do post no ${cfg.label} (opcional)`}
+                        className="h-8 text-xs"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <Button variant="ghost" size="sm" onClick={() => setPublishingItem(null)} disabled={savingPublish}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleSavePublication} disabled={savingPublish}>
+                {savingPublish ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salvar'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
