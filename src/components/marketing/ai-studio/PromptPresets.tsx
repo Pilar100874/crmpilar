@@ -52,6 +52,24 @@ import imgInfStreet from '@/assets/presets/preset-img-inf-street.jpg';
 import imgInfStudio from '@/assets/presets/preset-img-inf-studio.jpg';
 import imgInfCozy from '@/assets/presets/preset-img-inf-cozy.jpg';
 
+// ─── Sales-focused 15 best (PDF) ─────────────────────────────────────
+import imgSalesHero from '@/assets/presets/preset-sales-hero-explosion.jpg';
+import imgSales360 from '@/assets/presets/preset-sales-360-turntable.jpg';
+import imgSalesSplash from '@/assets/presets/preset-sales-liquid-splash.jpg';
+import imgSalesTestimonial from '@/assets/presets/preset-sales-influencer-testimonial.jpg';
+import imgSalesBeforeAfter from '@/assets/presets/preset-sales-before-after.jpg';
+import imgSalesDropWater from '@/assets/presets/preset-sales-drop-water.jpg';
+import imgSalesLifestyleUse from '@/assets/presets/preset-sales-lifestyle-use.jpg';
+import imgSalesUnboxing from '@/assets/presets/preset-sales-unboxing-closeup.jpg';
+import imgSalesMagazine from '@/assets/presets/preset-sales-magazine-hero.jpg';
+import imgSalesEcom from '@/assets/presets/preset-sales-ecom-packshot.jpg';
+import imgSalesCompare from '@/assets/presets/preset-sales-comparison.jpg';
+import imgSalesPromo from '@/assets/presets/preset-sales-promo-banner.jpg';
+import imgSalesInsta from '@/assets/presets/preset-sales-insta-square.jpg';
+import imgSalesUgc from '@/assets/presets/preset-sales-ugc-smartphone.jpg';
+import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
+
+
 // ─── Reference Block Definitions ─────────────────────────────────────
 
 const ALL_REF_BLOCKS = [
