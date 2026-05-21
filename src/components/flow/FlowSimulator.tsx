@@ -2615,11 +2615,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                         {msg.mediaType === "image" && (
                           <img 
                             src={msg.mediaUrl} 
-                            alt="Media" 
+                            alt={msg.text || "Mídia"} 
                             className="w-full max-w-xs object-cover"
+                            loading="lazy"
                             onError={(e) => {
                               console.error("Image failed to load:", msg.mediaUrl);
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.style.display = 'block';
+                              e.currentTarget.alt = "Imagem indisponível";
                             }}
                           />
                         )}
