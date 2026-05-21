@@ -384,18 +384,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               serverMsg = body?.error || "";
             } catch {}
             if (status === 402 || /cr[eé]dito|payment|insufficient/i.test(serverMsg)) {
-              addSystemMessage(`❌ Não foi possível gerar: créditos da IA esgotados no workspace. Adicione créditos em Configurações → Lovable Cloud para retomar a geração.`);
+              addSystemMessage(`😕 Não consegui criar suas imagens agora porque os créditos de IA acabaram. Peça ao responsável para adicionar créditos e tente novamente em seguida.`);
               return;
             }
             if (status === 429 || /rate|limite/i.test(serverMsg)) {
-              addSystemMessage(`❌ Não foi possível gerar: limite de requisições da IA atingido. Aguarde alguns segundos e tente novamente.`);
+              addSystemMessage(`⏳ A IA está muito ocupada neste momento. Aguarde alguns segundos e tente gerar novamente, por favor.`);
               return;
             }
             if (status === 404 || /model|not found|indispon/i.test(serverMsg)) {
-              addSystemMessage(`❌ Modelo de IA indisponível no momento (${serverMsg || "verifique o modelo selecionado"}).`);
+              addSystemMessage(`😕 O modelo de IA escolhido está indisponível agora. Selecione outro modelo nas configurações do bloco e tente novamente.`);
               return;
             }
-            addSystemMessage(`❌ Erro ao gerar mídia: ${serverMsg || (error as any)?.message || "falha desconhecida"}.`);
+            addSystemMessage(`😕 Não consegui gerar a imagem desta vez. Tente novamente em instantes — se persistir, revise as configurações do bloco.`);
             return;
           }
 
@@ -403,15 +403,17 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           optionImage = batchImages[0] || "";
           if (Array.isArray(data?.errors)) errors.push(...data.errors);
 
-          // Detectar falhas explícitas do backend (créditos / rate-limit) embutidas no payload de sucesso
+          // Detectar falhas explícitas do backend embutidas no payload de sucesso
           const blockingErr = (data?.errors || []).find((m: string) =>
             /cr[eé]dito|insufficient|payment|402|429|rate|limite/i.test(m || "")
           );
           if (!optionImage && blockingErr) {
             if (/cr[eé]dito|insufficient|payment|402/i.test(blockingErr)) {
-              addSystemMessage(`❌ Não foi possível gerar: créditos da IA esgotados. Adicione créditos em Configurações → Lovable Cloud para continuar.`);
+              addSystemMessage(`😕 Não consegui criar suas imagens agora porque os créditos de IA acabaram. Peça ao responsável para adicionar créditos e tente novamente em seguida.`);
+            } else if (/rate|limite|429/i.test(blockingErr)) {
+              addSystemMessage(`⏳ A IA está muito ocupada neste momento. Aguarde alguns segundos e tente gerar novamente, por favor.`);
             } else {
-              addSystemMessage(`❌ Não foi possível gerar agora: ${blockingErr}.`);
+              addSystemMessage(`😕 Não consegui gerar a imagem agora. Tente novamente em instantes.`);
             }
             return;
           }
