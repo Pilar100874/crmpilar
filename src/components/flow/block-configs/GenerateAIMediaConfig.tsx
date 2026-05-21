@@ -13,10 +13,9 @@ interface ConfigProps {
   handleConfigChange: (key: string, value: any) => void;
 }
 
-// Catálogo de modelos disponíveis (alinhado com Visual Identity)
-const MEDIA_MODELS = [
+// Catálogo de modelos disponíveis (alinhado com Visual Identity), agrupado por tipo de mídia
+const IMAGE_MODELS = [
   { value: "", label: "Padrão (auto)" },
-  // Imagem
   { value: "google/gemini-2.5-flash-image", label: "🖼️ Gemini 2.5 Flash Image (Nano Banana)" },
   { value: "google/gemini-3-pro-image-preview", label: "🖼️ Gemini 3 Pro Image" },
   { value: "google/gemini-3.1-flash-image-preview", label: "🖼️ Gemini 3.1 Flash Image (Nano Banana 2)" },
@@ -24,13 +23,17 @@ const MEDIA_MODELS = [
   { value: "stability/sd3.5-turbo", label: "🖼️ Stable Diffusion 3.5" },
   { value: "flux/1.1-pro", label: "🖼️ Flux 1.1 Pro" },
   { value: "ideogram/v3", label: "🖼️ Ideogram v3" },
-  // Vídeo
+];
+
+const VIDEO_MODELS = [
+  { value: "", label: "Padrão (auto)" },
   { value: "google/veo-3", label: "🎬 Google Veo 3" },
   { value: "google/veo-2.0", label: "🎬 Google Veo 2.0" },
   { value: "kling/3.0", label: "🎬 Kling 3.0" },
   { value: "runway/gen-3", label: "🎬 Runway Gen-3" },
   { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
 ];
+
 
 interface PresetDef {
   id: string;
@@ -162,9 +165,18 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         <Label>1. O que gerar?</Label>
         <RadioGroup
           value={mediaType}
-          onValueChange={(v) => handleConfigChange("mediaType", v)}
+          onValueChange={(v) => {
+            handleConfigChange("mediaType", v);
+            // Reseta o modelo selecionado quando troca o tipo para evitar usar um modelo incompatível
+            const valid = (v === "video" ? VIDEO_MODELS : IMAGE_MODELS).some((m) => m.value === config.model);
+            if (!valid) {
+              handleConfigChange("model", "");
+              handleConfigChange("modelOverridden", false);
+            }
+          }}
           className="grid grid-cols-2 gap-2"
         >
+
           <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${mediaType === "image" ? "border-primary bg-primary/10" : "border-border"}`}>
             <RadioGroupItem value="image" />
             <ImageIcon className="h-4 w-4" />
@@ -238,13 +250,14 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           }}
           className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
-          {MEDIA_MODELS.map((m) => (
+          {(mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS).map((m) => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
         </select>
         <p className="text-[10px] text-muted-foreground">
-          Sugerido pelo preset/IV; pode trocar manualmente.
+          Lista filtrada por tipo de mídia ({mediaType === "video" ? "vídeo" : "imagem"}). Sugerido pelo preset/IV; pode trocar manualmente.
         </p>
+
       </div>
 
       {/* 2c. Prompt negativo */}
