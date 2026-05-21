@@ -18,8 +18,10 @@ import {
   FolderOpen,
   FolderPlus,
   GripVertical,
-  MessageSquare
+  MessageSquare,
+  Rocket
 } from 'lucide-react';
+import PublishWizardDialog from './PublishWizardDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -106,6 +108,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
   const [publishingItem, setPublishingItem] = useState<MarketingContentItem | null>(null);
   const [publishDraft, setPublishDraft] = useState<Record<string, { enabled: boolean; url: string }>>({});
   const [savingPublish, setSavingPublish] = useState(false);
+  const [wizardItem, setWizardItem] = useState<MarketingContentItem | null>(null);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   // Folder system
@@ -769,6 +772,16 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                               )}
                             </>
                           )}
+                          {item._source === 'media_gallery' && item.content_type === 'image' && item.content_url && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => setWizardItem(item)}
+                              title="Publicar com ajuste de formato"
+                            >
+                              <Rocket className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
                             <Button
                               size="sm"
@@ -949,6 +962,25 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </div>
         </DialogContent>
       </Dialog>
+
+      {wizardItem && wizardItem.content_url && (
+        <PublishWizardDialog
+          open={!!wizardItem}
+          onClose={() => setWizardItem(null)}
+          itemId={wizardItem.id}
+          imageUrl={wizardItem.content_url}
+          itemName={wizardItem.resource_name}
+          existingChannels={wizardItem.published_channels || []}
+          onPublished={(entry) => {
+            setContent((prev) => prev.map((c) => {
+              if (c.id !== wizardItem.id) return c;
+              const existing = c.published_channels || [];
+              const next = [...existing.filter((e: any) => !(e.channel === entry.channel && (e as any).format === entry.format)), entry as any];
+              return { ...c, published_channels: next };
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };
