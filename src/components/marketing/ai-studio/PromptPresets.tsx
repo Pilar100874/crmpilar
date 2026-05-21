@@ -1275,7 +1275,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
           </div>
 
           <div>
-            <Label className="text-xs">Prompt</Label>
+            <Label className="text-xs">Prompt (descrição do que DEVE aparecer)</Label>
             <Textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
@@ -1283,6 +1283,32 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
               className="mt-1 min-h-[120px] text-xs font-mono"
             />
           </div>
+
+          {/* Negative Prompt */}
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs text-destructive">🚫 Negative prompt (o que NÃO pode aparecer)</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setNegativePrompt(NEGATIVE_BLOCK_TEXT)}
+              >
+                Restaurar padrão
+              </Button>
+            </div>
+            <Textarea
+              value={negativePrompt}
+              onChange={e => setNegativePrompt(e.target.value)}
+              placeholder="Ex: sem textos, sem logos, sem mãos extras, sem conteúdo erótico..."
+              className="mt-1 min-h-[80px] text-xs font-mono border-destructive/30 focus-visible:ring-destructive/40"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Este bloco é anexado automaticamente ao prompt enviado ao modelo para evitar elementos indesejados.
+            </p>
+          </div>
+
 
           {/* Reference Blocks */}
           <div>
