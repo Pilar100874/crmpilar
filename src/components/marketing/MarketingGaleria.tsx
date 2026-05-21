@@ -772,7 +772,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                               )}
                             </>
                           )}
-                          {item._source === 'media_gallery' && item.content_type === 'image' && item.content_url && (
+                          {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && item.content_url && (
                             <Button
                               size="sm"
                               variant="default"
