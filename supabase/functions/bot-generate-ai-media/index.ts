@@ -233,7 +233,7 @@ serve(async (req) => {
     // Sequential generation to avoid rate limits and ensure ALL variations are produced
     for (let i = 0; i < variationsCount; i++) {
       const img = await generateVariation(i);
-      if (img) generated.push(img);
+      if (img) generated.push(await persistGeneratedImage(supabase, img, estabelecimentoId, i + 1));
       if (i < variationsCount - 1) await sleep(800);
     }
 
@@ -241,7 +241,7 @@ serve(async (req) => {
     let safety = 0;
     while (generated.length < variationsCount && safety < variationsCount) {
       const img = await generateVariation(generated.length + safety);
-      if (img) generated.push(img);
+      if (img) generated.push(await persistGeneratedImage(supabase, img, estabelecimentoId, generated.length + 1));
       safety++;
       await sleep(800);
     }
