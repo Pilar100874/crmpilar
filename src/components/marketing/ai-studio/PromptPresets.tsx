@@ -478,7 +478,21 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
   const [detailPreset, setDetailPreset] = useState<PromptPreset | null>(null);
+  const [modelConfirmPreset, setModelConfirmPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
+
+  /**
+   * Wraps onSelect with model-availability check.
+   * If preset.requiresExternalModel is true, opens a confirm dialog before applying.
+   */
+  const handleApplyPreset = useCallback((preset: PromptPreset) => {
+    if (preset.requiresExternalModel && preset.originalModel) {
+      setModelConfirmPreset(preset);
+      return;
+    }
+    onSelect(preset);
+  }, [onSelect]);
+
 
   // Load which presets are in use by saved workflows
   React.useEffect(() => {
