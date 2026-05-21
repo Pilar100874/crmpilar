@@ -18,8 +18,10 @@ import {
   FolderOpen,
   FolderPlus,
   GripVertical,
-  MessageSquare
+  MessageSquare,
+  Rocket
 } from 'lucide-react';
+import PublishWizardDialog from './PublishWizardDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
