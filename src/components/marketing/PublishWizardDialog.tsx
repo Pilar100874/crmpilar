@@ -95,11 +95,12 @@ interface Props {
   itemId: string;
   imageUrl: string;
   itemName: string;
+  mediaType?: 'image' | 'video';
   existingChannels?: any[];
   onPublished: (entry: { channel: PublishChannel; format: string; url?: string; cropped_url: string; published_at: string }) => void;
 }
 
-const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl, itemName, existingChannels = [], onPublished }) => {
+const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl, itemName, mediaType = 'image', existingChannels = [], onPublished }) => {
   const [step, setStep] = useState(1);
   const [channel, setChannel] = useState<PublishChannel | null>(null);
   const [format, setFormat] = useState<PublishFormat | null>(null);
@@ -131,22 +132,27 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
     setCroppedAreaPixels(areaPixels);
   }, []);
 
+  const isVideo = mediaType === 'video';
+
   const handlePublish = async () => {
-    if (!channel || !format || !croppedAreaPixels) {
-      toast.error('Ajuste a imagem antes de publicar');
+    if (!channel || !format || (!isVideo && !croppedAreaPixels)) {
+      toast.error('Ajuste a mídia antes de publicar');
       return;
     }
     setPublishing(true);
     try {
-      const targetKey = format.aspectRatio.toString();
-      const target = TARGET_DIMENSIONS[targetKey] || { w: 1080, h: Math.round(1080 / format.aspectRatio) };
-      const blob = await getCroppedBlob(imageUrl, croppedAreaPixels, target);
-      const estabId = localStorage.getItem('estabelecimentoId') || 'default';
-      const path = `${estabId}/published/${channel}_${format.id}_${Date.now()}.jpg`;
-      const { error: upErr } = await supabase.storage.from('marketing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('marketing-images').getPublicUrl(path);
-      const croppedUrl = pub.publicUrl;
+      let croppedUrl = imageUrl;
+      if (!isVideo) {
+        const targetKey = format.aspectRatio.toString();
+        const target = TARGET_DIMENSIONS[targetKey] || { w: 1080, h: Math.round(1080 / format.aspectRatio) };
+        const blob = await getCroppedBlob(imageUrl, croppedAreaPixels!, target);
+        const estabId = localStorage.getItem('estabelecimentoId') || 'default';
+        const path = `${estabId}/published/${channel}_${format.id}_${Date.now()}.jpg`;
+        const { error: upErr } = await supabase.storage.from('marketing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from('marketing-images').getPublicUrl(path);
+        croppedUrl = pub.publicUrl;
+      }
 
       const now = new Date().toISOString();
       const newEntry = {
@@ -183,7 +189,7 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
           </DialogTitle>
           <DialogDescription>
             {step === 1 && 'Escolha o canal e o formato de publicação'}
-            {step === 2 && 'Ajuste a imagem para o formato escolhido'}
+            {step === 2 && (isVideo ? 'Pré-visualização do vídeo no formato escolhido' : 'Ajuste a imagem para o formato escolhido')}
             {step === 3 && 'Confira e publique'}
           </DialogDescription>
         </DialogHeader>
@@ -244,27 +250,53 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
 
         {step === 2 && format && (
           <div className="space-y-4">
-            <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
-              <Cropper
-                image={imageUrl}
-                crop={crop}
-                zoom={zoom}
-                aspect={format.aspectRatio}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-                showGrid
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-xs">Zoom</Label>
-              <Slider value={[zoom]} min={1} max={3} step={0.01} onValueChange={(v) => setZoom(v[0])} />
-            </div>
+            {isVideo ? (
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="relative bg-black rounded-lg overflow-hidden border-2 border-primary/50"
+                  style={{
+                    aspectRatio: format.aspectRatio,
+                    maxHeight: 400,
+                    width: format.aspectRatio >= 1 ? 'min(100%, 640px)' : 'auto',
+                    height: format.aspectRatio < 1 ? 400 : 'auto',
+                  }}
+                >
+                  <video
+                    src={imageUrl}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center max-w-md">
+                  O vídeo será exibido recortado (cover) na proporção {format.label} ({format.description}).
+                  Para edição precisa, use o editor de vídeo antes de publicar.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
+                  <Cropper
+                    image={imageUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={format.aspectRatio}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    showGrid
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-xs">Zoom</Label>
+                  <Slider value={[zoom]} min={1} max={3} step={0.01} onValueChange={(v) => setZoom(v[0])} />
+                </div>
+              </>
+            )}
             <div className="flex justify-between gap-2 pt-2">
               <Button variant="outline" onClick={() => setStep(1)}>
                 <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <Button onClick={() => setStep(3)} disabled={!croppedAreaPixels}>
+              <Button onClick={() => setStep(3)} disabled={!isVideo && !croppedAreaPixels}>
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
