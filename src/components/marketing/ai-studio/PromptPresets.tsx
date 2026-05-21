@@ -1097,6 +1097,31 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="Ex: luxury, beach, outdoor" className="mt-1" />
           </div>
 
+          {/* Suggested Model (info only) */}
+          {isEditing && editingPreset?.originalModel && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-start gap-2">
+                <span className="text-base leading-none">🤖</span>
+                <div className="flex-1 min-w-0">
+                  <Label className="text-xs font-semibold">Modelo sugerido para melhor qualidade</Label>
+                  <p className="text-xs mt-1">
+                    <span className="font-medium text-foreground">{editingPreset.originalModel}</span>
+                    {editingPreset.fallbackModel && (
+                      <span className="text-muted-foreground"> · fallback nativo: {editingPreset.fallbackModel}</span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {editingPreset.requiresExternalModel
+                      ? 'Requer API key externa. Se não habilitado, será usado o modelo nativo equivalente.'
+                      : 'Modelo recomendado pelo autor deste prompt para o melhor resultado.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
           {/* Prompt */}
           <div>
             <Label className="text-xs">Prompt</Label>
