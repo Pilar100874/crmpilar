@@ -769,6 +769,16 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                               )}
                             </>
                           )}
+                          {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openPublishDialog(item)}
+                              title="Marcar onde foi publicado"
+                            >
+                              📣
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
