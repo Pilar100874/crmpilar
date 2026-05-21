@@ -601,12 +601,20 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                     />
                   )}
                   {current.mode === "gallery" && galleryCat && (
-                    <GalleryRefPicker
-                      categoria={galleryCat.categoria}
-                      value={{ url: current.galleryUrl, name: current.galleryName }}
-                      onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
-                      onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
-                    />
+                    blockId === "productImageSelect" ? (
+                      <ProductCatalogPicker
+                        value={{ url: current.galleryUrl, name: current.galleryName }}
+                        onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name, productId: it.id })}
+                        onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "", productId: "" })}
+                      />
+                    ) : (
+                      <GalleryRefPicker
+                        categoria={galleryCat.categoria}
+                        value={{ url: current.galleryUrl, name: current.galleryName }}
+                        onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
+                        onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
+                      />
+                    )
                   )}
                 </div>
               );
