@@ -29,12 +29,62 @@ function buildCaption(caption?: string, hashtags?: string) {
   return parts.join("\n\n");
 }
 
+async function publishInstagramViaBridge(creds: any, body: PublishRequest): Promise<PublishResult> {
+  const platform = "instagram";
+  try {
+    const bridgeUrl = Deno.env.get("INSTAGRAM_BRIDGE_URL");
+    if (!bridgeUrl) {
+      throw new Error(
+        "Publicação via usuário/senha exige um bridge externo. Configure o secret INSTAGRAM_BRIDGE_URL (ex.: instagrapi-rest self-hosted).",
+      );
+    }
+    const bridgeToken = Deno.env.get("INSTAGRAM_BRIDGE_TOKEN") || "";
+
+    const mediaUrls = (body.mediaUrl || "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (mediaUrls.length === 0) throw new Error("URL da mídia é obrigatória");
+
+    const fullCaption = buildCaption(body.caption, body.hashtags);
+    const payload = {
+      username: creds.username,
+      password: creds.password,
+      caption: fullCaption,
+      media_urls: mediaUrls,
+      post_type: body.postType || "image",
+    };
+
+    const r = await fetch(bridgeUrl.replace(/\/$/, "") + "/publish", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(bridgeToken ? { Authorization: `Bearer ${bridgeToken}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(`Bridge falhou [${r.status}]: ${JSON.stringify(j)}`);
+
+    return {
+      platform,
+      success: true,
+      post_id: j.post_id || j.id,
+      permalink: j.permalink,
+    };
+  } catch (e: any) {
+    return { platform, success: false, error: e.message };
+  }
+}
+
 async function publishInstagram(creds: any, body: PublishRequest): Promise<PublishResult> {
+  // Roteamento automático: usuário/senha => bridge externo; access_token => Graph API
+  if (creds?.username && creds?.password && !creds?.access_token) {
+    return publishInstagramViaBridge(creds, body);
+  }
+
   const platform = "instagram";
   try {
     const accessToken = creds.access_token;
     const igUserId = creds.page_id;
-    if (!accessToken || !igUserId) throw new Error("Credenciais incompletas (access_token, page_id)");
+    if (!accessToken || !igUserId) throw new Error("Credenciais incompletas (access_token, page_id) — ou configure usuário/senha");
 
     const mediaUrls = (body.mediaUrl || "").split(",").map((s) => s.trim()).filter(Boolean);
     if (mediaUrls.length === 0) throw new Error("URL da mídia é obrigatória");
@@ -45,7 +95,6 @@ async function publishInstagram(creds: any, body: PublishRequest): Promise<Publi
     let creationId: string;
 
     if (body.postType === "carousel" && mediaUrls.length > 1) {
-      // Cria itens filhos
       const childIds: string[] = [];
       for (const url of mediaUrls) {
         const r = await fetch(`https://graph.facebook.com/v21.0/${igUserId}/media`, {
@@ -88,7 +137,6 @@ async function publishInstagram(creds: any, body: PublishRequest): Promise<Publi
       creationId = j.id;
     }
 
-    // Para vídeo, esperar processar
     if (isVideo || body.postType === "carousel") {
       for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 2000));
@@ -109,7 +157,6 @@ async function publishInstagram(creds: any, body: PublishRequest): Promise<Publi
     const pubJson = await pub.json();
     if (!pub.ok) throw new Error(`Publicação falhou: ${JSON.stringify(pubJson)}`);
 
-    // Buscar permalink
     const perma = await fetch(
       `https://graph.facebook.com/v21.0/${pubJson.id}?fields=permalink&access_token=${accessToken}`,
     );
