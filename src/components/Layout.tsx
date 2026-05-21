@@ -55,6 +55,7 @@ import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder"
 import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
+import { SupportTicketFloatingButton } from "@/components/support/SupportTicketFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
@@ -1159,6 +1160,7 @@ export default function Layout({ children }: LayoutProps) {
       
       <FloatingMacroRecorder />
       <FloatingMacroQuickAccess />
+      <SupportTicketFloatingButton />
       <ChangePasswordDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}

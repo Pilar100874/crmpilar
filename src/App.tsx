@@ -61,6 +61,7 @@ import ConfigSLAPage from "./pages/ConfigSLA";
 import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
 import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
 import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
+import SupportTickets from "./pages/SupportTickets";
 
 
 import QualityAssurance from "./pages/QualityAssurance";
@@ -290,6 +291,7 @@ const App = () => (
               <Route path="/ads/automation" element={<AdsAutomation />} />
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
               <Route path="/railway-env" element={<RailwayEnvVariables />} />
+              <Route path="/admin/support-tickets" element={<SupportTickets />} />
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
