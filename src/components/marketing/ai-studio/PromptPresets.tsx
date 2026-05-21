@@ -727,13 +727,20 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                         </Badge>
                       )}
                     </div>
-                    {preset.originalModel && (
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm">
-                          🤖 {preset.originalModel}
-                        </Badge>
-                      </div>
-                    )}
+                    {(() => {
+                      const models = getSuggestedModels(preset);
+                      if (models.length === 0) return null;
+                      const first = models[0];
+                      const extra = models.length - 1;
+                      return (
+                        <div className="absolute top-2 right-2 flex flex-col items-end gap-1 max-w-[70%]">
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm truncate max-w-full">
+                            🤖 {first}{extra > 0 && <span className="ml-1 opacity-80">+{extra}</span>}
+                          </Badge>
+                        </div>
+                      );
+                    })()}
+
                     {selectedId === preset.id && (
                       <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
                         <Check className="h-3 w-3 text-primary-foreground" />
