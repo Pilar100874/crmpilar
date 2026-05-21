@@ -375,11 +375,46 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               aspectRatio: imageAspectRatio,
             },
           });
-          if (error) throw error;
+          if (error) {
+            const ctx: any = (error as any)?.context;
+            const status = ctx?.status ?? (error as any)?.status;
+            let serverMsg = "";
+            try {
+              const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+              serverMsg = body?.error || "";
+            } catch {}
+            if (status === 402 || /cr[eé]dito|payment|insufficient/i.test(serverMsg)) {
+              addSystemMessage(`❌ Não foi possível gerar: créditos da IA esgotados no workspace. Adicione créditos em Configurações → Lovable Cloud para retomar a geração.`);
+              return;
+            }
+            if (status === 429 || /rate|limite/i.test(serverMsg)) {
+              addSystemMessage(`❌ Não foi possível gerar: limite de requisições da IA atingido. Aguarde alguns segundos e tente novamente.`);
+              return;
+            }
+            if (status === 404 || /model|not found|indispon/i.test(serverMsg)) {
+              addSystemMessage(`❌ Modelo de IA indisponível no momento (${serverMsg || "verifique o modelo selecionado"}).`);
+              return;
+            }
+            addSystemMessage(`❌ Erro ao gerar mídia: ${serverMsg || (error as any)?.message || "falha desconhecida"}.`);
+            return;
+          }
 
           const batchImages: string[] = Array.isArray(data?.images) ? data.images.filter(Boolean) : [];
           optionImage = batchImages[0] || "";
           if (Array.isArray(data?.errors)) errors.push(...data.errors);
+
+          // Detectar falhas explícitas do backend (créditos / rate-limit) embutidas no payload de sucesso
+          const blockingErr = (data?.errors || []).find((m: string) =>
+            /cr[eé]dito|insufficient|payment|402|429|rate|limite/i.test(m || "")
+          );
+          if (!optionImage && blockingErr) {
+            if (/cr[eé]dito|insufficient|payment|402/i.test(blockingErr)) {
+              addSystemMessage(`❌ Não foi possível gerar: créditos da IA esgotados. Adicione créditos em Configurações → Lovable Cloud para continuar.`);
+            } else {
+              addSystemMessage(`❌ Não foi possível gerar agora: ${blockingErr}.`);
+            }
+            return;
+          }
         }
 
         if (!optionImage) continue;
@@ -395,6 +430,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         addSystemMessage(`❌ A IA retornou apenas ${collectedImages.length}/${variations} opções. Não enviei opções parciais para evitar pular numeração. ${errors.join(" | ")}`);
         return;
       }
+
       const items = collectedImages.slice(0, variations).map((url, i) => ({ url, index: i + 1 }));
 
       // Salvar as imagens geradas na Galeria de Marketing na pasta "Gerado por WhatsApp Marketing"
