@@ -944,6 +944,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
         setTags(editingPreset.tags.join(', '));
         setSelectedBlocks(editingPreset.referenceBlocks || ['productImageSelect']);
         setGeneratedImage(editingPreset.image || '');
+        setSuggestedModel(editingPreset.originalModel || '');
       } else {
         setName('');
         setPrompt('');
@@ -952,6 +953,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
         setTags('');
         setSelectedBlocks(['productImageSelect']);
         setGeneratedImage('');
+        setSuggestedModel('');
       }
     }
   }, [open, defaultMediaType, defaultCategory, editingPreset]);
