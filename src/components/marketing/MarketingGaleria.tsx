@@ -696,6 +696,28 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                           </div>
                         )}
 
+                        {item._source === 'media_gallery' && item.published_channels && item.published_channels.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-full">Publicado em</span>
+                            {item.published_channels.map((entry) => {
+                              const cfg = CHANNEL_CONFIG[entry.channel];
+                              const label = cfg?.label || entry.channel;
+                              const badge = (
+                                <Badge key={entry.channel} variant="outline" className="text-[10px] gap-1 cursor-pointer">
+                                  <span className={`inline-block h-2 w-2 rounded-full ${cfg?.color || 'bg-primary'}`} />
+                                  {label}
+                                  {entry.url && <ExternalLink className="h-2.5 w-2.5" />}
+                                </Badge>
+                              );
+                              return entry.url ? (
+                                <a key={entry.channel} href={entry.url} target="_blank" rel="noreferrer" title={`Ver post em ${label}`}>
+                                  {badge}
+                                </a>
+                              ) : badge;
+                            })}
+                          </div>
+                        )}
+
                         <div className="flex gap-1 flex-wrap">
                           {item.content_url && (item.content_type === 'image' || item.content_type === 'video') && (
                             <Button
