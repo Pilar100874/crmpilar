@@ -50,6 +50,12 @@ import { convertVideoToWhatsappMp4, removeAudioFromVideo } from '@/lib/video/wha
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Volume2, VolumeX, ChevronDown } from 'lucide-react';
 
+interface PublishedChannelEntry {
+  channel: PublishChannel;
+  url?: string;
+  published_at: string;
+}
+
 interface MarketingContentItem {
   id: string;
   resource_id: string | null;
@@ -64,6 +70,7 @@ interface MarketingContentItem {
   _source?: 'marketing_content' | 'media_gallery';
   _folder?: string | null;
   disponivel_chat?: boolean;
+  published_channels?: PublishedChannelEntry[];
 }
 
 const ContentTypeIcon: React.FC<{ type: string; className?: string }> = ({ type, className = "h-5 w-5" }) => {
