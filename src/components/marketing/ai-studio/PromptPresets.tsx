@@ -1188,11 +1188,6 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="Ex: luxury, beach, outdoor" className="mt-1" />
           </div>
 
-          {/* Suggested Model (editable) */}
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-            <div className="flex items-start gap-2">
-              <span className="text-base leading-none mt-0.5">🤖</span>
-              <div className="flex-1 min-w-0">
           {/* Suggested Models (multi, chip-based) */}
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
             <div className="flex items-start gap-2">
