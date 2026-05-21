@@ -120,6 +120,7 @@ serve(async (req) => {
       preset = "",
       referenceImageUrl = "",
       estabelecimentoId = "",
+      aspectRatio = "1:1",
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -172,6 +173,7 @@ serve(async (req) => {
       styleGuidance ? `IDENTIDADE VISUAL DA MARCA — preserve cores, tom, linguagem, composição, fotografia e personalidade: ${styleGuidance}` : "",
       referenceImageUrl ? "REFERÊNCIA PRINCIPAL: a primeira imagem enviada é a referência mais importante. Preserve produto/objeto/personagem, embalagem, cores, forma e elementos visuais principais." : "",
       referenceImages.length > (referenceImageUrl ? 1 : 0) ? "REFERÊNCIAS DA MARCA: as demais imagens definem identidade visual, paleta, iluminação, composição e acabamento." : "",
+      `FORMATO OBRIGATÓRIO: gere todas as imagens no mesmo tamanho e proporção ${aspectRatio}. Não altere a proporção entre variações.`,
       "Não ignore o pedido do usuário. Não crie assunto aleatório. Resultado premium, realista, pronto para marketing. Textos em Português Brasileiro se houver.",
     ].filter(Boolean).join("\n\n");
 
