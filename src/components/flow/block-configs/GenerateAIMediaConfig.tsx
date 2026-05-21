@@ -241,13 +241,14 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           }}
           className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
-          {MEDIA_MODELS.map((m) => (
+          {(mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS).map((m) => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
         </select>
         <p className="text-[10px] text-muted-foreground">
-          Sugerido pelo preset/IV; pode trocar manualmente.
+          Lista filtrada por tipo de mídia ({mediaType === "video" ? "vídeo" : "imagem"}). Sugerido pelo preset/IV; pode trocar manualmente.
         </p>
+
       </div>
 
       {/* 2c. Prompt negativo */}
