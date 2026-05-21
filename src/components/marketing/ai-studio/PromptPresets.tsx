@@ -679,12 +679,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                       <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/50 text-white border-0">
                         {preset.mediaType === 'video' ? '🎥' : '📷'}
                       </Badge>
-                      {preset.isCustom && (
+                      {preset.bestSeller && (
+                        <Badge className="text-[9px] px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow">
+                          TOP
+                        </Badge>
+                      )}
+                      {preset.isCustom && !preset.bestSeller && (
                         <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-primary/80 text-white border-0">
                           Custom
                         </Badge>
                       )}
                     </div>
+                    {preset.originalModel && (
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm">
+                          🤖 {preset.originalModel}
+                        </Badge>
+                      </div>
+                    )}
                     {selectedId === preset.id && (
                       <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
                         <Check className="h-3 w-3 text-primary-foreground" />
