@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2 } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
+
 
 interface ConfigProps {
   config: any;
@@ -34,47 +36,33 @@ const VIDEO_MODELS = [
   { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
 ];
 
+// Modelos sugeridos legíveis → mapeamento para o catálogo nativo
+const SUGGESTED_MODEL_NATIVE_FALLBACK = (label: string, mediaType: "image" | "video"): string => {
+  const l = (label || "").toLowerCase();
+  if (mediaType === "video") {
+    if (l.includes("veo 2")) return "google/veo-2.0";
+    return "google/veo-3";
+  }
+  if (l.includes("nano banana pro") || l.includes("gemini 3 pro")) return "google/gemini-3-pro-image-preview";
+  if (l.includes("nano banana 2") || l.includes("gemini 3.1 flash")) return "google/gemini-3.1-flash-image-preview";
+  if (l.includes("flux")) return "flux/1.1-pro";
+  if (l.includes("ideogram")) return "ideogram/v3";
+  if (l.includes("dall")) return "openai/dall-e-3";
+  if (l.includes("stable")) return "stability/sd3.5-turbo";
+  return "google/gemini-2.5-flash-image";
+};
 
-interface PresetDef {
-  id: string;
-  label: string;
-  mediaType: "image" | "video";
-  suggestedModel: string;
-  negativePrompt: string;
-}
+// Carrega presets customizados criados no Studio (mesma chave usada lá)
+const CUSTOM_PRESETS_KEY = "ai-studio-custom-prompt-presets";
+const loadAllSystemPresets = (): PromptPreset[] => {
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
+    const saved: PromptPreset[] = raw ? JSON.parse(raw) : [];
+    if (saved.length > 0) return saved;
+  } catch {}
+  return [...PROMPT_PRESETS];
+};
 
-const PRESETS: PresetDef[] = [
-  {
-    id: "produto_branco", label: "Produto fundo branco", mediaType: "image",
-    suggestedModel: "google/gemini-3-pro-image-preview",
-    negativePrompt: "sem texto, sem logos, sem marca d'água, sem pessoas, sem sombras duras, sem elementos extras",
-  },
-  {
-    id: "produto_lifestyle", label: "Produto lifestyle", mediaType: "image",
-    suggestedModel: "flux/1.1-pro",
-    negativePrompt: "sem texto, sem deformações, sem objetos competindo com o produto, sem watermark",
-  },
-  {
-    id: "influencer_ugc", label: "Influencer / UGC", mediaType: "image",
-    suggestedModel: "google/gemini-3.1-flash-image-preview",
-    negativePrompt: "sem texto, sem rosto deformado, sem mãos extras, sem watermark, sem conteúdo erótico",
-  },
-  {
-    id: "post_promocional", label: "Post promocional", mediaType: "image",
-    suggestedModel: "ideogram/v3",
-    negativePrompt: "sem erros de tipografia, sem texto cortado, sem elementos fora do enquadramento",
-  },
-  {
-    id: "story_vertical", label: "Story vertical 9:16", mediaType: "image",
-    suggestedModel: "google/gemini-3-pro-image-preview",
-    negativePrompt: "sem barras laterais, sem texto sobreposto não solicitado, sem logos de terceiros",
-  },
-  {
-    id: "cinematic", label: "Cinematic / Reels", mediaType: "video",
-    suggestedModel: "google/veo-3",
-    negativePrompt: "sem texto, sem cortes abruptos, sem distorção facial, sem watermark",
-  },
-];
 
 // Estilos de som ambiente para vídeo
 const AMBIENT_SOUND_STYLES = [
@@ -123,18 +111,33 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
     return () => { cancelled = true; };
   }, []);
 
+  // Todos os presets do sistema (defaults + customizados criados no Studio)
+  const allSystemPresets = useMemo(() => loadAllSystemPresets(), []);
+  const presetsForType = useMemo(
+    () => allSystemPresets.filter((p) => p.mediaType === mediaType),
+    [allSystemPresets, mediaType],
+  );
+  const selectedPreset: PromptPreset | undefined = useMemo(
+    () => allSystemPresets.find((p) => p.id === config.preset),
+    [allSystemPresets, config.preset],
+  );
+
   const handlePresetChange = (presetId: string) => {
     handleConfigChange("preset", presetId);
-    const p = PRESETS.find((x) => x.id === presetId);
+    const p = allSystemPresets.find((x) => x.id === presetId);
     if (!p) return;
-    // Aplica modelo sugerido e prompt negativo automaticamente (não sobrescreve se usuário já mexeu)
+    // Salva nome para rastreio de uso (bloqueio de exclusão no Studio)
+    handleConfigChange("presetName", p.name);
+    // Modelo sugerido pelo preset → mapeia para o catálogo nativo
     if (!config.modelOverridden) {
-      handleConfigChange("model", p.suggestedModel);
+      const suggestedLabel = (p.suggestedModels && p.suggestedModels[0]) || p.fallbackModel || p.originalModel || "";
+      handleConfigChange("model", SUGGESTED_MODEL_NATIVE_FALLBACK(suggestedLabel, p.mediaType));
     }
-    if (!config.negativePromptOverridden) {
+    if (!config.negativePromptOverridden && p.negativePrompt) {
       handleConfigChange("negativePrompt", p.negativePrompt);
     }
   };
+
 
   const effectiveModel =
     config.model !== undefined && config.model !== ""
@@ -209,17 +212,96 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         </RadioGroup>
 
         {styleSource === "preset" && (
-          <select
-            value={config.preset || ""}
-            onChange={(e) => handlePresetChange(e.target.value)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="">Selecione um preset...</option>
-            {PRESETS.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}</option>
-            ))}
-          </select>
+          <>
+            <select
+              value={config.preset || ""}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Selecione um preset...</option>
+              {presetsForType.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.bestSeller ? "🏆 " : ""}{p.name} · {p.category}
+                </option>
+              ))}
+            </select>
+            {selectedPreset && (
+              <p className="text-[10px] text-muted-foreground">
+                {selectedPreset.tags.slice(0, 4).map((t) => `#${t}`).join(" ")}
+              </p>
+            )}
+          </>
         )}
+
+        {/* Blocos de referência exigidos pelo preset */}
+        {styleSource === "preset" && selectedPreset && selectedPreset.referenceBlocks?.length > 0 && (
+          <div className="space-y-2 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Images className="h-4 w-4 text-primary" />
+              <Label className="text-xs font-semibold">
+                Imagens de referência exigidas pelo preset
+              </Label>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Para cada item, escolha se a imagem virá de uma <strong>variável de bloco anterior</strong> (ex: bloco Buscar Produto) ou se o <strong>bot pedirá ao usuário</strong> via WhatsApp.
+            </p>
+            {selectedPreset.referenceBlocks.map((blockId) => {
+              const def = ALL_REF_BLOCKS.find((b) => b.id === blockId);
+              if (!def) return null;
+              const refInputs = config.referenceInputs || {};
+              const current = refInputs[blockId] || { mode: "ask" };
+              const updateRef = (patch: any) => {
+                handleConfigChange("referenceInputs", {
+                  ...refInputs,
+                  [blockId]: { ...current, ...patch },
+                });
+              };
+              return (
+                <div key={blockId} className="p-2 rounded-md border border-border bg-background/60 space-y-2">
+                  <p className="text-xs font-medium">{def.emoji} {def.label}</p>
+                  <RadioGroup
+                    value={current.mode}
+                    onValueChange={(v) => updateRef({ mode: v })}
+                    className="space-y-1"
+                  >
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="variable" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
+                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto / Galeria</p>
+                      </div>
+                    </label>
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "ask" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="ask" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Pedir ao usuário no WhatsApp</p>
+                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem</p>
+                      </div>
+                    </label>
+                  </RadioGroup>
+
+                  {current.mode === "variable" && (
+                    <Input
+                      value={current.variable || ""}
+                      onChange={(e) => updateRef({ variable: e.target.value })}
+                      placeholder={`Variável (ex: ${blockId === "productImageSelect" ? "produto_imagem_url" : blockId === "galleryInfluencer" ? "influencer_url" : "imagem_url"})`}
+                      className="h-8 text-xs"
+                    />
+                  )}
+                  {current.mode === "ask" && (
+                    <Input
+                      value={current.askMessage || ""}
+                      onChange={(e) => updateRef({ askMessage: e.target.value })}
+                      placeholder={`Mensagem ao usuário (ex: Envie uma foto de ${def.label.toLowerCase()})`}
+                      className="h-8 text-xs"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
 
         {styleSource === "visual_identity" && viInfo.loaded && (
           <div className="p-2 rounded-md bg-muted/40 border border-border space-y-1">

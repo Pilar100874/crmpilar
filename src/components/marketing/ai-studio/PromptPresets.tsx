@@ -72,7 +72,7 @@ import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
 
 // ─── Reference Block Definitions ─────────────────────────────────────
 
-const ALL_REF_BLOCKS = [
+export const ALL_REF_BLOCKS = [
   { id: 'productImageSelect', label: 'Produto', emoji: '📦' },
   { id: 'galleryInfluencer', label: 'Influencer', emoji: '👤' },
   { id: 'galleryLogo', label: 'Logo / Marca', emoji: '🏷️' },
@@ -84,6 +84,7 @@ const ALL_REF_BLOCKS = [
   { id: 'galleryPaleta', label: 'Paleta de Cores', emoji: '🎨' },
   { id: 'imageInput', label: 'Imagem de Referência', emoji: '🖼️' },
 ];
+
 
 // ─── Preset types ────────────────────────────────────────────────────
 
@@ -534,22 +535,38 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   // Load which presets are in use by saved workflows
   React.useEffect(() => {
     const fetchPresetsInUse = async () => {
-      if (!estabelecimentoId) return;
-      const { data } = await supabase
-        .from('ai_studio_workflows')
-        .select('nodes_data')
-        .eq('estabelecimento_id', estabelecimentoId);
-      if (!data) return;
       const usedNames = new Set<string>();
-      data.forEach((w: any) => {
-        const nodes = Array.isArray(w.nodes_data) ? w.nodes_data : [];
+      const usedIds = new Set<string>();
+
+      // 1) AI Studio workflows (presetName em config)
+      if (estabelecimentoId) {
+        const { data } = await supabase
+          .from('ai_studio_workflows')
+          .select('nodes_data')
+          .eq('estabelecimento_id', estabelecimentoId);
+        (data || []).forEach((w: any) => {
+          const nodes = Array.isArray(w.nodes_data) ? w.nodes_data : [];
+          nodes.forEach((n: any) => {
+            const name = n?.data?.config?.presetName;
+            if (name) usedNames.add(name);
+          });
+        });
+      }
+
+      // 2) Bot Builder flows (preset = id em config do bloco "Gerar Mídia IA")
+      const { data: bots } = await supabase
+        .from('bot_flows')
+        .select('flow_data');
+      (bots || []).forEach((b: any) => {
+        const nodes = b?.flow_data?.nodes || [];
         nodes.forEach((n: any) => {
-          const name = n?.data?.config?.presetName;
-          if (name) usedNames.add(name);
+          const id = n?.data?.config?.preset;
+          if (id) usedIds.add(id);
+          const nm = n?.data?.config?.presetName;
+          if (nm) usedNames.add(nm);
         });
       });
-      // Map names back to preset IDs
-      const usedIds = new Set<string>();
+
       allPresets.forEach(p => {
         if (usedNames.has(p.name)) usedIds.add(p.id);
       });
@@ -557,6 +574,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
     };
     fetchPresetsInUse();
   }, [estabelecimentoId, allPresets]);
+
 
   const filtered = useMemo(() => {
     return allPresets.filter(p => {
