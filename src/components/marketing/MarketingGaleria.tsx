@@ -262,6 +262,49 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
     }
   }, []);
 
+  const openPublishDialog = useCallback((item: MarketingContentItem) => {
+    const existing = item.published_channels || [];
+    const draft: Record<string, { enabled: boolean; url: string }> = {};
+    (Object.keys(CHANNEL_CONFIG) as PublishChannel[]).forEach((ch) => {
+      const found = existing.find((e) => e.channel === ch);
+      draft[ch] = { enabled: !!found, url: found?.url || '' };
+    });
+    setPublishDraft(draft);
+    setPublishingItem(item);
+  }, []);
+
+  const handleSavePublication = useCallback(async () => {
+    if (!publishingItem) return;
+    setSavingPublish(true);
+    try {
+      const now = new Date().toISOString();
+      const previous = publishingItem.published_channels || [];
+      const next: PublishedChannelEntry[] = (Object.keys(publishDraft) as PublishChannel[])
+        .filter((ch) => publishDraft[ch].enabled)
+        .map((ch) => {
+          const prev = previous.find((p) => p.channel === ch);
+          return {
+            channel: ch,
+            url: publishDraft[ch].url.trim() || undefined,
+            published_at: prev?.published_at || now,
+          };
+        });
+      const { error } = await supabase
+        .from('media_gallery')
+        .update({ published_channels: next } as any)
+        .eq('id', publishingItem.id);
+      if (error) throw error;
+      setContent((prev) => prev.map((c) => c.id === publishingItem.id ? { ...c, published_channels: next } : c));
+      toast.success('Publicações atualizadas');
+      setPublishingItem(null);
+    } catch (err: any) {
+      console.error('Erro ao salvar publicações:', err);
+      toast.error('Erro ao salvar publicações');
+    } finally {
+      setSavingPublish(false);
+    }
+  }, [publishingItem, publishDraft]);
+
   const handleDownload = useCallback(async (item: MarketingContentItem, withAudio: boolean = true) => {
     if (!item.content_url) return;
     try {
