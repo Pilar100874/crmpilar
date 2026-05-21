@@ -65,7 +65,7 @@ export default function SupportTickets() {
   const load = async () => {
     setLoading(true);
     // Aplica auto-fechamento por inatividade
-    await supabase.rpc("auto_close_support_tickets" as any).catch(() => {});
+    try { await (supabase.rpc as any)("auto_close_support_tickets"); } catch {}
 
     const { data, error } = await supabase
       .from("support_tickets")
