@@ -49,6 +49,50 @@ async function callGateway(apiKey: string, body: Record<string, any>) {
   return resp.json();
 }
 
+function extensionFromContentType(contentType: string): string {
+  if (contentType.includes("png")) return "png";
+  if (contentType.includes("webp")) return "webp";
+  if (contentType.includes("gif")) return "gif";
+  return "jpg";
+}
+
+async function persistGeneratedImage(supabase: any, imageUrl: string, estabelecimentoId: string, index: number): Promise<string> {
+  try {
+    let contentType = "image/jpeg";
+    let bytes: Uint8Array;
+
+    const dataUrlMatch = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s);
+    if (dataUrlMatch) {
+      contentType = dataUrlMatch[1];
+      const binary = atob(dataUrlMatch[2]);
+      bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    } else {
+      const response = await fetch(imageUrl);
+      if (!response.ok) return imageUrl;
+      contentType = response.headers.get("content-type") || contentType;
+      bytes = new Uint8Array(await response.arrayBuffer());
+    }
+
+    const safeEst = String(estabelecimentoId || "simulador").replace(/[^a-zA-Z0-9_-]/g, "");
+    const ext = extensionFromContentType(contentType);
+    const path = `bot-ai-media/${safeEst}/${Date.now()}_${crypto.randomUUID()}_${index}.${ext}`;
+    const { error } = await supabase.storage.from("marketing-images").upload(path, bytes, {
+      contentType,
+      upsert: true,
+    });
+    if (error) {
+      console.warn("Falha ao salvar imagem gerada no storage:", error.message);
+      return imageUrl;
+    }
+    const { data } = supabase.storage.from("marketing-images").getPublicUrl(path);
+    return data?.publicUrl || imageUrl;
+  } catch (error) {
+    console.warn("Falha ao persistir imagem gerada:", error);
+    return imageUrl;
+  }
+}
+
 function extractImageUrl(data: any): string | null {
   const msg = data?.choices?.[0]?.message;
   const direct = msg?.images?.[0]?.image_url?.url;
@@ -189,7 +233,7 @@ serve(async (req) => {
     // Sequential generation to avoid rate limits and ensure ALL variations are produced
     for (let i = 0; i < variationsCount; i++) {
       const img = await generateVariation(i);
-      if (img) generated.push(img);
+      if (img) generated.push(await persistGeneratedImage(supabase, img, estabelecimentoId, i + 1));
       if (i < variationsCount - 1) await sleep(800);
     }
 
@@ -197,7 +241,7 @@ serve(async (req) => {
     let safety = 0;
     while (generated.length < variationsCount && safety < variationsCount) {
       const img = await generateVariation(generated.length + safety);
-      if (img) generated.push(img);
+      if (img) generated.push(await persistGeneratedImage(supabase, img, estabelecimentoId, generated.length + 1));
       safety++;
       await sleep(800);
     }

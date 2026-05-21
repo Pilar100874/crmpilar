@@ -2498,13 +2498,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addBotMediaMessage = (mediaUrl: string, mediaType: "image" | "video" | "audio" | "file", caption: string, nodeId?: string) => {
     console.log("Adding bot media message:", { mediaUrl, mediaType, caption });
+    const safeMediaUrl = typeof mediaUrl === "string" ? mediaUrl.trim() : "";
+    if (!safeMediaUrl) {
+      console.warn("Mensagem de mídia ignorada sem URL válida:", { mediaUrl, mediaType, caption });
+      return;
+    }
     const msg: Message = {
       id: uid(),
       sender: "bot",
       text: caption || "",
       timestamp: new Date(),
       nodeId,
-      mediaUrl,
+      mediaUrl: safeMediaUrl,
       mediaType,
     };
     setMessages((prev) => {
@@ -2610,11 +2615,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                         {msg.mediaType === "image" && (
                           <img 
                             src={msg.mediaUrl} 
-                            alt="Media" 
+                            alt={msg.text || "Mídia"} 
                             className="w-full max-w-xs object-cover"
+                            loading="lazy"
                             onError={(e) => {
                               console.error("Image failed to load:", msg.mediaUrl);
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.style.display = 'block';
+                              e.currentTarget.alt = "Imagem indisponível";
                             }}
                           />
                         )}
