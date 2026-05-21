@@ -52,6 +52,24 @@ import imgInfStreet from '@/assets/presets/preset-img-inf-street.jpg';
 import imgInfStudio from '@/assets/presets/preset-img-inf-studio.jpg';
 import imgInfCozy from '@/assets/presets/preset-img-inf-cozy.jpg';
 
+// ─── Sales-focused 15 best (PDF) ─────────────────────────────────────
+import imgSalesHero from '@/assets/presets/preset-sales-hero-explosion.jpg';
+import imgSales360 from '@/assets/presets/preset-sales-360-turntable.jpg';
+import imgSalesSplash from '@/assets/presets/preset-sales-liquid-splash.jpg';
+import imgSalesTestimonial from '@/assets/presets/preset-sales-influencer-testimonial.jpg';
+import imgSalesBeforeAfter from '@/assets/presets/preset-sales-before-after.jpg';
+import imgSalesDropWater from '@/assets/presets/preset-sales-drop-water.jpg';
+import imgSalesLifestyleUse from '@/assets/presets/preset-sales-lifestyle-use.jpg';
+import imgSalesUnboxing from '@/assets/presets/preset-sales-unboxing-closeup.jpg';
+import imgSalesMagazine from '@/assets/presets/preset-sales-magazine-hero.jpg';
+import imgSalesEcom from '@/assets/presets/preset-sales-ecom-packshot.jpg';
+import imgSalesCompare from '@/assets/presets/preset-sales-comparison.jpg';
+import imgSalesPromo from '@/assets/presets/preset-sales-promo-banner.jpg';
+import imgSalesInsta from '@/assets/presets/preset-sales-insta-square.jpg';
+import imgSalesUgc from '@/assets/presets/preset-sales-ugc-smartphone.jpg';
+import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
+
+
 // ─── Reference Block Definitions ─────────────────────────────────────
 
 const ALL_REF_BLOCKS = [
@@ -79,12 +97,128 @@ export interface PromptPreset {
   tags: string[];
   referenceBlocks: string[];
   isCustom?: boolean;
+  /** Modelo original recomendado para esse prompt (ex: "Kling 3.0", "Higgsfield Soul V2"). Exibido como badge. */
+  originalModel?: string;
+  /** Modelo equivalente do nosso catálogo usado se o original não estiver habilitado. */
+  fallbackModel?: string;
+  /** Se true, mostra alerta de confirmação antes de aplicar (modelo externo não habilitado). */
+  requiresExternalModel?: boolean;
+  /** Marca como "Top 15 para vendas". */
+  bestSeller?: boolean;
 }
 
 const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
 
 const DEFAULT_PRESETS: PromptPreset[] = [
+  // ═══ TOP 15 — VENDA DE PRODUTOS (PDF) ═══
+  {
+    id: 'sales-hero-explosion', name: '🏆 Hero Explosion Reveal', mediaType: 'video', category: 'produto',
+    tags: ['hero', 'reveal', 'premium'], image: imgSalesHero, isCustom: true, bestSeller: true,
+    originalModel: 'Kling 3.0', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra cinematic hero product reveal. The product appears in the center of the frame as golden confetti and glittering particles explode outward in slow motion. Dramatic studio lighting with strong rim light and volumetric beams. Glossy black reflective surface beneath the product. Camera slowly pushes in (dolly-in) with shallow depth of field. ARRI Alexa Mini LF aesthetic, 50mm lens, 120fps. Color grading: deep blacks, warm gold accents. Premium luxury commercial vibe. End frame holds on the product centered with confetti settling and subtle bokeh glow.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-360-turntable', name: '🏆 360° Luxury Turntable', mediaType: 'video', category: 'produto',
+    tags: ['360', 'turntable', 'ecommerce'], image: imgSales360, isCustom: true, bestSeller: true,
+    originalModel: 'Seedance 2.0', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Premium 360-degree product turntable shot. The product rotates slowly on a dark glossy podium with a subtle orange LED accent ring underneath. Pure black studio background with soft top key light and rim light defining the silhouette. Hyper realistic reflections on the podium surface. Camera locked-off, smooth continuous rotation. Ultra detailed material texture visible. Final loop seamless. Premium e-commerce hero asset.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-liquid-splash', name: '🏆 Dynamic Liquid Splash', mediaType: 'video', category: 'produto',
+    tags: ['splash', 'water', 'energy'], image: imgSalesSplash, isCustom: true, bestSeller: true,
+    originalModel: 'Veo 3.1', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `High-speed product commercial with dynamic liquid splash. The product is suspended in mid-air as vivid blue water bursts and droplets explode around it, frozen and then resuming in slow motion. Bright gradient cyan background. Strobe lighting captures every micro-droplet with crystal clarity. Camera slow dolly-in 1/8000s effect. Refreshing, energetic beverage / cosmetic advertising tone.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-influencer-testimonial', name: '🏆 Influencer Testimonial UGC', mediaType: 'video', category: 'influencer',
+    tags: ['ugc', 'testimonial', 'authentic'], image: imgSalesTestimonial, isCustom: true, bestSeller: true,
+    originalModel: 'Higgsfield Soul V2', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Authentic UGC-style influencer testimonial. A charismatic young woman holds the product up to the camera while speaking naturally and smiling. Cozy modern apartment with warm window light, soft bokeh background. Handheld vlog feel but cinematic stabilization. Camera: Sony FX3, 35mm, f/2.0, natural skin tones, no over-retouching. Social media advertising tone, vertical-friendly framing.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-before-after', name: '🏆 Before / After Transformation', mediaType: 'image', category: 'produto',
+    tags: ['before-after', 'results', 'skincare'], image: imgSalesBeforeAfter, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Editorial split-screen before and after image showcasing the visible results of using the product. Left side "BEFORE" with slightly duller, more textured skin; right side "AFTER" with luminous, refined, glowing skin. Same model, same lighting, same angle for fair comparison. Clean soft pink gradient background. Professional beauty advertising style. Camera: Canon R5, 85mm f/2.0, beauty dish lighting.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-drop-water', name: '🏆 Slow-Mo Drop in Water', mediaType: 'video', category: 'produto',
+    tags: ['slowmo', 'water', 'refresh'], image: imgSalesDropWater, isCustom: true, bestSeller: true,
+    originalModel: 'Veo 3', fallbackModel: 'Google Veo (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra slow motion commercial. The product falls into a pool of crystal clear water creating elegant ripples, bubbles and splashes. Deep blue gradient background. Macro perspective, 240fps look. Soft top lighting filtering through the water. Premium refreshing aesthetic for cosmetics or beverages. Camera holds on the final ripples slowly fading.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-lifestyle-use', name: '🏆 Lifestyle in Use', mediaType: 'video', category: 'influencer',
+    tags: ['lifestyle', 'real', 'morning'], image: imgSalesLifestyleUse, isCustom: true, bestSeller: true,
+    originalModel: 'Sora 2', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Cinematic lifestyle commercial. A person enjoys the product in an authentic everyday moment — morning routine in a sunny kitchen with warm window light. Natural unscripted gestures, soft smile. Camera: ARRI Alexa Mini, 35mm lens, handheld with subtle stabilization. Warm color grading, golden hour vibes. Realistic skin texture, no over-retouching. Premium lifestyle brand storytelling.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-unboxing-closeup', name: '🏆 Cinematic Unboxing', mediaType: 'video', category: 'produto',
+    tags: ['unboxing', 'premium', 'macro'], image: imgSalesUnboxing, isCustom: true, bestSeller: true,
+    originalModel: 'Kling 2.6', fallbackModel: 'Google Veo (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Cinematic macro unboxing video. Hands slowly open a premium matte black gift box, revealing the product nestled inside with elegant tissue paper. Warm rim light from one side, soft fill from the other. Camera: 100mm macro lens, shallow depth of field. Ultra detailed textures of paper, embossed logo recess, and product surface. Anticipation builds with the slow reveal. Luxury packaging brand aesthetic.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-magazine-hero', name: '🏆 Magazine Cover Hero', mediaType: 'image', category: 'produto',
+    tags: ['editorial', 'magazine', 'luxury'], image: imgSalesMagazine, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Editorial magazine cover hero shot of a luxury product placed on a polished marble pedestal. Soft pink to gold gradient backdrop. Premium beauty advertising composition with clear empty space on the top for headline. Diffused beauty light, gentle shadows, refined elegant tone. Camera: Hasselblad X2D, 80mm, medium format quality. Color palette: blush, rose-gold, ivory.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-ecom-packshot', name: '🏆 E-commerce Packshot', mediaType: 'image', category: 'produto',
+    tags: ['ecommerce', 'catalog', 'clean'], image: imgSalesEcom, isCustom: true, bestSeller: true,
+    originalModel: 'Flux Pro', fallbackModel: 'Nano Banana (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Premium product e-commerce packshot. The product perfectly centered on a pure white seamless background. Multi-point softbox lighting eliminates harsh shadows, leaving only a subtle natural ground shadow for depth. Razor-sharp focus across the entire product, optimized for marketplace catalog use. Camera: Phase One IQ4, 120mm macro lens, focus-stacked. 4K ready.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-comparison', name: '🏆 Comparison Infographic', mediaType: 'image', category: 'produto',
+    tags: ['compare', 'infographic', 'benefits'], image: imgSalesCompare, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Clean comparison visual showing the product next to a generic alternative, with subtle floating benefit icons around the hero product (leaf for natural, shield for safety, drop for hydration). Soft beige background with warm directional light. Editorial infographic style. Composition leaves balanced empty space for added copy. No on-image text — icons only.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-promo-banner', name: '🏆 Promo Banner Sale', mediaType: 'image', category: 'produto',
+    tags: ['promo', 'sale', 'banner'], image: imgSalesPromo, isCustom: true, bestSeller: true,
+    originalModel: 'Ideogram v3', fallbackModel: 'Nano Banana 2 (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Vibrant promotional sale banner composition. The product placed on the right side floating slightly tilted on a small podium. Large empty space on the left for copy and CTA. Bold gradient background transitioning from orange to magenta to purple. High energy commercial vibe. Subtle floating particles around the product. Format: 16:9, optimized for ads and landing page hero.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-insta-square', name: '🏆 Instagram Square', mediaType: 'image', category: 'produto',
+    tags: ['instagram', 'square', 'lifestyle'], image: imgSalesInsta, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryAmbiente'],
+    prompt: `Aesthetic Instagram-ready square flat lay (1:1). The product centered on a soft ivory tablecloth surrounded by plants, two ceramic mugs (one coffee, one matcha) and natural morning props. Top-down composition, balanced negative space. Warm soft natural lighting. Cohesive earthy color palette. Optimized for feed engagement.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-ugc-smartphone', name: '🏆 UGC Smartphone Style', mediaType: 'image', category: 'influencer',
+    tags: ['ugc', 'smartphone', 'authentic'], image: imgSalesUgc, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana 2', fallbackModel: 'Nano Banana (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Authentic user-generated content style photo. A hand holding a smartphone that displays the product photo on its screen, casual home interior softly blurred in the background. Slightly imperfect framing, realistic natural indoor lighting with a hint of grain. Looks like a real customer shared the product on social media. Avoid commercial polish — keep it raw and trustworthy.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-smoke-podium', name: '🏆 Smoke & Gold Podium', mediaType: 'image', category: 'produto',
+    tags: ['smoke', 'luxury', 'dramatic'], image: imgSalesSmoke, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra dramatic luxury product reveal still. The product centered atop a black marble podium with gold veining, surrounded by swirling clouds of black and golden smoke against a deep black backdrop. Volumetric warm orange backlight glows through the smoke. Cinematic chiaroscuro lighting. Premium high-end advertising aesthetic. Camera: medium format, 100mm.${NEGATIVE_BLOCK}`,
+  },
+
   // ═══ VIDEO — PRODUTOS ═══
+
   {
     id: 'vp-cinematic-studio', name: 'Cinematic Studio', mediaType: 'video', category: 'produto',
     tags: ['studio', 'tech', 'luxury'], image: imgCinematicStudio,
@@ -294,7 +428,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
 // ─── Local storage for custom presets ────────────────────────────────
 const CUSTOM_PRESETS_KEY = 'ai-studio-custom-prompt-presets';
 const SEEDED_VERSION_KEY = 'ai-studio-presets-seeded-v';
-const CURRENT_SEED_VERSION = '2';
+const CURRENT_SEED_VERSION = '3';
 
 function loadAllPresets(): PromptPreset[] {
   try {
@@ -344,7 +478,21 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
   const [editingPreset, setEditingPreset] = useState<PromptPreset | null>(null);
   const [presetsInUse, setPresetsInUse] = useState<Set<string>>(new Set());
   const [detailPreset, setDetailPreset] = useState<PromptPreset | null>(null);
+  const [modelConfirmPreset, setModelConfirmPreset] = useState<PromptPreset | null>(null);
   const { toast } = useToast();
+
+  /**
+   * Wraps onSelect with model-availability check.
+   * If preset.requiresExternalModel is true, opens a confirm dialog before applying.
+   */
+  const handleApplyPreset = useCallback((preset: PromptPreset) => {
+    if (preset.requiresExternalModel && preset.originalModel) {
+      setModelConfirmPreset(preset);
+      return;
+    }
+    onSelect(preset);
+  }, [onSelect]);
+
 
   // Load which presets are in use by saved workflows
   React.useEffect(() => {
@@ -531,12 +679,24 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                       <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/50 text-white border-0">
                         {preset.mediaType === 'video' ? '🎥' : '📷'}
                       </Badge>
-                      {preset.isCustom && (
+                      {preset.bestSeller && (
+                        <Badge className="text-[9px] px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow">
+                          TOP
+                        </Badge>
+                      )}
+                      {preset.isCustom && !preset.bestSeller && (
                         <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-primary/80 text-white border-0">
                           Custom
                         </Badge>
                       )}
                     </div>
+                    {preset.originalModel && (
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm">
+                          🤖 {preset.originalModel}
+                        </Badge>
+                      </div>
+                    )}
                     {selectedId === preset.id && (
                       <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
                         <Check className="h-3 w-3 text-primary-foreground" />
@@ -557,7 +717,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   <Button
                     size="sm"
                     className="gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] pointer-events-auto shadow-lg h-6 sm:h-7 px-1.5 sm:px-2"
-                    onClick={(e) => { e.stopPropagation(); onSelect(preset); }}
+                    onClick={(e) => { e.stopPropagation(); handleApplyPreset(preset); }}
                   >
                     <Play className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Usar
                   </Button>
@@ -621,8 +781,17 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   <Badge variant="outline" className="text-[10px]">
                     {detailPreset.category === 'produto' ? '📦 Produto' : '👤 Influencer'}
                   </Badge>
-                  {detailPreset.isCustom && (
+                  {detailPreset.bestSeller && (
+                    <Badge className="text-[10px] bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">🏆 TOP Vendas</Badge>
+                  )}
+                  {detailPreset.isCustom && !detailPreset.bestSeller && (
                     <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
+                  )}
+                  {detailPreset.originalModel && (
+                    <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                      🤖 {detailPreset.originalModel}
+                      {detailPreset.requiresExternalModel && <span className="text-[8px] opacity-70">(externo)</span>}
+                    </Badge>
                   )}
                   {detailPreset.tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="text-[10px] max-w-full break-all">{tag}</Badge>
@@ -672,7 +841,7 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1 sm:flex-none" onClick={() => { setDetailPreset(null); handleEditPreset(detailPreset); }}>
                   <Sparkles className="h-3.5 w-3.5" /> Editar
                 </Button>
-                <Button size="sm" className="w-full sm:flex-1 gap-1.5 text-xs" onClick={() => { setDetailPreset(null); onSelect(detailPreset); }}>
+                <Button size="sm" className="w-full sm:flex-1 gap-1.5 text-xs" onClick={() => { const p = detailPreset; setDetailPreset(null); if (p) handleApplyPreset(p); }}>
                   <Play className="h-3.5 w-3.5" /> Aplicar no Canvas
                 </Button>
               </div>
@@ -698,7 +867,46 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* External model confirmation */}
+      <AlertDialog open={!!modelConfirmPreset} onOpenChange={(v) => !v && setModelConfirmPreset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Modelo externo não habilitado</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Este prompt foi otimizado originalmente para{' '}
+                  <span className="font-semibold text-foreground">{modelConfirmPreset?.originalModel}</span>,
+                  que ainda não está habilitado no seu workspace.
+                </p>
+                <p>
+                  Podemos continuar usando o modelo equivalente nativo:{' '}
+                  <span className="font-semibold text-foreground">{modelConfirmPreset?.fallbackModel || 'Modelo padrão atual'}</span>.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Para usar o modelo original, configure a API key correspondente em{' '}
+                  <span className="font-medium">Marketing → Configurações de IA</span>.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const p = modelConfirmPreset;
+                setModelConfirmPreset(null);
+                if (p) onSelect(p);
+              }}
+            >
+              Continuar com {modelConfirmPreset?.fallbackModel?.split(' ')[0] || 'padrão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
