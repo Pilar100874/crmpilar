@@ -1043,6 +1043,9 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       referenceBlocks: selectedBlocks,
       isCustom: true,
+      ...(suggestedModel.trim() ? { originalModel: suggestedModel.trim() } : {}),
+      ...(editingPreset?.fallbackModel ? { fallbackModel: editingPreset.fallbackModel } : {}),
+      ...(editingPreset?.requiresExternalModel ? { requiresExternalModel: editingPreset.requiresExternalModel } : {}),
     };
     onSave(preset);
   };
