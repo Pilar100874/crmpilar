@@ -772,6 +772,16 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
                               )}
                             </>
                           )}
+                          {item._source === 'media_gallery' && item.content_type === 'image' && item.content_url && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => setWizardItem(item)}
+                              title="Publicar com ajuste de formato"
+                            >
+                              <Rocket className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           {item._source === 'media_gallery' && (item.content_type === 'image' || item.content_type === 'video') && (
                             <Button
                               size="sm"
