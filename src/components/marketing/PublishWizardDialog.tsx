@@ -95,11 +95,12 @@ interface Props {
   itemId: string;
   imageUrl: string;
   itemName: string;
+  mediaType?: 'image' | 'video';
   existingChannels?: any[];
   onPublished: (entry: { channel: PublishChannel; format: string; url?: string; cropped_url: string; published_at: string }) => void;
 }
 
-const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl, itemName, existingChannels = [], onPublished }) => {
+const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl, itemName, mediaType = 'image', existingChannels = [], onPublished }) => {
   const [step, setStep] = useState(1);
   const [channel, setChannel] = useState<PublishChannel | null>(null);
   const [format, setFormat] = useState<PublishFormat | null>(null);
