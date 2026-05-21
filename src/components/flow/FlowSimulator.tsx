@@ -2498,13 +2498,18 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
   const addBotMediaMessage = (mediaUrl: string, mediaType: "image" | "video" | "audio" | "file", caption: string, nodeId?: string) => {
     console.log("Adding bot media message:", { mediaUrl, mediaType, caption });
+    const safeMediaUrl = typeof mediaUrl === "string" ? mediaUrl.trim() : "";
+    if (!safeMediaUrl) {
+      console.warn("Mensagem de mídia ignorada sem URL válida:", { mediaUrl, mediaType, caption });
+      return;
+    }
     const msg: Message = {
       id: uid(),
       sender: "bot",
       text: caption || "",
       timestamp: new Date(),
       nodeId,
-      mediaUrl,
+      mediaUrl: safeMediaUrl,
       mediaType,
     };
     setMessages((prev) => {
