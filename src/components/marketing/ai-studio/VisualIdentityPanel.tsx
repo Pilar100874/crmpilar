@@ -84,6 +84,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           is_active: row.is_active,
           name: row.name || 'Identidade Visual',
           prompt: row.prompt || '',
+          negative_prompt: (row as any).negative_prompt || '',
           images,
           use_prompt: row.use_prompt ?? true,
           use_images: row.use_images ?? true,
