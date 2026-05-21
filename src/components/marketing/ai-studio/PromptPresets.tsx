@@ -97,17 +97,54 @@ export interface PromptPreset {
   tags: string[];
   referenceBlocks: string[];
   isCustom?: boolean;
-  /** Modelo original recomendado para esse prompt (ex: "Kling 3.0", "Higgsfield Soul V2"). Exibido como badge. */
+  /** @deprecated Use suggestedModels. Mantido por compatibilidade. */
   originalModel?: string;
+  /** Lista de modelos sugeridos (em ordem de preferência) para obter o melhor resultado deste prompt. */
+  suggestedModels?: string[];
   /** Modelo equivalente do nosso catálogo usado se o original não estiver habilitado. */
   fallbackModel?: string;
   /** Se true, mostra alerta de confirmação antes de aplicar (modelo externo não habilitado). */
   requiresExternalModel?: boolean;
   /** Marca como "Top 15 para vendas". */
   bestSeller?: boolean;
+  /** Texto explícito do que NÃO deve aparecer no resultado (negative prompt). */
+  negativePrompt?: string;
 }
 
-const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
+const NEGATIVE_BLOCK_TEXT = `Do not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
+const NEGATIVE_BLOCK = `\n${NEGATIVE_BLOCK_TEXT}`;
+
+/** Retorna lista efetiva de modelos sugeridos (com fallback ao campo legado `originalModel`). */
+export const getSuggestedModels = (p: PromptPreset): string[] => {
+  if (p.suggestedModels && p.suggestedModels.length > 0) return p.suggestedModels;
+  if (p.originalModel) return [p.originalModel];
+  return [];
+};
+
+/** Separa o prompt principal do bloco negativo (heurística por substring). */
+export const splitPromptAndNegative = (full: string, negative?: string): { main: string; negative: string } => {
+  const neg = negative || NEGATIVE_BLOCK_TEXT;
+  const idx = full.indexOf(neg);
+  if (idx >= 0) {
+    return { main: full.slice(0, idx).trimEnd(), negative: neg };
+  }
+  // Fallback: tenta detectar pelo início clássico
+  const sentinel = 'Do not generate any text';
+  const i2 = full.indexOf(sentinel);
+  if (i2 >= 0) {
+    return { main: full.slice(0, i2).trimEnd(), negative: full.slice(i2).trim() };
+  }
+  return { main: full, negative: '' };
+};
+
+/** Junta prompt principal + bloco negativo num único texto (para envio ao modelo). */
+export const joinPromptAndNegative = (main: string, negative?: string): string => {
+  const m = main.trim();
+  const n = (negative || '').trim();
+  if (!n) return m;
+  return `${m}\n${n}`;
+};
+
 
 const DEFAULT_PRESETS: PromptPreset[] = [
   // ═══ TOP 15 — VENDA DE PRODUTOS (PDF) ═══
