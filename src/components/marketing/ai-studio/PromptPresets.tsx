@@ -97,12 +97,128 @@ export interface PromptPreset {
   tags: string[];
   referenceBlocks: string[];
   isCustom?: boolean;
+  /** Modelo original recomendado para esse prompt (ex: "Kling 3.0", "Higgsfield Soul V2"). Exibido como badge. */
+  originalModel?: string;
+  /** Modelo equivalente do nosso catálogo usado se o original não estiver habilitado. */
+  fallbackModel?: string;
+  /** Se true, mostra alerta de confirmação antes de aplicar (modelo externo não habilitado). */
+  requiresExternalModel?: boolean;
+  /** Marca como "Top 15 para vendas". */
+  bestSeller?: boolean;
 }
 
 const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
 
 const DEFAULT_PRESETS: PromptPreset[] = [
+  // ═══ TOP 15 — VENDA DE PRODUTOS (PDF) ═══
+  {
+    id: 'sales-hero-explosion', name: '🏆 Hero Explosion Reveal', mediaType: 'video', category: 'produto',
+    tags: ['hero', 'reveal', 'premium'], image: imgSalesHero, isCustom: true, bestSeller: true,
+    originalModel: 'Kling 3.0', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra cinematic hero product reveal. The product appears in the center of the frame as golden confetti and glittering particles explode outward in slow motion. Dramatic studio lighting with strong rim light and volumetric beams. Glossy black reflective surface beneath the product. Camera slowly pushes in (dolly-in) with shallow depth of field. ARRI Alexa Mini LF aesthetic, 50mm lens, 120fps. Color grading: deep blacks, warm gold accents. Premium luxury commercial vibe. End frame holds on the product centered with confetti settling and subtle bokeh glow.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-360-turntable', name: '🏆 360° Luxury Turntable', mediaType: 'video', category: 'produto',
+    tags: ['360', 'turntable', 'ecommerce'], image: imgSales360, isCustom: true, bestSeller: true,
+    originalModel: 'Seedance 2.0', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Premium 360-degree product turntable shot. The product rotates slowly on a dark glossy podium with a subtle orange LED accent ring underneath. Pure black studio background with soft top key light and rim light defining the silhouette. Hyper realistic reflections on the podium surface. Camera locked-off, smooth continuous rotation. Ultra detailed material texture visible. Final loop seamless. Premium e-commerce hero asset.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-liquid-splash', name: '🏆 Dynamic Liquid Splash', mediaType: 'video', category: 'produto',
+    tags: ['splash', 'water', 'energy'], image: imgSalesSplash, isCustom: true, bestSeller: true,
+    originalModel: 'Veo 3.1', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `High-speed product commercial with dynamic liquid splash. The product is suspended in mid-air as vivid blue water bursts and droplets explode around it, frozen and then resuming in slow motion. Bright gradient cyan background. Strobe lighting captures every micro-droplet with crystal clarity. Camera slow dolly-in 1/8000s effect. Refreshing, energetic beverage / cosmetic advertising tone.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-influencer-testimonial', name: '🏆 Influencer Testimonial UGC', mediaType: 'video', category: 'influencer',
+    tags: ['ugc', 'testimonial', 'authentic'], image: imgSalesTestimonial, isCustom: true, bestSeller: true,
+    originalModel: 'Higgsfield Soul V2', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Authentic UGC-style influencer testimonial. A charismatic young woman holds the product up to the camera while speaking naturally and smiling. Cozy modern apartment with warm window light, soft bokeh background. Handheld vlog feel but cinematic stabilization. Camera: Sony FX3, 35mm, f/2.0, natural skin tones, no over-retouching. Social media advertising tone, vertical-friendly framing.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-before-after', name: '🏆 Before / After Transformation', mediaType: 'image', category: 'produto',
+    tags: ['before-after', 'results', 'skincare'], image: imgSalesBeforeAfter, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Editorial split-screen before and after image showcasing the visible results of using the product. Left side "BEFORE" with slightly duller, more textured skin; right side "AFTER" with luminous, refined, glowing skin. Same model, same lighting, same angle for fair comparison. Clean soft pink gradient background. Professional beauty advertising style. Camera: Canon R5, 85mm f/2.0, beauty dish lighting.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-drop-water', name: '🏆 Slow-Mo Drop in Water', mediaType: 'video', category: 'produto',
+    tags: ['slowmo', 'water', 'refresh'], image: imgSalesDropWater, isCustom: true, bestSeller: true,
+    originalModel: 'Veo 3', fallbackModel: 'Google Veo (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra slow motion commercial. The product falls into a pool of crystal clear water creating elegant ripples, bubbles and splashes. Deep blue gradient background. Macro perspective, 240fps look. Soft top lighting filtering through the water. Premium refreshing aesthetic for cosmetics or beverages. Camera holds on the final ripples slowly fading.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-lifestyle-use', name: '🏆 Lifestyle in Use', mediaType: 'video', category: 'influencer',
+    tags: ['lifestyle', 'real', 'morning'], image: imgSalesLifestyleUse, isCustom: true, bestSeller: true,
+    originalModel: 'Sora 2', fallbackModel: 'Google Veo (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Cinematic lifestyle commercial. A person enjoys the product in an authentic everyday moment — morning routine in a sunny kitchen with warm window light. Natural unscripted gestures, soft smile. Camera: ARRI Alexa Mini, 35mm lens, handheld with subtle stabilization. Warm color grading, golden hour vibes. Realistic skin texture, no over-retouching. Premium lifestyle brand storytelling.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-unboxing-closeup', name: '🏆 Cinematic Unboxing', mediaType: 'video', category: 'produto',
+    tags: ['unboxing', 'premium', 'macro'], image: imgSalesUnboxing, isCustom: true, bestSeller: true,
+    originalModel: 'Kling 2.6', fallbackModel: 'Google Veo (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Cinematic macro unboxing video. Hands slowly open a premium matte black gift box, revealing the product nestled inside with elegant tissue paper. Warm rim light from one side, soft fill from the other. Camera: 100mm macro lens, shallow depth of field. Ultra detailed textures of paper, embossed logo recess, and product surface. Anticipation builds with the slow reveal. Luxury packaging brand aesthetic.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-magazine-hero', name: '🏆 Magazine Cover Hero', mediaType: 'image', category: 'produto',
+    tags: ['editorial', 'magazine', 'luxury'], image: imgSalesMagazine, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Editorial magazine cover hero shot of a luxury product placed on a polished marble pedestal. Soft pink to gold gradient backdrop. Premium beauty advertising composition with clear empty space on the top for headline. Diffused beauty light, gentle shadows, refined elegant tone. Camera: Hasselblad X2D, 80mm, medium format quality. Color palette: blush, rose-gold, ivory.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-ecom-packshot', name: '🏆 E-commerce Packshot', mediaType: 'image', category: 'produto',
+    tags: ['ecommerce', 'catalog', 'clean'], image: imgSalesEcom, isCustom: true, bestSeller: true,
+    originalModel: 'Flux Pro', fallbackModel: 'Nano Banana (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Premium product e-commerce packshot. The product perfectly centered on a pure white seamless background. Multi-point softbox lighting eliminates harsh shadows, leaving only a subtle natural ground shadow for depth. Razor-sharp focus across the entire product, optimized for marketplace catalog use. Camera: Phase One IQ4, 120mm macro lens, focus-stacked. 4K ready.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-comparison', name: '🏆 Comparison Infographic', mediaType: 'image', category: 'produto',
+    tags: ['compare', 'infographic', 'benefits'], image: imgSalesCompare, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Clean comparison visual showing the product next to a generic alternative, with subtle floating benefit icons around the hero product (leaf for natural, shield for safety, drop for hydration). Soft beige background with warm directional light. Editorial infographic style. Composition leaves balanced empty space for added copy. No on-image text — icons only.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-promo-banner', name: '🏆 Promo Banner Sale', mediaType: 'image', category: 'produto',
+    tags: ['promo', 'sale', 'banner'], image: imgSalesPromo, isCustom: true, bestSeller: true,
+    originalModel: 'Ideogram v3', fallbackModel: 'Nano Banana 2 (nativo)', requiresExternalModel: true,
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Vibrant promotional sale banner composition. The product placed on the right side floating slightly tilted on a small podium. Large empty space on the left for copy and CTA. Bold gradient background transitioning from orange to magenta to purple. High energy commercial vibe. Subtle floating particles around the product. Format: 16:9, optimized for ads and landing page hero.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-insta-square', name: '🏆 Instagram Square', mediaType: 'image', category: 'produto',
+    tags: ['instagram', 'square', 'lifestyle'], image: imgSalesInsta, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryAmbiente'],
+    prompt: `Aesthetic Instagram-ready square flat lay (1:1). The product centered on a soft ivory tablecloth surrounded by plants, two ceramic mugs (one coffee, one matcha) and natural morning props. Top-down composition, balanced negative space. Warm soft natural lighting. Cohesive earthy color palette. Optimized for feed engagement.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-ugc-smartphone', name: '🏆 UGC Smartphone Style', mediaType: 'image', category: 'influencer',
+    tags: ['ugc', 'smartphone', 'authentic'], image: imgSalesUgc, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana 2', fallbackModel: 'Nano Banana (nativo)',
+    referenceBlocks: ['productImageSelect', 'galleryInfluencer'],
+    prompt: `Authentic user-generated content style photo. A hand holding a smartphone that displays the product photo on its screen, casual home interior softly blurred in the background. Slightly imperfect framing, realistic natural indoor lighting with a hint of grain. Looks like a real customer shared the product on social media. Avoid commercial polish — keep it raw and trustworthy.${NEGATIVE_BLOCK}`,
+  },
+  {
+    id: 'sales-smoke-podium', name: '🏆 Smoke & Gold Podium', mediaType: 'image', category: 'produto',
+    tags: ['smoke', 'luxury', 'dramatic'], image: imgSalesSmoke, isCustom: true, bestSeller: true,
+    originalModel: 'Nano Banana Pro', fallbackModel: 'Gemini 3 Pro Image (nativo)',
+    referenceBlocks: ['productImageSelect'],
+    prompt: `Ultra dramatic luxury product reveal still. The product centered atop a black marble podium with gold veining, surrounded by swirling clouds of black and golden smoke against a deep black backdrop. Volumetric warm orange backlight glows through the smoke. Cinematic chiaroscuro lighting. Premium high-end advertising aesthetic. Camera: medium format, 100mm.${NEGATIVE_BLOCK}`,
+  },
+
   // ═══ VIDEO — PRODUTOS ═══
+
   {
     id: 'vp-cinematic-studio', name: 'Cinematic Studio', mediaType: 'video', category: 'produto',
     tags: ['studio', 'tech', 'luxury'], image: imgCinematicStudio,
