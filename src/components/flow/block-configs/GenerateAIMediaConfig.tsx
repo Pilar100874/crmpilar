@@ -111,18 +111,33 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
     return () => { cancelled = true; };
   }, []);
 
+  // Todos os presets do sistema (defaults + customizados criados no Studio)
+  const allSystemPresets = useMemo(() => loadAllSystemPresets(), []);
+  const presetsForType = useMemo(
+    () => allSystemPresets.filter((p) => p.mediaType === mediaType),
+    [allSystemPresets, mediaType],
+  );
+  const selectedPreset: PromptPreset | undefined = useMemo(
+    () => allSystemPresets.find((p) => p.id === config.preset),
+    [allSystemPresets, config.preset],
+  );
+
   const handlePresetChange = (presetId: string) => {
     handleConfigChange("preset", presetId);
-    const p = PRESETS.find((x) => x.id === presetId);
+    const p = allSystemPresets.find((x) => x.id === presetId);
     if (!p) return;
-    // Aplica modelo sugerido e prompt negativo automaticamente (não sobrescreve se usuário já mexeu)
+    // Salva nome para rastreio de uso (bloqueio de exclusão no Studio)
+    handleConfigChange("presetName", p.name);
+    // Modelo sugerido pelo preset → mapeia para o catálogo nativo
     if (!config.modelOverridden) {
-      handleConfigChange("model", p.suggestedModel);
+      const suggestedLabel = (p.suggestedModels && p.suggestedModels[0]) || p.fallbackModel || p.originalModel || "";
+      handleConfigChange("model", SUGGESTED_MODEL_NATIVE_FALLBACK(suggestedLabel, p.mediaType));
     }
-    if (!config.negativePromptOverridden) {
+    if (!config.negativePromptOverridden && p.negativePrompt) {
       handleConfigChange("negativePrompt", p.negativePrompt);
     }
   };
+
 
   const effectiveModel =
     config.model !== undefined && config.model !== ""
