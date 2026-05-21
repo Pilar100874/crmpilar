@@ -212,17 +212,96 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         </RadioGroup>
 
         {styleSource === "preset" && (
-          <select
-            value={config.preset || ""}
-            onChange={(e) => handlePresetChange(e.target.value)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="">Selecione um preset...</option>
-            {PRESETS.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}</option>
-            ))}
-          </select>
+          <>
+            <select
+              value={config.preset || ""}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Selecione um preset...</option>
+              {presetsForType.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.bestSeller ? "🏆 " : ""}{p.name} · {p.category}
+                </option>
+              ))}
+            </select>
+            {selectedPreset && (
+              <p className="text-[10px] text-muted-foreground">
+                {selectedPreset.tags.slice(0, 4).map((t) => `#${t}`).join(" ")}
+              </p>
+            )}
+          </>
         )}
+
+        {/* Blocos de referência exigidos pelo preset */}
+        {styleSource === "preset" && selectedPreset && selectedPreset.referenceBlocks?.length > 0 && (
+          <div className="space-y-2 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Images className="h-4 w-4 text-primary" />
+              <Label className="text-xs font-semibold">
+                Imagens de referência exigidas pelo preset
+              </Label>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Para cada item, escolha se a imagem virá de uma <strong>variável de bloco anterior</strong> (ex: bloco Buscar Produto) ou se o <strong>bot pedirá ao usuário</strong> via WhatsApp.
+            </p>
+            {selectedPreset.referenceBlocks.map((blockId) => {
+              const def = ALL_REF_BLOCKS.find((b) => b.id === blockId);
+              if (!def) return null;
+              const refInputs = config.referenceInputs || {};
+              const current = refInputs[blockId] || { mode: "ask" };
+              const updateRef = (patch: any) => {
+                handleConfigChange("referenceInputs", {
+                  ...refInputs,
+                  [blockId]: { ...current, ...patch },
+                });
+              };
+              return (
+                <div key={blockId} className="p-2 rounded-md border border-border bg-background/60 space-y-2">
+                  <p className="text-xs font-medium">{def.emoji} {def.label}</p>
+                  <RadioGroup
+                    value={current.mode}
+                    onValueChange={(v) => updateRef({ mode: v })}
+                    className="space-y-1"
+                  >
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "variable" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="variable" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Usar variável de bloco anterior</p>
+                        <p className="text-[10px] text-muted-foreground">Ex: imagem vinda do bloco Buscar Produto / Galeria</p>
+                      </div>
+                    </label>
+                    <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "ask" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <RadioGroupItem value="ask" className="mt-0.5" />
+                      <div>
+                        <p className="text-[11px] font-medium">Pedir ao usuário no WhatsApp</p>
+                        <p className="text-[10px] text-muted-foreground">O bot solicita que o usuário envie esta imagem</p>
+                      </div>
+                    </label>
+                  </RadioGroup>
+
+                  {current.mode === "variable" && (
+                    <Input
+                      value={current.variable || ""}
+                      onChange={(e) => updateRef({ variable: e.target.value })}
+                      placeholder={`Variável (ex: ${blockId === "productImageSelect" ? "produto_imagem_url" : blockId === "galleryInfluencer" ? "influencer_url" : "imagem_url"})`}
+                      className="h-8 text-xs"
+                    />
+                  )}
+                  {current.mode === "ask" && (
+                    <Input
+                      value={current.askMessage || ""}
+                      onChange={(e) => updateRef({ askMessage: e.target.value })}
+                      placeholder={`Mensagem ao usuário (ex: Envie uma foto de ${def.label.toLowerCase()})`}
+                      className="h-8 text-xs"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
 
         {styleSource === "visual_identity" && viInfo.loaded && (
           <div className="p-2 rounded-md bg-muted/40 border border-border space-y-1">
