@@ -132,22 +132,27 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
     setCroppedAreaPixels(areaPixels);
   }, []);
 
+  const isVideo = mediaType === 'video';
+
   const handlePublish = async () => {
-    if (!channel || !format || !croppedAreaPixels) {
-      toast.error('Ajuste a imagem antes de publicar');
+    if (!channel || !format || (!isVideo && !croppedAreaPixels)) {
+      toast.error('Ajuste a mídia antes de publicar');
       return;
     }
     setPublishing(true);
     try {
-      const targetKey = format.aspectRatio.toString();
-      const target = TARGET_DIMENSIONS[targetKey] || { w: 1080, h: Math.round(1080 / format.aspectRatio) };
-      const blob = await getCroppedBlob(imageUrl, croppedAreaPixels, target);
-      const estabId = localStorage.getItem('estabelecimentoId') || 'default';
-      const path = `${estabId}/published/${channel}_${format.id}_${Date.now()}.jpg`;
-      const { error: upErr } = await supabase.storage.from('marketing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('marketing-images').getPublicUrl(path);
-      const croppedUrl = pub.publicUrl;
+      let croppedUrl = imageUrl;
+      if (!isVideo) {
+        const targetKey = format.aspectRatio.toString();
+        const target = TARGET_DIMENSIONS[targetKey] || { w: 1080, h: Math.round(1080 / format.aspectRatio) };
+        const blob = await getCroppedBlob(imageUrl, croppedAreaPixels!, target);
+        const estabId = localStorage.getItem('estabelecimentoId') || 'default';
+        const path = `${estabId}/published/${channel}_${format.id}_${Date.now()}.jpg`;
+        const { error: upErr } = await supabase.storage.from('marketing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from('marketing-images').getPublicUrl(path);
+        croppedUrl = pub.publicUrl;
+      }
 
       const now = new Date().toISOString();
       const newEntry = {
