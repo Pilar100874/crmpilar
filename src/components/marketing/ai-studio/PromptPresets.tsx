@@ -929,6 +929,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
   const [tags, setTags] = useState('');
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>(['productImageSelect']);
   const [generatedImage, setGeneratedImage] = useState<string>('');
+  const [suggestedModel, setSuggestedModel] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
