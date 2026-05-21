@@ -428,7 +428,7 @@ const DEFAULT_PRESETS: PromptPreset[] = [
 // ─── Local storage for custom presets ────────────────────────────────
 const CUSTOM_PRESETS_KEY = 'ai-studio-custom-prompt-presets';
 const SEEDED_VERSION_KEY = 'ai-studio-presets-seeded-v';
-const CURRENT_SEED_VERSION = '2';
+const CURRENT_SEED_VERSION = '3';
 
 function loadAllPresets(): PromptPreset[] {
   try {
