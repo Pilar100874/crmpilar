@@ -167,8 +167,11 @@ export const CHANNEL_CONFIG: Record<PublishChannel, { label: string; icon: strin
   whatsapp: { label: 'WhatsApp', icon: 'MessageCircle', color: 'bg-green-500' },
   instagram: { label: 'Instagram', icon: 'Instagram', color: 'bg-pink-500' },
   facebook: { label: 'Facebook', icon: 'Facebook', color: 'bg-blue-600' },
-  twitter: { label: 'Twitter', icon: 'Twitter', color: 'bg-sky-500' },
+  twitter: { label: 'Twitter / X', icon: 'Twitter', color: 'bg-sky-500' },
   linkedin: { label: 'LinkedIn', icon: 'Linkedin', color: 'bg-blue-700' },
   telegram: { label: 'Telegram', icon: 'Send', color: 'bg-blue-400' },
   email: { label: 'E-mail', icon: 'Mail', color: 'bg-gray-600' },
+  youtube: { label: 'YouTube', icon: 'Youtube', color: 'bg-red-600' },
+  pinterest: { label: 'Pinterest', icon: 'Image', color: 'bg-rose-600' },
+  tiktok: { label: 'TikTok', icon: 'Music', color: 'bg-neutral-900' },
 };
