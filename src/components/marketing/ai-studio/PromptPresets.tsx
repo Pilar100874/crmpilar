@@ -1113,22 +1113,27 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       toast({ title: 'Campos obrigatórios', description: 'Preencha o nome e o prompt.', variant: 'destructive' });
       return;
     }
+    // Re-anexa o negative prompt no campo `prompt` para compatibilidade com o pipeline existente
+    const fullPrompt = joinPromptAndNegative(prompt, negativePrompt);
+    const models = suggestedModels.filter(Boolean);
     const preset: PromptPreset = {
       id: editingPreset ? editingPreset.id : `custom-${Date.now()}`,
       name: name.trim(),
-      prompt: prompt.trim(),
+      prompt: fullPrompt,
       image: generatedImage,
       mediaType,
       category,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       referenceBlocks: selectedBlocks,
       isCustom: true,
-      ...(suggestedModel.trim() ? { originalModel: suggestedModel.trim() } : {}),
+      ...(models.length > 0 ? { suggestedModels: models, originalModel: models[0] } : {}),
+      ...(negativePrompt.trim() ? { negativePrompt: negativePrompt.trim() } : {}),
       ...(editingPreset?.fallbackModel ? { fallbackModel: editingPreset.fallbackModel } : {}),
       ...(editingPreset?.requiresExternalModel ? { requiresExternalModel: editingPreset.requiresExternalModel } : {}),
     };
     onSave(preset);
   };
+
 
   const isEditing = !!editingPreset;
 
