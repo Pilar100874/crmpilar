@@ -26,12 +26,12 @@ const PLATFORMS: PlatformConfig[] = [
     label: 'Instagram',
     icon: Instagram,
     iconColor: 'text-pink-500',
-    description: 'Publique posts, reels e stories através da Graph API.',
+    description: 'Conecte sua conta do Instagram diretamente com usuário e senha — sem precisar do Facebook ou Graph API.',
     fields: [
-      { key: 'access_token', label: 'Access Token', placeholder: 'EAAG...', type: 'password' },
-      { key: 'page_id', label: 'ID da Conta Instagram (IG Business)', placeholder: '17841...' },
+      { key: 'username', label: 'Usuário do Instagram', placeholder: '@seuusuario' },
+      { key: 'password', label: 'Senha do Instagram', placeholder: '••••••••', type: 'password' },
     ],
-    docsUrl: 'https://developers.facebook.com/docs/instagram-api',
+    docsUrl: 'https://help.instagram.com/',
   },
   {
     id: 'facebook',
