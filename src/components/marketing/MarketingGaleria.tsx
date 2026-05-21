@@ -103,6 +103,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<MarketingContentItem | null>(null);
   const [isSavingTrimmed, setIsSavingTrimmed] = useState(false);
+  const [publishingItem, setPublishingItem] = useState<MarketingContentItem | null>(null);
+  const [publishDraft, setPublishDraft] = useState<Record<string, { enabled: boolean; url: string }>>({});
+  const [savingPublish, setSavingPublish] = useState(false);
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   // Folder system
