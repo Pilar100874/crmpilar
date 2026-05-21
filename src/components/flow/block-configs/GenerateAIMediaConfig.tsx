@@ -1,23 +1,91 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Image as ImageIcon, Video } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigProps {
   config: any;
   handleConfigChange: (key: string, value: any) => void;
 }
 
-const PRESETS = [
-  { id: "produto_branco", label: "Produto fundo branco" },
-  { id: "produto_lifestyle", label: "Produto lifestyle" },
-  { id: "influencer_ugc", label: "Influencer / UGC" },
-  { id: "post_promocional", label: "Post promocional" },
-  { id: "story_vertical", label: "Story vertical 9:16" },
-  { id: "cinematic", label: "Cinematic / Reels" },
+// Catálogo de modelos disponíveis (alinhado com Visual Identity)
+const MEDIA_MODELS = [
+  { value: "", label: "Padrão (auto)" },
+  // Imagem
+  { value: "google/gemini-2.5-flash-image", label: "🖼️ Gemini 2.5 Flash Image (Nano Banana)" },
+  { value: "google/gemini-3-pro-image-preview", label: "🖼️ Gemini 3 Pro Image" },
+  { value: "google/gemini-3.1-flash-image-preview", label: "🖼️ Gemini 3.1 Flash Image (Nano Banana 2)" },
+  { value: "openai/dall-e-3", label: "🖼️ DALL·E 3" },
+  { value: "stability/sd3.5-turbo", label: "🖼️ Stable Diffusion 3.5" },
+  { value: "flux/1.1-pro", label: "🖼️ Flux 1.1 Pro" },
+  { value: "ideogram/v3", label: "🖼️ Ideogram v3" },
+  // Vídeo
+  { value: "google/veo-3", label: "🎬 Google Veo 3" },
+  { value: "google/veo-2.0", label: "🎬 Google Veo 2.0" },
+  { value: "kling/3.0", label: "🎬 Kling 3.0" },
+  { value: "runway/gen-3", label: "🎬 Runway Gen-3" },
+  { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
+];
+
+interface PresetDef {
+  id: string;
+  label: string;
+  mediaType: "image" | "video";
+  suggestedModel: string;
+  negativePrompt: string;
+}
+
+const PRESETS: PresetDef[] = [
+  {
+    id: "produto_branco", label: "Produto fundo branco", mediaType: "image",
+    suggestedModel: "google/gemini-3-pro-image-preview",
+    negativePrompt: "sem texto, sem logos, sem marca d'água, sem pessoas, sem sombras duras, sem elementos extras",
+  },
+  {
+    id: "produto_lifestyle", label: "Produto lifestyle", mediaType: "image",
+    suggestedModel: "flux/1.1-pro",
+    negativePrompt: "sem texto, sem deformações, sem objetos competindo com o produto, sem watermark",
+  },
+  {
+    id: "influencer_ugc", label: "Influencer / UGC", mediaType: "image",
+    suggestedModel: "google/gemini-3.1-flash-image-preview",
+    negativePrompt: "sem texto, sem rosto deformado, sem mãos extras, sem watermark, sem conteúdo erótico",
+  },
+  {
+    id: "post_promocional", label: "Post promocional", mediaType: "image",
+    suggestedModel: "ideogram/v3",
+    negativePrompt: "sem erros de tipografia, sem texto cortado, sem elementos fora do enquadramento",
+  },
+  {
+    id: "story_vertical", label: "Story vertical 9:16", mediaType: "image",
+    suggestedModel: "google/gemini-3-pro-image-preview",
+    negativePrompt: "sem barras laterais, sem texto sobreposto não solicitado, sem logos de terceiros",
+  },
+  {
+    id: "cinematic", label: "Cinematic / Reels", mediaType: "video",
+    suggestedModel: "google/veo-3",
+    negativePrompt: "sem texto, sem cortes abruptos, sem distorção facial, sem watermark",
+  },
+];
+
+// Estilos de som ambiente para vídeo
+const AMBIENT_SOUND_STYLES = [
+  { value: "", label: "Nenhum" },
+  { value: "cinematic_score", label: "🎬 Trilha cinematográfica" },
+  { value: "upbeat_pop", label: "🎉 Pop animado" },
+  { value: "lofi_chill", label: "🎧 Lo-fi chill" },
+  { value: "corporate_inspirational", label: "💼 Corporativo inspirador" },
+  { value: "epic_trailer", label: "🔥 Épico (trailer)" },
+  { value: "ambient_nature", label: "🌿 Ambiente natural" },
+  { value: "electronic_modern", label: "⚡ Eletrônico moderno" },
+  { value: "acoustic_warm", label: "🎸 Acústico aconchegante" },
+  { value: "luxury_elegant", label: "✨ Luxo elegante" },
+  { value: "silence", label: "🔇 Sem música (silêncio)" },
 ];
 
 export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProps) => {
@@ -25,6 +93,59 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   const styleSource = config.styleSource || "visual_identity";
   const acceptText = config.acceptText ?? true;
   const acceptImageRef = config.acceptImageRef ?? false;
+  const audioMode = config.audioMode || "none";
+
+  const [viInfo, setViInfo] = useState<{ model: string; negative: string; loaded: boolean }>({
+    model: "", negative: "", loaded: false,
+  });
+
+  // Carrega Identidade Visual para mostrar modelo/negativo herdados
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const estabelecimentoId = localStorage.getItem("estabelecimentoId") || "";
+      if (!estabelecimentoId) return;
+      const { data } = await supabase
+        .from("studio_visual_identity")
+        .select("preferred_model, negative_prompt")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+      if (cancelled) return;
+      setViInfo({
+        model: (data as any)?.preferred_model || "",
+        negative: (data as any)?.negative_prompt || "",
+        loaded: true,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handlePresetChange = (presetId: string) => {
+    handleConfigChange("preset", presetId);
+    const p = PRESETS.find((x) => x.id === presetId);
+    if (!p) return;
+    // Aplica modelo sugerido e prompt negativo automaticamente (não sobrescreve se usuário já mexeu)
+    if (!config.modelOverridden) {
+      handleConfigChange("model", p.suggestedModel);
+    }
+    if (!config.negativePromptOverridden) {
+      handleConfigChange("negativePrompt", p.negativePrompt);
+    }
+  };
+
+  const effectiveModel =
+    config.model !== undefined && config.model !== ""
+      ? config.model
+      : styleSource === "visual_identity"
+        ? viInfo.model
+        : "";
+
+  const effectiveNegative =
+    config.negativePrompt !== undefined && config.negativePrompt !== ""
+      ? config.negativePrompt
+      : styleSource === "visual_identity"
+        ? viInfo.negative
+        : "";
 
   return (
     <div className="space-y-4">
@@ -78,7 +199,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         {styleSource === "preset" && (
           <select
             value={config.preset || ""}
-            onChange={(e) => handleConfigChange("preset", e.target.value)}
+            onChange={(e) => handlePresetChange(e.target.value)}
             className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="">Selecione um preset...</option>
@@ -87,6 +208,60 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
             ))}
           </select>
         )}
+
+        {styleSource === "visual_identity" && viInfo.loaded && (
+          <div className="p-2 rounded-md bg-muted/40 border border-border space-y-1">
+            <p className="text-[10px] text-muted-foreground">
+              <strong>Modelo da IV:</strong> {viInfo.model || "padrão"} •{" "}
+              <strong>Negativo:</strong> {viInfo.negative ? `"${viInfo.negative.slice(0, 60)}${viInfo.negative.length > 60 ? "…" : ""}"` : "não definido"}
+            </p>
+            {!viInfo.model && !viInfo.negative && (
+              <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                ⚠️ Defina modelo e prompt negativo em Identidade Visual para herdar aqui.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 2b. Modelo de IA */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="text-xs">Modelo de IA</Label>
+        </div>
+        <select
+          value={effectiveModel}
+          onChange={(e) => {
+            handleConfigChange("model", e.target.value);
+            handleConfigChange("modelOverridden", true);
+          }}
+          className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {MEDIA_MODELS.map((m) => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+        <p className="text-[10px] text-muted-foreground">
+          Sugerido pelo preset/IV; pode trocar manualmente.
+        </p>
+      </div>
+
+      {/* 2c. Prompt negativo */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="text-xs">Prompt negativo (o que NÃO pode aparecer)</Label>
+        </div>
+        <Textarea
+          value={effectiveNegative}
+          onChange={(e) => {
+            handleConfigChange("negativePrompt", e.target.value);
+            handleConfigChange("negativePromptOverridden", true);
+          }}
+          placeholder="Ex: sem texto, sem logos de concorrentes, sem watermark..."
+          rows={2}
+        />
       </div>
 
       {/* 3. Entradas do usuário */}
@@ -191,6 +366,91 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           O usuário receberá as variações para escolher uma.
         </p>
       </div>
+
+      {/* 5. Áudio (apenas para vídeo) */}
+      {mediaType === "video" && (
+        <div className="space-y-3 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-2">
+            <Music2 className="h-4 w-4 text-primary" />
+            <Label className="text-xs font-semibold">5. Áudio do vídeo</Label>
+          </div>
+
+          <RadioGroup
+            value={audioMode}
+            onValueChange={(v) => handleConfigChange("audioMode", v)}
+            className="space-y-1"
+          >
+            <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer ${audioMode === "none" ? "border-primary bg-primary/10" : "border-border"}`}>
+              <RadioGroupItem value="none" className="mt-0.5" />
+              <div>
+                <p className="text-xs font-medium">Sem áudio</p>
+                <p className="text-[10px] text-muted-foreground">Vídeo mudo</p>
+              </div>
+            </label>
+            <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer ${audioMode === "voice" ? "border-primary bg-primary/10" : "border-border"}`}>
+              <RadioGroupItem value="voice" className="mt-0.5" />
+              <div>
+                <p className="text-xs font-medium">Narração (texto → voz)</p>
+                <p className="text-[10px] text-muted-foreground">O texto abaixo será falado no vídeo</p>
+              </div>
+            </label>
+            <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer ${audioMode === "ambient" ? "border-primary bg-primary/10" : "border-border"}`}>
+              <RadioGroupItem value="ambient" className="mt-0.5" />
+              <div>
+                <p className="text-xs font-medium">Som ambiente / trilha de fundo</p>
+                <p className="text-[10px] text-muted-foreground">Estilo musical escolhido abaixo</p>
+              </div>
+            </label>
+            <label className={`flex items-start gap-2 p-2 rounded-lg border-2 cursor-pointer ${audioMode === "voice_ambient" ? "border-primary bg-primary/10" : "border-border"}`}>
+              <RadioGroupItem value="voice_ambient" className="mt-0.5" />
+              <div>
+                <p className="text-xs font-medium">Narração + trilha de fundo</p>
+                <p className="text-[10px] text-muted-foreground">Combina voz e música ambiente</p>
+              </div>
+            </label>
+          </RadioGroup>
+
+          {(audioMode === "voice" || audioMode === "voice_ambient") && (
+            <div className="space-y-1">
+              <Label className="text-xs">Texto da narração</Label>
+              <Textarea
+                value={config.audioScript || ""}
+                onChange={(e) => handleConfigChange("audioScript", e.target.value)}
+                placeholder="Ex: Conheça o novo produto que vai transformar sua rotina..."
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <select
+                  value={config.audioVoice || "pt-BR-feminina-jovem"}
+                  onChange={(e) => handleConfigChange("audioVoice", e.target.value)}
+                  className="flex-1 h-9 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="pt-BR-feminina-jovem">🎙️ Feminina jovem (PT-BR)</option>
+                  <option value="pt-BR-feminina-adulta">🎙️ Feminina adulta (PT-BR)</option>
+                  <option value="pt-BR-masculina-jovem">🎙️ Masculina jovem (PT-BR)</option>
+                  <option value="pt-BR-masculina-adulta">🎙️ Masculina adulta (PT-BR)</option>
+                  <option value="pt-BR-narrador">🎙️ Narrador profissional</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {(audioMode === "ambient" || audioMode === "voice_ambient") && (
+            <div className="space-y-1">
+              <Label className="text-xs">Estilo do som de fundo</Label>
+              <select
+                value={config.ambientStyle || ""}
+                onChange={(e) => handleConfigChange("ambientStyle", e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-background px-2 text-xs"
+              >
+                {AMBIENT_SOUND_STYLES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Prompt base opcional */}
       <div className="space-y-2">
