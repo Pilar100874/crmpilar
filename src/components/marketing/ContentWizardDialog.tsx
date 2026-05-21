@@ -64,6 +64,9 @@ const ChannelIcon: React.FC<{ channel: PublishChannel }> = ({ channel }) => {
     linkedin: <Linkedin className="h-5 w-5" />,
     telegram: <Send className="h-5 w-5" />,
     email: <Mail className="h-5 w-5" />,
+    youtube: <Mail className="h-5 w-5" />,
+    pinterest: <Mail className="h-5 w-5" />,
+    tiktok: <Mail className="h-5 w-5" />,
   };
   return <>{icons[channel]}</>;
 };
