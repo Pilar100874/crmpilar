@@ -97,17 +97,54 @@ export interface PromptPreset {
   tags: string[];
   referenceBlocks: string[];
   isCustom?: boolean;
-  /** Modelo original recomendado para esse prompt (ex: "Kling 3.0", "Higgsfield Soul V2"). Exibido como badge. */
+  /** @deprecated Use suggestedModels. Mantido por compatibilidade. */
   originalModel?: string;
+  /** Lista de modelos sugeridos (em ordem de preferência) para obter o melhor resultado deste prompt. */
+  suggestedModels?: string[];
   /** Modelo equivalente do nosso catálogo usado se o original não estiver habilitado. */
   fallbackModel?: string;
   /** Se true, mostra alerta de confirmação antes de aplicar (modelo externo não habilitado). */
   requiresExternalModel?: boolean;
   /** Marca como "Top 15 para vendas". */
   bestSeller?: boolean;
+  /** Texto explícito do que NÃO deve aparecer no resultado (negative prompt). */
+  negativePrompt?: string;
 }
 
-const NEGATIVE_BLOCK = `\nDo not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
+const NEGATIVE_BLOCK_TEXT = `Do not generate any text, captions, subtitles, logos, watermarks, letters, numbers or typography unless explicitly provided by system blocks. Use only the elements provided through the system input blocks. Do not add extra objects, products, people, environments, UI elements, overlays or graphics that are not provided. The generated content must not contain erotic, sexual, explicit or suggestive content.`;
+const NEGATIVE_BLOCK = `\n${NEGATIVE_BLOCK_TEXT}`;
+
+/** Retorna lista efetiva de modelos sugeridos (com fallback ao campo legado `originalModel`). */
+export const getSuggestedModels = (p: PromptPreset): string[] => {
+  if (p.suggestedModels && p.suggestedModels.length > 0) return p.suggestedModels;
+  if (p.originalModel) return [p.originalModel];
+  return [];
+};
+
+/** Separa o prompt principal do bloco negativo (heurística por substring). */
+export const splitPromptAndNegative = (full: string, negative?: string): { main: string; negative: string } => {
+  const neg = negative || NEGATIVE_BLOCK_TEXT;
+  const idx = full.indexOf(neg);
+  if (idx >= 0) {
+    return { main: full.slice(0, idx).trimEnd(), negative: neg };
+  }
+  // Fallback: tenta detectar pelo início clássico
+  const sentinel = 'Do not generate any text';
+  const i2 = full.indexOf(sentinel);
+  if (i2 >= 0) {
+    return { main: full.slice(0, i2).trimEnd(), negative: full.slice(i2).trim() };
+  }
+  return { main: full, negative: '' };
+};
+
+/** Junta prompt principal + bloco negativo num único texto (para envio ao modelo). */
+export const joinPromptAndNegative = (main: string, negative?: string): string => {
+  const m = main.trim();
+  const n = (negative || '').trim();
+  if (!n) return m;
+  return `${m}\n${n}`;
+};
+
 
 const DEFAULT_PRESETS: PromptPreset[] = [
   // ═══ TOP 15 — VENDA DE PRODUTOS (PDF) ═══
@@ -690,13 +727,20 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                         </Badge>
                       )}
                     </div>
-                    {preset.originalModel && (
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm">
-                          🤖 {preset.originalModel}
-                        </Badge>
-                      </div>
-                    )}
+                    {(() => {
+                      const models = getSuggestedModels(preset);
+                      if (models.length === 0) return null;
+                      const first = models[0];
+                      const extra = models.length - 1;
+                      return (
+                        <div className="absolute top-2 right-2 flex flex-col items-end gap-1 max-w-[70%]">
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 bg-black/60 text-white border-0 backdrop-blur-sm truncate max-w-full">
+                            🤖 {first}{extra > 0 && <span className="ml-1 opacity-80">+{extra}</span>}
+                          </Badge>
+                        </div>
+                      );
+                    })()}
+
                     {selectedId === preset.id && (
                       <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
                         <Check className="h-3 w-3 text-primary-foreground" />
@@ -787,12 +831,13 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                   {detailPreset.isCustom && !detailPreset.bestSeller && (
                     <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">Custom</Badge>
                   )}
-                  {detailPreset.originalModel && (
-                    <Badge variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
-                      🤖 {detailPreset.originalModel}
+                  {getSuggestedModels(detailPreset).map(m => (
+                    <Badge key={m} variant="outline" className="text-[10px] gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                      🤖 {m}
                       {detailPreset.requiresExternalModel && <span className="text-[8px] opacity-70">(externo)</span>}
                     </Badge>
-                  )}
+                  ))}
+
                   {detailPreset.tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="text-[10px] max-w-full break-all">{tag}</Badge>
                   ))}
@@ -823,15 +868,34 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
                 </div>
               )}
 
-              {/* Prompt */}
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
-                <div className="bg-muted/50 rounded-lg p-3 border max-h-[40vh] overflow-y-auto">
-                  <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/80">
-                    {detailPreset.prompt}
-                  </p>
-                </div>
-              </div>
+              {/* Prompt + Negative */}
+              {(() => {
+                const { main, negative } = splitPromptAndNegative(detailPreset.prompt, detailPreset.negativePrompt);
+                const neg = detailPreset.negativePrompt || negative;
+                return (
+                  <>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1.5">📝 Prompt</p>
+                      <div className="bg-muted/50 rounded-lg p-3 border max-h-[40vh] overflow-y-auto">
+                        <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/80">
+                          {main || detailPreset.prompt}
+                        </p>
+                      </div>
+                    </div>
+                    {neg && (
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-destructive mb-1.5">🚫 O que NÃO pode aparecer (negative prompt)</p>
+                        <div className="bg-destructive/5 rounded-lg p-3 border border-destructive/20 max-h-[25vh] overflow-y-auto">
+                          <p className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/70">
+                            {neg}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2 pt-2 border-t">
@@ -924,12 +988,14 @@ interface CreatePromptDialogProps {
 const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, onSave, defaultMediaType, defaultCategory, editingPreset }) => {
   const [name, setName] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [negativePrompt, setNegativePrompt] = useState('');
   const [mediaType, setMediaType] = useState<'video' | 'image'>(defaultMediaType);
   const [category, setCategory] = useState<'produto' | 'influencer'>(defaultCategory);
   const [tags, setTags] = useState('');
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>(['productImageSelect']);
   const [generatedImage, setGeneratedImage] = useState<string>('');
-  const [suggestedModel, setSuggestedModel] = useState<string>('');
+  const [suggestedModels, setSuggestedModels] = useState<string[]>([]);
+  const [modelInput, setModelInput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -937,26 +1003,40 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
   React.useEffect(() => {
     if (open) {
       if (editingPreset) {
+        const split = splitPromptAndNegative(editingPreset.prompt, editingPreset.negativePrompt);
         setName(editingPreset.name);
-        setPrompt(editingPreset.prompt);
+        setPrompt(split.main || editingPreset.prompt);
+        setNegativePrompt(editingPreset.negativePrompt || split.negative || NEGATIVE_BLOCK_TEXT);
         setMediaType(editingPreset.mediaType);
         setCategory(editingPreset.category);
         setTags(editingPreset.tags.join(', '));
         setSelectedBlocks(editingPreset.referenceBlocks || ['productImageSelect']);
         setGeneratedImage(editingPreset.image || '');
-        setSuggestedModel(editingPreset.originalModel || '');
+        setSuggestedModels(getSuggestedModels(editingPreset));
+        setModelInput('');
       } else {
         setName('');
         setPrompt('');
+        setNegativePrompt(NEGATIVE_BLOCK_TEXT);
         setMediaType(defaultMediaType);
         setCategory(defaultCategory);
         setTags('');
         setSelectedBlocks(['productImageSelect']);
         setGeneratedImage('');
-        setSuggestedModel('');
+        setSuggestedModels([]);
+        setModelInput('');
       }
     }
   }, [open, defaultMediaType, defaultCategory, editingPreset]);
+
+  const addModel = (m: string) => {
+    const v = m.trim();
+    if (!v) return;
+    setSuggestedModels(prev => prev.includes(v) ? prev : [...prev, v]);
+    setModelInput('');
+  };
+  const removeModel = (m: string) => setSuggestedModels(prev => prev.filter(x => x !== m));
+
 
   const toggleBlock = (blockId: string) => {
     setSelectedBlocks(prev =>
@@ -1033,22 +1113,27 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
       toast({ title: 'Campos obrigatórios', description: 'Preencha o nome e o prompt.', variant: 'destructive' });
       return;
     }
+    // Re-anexa o negative prompt no campo `prompt` para compatibilidade com o pipeline existente
+    const fullPrompt = joinPromptAndNegative(prompt, negativePrompt);
+    const models = suggestedModels.filter(Boolean);
     const preset: PromptPreset = {
       id: editingPreset ? editingPreset.id : `custom-${Date.now()}`,
       name: name.trim(),
-      prompt: prompt.trim(),
+      prompt: fullPrompt,
       image: generatedImage,
       mediaType,
       category,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       referenceBlocks: selectedBlocks,
       isCustom: true,
-      ...(suggestedModel.trim() ? { originalModel: suggestedModel.trim() } : {}),
+      ...(models.length > 0 ? { suggestedModels: models, originalModel: models[0] } : {}),
+      ...(negativePrompt.trim() ? { negativePrompt: negativePrompt.trim() } : {}),
       ...(editingPreset?.fallbackModel ? { fallbackModel: editingPreset.fallbackModel } : {}),
       ...(editingPreset?.requiresExternalModel ? { requiresExternalModel: editingPreset.requiresExternalModel } : {}),
     };
     onSave(preset);
   };
+
 
   const isEditing = !!editingPreset;
 
@@ -1103,19 +1188,64 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="Ex: luxury, beach, outdoor" className="mt-1" />
           </div>
 
-          {/* Suggested Model (editable) */}
+          {/* Suggested Models (multi, chip-based) */}
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
             <div className="flex items-start gap-2">
               <span className="text-base leading-none mt-0.5">🤖</span>
               <div className="flex-1 min-w-0">
-                <Label className="text-xs font-semibold">Modelo sugerido para melhor qualidade</Label>
-                <Input
-                  list="suggested-model-options"
-                  value={suggestedModel}
-                  onChange={e => setSuggestedModel(e.target.value)}
-                  placeholder={mediaType === 'video' ? 'Ex: Veo 3, Kling 3.0, Sora 2...' : 'Ex: Nano Banana Pro, Flux Pro, Ideogram v3...'}
-                  className="mt-1.5 h-8 text-xs"
-                />
+                <Label className="text-xs font-semibold">Modelos sugeridos para melhor qualidade</Label>
+                <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                  Liste os modelos ideais em ordem de preferência. O primeiro é o padrão.
+                </p>
+
+                {suggestedModels.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {suggestedModels.map((m, idx) => (
+                      <Badge
+                        key={m}
+                        variant={idx === 0 ? 'default' : 'secondary'}
+                        className="text-[10px] gap-1 pl-2 pr-1 py-0.5"
+                      >
+                        {idx === 0 && <span className="opacity-70">★</span>}
+                        {m}
+                        <button
+                          type="button"
+                          onClick={() => removeModel(m)}
+                          className="ml-1 rounded-full hover:bg-background/40 px-1 leading-none"
+                          aria-label={`Remover ${m}`}
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-1.5">
+                  <Input
+                    list="suggested-model-options"
+                    value={modelInput}
+                    onChange={e => setModelInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        addModel(modelInput);
+                      }
+                    }}
+                    placeholder={mediaType === 'video' ? 'Ex: Veo 3, Kling 3.0, Sora 2...' : 'Ex: Nano Banana Pro, Flux Pro, Ideogram v3...'}
+                    className="h-8 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 text-xs"
+                    onClick={() => addModel(modelInput)}
+                    disabled={!modelInput.trim()}
+                  >
+                    Adicionar
+                  </Button>
+                </div>
                 <datalist id="suggested-model-options">
                   {/* Vídeo */}
                   <option value="Google Veo (nativo)" />
@@ -1135,7 +1265,7 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
                   <option value="Ideogram v3" />
                 </datalist>
                 {editingPreset?.fallbackModel && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
                     Fallback nativo atual: <span className="font-medium text-foreground">{editingPreset.fallbackModel}</span>
                     {editingPreset.requiresExternalModel && ' · Requer API key externa'}
                   </p>
@@ -1144,12 +1274,8 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
             </div>
           </div>
 
-
-
-
-          {/* Prompt */}
           <div>
-            <Label className="text-xs">Prompt</Label>
+            <Label className="text-xs">Prompt (descrição do que DEVE aparecer)</Label>
             <Textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
@@ -1157,6 +1283,32 @@ const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({ open, onClose, 
               className="mt-1 min-h-[120px] text-xs font-mono"
             />
           </div>
+
+          {/* Negative Prompt */}
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs text-destructive">🚫 Negative prompt (o que NÃO pode aparecer)</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setNegativePrompt(NEGATIVE_BLOCK_TEXT)}
+              >
+                Restaurar padrão
+              </Button>
+            </div>
+            <Textarea
+              value={negativePrompt}
+              onChange={e => setNegativePrompt(e.target.value)}
+              placeholder="Ex: sem textos, sem logos, sem mãos extras, sem conteúdo erótico..."
+              className="mt-1 min-h-[80px] text-xs font-mono border-destructive/30 focus-visible:ring-destructive/40"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Este bloco é anexado automaticamente ao prompt enviado ao modelo para evitar elementos indesejados.
+            </p>
+          </div>
+
 
           {/* Reference Blocks */}
           <div>
