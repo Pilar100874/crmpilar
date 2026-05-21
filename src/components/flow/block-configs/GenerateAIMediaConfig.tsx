@@ -146,6 +146,123 @@ const GalleryRefPicker = ({
   );
 };
 
+// Picker inline para selecionar produto do CATÁLOGO (mesma fonte do AI Creative Studio)
+const ProductCatalogPicker = ({
+  value,
+  onSelect,
+  onClear,
+}: {
+  value?: { url?: string; name?: string };
+  onSelect: (item: { id: string; url: string; name: string }) => void;
+  onClear: () => void;
+}) => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const fetchProducts = useCallback(async () => {
+    const estabId = localStorage.getItem("estabelecimentoId");
+    if (!estabId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("produtos")
+      .select("id, nome, codigo, foto_url")
+      .eq("estabelecimento_id", estabId)
+      .eq("ativo", true)
+      .order("nome", { ascending: true })
+      .limit(200);
+    setProducts((data || []).filter((p: any) => p.foto_url));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { if (open && products.length === 0) fetchProducts(); }, [open, products.length, fetchProducts]);
+
+  const filtered = products.filter((p) =>
+    !search ||
+    p.nome?.toLowerCase().includes(search.toLowerCase()) ||
+    p.codigo?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (value?.url) {
+    return (
+      <div className="relative rounded-lg overflow-hidden border border-border group">
+        <img src={value.url} alt={value.name || ""} className="w-full h-24 object-contain bg-muted/30" />
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute top-1 right-1 p-1 rounded-full bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition"
+        >
+          <XIcon className="h-3 w-3" />
+        </button>
+        <p className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[10px] bg-background/80 backdrop-blur truncate">
+          📦 {value.name}
+        </p>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex flex-col items-center gap-1 py-3 border border-dashed border-emerald-500/40 rounded-lg hover:bg-emerald-500/5 transition"
+      >
+        <FolderOpen className="h-4 w-4 text-emerald-500/70" />
+        <span className="text-[10px] text-muted-foreground">Escolher do catálogo de produtos</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <input
+          autoFocus
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar produto..."
+          className="w-full h-7 pl-7 pr-2 text-[11px] rounded-md bg-muted/50 border border-border focus:outline-none"
+        />
+      </div>
+      <div className="max-h-[200px] overflow-y-auto space-y-1">
+        {loading && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-3">Nenhum produto com imagem cadastrada</p>
+        )}
+        {filtered.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => {
+              onSelect({ id: p.id, url: p.foto_url, name: p.nome });
+              setOpen(false);
+            }}
+            className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-emerald-500/10 transition text-left"
+          >
+            <img src={p.foto_url} alt={p.nome} className="w-8 h-8 rounded object-cover border border-border shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium truncate">{p.nome}</p>
+              {p.codigo && <p className="text-[9px] text-muted-foreground truncate">{p.codigo}</p>}
+            </div>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center py-1"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+};
+
+
+
 
 
 interface ConfigProps {
@@ -445,8 +562,16 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                       <label className={`flex items-start gap-2 p-2 rounded border cursor-pointer ${current.mode === "gallery" ? "border-primary bg-primary/10" : "border-border"}`}>
                         <RadioGroupItem value="gallery" className="mt-0.5" />
                         <div>
-                          <p className="text-[11px] font-medium">Selecionar da galeria do AI Studio</p>
-                          <p className="text-[10px] text-muted-foreground">Mesma biblioteca usada no Studio · categoria "{galleryCat.label}"</p>
+                          <p className="text-[11px] font-medium">
+                            {blockId === "productImageSelect"
+                              ? "Selecionar do catálogo de produtos"
+                              : "Selecionar da galeria do AI Studio"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {blockId === "productImageSelect"
+                              ? "Mesma fonte usada no AI Creative Studio · seus produtos cadastrados"
+                              : `Mesma biblioteca usada no Studio · categoria "${galleryCat.label}"`}
+                          </p>
                         </div>
                       </label>
                     )}
@@ -476,12 +601,20 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                     />
                   )}
                   {current.mode === "gallery" && galleryCat && (
-                    <GalleryRefPicker
-                      categoria={galleryCat.categoria}
-                      value={{ url: current.galleryUrl, name: current.galleryName }}
-                      onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
-                      onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
-                    />
+                    blockId === "productImageSelect" ? (
+                      <ProductCatalogPicker
+                        value={{ url: current.galleryUrl, name: current.galleryName }}
+                        onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name, productId: it.id })}
+                        onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "", productId: "" })}
+                      />
+                    ) : (
+                      <GalleryRefPicker
+                        categoria={galleryCat.categoria}
+                        value={{ url: current.galleryUrl, name: current.galleryName }}
+                        onSelect={(it) => updateRef({ galleryId: it.id, galleryUrl: it.url, galleryName: it.name })}
+                        onClear={() => updateRef({ galleryId: "", galleryUrl: "", galleryName: "" })}
+                      />
+                    )
                   )}
                 </div>
               );
