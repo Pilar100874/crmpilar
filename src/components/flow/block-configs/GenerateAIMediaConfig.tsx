@@ -13,10 +13,9 @@ interface ConfigProps {
   handleConfigChange: (key: string, value: any) => void;
 }
 
-// Catálogo de modelos disponíveis (alinhado com Visual Identity)
-const MEDIA_MODELS = [
+// Catálogo de modelos disponíveis (alinhado com Visual Identity), agrupado por tipo de mídia
+const IMAGE_MODELS = [
   { value: "", label: "Padrão (auto)" },
-  // Imagem
   { value: "google/gemini-2.5-flash-image", label: "🖼️ Gemini 2.5 Flash Image (Nano Banana)" },
   { value: "google/gemini-3-pro-image-preview", label: "🖼️ Gemini 3 Pro Image" },
   { value: "google/gemini-3.1-flash-image-preview", label: "🖼️ Gemini 3.1 Flash Image (Nano Banana 2)" },
@@ -24,13 +23,17 @@ const MEDIA_MODELS = [
   { value: "stability/sd3.5-turbo", label: "🖼️ Stable Diffusion 3.5" },
   { value: "flux/1.1-pro", label: "🖼️ Flux 1.1 Pro" },
   { value: "ideogram/v3", label: "🖼️ Ideogram v3" },
-  // Vídeo
+];
+
+const VIDEO_MODELS = [
+  { value: "", label: "Padrão (auto)" },
   { value: "google/veo-3", label: "🎬 Google Veo 3" },
   { value: "google/veo-2.0", label: "🎬 Google Veo 2.0" },
   { value: "kling/3.0", label: "🎬 Kling 3.0" },
   { value: "runway/gen-3", label: "🎬 Runway Gen-3" },
   { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
 ];
+
 
 interface PresetDef {
   id: string;
