@@ -1,0 +1,1 @@
+ALTER TABLE public.media_gallery ADD COLUMN IF NOT EXISTS published_channels jsonb NOT NULL DEFAULT '[]'::jsonb;

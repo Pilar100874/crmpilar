@@ -7259,6 +7259,7 @@ export type Database = {
           nome: string
           origem: string | null
           public_url: string
+          published_channels: Json
           storage_path: string
           tamanho_bytes: number | null
           thumbnail_url: string | null
@@ -7276,6 +7277,7 @@ export type Database = {
           nome: string
           origem?: string | null
           public_url: string
+          published_channels?: Json
           storage_path: string
           tamanho_bytes?: number | null
           thumbnail_url?: string | null
@@ -7293,6 +7295,7 @@ export type Database = {
           nome?: string
           origem?: string | null
           public_url?: string
+          published_channels?: Json
           storage_path?: string
           tamanho_bytes?: number | null
           thumbnail_url?: string | null
