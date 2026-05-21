@@ -27,7 +27,10 @@ export type PublishChannel =
   | 'twitter' 
   | 'linkedin'
   | 'telegram'
-  | 'email';
+  | 'email'
+  | 'youtube'
+  | 'pinterest'
+  | 'tiktok';
 
 export interface FieldOption {
   id: string;
