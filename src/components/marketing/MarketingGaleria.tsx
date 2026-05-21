@@ -180,6 +180,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
             created_at: item.created_at || new Date().toISOString(),
             _source: 'media_gallery' as const,
             disponivel_chat: item.disponivel_chat || false,
+            published_channels: Array.isArray(item.published_channels) ? item.published_channels : [],
           }));
         }
       }
