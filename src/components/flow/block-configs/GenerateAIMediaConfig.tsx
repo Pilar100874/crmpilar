@@ -36,47 +36,33 @@ const VIDEO_MODELS = [
   { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
 ];
 
+// Modelos sugeridos legíveis → mapeamento para o catálogo nativo
+const SUGGESTED_MODEL_NATIVE_FALLBACK = (label: string, mediaType: "image" | "video"): string => {
+  const l = (label || "").toLowerCase();
+  if (mediaType === "video") {
+    if (l.includes("veo 2")) return "google/veo-2.0";
+    return "google/veo-3";
+  }
+  if (l.includes("nano banana pro") || l.includes("gemini 3 pro")) return "google/gemini-3-pro-image-preview";
+  if (l.includes("nano banana 2") || l.includes("gemini 3.1 flash")) return "google/gemini-3.1-flash-image-preview";
+  if (l.includes("flux")) return "flux/1.1-pro";
+  if (l.includes("ideogram")) return "ideogram/v3";
+  if (l.includes("dall")) return "openai/dall-e-3";
+  if (l.includes("stable")) return "stability/sd3.5-turbo";
+  return "google/gemini-2.5-flash-image";
+};
 
-interface PresetDef {
-  id: string;
-  label: string;
-  mediaType: "image" | "video";
-  suggestedModel: string;
-  negativePrompt: string;
-}
+// Carrega presets customizados criados no Studio (mesma chave usada lá)
+const CUSTOM_PRESETS_KEY = "ai-studio-custom-prompt-presets";
+const loadAllSystemPresets = (): PromptPreset[] => {
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRESETS_KEY);
+    const saved: PromptPreset[] = raw ? JSON.parse(raw) : [];
+    if (saved.length > 0) return saved;
+  } catch {}
+  return [...PROMPT_PRESETS];
+};
 
-const PRESETS: PresetDef[] = [
-  {
-    id: "produto_branco", label: "Produto fundo branco", mediaType: "image",
-    suggestedModel: "google/gemini-3-pro-image-preview",
-    negativePrompt: "sem texto, sem logos, sem marca d'água, sem pessoas, sem sombras duras, sem elementos extras",
-  },
-  {
-    id: "produto_lifestyle", label: "Produto lifestyle", mediaType: "image",
-    suggestedModel: "flux/1.1-pro",
-    negativePrompt: "sem texto, sem deformações, sem objetos competindo com o produto, sem watermark",
-  },
-  {
-    id: "influencer_ugc", label: "Influencer / UGC", mediaType: "image",
-    suggestedModel: "google/gemini-3.1-flash-image-preview",
-    negativePrompt: "sem texto, sem rosto deformado, sem mãos extras, sem watermark, sem conteúdo erótico",
-  },
-  {
-    id: "post_promocional", label: "Post promocional", mediaType: "image",
-    suggestedModel: "ideogram/v3",
-    negativePrompt: "sem erros de tipografia, sem texto cortado, sem elementos fora do enquadramento",
-  },
-  {
-    id: "story_vertical", label: "Story vertical 9:16", mediaType: "image",
-    suggestedModel: "google/gemini-3-pro-image-preview",
-    negativePrompt: "sem barras laterais, sem texto sobreposto não solicitado, sem logos de terceiros",
-  },
-  {
-    id: "cinematic", label: "Cinematic / Reels", mediaType: "video",
-    suggestedModel: "google/veo-3",
-    negativePrompt: "sem texto, sem cortes abruptos, sem distorção facial, sem watermark",
-  },
-];
 
 // Estilos de som ambiente para vídeo
 const AMBIENT_SOUND_STYLES = [
