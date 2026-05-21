@@ -322,6 +322,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const userPrompt = interpolateVariables(prompt || config.basePrompt || "criativo", contextRef.current).trim();
     const basePrompt = interpolateVariables(config.basePrompt || "", contextRef.current).trim();
     const imageRefSource = config.imageRefSource || "user";
+    const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
 
     // Resolve reference image
     let refImageUrl: string | null = userRefImageUrl || null;
@@ -354,19 +355,24 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       const estId = await getEstabelecimentoId();
       const collectedImages: string[] = [];
       const errors: string[] = [];
+      const maxTotalAttempts = variations * 8;
+      let totalAttempts = 0;
 
-      for (let optionIndex = 0; optionIndex < variations; optionIndex++) {
+      while (collectedImages.length < variations && totalAttempts < maxTotalAttempts) {
+        const optionIndex = collectedImages.length;
         let optionImage = "";
-        for (let attempt = 1; !optionImage && attempt <= 3; attempt++) {
+        for (let attempt = 1; !optionImage && attempt <= 4; attempt++) {
+          totalAttempts++;
           const { data, error } = await supabase.functions.invoke("bot-generate-ai-media", {
             body: {
-              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing e identidade visual, variando apenas ângulo, enquadramento ou composição.`,
+              prompt: `${userPrompt}\n\nGere somente a opção ${optionIndex + 1} de ${variations}. Mantenha o mesmo briefing, identidade visual e formato ${imageAspectRatio}; varie apenas ângulo, enquadramento ou composição.`,
               basePrompt,
               variations: 1,
               styleSource,
               preset: config.preset || "",
               referenceImageUrl: refImageUrl || "",
               estabelecimentoId: estId || "",
+              aspectRatio: imageAspectRatio,
             },
           });
           if (error) throw error;
@@ -376,11 +382,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
           if (Array.isArray(data?.errors)) errors.push(...data.errors);
         }
 
-        if (!optionImage) break;
+        if (!optionImage) continue;
         collectedImages.push(optionImage);
-        if (collectedImages.length < variations) {
-          addSystemMessage(`⏳ ${collectedImages.length}/${variations} opções prontas. Gerando a próxima...`);
-        }
+        addSystemMessage(
+          collectedImages.length < variations
+            ? `⏳ ${collectedImages.length}/${variations} opções prontas. Gerando a próxima...`
+            : `✅ ${collectedImages.length}/${variations} opções prontas. Enviando imagens...`
+        );
       }
 
       if (collectedImages.length < variations) {
@@ -2616,7 +2624,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                           <img 
                             src={msg.mediaUrl} 
                             alt={msg.text || "Mídia"} 
-                            className="w-full max-w-xs object-cover"
+                            className="w-64 aspect-square max-w-full object-cover"
                             loading="lazy"
                             onError={(e) => {
                               console.error("Image failed to load:", msg.mediaUrl);
