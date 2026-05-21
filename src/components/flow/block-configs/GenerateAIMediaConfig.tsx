@@ -351,18 +351,48 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
 
         {styleSource === "preset" && (
           <>
-            <select
-              value={config.preset || ""}
-              onChange={(e) => handlePresetChange(e.target.value)}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Selecione um preset...</option>
-              {presetsForType.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.bestSeller ? "🏆 " : ""}{p.name} · {p.category}
-                </option>
-              ))}
-            </select>
+            {presetsForType.length === 0 && (
+              <p className="text-[10px] text-muted-foreground">Nenhum preset disponível para {mediaType === "video" ? "vídeo" : "imagem"}.</p>
+            )}
+            <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+              {presetsForType.map((p) => {
+                const isSelected = config.preset === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handlePresetChange(p.id)}
+                    className={`group relative rounded-lg overflow-hidden border-2 text-left transition ${
+                      isSelected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="aspect-video bg-muted/40 overflow-hidden">
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                    {p.bestSeller && (
+                      <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/90 text-white">
+                        🏆 Top
+                      </span>
+                    )}
+                    {isSelected && (
+                      <span className="absolute top-1 right-1 p-1 rounded-full bg-primary text-primary-foreground">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                    <div className="p-1.5 bg-background">
+                      <p className="text-[11px] font-medium leading-tight line-clamp-1">{p.name}</p>
+                      <p className="text-[9px] text-muted-foreground line-clamp-1">{p.category}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
             {selectedPreset && (
               <p className="text-[10px] text-muted-foreground">
                 {selectedPreset.tags.slice(0, 4).map((t) => `#${t}`).join(" ")}
@@ -370,6 +400,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
             )}
           </>
         )}
+
 
         {/* Blocos de referência exigidos pelo preset */}
         {styleSource === "preset" && selectedPreset && selectedPreset.referenceBlocks?.length > 0 && (
