@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2 } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Video, Cpu, AlertCircle, Music2, Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PROMPT_PRESETS, ALL_REF_BLOCKS, type PromptPreset } from "@/components/marketing/ai-studio/PromptPresets";
+
 
 interface ConfigProps {
   config: any;
