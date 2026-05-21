@@ -1,0 +1,1 @@
+ALTER TABLE public.studio_visual_identity ADD COLUMN IF NOT EXISTS negative_prompt text DEFAULT '';
