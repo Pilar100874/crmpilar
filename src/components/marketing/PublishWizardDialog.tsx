@@ -250,27 +250,53 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
 
         {step === 2 && format && (
           <div className="space-y-4">
-            <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
-              <Cropper
-                image={imageUrl}
-                crop={crop}
-                zoom={zoom}
-                aspect={format.aspectRatio}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-                showGrid
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-xs">Zoom</Label>
-              <Slider value={[zoom]} min={1} max={3} step={0.01} onValueChange={(v) => setZoom(v[0])} />
-            </div>
+            {isVideo ? (
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="relative bg-black rounded-lg overflow-hidden border-2 border-primary/50"
+                  style={{
+                    aspectRatio: format.aspectRatio,
+                    maxHeight: 400,
+                    width: format.aspectRatio >= 1 ? 'min(100%, 640px)' : 'auto',
+                    height: format.aspectRatio < 1 ? 400 : 'auto',
+                  }}
+                >
+                  <video
+                    src={imageUrl}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center max-w-md">
+                  O vídeo será exibido recortado (cover) na proporção {format.label} ({format.description}).
+                  Para edição precisa, use o editor de vídeo antes de publicar.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="relative w-full h-[400px] bg-muted rounded-lg overflow-hidden">
+                  <Cropper
+                    image={imageUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={format.aspectRatio}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    showGrid
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-xs">Zoom</Label>
+                  <Slider value={[zoom]} min={1} max={3} step={0.01} onValueChange={(v) => setZoom(v[0])} />
+                </div>
+              </>
+            )}
             <div className="flex justify-between gap-2 pt-2">
               <Button variant="outline" onClick={() => setStep(1)}>
                 <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
               </Button>
-              <Button onClick={() => setStep(3)} disabled={!croppedAreaPixels}>
+              <Button onClick={() => setStep(3)} disabled={!isVideo && !croppedAreaPixels}>
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
