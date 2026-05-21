@@ -20,7 +20,12 @@ interface Props {
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const location = useLocation();
-  const [tab, setTab] = useState<"texto" | "video">("texto");
+  const [tab, setTab] = useState<"texto" | "video" | "meus">("texto");
+  const [myTickets, setMyTickets] = useState<any[]>([]);
+  const [myMsgs, setMyMsgs] = useState<Record<string, any[]>>({});
+  const [reply, setReply] = useState<Record<string, string>>({});
+  const [loadingMine, setLoadingMine] = useState(false);
+  const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [observacao, setObservacao] = useState("");
