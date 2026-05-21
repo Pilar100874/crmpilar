@@ -970,6 +970,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           itemId={wizardItem.id}
           imageUrl={wizardItem.content_url}
           itemName={wizardItem.resource_name}
+          mediaType={wizardItem.content_type === 'video' ? 'video' : 'image'}
           existingChannels={wizardItem.published_channels || []}
           onPublished={(entry) => {
             setContent((prev) => prev.map((c) => {
