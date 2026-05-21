@@ -112,6 +112,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         is_active: newData.is_active,
         name: newData.name,
         prompt: newData.prompt,
+        negative_prompt: newData.negative_prompt || '',
         images: newData.images,
         use_prompt: newData.use_prompt,
         use_images: newData.use_images,
