@@ -12772,14 +12772,67 @@ export type Database = {
           },
         ]
       }
+      support_ticket_mensagens: {
+        Row: {
+          anexo_url: string | null
+          autor_nome: string | null
+          autor_tipo: string
+          autor_usuario_id: string | null
+          created_at: string
+          id: string
+          mensagem: string
+          ticket_id: string
+        }
+        Insert: {
+          anexo_url?: string | null
+          autor_nome?: string | null
+          autor_tipo: string
+          autor_usuario_id?: string | null
+          created_at?: string
+          id?: string
+          mensagem: string
+          ticket_id: string
+        }
+        Update: {
+          anexo_url?: string | null
+          autor_nome?: string | null
+          autor_tipo?: string
+          autor_usuario_id?: string | null
+          created_at?: string
+          id?: string
+          mensagem?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_mensagens_autor_usuario_id_fkey"
+            columns: ["autor_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_mensagens_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
+          auto_close_after_days: number
+          closed_at: string | null
           created_at: string
           descricao: string | null
           estabelecimento_id: string | null
           id: string
+          last_admin_message_at: string | null
+          last_user_message_at: string | null
           observacao: string | null
           prioridade: string
+          reopened_at: string | null
           resposta_admin: string | null
           status: string
           tela: string | null
@@ -12790,12 +12843,17 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          auto_close_after_days?: number
+          closed_at?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null
           id?: string
+          last_admin_message_at?: string | null
+          last_user_message_at?: string | null
           observacao?: string | null
           prioridade?: string
+          reopened_at?: string | null
           resposta_admin?: string | null
           status?: string
           tela?: string | null
@@ -12806,12 +12864,17 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          auto_close_after_days?: number
+          closed_at?: string | null
           created_at?: string
           descricao?: string | null
           estabelecimento_id?: string | null
           id?: string
+          last_admin_message_at?: string | null
+          last_user_message_at?: string | null
           observacao?: string | null
           prioridade?: string
+          reopened_at?: string | null
           resposta_admin?: string | null
           status?: string
           tela?: string | null
@@ -14182,6 +14245,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      auto_close_support_tickets: { Args: never; Returns: undefined }
       check_catalog_expiration: { Args: never; Returns: undefined }
       cleanup_old_agent_chat_sessions: { Args: never; Returns: undefined }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }

@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Video, Square, Loader2, FileText, Trash2 } from "lucide-react";
+import { Video, Square, Loader2, FileText, Trash2, Inbox, Send, Lock, RotateCcw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
   open: boolean;
@@ -18,7 +20,12 @@ interface Props {
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const location = useLocation();
-  const [tab, setTab] = useState<"texto" | "video">("texto");
+  const [tab, setTab] = useState<"texto" | "video" | "meus">("texto");
+  const [myTickets, setMyTickets] = useState<any[]>([]);
+  const [myMsgs, setMyMsgs] = useState<Record<string, any[]>>({});
+  const [reply, setReply] = useState<Record<string, string>>({});
+  const [loadingMine, setLoadingMine] = useState(false);
+  const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [observacao, setObservacao] = useState("");
@@ -36,7 +43,67 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) setTela(location.pathname);
-  }, [open, location.pathname]);
+    if (open && tab === "meus") loadMine();
+  }, [open, location.pathname, tab]);
+
+  const loadMine = async () => {
+    setLoadingMine(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const authId = userRes.user?.id;
+      if (!authId) return;
+      const { data: u } = await supabase.from("usuarios").select("id").eq("auth_user_id", authId).maybeSingle();
+      if (!u) return;
+      try { await (supabase.rpc as any)("auto_close_support_tickets"); } catch {}
+      const { data } = await supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("usuario_id", u.id)
+        .order("created_at", { ascending: false });
+      setMyTickets((data as any) || []);
+    } finally {
+      setLoadingMine(false);
+    }
+  };
+
+  const loadTicketMsgs = async (ticketId: string) => {
+    const { data } = await supabase
+      .from("support_ticket_mensagens")
+      .select("*")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: true });
+    setMyMsgs((p) => ({ ...p, [ticketId]: (data as any) || [] }));
+  };
+
+  const sendUserReply = async (ticketId: string) => {
+    const text = (reply[ticketId] || "").trim();
+    if (!text) return;
+    const { data: userRes } = await supabase.auth.getUser();
+    const authId = userRes.user?.id;
+    if (!authId) return;
+    const { data: u } = await supabase.from("usuarios").select("id,nome").eq("auth_user_id", authId).maybeSingle();
+    if (!u) return;
+    const { error } = await supabase.from("support_ticket_mensagens").insert({
+      ticket_id: ticketId,
+      autor_tipo: "user",
+      autor_usuario_id: u.id,
+      autor_nome: u.nome,
+      mensagem: text,
+    });
+    if (error) return toast.error(error.message);
+    setReply((p) => ({ ...p, [ticketId]: "" }));
+    await loadTicketMsgs(ticketId);
+    await loadMine();
+  };
+
+  const closeMyTicket = async (id: string) => {
+    const { error } = await supabase.from("support_tickets")
+      .update({ status: "fechado", closed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Ticket encerrado");
+    loadMine();
+  };
 
   const resetAll = () => {
     setTitulo(""); setDescricao(""); setObservacao("");
@@ -150,44 +217,47 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       )}
 
       <Dialog open={open} onOpenChange={(v) => { if (!recording) onOpenChange(v); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Abrir Ticket de Suporte</DialogTitle>
+            <DialogTitle>Suporte</DialogTitle>
             <DialogDescription>
-              Descreva o problema ou grave sua tela para enviar ao administrador.
+              Abra um novo ticket ou acompanhe seus tickets existentes.
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="texto"><FileText className="mr-2 h-4 w-4" /> Descrever</TabsTrigger>
               <TabsTrigger value="video"><Video className="mr-2 h-4 w-4" /> Gravar tela</TabsTrigger>
+              <TabsTrigger value="meus"><Inbox className="mr-2 h-4 w-4" /> Meus tickets</TabsTrigger>
             </TabsList>
 
-            <div className="mt-4 space-y-3">
-              <div>
-                <Label>Tela / Rota onde ocorreu</Label>
-                <Input value={tela} onChange={(e) => setTela(e.target.value)} placeholder="/dashboard" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            {tab !== "meus" && (
+              <div className="mt-4 space-y-3">
                 <div>
-                  <Label>Título (opcional)</Label>
-                  <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                  <Label>Tela / Rota onde ocorreu</Label>
+                  <Input value={tela} onChange={(e) => setTela(e.target.value)} placeholder="/dashboard" />
                 </div>
-                <div>
-                  <Label>Prioridade</Label>
-                  <Select value={prioridade} onValueChange={setPrioridade}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                      <SelectItem value="urgente">Urgente</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Título (opcional)</Label>
+                    <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Prioridade</Label>
+                    <Select value={prioridade} onValueChange={setPrioridade}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="baixa">Baixa</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                        <SelectItem value="urgente">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <TabsContent value="texto" className="mt-4">
               <Label>Descrição do problema</Label>
@@ -223,17 +293,94 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 />
               </div>
             </TabsContent>
+
+            <TabsContent value="meus" className="mt-4">
+              {loadingMine && <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>}
+              {!loadingMine && myTickets.length === 0 && (
+                <div className="text-sm text-muted-foreground text-center py-6">Você ainda não abriu nenhum ticket.</div>
+              )}
+              <ScrollArea className="max-h-[60vh] pr-2">
+                <div className="space-y-2">
+                  {myTickets.map((t) => {
+                    const isOpen = openTicket === t.id;
+                    const isClosed = t.status === "fechado";
+                    return (
+                      <div key={t.id} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{t.titulo || "Sem título"}</span>
+                            <Badge variant="outline" className="text-[10px]">{t.prioridade}</Badge>
+                            <Badge className={
+                              t.status === "aberto" ? "bg-blue-500" :
+                              t.status === "em_andamento" ? "bg-yellow-500" :
+                              t.status === "resolvido" ? "bg-green-500" : "bg-gray-500"
+                            }>{t.status}</Badge>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => { setOpenTicket(isOpen ? null : t.id); if (!isOpen) loadTicketMsgs(t.id); }}>
+                              {isOpen ? "Fechar" : "Abrir"}
+                            </Button>
+                            {!isClosed ? (
+                              <Button size="sm" variant="outline" onClick={() => closeMyTicket(t.id)}>
+                                <Lock className="h-3 w-3 mr-1" /> Encerrar
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => sendUserReply(t.id)} disabled={!reply[t.id]?.trim()} title="Envie uma mensagem para reabrir">
+                                <RotateCcw className="h-3 w-3 mr-1" /> Reabrir respondendo
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {new Date(t.created_at).toLocaleString("pt-BR")} · Tela: <code>{t.tela || "—"}</code>
+                        </div>
+                        {isOpen && (
+                          <div className="space-y-2 pt-2 border-t">
+                            {t.descricao && <div className="text-xs bg-muted/40 p-2 rounded whitespace-pre-wrap">{t.descricao}</div>}
+                            <div className="max-h-60 overflow-y-auto space-y-1">
+                              {(myMsgs[t.id] || []).map((m) => (
+                                <div key={m.id} className={`flex ${m.autor_tipo === "user" ? "justify-end" : "justify-start"}`}>
+                                  <div className={`max-w-[80%] rounded-lg px-2 py-1 text-xs ${m.autor_tipo === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                                    <div className="text-[9px] opacity-70">{m.autor_nome || m.autor_tipo} · {new Date(m.created_at).toLocaleString("pt-BR")}</div>
+                                    <div className="whitespace-pre-wrap">{m.mensagem}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <Textarea
+                                rows={2}
+                                value={reply[t.id] || ""}
+                                onChange={(e) => setReply((p) => ({ ...p, [t.id]: e.target.value }))}
+                                placeholder={isClosed ? "Responda para reabrir o ticket..." : "Sua resposta..."}
+                                className="flex-1 text-sm"
+                              />
+                              <Button size="sm" onClick={() => sendUserReply(t.id)} disabled={!reply[t.id]?.trim()}>
+                                <Send className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={saving}>
-              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar ticket
-            </Button>
-          </div>
+          {tab !== "meus" && (
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar ticket
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
   );
 }
+
