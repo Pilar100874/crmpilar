@@ -71,6 +71,7 @@ export const menuStructure: MenuCategory[] = [
     icon: LucideIcons.Target
   },
 { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
+  { id: "Suporte Tickets", title: "Suporte / Tickets", url: "/admin/support-tickets", icon: LucideIcons.LifeBuoy },
   { id: "Logística", title: "Logística", url: "/logistica", icon: LucideIcons.Truck },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
