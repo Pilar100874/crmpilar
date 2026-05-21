@@ -396,6 +396,51 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         return;
       }
       const items = collectedImages.slice(0, variations).map((url, i) => ({ url, index: i + 1 }));
+
+      // Salvar as imagens geradas na Galeria de Marketing na pasta "Gerado por WhatsApp Marketing"
+      try {
+        const estabId = localStorage.getItem("estabelecimentoId") || estId || "";
+        if (estabId) {
+          const FOLDER_NAME = "Gerado por WhatsApp Marketing";
+          const foldersKey = `galeria_content_folders_${estabId}`;
+          const assignmentsKey = `galeria_content_assignments_${estabId}`;
+          let folders: string[] = [];
+          let assignments: Record<string, string | null> = {};
+          try { folders = JSON.parse(localStorage.getItem(foldersKey) || "[]"); } catch {}
+          try { assignments = JSON.parse(localStorage.getItem(assignmentsKey) || "{}"); } catch {}
+          if (!folders.includes(FOLDER_NAME)) {
+            folders.push(FOLDER_NAME);
+            localStorage.setItem(foldersKey, JSON.stringify(folders));
+          }
+          for (const it of items) {
+            try {
+              const { data: inserted, error: insErr } = await supabase
+                .from("media_gallery")
+                .insert({
+                  estabelecimento_id: estabId,
+                  tipo: "image",
+                  public_url: it.url,
+                  storage_path: it.url.split("/marketing-images/")[1] || it.url,
+                  nome: `Opção ${it.index} · WhatsApp Marketing ${new Date().toLocaleString("pt-BR")}`,
+                  mime_type: "image/png",
+                  origem: "whatsapp_marketing",
+                } as any)
+                .select("id")
+                .single();
+              if (!insErr && inserted?.id) {
+                assignments[inserted.id] = FOLDER_NAME;
+              }
+            } catch (galErr) {
+              console.warn("Falha ao salvar imagem na galeria:", galErr);
+            }
+          }
+          localStorage.setItem(assignmentsKey, JSON.stringify(assignments));
+          addSystemMessage(`💾 ${items.length} imagem(ns) salva(s) na Galeria → pasta "${FOLDER_NAME}".`);
+        }
+      } catch (galErr) {
+        console.warn("Falha geral ao salvar na galeria:", galErr);
+      }
+
       items.forEach((it) => addBotMediaMessage(it.url, "image", `Opção ${it.index}`, node.id));
       addBotMessage("Responda com o número da opção que você gostou:", node.id);
       simNodeStateRef.current[node.id] = { items };
