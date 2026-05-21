@@ -189,7 +189,7 @@ const PublishWizardDialog: React.FC<Props> = ({ open, onClose, itemId, imageUrl,
           </DialogTitle>
           <DialogDescription>
             {step === 1 && 'Escolha o canal e o formato de publicação'}
-            {step === 2 && 'Ajuste a imagem para o formato escolhido'}
+            {step === 2 && (isVideo ? 'Pré-visualização do vídeo no formato escolhido' : 'Ajuste a imagem para o formato escolhido')}
             {step === 3 && 'Confira e publique'}
           </DialogDescription>
         </DialogHeader>
