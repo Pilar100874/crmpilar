@@ -962,6 +962,25 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </div>
         </DialogContent>
       </Dialog>
+
+      {wizardItem && wizardItem.content_url && (
+        <PublishWizardDialog
+          open={!!wizardItem}
+          onClose={() => setWizardItem(null)}
+          itemId={wizardItem.id}
+          imageUrl={wizardItem.content_url}
+          itemName={wizardItem.resource_name}
+          existingChannels={wizardItem.published_channels || []}
+          onPublished={(entry) => {
+            setContent((prev) => prev.map((c) => {
+              if (c.id !== wizardItem.id) return c;
+              const existing = c.published_channels || [];
+              const next = [...existing.filter((e: any) => !(e.channel === entry.channel && (e as any).format === entry.format)), entry as any];
+              return { ...c, published_channels: next };
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };
