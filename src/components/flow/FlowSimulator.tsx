@@ -326,6 +326,49 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
 
     // Resolve reference image
     let refImageUrl: string | null = userRefImageUrl || null;
+
+    // NOVO: preset com referenceInputs (productImageSelect, galleryInfluencer, etc.)
+    // Prioriza: variable (bloco anterior) > gallery > ask. Para a imagem principal,
+    // damos preferência ao productImageSelect (produto) sobre influencer/logo.
+    if (!refImageUrl && config.referenceInputs && typeof config.referenceInputs === "object") {
+      const refInputs = config.referenceInputs as Record<string, any>;
+      const orderedKeys = [
+        "productImageSelect",
+        "galleryInfluencer",
+        "galleryLogo",
+        ...Object.keys(refInputs),
+      ];
+      const seen = new Set<string>();
+      for (const key of orderedKeys) {
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const r = refInputs[key];
+        if (!r || !r.mode) continue;
+        if (r.mode === "variable" && r.variable) {
+          const varName = normalizeVarName(r.variable);
+          const raw = (contextRef.current as any)?.[varName];
+          let val: string | null = null;
+          if (raw && typeof raw === "string") val = interpolateVariables(raw, contextRef.current);
+          else if (raw && typeof raw === "object" && raw.foto_url) val = raw.foto_url;
+          if (val) {
+            refImageUrl = val;
+            addSystemMessage(`🖼️ Usando imagem de ${key} via variável {{${varName}}} (do bloco anterior)`);
+            addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
+            break;
+          } else {
+            addSystemMessage(`⚠️ Variável {{${varName}}} (${key}) está vazia — verificando próxima referência.`);
+          }
+        } else if (r.mode === "gallery" && r.galleryUrl) {
+          refImageUrl = r.galleryUrl;
+          addSystemMessage(`🖼️ Usando imagem de ${key} da galeria do Studio${r.galleryName ? ` (${r.galleryName})` : ""}`);
+          addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
+          break;
+        }
+        // mode === "ask" é tratado pelo fluxo askUserForRefImage
+      }
+    }
+
+    // Legacy: imageRefSource/imageRefVariable
     if (!refImageUrl && config.acceptImageRef && (imageRefSource === "variable" || imageRefSource === "both")) {
       const varName = normalizeVarName(config.imageRefVariable || "produto_imagem_url");
       const raw = (contextRef.current as any)?.[varName];
