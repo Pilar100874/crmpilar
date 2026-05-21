@@ -858,7 +858,46 @@ const PromptPresets: React.FC<PromptPresetsProps> = ({ onSelect, estabelecimento
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* External model confirmation */}
+      <AlertDialog open={!!modelConfirmPreset} onOpenChange={(v) => !v && setModelConfirmPreset(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Modelo externo não habilitado</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Este prompt foi otimizado originalmente para{' '}
+                  <span className="font-semibold text-foreground">{modelConfirmPreset?.originalModel}</span>,
+                  que ainda não está habilitado no seu workspace.
+                </p>
+                <p>
+                  Podemos continuar usando o modelo equivalente nativo:{' '}
+                  <span className="font-semibold text-foreground">{modelConfirmPreset?.fallbackModel || 'Modelo padrão atual'}</span>.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Para usar o modelo original, configure a API key correspondente em{' '}
+                  <span className="font-medium">Marketing → Configurações de IA</span>.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const p = modelConfirmPreset;
+                setModelConfirmPreset(null);
+                if (p) onSelect(p);
+              }}
+            >
+              Continuar com {modelConfirmPreset?.fallbackModel?.split(' ')[0] || 'padrão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
