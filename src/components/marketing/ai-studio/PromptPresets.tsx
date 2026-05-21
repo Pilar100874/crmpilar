@@ -72,7 +72,7 @@ import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
 
 // ─── Reference Block Definitions ─────────────────────────────────────
 
-const ALL_REF_BLOCKS = [
+export const ALL_REF_BLOCKS = [
   { id: 'productImageSelect', label: 'Produto', emoji: '📦' },
   { id: 'galleryInfluencer', label: 'Influencer', emoji: '👤' },
   { id: 'galleryLogo', label: 'Logo / Marca', emoji: '🏷️' },
@@ -84,6 +84,7 @@ const ALL_REF_BLOCKS = [
   { id: 'galleryPaleta', label: 'Paleta de Cores', emoji: '🎨' },
   { id: 'imageInput', label: 'Imagem de Referência', emoji: '🖼️' },
 ];
+
 
 // ─── Preset types ────────────────────────────────────────────────────
 
