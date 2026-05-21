@@ -899,6 +899,56 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {/* Publish channels dialog */}
+      <Dialog open={!!publishingItem} onOpenChange={(open) => { if (!open) setPublishingItem(null); }}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-base">Onde esta mídia foi publicada?</h3>
+              <p className="text-xs text-muted-foreground">
+                Marque os canais e, opcionalmente, cole o link do post.
+              </p>
+            </div>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((ch) => {
+                const cfg = CHANNEL_CONFIG[ch];
+                const state = publishDraft[ch] || { enabled: false, url: '' };
+                return (
+                  <div key={ch} className="border border-border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${cfg.color}`} />
+                        <span className="text-sm font-medium">{cfg.label}</span>
+                      </div>
+                      <Switch
+                        checked={state.enabled}
+                        onCheckedChange={(v) => setPublishDraft((p) => ({ ...p, [ch]: { ...state, enabled: v } }))}
+                      />
+                    </div>
+                    {state.enabled && (
+                      <Input
+                        value={state.url}
+                        onChange={(e) => setPublishDraft((p) => ({ ...p, [ch]: { ...state, url: e.target.value } }))}
+                        placeholder={`Link do post no ${cfg.label} (opcional)`}
+                        className="h-8 text-xs"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <Button variant="ghost" size="sm" onClick={() => setPublishingItem(null)} disabled={savingPublish}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleSavePublication} disabled={savingPublish}>
+                {savingPublish ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salvar'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
