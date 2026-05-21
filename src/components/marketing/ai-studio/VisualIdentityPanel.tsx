@@ -23,6 +23,7 @@ interface VisualIdentityData {
   is_active: boolean;
   name: string;
   prompt: string;
+  negative_prompt: string;
   images: string[];
   use_prompt: boolean;
   use_images: boolean;
@@ -54,7 +55,7 @@ const MAX_IMAGES = 10;
 
 const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
   const [data, setData] = useState<VisualIdentityData>({
-    is_active: false, name: 'Identidade Visual', prompt: '', images: [],
+    is_active: false, name: 'Identidade Visual', prompt: '', negative_prompt: '', images: [],
     use_prompt: true, use_images: true, selected_images: [], preferred_model: '',
   });
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
           is_active: row.is_active,
           name: row.name || 'Identidade Visual',
           prompt: row.prompt || '',
+          negative_prompt: (row as any).negative_prompt || '',
           images,
           use_prompt: row.use_prompt ?? true,
           use_images: row.use_images ?? true,
@@ -110,6 +112,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         is_active: newData.is_active,
         name: newData.name,
         prompt: newData.prompt,
+        negative_prompt: newData.negative_prompt || '',
         images: newData.images,
         use_prompt: newData.use_prompt,
         use_images: newData.use_images,
@@ -365,6 +368,25 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
                   <p className="text-[10px] text-muted-foreground/60">
                     Descreva o estilo visual, cores, tipografia e regras de branding.
                     {!data.use_prompt && ' (Desativado — não será usado nas gerações)'}
+                  </p>
+                </div>
+
+                {/* Negative Prompt */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Prompt Negativo (o que NÃO pode aparecer)</Label>
+                  </div>
+                  <Textarea
+                    value={data.negative_prompt}
+                    onChange={(e) => setData(prev => ({ ...prev, negative_prompt: e.target.value }))}
+                    onBlur={() => save(data)}
+                    placeholder="Ex: sem texto, sem logos de concorrentes, sem marca d'água, sem pessoas, sem conteúdo erótico..."
+                    className="text-sm min-h-[80px] resize-y"
+                    disabled={!data.is_active}
+                  />
+                  <p className="text-[10px] text-muted-foreground/60">
+                    Restrições aplicadas a todas as gerações (texto, marcas, elementos proibidos).
                   </p>
                 </div>
 

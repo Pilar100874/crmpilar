@@ -12680,6 +12680,7 @@ export type Database = {
           images: Json
           is_active: boolean
           name: string | null
+          negative_prompt: string | null
           preferred_model: string | null
           prompt: string | null
           selected_images: Json
@@ -12694,6 +12695,7 @@ export type Database = {
           images?: Json
           is_active?: boolean
           name?: string | null
+          negative_prompt?: string | null
           preferred_model?: string | null
           prompt?: string | null
           selected_images?: Json
@@ -12708,6 +12710,7 @@ export type Database = {
           images?: Json
           is_active?: boolean
           name?: string | null
+          negative_prompt?: string | null
           preferred_model?: string | null
           prompt?: string | null
           selected_images?: Json
