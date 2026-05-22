@@ -269,7 +269,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       if (error) throw error;
       toast.success("Ticket enviado ao admin!");
       resetAll();
-      onOpenChange(false);
+      setStep("meus");
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
     } finally { setSaving(false); }
