@@ -229,7 +229,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const handleSubmit = async () => {
     const isVideo = step === "video-review";
     if (!isVideo && !descricao.trim()) { toast.error("Descreva o problema."); return; }
-    if (isVideo && !videoBlob) { toast.error("Grave a tela antes de enviar."); return; }
+    if (isVideo && videos.length === 0) { toast.error("Grave a tela antes de enviar."); return; }
     setSaving(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -239,12 +239,18 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       if (!u) throw new Error("Usuário não encontrado");
 
       let videoUrl: string | null = null;
-      if (videoBlob) {
-        const path = `${u.id}/${Date.now()}.webm`;
-        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, videoBlob, { contentType: "video/webm" });
+      const videoAnexos: Anexo[] = [];
+      for (let i = 0; i < videos.length; i++) {
+        const v = videos[i];
+        const path = `${u.id}/${Date.now()}-${i}.webm`;
+        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, v.blob, { contentType: "video/webm" });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
-        videoUrl = pub.publicUrl;
+        if (i === 0) {
+          videoUrl = pub.publicUrl;
+        } else {
+          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: pub.publicUrl, size: v.blob.size, type: "video/webm" });
+        }
       }
 
       const { error } = await supabase.from("support_tickets").insert({
@@ -257,7 +263,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         observacao: observacao || null,
         video_url: videoUrl,
         prioridade,
-        anexos: anexos as any,
+        anexos: [...anexos, ...videoAnexos] as any,
+
       });
       if (error) throw error;
       toast.success("Ticket enviado ao admin!");
