@@ -172,6 +172,9 @@ export default function MeusTickets() {
                         <RotateCcw className="h-3 w-3 mr-1" /> Reabrir respondendo
                       </Button>
                     )}
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(t.id)}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                    </Button>
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground">
