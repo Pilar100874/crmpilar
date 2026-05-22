@@ -28,7 +28,10 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
   const [step, setStep] = useState<Step>(initialStep);
 
   useEffect(() => {
-    if (open) setStep(initialStep);
+    // Preserva o step quando voltamos da gravação para revisar o vídeo
+    if (open && step !== "video-review" && step !== "video-ready") {
+      setStep(initialStep);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialStep]);
 
