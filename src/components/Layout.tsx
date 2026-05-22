@@ -1069,6 +1069,19 @@ export default function Layout({ children }: LayoutProps) {
                       <Monitor className="w-4 h-4 flex-shrink-0" />
                       <span className="text-sm">Compartilhar ou Ver Tela</span>
                     </NavLink>
+
+                    <button
+                      onClick={() => {
+                        setOpenSubmenuId(null);
+                        window.dispatchEvent(new CustomEvent("open-support-ticket"));
+                      }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 w-full text-left"
+                    >
+                      <LifeBuoy className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm">Abrir Ticket de Suporte</span>
+                    </button>
+
+
                     
                     <button
                       onClick={() => {
