@@ -151,8 +151,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     mediaRecorderRef.current?.stop();
   };
 
-    mediaRecorderRef.current?.stop();
-  };
+
 
   // ---------- my tickets ----------
   const loadMine = async () => {
