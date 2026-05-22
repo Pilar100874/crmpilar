@@ -205,9 +205,17 @@ serve(async (req) => {
       .map((r, i) => `FOTO ${i + 1} = ${describeLabel(r.label)}`)
       .join("\n");
 
-    const compositionDirective = strictRefs.length >= 2
-      ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. O influenciador/pessoa DEVE aparecer interagindo com o produto (segurando, usando, mostrando ou ao lado). NÃO gere a pessoa sozinha. NÃO gere o produto sozinho. Preserve fielmente o rosto/traços da pessoa e a embalagem/forma do produto.`
-      : "";
+    const hasProduct = strictRefs.some((r) => (r.label || "").toLowerCase().includes("product"));
+    const hasPerson = strictRefs.some((r) => {
+      const l = (r.label || "").toLowerCase();
+      return l.includes("influencer") || l.includes("pose") || l.includes("roupa");
+    });
+
+    const compositionDirective = (hasProduct && hasPerson)
+      ? `COMPOSIÇÃO OBRIGATÓRIA (REGRA INVIOLÁVEL — vale para TODAS as variações): o PRODUTO da FOTO 1 DEVE aparecer fisicamente na cena em TODAS as imagens geradas, OBRIGATORIAMENTE em uma destas formas: (a) segurado pela mão do influenciador/pessoa, ou (b) apoiado sobre uma superfície visível (mesa, bancada, prateleira, balcão, pedra, caixa) junto ao influenciador. NUNCA gere a pessoa sem o produto. NUNCA gere o produto sem a pessoa. NUNCA esconda o produto atrás da pessoa. O produto deve estar nítido, em primeiro plano e reconhecível (mesma embalagem, cor, forma e rótulo da FOTO 1). Preserve fielmente o rosto, traços, cabelo e expressão do influenciador da FOTO 2.`
+      : strictRefs.length >= 2
+        ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. Preserve fielmente todos os elementos das referências.`
+        : "";
 
     const finalPrompt = [
       "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
@@ -236,8 +244,20 @@ serve(async (req) => {
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+    const placementHints = [
+      "o produto SEGURADO na mão direita do influenciador, em destaque na altura do peito/rosto",
+      "o produto APOIADO sobre uma superfície (mesa/bancada) ao lado do influenciador, com a mão dele tocando levemente o produto",
+      "o produto SEGURADO com as duas mãos pelo influenciador, mostrado de frente para a câmera",
+      "o produto APOIADO sobre uma superfície em primeiro plano, com o influenciador atrás levemente desfocado mas reconhecível",
+      "o produto SEGURADO próximo ao rosto do influenciador, como se estivesse apresentando",
+      "o produto APOIADO sobre uma caixa/pedestal ao lado do influenciador, ambos enquadrados nitidamente",
+    ];
+
     const generateVariation = async (variationIndex: number): Promise<string | null> => {
-      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento, pose ou composição para criar uma opção distinta.`;
+      const placement = (hasProduct && hasPerson)
+        ? `\n\nPOSICIONAMENTO DESTA VARIAÇÃO (obrigatório): ${placementHints[variationIndex % placementHints.length]}.`
+        : "";
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."}`;
       const messages = [{
         role: "user",
         content: [
