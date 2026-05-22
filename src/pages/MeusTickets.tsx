@@ -12,7 +12,7 @@ import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
 type Anexo = { name: string; url: string; size: number; type: string };
 
 export default function MeusTickets() {
-  const navigate = useNavigate();
+  
   const [tickets, setTickets] = useState<any[]>([]);
   const [msgs, setMsgs] = useState<Record<string, any[]>>({});
   const [reply, setReply] = useState<Record<string, string>>({});
