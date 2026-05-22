@@ -53,6 +53,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const [reply, setReply] = useState<Record<string, string>>({});
   const [loadingMine, setLoadingMine] = useState(false);
   const [openTicket, setOpenTicket] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
 
   useEffect(() => {
     if (open) {
