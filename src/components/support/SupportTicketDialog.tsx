@@ -312,7 +312,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       resetAll();
       onOpenChange(false);
       window.dispatchEvent(new CustomEvent("support-ticket-created"));
-      if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
+      setPostSendPromptOpen(true);
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
     } finally { setSaving(false); }
