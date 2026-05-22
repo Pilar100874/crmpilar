@@ -332,17 +332,42 @@ export default function MeusTickets() {
                         </>
                       );
                     })()}
-                    <div className="max-h-72 overflow-y-auto space-y-1">
-                      {(msgs[t.id] || []).map((m) => (
-                        <div key={m.id} className={`flex ${m.autor_tipo === "user" ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.autor_tipo === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                            <div className="text-[10px] opacity-70">{m.autor_nome || m.autor_tipo} · {new Date(m.created_at).toLocaleString("pt-BR")}</div>
-                            <div className="whitespace-pre-wrap">{m.mensagem}</div>
+                    <div className="max-h-72 overflow-y-auto space-y-2">
+                      {(msgs[t.id] || []).map((m) => {
+                        const mAnexos: Anexo[] = Array.isArray(m.anexos) ? m.anexos : [];
+                        const mVideos = mAnexos.filter((a) => (a?.type || "").startsWith("video/") || /\.webm($|\?)/i.test(a?.url || ""));
+                        const mDocs = mAnexos.filter((a) => !mVideos.includes(a));
+                        return (
+                          <div key={m.id} className={`flex ${m.autor_tipo === "user" ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm space-y-2 ${m.autor_tipo === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                              <div className="text-[10px] opacity-70">{m.autor_nome || m.autor_tipo} · {new Date(m.created_at).toLocaleString("pt-BR")}</div>
+                              {m.mensagem && <div className="whitespace-pre-wrap">{m.mensagem}</div>}
+                              {mVideos.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {mVideos.map((v, i) => (
+                                    <video key={i} src={v.url} controls className="w-full aspect-video object-contain rounded bg-black" />
+                                  ))}
+                                </div>
+                              )}
+                              {mDocs.map((a, i) => (
+                                <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-[11px] underline block truncate">📎 {a.name}</a>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                    <div className="flex gap-2">
+                    {(replyAnexos[t.id] || []).length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-2 border rounded bg-muted/30">
+                        {(replyAnexos[t.id] || []).map((a, i) => (
+                          <div key={i} className="flex items-center gap-1 text-xs bg-background border rounded px-2 py-1">
+                            <span className="truncate max-w-[160px]">{(a.type || "").startsWith("video/") ? "🎥" : "📎"} {a.name}</span>
+                            <button onClick={() => removeReplyAnexo(t.id, i)} className="text-destructive hover:opacity-70"><X className="h-3 w-3" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2 items-start">
                       <Textarea
                         rows={2}
                         value={reply[t.id] || ""}
@@ -350,9 +375,30 @@ export default function MeusTickets() {
                         placeholder={isClosed ? "Responda para reabrir o ticket..." : "Sua resposta..."}
                         className="flex-1 text-sm"
                       />
-                      <Button size="sm" onClick={() => sendReply(t.id)} disabled={!reply[t.id]?.trim()}>
-                        <Send className="h-4 w-4" />
-                      </Button>
+                      <div className="flex flex-col gap-1">
+                        <input
+                          ref={(el) => { fileInputsRef.current[t.id] = el; }}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => { if (e.target.files) { uploadFilesForReply(t.id, e.target.files); e.target.value = ""; } }}
+                        />
+                        <Button size="sm" variant="outline" type="button" onClick={() => fileInputsRef.current[t.id]?.click()} disabled={uploading[t.id]} title="Anexar arquivos">
+                          {uploading[t.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                        </Button>
+                        {recordingTicket === t.id ? (
+                          <Button size="sm" variant="destructive" type="button" onClick={stopRecording} title="Parar gravação">
+                            <Square className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" type="button" onClick={() => startRecording(t.id)} disabled={!!recordingTicket} title="Gravar vídeo da tela">
+                            <Video className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" onClick={() => sendReply(t.id)} disabled={(!reply[t.id]?.trim() && (replyAnexos[t.id] || []).length === 0) || uploading[t.id]}>
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
