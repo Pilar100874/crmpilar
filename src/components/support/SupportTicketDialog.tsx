@@ -364,7 +364,9 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
       <Dialog open={open} onOpenChange={(v) => {
         if (recording) return;
-        if (!v && (step === "video-instructions" || step === "video-review")) {
+        if (!v && (step === "video-instructions" || step === "video-ready" || step === "video-review")) {
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
           resetAll();
         }
         onOpenChange(v);
