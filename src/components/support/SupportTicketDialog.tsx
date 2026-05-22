@@ -22,6 +22,7 @@ type Anexo = { name: string; url: string; size: number; type: string };
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("home");
 
   // shared form state
