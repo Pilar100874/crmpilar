@@ -337,7 +337,14 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       )}
 
 
-      <Dialog open={open} onOpenChange={(v) => { if (!recording) onOpenChange(v); }}>
+      <Dialog open={open} onOpenChange={(v) => {
+        if (recording) return;
+        if (!v && (step === "video-instructions" || step === "video-review")) {
+          resetAll();
+        }
+        onOpenChange(v);
+      }}>
+
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -527,7 +534,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+                <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
+
                 <Button onClick={handleSubmit} disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Enviar ticket
