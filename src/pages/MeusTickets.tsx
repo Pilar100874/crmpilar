@@ -153,7 +153,7 @@ export default function MeusTickets() {
       <ScrollArea className="max-h-[calc(100vh-220px)] pr-2">
         <div className="space-y-3">
           {filtered.map((t) => {
-            const isOpen = true;
+            const isOpen = openTicket === t.id;
             const isClosed = t.status === "fechado";
             return (
               <div key={t.id} className="border rounded-lg p-4 space-y-2 bg-card">
