@@ -129,6 +129,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       };
       setStep("video-ready");
       onOpenChange(false);
+      window.dispatchEvent(new CustomEvent("support-recording-active", { detail: { active: true } }));
       toast.success("Tela pronta. Navegue até a tela do problema e clique em 'Começar a gravar'.");
     } catch (e: any) {
       toast.error("Não foi possível preparar: " + (e?.message || ""));
@@ -159,6 +160,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
         setStep("video-review");
         setRecording(false);
         setPaused(false);
+        window.dispatchEvent(new CustomEvent("support-recording-active", { detail: { active: false } }));
         onOpenChange(true);
       };
       mr.start();
@@ -181,7 +183,9 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setStep("video-instructions");
+    window.dispatchEvent(new CustomEvent("support-recording-active", { detail: { active: false } }));
   };
+
 
 
   const stopRecording = () => {
