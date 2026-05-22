@@ -205,9 +205,17 @@ serve(async (req) => {
       .map((r, i) => `FOTO ${i + 1} = ${describeLabel(r.label)}`)
       .join("\n");
 
-    const compositionDirective = strictRefs.length >= 2
-      ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. O influenciador/pessoa DEVE aparecer interagindo com o produto (segurando, usando, mostrando ou ao lado). NÃO gere a pessoa sozinha. NÃO gere o produto sozinho. Preserve fielmente o rosto/traços da pessoa e a embalagem/forma do produto.`
-      : "";
+    const hasProduct = strictRefs.some((r) => (r.label || "").toLowerCase().includes("product"));
+    const hasPerson = strictRefs.some((r) => {
+      const l = (r.label || "").toLowerCase();
+      return l.includes("influencer") || l.includes("pose") || l.includes("roupa");
+    });
+
+    const compositionDirective = (hasProduct && hasPerson)
+      ? `COMPOSIÇÃO OBRIGATÓRIA (REGRA INVIOLÁVEL — vale para TODAS as variações): o PRODUTO da FOTO 1 DEVE aparecer fisicamente na cena em TODAS as imagens geradas, OBRIGATORIAMENTE em uma destas formas: (a) segurado pela mão do influenciador/pessoa, ou (b) apoiado sobre uma superfície visível (mesa, bancada, prateleira, balcão, pedra, caixa) junto ao influenciador. NUNCA gere a pessoa sem o produto. NUNCA gere o produto sem a pessoa. NUNCA esconda o produto atrás da pessoa. O produto deve estar nítido, em primeiro plano e reconhecível (mesma embalagem, cor, forma e rótulo da FOTO 1). Preserve fielmente o rosto, traços, cabelo e expressão do influenciador da FOTO 2.`
+      : strictRefs.length >= 2
+        ? `COMPOSIÇÃO OBRIGATÓRIA: combine TODAS as referências acima em UMA única cena coesa. Preserve fielmente todos os elementos das referências.`
+        : "";
 
     const finalPrompt = [
       "TAREFA: gerar exatamente UMA imagem publicitária por chamada para WhatsApp.",
