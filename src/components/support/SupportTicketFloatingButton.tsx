@@ -6,6 +6,7 @@ import { SupportTicketDialog } from "./SupportTicketDialog";
 
 export function SupportTicketFloatingButton() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handler = () => setOpen(true);
@@ -13,8 +14,11 @@ export function SupportTicketFloatingButton() {
     return () => window.removeEventListener("open-support-ticket", handler);
   }, []);
 
+  const hideButton = location.pathname.startsWith("/meus-tickets");
+
   return (
     <>
+      {!hideButton && (
       <Button
         onClick={() => setOpen(true)}
         size="sm"
