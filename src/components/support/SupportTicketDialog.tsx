@@ -579,7 +579,45 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                           {new Date(t.created_at).toLocaleString("pt-BR")} · Tela: <code>{t.tela || "—"}</code>
                         </div>
                         {isOpen && (
-                          <div className="space-y-2 pt-2 border-t">
+                          <div className="space-y-3 pt-2 border-t">
+                            {/* TIMELINE */}
+                            {(() => {
+                              const events: { at: string; label: string; tone: "primary" | "warning" | "success" | "muted" | "destructive"; desc?: string }[] = [];
+                              events.push({ at: t.created_at, label: "Ticket aberto", tone: "primary", desc: t.titulo });
+                              (myMsgs[t.id] || []).forEach((m) => {
+                                events.push({
+                                  at: m.created_at,
+                                  label: m.autor_tipo === "user" ? "Mensagem do solicitante" : "Resposta do suporte",
+                                  tone: m.autor_tipo === "user" ? "muted" : "warning",
+                                  desc: (m.mensagem || "").slice(0, 120),
+                                });
+                              });
+                              if (t.reopened_at) events.push({ at: t.reopened_at, label: "Ticket reaberto", tone: "warning" });
+                              if (t.status === "resolvido") events.push({ at: t.updated_at, label: "Marcado como resolvido", tone: "success" });
+                              if (t.closed_at) events.push({ at: t.closed_at, label: "Ticket encerrado", tone: "destructive" });
+                              events.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+                              const toneClass = (tone: string) =>
+                                tone === "primary" ? "bg-primary" :
+                                tone === "warning" ? "bg-yellow-500" :
+                                tone === "success" ? "bg-green-500" :
+                                tone === "destructive" ? "bg-destructive" : "bg-muted-foreground";
+                              return (
+                                <div className="rounded-md border bg-muted/20 p-3">
+                                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Linha do tempo</div>
+                                  <ol className="relative border-l border-border ml-2 space-y-3">
+                                    {events.map((e, i) => (
+                                      <li key={i} className="ml-4">
+                                        <span className={`absolute -left-1.5 mt-1 h-3 w-3 rounded-full ring-2 ring-background ${toneClass(e.tone)}`} />
+                                        <div className="text-[11px] text-muted-foreground">{new Date(e.at).toLocaleString("pt-BR")}</div>
+                                        <div className="text-xs font-medium">{e.label}</div>
+                                        {e.desc && <div className="text-[11px] text-muted-foreground truncate">{e.desc}</div>}
+                                      </li>
+                                    ))}
+                                  </ol>
+                                </div>
+                              );
+                            })()}
+
                             {t.descricao && <div className="text-xs bg-muted/40 p-2 rounded whitespace-pre-wrap">{t.descricao}</div>}
                             {Array.isArray(t.anexos) && t.anexos.length > 0 && (
                               <div className="space-y-1">
