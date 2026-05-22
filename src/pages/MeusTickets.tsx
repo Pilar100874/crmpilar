@@ -168,6 +168,9 @@ export default function MeusTickets() {
                     }>{t.status}</Badge>
                   </div>
                   <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => setOpenTicket(isOpen ? null : t.id)}>
+                      {isOpen ? "Ocultar" : "Abrir"}
+                    </Button>
 
                     {!isClosed ? (
                       <Button size="sm" variant="outline" onClick={() => closeTicket(t.id)}>
