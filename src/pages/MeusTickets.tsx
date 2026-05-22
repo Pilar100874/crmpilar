@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus } from "lucide-react";
+import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
 
