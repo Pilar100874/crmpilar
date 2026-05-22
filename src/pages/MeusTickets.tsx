@@ -49,6 +49,12 @@ export default function MeusTickets() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const onCreated = () => load();
+    window.addEventListener("support-ticket-created", onCreated);
+    return () => window.removeEventListener("support-ticket-created", onCreated);
+  }, []);
+
   const loadMsgs = async (ticketId: string) => {
     const { data } = await supabase.from("support_ticket_mensagens")
       .select("*").eq("ticket_id", ticketId).order("created_at", { ascending: true });
