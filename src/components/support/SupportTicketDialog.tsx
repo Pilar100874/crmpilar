@@ -69,7 +69,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     setVideos([]);
     setTelasVisitadas([]);
     routesRef.current = [];
-    setStep("choose");
+    setStep("home");
   };
 
 
