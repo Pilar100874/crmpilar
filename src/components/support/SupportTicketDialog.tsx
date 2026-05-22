@@ -15,15 +15,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  initialStep?: Step;
 }
 
-type Step = "home" | "choose" | "texto" | "video-instructions" | "video-ready" | "video-review" | "meus";
+export type Step = "home" | "choose" | "texto" | "video-instructions" | "video-ready" | "video-review" | "meus";
 type Anexo = { name: string; url: string; size: number; type: string };
 
-export function SupportTicketDialog({ open, onOpenChange }: Props) {
+export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("home");
+  const [step, setStep] = useState<Step>(initialStep);
+
+  useEffect(() => {
+    if (open) setStep(initialStep);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialStep]);
 
   // shared form state
   const [titulo, setTitulo] = useState("");
