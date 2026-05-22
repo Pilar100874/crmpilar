@@ -377,7 +377,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 </div>
               </button>
               <button
-                onClick={() => setStep("meus")}
+                onClick={() => { setStatusFilter("abertos"); setStep("meus"); }}
                 className="group rounded-xl border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-md"
               >
                 <Inbox className="h-8 w-8 text-primary mb-3" />
