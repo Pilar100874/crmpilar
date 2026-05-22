@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X } from "lucide-react";
-import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
+
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
@@ -22,7 +22,7 @@ export default function MeusTickets() {
   const [loading, setLoading] = useState(false);
   const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
-  const [newTicketOpen, setNewTicketOpen] = useState(false);
+  
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -48,6 +48,12 @@ export default function MeusTickets() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const onCreated = () => load();
+    window.addEventListener("support-ticket-created", onCreated);
+    return () => window.removeEventListener("support-ticket-created", onCreated);
+  }, []);
 
   const loadMsgs = async (ticketId: string) => {
     const { data } = await supabase.from("support_ticket_mensagens")
@@ -111,7 +117,7 @@ export default function MeusTickets() {
           <LifeBuoy className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Meus tickets</h1>
         </div>
-        <Button onClick={() => setNewTicketOpen(true)}>
+        <Button onClick={() => window.dispatchEvent(new CustomEvent("open-support-ticket", { detail: { step: "choose" } }))}>
           <Plus className="h-4 w-4 mr-2" /> Novo ticket
         </Button>
       </div>
@@ -260,11 +266,8 @@ export default function MeusTickets() {
         </div>
       </ScrollArea>
 
-      <SupportTicketDialog
-        open={newTicketOpen}
-        onOpenChange={(v) => { setNewTicketOpen(v); if (!v) load(); }}
-        initialStep="choose"
-      />
+      {/* Recarrega a lista quando o popup global de ticket fechar */}
+
 
       <DeleteConfirmDialog
         open={!!deleteId}

@@ -305,6 +305,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       toast.success("Ticket enviado ao admin!");
       resetAll();
       onOpenChange(false);
+      window.dispatchEvent(new CustomEvent("support-ticket-created"));
       if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
