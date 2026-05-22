@@ -285,16 +285,24 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
 
       let videoUrl: string | null = null;
       const videoAnexos: Anexo[] = [];
-      for (let i = 0; i < videos.length; i++) {
-        const v = videos[i];
-        const path = `${u.id}/${Date.now()}-${i}.webm`;
-        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, v.blob, { contentType: "video/webm" });
-        if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
-        if (i === 0) {
-          videoUrl = pub.publicUrl;
-        } else {
-          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: pub.publicUrl, size: v.blob.size, type: "video/webm" });
+      if (videos.length > 0) {
+        setUploadProgress({ done: 0, total: videos.length });
+        const uploaded = await Promise.all(
+          videos.map(async (v, i) => {
+            const path = `${u.id}/${Date.now()}-${i}.webm`;
+            const { error: upErr } = await supabase.storage
+              .from("support-tickets")
+              .upload(path, v.blob, { contentType: "video/webm" });
+            if (upErr) throw upErr;
+            const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
+            setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
+            return { idx: i, url: pub.publicUrl, size: v.blob.size };
+          })
+        );
+        uploaded.sort((a, b) => a.idx - b.idx);
+        videoUrl = uploaded[0].url;
+        for (let i = 1; i < uploaded.length; i++) {
+          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: uploaded[i].url, size: uploaded[i].size, type: "video/webm" });
         }
       }
 
