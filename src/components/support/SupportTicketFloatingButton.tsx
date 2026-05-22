@@ -28,6 +28,7 @@ export function SupportTicketFloatingButton() {
         <Ticket className="h-4 w-4" />
         Abrir Ticket
       </Button>
+      )}
       <SupportTicketDialog open={open} onOpenChange={setOpen} />
     </>
   );
