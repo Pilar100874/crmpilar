@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Video, Square, Loader2, FileText, Trash2, Inbox, Send, Lock, RotateCcw, ArrowLeft, Paperclip, X, Play } from "lucide-react";
+import { Video, Square, Loader2, FileText, Trash2, Inbox, Send, Lock, RotateCcw, ArrowLeft, Paperclip, X, Play, Pause, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -36,14 +36,15 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   // recording
   const [recording, setRecording] = useState(false);
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-  const [videoUrlPreview, setVideoUrlPreview] = useState<string | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [videos, setVideos] = useState<{ blob: Blob; url: string }[]>([]);
   const [telasVisitadas, setTelasVisitadas] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const routesRef = useRef<string[]>([]);
   const routePollRef = useRef<number | null>(null);
+
 
 
   // my tickets
@@ -55,8 +56,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) {
-      // when reopening from a recording finish, keep video-review step
-      if (!videoBlob) setTela(location.pathname);
+      if (videos.length === 0) setTela(location.pathname);
       if (step === "meus") loadMine();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,13 +65,13 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const resetAll = () => {
     setTitulo(""); setDescricao(""); setObservacao("");
     setAnexos([]);
-    setVideoBlob(null);
-    if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview);
-    setVideoUrlPreview(null);
+    videos.forEach((v) => URL.revokeObjectURL(v.url));
+    setVideos([]);
     setTelasVisitadas([]);
     routesRef.current = [];
     setStep("choose");
   };
+
 
 
   // ---------- attachments ----------
@@ -114,18 +114,19 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       mr.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        setVideoBlob(blob);
-        setVideoUrlPreview(URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        setVideos((prev) => [...prev, { blob, url }]);
         stream.getTracks().forEach((t) => t.stop());
         if (routePollRef.current) {
           window.clearInterval(routePollRef.current);
           routePollRef.current = null;
         }
-        const lista = [...routesRef.current];
+        const lista = Array.from(new Set([...telasVisitadas, ...routesRef.current]));
         setTelasVisitadas(lista);
         setTela(lista.join(" → "));
         setStep("video-review");
         setRecording(false);
+        setPaused(false);
         onOpenChange(true);
       };
       stream.getVideoTracks()[0].onended = () => {
@@ -140,6 +141,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         if (arr[arr.length - 1] !== cur) arr.push(cur);
       }, 800);
       setRecording(true);
+      setPaused(false);
       toast.info("Gravação iniciada. Navegue até a tela do problema.");
       onOpenChange(false);
     } catch (e: any) {
@@ -150,6 +152,29 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
   };
+
+  const pauseRecording = () => {
+    const mr = mediaRecorderRef.current;
+    if (!mr) return;
+    if (mr.state === "recording") {
+      mr.pause();
+      setPaused(true);
+      toast.info("Gravação pausada");
+    } else if (mr.state === "paused") {
+      mr.resume();
+      setPaused(false);
+      toast.info("Gravação retomada");
+    }
+  };
+
+  const removeVideo = (idx: number) => {
+    setVideos((prev) => {
+      const v = prev[idx];
+      if (v) URL.revokeObjectURL(v.url);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
 
 
 
@@ -204,7 +229,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const handleSubmit = async () => {
     const isVideo = step === "video-review";
     if (!isVideo && !descricao.trim()) { toast.error("Descreva o problema."); return; }
-    if (isVideo && !videoBlob) { toast.error("Grave a tela antes de enviar."); return; }
+    if (isVideo && videos.length === 0) { toast.error("Grave a tela antes de enviar."); return; }
     setSaving(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -214,12 +239,18 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       if (!u) throw new Error("Usuário não encontrado");
 
       let videoUrl: string | null = null;
-      if (videoBlob) {
-        const path = `${u.id}/${Date.now()}.webm`;
-        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, videoBlob, { contentType: "video/webm" });
+      const videoAnexos: Anexo[] = [];
+      for (let i = 0; i < videos.length; i++) {
+        const v = videos[i];
+        const path = `${u.id}/${Date.now()}-${i}.webm`;
+        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, v.blob, { contentType: "video/webm" });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
-        videoUrl = pub.publicUrl;
+        if (i === 0) {
+          videoUrl = pub.publicUrl;
+        } else {
+          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: pub.publicUrl, size: v.blob.size, type: "video/webm" });
+        }
       }
 
       const { error } = await supabase.from("support_tickets").insert({
@@ -232,7 +263,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         observacao: observacao || null,
         video_url: videoUrl,
         prioridade,
-        anexos: anexos as any,
+        anexos: [...anexos, ...videoAnexos] as any,
+
       });
       if (error) throw error;
       toast.success("Ticket enviado ao admin!");
@@ -292,14 +324,18 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     <>
       {/* Floating recording indicator (when dialog closed) */}
       {recording && (
-        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-full bg-destructive px-4 py-2 text-destructive-foreground shadow-lg">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-          <span className="text-sm font-semibold">Gravando tela...</span>
+        <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-full px-4 py-2 text-destructive-foreground shadow-lg ${paused ? "bg-muted-foreground" : "bg-destructive"}`}>
+          <span className={`h-2 w-2 rounded-full bg-white ${paused ? "" : "animate-pulse"}`} />
+          <span className="text-sm font-semibold">{paused ? "Gravação pausada" : "Gravando tela..."}</span>
+          <Button size="sm" variant="secondary" onClick={pauseRecording}>
+            {paused ? (<><Play className="h-3 w-3" /> Retomar</>) : (<><Pause className="h-3 w-3" /> Pausar</>)}
+          </Button>
           <Button size="sm" variant="secondary" onClick={stopRecording}>
             <Square className="h-3 w-3" /> Finalizar
           </Button>
         </div>
       )}
+
 
       <Dialog open={open} onOpenChange={(v) => { if (!recording) onOpenChange(v); }}>
         <DialogContent className="max-w-2xl">
@@ -412,11 +448,12 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 <div className="font-semibold flex items-center gap-2"><Play className="h-4 w-4" /> Como funciona</div>
                 <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
                   <li>Clique em <strong>Iniciar gravação</strong> e escolha a aba/janela a compartilhar.</li>
-                  <li>Esta janela será fechada automaticamente para você navegar livremente.</li>
-                  <li>Vá até a tela onde o problema acontece e reproduza o erro.</li>
-                  <li>Quando terminar, clique em <strong>Finalizar</strong> no canto inferior direito (ou pare o compartilhamento do navegador).</li>
-                  <li>Um popup vai abrir no local em que você estava, com o vídeo anexado para você adicionar observações.</li>
+                  <li>Esta janela será fechada para você navegar livremente.</li>
+                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong> a gravação.</li>
+                  <li>Após finalizar, você poderá <strong>gravar outros vídeos</strong> ou enviar tudo de uma vez.</li>
+                  <li>Adicione observações e anexos antes de enviar ao suporte.</li>
                 </ol>
+
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setStep("choose")}>Voltar</Button>
@@ -430,14 +467,30 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
           {/* STEP: video-review */}
           {step === "video-review" && (
             <div className="space-y-3">
-              {videoUrlPreview && (
-                <video src={videoUrlPreview} controls className="w-full rounded-lg border max-h-72" />
-              )}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setVideoBlob(null); if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview); setVideoUrlPreview(null); setStep("video-instructions"); }}>
-                  <Trash2 className="mr-2 h-3 w-3" /> Descartar e gravar novamente
-                </Button>
+              <div className="space-y-3">
+                {videos.map((v, idx) => (
+                  <div key={v.url} className="relative rounded-lg border overflow-hidden">
+                    <div className="flex items-center justify-between px-2 py-1 bg-muted/50 text-xs">
+                      <span className="font-medium">Gravação {idx + 1}</span>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeVideo(idx)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                    <video src={v.url} controls className="w-full max-h-72" />
+                  </div>
+                ))}
               </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={startRecording}>
+                  <Plus className="mr-2 h-3 w-3" /> Gravar outro vídeo
+                </Button>
+                {videos.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={() => { videos.forEach((v) => URL.revokeObjectURL(v.url)); setVideos([]); setStep("video-instructions"); }}>
+                    <RotateCcw className="mr-2 h-3 w-3" /> Descartar tudo e recomeçar
+                  </Button>
+                )}
+              </div>
+
               {renderMetaFields()}
               <div>
                 <Label>Observação adicional</Label>
