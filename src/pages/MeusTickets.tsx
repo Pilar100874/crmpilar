@@ -34,7 +34,9 @@ export default function MeusTickets() {
       const { data } = await supabase
         .from("support_tickets").select("*")
         .eq("usuario_id", u.id).order("created_at", { ascending: false });
-      setTickets((data as any) || []);
+      const list = (data as any) || [];
+      setTickets(list);
+      list.forEach((t: any) => loadMsgs(t.id));
     } finally { setLoading(false); }
   };
 
