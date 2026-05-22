@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X, Paperclip, Video, Square } from "lucide-react";
 
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
