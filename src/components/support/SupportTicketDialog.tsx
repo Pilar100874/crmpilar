@@ -160,6 +160,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
         setStep("video-review");
         setRecording(false);
         setPaused(false);
+        window.dispatchEvent(new CustomEvent("support-recording-active", { detail: { active: false } }));
         onOpenChange(true);
       };
       mr.start();
