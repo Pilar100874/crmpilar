@@ -95,9 +95,38 @@ export default function MeusTickets() {
     }
   };
 
+  const canRecordScreen = () => {
+    if (typeof window === "undefined") return false;
+    const md: any = (navigator as any).mediaDevices;
+    const hasDisplayMedia = !!(md && typeof md.getDisplayMedia === "function");
+    const hasRecorder = typeof (window as any).MediaRecorder !== "undefined";
+    return hasDisplayMedia && hasRecorder;
+  };
+
+  const isMobileUA = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+  const isSecure = () => typeof window !== "undefined" && (window.isSecureContext || location.hostname === "localhost");
+
+  const explainRecordingUnavailable = () => {
+    if (!isSecure()) {
+      toast.error("Gravação requer conexão segura (HTTPS). Acesse o site via HTTPS para gravar.");
+      return;
+    }
+    if (isIOS()) {
+      toast.error("iPhone/iPad não permite gravação de tela pelo navegador. Use um computador (Chrome, Edge ou Firefox) ou anexe um vídeo já gravado pelo botão Anexar.");
+      return;
+    }
+    if (isMobileUA()) {
+      toast.error("Seu navegador móvel não permite gravação de tela. Use um computador (Chrome, Edge, Firefox ou Safari atualizado) ou anexe um vídeo já gravado.");
+      return;
+    }
+    toast.error("Seu navegador não suporta gravação de tela. Use Chrome, Edge, Firefox ou Safari atualizado, ou anexe um vídeo pelo botão Anexar.");
+  };
+
   const startRecording = async (ticketId: string) => {
+    if (!canRecordScreen()) { explainRecordingUnavailable(); return; }
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: true });
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({ video: { frameRate: 15 }, audio: true });
       recStreamRef.current = stream;
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       recChunksRef.current = [];
@@ -116,7 +145,11 @@ export default function MeusTickets() {
       mediaRecRef.current = mr;
       setRecordingTicket(ticketId);
     } catch (e: any) {
-      toast.error(e?.message || "Não foi possível iniciar a gravação");
+      if (e?.name === "NotAllowedError") {
+        toast.error("Permissão de gravação negada pelo usuário.");
+      } else {
+        toast.error(e?.message || "Não foi possível iniciar a gravação");
+      }
     }
   };
 
