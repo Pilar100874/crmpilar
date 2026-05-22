@@ -27,6 +27,13 @@ export default function MeusTickets() {
   const [dateTo, setDateTo] = useState<string>("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [replyAnexos, setReplyAnexos] = useState<Record<string, Anexo[]>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [recordingTicket, setRecordingTicket] = useState<string | null>(null);
+  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const recChunksRef = useRef<Blob[]>([]);
+  const recStreamRef = useRef<MediaStream | null>(null);
+  const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({});
 
 
   const load = async () => {
