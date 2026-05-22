@@ -324,14 +324,18 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     <>
       {/* Floating recording indicator (when dialog closed) */}
       {recording && (
-        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-full bg-destructive px-4 py-2 text-destructive-foreground shadow-lg">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-          <span className="text-sm font-semibold">Gravando tela...</span>
+        <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-full px-4 py-2 text-destructive-foreground shadow-lg ${paused ? "bg-muted-foreground" : "bg-destructive"}`}>
+          <span className={`h-2 w-2 rounded-full bg-white ${paused ? "" : "animate-pulse"}`} />
+          <span className="text-sm font-semibold">{paused ? "Gravação pausada" : "Gravando tela..."}</span>
+          <Button size="sm" variant="secondary" onClick={pauseRecording}>
+            {paused ? (<><Play className="h-3 w-3" /> Retomar</>) : (<><Pause className="h-3 w-3" /> Pausar</>)}
+          </Button>
           <Button size="sm" variant="secondary" onClick={stopRecording}>
             <Square className="h-3 w-3" /> Finalizar
           </Button>
         </div>
       )}
+
 
       <Dialog open={open} onOpenChange={(v) => { if (!recording) onOpenChange(v); }}>
         <DialogContent className="max-w-2xl">
