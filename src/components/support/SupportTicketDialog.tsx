@@ -750,11 +750,11 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
                               return (
                                 <>
                                   {allVideos.length > 0 && (
-                                    <div className="space-y-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {allVideos.map((v, i) => (
-                                        <div key={i} className="space-y-1">
-                                          <div className="text-[11px] font-medium text-muted-foreground">{v.name}</div>
-                                          <video src={v.url} controls className="w-full rounded border max-h-48" />
+                                        <div key={i} className="rounded-lg border bg-card overflow-hidden flex flex-col">
+                                          <div className="px-2 py-1 text-[11px] font-medium border-b bg-muted/40">{v.name}</div>
+                                          <video src={v.url} controls className="w-full aspect-video object-contain bg-black" />
                                         </div>
                                       ))}
                                     </div>
