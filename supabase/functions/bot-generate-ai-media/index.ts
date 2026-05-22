@@ -244,8 +244,20 @@ serve(async (req) => {
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+    const placementHints = [
+      "o produto SEGURADO na mão direita do influenciador, em destaque na altura do peito/rosto",
+      "o produto APOIADO sobre uma superfície (mesa/bancada) ao lado do influenciador, com a mão dele tocando levemente o produto",
+      "o produto SEGURADO com as duas mãos pelo influenciador, mostrado de frente para a câmera",
+      "o produto APOIADO sobre uma superfície em primeiro plano, com o influenciador atrás levemente desfocado mas reconhecível",
+      "o produto SEGURADO próximo ao rosto do influenciador, como se estivesse apresentando",
+      "o produto APOIADO sobre uma caixa/pedestal ao lado do influenciador, ambos enquadrados nitidamente",
+    ];
+
     const generateVariation = async (variationIndex: number): Promise<string | null> => {
-      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento, pose ou composição para criar uma opção distinta.`;
+      const placement = (hasProduct && hasPerson)
+        ? `\n\nPOSICIONAMENTO DESTA VARIAÇÃO (obrigatório): ${placementHints[variationIndex % placementHints.length]}.`
+        : "";
+      const varyHint = `\n\nVARIAÇÃO ${variationIndex + 1} de ${variationsCount}: mantenha o mesmo briefing, identidade visual e referências; mude apenas ângulo, enquadramento e composição.${placement}\n\nLEMBRETE FINAL: ${hasProduct && hasPerson ? "o PRODUTO e o INFLUENCIADOR precisam aparecer JUNTOS nesta imagem — sem exceção." : "siga rigorosamente as referências."}`;
       const messages = [{
         role: "user",
         content: [
