@@ -116,13 +116,24 @@ export default function MeusTickets() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button size="sm" variant={statusFilter === "abertos" ? "default" : "outline"} onClick={() => setStatusFilter("abertos")}>
           Em aberto
         </Button>
         <Button size="sm" variant={statusFilter === "todos" ? "default" : "outline"} onClick={() => setStatusFilter("todos")}>
           Todos
         </Button>
+        <div className="flex items-center gap-1 ml-2">
+          <Label className="text-xs text-muted-foreground">De:</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-[150px] text-xs" />
+          <Label className="text-xs text-muted-foreground ml-1">Até:</Label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-[150px] text-xs" />
+          {(dateFrom || dateTo) && (
+            <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <span className="ml-auto text-xs text-muted-foreground">{filtered.length} ticket(s)</span>
       </div>
 
