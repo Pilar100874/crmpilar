@@ -496,18 +496,36 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
                 <div className="font-semibold flex items-center gap-2"><Play className="h-4 w-4" /> Como funciona</div>
                 <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
-                  <li>Clique em <strong>Iniciar gravação</strong> e escolha a aba/janela a compartilhar.</li>
+                  <li>Clique em <strong>Selecionar tela</strong> e escolha a aba/janela a compartilhar.</li>
+                  <li>Na próxima etapa, clique em <strong>Começar a gravar</strong> apenas quando estiver pronto.</li>
                   <li>Esta janela será fechada para você navegar livremente.</li>
-                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong> a gravação.</li>
+                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong>.</li>
                   <li>Após finalizar, você poderá <strong>gravar outros vídeos</strong> ou enviar tudo de uma vez.</li>
-                  <li>Adicione observações e anexos antes de enviar ao suporte.</li>
                 </ol>
 
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setStep("choose")}>Voltar</Button>
-                <Button onClick={startRecording}>
-                  <Video className="mr-2 h-4 w-4" /> Iniciar gravação
+                <Button onClick={prepareRecording}>
+                  <Video className="mr-2 h-4 w-4" /> Selecionar tela
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: video-ready */}
+          {step === "video-ready" && (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
+                <div className="font-semibold flex items-center gap-2"><Video className="h-4 w-4 text-primary" /> Tela selecionada e pronta</div>
+                <p className="text-muted-foreground">
+                  Sua tela já está compartilhada, mas a gravação <strong>ainda não começou</strong>. Posicione-se na tela do problema e clique em <strong>Começar a gravar</strong> quando estiver pronto.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={cancelPreparedRecording}>Cancelar</Button>
+                <Button onClick={beginRecording}>
+                  <Play className="mr-2 h-4 w-4" /> Começar a gravar
                 </Button>
               </div>
             </div>
