@@ -404,8 +404,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
         onOpenChange(v);
       }}>
 
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[92vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
             <div className="flex items-center gap-2">
               {step !== "home" && step !== "video-review" && (
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep(step === "choose" || step === "meus" ? "home" : "choose")}>
@@ -424,6 +424,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
               {step === "meus" && "Acompanhe seus tickets e respostas do suporte."}
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
 
           {/* STEP: home */}
           {step === "home" && (
@@ -627,15 +629,6 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
                   </div>
                 )}
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
-
-                <Button onClick={handleSubmit} disabled={saving}>
-                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Enviar ticket
-                </Button>
-              </div>
             </div>
           )}
 
@@ -779,6 +772,18 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
             </div>
             );
           })()}
+          </div>
+
+          {/* Sticky footer for video-review */}
+          {step === "video-review" && (
+            <div className="shrink-0 border-t bg-background px-6 py-3 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar ticket
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
