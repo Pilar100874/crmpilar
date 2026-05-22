@@ -126,6 +126,10 @@ export default function Config() {
       setSearchParams({ secao: sectionId });
       return;
     }
+    if (sectionId === "support-tickets") {
+      navigate("/admin/support-tickets");
+      return;
+    }
     setActiveSection(sectionId);
     setSearchParams({ secao: sectionId });
   };
