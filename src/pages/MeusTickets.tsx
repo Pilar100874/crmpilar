@@ -226,16 +226,36 @@ export default function MeusTickets() {
                     })()}
 
                     {t.descricao && <div className="text-xs bg-muted/40 p-2 rounded whitespace-pre-wrap">{t.descricao}</div>}
-                    {Array.isArray(t.anexos) && t.anexos.length > 0 && (
-                      <div className="space-y-1">
-                        {t.anexos.map((a: Anexo, i: number) => (
-                          <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs underline block truncate">📎 {a.name}</a>
-                        ))}
-                      </div>
-                    )}
-                    {t.video_url && (
-                      <video src={t.video_url} controls className="w-full rounded border max-h-72" />
-                    )}
+                    {(() => {
+                      const anexos: any[] = Array.isArray(t.anexos) ? t.anexos : [];
+                      const videoAnexos = anexos.filter((a: any) => (a?.type || "").startsWith("video/") || /\.webm($|\?)/i.test(a?.url || ""));
+                      const docAnexos = anexos.filter((a: any) => !videoAnexos.includes(a));
+                      const allVideos = [
+                        ...(t.video_url ? [{ name: "Gravação 1.webm", url: t.video_url }] : []),
+                        ...videoAnexos.map((a: any, i: number) => ({ name: a.name || `Gravação ${i + 2}.webm`, url: a.url })),
+                      ];
+                      return (
+                        <>
+                          {allVideos.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {allVideos.map((v, i) => (
+                                <div key={i} className="rounded-lg border bg-card overflow-hidden flex flex-col">
+                                  <div className="px-2 py-1 text-xs font-medium border-b bg-muted/40 truncate">{v.name}</div>
+                                  <video src={v.url} controls className="w-full aspect-video object-contain bg-black" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {docAnexos.length > 0 && (
+                            <div className="space-y-1">
+                              {docAnexos.map((a: Anexo, i: number) => (
+                                <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs underline block truncate">📎 {a.name}</a>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                     <div className="max-h-72 overflow-y-auto space-y-1">
                       {(msgs[t.id] || []).map((m) => (
                         <div key={m.id} className={`flex ${m.autor_tipo === "user" ? "justify-end" : "justify-start"}`}>
