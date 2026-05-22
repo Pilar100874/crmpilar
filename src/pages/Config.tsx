@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail, Zap, Paintbrush
+  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy
 } from "lucide-react";
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
@@ -85,6 +85,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     bgColor: "bg-yellow-500/10",
     iconColor: "text-yellow-500",
   },
+  {
+    id: "support-tickets",
+    title: "Tickets de Suporte",
+    description: "Gerencie chamados de suporte enviados pelos usuários",
+    icon: LifeBuoy,
+    bgColor: "bg-red-500/10",
+    iconColor: "text-red-500",
+  },
 ];
 
 export default function Config() {
@@ -116,6 +124,10 @@ export default function Config() {
     if (sectionId === "macros") {
       setActiveSection(sectionId);
       setSearchParams({ secao: sectionId });
+      return;
+    }
+    if (sectionId === "support-tickets") {
+      navigate("/admin/support-tickets");
       return;
     }
     setActiveSection(sectionId);
