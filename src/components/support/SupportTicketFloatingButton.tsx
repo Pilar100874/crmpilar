@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Ticket } from "lucide-react";
 import { SupportTicketDialog } from "./SupportTicketDialog";
 
 export function SupportTicketFloatingButton() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-support-ticket", handler);
+    return () => window.removeEventListener("open-support-ticket", handler);
+  }, []);
+
   return (
     <>
       <Button
@@ -20,3 +27,4 @@ export function SupportTicketFloatingButton() {
     </>
   );
 }
+
