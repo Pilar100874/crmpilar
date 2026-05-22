@@ -28,8 +28,8 @@ export function SupportTicketFloatingButton() {
     };
   }, []);
 
-  const hideButton =
-    location.pathname.startsWith("/meus-tickets") || open || recordingActive;
+  const onTicketsScreen = location.pathname.startsWith("/meus-tickets");
+  const hideButton = !onTicketsScreen || open || recordingActive;
 
   return (
     <>
