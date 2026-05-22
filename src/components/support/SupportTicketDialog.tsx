@@ -337,7 +337,14 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       )}
 
 
-      <Dialog open={open} onOpenChange={(v) => { if (!recording) onOpenChange(v); }}>
+      <Dialog open={open} onOpenChange={(v) => {
+        if (recording) return;
+        if (!v && (step === "video-instructions" || step === "video-review")) {
+          resetAll();
+        }
+        onOpenChange(v);
+      }}>
+
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2">
