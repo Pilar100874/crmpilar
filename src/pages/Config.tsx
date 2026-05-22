@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail, Zap, Paintbrush
+  Settings, Check, Mail, Zap, Paintbrush, LifeBuoy
 } from "lucide-react";
 import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
