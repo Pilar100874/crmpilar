@@ -41,6 +41,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [postSendPromptOpen, setPostSendPromptOpen] = useState(false);
 
   // recording
   const [recording, setRecording] = useState(false);
