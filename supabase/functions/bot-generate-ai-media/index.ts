@@ -224,7 +224,7 @@ serve(async (req) => {
 
     // Convert reference URLs to base64
     const refContent: any[] = [];
-    for (const url of referenceImages.slice(0, 4)) {
+    for (const url of referenceImages.slice(0, 6)) {
       const b64 = await fetchAsBase64(url);
       if (b64) refContent.push({ type: "image_url", image_url: { url: b64 } });
     }
