@@ -697,7 +697,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 </div>
               </ScrollArea>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </>
