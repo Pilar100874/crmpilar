@@ -17,7 +17,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
-type Step = "home" | "choose" | "texto" | "video-instructions" | "video-review" | "meus";
+type Step = "home" | "choose" | "texto" | "video-instructions" | "video-ready" | "video-review" | "meus";
 type Anexo = { name: string; url: string; size: number; type: string };
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
