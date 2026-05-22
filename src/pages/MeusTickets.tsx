@@ -95,9 +95,38 @@ export default function MeusTickets() {
     }
   };
 
+  const canRecordScreen = () => {
+    if (typeof window === "undefined") return false;
+    const md: any = (navigator as any).mediaDevices;
+    const hasDisplayMedia = !!(md && typeof md.getDisplayMedia === "function");
+    const hasRecorder = typeof (window as any).MediaRecorder !== "undefined";
+    return hasDisplayMedia && hasRecorder;
+  };
+
+  const isMobileUA = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+  const isSecure = () => typeof window !== "undefined" && (window.isSecureContext || location.hostname === "localhost");
+
+  const explainRecordingUnavailable = () => {
+    if (!isSecure()) {
+      toast.error("Gravação requer conexão segura (HTTPS). Acesse o site via HTTPS para gravar.");
+      return;
+    }
+    if (isIOS()) {
+      toast.error("iPhone/iPad não permite gravação de tela pelo navegador. Use um computador (Chrome, Edge ou Firefox) ou anexe um vídeo já gravado pelo botão Anexar.");
+      return;
+    }
+    if (isMobileUA()) {
+      toast.error("Seu navegador móvel não permite gravação de tela. Use um computador (Chrome, Edge, Firefox ou Safari atualizado) ou anexe um vídeo já gravado.");
+      return;
+    }
+    toast.error("Seu navegador não suporta gravação de tela. Use Chrome, Edge, Firefox ou Safari atualizado, ou anexe um vídeo pelo botão Anexar.");
+  };
+
   const startRecording = async (ticketId: string) => {
+    if (!canRecordScreen()) { explainRecordingUnavailable(); return; }
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: true });
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({ video: { frameRate: 15 }, audio: true });
       recStreamRef.current = stream;
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       recChunksRef.current = [];
@@ -116,7 +145,11 @@ export default function MeusTickets() {
       mediaRecRef.current = mr;
       setRecordingTicket(ticketId);
     } catch (e: any) {
-      toast.error(e?.message || "Não foi possível iniciar a gravação");
+      if (e?.name === "NotAllowedError") {
+        toast.error("Permissão de gravação negada pelo usuário.");
+      } else {
+        toast.error(e?.message || "Não foi possível iniciar a gravação");
+      }
     }
   };
 
@@ -367,15 +400,15 @@ export default function MeusTickets() {
                         ))}
                       </div>
                     )}
-                    <div className="flex gap-2 items-start">
+                    <div className="space-y-2">
                       <Textarea
                         rows={2}
                         value={reply[t.id] || ""}
                         onChange={(e) => setReply((p) => ({ ...p, [t.id]: e.target.value }))}
                         placeholder={isClosed ? "Responda para reabrir o ticket..." : "Sua resposta..."}
-                        className="flex-1 text-sm"
+                        className="w-full text-sm"
                       />
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <input
                           ref={(el) => { fileInputsRef.current[t.id] = el; }}
                           type="file"
@@ -384,19 +417,34 @@ export default function MeusTickets() {
                           onChange={(e) => { if (e.target.files) { uploadFilesForReply(t.id, e.target.files); e.target.value = ""; } }}
                         />
                         <Button size="sm" variant="outline" type="button" onClick={() => fileInputsRef.current[t.id]?.click()} disabled={uploading[t.id]} title="Anexar arquivos">
-                          {uploading[t.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                          {uploading[t.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Paperclip className="h-4 w-4 mr-1" />}
+                          <span className="hidden sm:inline">Anexar</span>
                         </Button>
                         {recordingTicket === t.id ? (
                           <Button size="sm" variant="destructive" type="button" onClick={stopRecording} title="Parar gravação">
-                            <Square className="h-4 w-4" />
+                            <Square className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Parar</span>
                           </Button>
                         ) : (
-                          <Button size="sm" variant="outline" type="button" onClick={() => startRecording(t.id)} disabled={!!recordingTicket} title="Gravar vídeo da tela">
-                            <Video className="h-4 w-4" />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            type="button"
+                            onClick={() => startRecording(t.id)}
+                            disabled={!!recordingTicket}
+                            title={canRecordScreen() ? "Gravar vídeo da tela" : "Gravação indisponível neste dispositivo/navegador"}
+                          >
+                            <Video className={`h-4 w-4 mr-1 ${canRecordScreen() ? "" : "opacity-50"}`} />
+                            <span className="hidden sm:inline">Gravar</span>
                           </Button>
                         )}
-                        <Button size="sm" onClick={() => sendReply(t.id)} disabled={(!reply[t.id]?.trim() && (replyAnexos[t.id] || []).length === 0) || uploading[t.id]}>
-                          <Send className="h-4 w-4" />
+                        <Button
+                          size="sm"
+                          className="ml-auto"
+                          onClick={() => sendReply(t.id)}
+                          disabled={(!reply[t.id]?.trim() && (replyAnexos[t.id] || []).length === 0) || uploading[t.id]}
+                        >
+                          <Send className="h-4 w-4 mr-1" /> Enviar
                         </Button>
                       </div>
                     </div>
