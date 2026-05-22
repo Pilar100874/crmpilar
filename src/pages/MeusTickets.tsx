@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus } from "lucide-react";
+import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X } from "lucide-react";
 import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
 
@@ -20,6 +23,10 @@ export default function MeusTickets() {
   const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
   const [newTicketOpen, setNewTicketOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
 
   const load = async () => {
@@ -72,9 +79,30 @@ export default function MeusTickets() {
     toast.success("Ticket encerrado"); load();
   };
 
-  const filtered = statusFilter === "abertos"
-    ? tickets.filter((t) => t.status !== "fechado")
-    : tickets;
+  const deleteTicket = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      await supabase.from("support_ticket_mensagens").delete().eq("ticket_id", deleteId);
+      const { error } = await supabase.from("support_tickets").delete().eq("id", deleteId);
+      if (error) throw error;
+      toast.success("Ticket excluído");
+      setDeleteId(null);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao excluir");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const filtered = tickets.filter((t) => {
+    if (statusFilter === "abertos" && t.status === "fechado") return false;
+    const ts = new Date(t.created_at).getTime();
+    if (dateFrom && ts < new Date(dateFrom + "T00:00:00").getTime()) return false;
+    if (dateTo && ts > new Date(dateTo + "T23:59:59").getTime()) return false;
+    return true;
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-4">
@@ -88,13 +116,24 @@ export default function MeusTickets() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button size="sm" variant={statusFilter === "abertos" ? "default" : "outline"} onClick={() => setStatusFilter("abertos")}>
           Em aberto
         </Button>
         <Button size="sm" variant={statusFilter === "todos" ? "default" : "outline"} onClick={() => setStatusFilter("todos")}>
           Todos
         </Button>
+        <div className="flex items-center gap-1 ml-2">
+          <Label className="text-xs text-muted-foreground">De:</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-8 w-[150px] text-xs" />
+          <Label className="text-xs text-muted-foreground ml-1">Até:</Label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-8 w-[150px] text-xs" />
+          {(dateFrom || dateTo) && (
+            <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <span className="ml-auto text-xs text-muted-foreground">{filtered.length} ticket(s)</span>
       </div>
 
@@ -133,6 +172,9 @@ export default function MeusTickets() {
                         <RotateCcw className="h-3 w-3 mr-1" /> Reabrir respondendo
                       </Button>
                     )}
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(t.id)}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                    </Button>
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground">
@@ -222,6 +264,15 @@ export default function MeusTickets() {
         open={newTicketOpen}
         onOpenChange={(v) => { setNewTicketOpen(v); if (!v) load(); }}
         initialStep="choose"
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(v) => !v && setDeleteId(null)}
+        onConfirm={deleteTicket}
+        isLoading={deleting}
+        title="Excluir ticket"
+        description="Tem certeza que deseja excluir este ticket? Todas as mensagens e anexos serão removidos. Esta ação não pode ser desfeita."
       />
     </div>
   );
