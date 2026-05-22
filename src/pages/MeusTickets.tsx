@@ -68,19 +68,85 @@ export default function MeusTickets() {
     setMsgs((p) => ({ ...p, [ticketId]: (data as any) || [] }));
   };
 
+  const uploadFilesForReply = async (ticketId: string, files: FileList | File[]) => {
+    const arr = Array.from(files);
+    if (!arr.length) return;
+    setUploading((p) => ({ ...p, [ticketId]: true }));
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const authId = userRes.user?.id;
+      if (!authId) throw new Error("Não autenticado");
+      const { data: u } = await supabase.from("usuarios").select("id").eq("auth_user_id", authId).maybeSingle();
+      if (!u) throw new Error("Usuário não encontrado");
+      const novos: Anexo[] = [];
+      for (const f of arr) {
+        if (f.size > 25 * 1024 * 1024) { toast.error(`${f.name} excede 25MB`); continue; }
+        const path = `${u.id}/replies/${ticketId}/${Date.now()}-${f.name}`;
+        const { error } = await supabase.storage.from("support-tickets").upload(path, f, { contentType: f.type, upsert: false });
+        if (error) { toast.error(`Falha ao enviar ${f.name}: ${error.message}`); continue; }
+        const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
+        novos.push({ name: f.name, url: pub.publicUrl, size: f.size, type: f.type });
+      }
+      setReplyAnexos((p) => ({ ...p, [ticketId]: [...(p[ticketId] || []), ...novos] }));
+    } catch (e: any) {
+      toast.error(e?.message || "Erro no upload");
+    } finally {
+      setUploading((p) => ({ ...p, [ticketId]: false }));
+    }
+  };
+
+  const startRecording = async (ticketId: string) => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: true });
+      recStreamRef.current = stream;
+      const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
+      recChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) recChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        const blob = new Blob(recChunksRef.current, { type: "video/webm" });
+        recStreamRef.current?.getTracks().forEach((t) => t.stop());
+        recStreamRef.current = null;
+        setRecordingTicket(null);
+        const idx = (replyAnexos[ticketId] || []).filter(a => (a.type || "").startsWith("video/")).length + 1;
+        const file = new File([blob], `gravacao-${Date.now()}-${idx}.webm`, { type: "video/webm" });
+        await uploadFilesForReply(ticketId, [file]);
+      };
+      stream.getVideoTracks()[0].onended = () => { if (mr.state !== "inactive") mr.stop(); };
+      mr.start();
+      mediaRecRef.current = mr;
+      setRecordingTicket(ticketId);
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível iniciar a gravação");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
+      mediaRecRef.current.stop();
+    }
+  };
+
+  const removeReplyAnexo = (ticketId: string, idx: number) => {
+    setReplyAnexos((p) => ({ ...p, [ticketId]: (p[ticketId] || []).filter((_, i) => i !== idx) }));
+  };
+
   const sendReply = async (ticketId: string) => {
     const text = (reply[ticketId] || "").trim();
-    if (!text) return;
+    const anexos = replyAnexos[ticketId] || [];
+    if (!text && anexos.length === 0) return;
     const { data: userRes } = await supabase.auth.getUser();
     const authId = userRes.user?.id;
     if (!authId) return;
     const { data: u } = await supabase.from("usuarios").select("id,nome").eq("auth_user_id", authId).maybeSingle();
     if (!u) return;
     const { error } = await supabase.from("support_ticket_mensagens").insert({
-      ticket_id: ticketId, autor_tipo: "user", autor_usuario_id: u.id, autor_nome: u.nome, mensagem: text,
-    });
+      ticket_id: ticketId, autor_tipo: "user", autor_usuario_id: u.id, autor_nome: u.nome,
+      mensagem: text || (anexos.length ? "(anexos)" : ""),
+      anexos: anexos as any,
+    } as any);
     if (error) return toast.error(error.message);
     setReply((p) => ({ ...p, [ticketId]: "" }));
+    setReplyAnexos((p) => ({ ...p, [ticketId]: [] }));
     await loadMsgs(ticketId);
     await load();
   };
