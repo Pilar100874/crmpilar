@@ -198,11 +198,11 @@ export default function SupportTickets() {
                 return (
                   <>
                     {allVideos.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {allVideos.map((v, i) => (
-                          <div key={i} className="space-y-1">
-                            <div className="text-xs font-medium text-muted-foreground">{v.name}</div>
-                            <video src={v.url} controls className="w-full max-h-80 rounded-lg border" />
+                          <div key={i} className="rounded-lg border bg-card overflow-hidden flex flex-col">
+                            <div className="px-2 py-1 text-xs font-medium border-b bg-muted/40">{v.name}</div>
+                            <video src={v.url} controls className="w-full aspect-video object-contain bg-black" />
                           </div>
                         ))}
                       </div>
