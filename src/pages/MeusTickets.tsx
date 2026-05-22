@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,17 +7,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus } from "lucide-react";
+import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
 
 export default function MeusTickets() {
-  const navigate = useNavigate();
+  
   const [tickets, setTickets] = useState<any[]>([]);
   const [msgs, setMsgs] = useState<Record<string, any[]>>({});
   const [reply, setReply] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
+  const [newTicketOpen, setNewTicketOpen] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -78,7 +81,7 @@ export default function MeusTickets() {
           <LifeBuoy className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Meus tickets</h1>
         </div>
-        <Button onClick={() => navigate(-1)} variant="outline">
+        <Button onClick={() => setNewTicketOpen(true)}>
           <Plus className="h-4 w-4 mr-2" /> Novo ticket
         </Button>
       </div>
@@ -214,6 +217,12 @@ export default function MeusTickets() {
           })}
         </div>
       </ScrollArea>
+
+      <SupportTicketDialog
+        open={newTicketOpen}
+        onOpenChange={(v) => { setNewTicketOpen(v); if (!v) load(); }}
+        initialStep="choose"
+      />
     </div>
   );
 }
