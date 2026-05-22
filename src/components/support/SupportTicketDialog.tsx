@@ -110,14 +110,20 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       streamRef.current = stream;
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       chunksRef.current = [];
+      routesRef.current = [window.location.pathname];
       mr.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         setVideoBlob(blob);
         setVideoUrlPreview(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
-        // capture current screen route at the moment of stop
-        setTela(window.location.pathname);
+        if (routePollRef.current) {
+          window.clearInterval(routePollRef.current);
+          routePollRef.current = null;
+        }
+        const lista = [...routesRef.current];
+        setTelasVisitadas(lista);
+        setTela(lista.join(" → "));
         setStep("video-review");
         setRecording(false);
         onOpenChange(true);
@@ -127,6 +133,12 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       };
       mr.start();
       mediaRecorderRef.current = mr;
+      // Poll route changes every 800ms while recording
+      routePollRef.current = window.setInterval(() => {
+        const cur = window.location.pathname;
+        const arr = routesRef.current;
+        if (arr[arr.length - 1] !== cur) arr.push(cur);
+      }, 800);
       setRecording(true);
       toast.info("Gravação iniciada. Navegue até a tela do problema.");
       onOpenChange(false);
@@ -136,6 +148,9 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   };
 
   const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+  };
+
     mediaRecorderRef.current?.stop();
   };
 
