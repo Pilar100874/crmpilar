@@ -466,14 +466,30 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
           {/* STEP: video-review */}
           {step === "video-review" && (
             <div className="space-y-3">
-              {videoUrlPreview && (
-                <video src={videoUrlPreview} controls className="w-full rounded-lg border max-h-72" />
-              )}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setVideoBlob(null); if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview); setVideoUrlPreview(null); setStep("video-instructions"); }}>
-                  <Trash2 className="mr-2 h-3 w-3" /> Descartar e gravar novamente
-                </Button>
+              <div className="space-y-3">
+                {videos.map((v, idx) => (
+                  <div key={v.url} className="relative rounded-lg border overflow-hidden">
+                    <div className="flex items-center justify-between px-2 py-1 bg-muted/50 text-xs">
+                      <span className="font-medium">Gravação {idx + 1}</span>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeVideo(idx)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                    <video src={v.url} controls className="w-full max-h-72" />
+                  </div>
+                ))}
               </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={startRecording}>
+                  <Plus className="mr-2 h-3 w-3" /> Gravar outro vídeo
+                </Button>
+                {videos.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={() => { videos.forEach((v) => URL.revokeObjectURL(v.url)); setVideos([]); setStep("video-instructions"); }}>
+                    <RotateCcw className="mr-2 h-3 w-3" /> Descartar tudo e recomeçar
+                  </Button>
+                )}
+              </div>
+
               {renderMetaFields()}
               <div>
                 <Label>Observação adicional</Label>
