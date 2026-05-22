@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus } from "lucide-react";
+import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X } from "lucide-react";
 import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
 
@@ -20,6 +23,10 @@ export default function MeusTickets() {
   const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
   const [newTicketOpen, setNewTicketOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
 
   const load = async () => {
