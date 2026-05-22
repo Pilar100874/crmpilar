@@ -7,6 +7,7 @@ import { SupportTicketDialog, type Step } from "./SupportTicketDialog";
 export function SupportTicketFloatingButton() {
   const [open, setOpen] = useState(false);
   const [initialStep, setInitialStep] = useState<Step>("home");
+  const [recordingActive, setRecordingActive] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -15,11 +16,20 @@ export function SupportTicketFloatingButton() {
       setInitialStep(detail?.step || "home");
       setOpen(true);
     };
+    const recHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { active?: boolean } | undefined;
+      setRecordingActive(!!detail?.active);
+    };
     window.addEventListener("open-support-ticket", handler);
-    return () => window.removeEventListener("open-support-ticket", handler);
+    window.addEventListener("support-recording-active", recHandler);
+    return () => {
+      window.removeEventListener("open-support-ticket", handler);
+      window.removeEventListener("support-recording-active", recHandler);
+    };
   }, []);
 
-  const hideButton = location.pathname.startsWith("/meus-tickets");
+  const hideButton =
+    location.pathname.startsWith("/meus-tickets") || open || recordingActive;
 
   return (
     <>
