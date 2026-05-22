@@ -44,7 +44,9 @@ import {
   Clock,
   Sun,
   Moon,
+  LifeBuoy,
 } from "lucide-react";
+
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast-config";
