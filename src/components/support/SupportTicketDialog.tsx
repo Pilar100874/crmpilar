@@ -56,8 +56,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   useEffect(() => {
     if (open) {
-      // when reopening from a recording finish, keep video-review step
-      if (!videoBlob) setTela(location.pathname);
+      if (videos.length === 0) setTela(location.pathname);
       if (step === "meus") loadMine();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,13 +65,13 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const resetAll = () => {
     setTitulo(""); setDescricao(""); setObservacao("");
     setAnexos([]);
-    setVideoBlob(null);
-    if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview);
-    setVideoUrlPreview(null);
+    videos.forEach((v) => URL.revokeObjectURL(v.url));
+    setVideos([]);
     setTelasVisitadas([]);
     routesRef.current = [];
     setStep("choose");
   };
+
 
 
   // ---------- attachments ----------
