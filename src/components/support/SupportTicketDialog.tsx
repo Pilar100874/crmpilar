@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [postSendPromptOpen, setPostSendPromptOpen] = useState(false);
 
   // recording
   const [recording, setRecording] = useState(false);
@@ -310,7 +312,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       resetAll();
       onOpenChange(false);
       window.dispatchEvent(new CustomEvent("support-ticket-created"));
-      if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
+      setPostSendPromptOpen(true);
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
     } finally { setSaving(false); }
@@ -775,6 +777,28 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
           })()}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={postSendPromptOpen} onOpenChange={setPostSendPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ticket enviado!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja ir para a tela de tickets para acompanhar, ou apenas fechar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPostSendPromptOpen(false)}>Apenas fechar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPostSendPromptOpen(false);
+                if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
+              }}
+            >
+              Ir para Meus tickets
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
