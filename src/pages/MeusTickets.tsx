@@ -79,9 +79,30 @@ export default function MeusTickets() {
     toast.success("Ticket encerrado"); load();
   };
 
-  const filtered = statusFilter === "abertos"
-    ? tickets.filter((t) => t.status !== "fechado")
-    : tickets;
+  const deleteTicket = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      await supabase.from("support_ticket_mensagens").delete().eq("ticket_id", deleteId);
+      const { error } = await supabase.from("support_tickets").delete().eq("id", deleteId);
+      if (error) throw error;
+      toast.success("Ticket excluído");
+      setDeleteId(null);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao excluir");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const filtered = tickets.filter((t) => {
+    if (statusFilter === "abertos" && t.status === "fechado") return false;
+    const ts = new Date(t.created_at).getTime();
+    if (dateFrom && ts < new Date(dateFrom + "T00:00:00").getTime()) return false;
+    if (dateTo && ts > new Date(dateTo + "T23:59:59").getTime()) return false;
+    return true;
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-4">
