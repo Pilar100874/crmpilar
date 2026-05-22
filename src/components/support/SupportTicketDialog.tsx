@@ -401,7 +401,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
           {/* STEP: texto */}
           {step === "texto" && (
             <div className="space-y-3">
-              {renderMetaFields()}
+              {renderMetaFields(false)}
               <div>
                 <Label>Descrição do problema</Label>
                 <Textarea
