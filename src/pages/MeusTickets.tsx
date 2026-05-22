@@ -81,7 +81,7 @@ export default function MeusTickets() {
           <LifeBuoy className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Meus tickets</h1>
         </div>
-        <Button onClick={() => navigate(-1)} variant="outline">
+        <Button onClick={() => setNewTicketOpen(true)}>
           <Plus className="h-4 w-4 mr-2" /> Novo ticket
         </Button>
       </div>
