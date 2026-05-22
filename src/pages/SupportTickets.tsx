@@ -187,7 +187,38 @@ export default function SupportTickets() {
 
               {t.descricao && <div className="text-sm whitespace-pre-wrap bg-muted/40 p-2 rounded">{t.descricao}</div>}
               {t.observacao && <div className="text-sm"><strong>Observação:</strong> {t.observacao}</div>}
-              {t.video_url && <video src={t.video_url} controls className="w-full max-h-80 rounded-lg border" />}
+              {(() => {
+                const anexos: any[] = Array.isArray((t as any).anexos) ? (t as any).anexos : [];
+                const videoAnexos = anexos.filter((a) => (a?.type || "").startsWith("video/") || /\.webm($|\?)/i.test(a?.url || ""));
+                const docAnexos = anexos.filter((a) => !videoAnexos.includes(a));
+                const allVideos = [
+                  ...(t.video_url ? [{ name: "Gravação 1.webm", url: t.video_url }] : []),
+                  ...videoAnexos.map((a, i) => ({ name: a.name || `Gravação ${i + 2}.webm`, url: a.url })),
+                ];
+                return (
+                  <>
+                    {allVideos.length > 0 && (
+                      <div className="space-y-2">
+                        {allVideos.map((v, i) => (
+                          <div key={i} className="space-y-1">
+                            <div className="text-xs font-medium text-muted-foreground">{v.name}</div>
+                            <video src={v.url} controls className="w-full max-h-80 rounded-lg border" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {docAnexos.length > 0 && (
+                      <div className="space-y-1">
+                        {docAnexos.map((a, i) => (
+                          <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs underline block truncate">
+                            📎 {a.name}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               <div className="flex items-center gap-2 flex-wrap">
                 <Button size="sm" variant="outline" onClick={() => { setOpenId(isOpen ? null : t.id); if (!isOpen) loadMsgs(t.id); }}>

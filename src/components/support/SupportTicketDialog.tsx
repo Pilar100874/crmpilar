@@ -44,6 +44,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [postSendPromptOpen, setPostSendPromptOpen] = useState(false);
 
   // recording
@@ -284,16 +285,24 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
 
       let videoUrl: string | null = null;
       const videoAnexos: Anexo[] = [];
-      for (let i = 0; i < videos.length; i++) {
-        const v = videos[i];
-        const path = `${u.id}/${Date.now()}-${i}.webm`;
-        const { error: upErr } = await supabase.storage.from("support-tickets").upload(path, v.blob, { contentType: "video/webm" });
-        if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
-        if (i === 0) {
-          videoUrl = pub.publicUrl;
-        } else {
-          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: pub.publicUrl, size: v.blob.size, type: "video/webm" });
+      if (videos.length > 0) {
+        setUploadProgress({ done: 0, total: videos.length });
+        const uploaded = await Promise.all(
+          videos.map(async (v, i) => {
+            const path = `${u.id}/${Date.now()}-${i}.webm`;
+            const { error: upErr } = await supabase.storage
+              .from("support-tickets")
+              .upload(path, v.blob, { contentType: "video/webm" });
+            if (upErr) throw upErr;
+            const { data: pub } = supabase.storage.from("support-tickets").getPublicUrl(path);
+            setUploadProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
+            return { idx: i, url: pub.publicUrl, size: v.blob.size };
+          })
+        );
+        uploaded.sort((a, b) => a.idx - b.idx);
+        videoUrl = uploaded[0].url;
+        for (let i = 1; i < uploaded.length; i++) {
+          videoAnexos.push({ name: `Gravação ${i + 1}.webm`, url: uploaded[i].url, size: uploaded[i].size, type: "video/webm" });
         }
       }
 
@@ -318,7 +327,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       setPostSendPromptOpen(true);
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
-    } finally { setSaving(false); }
+    } finally { setSaving(false); setUploadProgress(null); }
   };
 
   // ---------- shared meta ----------
@@ -776,11 +785,17 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
 
           {/* Sticky footer for video-review */}
           {step === "video-review" && (
-            <div className="shrink-0 border-t bg-background px-6 py-3 flex justify-end gap-2">
+            <div className="shrink-0 border-t bg-background px-6 py-3 flex items-center justify-end gap-2">
+              {uploadProgress && (
+                <span className="mr-auto text-xs text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Enviando vídeo {uploadProgress.done}/{uploadProgress.total}…
+                </span>
+              )}
               <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
               <Button onClick={handleSubmit} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar ticket
+                {saving ? "Enviando…" : "Enviar ticket"}
               </Button>
             </div>
           )}
