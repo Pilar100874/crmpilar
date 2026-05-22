@@ -17,12 +17,12 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
-type Step = "choose" | "texto" | "video-instructions" | "video-review" | "meus";
+type Step = "home" | "choose" | "texto" | "video-instructions" | "video-review" | "meus";
 type Anexo = { name: string; url: string; size: number; type: string };
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const location = useLocation();
-  const [step, setStep] = useState<Step>("choose");
+  const [step, setStep] = useState<Step>("home");
 
   // shared form state
   const [titulo, setTitulo] = useState("");
