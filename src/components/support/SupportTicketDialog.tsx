@@ -128,7 +128,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
         }
       };
       setStep("video-ready");
-      toast.success("Tela pronta. Clique em 'Começar a gravar' quando estiver pronto.");
+      onOpenChange(false);
+      toast.success("Tela pronta. Navegue até a tela do problema e clique em 'Começar a gravar'.");
     } catch (e: any) {
       toast.error("Não foi possível preparar: " + (e?.message || ""));
     }
