@@ -12822,6 +12822,7 @@ export type Database = {
       }
       support_tickets: {
         Row: {
+          anexos: Json
           auto_close_after_days: number
           closed_at: string | null
           created_at: string
@@ -12843,6 +12844,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          anexos?: Json
           auto_close_after_days?: number
           closed_at?: string | null
           created_at?: string
@@ -12864,6 +12866,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          anexos?: Json
           auto_close_after_days?: number
           closed_at?: string | null
           created_at?: string
