@@ -68,8 +68,11 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     setVideoBlob(null);
     if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview);
     setVideoUrlPreview(null);
+    setTelasVisitadas([]);
+    routesRef.current = [];
     setStep("choose");
   };
+
 
   // ---------- attachments ----------
   const handleFiles = async (files: FileList | null) => {
