@@ -183,7 +183,9 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setStep("video-instructions");
+    window.dispatchEvent(new CustomEvent("support-recording-active", { detail: { active: false } }));
   };
+
 
 
   const stopRecording = () => {
