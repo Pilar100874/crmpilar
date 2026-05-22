@@ -276,48 +276,45 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   };
 
   // ---------- shared meta ----------
-  const renderMetaFields = () => {
+  const renderMetaFields = (showTela: boolean = true) => {
     const telas = telasVisitadas.length > 0 ? telasVisitadas : [tela].filter(Boolean);
     return (
       <div className="space-y-3">
+        {showTela && (
+          <div>
+            <Label>{telasVisitadas.length > 1 ? "Telas envolvidas (capturadas automaticamente)" : "Tela onde ocorreu (capturada automaticamente)"}</Label>
+            <div className="mt-1 flex flex-wrap gap-2 rounded-md border bg-muted/30 p-2">
+              {telas.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+              {telas.map((t, i) => (
+                <a
+                  key={`${t}-${i}`}
+                  href={t}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-mono px-2 py-1 rounded bg-background border hover:border-primary hover:text-primary transition-colors"
+                >
+                  {t}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         <div>
-          <Label>{telasVisitadas.length > 1 ? "Telas envolvidas (capturadas automaticamente)" : "Tela onde ocorreu (capturada automaticamente)"}</Label>
-          <div className="mt-1 flex flex-wrap gap-2 rounded-md border bg-muted/30 p-2">
-            {telas.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
-            {telas.map((t, i) => (
-              <a
-                key={`${t}-${i}`}
-                href={t}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono px-2 py-1 rounded bg-background border hover:border-primary hover:text-primary transition-colors"
-              >
-                {t}
-              </a>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Título (opcional)</Label>
-            <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-          </div>
-          <div>
-            <Label>Prioridade</Label>
-            <Select value={prioridade} onValueChange={setPrioridade}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="baixa">Baixa</SelectItem>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="alta">Alta</SelectItem>
-                <SelectItem value="urgente">Urgente</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Label>Prioridade</Label>
+          <Select value={prioridade} onValueChange={setPrioridade}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="baixa">Baixa</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="alta">Alta</SelectItem>
+              <SelectItem value="urgente">Urgente</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     );
   };
+
 
 
   return (
