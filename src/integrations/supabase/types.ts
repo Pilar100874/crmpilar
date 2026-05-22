@@ -12775,6 +12775,7 @@ export type Database = {
       support_ticket_mensagens: {
         Row: {
           anexo_url: string | null
+          anexos: Json
           autor_nome: string | null
           autor_tipo: string
           autor_usuario_id: string | null
@@ -12785,6 +12786,7 @@ export type Database = {
         }
         Insert: {
           anexo_url?: string | null
+          anexos?: Json
           autor_nome?: string | null
           autor_tipo: string
           autor_usuario_id?: string | null
@@ -12795,6 +12797,7 @@ export type Database = {
         }
         Update: {
           anexo_url?: string | null
+          anexos?: Json
           autor_nome?: string | null
           autor_tipo?: string
           autor_usuario_id?: string | null
