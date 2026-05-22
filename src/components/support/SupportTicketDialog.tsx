@@ -739,16 +739,36 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
                             })()}
 
                             {t.descricao && <div className="text-xs bg-muted/40 p-2 rounded whitespace-pre-wrap">{t.descricao}</div>}
-                            {Array.isArray(t.anexos) && t.anexos.length > 0 && (
-                              <div className="space-y-1">
-                                {t.anexos.map((a: Anexo, i: number) => (
-                                  <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs underline block truncate">📎 {a.name}</a>
-                                ))}
-                              </div>
-                            )}
-                            {t.video_url && (
-                              <video src={t.video_url} controls className="w-full rounded border max-h-48" />
-                            )}
+                            {(() => {
+                              const anexosArr: Anexo[] = Array.isArray(t.anexos) ? t.anexos : [];
+                              const videoAnexos = anexosArr.filter((a) => (a?.type || "").startsWith("video/") || /\.webm($|\?)/i.test(a?.url || ""));
+                              const docAnexos = anexosArr.filter((a) => !videoAnexos.includes(a));
+                              const allVideos = [
+                                ...(t.video_url ? [{ name: "Gravação 1.webm", url: t.video_url }] : []),
+                                ...videoAnexos.map((a, i) => ({ name: a.name || `Gravação ${i + 2}.webm`, url: a.url })),
+                              ];
+                              return (
+                                <>
+                                  {allVideos.length > 0 && (
+                                    <div className="space-y-2">
+                                      {allVideos.map((v, i) => (
+                                        <div key={i} className="space-y-1">
+                                          <div className="text-[11px] font-medium text-muted-foreground">{v.name}</div>
+                                          <video src={v.url} controls className="w-full rounded border max-h-48" />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {docAnexos.length > 0 && (
+                                    <div className="space-y-1">
+                                      {docAnexos.map((a, i) => (
+                                        <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs underline block truncate">📎 {a.name}</a>
+                                      ))}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                             <div className="max-h-60 overflow-y-auto space-y-1">
                               {(myMsgs[t.id] || []).map((m) => (
                                 <div key={m.id} className={`flex ${m.autor_tipo === "user" ? "justify-end" : "justify-start"}`}>
