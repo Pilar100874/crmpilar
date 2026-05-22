@@ -256,7 +256,7 @@ export default function MeusTickets() {
         </div>
       )}
 
-      <ScrollArea className="max-h-[calc(100vh-220px)] pr-2">
+      <div className="pr-2 pb-32">
         <div className="space-y-3">
           {filtered.map((t) => {
             const isOpen = openTicket === t.id;
@@ -454,7 +454,7 @@ export default function MeusTickets() {
             );
           })}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Recarrega a lista quando o popup global de ticket fechar */}
 
