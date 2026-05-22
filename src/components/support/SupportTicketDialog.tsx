@@ -348,15 +348,15 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               )}
               <DialogTitle>Suporte</DialogTitle>
               <div className="ml-auto mr-8">
-                {step !== "meus" ? (
-                  <Button size="sm" variant="outline" onClick={() => setStep("meus")}>
-                    <Inbox className="mr-2 h-4 w-4" /> Meus tickets
-                  </Button>
-                ) : (
+                {step === "meus" ? (
                   <Button size="sm" variant="outline" onClick={() => setStep("choose")}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Novo ticket
                   </Button>
-                )}
+                ) : step !== "video-instructions" && step !== "video-review" ? (
+                  <Button size="sm" variant="outline" onClick={() => setStep("meus")}>
+                    <Inbox className="mr-2 h-4 w-4" /> Meus tickets
+                  </Button>
+                ) : null}
               </div>
             </div>
             <DialogDescription>
