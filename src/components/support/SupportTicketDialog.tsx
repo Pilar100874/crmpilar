@@ -327,7 +327,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       setPostSendPromptOpen(true);
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
-    } finally { setSaving(false); }
+    } finally { setSaving(false); setUploadProgress(null); }
   };
 
   // ---------- shared meta ----------
