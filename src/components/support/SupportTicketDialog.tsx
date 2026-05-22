@@ -114,18 +114,19 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       mr.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        setVideoBlob(blob);
-        setVideoUrlPreview(URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        setVideos((prev) => [...prev, { blob, url }]);
         stream.getTracks().forEach((t) => t.stop());
         if (routePollRef.current) {
           window.clearInterval(routePollRef.current);
           routePollRef.current = null;
         }
-        const lista = [...routesRef.current];
+        const lista = Array.from(new Set([...telasVisitadas, ...routesRef.current]));
         setTelasVisitadas(lista);
         setTela(lista.join(" → "));
         setStep("video-review");
         setRecording(false);
+        setPaused(false);
         onOpenChange(true);
       };
       stream.getVideoTracks()[0].onended = () => {
@@ -140,6 +141,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         if (arr[arr.length - 1] !== cur) arr.push(cur);
       }, 800);
       setRecording(true);
+      setPaused(false);
       toast.info("Gravação iniciada. Navegue até a tela do problema.");
       onOpenChange(false);
     } catch (e: any) {
@@ -150,6 +152,29 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
   };
+
+  const pauseRecording = () => {
+    const mr = mediaRecorderRef.current;
+    if (!mr) return;
+    if (mr.state === "recording") {
+      mr.pause();
+      setPaused(true);
+      toast.info("Gravação pausada");
+    } else if (mr.state === "paused") {
+      mr.resume();
+      setPaused(false);
+      toast.info("Gravação retomada");
+    }
+  };
+
+  const removeVideo = (idx: number) => {
+    setVideos((prev) => {
+      const v = prev[idx];
+      if (v) URL.revokeObjectURL(v.url);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
 
 
 
