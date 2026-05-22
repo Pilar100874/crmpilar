@@ -324,13 +324,13 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     const imageRefSource = config.imageRefSource || "user";
     const imageAspectRatio = config.aspectRatio || (config.preset === "story_vertical" ? "9:16" : "1:1");
 
-    // Resolve reference image
+    // Resolve reference image(s) — coleta TODAS (produto + influencer + logo + extras)
+    // para compor uma única cena. Ordem: produto (#1), influencer (#2), logo, demais.
     let refImageUrl: string | null = userRefImageUrl || null;
+    let primaryRefKey: string = userRefImageUrl ? "usuario" : "";
+    const extraRefs: Array<{ key: string; url: string }> = [];
 
-    // NOVO: preset com referenceInputs (productImageSelect, galleryInfluencer, etc.)
-    // Prioriza: variable (bloco anterior) > gallery > ask. Para a imagem principal,
-    // damos preferência ao productImageSelect (produto) sobre influencer/logo.
-    if (!refImageUrl && config.referenceInputs && typeof config.referenceInputs === "object") {
+    if (config.referenceInputs && typeof config.referenceInputs === "object") {
       const refInputs = config.referenceInputs as Record<string, any>;
       const orderedKeys = [
         "productImageSelect",
@@ -344,27 +344,30 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         seen.add(key);
         const r = refInputs[key];
         if (!r || !r.mode) continue;
+        let val: string | null = null;
+        let label = "";
         if (r.mode === "variable" && r.variable) {
           const varName = normalizeVarName(r.variable);
           const raw = (contextRef.current as any)?.[varName];
-          let val: string | null = null;
           if (raw && typeof raw === "string") val = interpolateVariables(raw, contextRef.current);
           else if (raw && typeof raw === "object" && raw.foto_url) val = raw.foto_url;
-          if (val) {
-            refImageUrl = val;
-            addSystemMessage(`🖼️ Usando imagem de ${key} via variável {{${varName}}} (do bloco anterior)`);
-            addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
-            break;
-          } else {
-            addSystemMessage(`⚠️ Variável {{${varName}}} (${key}) está vazia — verificando próxima referência.`);
-          }
+          label = `${key} via {{${varName}}}`;
+          if (!val) addSystemMessage(`⚠️ Variável {{${varName}}} (${key}) vazia — ignorando.`);
         } else if (r.mode === "gallery" && r.galleryUrl) {
-          refImageUrl = r.galleryUrl;
-          addSystemMessage(`🖼️ Usando imagem de ${key} da galeria do Studio${r.galleryName ? ` (${r.galleryName})` : ""}`);
-          addBotMediaMessage(refImageUrl, "image", "Referência", node.id);
-          break;
+          val = r.galleryUrl;
+          label = `${key} da galeria${r.galleryName ? ` (${r.galleryName})` : ""}`;
         }
-        // mode === "ask" é tratado pelo fluxo askUserForRefImage
+        if (!val) continue;
+        if (!refImageUrl) {
+          refImageUrl = val;
+          primaryRefKey = key;
+          addSystemMessage(`🖼️ Referência principal: ${label}`);
+          addBotMediaMessage(refImageUrl, "image", "Referência principal", node.id);
+        } else if (!extraRefs.some((e) => e.url === val) && val !== refImageUrl) {
+          extraRefs.push({ key, url: val });
+          addSystemMessage(`➕ Referência adicional: ${label}`);
+          addBotMediaMessage(val, "image", `Referência (${key})`, node.id);
+        }
       }
     }
 
@@ -414,6 +417,11 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               styleSource,
               preset: config.preset || "",
               referenceImageUrl: refImageUrl || "",
+              referenceImageUrls: [refImageUrl, ...extraRefs.map((e) => e.url)].filter(Boolean),
+              referenceLabels: [
+                refImageUrl ? (primaryRefKey || "principal") : null,
+                ...extraRefs.map((e) => e.key),
+              ].filter(Boolean),
               estabelecimentoId: estId || "",
               aspectRatio: imageAspectRatio,
             },
