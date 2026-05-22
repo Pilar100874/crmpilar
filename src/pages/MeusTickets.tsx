@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Send, Lock, RotateCcw, LifeBuoy, Plus, Trash2, X } from "lucide-react";
-import { SupportTicketDialog } from "@/components/support/SupportTicketDialog";
+
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 type Anexo = { name: string; url: string; size: number; type: string };
