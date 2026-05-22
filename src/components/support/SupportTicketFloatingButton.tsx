@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Ticket } from "lucide-react";
 import { SupportTicketDialog } from "./SupportTicketDialog";
 
 export function SupportTicketFloatingButton() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handler = () => setOpen(true);
@@ -12,8 +14,11 @@ export function SupportTicketFloatingButton() {
     return () => window.removeEventListener("open-support-ticket", handler);
   }, []);
 
+  const hideButton = location.pathname.startsWith("/meus-tickets");
+
   return (
     <>
+      {!hideButton && (
       <Button
         onClick={() => setOpen(true)}
         size="sm"
@@ -23,6 +28,7 @@ export function SupportTicketFloatingButton() {
         <Ticket className="h-4 w-4" />
         Abrir Ticket
       </Button>
+      )}
       <SupportTicketDialog open={open} onOpenChange={setOpen} />
     </>
   );
