@@ -448,11 +448,12 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 <div className="font-semibold flex items-center gap-2"><Play className="h-4 w-4" /> Como funciona</div>
                 <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
                   <li>Clique em <strong>Iniciar gravação</strong> e escolha a aba/janela a compartilhar.</li>
-                  <li>Esta janela será fechada automaticamente para você navegar livremente.</li>
-                  <li>Vá até a tela onde o problema acontece e reproduza o erro.</li>
-                  <li>Quando terminar, clique em <strong>Finalizar</strong> no canto inferior direito (ou pare o compartilhamento do navegador).</li>
-                  <li>Um popup vai abrir no local em que você estava, com o vídeo anexado para você adicionar observações.</li>
+                  <li>Esta janela será fechada para você navegar livremente.</li>
+                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong> a gravação.</li>
+                  <li>Após finalizar, você poderá <strong>gravar outros vídeos</strong> ou enviar tudo de uma vez.</li>
+                  <li>Adicione observações e anexos antes de enviar ao suporte.</li>
                 </ol>
+
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setStep("choose")}>Voltar</Button>
