@@ -303,7 +303,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       if (error) throw error;
       toast.success("Ticket enviado ao admin!");
       resetAll();
-      setStep("meus");
+      onOpenChange(false);
+      if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
     } catch (e: any) {
       toast.error("Erro ao enviar: " + (e?.message || ""));
     } finally { setSaving(false); }
