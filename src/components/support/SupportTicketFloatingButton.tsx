@@ -20,8 +20,3 @@ export function SupportTicketFloatingButton() {
     </>
   );
 }
-
-      <SupportTicketDialog open={open} onOpenChange={setOpen} />
-    </>
-  );
-}
