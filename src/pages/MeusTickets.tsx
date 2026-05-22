@@ -19,6 +19,8 @@ export default function MeusTickets() {
   const [loading, setLoading] = useState(false);
   const [openTicket, setOpenTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"abertos" | "todos">("abertos");
+  const [newTicketOpen, setNewTicketOpen] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
