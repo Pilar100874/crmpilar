@@ -448,6 +448,31 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                   placeholder="Explique o que está acontecendo no vídeo..."
                 />
               </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" /> Anexos (opcional)
+                </Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleFiles(e.target.files)}
+                  disabled={uploading}
+                />
+                {uploading && <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Enviando...</div>}
+                {anexos.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {anexos.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs bg-muted/40 rounded px-2 py-1">
+                        <a href={a.url} target="_blank" rel="noreferrer" className="truncate hover:underline">{a.name}</a>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setAnexos((p) => p.filter((_, idx) => idx !== i))}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
                 <Button onClick={handleSubmit} disabled={saving}>
