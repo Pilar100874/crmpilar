@@ -560,15 +560,30 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
           )}
 
           {/* STEP: meus */}
-          {step === "meus" && (
+          {step === "meus" && (() => {
+            const filtered = statusFilter === "abertos"
+              ? myTickets.filter((t) => t.status !== "fechado")
+              : myTickets;
+            return (
             <div>
+              <div className="flex items-center gap-2 pb-2">
+                <Button size="sm" variant={statusFilter === "abertos" ? "default" : "outline"} onClick={() => setStatusFilter("abertos")}>
+                  Em aberto
+                </Button>
+                <Button size="sm" variant={statusFilter === "todos" ? "default" : "outline"} onClick={() => setStatusFilter("todos")}>
+                  Todos
+                </Button>
+                <span className="ml-auto text-xs text-muted-foreground">{filtered.length} ticket(s)</span>
+              </div>
               {loadingMine && <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>}
-              {!loadingMine && myTickets.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-6">Você ainda não abriu nenhum ticket.</div>
+              {!loadingMine && filtered.length === 0 && (
+                <div className="text-sm text-muted-foreground text-center py-6">
+                  {statusFilter === "abertos" ? "Nenhum ticket em aberto." : "Você ainda não abriu nenhum ticket."}
+                </div>
               )}
               <ScrollArea className="max-h-[60vh] pr-2">
                 <div className="space-y-2">
-                  {myTickets.map((t) => {
+                  {filtered.map((t) => {
                     const isOpen = openTicket === t.id;
                     const isClosed = t.status === "fechado";
                     return (
