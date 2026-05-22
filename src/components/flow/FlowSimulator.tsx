@@ -419,7 +419,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               referenceImageUrl: refImageUrl || "",
               referenceImageUrls: [refImageUrl, ...extraRefs.map((e) => e.url)].filter(Boolean),
               referenceLabels: [
-                refImageUrl ? "produto_principal" : null,
+                refImageUrl ? (primaryRefKey || "principal") : null,
                 ...extraRefs.map((e) => e.key),
               ].filter(Boolean),
               estabelecimentoId: estId || "",
