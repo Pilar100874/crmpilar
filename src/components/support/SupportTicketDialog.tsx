@@ -345,21 +345,15 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2">
-              {step !== "choose" && step !== "video-review" && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep("choose")}>
+              {step !== "home" && step !== "video-review" && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep(step === "choose" || step === "meus" ? "home" : "choose")}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
               <DialogTitle>Suporte</DialogTitle>
-              {step === "meus" && (
-                <div className="ml-auto mr-8">
-                  <Button size="sm" variant="outline" onClick={() => setStep("choose")}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Novo ticket
-                  </Button>
-                </div>
-              )}
             </div>
             <DialogDescription>
+              {step === "home" && "O que você deseja fazer?"}
               {step === "choose" && "Como você prefere relatar o problema?"}
               {step === "texto" && "Descreva o problema e anexe documentos se necessário."}
               {step === "video-instructions" && "Vamos gravar sua tela enquanto você reproduz o problema."}
@@ -367,6 +361,32 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               {step === "meus" && "Acompanhe seus tickets e respostas do suporte."}
             </DialogDescription>
           </DialogHeader>
+
+          {/* STEP: home */}
+          {step === "home" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+              <button
+                onClick={() => setStep("choose")}
+                className="group rounded-xl border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-md"
+              >
+                <Send className="h-8 w-8 text-primary mb-3" />
+                <div className="font-semibold">Abrir ticket</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Relate um problema ou solicitação ao suporte.
+                </div>
+              </button>
+              <button
+                onClick={() => setStep("meus")}
+                className="group rounded-xl border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-md"
+              >
+                <Inbox className="h-8 w-8 text-primary mb-3" />
+                <div className="font-semibold">Ver tickets</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Acompanhe seus tickets e respostas do suporte.
+                </div>
+              </button>
+            </div>
+          )}
 
           {/* STEP: choose */}
           {step === "choose" && (
@@ -393,6 +413,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               </button>
             </div>
           )}
+
 
           {/* STEP: texto */}
           {step === "texto" && (
