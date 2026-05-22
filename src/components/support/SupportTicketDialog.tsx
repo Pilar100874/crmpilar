@@ -405,7 +405,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
       }}>
 
         <DialogContent className="max-w-4xl w-[95vw] max-h-[92vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
             <div className="flex items-center gap-2">
               {step !== "home" && step !== "video-review" && (
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setStep(step === "choose" || step === "meus" ? "home" : "choose")}>
@@ -424,6 +424,8 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
               {step === "meus" && "Acompanhe seus tickets e respostas do suporte."}
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
 
           {/* STEP: home */}
           {step === "home" && (
