@@ -327,6 +327,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     // Resolve reference image(s) — coleta TODAS (produto + influencer + logo + extras)
     // para compor uma única cena. Ordem: produto (#1), influencer (#2), logo, demais.
     let refImageUrl: string | null = userRefImageUrl || null;
+    let primaryRefKey: string = userRefImageUrl ? "usuario" : "";
     const extraRefs: Array<{ key: string; url: string }> = [];
 
     if (config.referenceInputs && typeof config.referenceInputs === "object") {
