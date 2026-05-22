@@ -454,7 +454,7 @@ export default function MeusTickets() {
             );
           })}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Recarrega a lista quando o popup global de ticket fechar */}
 
