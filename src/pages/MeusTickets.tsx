@@ -265,6 +265,15 @@ export default function MeusTickets() {
         onOpenChange={(v) => { setNewTicketOpen(v); if (!v) load(); }}
         initialStep="choose"
       />
+
+      <DeleteConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(v) => !v && setDeleteId(null)}
+        onConfirm={deleteTicket}
+        isLoading={deleting}
+        title="Excluir ticket"
+        description="Tem certeza que deseja excluir este ticket? Todas as mensagens e anexos serão removidos. Esta ação não pode ser desfeita."
+      />
     </div>
   );
 }
