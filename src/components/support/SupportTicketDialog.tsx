@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Video, Square, Loader2, FileText, Trash2, Inbox, Send, Lock, RotateCcw, ArrowLeft, Paperclip, X, Play, Pause, Plus } from "lucide-react";
@@ -17,11 +17,12 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
-type Step = "home" | "choose" | "texto" | "video-instructions" | "video-review" | "meus";
+type Step = "home" | "choose" | "texto" | "video-instructions" | "video-ready" | "video-review" | "meus";
 type Anexo = { name: string; url: string; size: number; type: string };
 
 export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("home");
 
   // shared form state
@@ -105,10 +106,32 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   };
 
   // ---------- recording ----------
-  const startRecording = async () => {
+  const prepareRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: true });
       streamRef.current = stream;
+      // If user stops sharing before starting, clean up
+      stream.getVideoTracks()[0].onended = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+          mediaRecorderRef.current.stop();
+        } else {
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
+          setStep("video-instructions");
+          toast.info("Compartilhamento encerrado antes de iniciar.");
+        }
+      };
+      setStep("video-ready");
+      toast.success("Tela pronta. Clique em 'Começar a gravar' quando estiver pronto.");
+    } catch (e: any) {
+      toast.error("Não foi possível preparar: " + (e?.message || ""));
+    }
+  };
+
+  const beginRecording = () => {
+    const stream = streamRef.current;
+    if (!stream) { toast.error("Stream indisponível. Tente novamente."); setStep("video-instructions"); return; }
+    try {
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       chunksRef.current = [];
       routesRef.current = [window.location.pathname];
@@ -118,6 +141,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         const url = URL.createObjectURL(blob);
         setVideos((prev) => [...prev, { blob, url }]);
         stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
         if (routePollRef.current) {
           window.clearInterval(routePollRef.current);
           routePollRef.current = null;
@@ -130,12 +154,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         setPaused(false);
         onOpenChange(true);
       };
-      stream.getVideoTracks()[0].onended = () => {
-        if (mr.state !== "inactive") mr.stop();
-      };
       mr.start();
       mediaRecorderRef.current = mr;
-      // Poll route changes every 800ms while recording
       routePollRef.current = window.setInterval(() => {
         const cur = window.location.pathname;
         const arr = routesRef.current;
@@ -149,6 +169,13 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       toast.error("Não foi possível iniciar: " + (e?.message || ""));
     }
   };
+
+  const cancelPreparedRecording = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setStep("video-instructions");
+  };
+
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -337,7 +364,9 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
       <Dialog open={open} onOpenChange={(v) => {
         if (recording) return;
-        if (!v && (step === "video-instructions" || step === "video-review")) {
+        if (!v && (step === "video-instructions" || step === "video-ready" || step === "video-review")) {
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
           resetAll();
         }
         onOpenChange(v);
@@ -358,6 +387,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               {step === "choose" && "Como você prefere relatar o problema?"}
               {step === "texto" && "Descreva o problema e anexe documentos se necessário."}
               {step === "video-instructions" && "Vamos gravar sua tela enquanto você reproduz o problema."}
+              {step === "video-ready" && "Tela selecionada. Inicie a gravação quando estiver pronto."}
               {step === "video-review" && "Revise a gravação e adicione uma observação antes de enviar."}
               {step === "meus" && "Acompanhe seus tickets e respostas do suporte."}
             </DialogDescription>
@@ -377,7 +407,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 </div>
               </button>
               <button
-                onClick={() => { setStatusFilter("abertos"); setStep("meus"); }}
+                onClick={() => { onOpenChange(false); navigate("/meus-tickets"); }}
                 className="group rounded-xl border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-md"
               >
                 <Inbox className="h-8 w-8 text-primary mb-3" />
@@ -469,18 +499,36 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
                 <div className="font-semibold flex items-center gap-2"><Play className="h-4 w-4" /> Como funciona</div>
                 <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
-                  <li>Clique em <strong>Iniciar gravação</strong> e escolha a aba/janela a compartilhar.</li>
+                  <li>Clique em <strong>Selecionar tela</strong> e escolha a aba/janela a compartilhar.</li>
+                  <li>Na próxima etapa, clique em <strong>Começar a gravar</strong> apenas quando estiver pronto.</li>
                   <li>Esta janela será fechada para você navegar livremente.</li>
-                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong> a gravação.</li>
+                  <li>Use o painel flutuante no canto inferior direito para <strong>Pausar</strong>, <strong>Retomar</strong> ou <strong>Finalizar</strong>.</li>
                   <li>Após finalizar, você poderá <strong>gravar outros vídeos</strong> ou enviar tudo de uma vez.</li>
-                  <li>Adicione observações e anexos antes de enviar ao suporte.</li>
                 </ol>
 
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setStep("choose")}>Voltar</Button>
-                <Button onClick={startRecording}>
-                  <Video className="mr-2 h-4 w-4" /> Iniciar gravação
+                <Button onClick={prepareRecording}>
+                  <Video className="mr-2 h-4 w-4" /> Selecionar tela
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: video-ready */}
+          {step === "video-ready" && (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
+                <div className="font-semibold flex items-center gap-2"><Video className="h-4 w-4 text-primary" /> Tela selecionada e pronta</div>
+                <p className="text-muted-foreground">
+                  Sua tela já está compartilhada, mas a gravação <strong>ainda não começou</strong>. Posicione-se na tela do problema e clique em <strong>Começar a gravar</strong> quando estiver pronto.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={cancelPreparedRecording}>Cancelar</Button>
+                <Button onClick={beginRecording}>
+                  <Play className="mr-2 h-4 w-4" /> Começar a gravar
                 </Button>
               </div>
             </div>
@@ -503,7 +551,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={startRecording}>
+                <Button variant="outline" size="sm" onClick={prepareRecording}>
                   <Plus className="mr-2 h-3 w-3" /> Gravar outro vídeo
                 </Button>
                 {videos.length > 0 && (
