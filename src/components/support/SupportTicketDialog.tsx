@@ -777,6 +777,28 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
           })()}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={postSendPromptOpen} onOpenChange={setPostSendPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ticket enviado!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja ir para a tela de tickets para acompanhar, ou apenas fechar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPostSendPromptOpen(false)}>Apenas fechar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPostSendPromptOpen(false);
+                if (location.pathname !== "/meus-tickets") navigate("/meus-tickets");
+              }}
+            >
+              Ir para Meus tickets
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
