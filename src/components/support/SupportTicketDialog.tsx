@@ -36,14 +36,15 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
 
   // recording
   const [recording, setRecording] = useState(false);
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-  const [videoUrlPreview, setVideoUrlPreview] = useState<string | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [videos, setVideos] = useState<{ blob: Blob; url: string }[]>([]);
   const [telasVisitadas, setTelasVisitadas] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const routesRef = useRef<string[]>([]);
   const routePollRef = useRef<number | null>(null);
+
 
 
   // my tickets
