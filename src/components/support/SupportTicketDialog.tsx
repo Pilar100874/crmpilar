@@ -404,7 +404,7 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
         onOpenChange(v);
       }}>
 
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[92vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader>
             <div className="flex items-center gap-2">
               {step !== "home" && step !== "video-review" && (
