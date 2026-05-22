@@ -360,6 +360,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
         if (!val) continue;
         if (!refImageUrl) {
           refImageUrl = val;
+          primaryRefKey = key;
           addSystemMessage(`🖼️ Referência principal: ${label}`);
           addBotMediaMessage(refImageUrl, "image", "Referência principal", node.id);
         } else if (!extraRefs.some((e) => e.url === val) && val !== refImageUrl) {
