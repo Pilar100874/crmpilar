@@ -62,6 +62,7 @@ import AdvancedAnalyticsPage from "./pages/AdvancedAnalytics";
 import PesquisasSatisfacaoPage from "./pages/PesquisasSatisfacao";
 import DashboardPesquisasSatisfacao from "./pages/DashboardPesquisasSatisfacao";
 import SupportTickets from "./pages/SupportTickets";
+import MeusTickets from "./pages/MeusTickets";
 
 
 import QualityAssurance from "./pages/QualityAssurance";
