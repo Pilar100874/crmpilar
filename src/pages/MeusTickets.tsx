@@ -34,7 +34,9 @@ export default function MeusTickets() {
       const { data } = await supabase
         .from("support_tickets").select("*")
         .eq("usuario_id", u.id).order("created_at", { ascending: false });
-      setTickets((data as any) || []);
+      const list = (data as any) || [];
+      setTickets(list);
+      list.forEach((t: any) => loadMsgs(t.id));
     } finally { setLoading(false); }
   };
 
@@ -106,7 +108,7 @@ export default function MeusTickets() {
       <ScrollArea className="max-h-[calc(100vh-220px)] pr-2">
         <div className="space-y-3">
           {filtered.map((t) => {
-            const isOpen = openTicket === t.id;
+            const isOpen = true;
             const isClosed = t.status === "fechado";
             return (
               <div key={t.id} className="border rounded-lg p-4 space-y-2 bg-card">
@@ -121,9 +123,7 @@ export default function MeusTickets() {
                     }>{t.status}</Badge>
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => { setOpenTicket(isOpen ? null : t.id); if (!isOpen) loadMsgs(t.id); }}>
-                      {isOpen ? "Fechar" : "Abrir"}
-                    </Button>
+
                     {!isClosed ? (
                       <Button size="sm" variant="outline" onClick={() => closeTicket(t.id)}>
                         <Lock className="h-3 w-3 mr-1" /> Encerrar
