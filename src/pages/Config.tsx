@@ -85,6 +85,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     bgColor: "bg-yellow-500/10",
     iconColor: "text-yellow-500",
   },
+  {
+    id: "support-tickets",
+    title: "Tickets de Suporte",
+    description: "Gerencie chamados de suporte enviados pelos usuários",
+    icon: LifeBuoy,
+    bgColor: "bg-red-500/10",
+    iconColor: "text-red-500",
+  },
 ];
 
 export default function Config() {
