@@ -12886,6 +12886,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "support_tickets_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "support_tickets_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false

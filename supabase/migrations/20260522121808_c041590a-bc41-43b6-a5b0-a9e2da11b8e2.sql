@@ -1,0 +1,1 @@
+ALTER TABLE public.support_tickets ADD CONSTRAINT support_tickets_estabelecimento_id_fkey FOREIGN KEY (estabelecimento_id) REFERENCES public.estabelecimentos(id) ON DELETE SET NULL;
