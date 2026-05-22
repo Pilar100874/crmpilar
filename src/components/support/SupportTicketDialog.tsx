@@ -38,9 +38,13 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const [recording, setRecording] = useState(false);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [videoUrlPreview, setVideoUrlPreview] = useState<string | null>(null);
+  const [telasVisitadas, setTelasVisitadas] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const routesRef = useRef<string[]>([]);
+  const routePollRef = useRef<number | null>(null);
+
 
   // my tickets
   const [myTickets, setMyTickets] = useState<any[]>([]);
@@ -64,8 +68,11 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
     setVideoBlob(null);
     if (videoUrlPreview) URL.revokeObjectURL(videoUrlPreview);
     setVideoUrlPreview(null);
+    setTelasVisitadas([]);
+    routesRef.current = [];
     setStep("choose");
   };
+
 
   // ---------- attachments ----------
   const handleFiles = async (files: FileList | null) => {
@@ -103,14 +110,20 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       streamRef.current = stream;
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       chunksRef.current = [];
+      routesRef.current = [window.location.pathname];
       mr.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         setVideoBlob(blob);
         setVideoUrlPreview(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
-        // capture current screen route at the moment of stop
-        setTela(window.location.pathname);
+        if (routePollRef.current) {
+          window.clearInterval(routePollRef.current);
+          routePollRef.current = null;
+        }
+        const lista = [...routesRef.current];
+        setTelasVisitadas(lista);
+        setTela(lista.join(" → "));
         setStep("video-review");
         setRecording(false);
         onOpenChange(true);
@@ -120,6 +133,12 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       };
       mr.start();
       mediaRecorderRef.current = mr;
+      // Poll route changes every 800ms while recording
+      routePollRef.current = window.setInterval(() => {
+        const cur = window.location.pathname;
+        const arr = routesRef.current;
+        if (arr[arr.length - 1] !== cur) arr.push(cur);
+      }, 800);
       setRecording(true);
       toast.info("Gravação iniciada. Navegue até a tela do problema.");
       onOpenChange(false);
@@ -131,6 +150,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
   };
+
+
 
   // ---------- my tickets ----------
   const loadMine = async () => {
@@ -223,32 +244,49 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   };
 
   // ---------- shared meta ----------
-  const renderMetaFields = () => (
-    <div className="space-y-3">
-      <div>
-        <Label>Tela / Rota onde ocorreu</Label>
-        <Input value={tela} onChange={(e) => setTela(e.target.value)} placeholder="/dashboard" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
+  const renderMetaFields = () => {
+    const telas = telasVisitadas.length > 0 ? telasVisitadas : [tela].filter(Boolean);
+    return (
+      <div className="space-y-3">
         <div>
-          <Label>Título (opcional)</Label>
-          <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          <Label>{telasVisitadas.length > 1 ? "Telas envolvidas (capturadas automaticamente)" : "Tela onde ocorreu (capturada automaticamente)"}</Label>
+          <div className="mt-1 flex flex-wrap gap-2 rounded-md border bg-muted/30 p-2">
+            {telas.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+            {telas.map((t, i) => (
+              <a
+                key={`${t}-${i}`}
+                href={t}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-mono px-2 py-1 rounded bg-background border hover:border-primary hover:text-primary transition-colors"
+              >
+                {t}
+              </a>
+            ))}
+          </div>
         </div>
-        <div>
-          <Label>Prioridade</Label>
-          <Select value={prioridade} onValueChange={setPrioridade}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="baixa">Baixa</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="alta">Alta</SelectItem>
-              <SelectItem value="urgente">Urgente</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Título (opcional)</Label>
+            <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          </div>
+          <div>
+            <Label>Prioridade</Label>
+            <Select value={prioridade} onValueChange={setPrioridade}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="baixa">Baixa</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="alta">Alta</SelectItem>
+                <SelectItem value="urgente">Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
 
   return (
     <>
@@ -410,6 +448,31 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                   placeholder="Explique o que está acontecendo no vídeo..."
                 />
               </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" /> Anexos (opcional)
+                </Label>
+                <Input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleFiles(e.target.files)}
+                  disabled={uploading}
+                />
+                {uploading && <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Enviando...</div>}
+                {anexos.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {anexos.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs bg-muted/40 rounded px-2 py-1">
+                        <a href={a.url} target="_blank" rel="noreferrer" className="truncate hover:underline">{a.name}</a>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setAnexos((p) => p.filter((_, idx) => idx !== i))}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
                 <Button onClick={handleSubmit} disabled={saving}>
