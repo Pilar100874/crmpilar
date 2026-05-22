@@ -217,6 +217,12 @@ export default function MeusTickets() {
           })}
         </div>
       </ScrollArea>
+
+      <SupportTicketDialog
+        open={newTicketOpen}
+        onOpenChange={(v) => { setNewTicketOpen(v); if (!v) load(); }}
+        initialStep="choose"
+      />
     </div>
   );
 }
