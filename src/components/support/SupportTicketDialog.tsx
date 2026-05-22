@@ -548,7 +548,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={startRecording}>
+                <Button variant="outline" size="sm" onClick={prepareRecording}>
                   <Plus className="mr-2 h-3 w-3" /> Gravar outro vídeo
                 </Button>
                 {videos.length > 0 && (
