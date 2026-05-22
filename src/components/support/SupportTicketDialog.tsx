@@ -387,6 +387,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
               {step === "choose" && "Como você prefere relatar o problema?"}
               {step === "texto" && "Descreva o problema e anexe documentos se necessário."}
               {step === "video-instructions" && "Vamos gravar sua tela enquanto você reproduz o problema."}
+              {step === "video-ready" && "Tela selecionada. Inicie a gravação quando estiver pronto."}
               {step === "video-review" && "Revise a gravação e adicione uma observação antes de enviar."}
               {step === "meus" && "Acompanhe seus tickets e respostas do suporte."}
             </DialogDescription>
