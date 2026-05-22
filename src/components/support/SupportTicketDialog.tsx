@@ -378,12 +378,13 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
 
       {/* Floating start-recording bar (dialog closed, stream ready) */}
       {!recording && step === "video-ready" && !open && (
-        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-primary-foreground shadow-lg">
-          <span className="text-sm font-semibold">Pronto para gravar</span>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[2147483647] flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-primary-foreground shadow-2xl ring-2 ring-primary/40 animate-in fade-in slide-in-from-top-4">
+          <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+          <span className="text-sm font-semibold whitespace-nowrap">Pronto para gravar — navegue até a tela do problema</span>
           <Button size="sm" variant="secondary" onClick={beginRecording}>
             <Play className="h-3 w-3 mr-1" /> Começar a gravar
           </Button>
-          <Button size="sm" variant="ghost" className="text-primary-foreground hover:text-primary-foreground/80" onClick={cancelPreparedRecording}>
+          <Button size="sm" variant="ghost" className="text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10" onClick={cancelPreparedRecording}>
             Cancelar
           </Button>
         </div>
