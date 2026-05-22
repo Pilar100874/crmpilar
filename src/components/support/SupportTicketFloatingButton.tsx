@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Ticket } from "lucide-react";
 import { SupportTicketDialog } from "./SupportTicketDialog";
