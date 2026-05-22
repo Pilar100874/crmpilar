@@ -785,11 +785,17 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
 
           {/* Sticky footer for video-review */}
           {step === "video-review" && (
-            <div className="shrink-0 border-t bg-background px-6 py-3 flex justify-end gap-2">
+            <div className="shrink-0 border-t bg-background px-6 py-3 flex items-center justify-end gap-2">
+              {uploadProgress && (
+                <span className="mr-auto text-xs text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Enviando vídeo {uploadProgress.done}/{uploadProgress.total}…
+                </span>
+              )}
               <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
               <Button onClick={handleSubmit} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar ticket
+                {saving ? "Enviando…" : "Enviar ticket"}
               </Button>
             </div>
           )}
