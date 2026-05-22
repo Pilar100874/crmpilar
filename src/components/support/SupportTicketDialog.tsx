@@ -629,15 +629,6 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
                   </div>
                 )}
               </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
-
-                <Button onClick={handleSubmit} disabled={saving}>
-                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Enviar ticket
-                </Button>
-              </div>
             </div>
           )}
 
