@@ -347,7 +347,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
                 </Button>
               )}
               <DialogTitle>Suporte</DialogTitle>
-              <div className="ml-auto">
+              <div className="ml-auto mr-8">
                 {step !== "meus" ? (
                   <Button size="sm" variant="outline" onClick={() => setStep("meus")}>
                     <Inbox className="mr-2 h-4 w-4" /> Meus tickets
