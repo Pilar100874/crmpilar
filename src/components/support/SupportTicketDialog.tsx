@@ -772,6 +772,18 @@ export function SupportTicketDialog({ open, onOpenChange, initialStep = "home" }
             </div>
             );
           })()}
+          </div>
+
+          {/* Sticky footer for video-review */}
+          {step === "video-review" && (
+            <div className="shrink-0 border-t bg-background px-6 py-3 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { resetAll(); onOpenChange(false); }} disabled={saving}>Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar ticket
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
