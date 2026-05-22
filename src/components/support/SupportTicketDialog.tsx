@@ -106,10 +106,32 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
   };
 
   // ---------- recording ----------
-  const startRecording = async () => {
+  const prepareRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: true });
       streamRef.current = stream;
+      // If user stops sharing before starting, clean up
+      stream.getVideoTracks()[0].onended = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+          mediaRecorderRef.current.stop();
+        } else {
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
+          setStep("video-instructions");
+          toast.info("Compartilhamento encerrado antes de iniciar.");
+        }
+      };
+      setStep("video-ready");
+      toast.success("Tela pronta. Clique em 'Começar a gravar' quando estiver pronto.");
+    } catch (e: any) {
+      toast.error("Não foi possível preparar: " + (e?.message || ""));
+    }
+  };
+
+  const beginRecording = () => {
+    const stream = streamRef.current;
+    if (!stream) { toast.error("Stream indisponível. Tente novamente."); setStep("video-instructions"); return; }
+    try {
       const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9,opus" });
       chunksRef.current = [];
       routesRef.current = [window.location.pathname];
@@ -119,6 +141,7 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         const url = URL.createObjectURL(blob);
         setVideos((prev) => [...prev, { blob, url }]);
         stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
         if (routePollRef.current) {
           window.clearInterval(routePollRef.current);
           routePollRef.current = null;
@@ -131,12 +154,8 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
         setPaused(false);
         onOpenChange(true);
       };
-      stream.getVideoTracks()[0].onended = () => {
-        if (mr.state !== "inactive") mr.stop();
-      };
       mr.start();
       mediaRecorderRef.current = mr;
-      // Poll route changes every 800ms while recording
       routePollRef.current = window.setInterval(() => {
         const cur = window.location.pathname;
         const arr = routesRef.current;
@@ -150,6 +169,13 @@ export function SupportTicketDialog({ open, onOpenChange }: Props) {
       toast.error("Não foi possível iniciar: " + (e?.message || ""));
     }
   };
+
+  const cancelPreparedRecording = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setStep("video-instructions");
+  };
+
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
