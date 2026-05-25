@@ -394,6 +394,147 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
       ? "Identidade Visual da marca"
       : (styleSource === "preset" && config.preset ? `preset "${config.preset}"` : "estilo padrão");
 
+    const mediaType: "image" | "video" = (config.mediaType === "video") ? "video" : "image";
+
+    // ============== VIDEO GENERATION PATH ==============
+    if (mediaType === "video") {
+      const allRefs = [
+        ...(refImageUrl ? [{ key: primaryRefKey || "principal", url: refImageUrl }] : []),
+        ...extraRefs,
+      ];
+      const roleFor = (key: string): string => {
+        const k = (key || "").toLowerCase();
+        if (k.includes("product")) return "PRODUCT";
+        if (k.includes("influencer") || k.includes("pose") || k.includes("roupa")) return "INFLUENCER";
+        if (k.includes("logo")) return "LOGO";
+        if (k.includes("ambiente")) return "SCENE";
+        return key.toUpperCase();
+      };
+      const imageUrls = allRefs.map((r) => r.url);
+      const imageRoles = allRefs.map((r) => roleFor(r.key));
+      const hasProduct = imageRoles.includes("PRODUCT");
+      const hasPerson = imageRoles.includes("INFLUENCER");
+
+      const compositionDirective = (hasProduct && hasPerson)
+        ? `\n\nCOMPOSIÇÃO OBRIGATÓRIA (REGRA INVIOLÁVEL): o PRODUTO (FOTO marcada como PRODUCT) DEVE aparecer fisicamente em TODA a duração do vídeo, OBRIGATORIAMENTE: (a) segurado pela mão do INFLUENCIADOR, ou (b) apoiado sobre uma superfície visível ao lado dele. NUNCA mostre a pessoa sem o produto. NUNCA esconda o produto. Preserve fielmente o rosto, traços e estilo do influenciador.`
+        : allRefs.length >= 2
+          ? `\n\nCOMPOSIÇÃO: combine TODAS as referências numa única cena coesa, preservando fielmente cada elemento.`
+          : "";
+
+      const modelMap: Record<string, string> = {
+        "google/veo-3": "google/veo-3",
+        "google/veo-2.0": "google/veo-2",
+        "google/veo-2": "google/veo-2",
+        "kling/3.0": "kling/3.0",
+        "runway/gen-3": "runway/gen-3",
+        "luma/dream-machine": "luma/dream-machine",
+      };
+      const videoModel = modelMap[config.model] || "google/veo-3";
+
+      const audioMode = config.audioMode || "none";
+      const withAudio = audioMode !== "none";
+      const withMusic = audioMode === "ambient" || audioMode === "voice_ambient";
+      const audioScript = (audioMode === "voice" || audioMode === "voice_ambient") ? (config.audioScript || "") : "";
+
+      const finalVideoPrompt = [
+        userPrompt,
+        basePrompt ? `\n[INSTRUÇÕES FIXAS DO BLOCO]: ${basePrompt}` : "",
+        styleSource === "preset" && config.preset ? `\n[ESTILO/PRESET]: ${config.presetName || config.preset}` : "",
+        compositionDirective,
+        audioScript ? `\n[NARRAÇÃO — fale exatamente este texto em Português Brasileiro]: ${audioScript}` : "",
+        `\nFormato ${imageAspectRatio}.`,
+      ].filter(Boolean).join("");
+
+      addSystemMessage(`🎬 Gerando ${variations} vídeo(s) com IA · ${styleLabel} · modelo ${videoModel}${imageUrls.length ? ` · ${imageUrls.length} referência(s)` : ""}…`);
+      addBotMessage(`⏳ Aguarde, criando ${variations} vídeo(s). Pode levar alguns minutos.`, node.id);
+
+      try {
+        const estId = await getEstabelecimentoId();
+        const collectedVideos: string[] = [];
+        const vidErrors: string[] = [];
+
+        for (let i = 0; i < variations; i++) {
+          try {
+            const { data, error } = await supabase.functions.invoke("ai-creative-studio", {
+              body: {
+                action: "generate_video",
+                params: {
+                  prompt: finalVideoPrompt + (variations > 1 ? `\n\nVARIAÇÃO ${i + 1} de ${variations}: mude apenas ângulo/movimento de câmera.` : ""),
+                  model: videoModel,
+                  aspectRatio: imageAspectRatio,
+                  resolution: config.resolution || "1080p",
+                  duration: config.duration || 5,
+                  withAudio,
+                  withMusic,
+                  imageUrls: imageUrls.length ? imageUrls : undefined,
+                  imageRoles: imageRoles.length ? imageRoles : undefined,
+                  estabelecimentoId: estId || "",
+                },
+                estabelecimentoId: estId || "",
+              },
+            });
+            if (error) {
+              const ctx: any = (error as any)?.context;
+              const status = ctx?.status ?? (error as any)?.status;
+              let serverMsg = "";
+              try {
+                const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+                serverMsg = body?.error || "";
+              } catch {}
+              vidErrors.push(serverMsg || (error as any)?.message || String(error));
+              if (status === 402 || /cr[eé]dito|insufficient/i.test(serverMsg)) {
+                addSystemMessage(`😕 Créditos de IA esgotados.`);
+                return;
+              }
+              if (/api[_ ]?key|chave|provider|not configured/i.test(serverMsg)) {
+                addSystemMessage(`😕 Sem chave de API configurada para vídeo (${videoModel}). Configure em AI Creative Studio → Configurações → Chaves de API.`);
+                return;
+              }
+              continue;
+            }
+            const videoUrl: string = data?.videoUrl || data?.result?.videoUrl || "";
+            if (videoUrl) {
+              collectedVideos.push(videoUrl);
+              addSystemMessage(`✅ ${collectedVideos.length}/${variations} vídeo(s) prontos.`);
+            } else {
+              vidErrors.push(data?.error || `Vídeo ${i + 1}: sem URL retornada.`);
+            }
+          } catch (e: any) {
+            vidErrors.push(e?.message || String(e));
+          }
+        }
+
+        if (collectedVideos.length === 0) {
+          addSystemMessage(`❌ Não foi possível gerar vídeos. ${vidErrors.slice(0, 2).join(" | ")}`);
+          return;
+        }
+
+        const items = collectedVideos.map((url, i) => ({ url, index: i + 1 }));
+        items.forEach((it) => addBotMediaMessage(it.url, "video", `Opção ${it.index}`, node.id));
+
+        if (items.length === 1) {
+          const outputVar = config.outputVariable || "midia_selecionada";
+          setContext((prev) => ({ ...prev, [outputVar]: items[0].url }));
+          const nextNode = getNextNode(node.id);
+          if (nextNode) {
+            setCurrentNodeId(nextNode.id);
+            safeSetTimeout(() => executeNode(nextNode), 600);
+          }
+        } else {
+          addBotMessage("Responda com o número da opção que você gostou:", node.id);
+          simNodeStateRef.current[node.id] = { items };
+          setIsWaitingInput(true);
+          setCurrentBlockType("ai_media_select");
+          setPendingVariable(`__aims_${node.id}`);
+          setCurrentNodeId(node.id);
+        }
+      } catch (e: any) {
+        addSystemMessage(`❌ Erro ao gerar vídeo: ${e?.message || e}`);
+      }
+      return;
+    }
+    // ============== END VIDEO PATH ==============
+
     addSystemMessage(`🎨 Gerando ${variations} imagem(ns) com IA · ${styleLabel}${refImageUrl ? " · com imagem de referência" : ""}…`);
     addBotMessage(`⏳ Aguarde, estou criando ${variations} opções de imagem. Isso pode levar até 1 minuto — você receberá todas juntas quando ficarem prontas.`, node.id);
     addSystemMessage(`📝 Texto usado: ${userPrompt}`);
