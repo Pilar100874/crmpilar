@@ -517,7 +517,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           onValueChange={(v) => {
             handleConfigChange("mediaType", v);
             // Reseta o modelo selecionado quando troca o tipo para evitar usar um modelo incompatível
-            const valid = (v === "video" ? VIDEO_MODELS : IMAGE_MODELS).some((m) => m.value === config.model);
+            const valid = (v === "video" ? videoModels : imageModels).some((m) => m.value === config.model);
             if (!valid) {
               handleConfigChange("model", "");
               handleConfigChange("modelOverridden", false);
