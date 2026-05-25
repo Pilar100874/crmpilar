@@ -382,7 +382,7 @@ export function StrategyManual() {
             O sistema permite exportar toda a estratégia gerada em diferentes formatos para uso externo.
           </p>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <Card className="p-3 text-center">
               <div className="text-2xl mb-1">📄</div>
               <h4 className="text-xs font-semibold">PDF</h4>
@@ -515,17 +515,17 @@ export function StrategyManual() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-12 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         {/* Sidebar */}
-        <div className="col-span-3">
-          <Card className="sticky top-0">
+        <div className="lg:col-span-3">
+          <Card className="lg:sticky lg:top-0">
             <CardContent className="p-2">
-              <nav className="space-y-0.5">
+              <nav className="flex flex-wrap lg:flex-col gap-1 lg:gap-0.5">
                 {sections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-medium transition-colors text-left ${
+                    className={`shrink-0 lg:w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-medium transition-colors text-left whitespace-nowrap ${
                       activeSection === section.id
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -533,7 +533,7 @@ export function StrategyManual() {
                   >
                     {section.icon}
                     <span className="truncate">{section.title}</span>
-                    {activeSection === section.id && <ChevronRight className="h-3 w-3 ml-auto shrink-0" />}
+                    {activeSection === section.id && <ChevronRight className="h-3 w-3 ml-auto shrink-0 hidden lg:inline" />}
                   </button>
                 ))}
               </nav>
@@ -542,10 +542,10 @@ export function StrategyManual() {
         </div>
 
         {/* Content */}
-        <div className="col-span-9">
+        <div className="lg:col-span-9">
           <Card>
-            <ScrollArea className="h-[560px]">
-              <CardContent className="p-5">
+            <ScrollArea className="h-[60vh] lg:h-[560px]">
+              <CardContent className="p-3 sm:p-5">
                 {sections.find(s => s.id === activeSection)?.content}
               </CardContent>
             </ScrollArea>

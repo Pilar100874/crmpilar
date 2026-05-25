@@ -570,7 +570,7 @@ export function StrategyAdminPanel() {
     <div className="space-y-3">
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
             <CreateAgentDialog
               onCreate={async (agent) => {
@@ -603,11 +603,11 @@ export function StrategyAdminPanel() {
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedAgent(isExpanded ? null : agentKey)}>
                   <CardHeader className="pb-2">
                     <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between cursor-pointer group">
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      <div className="flex flex-wrap items-center justify-between gap-2 cursor-pointer group">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          {isExpanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                           <span className="text-lg">{agentIcon}</span>
-                          <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
+                          <CardTitle className="text-sm group-hover:underline truncate max-w-[60vw] sm:max-w-none">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
                           {config.knowledgeBaseType === 'external' && (
@@ -617,11 +617,11 @@ export function StrategyAdminPanel() {
                           )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
-                        <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 sm:gap-3 ml-auto" onClick={e => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
-                          <span className="text-xs text-muted-foreground">Ativo</span>
+                          <span className="text-xs text-muted-foreground hidden sm:inline">Ativo</span>
                           <Switch
                             checked={config.active}
                             onCheckedChange={v => setConfigs(prev => ({
@@ -658,12 +658,12 @@ export function StrategyAdminPanel() {
                   <CollapsibleContent>
                     <CardContent className="pt-0 space-y-4">
                       <Tabs defaultValue="identity" className="w-full">
-                        <TabsList className="w-full grid grid-cols-5 h-8">
-                          <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
-                          <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
-                          <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
-                          <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-                          <TabsTrigger value="prompt" className="text-[10px] gap-1">
+                        <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+                          <TabsTrigger value="identity" className="text-[10px] flex-1 min-w-[60px]">Identidade</TabsTrigger>
+                          <TabsTrigger value="contracts" className="text-[10px] flex-1 min-w-[60px]">Contratos</TabsTrigger>
+                          <TabsTrigger value="reasoning" className="text-[10px] flex-1 min-w-[60px]">Raciocínio</TabsTrigger>
+                          <TabsTrigger value="quality" className="text-[10px] flex-1 min-w-[60px]">Qualidade</TabsTrigger>
+                          <TabsTrigger value="prompt" className="text-[10px] flex-1 min-w-[60px] gap-1">
                             Prompt
                             {!config.saved && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
                           </TabsTrigger>
@@ -671,7 +671,7 @@ export function StrategyAdminPanel() {
 
                         {/* ─── IDENTITY TAB ─── */}
                         <TabsContent value="identity" className="space-y-3 mt-3">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <FieldSection label="Nome">
                               <Input value={card.name} onChange={e => updateCard(agentKey, 'name', e.target.value)} className="text-xs h-8" />
                             </FieldSection>
@@ -846,8 +846,8 @@ export function StrategyAdminPanel() {
                       </Tabs>
 
                       {/* ─── Actions ─── */}
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <div className="flex gap-2">
+                      <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t">
+                        <div className="flex flex-wrap gap-2">
                           {AGENT_CARDS[agentKey] && (
                             <Button variant="ghost" size="sm" onClick={() => handleReset(agentKey)}>
                               <RotateCcw className="h-3 w-3 mr-1" /> Resetar ao Padrão
@@ -857,7 +857,7 @@ export function StrategyAdminPanel() {
                             <Trash2 className="h-3 w-3 mr-1" /> Excluir Agente
                           </Button>
                         </div>
-                        <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey}>
+                        <Button size="sm" onClick={() => handleSave(agentKey)} disabled={config.saved || saving === agentKey} className="w-full sm:w-auto">
                           {saving === agentKey ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
                           Salvar Agent Card
                         </Button>

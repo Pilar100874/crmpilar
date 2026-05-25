@@ -228,7 +228,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
           Novo Agente
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-xl">{icon}</span>
@@ -286,7 +286,7 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Ícone</Label>
               <div className="flex flex-wrap gap-1">
@@ -335,17 +335,17 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
         {/* ─── Tabbed Agent Card editing ─── */}
         <Tabs defaultValue="identity" className="w-full mt-2">
-          <TabsList className="w-full grid grid-cols-5 h-8">
-            <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
-            <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
-            <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
-            <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-            <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+          <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="identity" className="text-[10px] flex-1 min-w-[60px]">Identidade</TabsTrigger>
+            <TabsTrigger value="contracts" className="text-[10px] flex-1 min-w-[60px]">Contratos</TabsTrigger>
+            <TabsTrigger value="reasoning" className="text-[10px] flex-1 min-w-[60px]">Raciocínio</TabsTrigger>
+            <TabsTrigger value="quality" className="text-[10px] flex-1 min-w-[60px]">Qualidade</TabsTrigger>
+            <TabsTrigger value="prompt" className="text-[10px] flex-1 min-w-[60px]">Prompt</TabsTrigger>
           </TabsList>
 
           {/* ─── IDENTITY TAB ─── */}
           <TabsContent value="identity" className="space-y-3 mt-3">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <FieldSection label="Nome">
                 <Input value={card.name} onChange={e => updateCard('name', e.target.value)} className="text-xs h-8" placeholder="Nome do Agente" />
               </FieldSection>
@@ -455,9 +455,9 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
         </Tabs>
 
         {/* ─── Actions ─── */}
-        <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={saving}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
+          <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
+          <Button size="sm" onClick={handleSubmit} disabled={saving} className="w-full sm:w-auto">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
             Criar Agente
           </Button>
