@@ -314,7 +314,9 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       const response = await fetch(item.content_url);
       const blob = await response.blob();
       const isVideo = item.content_type === 'video';
-      const ext = isVideo ? 'mp4' : (item.content_type === 'audio' ? 'mp3' : 'png');
+      const isAudio = item.content_type === 'audio';
+      const isImage = !isVideo && !isAudio;
+      const ext = isVideo ? 'mp4' : (isAudio ? 'mp3' : 'jpg');
       const suffix = isVideo && !withAudio ? '_sem-audio' : '';
       const fileName = `${item.resource_name || 'download'}${suffix}.${ext}`;
 
@@ -323,10 +325,11 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
         downloadBlob = withAudio
           ? await convertVideoToWhatsappMp4(blob)
           : await removeAudioFromVideo(blob);
-      } else if (item.content_type === 'audio') {
+      } else if (isAudio) {
         downloadBlob = new Blob([blob], { type: 'audio/mpeg' });
       } else {
-        downloadBlob = blob;
+        // WhatsApp-compatible image: JPG, sRGB, max ~1600px, flattened on white
+        downloadBlob = await convertImageToWhatsappJpg(blob);
       }
 
       const url = URL.createObjectURL(downloadBlob);
@@ -339,9 +342,27 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      toast.error('Não foi possível converter para MP4 compatível.');
+      toast.error('Não foi possível preparar o arquivo para o WhatsApp.');
     }
   }, []);
+
+  async function convertImageToWhatsappJpg(blob: Blob): Promise<Blob> {
+    const bitmap = await createImageBitmap(blob);
+    const MAX = 1600;
+    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.9);
+    });
+  }
 
   // Folder logic
   const folders = Array.from(new Set([
