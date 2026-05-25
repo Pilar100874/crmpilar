@@ -330,7 +330,8 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
     let primaryRefKey: string = userRefImageUrl ? "usuario" : "";
     const extraRefs: Array<{ key: string; url: string }> = [];
 
-    if (config.referenceInputs && typeof config.referenceInputs === "object") {
+    const _styleSourceForRefs = config.styleSource || "visual_identity";
+    if (_styleSourceForRefs === "preset" && config.referenceInputs && typeof config.referenceInputs === "object") {
       const refInputs = config.referenceInputs as Record<string, any>;
       const orderedKeys = [
         "productImageSelect",
