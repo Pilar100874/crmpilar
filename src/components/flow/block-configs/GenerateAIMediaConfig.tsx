@@ -572,6 +572,16 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mediaType, effectiveModel]);
 
+  // Áudio nativo: só liberado para modelos compatíveis. Caso contrário força "none".
+  const audioSupported = mediaType === "video" && supportsNativeAudio(effectiveModel);
+  useEffect(() => {
+    if (mediaType !== "video") return;
+    if (!audioSupported && (config.audioMode && config.audioMode !== "none")) {
+      handleConfigChange("audioMode", "none");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaType, effectiveModel, audioSupported]);
+
   const effectiveNegative =
     config.negativePrompt !== undefined && config.negativePrompt !== ""
       ? config.negativePrompt
