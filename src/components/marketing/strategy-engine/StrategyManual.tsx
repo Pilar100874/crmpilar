@@ -382,7 +382,7 @@ export function StrategyManual() {
             O sistema permite exportar toda a estratégia gerada em diferentes formatos para uso externo.
           </p>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <Card className="p-3 text-center">
               <div className="text-2xl mb-1">📄</div>
               <h4 className="text-xs font-semibold">PDF</h4>
