@@ -570,7 +570,7 @@ export function StrategyAdminPanel() {
     <div className="space-y-3">
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="text-base">🏗️ Agent Card Architecture v1.0</CardTitle>
             <CreateAgentDialog
               onCreate={async (agent) => {
