@@ -1246,7 +1246,7 @@ function BotBuilderContent() {
             onToggleExpanded={setIsBlockLibraryExpanded}
           />
 
-          <div className={`${showSimulator ? "mr-96" : ""} flex-1 relative`} ref={reactFlowWrapper}>
+          <div className={`${showSimulator ? "lg:mr-96" : ""} flex-1 relative`} ref={reactFlowWrapper}>
             <ReactFlow
               nodes={nodes.map(node => ({
                 ...node,
