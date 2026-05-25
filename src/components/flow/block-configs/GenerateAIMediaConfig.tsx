@@ -394,12 +394,16 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   };
 
 
-  const effectiveModel =
+  const allowedModels = mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS;
+  const isAllowed = (val: string) => allowedModels.some((m) => m.value === val);
+  const rawEffectiveModel =
     config.model !== undefined && config.model !== ""
       ? config.model
       : styleSource === "visual_identity"
         ? viInfo.model
         : "";
+  // Garante que o valor selecionado pertença ao tipo de mídia atual (imagem ou vídeo).
+  const effectiveModel = isAllowed(rawEffectiveModel) ? rawEffectiveModel : "";
 
   const effectiveNegative =
     config.negativePrompt !== undefined && config.negativePrompt !== ""
@@ -670,7 +674,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           }}
           className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
-          {(mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS).map((m) => (
+          {allowedModels.map((m) => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
         </select>
