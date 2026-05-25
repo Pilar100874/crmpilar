@@ -1005,14 +1005,24 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         </p>
       </div>
 
-      {/* 5. Áudio (apenas para vídeo) */}
+      {/* 5. Áudio (apenas para vídeo, e somente em modelos com áudio nativo) */}
       {mediaType === "video" && (
-        <div className="space-y-3 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+        <div className={`space-y-3 p-3 rounded-lg border-2 border-dashed ${audioSupported ? "border-primary/30 bg-primary/5" : "border-muted bg-muted/30 opacity-80"}`}>
           <div className="flex items-center gap-2">
             <Music2 className="h-4 w-4 text-primary" />
             <Label className="text-xs font-semibold">5. Áudio do vídeo</Label>
           </div>
 
+          {!audioSupported ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-[11px]">
+                O modelo selecionado <strong>não suporta áudio nativo</strong>. Para habilitar narração ou trilha,
+                escolha um modelo com áudio: <strong>Google Veo 3</strong>, <strong>Sora 2</strong>,
+                <strong> Runway Gen-4</strong> ou <strong>Pika 2.0</strong>.
+              </AlertDescription>
+            </Alert>
+          ) : (
           <RadioGroup
             value={audioMode}
             onValueChange={(v) => handleConfigChange("audioMode", v)}
