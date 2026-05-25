@@ -431,6 +431,15 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
               handleConfigChange("model", "");
               handleConfigChange("modelOverridden", false);
             }
+            // Limpa preset se não pertencer ao novo tipo de mídia
+            if (config.preset) {
+              const currentPreset = allSystemPresets.find((p) => p.id === config.preset);
+              if (!currentPreset || currentPreset.mediaType !== v) {
+                handleConfigChange("preset", "");
+                handleConfigChange("presetName", "");
+                handleConfigChange("referenceInputs", {});
+              }
+            }
           }}
           className="grid grid-cols-2 gap-2"
         >
