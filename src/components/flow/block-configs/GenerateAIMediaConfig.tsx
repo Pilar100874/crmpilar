@@ -370,6 +370,36 @@ const getDurationsForModel = (model: string): number[] => {
   return DEFAULT_VIDEO_DURATIONS;
 };
 
+// Capacidade de áudio nativo por modelo de vídeo. Apenas modelos listados aqui
+// conseguem gerar áudio (voz/ambiente) embutido no vídeo. Para os demais, o
+// bloco de áudio é desabilitado e forçado para "none".
+const VIDEO_MODEL_AUDIO_SUPPORT: Record<string, boolean> = {
+  "google/veo-3": true,
+  "google/veo-2.0": false,
+  "apiframe/veo": true, // assume Veo 3 via Apiframe
+  "openai/sora-2": true,
+  "apiframe/sora-2": true,
+  "apiframe/runway-gen4": true,
+  "runway/gen-3": false,
+  "aimlapi/runway-gen3": false,
+  "polloai/runway-gen3": false,
+  "kling/3.0": false,
+  "apiframe/kling-2.6": false,
+  "aimlapi/kling-v2": false,
+  "polloai/kling-v2": false,
+  "luma/dream-machine": false,
+  "apiframe/luma": false,
+  "aimlapi/luma": false,
+  "polloai/luma": false,
+  "pika/2.0": true,
+  "replicate/ltx-video-2": false,
+  "aimlapi/minimax": false,
+};
+const supportsNativeAudio = (model: string): boolean => {
+  if (!model) return false;
+  return VIDEO_MODEL_AUDIO_SUPPORT[model] === true;
+};
+
 
 
 // Modelos sugeridos legíveis → mapeamento para o catálogo nativo
@@ -541,6 +571,16 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mediaType, effectiveModel]);
+
+  // Áudio nativo: só liberado para modelos compatíveis. Caso contrário força "none".
+  const audioSupported = mediaType === "video" && supportsNativeAudio(effectiveModel);
+  useEffect(() => {
+    if (mediaType !== "video") return;
+    if (!audioSupported && (config.audioMode && config.audioMode !== "none")) {
+      handleConfigChange("audioMode", "none");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaType, effectiveModel, audioSupported]);
 
   const effectiveNegative =
     config.negativePrompt !== undefined && config.negativePrompt !== ""
@@ -965,14 +1005,25 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         </p>
       </div>
 
-      {/* 5. Áudio (apenas para vídeo) */}
+      {/* 5. Áudio (apenas para vídeo, e somente em modelos com áudio nativo) */}
       {mediaType === "video" && (
-        <div className="space-y-3 p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+        <div className={`space-y-3 p-3 rounded-lg border-2 border-dashed ${audioSupported ? "border-primary/30 bg-primary/5" : "border-muted bg-muted/30 opacity-80"}`}>
           <div className="flex items-center gap-2">
             <Music2 className="h-4 w-4 text-primary" />
             <Label className="text-xs font-semibold">5. Áudio do vídeo</Label>
           </div>
 
+          {!audioSupported ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-[11px]">
+                O modelo selecionado <strong>não suporta áudio nativo</strong>. Para habilitar narração ou trilha,
+                escolha um modelo com áudio: <strong>Google Veo 3</strong>, <strong>Sora 2</strong>,
+                <strong> Runway Gen-4</strong> ou <strong>Pika 2.0</strong>.
+              </AlertDescription>
+            </Alert>
+          ) : (
+          <>
           <RadioGroup
             value={audioMode}
             onValueChange={(v) => handleConfigChange("audioMode", v)}
@@ -1046,6 +1097,8 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
                 ))}
               </select>
             </div>
+          )}
+          </>
           )}
         </div>
       )}
