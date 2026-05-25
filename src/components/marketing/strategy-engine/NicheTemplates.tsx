@@ -102,14 +102,14 @@ export function NicheTemplates({ onSelectTemplate }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <LayoutTemplate className="h-4 w-4 mr-1" />
-          Templates de Nicho
+        <Button variant="outline" size="sm" className="w-full sm:w-auto whitespace-nowrap">
+          <LayoutTemplate className="h-4 w-4 mr-1 shrink-0" />
+          <span className="truncate">Templates de Nicho</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <LayoutTemplate className="h-5 w-5" />
             Templates por Segmento de Mercado
           </DialogTitle>
@@ -126,7 +126,7 @@ export function NicheTemplates({ onSelectTemplate }: Props) {
         </div>
 
         {!selectedTemplate ? (
-          <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 overflow-y-auto pr-1">
             {filtered.map(template => (
               <Card
                 key={template.id}
