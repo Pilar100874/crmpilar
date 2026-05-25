@@ -453,7 +453,15 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         <Label>2. Estilo visual</Label>
         <RadioGroup
           value={styleSource}
-          onValueChange={(v) => handleConfigChange("styleSource", v)}
+          onValueChange={(v) => {
+            handleConfigChange("styleSource", v);
+            if (v === "visual_identity") {
+              // Limpa dados do preset para não vazarem na geração
+              handleConfigChange("preset", "");
+              handleConfigChange("presetName", "");
+              handleConfigChange("referenceInputs", {});
+            }
+          }}
           className="space-y-1"
         >
           <label className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer ${styleSource === "visual_identity" ? "border-primary bg-primary/10" : "border-border"}`}>
