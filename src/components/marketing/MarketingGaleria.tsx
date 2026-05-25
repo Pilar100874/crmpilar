@@ -808,7 +808,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       )}
 
       {/* Video Editor */}
