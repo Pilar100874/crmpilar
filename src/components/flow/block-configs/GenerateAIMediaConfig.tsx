@@ -270,26 +270,75 @@ interface ConfigProps {
   handleConfigChange: (key: string, value: any) => void;
 }
 
-// Catálogo de modelos disponíveis (alinhado com Visual Identity), agrupado por tipo de mídia
-const IMAGE_MODELS = [
+// Catálogo nativo Lovable AI — sempre disponível, sem necessidade de chave externa
+const NATIVE_IMAGE_MODELS = [
   { value: "", label: "Padrão (auto)" },
-  { value: "google/gemini-2.5-flash-image", label: "🖼️ Gemini 2.5 Flash Image (Nano Banana)" },
-  { value: "google/gemini-3-pro-image-preview", label: "🖼️ Gemini 3 Pro Image" },
-  { value: "google/gemini-3.1-flash-image-preview", label: "🖼️ Gemini 3.1 Flash Image (Nano Banana 2)" },
-  { value: "openai/dall-e-3", label: "🖼️ DALL·E 3" },
-  { value: "stability/sd3.5-turbo", label: "🖼️ Stable Diffusion 3.5" },
-  { value: "flux/1.1-pro", label: "🖼️ Flux 1.1 Pro" },
-  { value: "ideogram/v3", label: "🖼️ Ideogram v3" },
+  { value: "google/gemini-2.5-flash-image", label: "🖼️ Gemini 2.5 Flash Image (Nano Banana) — Lovable AI" },
+  { value: "google/gemini-3-pro-image-preview", label: "🖼️ Gemini 3 Pro Image — Lovable AI" },
+  { value: "google/gemini-3.1-flash-image-preview", label: "🖼️ Gemini 3.1 Flash Image (Nano Banana 2) — Lovable AI" },
 ];
 
-const VIDEO_MODELS = [
+const NATIVE_VIDEO_MODELS = [
   { value: "", label: "Padrão (auto)" },
-  { value: "google/veo-3", label: "🎬 Google Veo 3" },
-  { value: "google/veo-2.0", label: "🎬 Google Veo 2.0" },
-  { value: "kling/3.0", label: "🎬 Kling 3.0" },
-  { value: "runway/gen-3", label: "🎬 Runway Gen-3" },
-  { value: "luma/dream-machine", label: "🎬 Luma Dream Machine" },
 ];
+
+// Modelos extras liberados quando o provider correspondente está ativo em "Config APIs"
+// (tabela ai_api_keys, is_active = true). Permite expor automaticamente tudo que o
+// usuário habilitou nas suas próprias chaves.
+type ModelDef = { value: string; label: string };
+const PROVIDER_IMAGE_MODELS: Record<string, ModelDef[]> = {
+  openai: [{ value: "openai/dall-e-3", label: "🖼️ DALL·E 3 — OpenAI" }],
+  chatgpt_image: [{ value: "openai/gpt-image-1", label: "🖼️ GPT Image (DALL·E) — OpenAI" }],
+  stability: [{ value: "stability/sd3.5-turbo", label: "🖼️ Stable Diffusion 3.5 — Stability" }],
+  apiframe: [
+    { value: "apiframe/flux-1.1-pro", label: "🖼️ Flux 1.1 Pro — Apiframe" },
+    { value: "apiframe/midjourney-v7", label: "🖼️ Midjourney v7 — Apiframe" },
+    { value: "apiframe/ideogram-v3", label: "🖼️ Ideogram v3 — Apiframe" },
+    { value: "apiframe/nano-banana", label: "🖼️ Nano Banana — Apiframe" },
+  ],
+  aimlapi: [
+    { value: "aimlapi/flux-pro", label: "🖼️ Flux Pro — AIML API" },
+    { value: "aimlapi/dall-e-3", label: "🖼️ DALL·E 3 — AIML API" },
+    { value: "aimlapi/sd3", label: "🖼️ Stable Diffusion 3 — AIML API" },
+    { value: "aimlapi/recraft-v3", label: "🖼️ Recraft V3 — AIML API" },
+  ],
+  polloai: [
+    { value: "polloai/flux-pro", label: "🖼️ Flux Pro — Pollo AI" },
+    { value: "polloai/ideogram-v2", label: "🖼️ Ideogram v2 — Pollo AI" },
+    { value: "polloai/sdxl", label: "🖼️ SDXL — Pollo AI" },
+  ],
+};
+
+const PROVIDER_VIDEO_MODELS: Record<string, ModelDef[]> = {
+  google: [
+    { value: "google/veo-3", label: "🎬 Google Veo 3" },
+    { value: "google/veo-2.0", label: "🎬 Google Veo 2.0" },
+  ],
+  openai: [{ value: "openai/sora-2", label: "🎬 Sora 2 — OpenAI" }],
+  runway: [{ value: "runway/gen-3", label: "🎬 Runway Gen-3" }],
+  kling: [{ value: "kling/3.0", label: "🎬 Kling 3.0" }],
+  luma: [{ value: "luma/dream-machine", label: "🎬 Luma Dream Machine" }],
+  pika: [{ value: "pika/2.0", label: "🎬 Pika 2.0" }],
+  replicate: [{ value: "replicate/ltx-video-2", label: "🎬 LTX-Video 2 — Replicate" }],
+  apiframe: [
+    { value: "apiframe/runway-gen4", label: "🎬 Runway Gen-4 — Apiframe" },
+    { value: "apiframe/kling-2.6", label: "🎬 Kling 2.6 — Apiframe" },
+    { value: "apiframe/veo", label: "🎬 Google Veo — Apiframe" },
+    { value: "apiframe/sora-2", label: "🎬 Sora 2 — Apiframe" },
+    { value: "apiframe/luma", label: "🎬 Luma — Apiframe" },
+  ],
+  aimlapi: [
+    { value: "aimlapi/runway-gen3", label: "🎬 Runway Gen-3 — AIML API" },
+    { value: "aimlapi/kling-v2", label: "🎬 Kling v2 — AIML API" },
+    { value: "aimlapi/luma", label: "🎬 Luma — AIML API" },
+    { value: "aimlapi/minimax", label: "🎬 Minimax Video — AIML API" },
+  ],
+  polloai: [
+    { value: "polloai/runway-gen3", label: "🎬 Runway Gen-3 — Pollo AI" },
+    { value: "polloai/kling-v2", label: "🎬 Kling v2 — Pollo AI" },
+    { value: "polloai/luma", label: "🎬 Luma — Pollo AI" },
+  ],
+};
 
 // Modelos sugeridos legíveis → mapeamento para o catálogo nativo
 const SUGGESTED_MODEL_NATIVE_FALLBACK = (label: string, mediaType: "image" | "video"): string => {
@@ -344,6 +393,44 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   const [viInfo, setViInfo] = useState<{ model: string; negative: string; loaded: boolean }>({
     model: "", negative: "", loaded: false,
   });
+  // Providers com API key ativa em "Config APIs" (ai_api_keys.is_active = true)
+  const [activeProviders, setActiveProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const estabId = localStorage.getItem("estabelecimentoId") || "";
+      if (!estabId) return;
+      const { data } = await supabase
+        .from("ai_api_keys")
+        .select("provider, api_key, is_active")
+        .eq("estabelecimento_id", estabId);
+      if (cancelled) return;
+      const list = (data || [])
+        .filter((r: any) => r.is_active !== false && (r.api_key || "").trim().length > 0)
+        .map((r: any) => r.provider);
+      setActiveProviders(list);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Lista dinâmica de modelos: nativos Lovable AI + modelos liberados pelas APIs ativas
+  const imageModels = useMemo(() => {
+    const extras = activeProviders.flatMap((p) => PROVIDER_IMAGE_MODELS[p] || []);
+    const seen = new Set<string>();
+    return [...NATIVE_IMAGE_MODELS, ...extras].filter((m) => {
+      if (seen.has(m.value)) return false;
+      seen.add(m.value); return true;
+    });
+  }, [activeProviders]);
+  const videoModels = useMemo(() => {
+    const extras = activeProviders.flatMap((p) => PROVIDER_VIDEO_MODELS[p] || []);
+    const seen = new Set<string>();
+    return [...NATIVE_VIDEO_MODELS, ...extras].filter((m) => {
+      if (seen.has(m.value)) return false;
+      seen.add(m.value); return true;
+    });
+  }, [activeProviders]);
 
   // Carrega Identidade Visual para mostrar modelo/negativo herdados
   useEffect(() => {
@@ -394,7 +481,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   };
 
 
-  const allowedModels = mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS;
+  const allowedModels = mediaType === "video" ? videoModels : imageModels;
   const isAllowed = (val: string) => allowedModels.some((m) => m.value === val);
   const rawEffectiveModel =
     config.model !== undefined && config.model !== ""
@@ -430,7 +517,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           onValueChange={(v) => {
             handleConfigChange("mediaType", v);
             // Reseta o modelo selecionado quando troca o tipo para evitar usar um modelo incompatível
-            const valid = (v === "video" ? VIDEO_MODELS : IMAGE_MODELS).some((m) => m.value === config.model);
+            const valid = (v === "video" ? videoModels : imageModels).some((m) => m.value === config.model);
             if (!valid) {
               handleConfigChange("model", "");
               handleConfigChange("modelOverridden", false);
