@@ -53,7 +53,7 @@ export function StrategyEngine() {
           </div>
 
           {/* Pill tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-card/60 backdrop-blur border border-border/60 shadow-sm self-start md:self-auto">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-card/60 backdrop-blur border border-border/60 shadow-sm self-start md:self-auto w-full md:w-auto overflow-x-auto">
             {sections.map((s) => {
               const Icon = s.icon;
               const isActive = activeSection === s.id;
