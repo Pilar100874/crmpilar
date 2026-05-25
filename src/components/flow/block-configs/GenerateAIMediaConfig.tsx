@@ -524,6 +524,24 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   // Garante que o valor selecionado pertença ao tipo de mídia atual (imagem ou vídeo).
   const effectiveModel = isAllowed(rawEffectiveModel) ? rawEffectiveModel : "";
 
+  // Durações suportadas pelo modelo de vídeo atual
+  const allowedDurations = useMemo(
+    () => (mediaType === "video" ? getDurationsForModel(effectiveModel) : []),
+    [mediaType, effectiveModel],
+  );
+  const currentDuration = Number(config.duration) || allowedDurations[0] || 5;
+  // Se a duração atual não for suportada pelo modelo, ajusta para a mais próxima permitida.
+  useEffect(() => {
+    if (mediaType !== "video" || allowedDurations.length === 0) return;
+    if (!allowedDurations.includes(currentDuration)) {
+      const closest = allowedDurations.reduce((prev, d) =>
+        Math.abs(d - currentDuration) < Math.abs(prev - currentDuration) ? d : prev,
+      );
+      handleConfigChange("duration", closest);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaType, effectiveModel]);
+
   const effectiveNegative =
     config.negativePrompt !== undefined && config.negativePrompt !== ""
       ? config.negativePrompt
