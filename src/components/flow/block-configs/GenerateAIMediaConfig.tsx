@@ -821,6 +821,30 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
 
       </div>
 
+      {/* 2b.1 Tempo do vídeo (apenas para vídeo) — opções dependem do modelo */}
+      {mediaType === "video" && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <Video className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="text-xs">Tempo do vídeo</Label>
+          </div>
+          <select
+            value={currentDuration}
+            onChange={(e) => handleConfigChange("duration", Number(e.target.value))}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {allowedDurations.map((d) => (
+              <option key={d} value={d}>{d} segundos</option>
+            ))}
+          </select>
+          <p className="text-[10px] text-muted-foreground">
+            Durações suportadas pelo modelo selecionado.
+          </p>
+        </div>
+      )}
+
+
+
       {/* 2c. Prompt negativo */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5">
