@@ -343,9 +343,9 @@ const PROVIDER_VIDEO_MODELS: Record<string, ModelDef[]> = {
 // Durações suportadas (segundos) por modelo de vídeo. Usado para montar o seletor
 // de "Tempo do vídeo" dinamicamente conforme o modelo escolhido.
 const VIDEO_MODEL_DURATIONS: Record<string, number[]> = {
-  "google/veo-3": [4, 6, 8],
-  "google/veo-2.0": [5, 6, 8],
-  "apiframe/veo": [4, 6, 8],
+  "google/veo-3": [8], // Veo 3 only supports fixed 8s
+  "google/veo-2.0": [4, 5, 6, 7, 8],
+  "apiframe/veo": [8],
   "openai/sora-2": [5, 10, 15, 20],
   "apiframe/sora-2": [5, 10, 15, 20],
   "runway/gen-3": [5, 10],
