@@ -340,6 +340,38 @@ const PROVIDER_VIDEO_MODELS: Record<string, ModelDef[]> = {
   ],
 };
 
+// Durações suportadas (segundos) por modelo de vídeo. Usado para montar o seletor
+// de "Tempo do vídeo" dinamicamente conforme o modelo escolhido.
+const VIDEO_MODEL_DURATIONS: Record<string, number[]> = {
+  "google/veo-3": [4, 6, 8],
+  "google/veo-2.0": [5, 6, 8],
+  "apiframe/veo": [4, 6, 8],
+  "openai/sora-2": [5, 10, 15, 20],
+  "apiframe/sora-2": [5, 10, 15, 20],
+  "runway/gen-3": [5, 10],
+  "apiframe/runway-gen4": [5, 10],
+  "aimlapi/runway-gen3": [5, 10],
+  "polloai/runway-gen3": [5, 10],
+  "kling/3.0": [5, 10],
+  "apiframe/kling-2.6": [5, 10],
+  "aimlapi/kling-v2": [5, 10],
+  "polloai/kling-v2": [5, 10],
+  "luma/dream-machine": [5, 9],
+  "apiframe/luma": [5, 9],
+  "aimlapi/luma": [5, 9],
+  "polloai/luma": [5, 9],
+  "pika/2.0": [3, 5, 8, 10],
+  "replicate/ltx-video-2": [5, 8, 10],
+  "aimlapi/minimax": [6, 10],
+};
+const DEFAULT_VIDEO_DURATIONS = [5, 8, 10];
+const getDurationsForModel = (model: string): number[] => {
+  if (model && VIDEO_MODEL_DURATIONS[model]) return VIDEO_MODEL_DURATIONS[model];
+  return DEFAULT_VIDEO_DURATIONS;
+};
+
+
+
 // Modelos sugeridos legíveis → mapeamento para o catálogo nativo
 const SUGGESTED_MODEL_NATIVE_FALLBACK = (label: string, mediaType: "image" | "video"): string => {
   const l = (label || "").toLowerCase();
