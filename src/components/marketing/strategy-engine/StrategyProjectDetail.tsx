@@ -161,9 +161,10 @@ export function StrategyProjectDetail({ projectId, onBack }: Props) {
             <Clock className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="artifacts" className="flex items-center gap-1.5 text-xs font-semibold rounded-lg data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary/85 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/25">
-            <FileText className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Artefatos</span> ({artifacts.length})
+          <TabsTrigger value="artifacts" className="flex items-center gap-1.5 text-xs font-semibold rounded-lg px-1 min-w-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-primary/85 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/25">
+            <FileText className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline">Artefatos</span>
+            <span className="truncate">({artifacts.length})</span>
           </TabsTrigger>
         </TabsList>
 
