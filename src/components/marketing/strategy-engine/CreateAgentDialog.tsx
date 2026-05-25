@@ -455,9 +455,9 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
         </Tabs>
 
         {/* ─── Actions ─── */}
-        <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={saving}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
+          <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
+          <Button size="sm" onClick={handleSubmit} disabled={saving} className="w-full sm:w-auto">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
             Criar Agente
           </Button>
