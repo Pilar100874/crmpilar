@@ -1097,6 +1097,8 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
               </select>
             </div>
           )}
+          </>
+          )}
         </div>
       )}
 
