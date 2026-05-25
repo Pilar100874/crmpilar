@@ -674,7 +674,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
           }}
           className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
-          {(mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS).map((m) => (
+          {allowedModels.map((m) => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
         </select>
