@@ -1023,6 +1023,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
               </AlertDescription>
             </Alert>
           ) : (
+          <>
           <RadioGroup
             value={audioMode}
             onValueChange={(v) => handleConfigChange("audioMode", v)}
