@@ -202,10 +202,10 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         }],
         parameters: {
           aspectRatio: (["16:9","9:16"].includes(params.aspectRatio) ? params.aspectRatio : "16:9"),
-          // Veo 3 only supports fixed 8s; Veo 2 supports 4-8s
-          durationSeconds: modelId.startsWith("veo-3")
-            ? 8
-            : Math.min(8, Math.max(4, Math.round(Number(params.duration) || 6))),
+          // Veo 3 has fixed duration (do NOT send durationSeconds); Veo 2 supports 4-8s
+          ...(modelId.startsWith("veo-3")
+            ? {}
+            : { durationSeconds: Math.min(8, Math.max(4, Math.round(Number(params.duration) || 6))) }),
           ...(modelId.startsWith("veo-2") ? { generateAudio: withAudio } : {}),
           ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
         },
