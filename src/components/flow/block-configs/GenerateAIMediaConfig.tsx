@@ -481,7 +481,7 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   };
 
 
-  const allowedModels = mediaType === "video" ? VIDEO_MODELS : IMAGE_MODELS;
+  const allowedModels = mediaType === "video" ? videoModels : imageModels;
   const isAllowed = (val: string) => allowedModels.some((m) => m.value === val);
   const rawEffectiveModel =
     config.model !== undefined && config.model !== ""
