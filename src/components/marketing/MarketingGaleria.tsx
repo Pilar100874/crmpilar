@@ -618,7 +618,7 @@ const MarketingGaleria: React.FC<MarketingGaleriaProps> = ({ onEditImage, onEdit
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-24rem)]">
+        <div className="w-full">
           <div className="space-y-6">
             {Object.entries(groupedByDate).map(([date, items]) => (
               <div key={date}>
