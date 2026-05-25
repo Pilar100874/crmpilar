@@ -1367,7 +1367,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden overscroll-contain"
     >
       {/* Header */}
       <div className="relative overflow-hidden shrink-0">
@@ -1535,7 +1535,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="px-2.5 sm:px-4 pb-5 space-y-2">
               {visibleLayers.map((layer, idx) => {
                 const isExpanded = expandedLayer === layer.id;
@@ -1676,7 +1676,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
           {/* Step 1 Footer — Avançar button */}
           <div className="p-3 sm:p-4 border-t border-border/20 bg-gradient-to-t from-background to-background/80 backdrop-blur-sm">
             <Button
@@ -1741,7 +1741,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
 
             {/* TAB: Prompt */}
             <TabsContent value="prompt" className="flex-1 flex flex-col overflow-hidden mt-0">
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-5 space-y-4">
                   {selectionCount > 0 && (
                     <div className="rounded-xl border border-border/30 bg-gradient-to-br from-muted/20 to-muted/5 p-4">
@@ -1808,7 +1808,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB: Viral Hooks */}
@@ -1823,7 +1823,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   </Badge>
                 )}
               </div>
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-3 space-y-4">
                   {filteredHooks.map((category) => {
                     const catIdx = viralHooks.findIndex(h => h.category === category.category);
@@ -1947,12 +1947,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB: Script */}
             <TabsContent value="script" className="flex-1 flex flex-col overflow-hidden mt-0">
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-4">
                   {selectionCount >= 2 ? (
                     <div className="bg-background rounded-lg border p-3">
@@ -2000,12 +2000,12 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB: Scenes / Storyboard */}
             <TabsContent value="scenes" className="flex-1 flex flex-col overflow-hidden mt-0">
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-3 space-y-3">
                   {selectionCount >= 2 ? (
                     <>
@@ -2118,7 +2118,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
 
             {/* TAB: Variations */}
@@ -2157,7 +2157,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                   </>
                 )}
               </div>
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-3 space-y-3">
                   {variations.length > 0 ? (
                     variations.map((v, i) => {
@@ -2206,7 +2206,7 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </TabsContent>
           </Tabs>
 
