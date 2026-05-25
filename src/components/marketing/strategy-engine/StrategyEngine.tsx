@@ -62,7 +62,7 @@ export function StrategyEngine() {
                   key={s.id}
                   onClick={() => setActiveSection(s.id)}
                   className={cn(
-                    'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                    'relative flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap',
                     isActive
                       ? 'bg-gradient-to-br from-primary to-primary/85 text-primary-foreground shadow-md shadow-primary/25'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
