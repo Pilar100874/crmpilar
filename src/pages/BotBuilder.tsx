@@ -1215,7 +1215,7 @@ function BotBuilderContent() {
           </div>
           
           {/* Right section - Action buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2 hidden lg:flex">
               <Upload className="h-4 w-4 mr-1.5" />
               <span className="hidden xl:inline">Importar</span>
