@@ -1405,16 +1405,31 @@ function BotBuilderContent() {
           </div>
 
           {showSimulator && (
-            <div className="fixed right-0 top-[90px] w-96 h-[calc(100vh-90px)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40">
-              <FlowSimulator
-                nodes={nodes}
-                edges={edges}
-                onHighlightNode={setHighlightedNodeId}
-                breakpointNodes={breakpointNodes}
-                skipNodes={skipNodes}
-                onContextChange={setSimulatorContext}
+            <>
+              {/* Overlay para mobile/tablet permitir fechar tocando fora */}
+              <div
+                className="fixed inset-0 top-[90px] bg-black/40 z-30 lg:hidden"
+                onClick={() => setShowSimulator(false)}
               />
-            </div>
+              <div className="fixed right-0 top-[90px] w-full sm:w-[420px] lg:w-96 h-[calc(100vh-90px)] h-[calc(100dvh-90px)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setShowSimulator(false)}
+                  className="lg:hidden absolute top-2 right-2 z-50 h-8 w-8 inline-flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white"
+                  aria-label="Fechar simulador"
+                >
+                  ✕
+                </button>
+                <FlowSimulator
+                  nodes={nodes}
+                  edges={edges}
+                  onHighlightNode={setHighlightedNodeId}
+                  breakpointNodes={breakpointNodes}
+                  skipNodes={skipNodes}
+                  onContextChange={setSimulatorContext}
+                />
+              </div>
+            </>
           )}
 
           {!showSimulator && selectedNode && nodes.some(n => n.id === selectedNode.id) && (
