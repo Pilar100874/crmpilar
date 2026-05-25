@@ -340,6 +340,38 @@ const PROVIDER_VIDEO_MODELS: Record<string, ModelDef[]> = {
   ],
 };
 
+// Durações suportadas (segundos) por modelo de vídeo. Usado para montar o seletor
+// de "Tempo do vídeo" dinamicamente conforme o modelo escolhido.
+const VIDEO_MODEL_DURATIONS: Record<string, number[]> = {
+  "google/veo-3": [4, 6, 8],
+  "google/veo-2.0": [5, 6, 8],
+  "apiframe/veo": [4, 6, 8],
+  "openai/sora-2": [5, 10, 15, 20],
+  "apiframe/sora-2": [5, 10, 15, 20],
+  "runway/gen-3": [5, 10],
+  "apiframe/runway-gen4": [5, 10],
+  "aimlapi/runway-gen3": [5, 10],
+  "polloai/runway-gen3": [5, 10],
+  "kling/3.0": [5, 10],
+  "apiframe/kling-2.6": [5, 10],
+  "aimlapi/kling-v2": [5, 10],
+  "polloai/kling-v2": [5, 10],
+  "luma/dream-machine": [5, 9],
+  "apiframe/luma": [5, 9],
+  "aimlapi/luma": [5, 9],
+  "polloai/luma": [5, 9],
+  "pika/2.0": [3, 5, 8, 10],
+  "replicate/ltx-video-2": [5, 8, 10],
+  "aimlapi/minimax": [6, 10],
+};
+const DEFAULT_VIDEO_DURATIONS = [5, 8, 10];
+const getDurationsForModel = (model: string): number[] => {
+  if (model && VIDEO_MODEL_DURATIONS[model]) return VIDEO_MODEL_DURATIONS[model];
+  return DEFAULT_VIDEO_DURATIONS;
+};
+
+
+
 // Modelos sugeridos legíveis → mapeamento para o catálogo nativo
 const SUGGESTED_MODEL_NATIVE_FALLBACK = (label: string, mediaType: "image" | "video"): string => {
   const l = (label || "").toLowerCase();
@@ -491,6 +523,24 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         : "";
   // Garante que o valor selecionado pertença ao tipo de mídia atual (imagem ou vídeo).
   const effectiveModel = isAllowed(rawEffectiveModel) ? rawEffectiveModel : "";
+
+  // Durações suportadas pelo modelo de vídeo atual
+  const allowedDurations = useMemo(
+    () => (mediaType === "video" ? getDurationsForModel(effectiveModel) : []),
+    [mediaType, effectiveModel],
+  );
+  const currentDuration = Number(config.duration) || allowedDurations[0] || 5;
+  // Se a duração atual não for suportada pelo modelo, ajusta para a mais próxima permitida.
+  useEffect(() => {
+    if (mediaType !== "video" || allowedDurations.length === 0) return;
+    if (!allowedDurations.includes(currentDuration)) {
+      const closest = allowedDurations.reduce((prev, d) =>
+        Math.abs(d - currentDuration) < Math.abs(prev - currentDuration) ? d : prev,
+      );
+      handleConfigChange("duration", closest);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaType, effectiveModel]);
 
   const effectiveNegative =
     config.negativePrompt !== undefined && config.negativePrompt !== ""
@@ -770,6 +820,30 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
         </p>
 
       </div>
+
+      {/* 2b.1 Tempo do vídeo (apenas para vídeo) — opções dependem do modelo */}
+      {mediaType === "video" && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <Video className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="text-xs">Tempo do vídeo</Label>
+          </div>
+          <select
+            value={currentDuration}
+            onChange={(e) => handleConfigChange("duration", Number(e.target.value))}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {allowedDurations.map((d) => (
+              <option key={d} value={d}>{d} segundos</option>
+            ))}
+          </select>
+          <p className="text-[10px] text-muted-foreground">
+            Durações suportadas pelo modelo selecionado.
+          </p>
+        </div>
+      )}
+
+
 
       {/* 2c. Prompt negativo */}
       <div className="space-y-1.5">
