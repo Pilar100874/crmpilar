@@ -461,7 +461,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
                 params: {
                   prompt: finalVideoPrompt + (variations > 1 ? `\n\nVARIAÇÃO ${i + 1} de ${variations}: mude apenas ângulo/movimento de câmera.` : ""),
                   model: videoModel,
-                  aspectRatio: imageAspectRatio,
+                  aspectRatio: (videoModel.startsWith("google/veo") && !["16:9","9:16"].includes(imageAspectRatio)) ? "16:9" : imageAspectRatio,
                   resolution: config.resolution || "1080p",
                   duration: config.duration || 5,
                   withAudio,
