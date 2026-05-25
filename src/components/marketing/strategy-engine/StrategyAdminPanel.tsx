@@ -603,11 +603,11 @@ export function StrategyAdminPanel() {
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedAgent(isExpanded ? null : agentKey)}>
                   <CardHeader className="pb-2">
                     <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between cursor-pointer group">
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      <div className="flex flex-wrap items-center justify-between gap-2 cursor-pointer group">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          {isExpanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                           <span className="text-lg">{agentIcon}</span>
-                          <CardTitle className="text-sm group-hover:underline">{card.name || agentKey}</CardTitle>
+                          <CardTitle className="text-sm group-hover:underline truncate max-w-[60vw] sm:max-w-none">{card.name || agentKey}</CardTitle>
                           <Badge variant="outline" className="text-[10px]">v{card.version}</Badge>
                           <Badge variant="outline" className="text-[10px]">#{index + 1}</Badge>
                           {config.knowledgeBaseType === 'external' && (
@@ -617,11 +617,11 @@ export function StrategyAdminPanel() {
                           )}
                           {!config.saved && <Badge className="text-[10px] bg-primary/20 text-primary">Modificado</Badge>}
                         </div>
-                        <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 sm:gap-3 ml-auto" onClick={e => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(agentKey)}>
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
-                          <span className="text-xs text-muted-foreground">Ativo</span>
+                          <span className="text-xs text-muted-foreground hidden sm:inline">Ativo</span>
                           <Switch
                             checked={config.active}
                             onCheckedChange={v => setConfigs(prev => ({
