@@ -393,6 +393,44 @@ export const GenerateAIMediaConfig = ({ config, handleConfigChange }: ConfigProp
   const [viInfo, setViInfo] = useState<{ model: string; negative: string; loaded: boolean }>({
     model: "", negative: "", loaded: false,
   });
+  // Providers com API key ativa em "Config APIs" (ai_api_keys.is_active = true)
+  const [activeProviders, setActiveProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const estabId = localStorage.getItem("estabelecimentoId") || "";
+      if (!estabId) return;
+      const { data } = await supabase
+        .from("ai_api_keys")
+        .select("provider, api_key, is_active")
+        .eq("estabelecimento_id", estabId);
+      if (cancelled) return;
+      const list = (data || [])
+        .filter((r: any) => r.is_active !== false && (r.api_key || "").trim().length > 0)
+        .map((r: any) => r.provider);
+      setActiveProviders(list);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Lista dinâmica de modelos: nativos Lovable AI + modelos liberados pelas APIs ativas
+  const imageModels = useMemo(() => {
+    const extras = activeProviders.flatMap((p) => PROVIDER_IMAGE_MODELS[p] || []);
+    const seen = new Set<string>();
+    return [...NATIVE_IMAGE_MODELS, ...extras].filter((m) => {
+      if (seen.has(m.value)) return false;
+      seen.add(m.value); return true;
+    });
+  }, [activeProviders]);
+  const videoModels = useMemo(() => {
+    const extras = activeProviders.flatMap((p) => PROVIDER_VIDEO_MODELS[p] || []);
+    const seen = new Set<string>();
+    return [...NATIVE_VIDEO_MODELS, ...extras].filter((m) => {
+      if (seen.has(m.value)) return false;
+      seen.add(m.value); return true;
+    });
+  }, [activeProviders]);
 
   // Carrega Identidade Visual para mostrar modelo/negativo herdados
   useEffect(() => {
