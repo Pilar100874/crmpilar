@@ -81,11 +81,11 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
         <NicheTemplates onSelectTemplate={handleTemplateSelect} />
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" />
               Novo Projeto
             </Button>
