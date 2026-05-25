@@ -370,6 +370,36 @@ const getDurationsForModel = (model: string): number[] => {
   return DEFAULT_VIDEO_DURATIONS;
 };
 
+// Capacidade de áudio nativo por modelo de vídeo. Apenas modelos listados aqui
+// conseguem gerar áudio (voz/ambiente) embutido no vídeo. Para os demais, o
+// bloco de áudio é desabilitado e forçado para "none".
+const VIDEO_MODEL_AUDIO_SUPPORT: Record<string, boolean> = {
+  "google/veo-3": true,
+  "google/veo-2.0": false,
+  "apiframe/veo": true, // assume Veo 3 via Apiframe
+  "openai/sora-2": true,
+  "apiframe/sora-2": true,
+  "apiframe/runway-gen4": true,
+  "runway/gen-3": false,
+  "aimlapi/runway-gen3": false,
+  "polloai/runway-gen3": false,
+  "kling/3.0": false,
+  "apiframe/kling-2.6": false,
+  "aimlapi/kling-v2": false,
+  "polloai/kling-v2": false,
+  "luma/dream-machine": false,
+  "apiframe/luma": false,
+  "aimlapi/luma": false,
+  "polloai/luma": false,
+  "pika/2.0": true,
+  "replicate/ltx-video-2": false,
+  "aimlapi/minimax": false,
+};
+const supportsNativeAudio = (model: string): boolean => {
+  if (!model) return false;
+  return VIDEO_MODEL_AUDIO_SUPPORT[model] === true;
+};
+
 
 
 // Modelos sugeridos legíveis → mapeamento para o catálogo nativo
