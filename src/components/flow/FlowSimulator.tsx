@@ -416,7 +416,7 @@ export const FlowSimulator = ({ nodes, edges, onHighlightNode, breakpointNodes =
               basePrompt,
               variations: 1,
               styleSource,
-              preset: config.preset || "",
+              preset: styleSource === "preset" ? (config.preset || "") : "",
               referenceImageUrl: refImageUrl || "",
               referenceImageUrls: [refImageUrl, ...extraRefs.map((e) => e.url)].filter(Boolean),
               referenceLabels: [
