@@ -520,7 +520,7 @@ export function StrategyManual() {
         <div className="lg:col-span-3">
           <Card className="lg:sticky lg:top-0">
             <CardContent className="p-2">
-              <nav className="flex lg:flex-col gap-1 lg:gap-0.5 overflow-x-auto lg:overflow-visible -mx-1 px-1 lg:mx-0 lg:px-0">
+              <nav className="flex flex-wrap lg:flex-col gap-1 lg:gap-0.5">
                 {sections.map((section) => (
                   <button
                     key={section.id}
