@@ -335,12 +335,12 @@ export function CreateAgentDialog({ onCreate, existingKeys }: Props) {
 
         {/* ─── Tabbed Agent Card editing ─── */}
         <Tabs defaultValue="identity" className="w-full mt-2">
-          <TabsList className="w-full grid grid-cols-5 h-8">
-            <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
-            <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
-            <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
-            <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-            <TabsTrigger value="prompt" className="text-[10px]">Prompt</TabsTrigger>
+          <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="identity" className="text-[10px] flex-1 min-w-[60px]">Identidade</TabsTrigger>
+            <TabsTrigger value="contracts" className="text-[10px] flex-1 min-w-[60px]">Contratos</TabsTrigger>
+            <TabsTrigger value="reasoning" className="text-[10px] flex-1 min-w-[60px]">Raciocínio</TabsTrigger>
+            <TabsTrigger value="quality" className="text-[10px] flex-1 min-w-[60px]">Qualidade</TabsTrigger>
+            <TabsTrigger value="prompt" className="text-[10px] flex-1 min-w-[60px]">Prompt</TabsTrigger>
           </TabsList>
 
           {/* ─── IDENTITY TAB ─── */}
