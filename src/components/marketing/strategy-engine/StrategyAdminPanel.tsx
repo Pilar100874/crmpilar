@@ -658,12 +658,12 @@ export function StrategyAdminPanel() {
                   <CollapsibleContent>
                     <CardContent className="pt-0 space-y-4">
                       <Tabs defaultValue="identity" className="w-full">
-                        <TabsList className="w-full grid grid-cols-5 h-8">
-                          <TabsTrigger value="identity" className="text-[10px]">Identidade</TabsTrigger>
-                          <TabsTrigger value="contracts" className="text-[10px]">Contratos</TabsTrigger>
-                          <TabsTrigger value="reasoning" className="text-[10px]">Raciocínio</TabsTrigger>
-                          <TabsTrigger value="quality" className="text-[10px]">Qualidade</TabsTrigger>
-                          <TabsTrigger value="prompt" className="text-[10px] gap-1">
+                        <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+                          <TabsTrigger value="identity" className="text-[10px] flex-1 min-w-[60px]">Identidade</TabsTrigger>
+                          <TabsTrigger value="contracts" className="text-[10px] flex-1 min-w-[60px]">Contratos</TabsTrigger>
+                          <TabsTrigger value="reasoning" className="text-[10px] flex-1 min-w-[60px]">Raciocínio</TabsTrigger>
+                          <TabsTrigger value="quality" className="text-[10px] flex-1 min-w-[60px]">Qualidade</TabsTrigger>
+                          <TabsTrigger value="prompt" className="text-[10px] flex-1 min-w-[60px] gap-1">
                             Prompt
                             {!config.saved && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
                           </TabsTrigger>
