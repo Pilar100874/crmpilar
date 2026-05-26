@@ -1645,12 +1645,38 @@ const AICreativeStudioInner: React.FC = () => {
             <Clapperboard className="h-3.5 w-3.5" />
             Presets
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="h-7 w-7 sm:hidden shrink-0" title="Identidade Visual">
-            <Palette className="h-3 w-3" />
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowVisualIdentity(true)}
+            className={cn(
+              "h-7 w-7 sm:hidden shrink-0 relative",
+              viActive && "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400 text-white hover:opacity-90"
+            )}
+            title={viActive ? "Identidade Visual ATIVA" : "Identidade Visual"}
+          >
+            <Palette className={cn("h-3 w-3", viActive && "animate-pulse")} />
+            {viActive && (
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 border border-white" />
+            )}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowVisualIdentity(true)} className="gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex">
-            <Palette className="h-3.5 w-3.5" />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowVisualIdentity(true)}
+            className={cn(
+              "gap-1.5 text-xs h-8 px-3 shrink-0 hidden sm:flex relative transition-all",
+              viActive
+                ? "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400 text-white hover:opacity-90 shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                : ""
+            )}
+            title={viActive ? "Identidade Visual ATIVA — todas as gerações usarão a marca" : "Identidade Visual"}
+          >
+            <Palette className={cn("h-3.5 w-3.5", viActive && "animate-pulse")} />
             Identidade Visual
+            {viActive && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-white/25 text-[9px] font-bold uppercase tracking-wider">Ativa</span>
+            )}
           </Button>
           <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
