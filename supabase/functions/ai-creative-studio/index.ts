@@ -2166,6 +2166,16 @@ Deno.serve(async (req) => {
                 const publicUrl = await uploadBase64ToStorage(slideImageUrl);
                 if (publicUrl) slideImageUrl = publicUrl;
               }
+              const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
+              if (lockedProductUrl) {
+                const overlaidSlideUrl = await createLockedProductOverlay(
+                  slideImageUrl,
+                  lockedProductUrl,
+                  `${slideW}x${slideH}`,
+                  imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
+                );
+                if (overlaidSlideUrl) slideImageUrl = overlaidSlideUrl;
+              }
               slideImages.push(slideImageUrl);
               console.log(`[generate_image] Slide ${slideNum}/${totalSlides} generated OK`);
             } else {
