@@ -631,7 +631,7 @@ const AICreativeStudioInner: React.FC = () => {
       toast.error('Não foi possível excluir (sem permissão ou já removido)');
       return;
     }
-    setWorkflows((prev) => prev.filter((w) => w.id !== id));
+    setSavedWorkflows((prev) => prev.filter((w) => w.id !== id));
     toast.success(`"${nome}" excluído`);
     fetchWorkflows();
   }, [fetchWorkflows]);
