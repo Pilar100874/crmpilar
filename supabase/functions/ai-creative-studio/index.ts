@@ -1335,7 +1335,20 @@ async function generateHeroFrame(params: any): Promise<string | null> {
         const publicUrl = await uploadBase64ToStorage(heroUrl);
         if (publicUrl) {
           console.log(`[hero-frame] Hero frame uploaded: ${publicUrl.substring(0, 80)}`);
-          return publicUrl;
+          heroUrl = publicUrl;
+        }
+      }
+      const productEntry = sortedEntries.find((entry) => entry.role === 'PRODUCT - DO NOT MODIFY');
+      if (productEntry?.url) {
+        const lockedHeroUrl = await createLockedProductOverlay(
+          heroUrl,
+          productEntry.url,
+          params.imageSize,
+          sortedEntries.some((entry) => entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY'),
+        );
+        if (lockedHeroUrl) {
+          console.log(`[hero-frame] Locked product overlay applied to video start frame`);
+          return lockedHeroUrl;
         }
       }
       console.log(`[hero-frame] Hero frame generated (${heroUrl.substring(0, 50)}...)`);
@@ -1601,7 +1614,7 @@ async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | nu
     
     const [header, base64] = base64DataUrl.split(",");
     const mime = header.match(/data:(.*?);/)?.[1] || "image/png";
-    const ext = mime.includes("jpeg") || mime.includes("jpg") ? "jpg" : "png";
+    const ext = mime.includes("svg") ? "svg" : mime.includes("webp") ? "webp" : mime.includes("jpeg") || mime.includes("jpg") ? "jpg" : "png";
     const fileName = `studio/${crypto.randomUUID()}.${ext}`;
     
     const bytes = base64Decode(base64);
@@ -1625,6 +1638,78 @@ async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | nu
     console.error("[upload] Failed to upload:", err);
     return null;
   }
+}
+
+async function uploadTextImageToStorage(content: string, mime: string = "image/svg+xml", ext: string = "svg"): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) return null;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+    const bytes = new TextEncoder().encode(content);
+    const { error } = await supabase.storage
+      .from("marketing-images")
+      .upload(fileName, bytes, { contentType: mime, upsert: true });
+    if (error) {
+      console.error("[upload-text-image] Storage upload error:", error.message);
+      return null;
+    }
+    const { data: publicData } = supabase.storage.from("marketing-images").getPublicUrl(fileName);
+    return publicData.publicUrl;
+  } catch (err) {
+    console.error("[upload-text-image] Failed:", err);
+    return null;
+  }
+}
+
+function escapeSvgAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function createLockedProductOverlay(
+  backgroundUrl: string,
+  productUrl: string,
+  imageSize?: string,
+  hasPerson: boolean = false,
+): Promise<string | null> {
+  if (!backgroundUrl || !productUrl) return null;
+  const toEmbeddedDataUrl = async (url: string): Promise<string> => {
+    if (url.startsWith("data:")) return url;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return url;
+      const mime = (resp.headers.get("content-type") || "image/png").split(";")[0].trim();
+      const bytes = await resp.arrayBuffer();
+      return `data:${mime};base64,${base64Encode(bytes)}`;
+    } catch (err) {
+      console.warn("[locked-product-overlay] Could not embed image:", err);
+      return url;
+    }
+  };
+  let bg = backgroundUrl;
+  let product = productUrl;
+  if (bg.startsWith("data:")) bg = await uploadBase64ToStorage(bg) || bg;
+  if (product.startsWith("data:")) product = await uploadBase64ToStorage(product) || product;
+  bg = await toEmbeddedDataUrl(bg);
+  product = await toEmbeddedDataUrl(product);
+
+  const [parsedW, parsedH] = (imageSize || "1080x1080").split("x").map((v) => Number(v));
+  const width = Number.isFinite(parsedW) && parsedW > 0 ? parsedW : 1080;
+  const height = Number.isFinite(parsedH) && parsedH > 0 ? parsedH : 1080;
+  const ratio = width / height;
+  const productBoxW = Math.round(width * (ratio > 1.25 ? 0.30 : ratio < 0.8 ? 0.50 : 0.38));
+  const productBoxH = Math.round(height * (ratio > 1.25 ? 0.58 : ratio < 0.8 ? 0.42 : 0.48));
+  const x = hasPerson ? Math.round(width - productBoxW - width * 0.055) : Math.round((width - productBoxW) / 2);
+  const y = Math.round(height - productBoxH - height * 0.055);
+  const pedestalY = Math.min(height - 18, y + productBoxH - Math.round(height * 0.02));
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <image href="${escapeSvgAttr(bg)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice"/>
+  <ellipse cx="${x + productBoxW / 2}" cy="${pedestalY}" rx="${Math.round(productBoxW * 0.46)}" ry="${Math.round(height * 0.022)}" fill="rgba(0,0,0,0.22)"/>
+  <image href="${escapeSvgAttr(product)}" x="${x}" y="${y}" width="${productBoxW}" height="${productBoxH}" preserveAspectRatio="xMidYMid meet"/>
+</svg>`;
+  return uploadTextImageToStorage(svg, "image/svg+xml", "svg");
 }
 
 const corsHeaders = {
@@ -2262,11 +2347,17 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         }
 
         let data: any;
+        let lockedProductSourceUrl: string | null = null;
+        let shouldApplyLockedProductOverlay = false;
+        let hasPersonStrictForOverlay = false;
 
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
           const strictGatewayModel = hasProductStrict ? "google/gemini-3-pro-image-preview" : gatewayModel;
+          lockedProductSourceUrl = strictImages.find(s => s.role === 'PRODUCT - DO NOT MODIFY')?.url || null;
+          shouldApplyLockedProductOverlay = !!lockedProductSourceUrl;
+          hasPersonStrictForOverlay = strictImages.some(s => s.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
           
           const editContent: any[] = [];
           
@@ -2301,12 +2392,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const subjectDescriptions = sortedStrict.map((s, i) => `Priority ${i + 1}: ${s.role}`).join(', ');
           const hasProductAndInfluencer = sortedStrict.some(s => s.role === 'PRODUCT - DO NOT MODIFY') && sortedStrict.some(s => s.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
           const interactionBlock = hasProductAndInfluencer
-            ? `\n\nCOMPOSITION & INTERACTION (MANDATORY when both product and person are present):\n- The product must look like a literal cut-and-paste of the original product photo placed into the new scene, NOT a newly generated package.\n- Preferred option: the person holds the product naturally with fingers supporting only the sides/base/back, never covering, bending, rewriting, or deforming the front label, logo, packaging text, colors, shape, cap, lid, or seals.\n- If a realistic hand grip would change or hide the packaging, DO NOT force holding: place the unchanged product on a nearby object/pedestal/table in the FOREGROUND and make the person touch, point to, present, or stand beside it.\n- The product must occupy 25-35% of the image area, positioned in the FOREGROUND or CENTER, sharp and well-lit.\n- Use RULE OF THIRDS: product at one intersection point, person at another.\n- The product and person must be CLOSE TOGETHER forming a VISUAL UNIT — never separated in different scenes.\n- Lighting: professional soft light highlighting the product without harsh shadows or reflections that alter the package.\n- Background: clean, slightly blurred (bokeh) to make product and person stand out.\n- Style: premium brand advertising photography.\n- NEVER modify the package to fit the hand, outfit, style, or scene. Product fidelity beats interaction quality.\n- NEVER generate the person alone; they must be holding, touching, pointing to, or presenting the unchanged product.`
+            ? `\n\nCOMPOSITION & INTERACTION (MANDATORY when both product and person are present):\n- Generate the person, hands, setting and advertising scene, but leave a clean foreground area for the exact product overlay.\n- The final product will be composited from the original product photo after generation, so DO NOT invent or redraw product labels.\n- Preferred composition: person close to the product area, touching, pointing to, presenting, or standing beside the product.\n- If holding would require covering or deforming packaging, DO NOT force holding: use a table/pedestal/object in the foreground and make the person present it.\n- The product area must be in the FOREGROUND or CENTER, sharp and well-lit, with space for a 25-35% frame product.\n- Use RULE OF THIRDS: product area at one intersection point, person at another.\n- The product and person must be CLOSE TOGETHER forming a VISUAL UNIT — never separated in different scenes.\n- Lighting: professional soft light, clean blurred background, premium brand advertising photography.\n- Product fidelity beats hand interaction quality. The exact product reference will be pasted on top unchanged.`
             : '';
-          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image — professional advertising photography.\n\nPRIORITY ORDER (ABSOLUTE — NO EXCEPTIONS):\n1. PRODUCT — The product is SACRED. It must appear EXACTLY as in the reference photo. Same packaging, same label, same colors, same logo, same text, same shape, same material. This is a LITERAL COPY-PASTE. You are NOT allowed to regenerate, redesign, or reinterpret the product in any way. If you change even ONE detail of the packaging (color, text, shape, label), the entire output is INVALID. The product must be PROMINENT — at least 25-35% of image area, well-lit, sharp, all details visible.\n2. PERSON/INFLUENCER — must have the IDENTICAL face from the reference. Must be actively HOLDING or DEMONSTRATING the product.\n3. Everything else (background, lighting, scene) is secondary and flexible.${interactionBlock}\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
+          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image — professional advertising photography.\n\nPRIORITY ORDER (ABSOLUTE — NO EXCEPTIONS):\n1. PRODUCT — The product is SACRED. Do not redesign the product. The final system will paste the original product image over the generated scene, so you must create a natural foreground placement area for the exact product photo. If a product appears during generation, it must only be a placeholder for the exact overlay and must not contain invented labels.\n2. PERSON/INFLUENCER — must have the IDENTICAL face from the reference and must be actively presenting, pointing to, touching near, or standing beside the product placement area.\n3. Everything else (background, lighting, scene) is secondary and flexible.${interactionBlock}\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. Your ABSOLUTE #1 RULE: The PRODUCT must be a LITERAL COPY-PASTE from the reference — same packaging, label, printed text, colors, logo, typography, shape, material, cap, lid and proportions. NEVER redesign, alter colors, simplify details, rotate into invented angles, or reinterpret any part. Hands, shadows, reflections, style, visual identity and scene are secondary and must not cover/deform/rewrite packaging. Fidelity > artistic quality. The product must be PROMINENT (25-35% of frame), SHARP, and WELL-LIT in the foreground/center. Priority #2: Person's face identical to reference. Priority #3: When both product and person are present, prefer natural holding only if packaging stays intact and fully legible; if holding would alter or hide the package, place the unchanged product on a foreground table/pedestal/object and have the person point to or present it beside them. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
+          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. ABSOLUTE PRODUCT LOCK: do not recreate the product packaging. Create the advertising scene, person, background, hand gesture and pedestal/table area so the original product photo can be pasted on top unchanged after generation. If a product placeholder appears, keep it simple and unobtrusive; never invent labels, logos, colors or packaging text. Fidelity > artistic quality. Priority #2: Person's face identical to reference. When both product and person are present, prefer presentation/pointing/touching-near the product area instead of gripping over the front label. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model: strictGatewayModel,
@@ -2386,6 +2477,21 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           if (imageUrl.startsWith('data:')) {
             const publicUrl = await uploadBase64ToStorage(imageUrl);
             if (publicUrl) imageUrl = publicUrl;
+          }
+          if (shouldApplyLockedProductOverlay && lockedProductSourceUrl) {
+            const overlaidUrl = await createLockedProductOverlay(
+              imageUrl,
+              lockedProductSourceUrl,
+              imageSize,
+              hasPersonStrictForOverlay,
+            );
+            if (overlaidUrl) {
+              imageUrl = overlaidUrl;
+              text = `${text || ''}\n\n[Produto original preservado por sobreposição bloqueada.]`.trim();
+              console.log(`[generate_image] Locked product overlay applied: ${overlaidUrl.substring(0, 100)}`);
+            } else {
+              console.warn(`[generate_image] Locked product overlay failed, returning generated image`);
+            }
           }
         }
 
