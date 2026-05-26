@@ -152,6 +152,7 @@ import EcommerceCuponsPage from "./pages/ecommerce/EcommerceCuponsPage";
 import EcommerceB2BEditor from "./pages/ecommerce/EcommerceB2BEditor";
 import EcommerceNewsletterPage from "./pages/ecommerce/EcommerceNewsletterPage";
 import { MacroProvider } from "./contexts/MacroContext";
+import { UnsavedChangesProvider } from "./contexts/UnsavedChangesContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import SplashScreen from "./components/SplashScreen";
