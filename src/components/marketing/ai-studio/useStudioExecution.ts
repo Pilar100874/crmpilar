@@ -834,18 +834,20 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real. A embalagem é SAGRADA e INTOCÁVEL.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções, material, tampa, selo.`,
+            `   - Trate como RECORTE/COLAGEM literal da foto original; não reconstrua o produto por texto, estilo ou imaginação.`,
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
             `   - NÃO mude a cor da tampa, rótulo, embalagem ou qualquer parte do produto.`,
             `   - NÃO simplifique ou estilize detalhes da embalagem. COPIE literalmente.`,
+            `   - NÃO permita que mão, dedo, cenário, identidade visual, preset ou estilo cubra/deforme/reinterprete a embalagem.`,
             `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
-            `   - É preferível mostrar o produto MENOR do que modificá-lo.`,
+            `   - É preferível mostrar o produto menor ou apoiado intacto em uma superfície/pedestal do que modificá-lo.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
             hasProduct && hasInfluencer
-              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena, com a pessoa interagindo fisicamente com o produto. O produto é o FOCO PRINCIPAL da imagem.`
+              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma mesa/pedestal/objeto em primeiro plano com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
               : '',
             ``,
             `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena INSERINDO esses sujeitos reais${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}.`,
