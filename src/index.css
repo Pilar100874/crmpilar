@@ -468,3 +468,129 @@ All colors MUST be HSL.
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ==========================================================================
+   Workflow visual standardization — Bot Builder as canonical reference.
+   Any page that adds `.workflow-shell` to its root inherits the same look:
+   header bar, canvas decorations, block library, properties panel, nodes.
+   ========================================================================== */
+
+/* Root */
+.workflow-shell {
+  background: hsl(var(--background));
+}
+
+/* ---- Header bar (first direct child div) ------------------------------- */
+.workflow-shell > div > div:first-child[class*="border-b"],
+.workflow-shell > div:first-child[class*="border-b"] {
+  background: hsl(var(--card)) !important;
+  background-image: none !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 1px 2px 0 hsl(var(--foreground) / 0.04);
+  min-height: 3.5rem;
+}
+
+/* ---- ReactFlow canvas decorations -------------------------------------- */
+.workflow-shell .react-flow {
+  background: hsl(var(--background));
+}
+.workflow-shell .react-flow__background {
+  background-color: hsl(var(--background));
+}
+.workflow-shell .react-flow__background pattern circle {
+  fill: hsl(var(--muted-foreground) / 0.35) !important;
+}
+
+/* Controls */
+.workflow-shell .react-flow__controls {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px -2px hsl(var(--foreground) / 0.08) !important;
+  overflow: hidden;
+}
+.workflow-shell .react-flow__controls-button {
+  background: hsl(var(--card)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+  width: 28px;
+  height: 28px;
+}
+.workflow-shell .react-flow__controls-button:hover {
+  background: hsl(var(--accent)) !important;
+}
+.workflow-shell .react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+/* MiniMap */
+.workflow-shell .react-flow__minimap {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px -2px hsl(var(--foreground) / 0.08) !important;
+  overflow: hidden;
+}
+
+/* Node cards uniform rounded look */
+.workflow-shell .react-flow__node {
+  border-radius: 0.75rem;
+}
+.workflow-shell .react-flow__node.selected {
+  outline: none;
+}
+.workflow-shell .react-flow__node > div {
+  border-radius: 0.75rem;
+}
+.workflow-shell .react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid hsl(var(--card));
+  background: hsl(var(--primary));
+}
+
+/* ---- Properties panel (right side) ------------------------------------- */
+/* Standard floating right-side properties panel — matches Bot Builder */
+.workflow-properties-panel {
+  position: fixed;
+  right: 0;
+  top: 3.5rem;
+  width: 100%;
+  height: calc(100vh - 3.5rem);
+  height: calc(100dvh - 3.5rem);
+  background: hsl(var(--card));
+  border-left: 1px solid hsl(var(--border));
+  box-shadow: -10px 0 30px -10px hsl(var(--foreground) / 0.15);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .workflow-properties-panel { width: 420px; }
+}
+@media (min-width: 1024px) {
+  .workflow-properties-panel { width: 24rem; }
+}
+
+/* ---- Block library (left side) ----------------------------------------- */
+.workflow-library-panel {
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
+  box-shadow: 4px 0 12px -4px hsl(var(--foreground) / 0.06);
+}
+
+/* ---- "Add block" round primary button (consistency across workflows) --- */
+.workflow-add-btn {
+  background-image: linear-gradient(to bottom right, hsl(var(--primary)), hsl(var(--primary) / 0.9)) !important;
+  border: 0 !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 12px -2px hsl(var(--primary) / 0.4) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.workflow-add-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px -2px hsl(var(--primary) / 0.5) !important;
+}
+
