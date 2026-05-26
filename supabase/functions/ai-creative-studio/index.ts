@@ -1601,7 +1601,7 @@ async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | nu
     
     const [header, base64] = base64DataUrl.split(",");
     const mime = header.match(/data:(.*?);/)?.[1] || "image/png";
-    const ext = mime.includes("jpeg") || mime.includes("jpg") ? "jpg" : "png";
+    const ext = mime.includes("svg") ? "svg" : mime.includes("webp") ? "webp" : mime.includes("jpeg") || mime.includes("jpg") ? "jpg" : "png";
     const fileName = `studio/${crypto.randomUUID()}.${ext}`;
     
     const bytes = base64Decode(base64);
@@ -1625,6 +1625,63 @@ async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | nu
     console.error("[upload] Failed to upload:", err);
     return null;
   }
+}
+
+async function uploadTextImageToStorage(content: string, mime: string = "image/svg+xml", ext: string = "svg"): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) return null;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+    const bytes = new TextEncoder().encode(content);
+    const { error } = await supabase.storage
+      .from("marketing-images")
+      .upload(fileName, bytes, { contentType: mime, upsert: true });
+    if (error) {
+      console.error("[upload-text-image] Storage upload error:", error.message);
+      return null;
+    }
+    const { data: publicData } = supabase.storage.from("marketing-images").getPublicUrl(fileName);
+    return publicData.publicUrl;
+  } catch (err) {
+    console.error("[upload-text-image] Failed:", err);
+    return null;
+  }
+}
+
+function escapeSvgAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function createLockedProductOverlay(
+  backgroundUrl: string,
+  productUrl: string,
+  imageSize?: string,
+  hasPerson: boolean = false,
+): Promise<string | null> {
+  if (!backgroundUrl || !productUrl) return null;
+  let bg = backgroundUrl;
+  let product = productUrl;
+  if (bg.startsWith("data:")) bg = await uploadBase64ToStorage(bg) || bg;
+  if (product.startsWith("data:")) product = await uploadBase64ToStorage(product) || product;
+
+  const [parsedW, parsedH] = (imageSize || "1080x1080").split("x").map((v) => Number(v));
+  const width = Number.isFinite(parsedW) && parsedW > 0 ? parsedW : 1080;
+  const height = Number.isFinite(parsedH) && parsedH > 0 ? parsedH : 1080;
+  const ratio = width / height;
+  const productBoxW = Math.round(width * (ratio > 1.25 ? 0.30 : ratio < 0.8 ? 0.50 : 0.38));
+  const productBoxH = Math.round(height * (ratio > 1.25 ? 0.58 : ratio < 0.8 ? 0.42 : 0.48));
+  const x = hasPerson ? Math.round(width - productBoxW - width * 0.055) : Math.round((width - productBoxW) / 2);
+  const y = Math.round(height - productBoxH - height * 0.055);
+  const pedestalY = Math.min(height - 18, y + productBoxH - Math.round(height * 0.02));
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <image href="${escapeSvgAttr(bg)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice"/>
+  <ellipse cx="${x + productBoxW / 2}" cy="${pedestalY}" rx="${Math.round(productBoxW * 0.46)}" ry="${Math.round(height * 0.022)}" fill="rgba(0,0,0,0.22)"/>
+  <image href="${escapeSvgAttr(product)}" x="${x}" y="${y}" width="${productBoxW}" height="${productBoxH}" preserveAspectRatio="xMidYMid meet"/>
+</svg>`;
+  return uploadTextImageToStorage(svg, "image/svg+xml", "svg");
 }
 
 const corsHeaders = {
