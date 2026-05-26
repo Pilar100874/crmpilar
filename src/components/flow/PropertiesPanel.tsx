@@ -26,6 +26,7 @@ interface PropertiesPanelProps {
   nodes: Node[];
   edges: Edge[];
   flowVariables?: FlowVariable[];
+  onClose?: () => void;
 }
 
 export const PropertiesPanel = ({ 
@@ -34,7 +35,8 @@ export const PropertiesPanel = ({
   onDeleteNode,
   nodes,
   edges,
-  flowVariables = []
+  flowVariables = [],
+  onClose
 }: PropertiesPanelProps) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [showVariablePicker, setShowVariablePicker] = useState(false);
