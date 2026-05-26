@@ -756,6 +756,8 @@ const AICreativeStudioInner: React.FC = () => {
   }, [draggingWorkflowId, handleMoveToFolder]);
 
   const handleDeleteFolder = useCallback(async (folder: string) => {
+    setDeleteFolderConfirm(null);
+    await new Promise((r) => setTimeout(r, 50));
     const workflowsInFolder = savedWorkflows.filter(w => w.pasta === folder);
     for (const w of workflowsInFolder) {
       await supabase
@@ -763,10 +765,11 @@ const AICreativeStudioInner: React.FC = () => {
         .update({ pasta: null } as any)
         .eq('id', w.id);
     }
-    // Also remove from manual folders
+    if (typeof document !== 'undefined') {
+      document.body.style.pointerEvents = '';
+    }
     saveManualFolders(manualFolders.filter(f => f !== folder));
     toast.success(`Pasta "${folder}" excluída. Workflows movidos para raiz.`);
-    setDeleteFolderConfirm(null);
     if (activeFolder === folder) setActiveFolder(null);
     fetchWorkflows();
   }, [savedWorkflows, activeFolder, fetchWorkflows, manualFolders, saveManualFolders]);
