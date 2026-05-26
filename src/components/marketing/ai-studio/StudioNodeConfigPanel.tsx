@@ -24,7 +24,11 @@ interface Props {
   allEdges?: StudioEdge[];
 }
 
-type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string; supportsMultiRef?: boolean };
+type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string; supportsMultiRef?: boolean; maxRefs?: number };
+
+// How many reference images each model can compose together.
+// Defaults: supportsMultiRef ? 2 : 1
+const getModelMaxRefs = (m: ModelInfo): number => m.maxRefs ?? (m.supportsMultiRef ? 2 : 1);
 
 const LLM_MODELS: ModelInfo[] = [
   { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico, ótimo custo-benefício' },
