@@ -375,7 +375,7 @@ const PropertiesPanel = () => {
   const isTextObject = selectedObject instanceof IText || selectedObject instanceof FabricText;
 
   return (
-    <Card className="fixed top-[91px] right-[20px] h-auto max-h-[calc(100vh-111px)] flex flex-col z-50 shadow-xl" style={{ width: '320px' }}>
+    <Card className="workflow-props fixed top-[91px] right-[20px] h-auto max-h-[calc(100vh-111px)] flex flex-col z-50 shadow-xl overflow-x-hidden" style={{ width: '320px' }}>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Settings className="h-4 w-4" />
