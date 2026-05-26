@@ -264,7 +264,7 @@ export const AutomacaoPropertiesPanel = ({
   };
 
   return (
-    <div className="w-80 border-l border-border flex flex-col bg-card shadow-lg h-full">
+    <div className="workflow-props w-80 border-l border-border flex flex-col bg-card shadow-lg h-full overflow-x-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-primary/10">
         <h3 className="font-bold text-sm text-foreground">Propriedades</h3>

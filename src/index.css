@@ -443,3 +443,28 @@ All colors MUST be HSL.
 .studio-video-no-fullscreen::-webkit-media-controls-picture-in-picture-button {
   display: none !important;
 }
+
+/* Workflow properties panels: never show horizontal scroll */
+.workflow-props,
+.workflow-props [data-radix-scroll-area-viewport],
+.workflow-props [data-radix-scroll-area-viewport] > div {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+.workflow-props [data-radix-scroll-area-scrollbar][data-orientation="horizontal"] {
+  display: none !important;
+}
+.workflow-props * {
+  min-width: 0;
+}
+.workflow-props input,
+.workflow-props textarea,
+.workflow-props select,
+.workflow-props button {
+  max-width: 100%;
+}
+.workflow-props pre,
+.workflow-props code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

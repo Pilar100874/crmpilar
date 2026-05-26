@@ -1495,7 +1495,7 @@ export const EcommercePropertiesPanel = ({ node, onUpdate, onDelete, onClose }: 
   };
 
   return (
-    <div className="w-80 border-l bg-background flex flex-col h-full">
+    <div className="workflow-props w-80 border-l bg-background flex flex-col h-full overflow-x-hidden">
       <div className="flex items-center justify-between p-3 border-b">
         <h3 className="font-semibold text-sm">Propriedades</h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
