@@ -197,7 +197,7 @@ const AdsHub: React.FC = () => {
             {/* Desktop: Sidebar menu */}
             <div className={cn(
               "hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
-              isMenuCollapsed ? "lg:w-16" : "lg:w-64"
+              isMenuCollapsed ? "lg:w-16" : "lg:w-72"
             )}>
               <Button 
                 variant="ghost" 
@@ -225,7 +225,7 @@ const AdsHub: React.FC = () => {
                       <span className={cn("shrink-0", !isActive && "opacity-70")}>
                         <LayoutDashboard className="h-4 w-4" />
                       </span>
-                      {!isMenuCollapsed && <span className="truncate">Dashboard Geral</span>}
+                      {!isMenuCollapsed && <span className="leading-tight break-words">Dashboard Geral</span>}
                     </button>
                   );
                   if (isMenuCollapsed) {
@@ -259,7 +259,7 @@ const AdsHub: React.FC = () => {
                       <span className={cn("shrink-0", !isActive && "opacity-70")}>
                         {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
                       </span>
-                      {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                      {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
                     </button>
                   );
                   if (isMenuCollapsed) {
@@ -344,7 +344,7 @@ const AdsHub: React.FC = () => {
           {/* Desktop: Sidebar menu */}
           <div className={cn(
             "hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
-            isMenuCollapsed ? "lg:w-16" : "lg:w-64"
+            isMenuCollapsed ? "lg:w-16" : "lg:w-72"
           )}>
             <Button 
               variant="ghost" 
@@ -372,7 +372,7 @@ const AdsHub: React.FC = () => {
                     <span className={cn("shrink-0", !isActive && "opacity-70")}>
                       <LayoutDashboard className="h-4 w-4" />
                     </span>
-                    {!isMenuCollapsed && <span className="truncate">Dashboard Geral</span>}
+                    {!isMenuCollapsed && <span className="leading-tight break-words">Dashboard Geral</span>}
                   </button>
                 );
                 if (isMenuCollapsed) {
@@ -406,7 +406,7 @@ const AdsHub: React.FC = () => {
                     <span className={cn("shrink-0", !isActive && "opacity-70")}>
                       {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
                     </span>
-                    {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                    {!isMenuCollapsed && <span className="leading-tight break-words">{tab.label}</span>}
                   </button>
                 );
                 if (isMenuCollapsed) {
