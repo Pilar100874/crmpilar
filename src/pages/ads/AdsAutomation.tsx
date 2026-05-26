@@ -726,19 +726,8 @@ function AdsAutomationContent() {
                   <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
                 
-                {/* Nome da Automação */}
-                <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
-                  <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                    Nome:
-                  </label>
-                  <span className="text-xs sm:text-sm font-semibold">{selectedAutomation?.nome}</span>
-                  {hasUnsavedChanges && (
-                    <Badge variant="outline" className="text-orange-600 border-orange-600 text-[10px]">
-                      Não salvo
-                    </Badge>
-                  )}
-                </div>
               </div>
+            </div>
             </div>
             
             <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
