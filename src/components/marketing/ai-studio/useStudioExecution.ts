@@ -762,9 +762,10 @@ export function useStudioExecution() {
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
+            `   - Se a referência tiver marcações/anotações vermelhas, círculos, setas, rabiscos, destaques, áreas pintadas, tarjas ou qualquer indicação visual de correção, IGNORE totalmente: isso NÃO faz parte do produto nem da cena e NUNCA deve aparecer no resultado final.`,
             `   - NÃO deixe mão, dedo, roupa, sombra, reflexo, estilo visual, identidade visual ou preset deformar, cobrir, reescrever ou reinterpretar o rótulo/embalagem.`,
-            `   - Interação com pessoa é SECUNDÁRIA: se segurar exigir mudar a embalagem, deixe o produto apoiado numa superfície REAL existente do próprio cenário (bancada, mesa do ambiente, prateleira da loja, chão do estúdio), com a pessoa ao lado apresentando.`,
-            `   - 🚫 PROIBIDO ABSOLUTAMENTE: NÃO insira o produto dentro de um QUADRADO, CAIXA, CARD, MOLDURA, ADESIVO, STICKER ou QUALQUER FUNDO BRANCO/COLORIDO ARTIFICIAL sobreposto à cena. NÃO desenhe pedestal artificial flutuante. NÃO recorte e cole o produto como figurinha. IGNORE o fundo branco da foto de referência — extraia APENAS o produto e integre-o organicamente ao cenário com perspectiva, escala, sombra e iluminação coerentes com o resto da imagem.`,
+            `   - Interação com pessoa é SECUNDÁRIA: se segurar exigir mudar a embalagem, deixe o produto em contato físico com a pessoa (mão aberta/lateral/base) ou apoiado diretamente sobre uma superfície REAL JÁ EXISTENTE e visível do próprio cenário, com textura/cor do ambiente, sem criar nenhum suporte novo.`,
+            `   - 🚫 PROIBIDO ABSOLUTAMENTE: NÃO insira o produto dentro de QUADRADO, CAIXA, CARD, MOLDURA, ADESIVO, STICKER, FUNDO BRANCO/COLORIDO ARTIFICIAL, FAIXA, BARRA, TARJA, RÓTULO EXTRA, PLACA ou RETÂNGULO ARREDONDADO sobreposto à cena. NÃO crie suporte novo, pedestal, bancada branca, base branca, mesa falsa ou área limpa artificial atrás/embaixo do produto. NÃO recorte e cole o produto como figurinha. IGNORE o fundo branco da foto de referência — extraia APENAS o produto e integre-o organicamente ao cenário com perspectiva, escala, sombra e iluminação coerentes com o resto da imagem.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
             `   - É preferível mostrar o produto MENOR ou em outro ângulo natural da cena, do que modificá-lo ou colá-lo como sticker.`,
             ``,
@@ -785,10 +786,10 @@ export function useStudioExecution() {
             `   - O produto NUNCA deve ficar pequeno, desfocado, parcialmente oculto ou em segundo plano`,
             ``,
             `👤 PRIORIDADE #2 — INFLUENCER/PESSOA (APRESENTADOR DO PRODUTO):`,
-            `   - Preferencialmente deixe o produto apoiado em uma SUPERFÍCIE REAL EXISTENTE do cenário (bancada do ambiente, mesa de café, prateleira, balcão da loja), com a pessoa apresentando/tocando ao lado — NUNCA em pedestal artificial flutuante nem em quadrado/caixa branca.`,
+            `   - Preferencialmente coloque o produto na mão aberta da pessoa ou apoiado diretamente em uma SUPERFÍCIE REAL JÁ EXISTENTE do cenário, com textura/cor coerente do ambiente e com a pessoa apresentando/tocando ao lado — NUNCA crie mesa, pedestal, base branca, quadrado, caixa, moldura ou faixa nova para encaixar o produto.`,
             `   - A pessoa só pode segurar o produto se a embalagem continuar 100% intacta, legível e fiel; na dúvida, NÃO segure`,
             `   - TIPOS DE INTERAÇÃO (escolha o mais adequado ao contexto):`,
-            `     • APOIAR EM SUPERFÍCIE REAL DA CENA: produto intacto sobre uma superfície que já existe no ambiente, pessoa ao lado apontando ou sorrindo`,
+            `     • APOIAR EM SUPERFÍCIE REAL DA CENA: produto intacto sobre uma superfície que já existe no ambiente, sem base branca ou suporte novo, pessoa ao lado apontando ou sorrindo`,
             `     • TOCAR SEM COBRIR: Pessoa encosta na lateral/base sem passar dedos na frente do rótulo`,
             `     • SEGURAR E MOSTRAR: somente se dedos ficarem atrás/laterais e a frente da embalagem ficar inteira`,
             `   - A expressão facial deve ser POSITIVA: sorriso confiante, olhar direto para câmera ou para o produto`,
@@ -808,7 +809,7 @@ export function useStudioExecution() {
             `   - NÃO esconda o produto atrás da pessoa, do braço ou em segundo plano`,
             `   - NÃO faça o produto parecer pequeno demais ou irrelevante`,
             `   - NÃO coloque o produto em uma superfície longe da pessoa; a superfície de apoio deve estar visualmente colada à pessoa`,
-            `   - 🚫 NÃO insira o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER ou sobre fundo branco artificial. NÃO use pedestal flutuante. Ignore o fundo branco da foto-referência: extraia somente o produto e funda na cena com sombra, perspectiva e iluminação reais.`,
+            `   - 🚫 NÃO insira o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER, sobre fundo branco artificial, base branca, faixa, barra cinza, legenda vazia ou retângulo arredondado. NÃO crie pedestal, mesa falsa ou suporte artificial. Ignore o fundo branco da foto-referência: extraia somente o produto e funda na cena com sombra, perspectiva e iluminação reais.`,
             `   - NÃO gere mãos deformadas ou com dedos incorretos`,
             ``,
             enrichedPrompt,
@@ -841,20 +842,21 @@ export function useStudioExecution() {
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
             `   - NÃO mude a cor da tampa, rótulo, embalagem ou qualquer parte do produto.`,
+            `   - IGNORE marcações/anotações vermelhas, círculos, setas, rabiscos, destaques, áreas pintadas ou qualquer sinal visual de revisão presente nas referências. Esses elementos são instruções externas, NÃO pertencem ao produto/cena e NUNCA devem ser renderizados.`,
             `   - NÃO simplifique ou estilize detalhes da embalagem. COPIE literalmente.`,
             `   - NÃO permita que mão, dedo, cenário, identidade visual, preset ou estilo cubra/deforme/reinterprete a embalagem.`,
             `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
-            `   - É preferível mostrar o produto menor ou apoiado intacto numa SUPERFÍCIE REAL EXISTENTE do cenário do que modificá-lo.`,
+            `   - É preferível mostrar o produto menor ou em contato com a mão da pessoa ou apoiado numa SUPERFÍCIE REAL JÁ EXISTENTE do cenário, sem fundo branco/base artificial, do que modificá-lo.`,
             `   - 🚫 NUNCA renderize o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER ou sobre fundo branco/colorido artificial. NÃO use pedestal flutuante. IGNORE o fundo branco da foto-referência e funda o produto na cena com sombra, perspectiva e iluminação consistentes.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
             hasProduct && hasInfluencer
-              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma SUPERFÍCIE REAL do próprio cenário (nunca em quadrado branco ou pedestal artificial) com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
+              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma SUPERFÍCIE REAL do próprio cenário (nunca em quadrado branco, base branca, faixa/barra cinza ou suporte artificial) com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
               : '',
             ``,
-            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena integrando esses sujeitos de forma realista${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}, sem sobreposição plana da foto original.`,
+            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena integrando esses sujeitos de forma realista${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}, sem sobreposição plana da foto original, sem fundo branco residual e sem tarjas/retângulos decorativos vazios.`,
             imagePositionHint,
             ``,
             referenceDescs.join('\n'),
@@ -1365,7 +1367,7 @@ export function useStudioExecution() {
               parts.push(`Scene: ${sceneDescription}`);
             } else {
               parts.push(`Create a realistic PHOTOMONTAGE integrating the person and product from the provided photos into this scene: ${sceneDescription}`);
-              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: integrate it naturally while keeping packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. Do not paste the original photo as a flat overlay. If holding would hide or deform packaging, place the unchanged product on a foreground surface/pedestal and have the person present it.`);
+              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: integrate it naturally while keeping packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. Do not paste the original photo as a flat overlay. If holding would hide or deform packaging, place the unchanged product directly on a real existing textured surface in the scene and have the person present it. Do not create a pedestal, white base, card, bar, label strip, or artificial support.`);
             }
             parts.push(`Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}`);
             parts.push(`Animation sequence: Frame ${i + 1} of ${frameCount} — ${stage}`);
