@@ -1998,14 +1998,8 @@ Deno.serve(async (req) => {
             } else {
               result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
             }
-            const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
-            if (lockedProductUrl) {
-              result = await applyLockedProductOverlayToResult(
-                result,
-                lockedProductUrl,
-                imageSize,
-                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-              ) || result;
+            if (findLockedProductReference(refImages, imageRoles)) {
+              console.log(`[chatgpt_image] Product lock handled by model-guided composition (no flat overlay).`);
             }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
@@ -2162,15 +2156,8 @@ Deno.serve(async (req) => {
                 const publicUrl = await uploadBase64ToStorage(slideImageUrl);
                 if (publicUrl) slideImageUrl = publicUrl;
               }
-              const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
-              if (lockedProductUrl) {
-                const overlaidSlideUrl = await createLockedProductOverlay(
-                  slideImageUrl,
-                  lockedProductUrl,
-                  `${slideW}x${slideH}`,
-                  imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-                );
-                if (overlaidSlideUrl) slideImageUrl = overlaidSlideUrl;
+              if (findLockedProductReference(refImages, imageRoles)) {
+                console.log(`[generate_image] Slide product lock handled by model-guided composition (no flat overlay).`);
               }
               slideImages.push(slideImageUrl);
               console.log(`[generate_image] Slide ${slideNum}/${totalSlides} generated OK`);
