@@ -979,6 +979,9 @@ export function useStudioExecution() {
         if (formatWidth && formatHeight) {
           fullPrompt = `${fullPrompt}\n\n[FORMAT] Otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
         }
+        const compImageSize = formatWidth && formatHeight
+          ? `${formatWidth}x${formatHeight}`
+          : (config.imageSize || undefined);
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
@@ -1010,6 +1013,7 @@ export function useStudioExecution() {
           model: (viCompose?.preferredModel) || config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
           imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+          imageSize: compImageSize,
           estabelecimentoId: viComposeId || undefined,
         });
 
