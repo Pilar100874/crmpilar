@@ -3,6 +3,7 @@ import { useGalleryFolders } from '@/hooks/useGalleryFolders';
 import { GalleryFolderTabs } from '@/components/ui/GalleryFolderTabs';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
+import { useVisualIdentityActive } from './VisualIdentityPanel';
 import { useNodeResult } from './useNodeResults';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
