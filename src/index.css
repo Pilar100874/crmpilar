@@ -200,6 +200,17 @@ All colors MUST be HSL.
     }
   }
 
+  /* Aumenta o tamanho do texto dos itens do menu lateral para melhor leitura em mobile/tablet */
+  @media (max-width: 1024px) {
+    .slide-out-menu .text-sm,
+    .slide-out-menu .text-xs {
+      font-size: 0.95rem;
+      line-height: 1.35rem;
+    }
+  }
+
+
+
 
   /* Chat Tab - estilo igual ao menu mas laranja, lado direito */
   .chat-tab {
