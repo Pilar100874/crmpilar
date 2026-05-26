@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MessageCircle, Video } from 'lucide-react';
 import { ChatInternoPanel } from './ChatInternoPanel';
 import { useChatInternoContext } from '@/contexts/ChatInternoContext';
@@ -11,6 +11,43 @@ export function ChatAvisosFloatingButton() {
   const handleChatClick = () => {
     setChatOpen(!chatOpen);
   };
+
+  // Swipe da borda direita para abrir o chat interno (mobile/tablet)
+  useEffect(() => {
+    if (window.innerWidth > 1024) return;
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      if (window.innerWidth - t.clientX <= 24 && !chatOpen) {
+        startX = t.clientX;
+        startY = t.clientY;
+        tracking = true;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!tracking) return;
+      const t = e.touches[0];
+      if (!t) return;
+      const dx = startX - t.clientX;
+      const dy = Math.abs(t.clientY - startY);
+      if (dx > 50 && dy < 40) {
+        setChatOpen(true);
+        tracking = false;
+      }
+    };
+    const onEnd = () => { tracking = false; };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [chatOpen]);
 
   // Determina se deve pulsar: tem mensagens não lidas e chat está fechado
   const shouldPulse = totalNaoLidas > 0 && !chatOpen;

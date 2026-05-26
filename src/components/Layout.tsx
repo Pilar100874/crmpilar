@@ -457,6 +457,44 @@ export default function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Swipe da borda esquerda para abrir o menu (mobile/tablet)
+  useEffect(() => {
+    if (window.innerWidth > 1024) return;
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      // Só ativa se começou bem na borda esquerda
+      if (t.clientX <= 24 && !menuOpen) {
+        startX = t.clientX;
+        startY = t.clientY;
+        tracking = true;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!tracking) return;
+      const t = e.touches[0];
+      if (!t) return;
+      const dx = t.clientX - startX;
+      const dy = Math.abs(t.clientY - startY);
+      if (dx > 50 && dy < 40) {
+        setMenuOpen(true);
+        tracking = false;
+      }
+    };
+    const onEnd = () => { tracking = false; };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [menuOpen]);
+
   const handleMenuMouseEnter = () => {
     if (menuLocked) return;
     // Não abre automaticamente - só mantém aberto se já estiver
