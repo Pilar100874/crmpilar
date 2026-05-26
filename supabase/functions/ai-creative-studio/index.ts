@@ -1730,7 +1730,7 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   
   let priorityPrefix = '';
   if (productEntries.length > 0) {
-    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Copy it EXACTLY into the scene as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
+    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Integrate it naturally into the scene with the exact same packaging design — label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT paste as a flat sticker, redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
   }
   if (personEntries.length > 0) {
     priorityPrefix += `\n\n⚠️ PRIORITY #2 — PERSON: Reproduce the person's EXACT face, skin tone, hair, features identically.`;
@@ -2006,7 +2006,7 @@ Deno.serve(async (req) => {
               for (const entry of slideEntries) {
                 editContent.push({ type: "image_url", image_url: { url: entry.url } });
                 editContent.push({ type: "text", text: entry.role === 'PRODUCT - DO NOT MODIFY'
-                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve as literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
+                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve the exact same packaging while integrating naturally in the slide: label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER paste as a flat sticker, redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
                   : `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY in output.` });
               }
               editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
@@ -2017,7 +2017,7 @@ Deno.serve(async (req) => {
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model: slideModel,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be a literal cut-and-paste with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not redraw or reinterpret the product under any circumstance." + slideDimInstruction },
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be naturally integrated with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not paste as a flat sticker, redraw or reinterpret the product under any circumstance." + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
@@ -2129,7 +2129,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
-                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Copy EXACTLY as literal cut-and-paste into scene: same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT redesign/recolor/simplify/stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
+                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Integrate naturally into the scene with the exact same packaging: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT paste as flat sticker, redesign, recolor, simplify or stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (strictRolesPano.includes(role)) {
