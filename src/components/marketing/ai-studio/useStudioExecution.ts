@@ -750,13 +750,14 @@ export function useStudioExecution() {
           }
         }
         // 🔒 ABSOLUTE PRODUCT LOCK — applies whenever a product image is connected,
-        // regardless of influencer presence. Product packaging is INVIOLABLE.
+        // regardless of influencer presence. Product packaging graphics are INVIOLABLE.
         if (hasProduct) {
           enrichedPrompt = [
             `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
             `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
-            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: copie pixel a pixel cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos.`,
-            `   - Use o produto como RECORTE/COLAGEM da foto original. A IA NÃO pode reconstruir, trocar ângulo, inventar verso/lateral ou redesenhar partes ocultas da embalagem.`,
+            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: mantenha o mesmo design gráfico, cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos visuais.`,
+            `   - NÃO cole a foto original como uma sobreposição plana. Gere o produto integrado naturalmente na cena, mas usando a embalagem da referência como guia rígido.`,
+            `   - A IA pode ajustar perspectiva, escala e iluminação SOMENTE para encaixar o produto na cena; esses ajustes não podem mudar o visual gráfico da embalagem.`,
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
@@ -778,7 +779,7 @@ export function useStudioExecution() {
             `   - Posicione o produto em PRIMEIRO PLANO ou no CENTRO da composição`,
             `   - O produto deve estar BEM ILUMINADO, NÍTIDO e com todos os detalhes visíveis (rótulo, logo, cores)`,
             `   - A embalagem é SAGRADA — copie-a EXATAMENTE como na referência, sem nenhuma alteração`,
-            `   - O produto deve parecer um RECORTE FIEL da foto original inserido na cena, não uma nova embalagem gerada`,
+            `   - O produto deve parecer um produto real fotografado na cena, NÃO uma imagem original colada por cima; porém o design gráfico da embalagem deve permanecer igual ao da referência`,
             `   - O produto NUNCA deve ficar pequeno, desfocado, parcialmente oculto ou em segundo plano`,
             ``,
             `👤 PRIORIDADE #2 — INFLUENCER/PESSOA (APRESENTADOR DO PRODUTO):`,
