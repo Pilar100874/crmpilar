@@ -2265,6 +2265,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
+          const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
+          const strictGatewayModel = hasProductStrict ? "google/gemini-3-pro-image-preview" : gatewayModel;
           
           const editContent: any[] = [];
           
@@ -2307,7 +2309,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. Your ABSOLUTE #1 RULE: The PRODUCT must be a LITERAL COPY-PASTE from the reference — same packaging, label, printed text, colors, logo, typography, shape, material, cap, lid and proportions. NEVER redesign, alter colors, simplify details, rotate into invented angles, or reinterpret any part. Hands, shadows, reflections, style, visual identity and scene are secondary and must not cover/deform/rewrite packaging. Fidelity > artistic quality. The product must be PROMINENT (25-35% of frame), SHARP, and WELL-LIT in the foreground/center. Priority #2: Person's face identical to reference. Priority #3: When both product and person are present, prefer natural holding only if packaging stays intact and fully legible; if holding would alter or hide the package, place the unchanged product on a foreground table/pedestal/object and have the person point to or present it beside them. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model: gatewayModel,
+            model: strictGatewayModel,
             messages: [
               { role: "system", content: editSystemPrompt },
               { role: "user", content: editContent },
