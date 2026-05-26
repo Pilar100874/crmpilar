@@ -756,11 +756,14 @@ export function useStudioExecution() {
             `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
             `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
             `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: copie pixel a pixel cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos.`,
+            `   - Use o produto como RECORTE/COLAGEM da foto original. A IA NÃO pode reconstruir, trocar ângulo, inventar verso/lateral ou redesenhar partes ocultas da embalagem.`,
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
+            `   - NÃO deixe mão, dedo, roupa, sombra, reflexo, estilo visual, identidade visual ou preset deformar, cobrir, reescrever ou reinterpretar o rótulo/embalagem.`,
+            `   - Interação com pessoa é SECUNDÁRIA: se segurar o produto exigir mudar embalagem, coloque o produto intacto sobre mesa/pedestal/objeto em primeiro plano e a pessoa aponta/apresenta ao lado.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
-            `   - É preferível mostrar o produto MENOR, em outro ângulo ou recortado, do que modificá-lo de qualquer forma.`,
+            `   - É preferível mostrar o produto MENOR ou apoiado em um objeto, do que modificá-lo de qualquer forma.`,
             ``,
             enrichedPrompt,
           ].join('\n');
@@ -775,10 +778,12 @@ export function useStudioExecution() {
             `   - Posicione o produto em PRIMEIRO PLANO ou no CENTRO da composição`,
             `   - O produto deve estar BEM ILUMINADO, NÍTIDO e com todos os detalhes visíveis (rótulo, logo, cores)`,
             `   - A embalagem é SAGRADA — copie-a EXATAMENTE como na referência, sem nenhuma alteração`,
+            `   - O produto deve parecer um RECORTE FIEL da foto original inserido na cena, não uma nova embalagem gerada`,
             `   - O produto NUNCA deve ficar pequeno, desfocado, parcialmente oculto ou em segundo plano`,
             ``,
             `👤 PRIORIDADE #2 — INFLUENCER/PESSOA (APRESENTADOR DO PRODUTO):`,
-            `   - A pessoa deve estar SEGURANDO O PRODUTO NA MÃO de forma natural e elegante`,
+            `   - Preferencialmente a pessoa segura o produto, MAS somente se a embalagem continuar 100% intacta, legível e fiel`,
+            `   - Se a mão/dedos cobrirem, dobrarem, deformarem ou alterarem a embalagem, NÃO segure: deixe o produto intacto em mesa/pedestal/objeto e a pessoa apresenta/aponta ao lado`,
             `   - TIPOS DE INTERAÇÃO (escolha o mais adequado ao contexto):`,
             `     • SEGURAR E MOSTRAR: Pessoa segura o produto na altura do peito/rosto, virado para a câmera`,
             `     • DEMONSTRAR USO: Pessoa usando/aplicando o produto de forma natural (ex: bebendo, aplicando, etc.)`,
@@ -797,7 +802,8 @@ export function useStudioExecution() {
             ``,
             `❌ PROIBIDO:`,
             `   - NÃO coloque o produto e a pessoa separados ou distantes`,
-            `   - NÃO gere a pessoa sem SEGURAR/TOCAR o produto`,
+            `   - NÃO gere a pessoa sem SEGURAR/TOCAR/APONTAR/APRESENTAR o produto`,
+            `   - NÃO force a mão segurando se isso mudar ou esconder rótulo, logo, textos, tampa, formato ou cores da embalagem`,
             `   - NÃO esconda o produto atrás da pessoa, do braço ou em segundo plano`,
             `   - NÃO faça o produto parecer pequeno demais ou irrelevante`,
             `   - NÃO coloque o produto em uma mesa/superfície longe da pessoa`,
@@ -828,18 +834,20 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real. A embalagem é SAGRADA e INTOCÁVEL.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções, material, tampa, selo.`,
+            `   - Trate como RECORTE/COLAGEM literal da foto original; não reconstrua o produto por texto, estilo ou imaginação.`,
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
             `   - NÃO mude a cor da tampa, rótulo, embalagem ou qualquer parte do produto.`,
             `   - NÃO simplifique ou estilize detalhes da embalagem. COPIE literalmente.`,
+            `   - NÃO permita que mão, dedo, cenário, identidade visual, preset ou estilo cubra/deforme/reinterprete a embalagem.`,
             `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
-            `   - É preferível mostrar o produto MENOR do que modificá-lo.`,
+            `   - É preferível mostrar o produto menor ou apoiado intacto em uma superfície/pedestal do que modificá-lo.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
             hasProduct && hasInfluencer
-              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena, com a pessoa interagindo fisicamente com o produto. O produto é o FOCO PRINCIPAL da imagem.`
+              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma mesa/pedestal/objeto em primeiro plano com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
               : '',
             ``,
             `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena INSERINDO esses sujeitos reais${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}.`,
@@ -1166,8 +1174,10 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
+            `   - Trate como RECORTE/COLAGEM literal da foto original; não reconstrua o produto por texto, estilo ou imaginação.`,
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
+            `   - NÃO permita que mãos, sombras, reflexos, cenário, identidade visual, preset ou estilo deformem/cubram/reinterpretem rótulo, logo, textos, tampa, formato ou cores.`,
             `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
@@ -1328,7 +1338,7 @@ export function useStudioExecution() {
               parts.push(`Scene: ${sceneDescription}`);
             } else {
               parts.push(`Create a PHOTOMONTAGE: cut the person and product from the provided photos and paste them into this scene: ${sceneDescription}`);
-              parts.push(`The person's face must be IDENTICAL to the photo. The product packaging must be IDENTICAL to the photo.`);
+              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: use it as a literal cut-and-paste and keep packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. If holding would hide or deform packaging, place the unchanged product on a foreground surface/pedestal and have the person present it.`);
             }
             parts.push(`Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}`);
             parts.push(`Animation sequence: Frame ${i + 1} of ${frameCount} — ${stage}`);

@@ -1282,7 +1282,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
       if (entry.role === 'PRODUCT - DO NOT MODIFY') {
-        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy this product EXACTLY into the scene: same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE — do NOT redesign.` });
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). Copy this product EXACTLY into the scene as a literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. DO NOT redraw, redesign, recolor, simplify, stylize, rotate into an invented side/back view, or let hands/shadows/reflections alter any packaging detail.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
       } else if (strictRoles.includes(entry.role)) {
@@ -1303,12 +1303,12 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       sceneDesc = sceneDesc.substring(0, instrStart) + instrBlock;
     }
 
-    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The person's FACE must be IDENTICAL. The product PACKAGING must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
+    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The product is PRIORITY #1 and must be a literal cut-and-paste from its reference. The product PACKAGING must be IDENTICAL: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do not redraw/reconstruct/reinterpret the package. If holding it would hide, bend, deform or rewrite the packaging, place the unchanged product on a foreground object/pedestal/table and have the person point to or present it. The person's FACE must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
 
     const data = await callGateway(LOVABLE_API_KEY, {
       model: "google/gemini-3-pro-image-preview",
       messages: [
-        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE PRIORITY is the PRODUCT — it must appear EXACTLY as in the reference photo: same packaging, colors, label, logo, proportions, typography. NEVER redesign, recolor, or modify the product in any way. The PERSON/INFLUENCER must hold or interact with the product naturally — their face must remain identical to the reference. The person should be ACTIVELY DEMONSTRATING the product (holding it, showing it to camera, using it). NEVER separate the person and product — they must be together in the same scene interacting." },
+        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE #1 RULE is PRODUCT FIDELITY. The product must appear EXACTLY as in the reference photo as a literal cut-and-paste: same packaging, label, printed text, typography, colors, logo, proportions, material, cap/lid and shape. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product in any way. Hands, shadows, reflections, style references and brand identity are secondary and must not cover, deform or reinterpret the packaging. If holding the product would alter or hide the package, keep the product intact on a foreground table/pedestal/object and make the person point to or present it. The PERSON/INFLUENCER face must remain identical to the reference. Product fidelity beats hand interaction and artistic style." },
         { role: "user", content: editContent },
       ],
       modalities: ["image", "text"],
@@ -1721,7 +1721,7 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   
   let priorityPrefix = '';
   if (productEntries.length > 0) {
-    priorityPrefix += `\n\n⚠️ PRIORITY #1 — PRODUCT: The first image is the REAL product. Copy it EXACTLY into the scene — same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE operation.`;
+    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Copy it EXACTLY into the scene as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
   }
   if (personEntries.length > 0) {
     priorityPrefix += `\n\n⚠️ PRIORITY #2 — PERSON: Reproduce the person's EXACT face, skin tone, hair, features identically.`;
@@ -1975,21 +1975,37 @@ Deno.serve(async (req) => {
             let slideData: any;
             if (hasStrict) {
               const editContent: any[] = [];
+              const slideEntries: { url: string; role: string; priority: number }[] = [];
+              const slidePriority: Record<string, number> = {
+                'PRODUCT - DO NOT MODIFY': 1,
+                'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+                'LOGO - DO NOT MODIFY': 3,
+                'CLOTHING - DO NOT MODIFY': 4,
+              };
               for (let i = 0; i < refImages.length; i++) {
                 const safe = truncateImageUrl(refImages[i]);
                 if (!safe) continue;
                 const role = imageRoles[i] || 'REFERENCE';
                 if (strictRoles.includes(role)) {
-                  editContent.push({ type: "image_url", image_url: { url: safe } });
-                  editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
+                  slideEntries.push({ url: safe, role, priority: slidePriority[role] || 99 });
                 }
               }
-              editContent.push({ type: "text", text: slidePrompt });
+              slideEntries.sort((a, b) => a.priority - b.priority);
+              for (const entry of slideEntries) {
+                editContent.push({ type: "image_url", image_url: { url: entry.url } });
+                editContent.push({ type: "text", text: entry.role === 'PRODUCT - DO NOT MODIFY'
+                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve as literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
+                  : `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY in output.` });
+              }
+              editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
               
+              const slideModel = slideEntries.some(e => e.role === 'PRODUCT - DO NOT MODIFY')
+                ? "google/gemini-3-pro-image-preview"
+                : model;
               slideData = await callGateway(LOVABLE_API_KEY, {
-                model,
+                model: slideModel,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY." + slideDimInstruction },
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be a literal cut-and-paste with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not redraw or reinterpret the product under any circumstance." + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
@@ -2098,7 +2114,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
-                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy EXACTLY into scene. Same packaging, label, colors, logo. DO NOT redesign. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Copy EXACTLY as literal cut-and-paste into scene: same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT redesign/recolor/simplify/stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (strictRolesPano.includes(role)) {
@@ -2107,10 +2123,13 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             }
             editContent.push({ type: "text", text: panoramicPrompt });
             
+            const panoModel = refImages.some((_, i) => (imageRoles[i] || '') === 'PRODUCT - DO NOT MODIFY')
+              ? "google/gemini-3-pro-image-preview"
+              : model;
             panoData = await callGateway(LOVABLE_API_KEY, {
-              model,
+              model: panoModel,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo. NEVER redesign or modify the product. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact on a foreground surface/pedestal. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -2246,6 +2265,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
+          const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
+          const strictGatewayModel = hasProductStrict ? "google/gemini-3-pro-image-preview" : gatewayModel;
           
           const editContent: any[] = [];
           
@@ -2264,7 +2285,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             if (s.role === 'PRODUCT - DO NOT MODIFY') {
               editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). This is a REAL photograph of the REAL product. You MUST treat this image as SACRED and UNTOUCHABLE. RULES:\n- COPY the product EXACTLY as a cut-and-paste into the scene. Do NOT regenerate, redraw, or reinterpret it.\n- The PACKAGING must be IDENTICAL: same shape, same material, same colors, same label text, same typography, same logo placement, same proportions.\n- Do NOT change the label text, brand name, or any printed text on the packaging.\n- Do NOT simplify, stylize, blur, or artistically reinterpret any part of the product.\n- Do NOT add, remove, or modify any seal, stamp, barcode, or decorative element on the packaging.\n- Do NOT change the color of the cap, lid, wrapper, or any part of the container.\n- The product in the output must be INDISTINGUISHABLE from this reference photo.\n- If you cannot preserve the product exactly, it is better to show it smaller than to modify it.` });
             } else if (s.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
-              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON/INFLUENCER. This is a REAL person. Reproduce their EXACT face, skin tone, hair, features.\nCOMPOSITION RULES:\n- The person MUST be HOLDING the product in their hand naturally — fingers wrapped around the packaging realistically.\n- Interaction types (pick best fit): hold-and-show (product at chest/face height facing camera), demonstrate-use (actively using/applying), present (one hand on product, other gesturing), offer (extending product toward camera with inviting smile).\n- Facial expression: confident smile, looking at camera or at the product.\n- The person and product must form a VISUAL UNIT — close together, never separated.\n- Professional advertising photography style with soft lighting.` });
+              editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON/INFLUENCER. This is a REAL person. Reproduce their EXACT face, skin tone, hair, features.\nCOMPOSITION RULES:\n- Prefer the person holding the product naturally ONLY if the product packaging remains 100% intact, legible and unchanged.\n- Fingers may support only sides/base/back and must NEVER cover, bend, rewrite, deform, recolor or reinterpret label, logo, text, cap/lid, shape or colors.\n- If holding would alter/hide packaging, DO NOT force holding: place the unchanged product on a foreground object/pedestal/table and make the person touch, point to, or present it beside them.\n- Interaction types (pick best fit): hold-and-show, demonstrate-use, present beside/on surface, point-to-product, offer with label fully visible.\n- Facial expression: confident smile, looking at camera or at the product.\n- The person and product must form a VISUAL UNIT — close together, never separated.\n- Product fidelity always beats hand interaction quality.` });
 
             } else {
               editContent.push({ type: "text", text: `↑ SUBJECT (${s.role}). Preserve IDENTICALLY in output.` });
@@ -2285,10 +2306,10 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image — professional advertising photography.\n\nPRIORITY ORDER (ABSOLUTE — NO EXCEPTIONS):\n1. PRODUCT — The product is SACRED. It must appear EXACTLY as in the reference photo. Same packaging, same label, same colors, same logo, same text, same shape, same material. This is a LITERAL COPY-PASTE. You are NOT allowed to regenerate, redesign, or reinterpret the product in any way. If you change even ONE detail of the packaging (color, text, shape, label), the entire output is INVALID. The product must be PROMINENT — at least 25-35% of image area, well-lit, sharp, all details visible.\n2. PERSON/INFLUENCER — must have the IDENTICAL face from the reference. Must be actively HOLDING or DEMONSTRATING the product.\n3. Everything else (background, lighting, scene) is secondary and flexible.${interactionBlock}\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. Your ABSOLUTE #1 RULE: The PRODUCT must be a LITERAL COPY-PASTE from the reference — same packaging, label, text, colors, logo, typography, shape, material, cap, lid. NEVER redesign, alter colors, simplify details, or reinterpret any part. Fidelity > artistic quality. The product must be PROMINENT (25-35% of frame), SHARP, and WELL-LIT in the foreground/center. Priority #2: Person's face identical to reference. Priority #3: When both product and person are present, the person MUST be HOLDING the product naturally in their hand — create a realistic grip with proper finger anatomy. They should form a visual unit like a real advertising photo shoot. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
+          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. Your ABSOLUTE #1 RULE: The PRODUCT must be a LITERAL COPY-PASTE from the reference — same packaging, label, printed text, colors, logo, typography, shape, material, cap, lid and proportions. NEVER redesign, alter colors, simplify details, rotate into invented angles, or reinterpret any part. Hands, shadows, reflections, style, visual identity and scene are secondary and must not cover/deform/rewrite packaging. Fidelity > artistic quality. The product must be PROMINENT (25-35% of frame), SHARP, and WELL-LIT in the foreground/center. Priority #2: Person's face identical to reference. Priority #3: When both product and person are present, prefer natural holding only if packaging stays intact and fully legible; if holding would alter or hide the package, place the unchanged product on a foreground table/pedestal/object and have the person point to or present it beside them. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
-            model: gatewayModel,
+            model: strictGatewayModel,
             messages: [
               { role: "system", content: editSystemPrompt },
               { role: "user", content: editContent },
