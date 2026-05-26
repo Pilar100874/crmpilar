@@ -618,11 +618,18 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleDeleteWorkflow = useCallback(async (id: string, nome: string) => {
     setDeleteConfirm(null);
+    // Aguarda Radix finalizar a animação/foco do AlertDialog antes de mexer no DOM,
+    // evitando que o body fique com pointer-events:none travando cliques nos cards.
+    await new Promise((r) => setTimeout(r, 50));
     const { data, error } = await supabase
       .from('ai_studio_workflows')
       .delete()
       .eq('id', id)
       .select('id');
+    // Garante restauração de pointer-events caso Radix tenha deixado travado
+    if (typeof document !== 'undefined') {
+      document.body.style.pointerEvents = '';
+    }
     if (error) {
       toast.error(`Erro ao excluir: ${error.message}`);
       return;
@@ -749,6 +756,8 @@ const AICreativeStudioInner: React.FC = () => {
   }, [draggingWorkflowId, handleMoveToFolder]);
 
   const handleDeleteFolder = useCallback(async (folder: string) => {
+    setDeleteFolderConfirm(null);
+    await new Promise((r) => setTimeout(r, 50));
     const workflowsInFolder = savedWorkflows.filter(w => w.pasta === folder);
     for (const w of workflowsInFolder) {
       await supabase
@@ -756,10 +765,11 @@ const AICreativeStudioInner: React.FC = () => {
         .update({ pasta: null } as any)
         .eq('id', w.id);
     }
-    // Also remove from manual folders
+    if (typeof document !== 'undefined') {
+      document.body.style.pointerEvents = '';
+    }
     saveManualFolders(manualFolders.filter(f => f !== folder));
     toast.success(`Pasta "${folder}" excluída. Workflows movidos para raiz.`);
-    setDeleteFolderConfirm(null);
     if (activeFolder === folder) setActiveFolder(null);
     fetchWorkflows();
   }, [savedWorkflows, activeFolder, fetchWorkflows, manualFolders, saveManualFolders]);
@@ -1239,8 +1249,8 @@ const AICreativeStudioInner: React.FC = () => {
   // Landing page — only show when user has NOT entered the canvas editor
   if (!showCanvas) {
     return (
-      <div className="h-[calc(100vh-180px)] min-h-[350px] md:min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative overflow-y-auto pt-4 sm:pt-8 md:pt-12 pb-20 lg:pb-16">
+      <div className="min-h-[calc(100vh-180px)] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-start px-3 sm:px-6 relative pt-4 sm:pt-8 md:pt-12 pb-20 lg:pb-16">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
 
