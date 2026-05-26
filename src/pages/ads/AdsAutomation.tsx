@@ -286,7 +286,7 @@ function AdsAutomationContent() {
     }
   }, [selectedAutomation, nodes, edges, reactFlowInstance, updateAutomationMutation]);
 
-  useUnsavedChanges("ads-automation", hasUnsavedChanges, async () => { await handleSave(); return true; }, selectedAutomation?.name || "Automação");
+  useUnsavedChanges("ads-automation", hasUnsavedChanges, async () => { await handleSave(); return true; }, selectedAutomation?.nome || "Automação");
 
 
 
