@@ -552,6 +552,8 @@ function EditorRegrasContent() {
     }
   };
 
+  useUnsavedChanges("editor-regras", hasUnsavedChanges, async () => { await handleSave(); return !hasUnsavedChanges; }, nomeRegra || "Regra");
+
   const handleBack = () => {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
