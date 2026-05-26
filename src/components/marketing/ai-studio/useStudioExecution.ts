@@ -1199,14 +1199,13 @@ export function useStudioExecution() {
             `   - NÃO gere uma pessoa parecida. NÃO altere nenhuma característica facial. É a MESMA pessoa.`,
             `   - Se a IA gerar um rosto diferente, o resultado está ERRADO.`,
             ``,
-            `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
-            `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
-            `   - Integre o produto naturalmente no vídeo/cena, sem colar a foto original por cima; não reconstrua o produto por texto, estilo ou imaginação.`,
-            `   - Ajustes de perspectiva, escala e iluminação são permitidos apenas para realismo; não podem mudar rótulo, logo, textos, cores, formato ou proporções.`,
-            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
-            `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
-            `   - NÃO permita que mãos, sombras, reflexos, cenário, identidade visual, preset ou estilo deformem/cubram/reinterpretem rótulo, logo, textos, tampa, formato ou cores.`,
-            `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
+            `2. PRODUTO/EMBALAGEM: REGENERE o produto do zero como uma nova fotografia dentro da cena.`,
+            `   - 🚫 PROIBIDO ABSOLUTAMENTE colar, sobrepor, recortar ou inserir a foto original do produto por cima da imagem gerada. NÃO faça composição "sticker", "cut-out", "paste-over" ou colagem.`,
+            `   - 🚫 PROIBIDO mostrar o produto como uma figura flutuante, recortada, com borda visível, em uma camada separada ou com iluminação diferente do cenário.`,
+            `   - ✅ O produto deve ser RENDERIZADO novamente pelo modelo, do mesmo ângulo de câmera da cena, com a MESMA iluminação, sombras e perspectiva do cenário gerado, parecendo uma foto única e contínua.`,
+            `   - Use a foto de referência APENAS como guia de design (cores, rótulo, tipografia, logo, formato, proporções). Mantenha esses elementos fiéis, mas pinte-os novamente no contexto da cena.`,
+            `   - NÃO redesenhe a marca/rótulo. NÃO invente textos. NÃO altere cores ou logotipo. NÃO crie embalagem similar — é o MESMO produto, mas REPINTADO na cena.`,
+            `   - Mãos, sombras e reflexos podem interagir naturalmente desde que não distorçam rótulo, logo, textos, tampa, formato ou cores.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             ``,
@@ -1232,10 +1231,12 @@ export function useStudioExecution() {
         }
 
         // Inject visual identity references for video generation
+        let viVideoModelOverride: string | null = null;
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
           const viVideo = await getActiveVisualIdentity(viEstabId);
-          console.log('[Studio][VI] videoGen ativa?', !!(viVideo && (viVideo.images.length>0 || viVideo.prompt)));
+          const viVideoActive = !!(viVideo && (viVideo.images.length > 0 || viVideo.prompt));
+          console.log('[Studio][VI] videoGen ativa?', viVideoActive, { preferredModel: viVideo?.preferredModel });
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
             videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
@@ -1243,10 +1244,15 @@ export function useStudioExecution() {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
             }
+            if (viVideo.preferredModel) {
+              viVideoModelOverride = viVideo.preferredModel;
+            }
           }
         }
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
-        const effectiveVideoModel = videoModel === 'free/gif-animated' ? 'auto' : videoModel;
+        // VI preferred model takes priority over block-configured model
+        const baseVideoModel = viVideoModelOverride || videoModel;
+        const effectiveVideoModel = baseVideoModel === 'free/gif-animated' ? 'auto' : baseVideoModel;
         {
           nodeResultStore.setResult(node.id, { 
             text: `🎬 Gerando vídeo${effectiveVideoModel === 'auto' ? ' (detectando provedor disponível)' : ` com ${effectiveVideoModel.split('/').pop()}`}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
