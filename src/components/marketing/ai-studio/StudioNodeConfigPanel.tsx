@@ -66,7 +66,7 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'apiframe/flux-dev', label: '⚡ AF: Flux Dev', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/ideogram', label: '⚡ AF: Ideogram v3', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 3 créditos', supportsMultiRef: false },
   { value: 'apiframe/dall-e', label: '⚡ AF: DALL-E', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
-  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: true },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe (até 10 refs)', supportsMultiRef: true, maxRefs: 10 },
   { value: 'apiframe/nano-banana', label: '⚡ AF: Nano Banana', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
