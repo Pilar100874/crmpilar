@@ -880,7 +880,7 @@ export default function OmnichannelBuilder() {
         )}
 
         {!showSimulator && !selectedNode && showAnalytics && id && (
-          <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] overflow-y-auto bg-card border-l border-border z-40 shadow-2xl p-4">
+          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[420px] lg:w-96 overflow-y-auto bg-card border-l border-border z-40 shadow-2xl p-4">
             <FlowAnalytics flowId={id} nodes={nodes} />
           </div>
         )}
