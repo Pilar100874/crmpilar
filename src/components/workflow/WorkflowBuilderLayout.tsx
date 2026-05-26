@@ -89,9 +89,9 @@ export function WorkflowBuilderLayout({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between px-2 sm:px-4 bg-gradient-to-r from-primary/5 to-primary/10 shadow-sm">
+      <div className="h-14 min-h-[3.5rem] border-b border-border flex items-center justify-between px-2 sm:px-4 bg-card shadow-sm">
         {/* Left Section */}
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {/* Title - Hidden on small screens */}
