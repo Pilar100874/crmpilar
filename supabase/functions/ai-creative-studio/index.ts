@@ -2320,15 +2320,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
              const publicUrl = await uploadBase64ToStorage(panoImageUrl);
              if (publicUrl) panoImageUrl = publicUrl;
            }
-            const lockedPanoProductUrl = findLockedProductReference(refImages, imageRoles);
-            if (panoImageUrl && lockedPanoProductUrl) {
-              const overlaidPanoUrl = await createLockedProductOverlay(
-                panoImageUrl,
-                lockedPanoProductUrl,
-                '1080x1080',
-                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-              );
-              if (overlaidPanoUrl) panoImageUrl = overlaidPanoUrl;
+            if (panoImageUrl && findLockedProductReference(refImages, imageRoles)) {
+              console.log(`[generate_image] Panoramic product lock handled by model-guided composition (no flat overlay).`);
             }
            
            console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
@@ -2386,16 +2379,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
         let data: any;
         let lockedProductSourceUrl: string | null = null;
-        let shouldApplyLockedProductOverlay = false;
-        let hasPersonStrictForOverlay = false;
 
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
           const strictGatewayModel = hasProductStrict ? "google/gemini-3-pro-image-preview" : gatewayModel;
           lockedProductSourceUrl = strictImages.find(s => s.role === 'PRODUCT - DO NOT MODIFY')?.url || null;
-          shouldApplyLockedProductOverlay = !!lockedProductSourceUrl;
-          hasPersonStrictForOverlay = strictImages.some(s => s.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
           
           const editContent: any[] = [];
           
