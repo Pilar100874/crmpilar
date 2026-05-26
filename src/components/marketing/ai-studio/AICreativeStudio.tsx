@@ -618,11 +618,18 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleDeleteWorkflow = useCallback(async (id: string, nome: string) => {
     setDeleteConfirm(null);
+    // Aguarda Radix finalizar a animação/foco do AlertDialog antes de mexer no DOM,
+    // evitando que o body fique com pointer-events:none travando cliques nos cards.
+    await new Promise((r) => setTimeout(r, 50));
     const { data, error } = await supabase
       .from('ai_studio_workflows')
       .delete()
       .eq('id', id)
       .select('id');
+    // Garante restauração de pointer-events caso Radix tenha deixado travado
+    if (typeof document !== 'undefined') {
+      document.body.style.pointerEvents = '';
+    }
     if (error) {
       toast.error(`Erro ao excluir: ${error.message}`);
       return;
