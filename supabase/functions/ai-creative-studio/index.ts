@@ -2450,6 +2450,21 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             const publicUrl = await uploadBase64ToStorage(imageUrl);
             if (publicUrl) imageUrl = publicUrl;
           }
+          if (shouldApplyLockedProductOverlay && lockedProductSourceUrl) {
+            const overlaidUrl = await createLockedProductOverlay(
+              imageUrl,
+              lockedProductSourceUrl,
+              imageSize,
+              hasPersonStrictForOverlay,
+            );
+            if (overlaidUrl) {
+              imageUrl = overlaidUrl;
+              text = `${text || ''}\n\n[Produto original preservado por sobreposição bloqueada.]`.trim();
+              console.log(`[generate_image] Locked product overlay applied: ${overlaidUrl.substring(0, 100)}`);
+            } else {
+              console.warn(`[generate_image] Locked product overlay failed, returning generated image`);
+            }
+          }
         }
 
         return new Response(JSON.stringify({ result: { imageUrl, text } }), {
