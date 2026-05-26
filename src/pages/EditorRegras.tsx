@@ -357,6 +357,39 @@ function EditorRegrasContent() {
     [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
   );
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type;
+      if (!type || !reactFlowWrapper.current || !reactFlowInstance) return;
+      const blockDef = AUTOMACAO_VENDAS_BLOCKS.find((b) => b.type === type);
+      if (!blockDef) return;
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: bounds.left + bounds.width / 2,
+        y: bounds.top + bounds.height / 2,
+      });
+      const newNode: Node = {
+        id: getId(),
+        type: "custom",
+        position,
+        data: {
+          label: blockDef.label,
+          type: blockDef.type,
+          config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+          onDuplicate: handleDuplicateNode,
+          onDelete: handleDeleteNode,
+          onAddNote: handleAddNote,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode);
+      setHasUnsavedChanges(true);
+      toast({ title: "Bloco adicionado", description: `Bloco "${blockDef.label}" adicionado com sucesso!` });
+    };
+    window.addEventListener("workflow:add-block", handler);
+    return () => window.removeEventListener("workflow:add-block", handler);
+  }, [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]);
+
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
