@@ -892,8 +892,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
-                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
+                  <strong className="block mb-0.5">{refCount} referências conectadas</strong>
+                  Exibindo apenas modelos compatíveis com {refCount}+ imagens de referência.
                 </div>
               </div>
             )}
