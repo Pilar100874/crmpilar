@@ -1703,9 +1703,14 @@ async function createLockedProductOverlay(
   const x = hasPerson ? Math.round(width - productBoxW - width * 0.055) : Math.round((width - productBoxW) / 2);
   const y = Math.round(height - productBoxH - height * 0.055);
   const pedestalY = Math.min(height - 18, y + productBoxH - Math.round(height * 0.02));
+  const pedestalW = Math.round(productBoxW * 1.18);
+  const pedestalH = Math.max(18, Math.round(height * 0.055));
+  const pedestalX = Math.round(x + productBoxW / 2 - pedestalW / 2);
+  const pedestalTop = Math.round(pedestalY - pedestalH * 0.45);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <image href="${escapeSvgAttr(bg)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="${pedestalX}" y="${pedestalTop}" width="${pedestalW}" height="${pedestalH}" rx="${Math.round(pedestalH * 0.35)}" fill="rgba(255,255,255,0.72)" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
   <ellipse cx="${x + productBoxW / 2}" cy="${pedestalY}" rx="${Math.round(productBoxW * 0.46)}" ry="${Math.round(height * 0.022)}" fill="rgba(0,0,0,0.22)"/>
   <image href="${escapeSvgAttr(product)}" x="${x}" y="${y}" width="${productBoxW}" height="${productBoxH}" preserveAspectRatio="xMidYMid meet"/>
 </svg>`;
