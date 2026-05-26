@@ -1282,7 +1282,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
       if (entry.role === 'PRODUCT - DO NOT MODIFY') {
-        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). Integrate this product naturally into the scene with the EXACT SAME packaging design: label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do NOT paste it as a flat sticker, redraw, redesign, recolor, simplify, stylize, rotate into an invented side/back view, or let hands/shadows/reflections alter any packaging detail.` });
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT REFERENCE (design guide only). REGENERATE this product from scratch as a NEW photograph rendered by the model, fully integrated in the scene's lighting, perspective and camera angle. 🚫 ABSOLUTELY FORBIDDEN to copy, paste, splice, cut-out, sticker-overlay or reuse pixels from this reference photo on top of the generated image. The product in the output MUST be a freshly rendered version that shares the EXACT same packaging design (label, printed text, typography, logo, colors, cap/lid, material, shape, proportions) but is REPAINTED inside the scene as if photographed there. No flat sticker, no floating cut-out, no separate layer, no visible border, no mismatched lighting.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
       } else if (strictRoles.includes(entry.role)) {
