@@ -95,6 +95,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [showVisualIdentity, setShowVisualIdentity] = useState(false);
+  const viActive = useVisualIdentityActive();
   const [pendingPreset, setPendingPreset] = useState<Preset | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
