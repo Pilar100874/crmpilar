@@ -1721,7 +1721,7 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   
   let priorityPrefix = '';
   if (productEntries.length > 0) {
-    priorityPrefix += `\n\n⚠️ PRIORITY #1 — PRODUCT: The first image is the REAL product. Copy it EXACTLY into the scene — same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE operation.`;
+    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Copy it EXACTLY into the scene as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
   }
   if (personEntries.length > 0) {
     priorityPrefix += `\n\n⚠️ PRIORITY #2 — PERSON: Reproduce the person's EXACT face, skin tone, hair, features identically.`;
