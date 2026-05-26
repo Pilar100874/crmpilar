@@ -646,6 +646,7 @@ export function useStudioExecution() {
 
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
+        console.log('[Studio][VI] imageGen ativa?', !!(viCheck && (viCheck.images.length>0 || viCheck.prompt)), { images: viCheck?.images?.length || 0, hasPrompt: !!viCheck?.prompt, preferredModel: viCheck?.preferredModel });
         const viIsActive = !!(viCheck && (viCheck.images.length > 0 || viCheck.prompt));
         // If VI has a preferred model, override the block's model
         const viModelOverride = viIsActive && viCheck?.preferredModel ? viCheck.preferredModel : null;
@@ -931,6 +932,7 @@ export function useStudioExecution() {
 
         // Inject Visual Identity for image edit
         const viEdit = await getActiveVisualIdentity(editEstabId);
+        console.log('[Studio][VI] imageEdit ativa?', !!(viEdit && (viEdit.images.length>0 || viEdit.prompt)), { images: viEdit?.images?.length || 0, hasPrompt: !!viEdit?.prompt });
         const viEditActive = !!(viEdit && (viEdit.images.length > 0 || viEdit.prompt));
         const editImageInputs = [...imageInputs];
         if (viEditActive && viEdit) {
@@ -1006,6 +1008,7 @@ export function useStudioExecution() {
         // Inject visual identity for compose
         const viComposeId = localStorage.getItem('estabelecimentoId') || '';
         const viCompose = await getActiveVisualIdentity(viComposeId);
+        console.log('[Studio][VI] productComposite ativa?', !!(viCompose && (viCompose.images.length>0 || viCompose.prompt)), { images: viCompose?.images?.length || 0, hasPrompt: !!viCompose?.prompt, preferredModel: viCompose?.preferredModel });
         if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
           const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
           fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}`;
@@ -1230,6 +1233,7 @@ export function useStudioExecution() {
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
           const viVideo = await getActiveVisualIdentity(viEstabId);
+          console.log('[Studio][VI] videoGen ativa?', !!(viVideo && (viVideo.images.length>0 || viVideo.prompt)));
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
             videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
