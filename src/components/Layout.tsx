@@ -406,9 +406,12 @@ export default function Layout({ children }: LayoutProps) {
     fetchUserAndEstabelecimento();
   }, [user, isAdmin]);
 
-  // Close any open submenu whenever the route changes
+  // Close any open submenu whenever the route changes. On mobile/tablet, also collapse menu.
   useEffect(() => {
     setOpenSubmenuId(null);
+    if (window.innerWidth <= 1024) {
+      setMenuOpen(false);
+    }
   }, [location.pathname]);
 
   // Force close submenus on escape key and click outside
