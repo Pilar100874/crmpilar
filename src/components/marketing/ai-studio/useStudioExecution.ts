@@ -646,6 +646,7 @@ export function useStudioExecution() {
 
         // Check if Visual Identity is active — if so, skip imageStyle (VI takes precedence)
         const viCheck = await getActiveVisualIdentity(imgEstabId);
+        console.log('[Studio][VI] imageGen ativa?', !!(viCheck && (viCheck.images.length>0 || viCheck.prompt)), { images: viCheck?.images?.length || 0, hasPrompt: !!viCheck?.prompt, preferredModel: viCheck?.preferredModel });
         const viIsActive = !!(viCheck && (viCheck.images.length > 0 || viCheck.prompt));
         // If VI has a preferred model, override the block's model
         const viModelOverride = viIsActive && viCheck?.preferredModel ? viCheck.preferredModel : null;
@@ -762,9 +763,10 @@ export function useStudioExecution() {
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
             `   - NÃO deixe mão, dedo, roupa, sombra, reflexo, estilo visual, identidade visual ou preset deformar, cobrir, reescrever ou reinterpretar o rótulo/embalagem.`,
-            `   - Interação com pessoa é SECUNDÁRIA: se segurar o produto exigir mudar embalagem, coloque o produto intacto sobre mesa/pedestal/objeto em primeiro plano e a pessoa aponta/apresenta ao lado.`,
+            `   - Interação com pessoa é SECUNDÁRIA: se segurar exigir mudar a embalagem, deixe o produto apoiado numa superfície REAL existente do próprio cenário (bancada, mesa do ambiente, prateleira da loja, chão do estúdio), com a pessoa ao lado apresentando.`,
+            `   - 🚫 PROIBIDO ABSOLUTAMENTE: NÃO insira o produto dentro de um QUADRADO, CAIXA, CARD, MOLDURA, ADESIVO, STICKER ou QUALQUER FUNDO BRANCO/COLORIDO ARTIFICIAL sobreposto à cena. NÃO desenhe pedestal artificial flutuante. NÃO recorte e cole o produto como figurinha. IGNORE o fundo branco da foto de referência — extraia APENAS o produto e integre-o organicamente ao cenário com perspectiva, escala, sombra e iluminação coerentes com o resto da imagem.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
-            `   - É preferível mostrar o produto MENOR ou apoiado em um objeto, do que modificá-lo de qualquer forma.`,
+            `   - É preferível mostrar o produto MENOR ou em outro ângulo natural da cena, do que modificá-lo ou colá-lo como sticker.`,
             ``,
             enrichedPrompt,
           ].join('\n');
@@ -783,10 +785,10 @@ export function useStudioExecution() {
             `   - O produto NUNCA deve ficar pequeno, desfocado, parcialmente oculto ou em segundo plano`,
             ``,
             `👤 PRIORIDADE #2 — INFLUENCER/PESSOA (APRESENTADOR DO PRODUTO):`,
-            `   - Preferencialmente deixe o produto intacto em mesa/pedestal/objeto em primeiro plano, com a pessoa apresentando, tocando ao lado ou apontando`,
+            `   - Preferencialmente deixe o produto apoiado em uma SUPERFÍCIE REAL EXISTENTE do cenário (bancada do ambiente, mesa de café, prateleira, balcão da loja), com a pessoa apresentando/tocando ao lado — NUNCA em pedestal artificial flutuante nem em quadrado/caixa branca.`,
             `   - A pessoa só pode segurar o produto se a embalagem continuar 100% intacta, legível e fiel; na dúvida, NÃO segure`,
             `   - TIPOS DE INTERAÇÃO (escolha o mais adequado ao contexto):`,
-            `     • APRESENTAR EM PEDESTAL/MESA: Produto intacto apoiado, pessoa ao lado apontando ou sorrindo`,
+            `     • APOIAR EM SUPERFÍCIE REAL DA CENA: produto intacto sobre uma superfície que já existe no ambiente, pessoa ao lado apontando ou sorrindo`,
             `     • TOCAR SEM COBRIR: Pessoa encosta na lateral/base sem passar dedos na frente do rótulo`,
             `     • SEGURAR E MOSTRAR: somente se dedos ficarem atrás/laterais e a frente da embalagem ficar inteira`,
             `   - A expressão facial deve ser POSITIVA: sorriso confiante, olhar direto para câmera ou para o produto`,
@@ -805,7 +807,8 @@ export function useStudioExecution() {
             `   - NÃO force a mão segurando se isso mudar ou esconder rótulo, logo, textos, tampa, formato ou cores da embalagem`,
             `   - NÃO esconda o produto atrás da pessoa, do braço ou em segundo plano`,
             `   - NÃO faça o produto parecer pequeno demais ou irrelevante`,
-            `   - NÃO coloque o produto em uma mesa/superfície longe da pessoa; a mesa/pedestal deve estar colada visualmente à pessoa`,
+            `   - NÃO coloque o produto em uma superfície longe da pessoa; a superfície de apoio deve estar visualmente colada à pessoa`,
+            `   - 🚫 NÃO insira o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER ou sobre fundo branco artificial. NÃO use pedestal flutuante. Ignore o fundo branco da foto-referência: extraia somente o produto e funda na cena com sombra, perspectiva e iluminação reais.`,
             `   - NÃO gere mãos deformadas ou com dedos incorretos`,
             ``,
             enrichedPrompt,
@@ -841,13 +844,14 @@ export function useStudioExecution() {
             `   - NÃO simplifique ou estilize detalhes da embalagem. COPIE literalmente.`,
             `   - NÃO permita que mão, dedo, cenário, identidade visual, preset ou estilo cubra/deforme/reinterprete a embalagem.`,
             `   - Se a IA gerar qualquer diferença visual no produto em relação à referência, o resultado está ERRADO.`,
-            `   - É preferível mostrar o produto menor ou apoiado intacto em uma superfície/pedestal do que modificá-lo.`,
+            `   - É preferível mostrar o produto menor ou apoiado intacto numa SUPERFÍCIE REAL EXISTENTE do cenário do que modificá-lo.`,
+            `   - 🚫 NUNCA renderize o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER ou sobre fundo branco/colorido artificial. NÃO use pedestal flutuante. IGNORE o fundo branco da foto-referência e funda o produto na cena com sombra, perspectiva e iluminação consistentes.`,
             ``,
             `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
             `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
             hasProduct && hasInfluencer
-              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma mesa/pedestal/objeto em primeiro plano com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
+              ? `5. COMPOSIÇÃO OBRIGATÓRIA: A pessoa DEVE estar SEGURANDO, USANDO, APONTANDO ou DEMONSTRANDO o produto. Eles devem estar JUNTOS na mesma cena. Porém, a interação NUNCA pode alterar embalagem/rótulo/logo/textos/formato: se segurar modificar o produto, coloque o produto intacto sobre uma SUPERFÍCIE REAL do próprio cenário (nunca em quadrado branco ou pedestal artificial) com a pessoa apresentando ao lado. O produto é o FOCO PRINCIPAL da imagem.`
               : '',
             ``,
             `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena integrando esses sujeitos de forma realista${hasProduct && hasInfluencer ? ', com a pessoa apresentando/segurando o produto' : ''}, sem sobreposição plana da foto original.`,
@@ -928,6 +932,7 @@ export function useStudioExecution() {
 
         // Inject Visual Identity for image edit
         const viEdit = await getActiveVisualIdentity(editEstabId);
+        console.log('[Studio][VI] imageEdit ativa?', !!(viEdit && (viEdit.images.length>0 || viEdit.prompt)), { images: viEdit?.images?.length || 0, hasPrompt: !!viEdit?.prompt });
         const viEditActive = !!(viEdit && (viEdit.images.length > 0 || viEdit.prompt));
         const editImageInputs = [...imageInputs];
         if (viEditActive && viEdit) {
@@ -972,9 +977,10 @@ export function useStudioExecution() {
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
             `   - NÃO deixe dedos, roupa, sombra, reflexo ou cenário deformarem, cobrirem ou reinterpretarem rótulo, logo e textos da embalagem.`,
             `   - Se a pessoa estiver segurando, a mão deve apoiar apenas laterais/base/tampa, mantendo a frente da embalagem totalmente legível e fiel.`,
-            `   - Se segurar o produto exigir mudar a embalagem, NÃO segure: coloque o produto intacto sobre um objeto/pedestal/mesa em primeiro plano com a pessoa tocando, apontando ou apresentando ao lado.`,
+            `   - Se segurar o produto exigir mudar a embalagem, NÃO segure: apoie o produto intacto sobre uma SUPERFÍCIE REAL EXISTENTE do cenário (bancada, mesa do ambiente, prateleira) com a pessoa tocando/apontando/apresentando ao lado.`,
+            `   - 🚫 PROIBIDO ABSOLUTAMENTE: NÃO insira o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER nem sobre fundo branco/colorido artificial. NÃO desenhe pedestal flutuante. IGNORE o fundo branco da foto-referência — extraia somente o produto e funda-o à cena com sombra, perspectiva e iluminação coerentes.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
-            `   - É preferível mostrar o produto menor, com a mão atrás ou apoiado em um objeto, do que modificar a embalagem de qualquer forma.`,
+            `   - É preferível mostrar o produto menor ou em outro ângulo natural da cena do que modificar a embalagem ou colá-lo como sticker.`,
             ``,
             fullPrompt,
           ].join('\n');
@@ -1002,6 +1008,7 @@ export function useStudioExecution() {
         // Inject visual identity for compose
         const viComposeId = localStorage.getItem('estabelecimentoId') || '';
         const viCompose = await getActiveVisualIdentity(viComposeId);
+        console.log('[Studio][VI] productComposite ativa?', !!(viCompose && (viCompose.images.length>0 || viCompose.prompt)), { images: viCompose?.images?.length || 0, hasPrompt: !!viCompose?.prompt, preferredModel: viCompose?.preferredModel });
         if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
           const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
           fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}`;
@@ -1226,6 +1233,7 @@ export function useStudioExecution() {
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
           const viVideo = await getActiveVisualIdentity(viEstabId);
+          console.log('[Studio][VI] videoGen ativa?', !!(viVideo && (viVideo.images.length>0 || viVideo.prompt)));
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
             videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
