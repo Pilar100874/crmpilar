@@ -922,11 +922,24 @@ export function useStudioExecution() {
         const editDefaults = getStudioDefaults(editEstabId);
         const editLangSuffix = getLanguagePromptSuffix(editDefaults.defaultLanguage || 'pt-BR');
         const editPromptText = config.editPrompt || combinedInput || 'Melhore esta imagem';
-        const editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
+        let editPromptWithLang = `${editPromptText}\n\n[IDIOMA] Todos os textos na imagem devem estar ${editLangSuffix}.`;
+
+        // Inject Visual Identity for image edit
+        const viEdit = await getActiveVisualIdentity(editEstabId);
+        const viEditActive = !!(viEdit && (viEdit.images.length > 0 || viEdit.prompt));
+        const editImageInputs = [...imageInputs];
+        if (viEditActive && viEdit) {
+          const viEText = viEdit.prompt ? `\n${viEdit.prompt}` : '';
+          editPromptWithLang = `${editPromptWithLang}\n\n[IDENTIDADE VISUAL] Use as referências e instruções da marca para manter consistência de cores, estilo, atmosfera e branding na edição.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua PRODUTO e INFLUENCER/PESSOA presentes na imagem editada. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viEText}`;
+          for (const viUrl of viEdit.images) {
+            if (!editImageInputs.includes(viUrl)) editImageInputs.push(viUrl);
+          }
+        }
+
         const result = await callStudio('edit_image', {
           prompt: editPromptWithLang,
-          imageUrls: imageInputs,
-          model: config.model,
+          imageUrls: editImageInputs,
+          model: (viEditActive && viEdit?.preferredModel) || config.model,
         });
         return result;
       }
