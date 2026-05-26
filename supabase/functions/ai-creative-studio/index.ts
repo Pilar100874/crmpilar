@@ -2111,7 +2111,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
-                editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy EXACTLY into scene. Same packaging, label, colors, logo. DO NOT redesign. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Copy EXACTLY as literal cut-and-paste into scene: same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT redesign/recolor/simplify/stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (strictRolesPano.includes(role)) {
@@ -2123,7 +2123,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference — same packaging, colors, label, logo. NEVER redesign or modify the product. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact on a foreground surface/pedestal. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
