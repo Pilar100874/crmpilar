@@ -2002,6 +2002,15 @@ Deno.serve(async (req) => {
             } else {
               result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
             }
+            const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
+            if (lockedProductUrl) {
+              result = await applyLockedProductOverlayToResult(
+                result,
+                lockedProductUrl,
+                imageSize,
+                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
+              ) || result;
+            }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
             console.error("[chatgpt_image] Error:", err.message);
