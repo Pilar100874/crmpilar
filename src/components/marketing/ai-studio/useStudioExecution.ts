@@ -1192,7 +1192,8 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
-            `   - Trate como RECORTE/COLAGEM literal da foto original; não reconstrua o produto por texto, estilo ou imaginação.`,
+            `   - Integre o produto naturalmente no vídeo/cena, sem colar a foto original por cima; não reconstrua o produto por texto, estilo ou imaginação.`,
+            `   - Ajustes de perspectiva, escala e iluminação são permitidos apenas para realismo; não podem mudar rótulo, logo, textos, cores, formato ou proporções.`,
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
             `   - NÃO permita que mãos, sombras, reflexos, cenário, identidade visual, preset ou estilo deformem/cubram/reinterpretem rótulo, logo, textos, tampa, formato ou cores.`,
@@ -1355,8 +1356,8 @@ export function useStudioExecution() {
               parts.push(`EDIT the first image (frame reference): keep the EXACT same person and product, only change the pose/angle slightly for animation.`);
               parts.push(`Scene: ${sceneDescription}`);
             } else {
-              parts.push(`Create a PHOTOMONTAGE: cut the person and product from the provided photos and paste them into this scene: ${sceneDescription}`);
-              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: use it as a literal cut-and-paste and keep packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. If holding would hide or deform packaging, place the unchanged product on a foreground surface/pedestal and have the person present it.`);
+              parts.push(`Create a realistic PHOTOMONTAGE integrating the person and product from the provided photos into this scene: ${sceneDescription}`);
+              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: integrate it naturally while keeping packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. Do not paste the original photo as a flat overlay. If holding would hide or deform packaging, place the unchanged product on a foreground surface/pedestal and have the person present it.`);
             }
             parts.push(`Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}`);
             parts.push(`Animation sequence: Frame ${i + 1} of ${frameCount} — ${stage}`);
