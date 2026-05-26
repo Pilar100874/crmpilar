@@ -662,6 +662,8 @@ function EditorContent({
     }
   };
 
+  useUnsavedChanges("logistica-automacao", hasUnsavedChanges, async () => { await handleSave(); return !hasUnsavedChanges; }, nomeAutomacao || "Automação");
+
   const handleBack = () => {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
