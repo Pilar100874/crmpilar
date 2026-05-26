@@ -713,7 +713,7 @@ export default function OmnichannelBuilder() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {showValidator && (
           <div className="w-96 border-r p-4 overflow-y-auto">
             <FlowValidator
@@ -812,10 +812,11 @@ export default function OmnichannelBuilder() {
         {showSimulator && (
           <>
             <div
-              className="fixed inset-0 top-14 bg-black/40 z-30 lg:hidden"
+              className="absolute inset-0 bg-black/40 z-30 lg:hidden"
               onClick={() => setShowSimulator(false)}
             />
-            <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl">
+            <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[420px] lg:w-96 min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl">
+
               <div className="flex items-center justify-between px-3 h-12 border-b shrink-0">
                 <span className="text-sm font-semibold">Simulador</span>
                 <button
@@ -852,10 +853,11 @@ export default function OmnichannelBuilder() {
         {!showSimulator && selectedNode && nodes.some(n => n.id === selectedNode.id) && (
           <>
             <div
-              className="fixed inset-0 top-14 bg-black/40 z-30 lg:hidden"
+              className="absolute inset-0 bg-black/40 z-30 lg:hidden"
               onClick={() => setSelectedNode(null)}
             />
-            <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl workflow-props">
+            <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[420px] lg:w-96 min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl workflow-props">
+
               <div className="flex items-center justify-between px-3 h-12 border-b shrink-0">
                 <span className="text-sm font-semibold truncate">{(selectedNode.data as any)?.label || "Propriedades"}</span>
                 <button
@@ -878,7 +880,7 @@ export default function OmnichannelBuilder() {
         )}
 
         {!showSimulator && !selectedNode && showAnalytics && id && (
-          <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] overflow-y-auto bg-card border-l border-border z-40 shadow-2xl p-4">
+          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[420px] lg:w-96 overflow-y-auto bg-card border-l border-border z-40 shadow-2xl p-4">
             <FlowAnalytics flowId={id} nodes={nodes} />
           </div>
         )}
