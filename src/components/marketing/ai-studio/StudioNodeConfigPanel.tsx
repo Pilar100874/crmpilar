@@ -24,7 +24,11 @@ interface Props {
   allEdges?: StudioEdge[];
 }
 
-type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string; supportsMultiRef?: boolean };
+type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string; supportsMultiRef?: boolean; maxRefs?: number };
+
+// How many reference images each model can compose together.
+// Defaults: supportsMultiRef ? 2 : 1
+const getModelMaxRefs = (m: ModelInfo): number => m.maxRefs ?? (m.supportsMultiRef ? 2 : 1);
 
 const LLM_MODELS: ModelInfo[] = [
   { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico, ótimo custo-benefício' },
@@ -42,9 +46,9 @@ const LLM_MODELS: ModelInfo[] = [
 // Models that only generate from text prompts (no image input) or single-image-only cannot reliably compose two subjects.
 const IMAGE_MODELS: ModelInfo[] = [
   { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, qualidade básica', supportsMultiRef: false },
-  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico para imagens', supportsMultiRef: true },
-  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google', cost: '$$', quality: 5, tip: 'Nova geração, alta qualidade', supportsMultiRef: true },
-  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Máxima qualidade, mais caro', supportsMultiRef: true },
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico para imagens (até 3 refs)', supportsMultiRef: true, maxRefs: 3 },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google', cost: '$$', quality: 5, tip: 'Nova geração, alta qualidade (até 6 refs)', supportsMultiRef: true, maxRefs: 6 },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Máxima qualidade (até 2 refs)', supportsMultiRef: true, maxRefs: 2 },
   { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo moderado', supportsMultiRef: false },
   { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Rápido e barato', supportsMultiRef: false },
   { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI', cost: '$$', quality: 4, tip: 'Boa qualidade, open source', supportsMultiRef: false },
@@ -62,7 +66,7 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'apiframe/flux-dev', label: '⚡ AF: Flux Dev', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/ideogram', label: '⚡ AF: Ideogram v3', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe, 3 créditos', supportsMultiRef: false },
   { value: 'apiframe/dall-e', label: '⚡ AF: DALL-E', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: false },
-  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe', supportsMultiRef: true },
+  { value: 'apiframe/gpt-image', label: '⚡ AF: GPT Image', provider: 'Apiframe', cost: '$$', quality: 5, tip: 'Via Apiframe (até 10 refs)', supportsMultiRef: true, maxRefs: 10 },
   { value: 'apiframe/nano-banana', label: '⚡ AF: Nano Banana', provider: 'Apiframe', cost: '$', quality: 3, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/seedream', label: '⚡ AF: Seedream', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
   { value: 'apiframe/reve', label: '⚡ AF: Reve', provider: 'Apiframe', cost: '$', quality: 4, tip: 'Via Apiframe', supportsMultiRef: false },
@@ -98,7 +102,7 @@ const IMAGE_MODELS: ModelInfo[] = [
   { value: 'wavespeed/ideogram-v3', label: '🌊 WS: Ideogram v3', provider: 'WaveSpeed', cost: '$$', quality: 4, tip: 'Via WaveSpeed', supportsMultiRef: false },
   { value: 'wavespeed/kolors', label: '🌊 WS: Kolors', provider: 'WaveSpeed', cost: '$', quality: 3, tip: 'Via WaveSpeed', supportsMultiRef: false },
   // ChatGPT Image Creator (usa chave própria do usuário)
-  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1 (Edit)', provider: 'ChatGPT Image', cost: '$$', quality: 5, tip: 'GPT-Image-1 com edição — envia imagens de referência para a OpenAI preservar o produto', supportsMultiRef: true },
+  { value: 'chatgpt_image/gpt-image-1', label: '🖼️ ChatGPT Image 1 (Edit)', provider: 'ChatGPT Image', cost: '$$', quality: 5, tip: 'GPT-Image-1 com edição — envia várias imagens de referência (até 10)', supportsMultiRef: true, maxRefs: 10 },
   { value: 'chatgpt_image/dall-e-3', label: '🖼️ ChatGPT DALL·E 3', provider: 'ChatGPT Image', cost: '$$', quality: 4, tip: 'DALL·E 3 via sua chave OpenAI (apenas geração, sem referência)', supportsMultiRef: false },
 ];
 
@@ -597,31 +601,37 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
-  // Detect if this node has multiple distinct subject references connected (works for videoGen and imageGen)
-  const hasMultipleSubjectRefs = useMemo(() => {
-    if (node.data.type !== 'videoGen' && node.data.type !== 'imageGen' && node.data.type !== 'productComposite') {
-      if (!allNodes || !allEdges) return false;
-      return false;
+  // Count incoming reference images connected to this node (produto + influencer + etc).
+  // Each connected source counts as one reference; multiProductSelect may contribute more.
+  const refCount = useMemo(() => {
+    if (node.data.type !== 'videoGen' && node.data.type !== 'imageGen' && node.data.type !== 'imageEdit' && node.data.type !== 'productComposite') {
+      return 0;
     }
-    if (!allNodes || !allEdges) return false;
+    if (!allNodes || !allEdges) return 0;
     const incomingNodeIds = allEdges.filter(e => e.target === node.id).map(e => e.source);
     const incomingNodes = allNodes.filter(n => incomingNodeIds.includes(n.id));
-    const subjectTypes = new Set<string>();
+    let count = 0;
     incomingNodes.forEach(n => {
       const t = (n.data as any)?.type as StudioNodeType;
-      if (t === 'productImageSelect' || t === 'multiProductSelect') subjectTypes.add('produto');
-      if (t === 'galleryInfluencer') subjectTypes.add('influencer');
+      const cfg = (n.data as any)?.config || {};
+      if (t === 'productImageSelect') count += 1;
+      else if (t === 'multiProductSelect') {
+        const sel = Array.isArray(cfg.selectedProducts) ? cfg.selectedProducts.length : (Array.isArray(cfg.products) ? cfg.products.length : 1);
+        count += Math.max(1, sel);
+      }
+      else if (t === 'galleryInfluencer') count += 1;
+      else if (t === 'imageInput') count += 1;
     });
-    return subjectTypes.size >= 2;
+    return count;
   }, [node.id, node.data.type, allNodes, allEdges]);
 
-  // When multiple subject refs are connected, filter to only multi-ref capable models
+  const hasMultipleSubjectRefs = refCount >= 2;
+
+  // Filter image models by how many refs they accept relative to what's connected.
   const filteredImage = useMemo(() => {
-    if (hasMultipleSubjectRefs) {
-      return filteredImageBase.filter(m => m.supportsMultiRef);
-    }
-    return filteredImageBase;
-  }, [filteredImageBase, hasMultipleSubjectRefs]);
+    if (refCount <= 1) return filteredImageBase;
+    return filteredImageBase.filter(m => getModelMaxRefs(m) >= refCount);
+  }, [filteredImageBase, refCount]);
 
   // Video models handle multi-subject composition via enriched text prompts, so no filtering needed
   const filteredVideoFinal = filteredVideo;
@@ -882,8 +892,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block mb-0.5">Múltiplas referências detectadas</strong>
-                  Produto + Influencer conectados. Apenas modelos compatíveis com múltiplas referências visuais estão sendo exibidos.
+                  <strong className="block mb-0.5">{refCount} referências conectadas</strong>
+                  Exibindo apenas modelos compatíveis com {refCount}+ imagens de referência.
                 </div>
               </div>
             )}
@@ -1045,17 +1055,15 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               );
             })()}
             <ConfigField label="Modelo de Imagem">
-              {viActive && viPreferredModel ? (
-                <div className="mt-1 space-y-1">
-                  <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-                    <Palette className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                    <span className="text-[11px] text-amber-300">
-                      Usando modelo da Identidade Visual: <strong>{IMAGE_MODELS.find(m => m.value === viPreferredModel)?.label || viPreferredModel}</strong>
-                    </span>
-                  </div>
+              {viActive && viPreferredModel && (
+                <div className="mt-1 mb-1.5 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                  <Palette className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span className="text-[11px] text-amber-300">
+                    Padrão da Identidade Visual: <strong>{IMAGE_MODELS.find(m => m.value === viPreferredModel)?.label || viPreferredModel}</strong>. Você pode escolher outro abaixo.
+                  </span>
                 </div>
-              ) : (
-              <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
+              )}
+              <Select value={config.model || viPreferredModel || 'google/gemini-2.5-flash-image'} onValueChange={(v) => {
                 update('model', v);
                 if (currentImgPreset !== 'custom') return;
                 if (v.startsWith('google/')) {
@@ -1092,12 +1100,17 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {filteredImage.map((m) => (
-                    <ModelSelectItem key={m.value} model={m} />
-                  ))}
+                  {filteredImage.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      Nenhum modelo aceita {refCount} referências. Reduza as imagens conectadas ou configure uma API compatível.
+                    </div>
+                  ) : (
+                    filteredImage.map((m) => (
+                      <ModelSelectItem key={m.value} model={m} />
+                    ))
+                  )}
                 </SelectContent>
               </Select>
-              )}
             </ConfigField>
             {node.data.type === 'imageEdit' && (
               <ConfigField label="Instrução de Edição">
