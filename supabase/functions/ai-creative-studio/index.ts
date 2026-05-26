@@ -1661,10 +1661,25 @@ async function createLockedProductOverlay(
   hasPerson: boolean = false,
 ): Promise<string | null> {
   if (!backgroundUrl || !productUrl) return null;
+  const toEmbeddedDataUrl = async (url: string): Promise<string> => {
+    if (url.startsWith("data:")) return url;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return url;
+      const mime = (resp.headers.get("content-type") || "image/png").split(";")[0].trim();
+      const bytes = await resp.arrayBuffer();
+      return `data:${mime};base64,${base64Encode(bytes)}`;
+    } catch (err) {
+      console.warn("[locked-product-overlay] Could not embed image:", err);
+      return url;
+    }
+  };
   let bg = backgroundUrl;
   let product = productUrl;
   if (bg.startsWith("data:")) bg = await uploadBase64ToStorage(bg) || bg;
   if (product.startsWith("data:")) product = await uploadBase64ToStorage(product) || product;
+  bg = await toEmbeddedDataUrl(bg);
+  product = await toEmbeddedDataUrl(product);
 
   const [parsedW, parsedH] = (imageSize || "1080x1080").split("x").map((v) => Number(v));
   const width = Number.isFinite(parsedW) && parsedW > 0 ? parsedW : 1080;
