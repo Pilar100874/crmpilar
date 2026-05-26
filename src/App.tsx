@@ -153,6 +153,7 @@ import EcommerceB2BEditor from "./pages/ecommerce/EcommerceB2BEditor";
 import EcommerceNewsletterPage from "./pages/ecommerce/EcommerceNewsletterPage";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -172,6 +173,7 @@ const App = () => (
         
         <BrowserRouter>
           <WatchRedirectWrapper />
+          <PWAInstallPrompt />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
