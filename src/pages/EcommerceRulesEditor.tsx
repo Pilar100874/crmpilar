@@ -166,6 +166,10 @@ function EcommerceRulesEditorInner() {
     }
   };
 
+  useUnsavedChanges("ecommerce-rules", hasUnsavedChanges, async () => { await handleSave(); return !hasUnsavedChanges; }, flowName || "Regra");
+
+
+
   const onConnect = useCallback((params: Connection) => {
     setEdges(eds => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds));
   }, [setEdges]);
