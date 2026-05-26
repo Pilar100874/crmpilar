@@ -1158,7 +1158,7 @@ function BotBuilderContent() {
   }, [navigate, originUrl]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
         <div className="min-h-14 px-2 sm:px-3 py-1.5 border-b border-border bg-card flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 shadow-sm shrink-0">
           {/* Left section */}
           <div className="flex items-center gap-2 flex-wrap min-w-0">

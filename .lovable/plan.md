@@ -1,109 +1,72 @@
-# Fluxo de Aprovação e Publicação via WhatsApp
 
 ## Objetivo
-Automação que: gera mídias com IA → envia para WhatsApp do aprovador → ele escolhe quais gostou → escolhe destino (Instagram, Facebook, etc.) → sistema publica → envia confirmação com link da publicação.
+Deixar todos os editores visuais (workflows) do sistema com o **mesmo padrão visual do Bot Builder**: header superior, biblioteca de blocos à esquerda (colapsável), canvas no centro com mesmos controles, painel de propriedades à direita (mesmo formato), e blocos com a mesma aparência.
 
-## Visão geral do fluxo no Bot Builder
+## Workflows alvo (todos devem ficar idênticos visualmente ao Bot Builder)
 
-```text
-[Início]
-   ↓
-[Gerar Mídia IA]  (gera N variações, salva URLs em {{midias_geradas}})
-   ↓
-[Enviar WhatsApp para número]  (envia cada mídia numerada: 1, 2, 3...)
-   ↓
-[Aguardar Resposta]  (waitForReply = true; usuário responde "1,3" ou "1 e 3")
-   ↓
-[Processar Seleção]  (parse da resposta → {{midias_aprovadas}})
-   ↓
-[Enviar WhatsApp]  ("Para qual rede deseja publicar? 1-Instagram 2-Facebook")
-   ↓
-[Aguardar Resposta]  → {{destino}}
-   ↓
-[Publicar em Rede Social]  (novo bloco — usa API Instagram/Facebook/etc.)
-   ↓
-[Enviar WhatsApp]  ("✅ Publicado! Veja: {{link_publicacao}}")
-   ↓
-[Fim]
-```
+1. **Bot Builder** — `src/pages/BotBuilder.tsx` (referência, sem mudanças visuais)
+2. **Automações de Vendas** — `src/pages/AutomacoesVendas.tsx`
+3. **Editor de Regras (automação)** — `src/pages/EditorRegras.tsx`
+4. **Editor de Regras de E-commerce** — `src/pages/EcommerceRulesEditor.tsx`
+5. **Automações de Logística** — `src/pages/LogisticaAutomacoes.tsx`
+6. **Marketing Canvas** — `src/pages/MarketingCanvas.tsx`
+7. **Omnichannel Builder** — `src/pages/OmnichannelBuilder.tsx`
+8. **Ads Hub (automação de anúncios)** — `src/pages/AdsHub.tsx`
 
-## O que já existe
-- Bloco **Gerar Mídia IA** ✅
-- Bloco **Enviar WhatsApp para número** ✅ (já suporta `mediaUrl` e `waitForReply`)
-- Bloco **Aguardar Resposta** ✅ (via `waitForReply` no envio)
+## Padrão do Bot Builder (o que vou replicar)
 
-## O que precisa ser criado
+### Header superior (sticky)
+- Altura ~56px, `bg-card/95 backdrop-blur border-b`.
+- Esquerda: título + botão **"+ Blocos"** que abre a biblioteca.
+- Direita: ações (Salvar, Simular, Importar/Exportar, Zoom In/Out/Fit, Lock/Unlock).
+- Botões pequenos `size="sm"` com ícones lucide.
 
-### 1. Bloco "Enviar Múltiplas Mídias para Aprovação"
-Novo bloco em `src/components/flow/block-configs/` — `SendMediasForApprovalConfig.tsx`:
-- Recebe array `{{midias_geradas}}`
-- Envia cada mídia numerada com legenda "Opção 1/N — responda com os números das que gostou"
-- Aguarda resposta única
-- Output: `{{midias_aprovadas}}` (array filtrado)
+### Biblioteca de blocos (esquerda)
+- Painel colapsável (largura 256px expandido, oculto colapsado).
+- Header com título + botão X para fechar.
+- Categorias com chips e busca no topo.
+- Cards de bloco arrastáveis com ícone colorido + label + descrição.
 
-### 2. Bloco "Escolher Destino de Publicação"
-`ChoosePublishTargetConfig.tsx`:
-- Envia menu interativo no WhatsApp ("1-Instagram, 2-Facebook, 3-LinkedIn")
-- Aguarda resposta
-- Output: `{{destino}}` ("instagram" | "facebook" | etc.)
+### Canvas central
+- ReactFlow com `BackgroundVariant.Dots`, gap 16, cor `hsl(var(--muted-foreground))`.
+- `Controls` no canto inferior esquerdo, `MiniMap` no inferior direito (estilizado com tokens).
+- Snap to grid 8px.
 
-### 3. Bloco "Publicar em Rede Social"
-`PublishToSocialConfig.tsx`:
-- Inputs: `medias`, `caption`, `destino`
-- Chama edge function `publish-social-media`
-- Output: `{{link_publicacao}}`, `{{post_id}}`
+### Painel de propriedades (direita)
+- `fixed right-0 top-[56px] w-full sm:w-[420px] lg:w-96 h-[calc(100vh-56px)]`
+- `bg-card border-l shadow-2xl` com header sticky (ícone + nome do bloco + X).
+- Conteúdo scrollável, footer sticky com ações (Salvar / Excluir).
+- Sem scroll horizontal (regra já existente `workflow-props`).
 
-### 4. Edge Function `publish-social-media`
-Em `supabase/functions/publish-social-media/index.ts`:
-- Recebe `{ destino, medias[], caption, estabelecimento_id }`
-- Roteia para API correspondente:
-  - **Instagram**: Graph API (Container → Publish)
-  - **Facebook**: Graph API `/me/feed` com `attached_media`
-  - **LinkedIn**: UGC Posts API
-- Retorna `{ permalink, post_id }`
+### Blocos (nodes) no canvas
+- Card arredondado `rounded-xl`, borda colorida por categoria.
+- Header com ícone + label, badge de status, handles superior/inferior.
+- Hover com `ring-2 ring-primary/40`, selecionado com `ring-2 ring-primary`.
 
-### 5. Tabela `social_media_credentials`
-Armazena tokens OAuth por estabelecimento e plataforma:
-- `estabelecimento_id`, `platform`, `access_token`, `account_id`, `expires_at`
-- RLS: usuário só vê do seu estabelecimento
+## Como vou implementar
 
-### 6. Tela de configuração de credenciais
-`src/pages/SocialMediaConfig.tsx`:
-- Conecta contas Instagram/Facebook via OAuth (Meta)
-- Lista contas conectadas
-- Permite revogar
+Em vez de reescrever cada BlockLibrary/PropertiesPanel/FlowNode separadamente, vou:
 
-## Detalhes técnicos
+1. **Criar 3 componentes "shell" compartilhados** em `src/components/workflow-shell/`:
+   - `WorkflowHeader.tsx` — header padronizado (recebe título + slots de ações).
+   - `WorkflowLibraryShell.tsx` — wrapper visual padronizado para qualquer biblioteca de blocos (recebe categorias e itens como props).
+   - `WorkflowPropertiesShell.tsx` — wrapper visual padronizado para painel de propriedades (recebe título, ícone, conteúdo e ações).
+   - `WorkflowNodeShell.tsx` — wrapper visual padronizado para nodes do ReactFlow.
 
-**Engine do bot** (`src/services/automacaoFlowEngine.ts` ou equivalente do bot builder):
-- Já processa blocos sequencialmente — basta registrar os 3 novos tipos no `BlockLibrary`
-- `waitForReply` precisa pausar a execução e retomar quando o webhook do WAHA receber resposta do mesmo número
-- Estado de pausa salvo em tabela `bot_executions_pending` (id, fluxo_id, contexto, aguardando_de, criado_em)
+2. **Adaptar cada workflow** para usar esses shells, mantendo a lógica de negócio (handlers, configs, validações) intocada. Só troco a camada de apresentação.
 
-**Webhook WAHA** (`supabase/functions/waha-webhook`):
-- Quando chega mensagem, verifica se há execução pendente para aquele número
-- Se sim, injeta a resposta como `{{resposta_usuario}}` e retoma o fluxo
+3. **Adicionar tokens CSS globais** em `src/index.css` (classes `workflow-header`, `workflow-canvas`, `workflow-properties`, `workflow-node`) para garantir consistência mesmo se algum workflow não migrar totalmente.
 
-**Credenciais Meta (Instagram/Facebook)**:
-- Requer App Meta com Instagram Graph API + permissões `instagram_basic`, `instagram_content_publish`, `pages_manage_posts`
-- Usuário cria App em developers.facebook.com, fornece `META_APP_ID` e `META_APP_SECRET` como secrets
-- OAuth callback gera tokens por conta
+4. **Manter responsividade** já implementada (mobile overlay para propriedades com X, edge-swipe, sem scroll horizontal).
 
-## Pré-requisitos do usuário
-1. Conta business no Instagram conectada a uma Página do Facebook
-2. App Meta criado em developers.facebook.com (ou usar conector existente, se houver)
-3. Aprovação de permissões Meta para publicação (review necessário para produção)
+## O que NÃO vou mudar
+- Lógica de cada workflow (regras, validações, persistência, edge functions).
+- Conjunto de blocos disponíveis em cada editor.
+- Comportamento de simulação, breakpoints, AI Generator etc.
 
-## Ordem de implementação sugerida
-1. Tabela `social_media_credentials` + tela de config (sem OAuth ainda — entrada manual de token para teste)
-2. Edge function `publish-social-media` só com Instagram primeiro
-3. Bloco "Publicar em Rede Social"
-4. Blocos de aprovação WhatsApp (múltiplas mídias + escolha destino)
-5. Lógica de pausa/retomada no engine + webhook WAHA
-6. OAuth Meta completo
+## Riscos
+- Alguns workflows (Marketing Canvas, Ads Hub) têm estruturas bem diferentes (não usam ReactFlow da mesma forma). Para esses, vou padronizar apenas header + painel de propriedades + estilo dos cards, mantendo o canvas próprio.
+- Pode haver pequenas regressões visuais em telas muito específicas — vou validar visualmente cada workflow após a migração.
 
-## Perguntas antes de começar
-1. **Quais redes sociais** no MVP? (sugiro só Instagram + Facebook)
-2. Você já tem **App Meta** criado, ou precisa de guia para criar?
-3. A **aprovação por WhatsApp** será sempre para um único número fixo (configurado no bloco), ou dinâmico via variável?
-4. Deseja que o sistema **agende** a publicação (ex.: "publicar amanhã 9h") ou só publicação imediata?
+## Entrega esperada
+Todos os 8 workflows com a mesma identidade visual do Bot Builder: mesmo header, mesma biblioteca, mesmo painel de propriedades, mesmo estilo de bloco e mesma posição/comportamento dos menus.

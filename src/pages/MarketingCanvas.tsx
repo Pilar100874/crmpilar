@@ -777,7 +777,7 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClo
           setIsPanelOpen(true);
         }
       }}>
-        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background">
+        <div className="workflow-shell fixed inset-0 z-50 flex flex-col overflow-hidden bg-background">
           {/* Toolbar */}
             <EditorToolbarV2 
               projectName={projectName}

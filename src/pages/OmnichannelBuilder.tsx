@@ -528,7 +528,7 @@ export default function OmnichannelBuilder() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header Unificado */}
