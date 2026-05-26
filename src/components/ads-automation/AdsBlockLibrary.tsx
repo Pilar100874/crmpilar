@@ -142,7 +142,9 @@ export const AdsBlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: A
                         key={blockDef.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, blockDef.type)}
-                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-lg"
+                        onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: blockDef.type } }))}
+                        title="Arraste ou clique 2x para adicionar"
+                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-lg select-none"
                       >
                         <div className="flex items-center gap-2">
                           {IconComponent && (
