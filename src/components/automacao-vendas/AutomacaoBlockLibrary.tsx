@@ -144,7 +144,9 @@ export const AutomacaoBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                         key={block.type}
                         draggable
                         onDragStart={(event) => onDragStart(event, block.type)}
-                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl"
+                        onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
+                        title="Arraste ou clique 2x para adicionar"
+                        className="p-2 ml-5 cursor-grab active:cursor-grabbing bg-muted/50 hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:shadow-md group rounded-2xl select-none"
                       >
                         <div className="flex items-center gap-2">
                           {BlockIcon && (
