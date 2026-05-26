@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   ReactFlow,
   Background,
-  Controls,
+  BackgroundVariant,
   MiniMap,
   addEdge,
   useNodesState,
