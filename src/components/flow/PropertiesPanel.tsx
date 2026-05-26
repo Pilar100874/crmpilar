@@ -887,7 +887,7 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto bg-background border-l border-border flex flex-col h-full shadow-2xl lg:shadow-none">
+    <div className="workflow-props fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto bg-background border-l border-border flex flex-col h-full shadow-2xl lg:shadow-none overflow-x-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border bg-white">
         <div className="flex items-center justify-between gap-2">
