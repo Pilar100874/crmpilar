@@ -154,6 +154,7 @@ import EcommerceNewsletterPage from "./pages/ecommerce/EcommerceNewsletterPage";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import SplashScreen from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <MacroProvider>
       <TooltipProvider>
+        <SplashScreen />
         <Toaster />
         <Sonner />
         
