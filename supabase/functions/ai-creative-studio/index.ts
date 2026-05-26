@@ -1975,21 +1975,34 @@ Deno.serve(async (req) => {
             let slideData: any;
             if (hasStrict) {
               const editContent: any[] = [];
+              const slideEntries: { url: string; role: string; priority: number }[] = [];
+              const slidePriority: Record<string, number> = {
+                'PRODUCT - DO NOT MODIFY': 1,
+                'PERSON/INFLUENCER - DO NOT MODIFY': 2,
+                'LOGO - DO NOT MODIFY': 3,
+                'CLOTHING - DO NOT MODIFY': 4,
+              };
               for (let i = 0; i < refImages.length; i++) {
                 const safe = truncateImageUrl(refImages[i]);
                 if (!safe) continue;
                 const role = imageRoles[i] || 'REFERENCE';
                 if (strictRoles.includes(role)) {
-                  editContent.push({ type: "image_url", image_url: { url: safe } });
-                  editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY in output.` });
+                  slideEntries.push({ url: safe, role, priority: slidePriority[role] || 99 });
                 }
               }
-              editContent.push({ type: "text", text: slidePrompt });
+              slideEntries.sort((a, b) => a.priority - b.priority);
+              for (const entry of slideEntries) {
+                editContent.push({ type: "image_url", image_url: { url: entry.url } });
+                editContent.push({ type: "text", text: entry.role === 'PRODUCT - DO NOT MODIFY'
+                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve as literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
+                  : `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY in output.` });
+              }
+              editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
               
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY." + slideDimInstruction },
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be a literal cut-and-paste with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not redraw or reinterpret the product under any circumstance." + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
