@@ -150,14 +150,14 @@ All colors MUST be HSL.
 
   .slide-out-menu-tab {
     position: absolute;
-    right: -40px;
+    right: -28px;
     top: 50%;
     transform: translateY(-50%) scale(1);
-    width: 40px;
-    height: 96px;
+    width: 28px;
+    height: 80px;
     background: hsl(var(--sidebar-background));
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -168,35 +168,37 @@ All colors MUST be HSL.
   }
 
   .slide-out-menu-tab:hover {
-    width: 44px;
+    width: 32px;
     transform: translateY(-50%) scale(1.05);
     background: hsl(var(--sidebar-accent));
     box-shadow: 2px 0 14px rgba(0, 0, 0, 0.25);
   }
 
   .slide-out-menu-tab.menu-open {
-    right: -40px;
+    right: -28px;
   }
 
   .slide-out-menu-tab svg {
     color: hsl(var(--sidebar-foreground));
     opacity: 0.95;
-    width: 20px !important;
-    height: 20px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
 
   @media (max-width: 1024px) {
     .slide-out-menu-tab {
-      width: 48px;
-      height: 120px;
-      right: -48px;
+      width: 40px;
+      height: 100px;
+      right: -40px;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
     }
     .slide-out-menu-tab.menu-open {
-      right: -48px;
+      right: -40px;
     }
     .slide-out-menu-tab svg {
-      width: 24px !important;
-      height: 24px !important;
+      width: 20px !important;
+      height: 20px !important;
     }
   }
 
