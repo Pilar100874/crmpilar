@@ -316,29 +316,40 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <span className="font-semibold flex-1 text-center">
+              <span className="font-semibold flex-1 text-center truncate px-2">
                 {getConversaNome(conversaAtual)}
               </span>
-              {/* Botão de videochamada - apenas para conversas diretas */}
-              {conversaAtual.tipo === 'direto' && (
+              <div className="flex items-center gap-1">
+                {/* Botão de videochamada - apenas para conversas diretas */}
+                {conversaAtual.tipo === 'direto' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsIncomingCall(false);
+                      setShowVideoChamada(true);
+                    }}
+                    title="Iniciar videochamada"
+                    className={cn(
+                      videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
+                    )}
+                  >
+                    <Video className={cn(
+                      "h-4 w-4",
+                      videoChamadaPendente?.conversaId === conversaAtual.id && "text-green-500"
+                    )} />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => {
-                    setIsIncomingCall(false);
-                    setShowVideoChamada(true);
-                  }}
-                  title="Iniciar videochamada"
-                  className={cn(
-                    videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
-                  )}
+                  onClick={onClose}
+                  className="lg:hidden"
+                  title="Fechar"
                 >
-                  <Video className={cn(
-                    "h-4 w-4",
-                    videoChamadaPendente?.conversaId === conversaAtual.id && "text-green-500"
-                  )} />
+                  <X className="h-4 w-4" />
                 </Button>
-              )}
+              </div>
             </>
           ) : showNovaConversa ? (
             <>
@@ -355,6 +366,15 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               <span className="font-semibold flex-1 text-center">
                 Nova Conversa
               </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="lg:hidden"
+                title="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </>
           ) : (
             <>
@@ -374,7 +394,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                   variant="ghost" 
                   size="icon"
                   onClick={onClose}
-                  className="md:hidden"
+                  className="lg:hidden"
                   title="Fechar"
                 >
                   <X className="h-4 w-4" />
