@@ -151,10 +151,10 @@ export const AdsBlockLibrary = ({ onDragStart, isExpanded, onToggleExpanded }: A
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors truncate">
+                            <h4 className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors leading-tight break-words">
                               {blockDef.label}
                             </h4>
-                            <p className="text-[10px] text-muted-foreground truncate">{blockDef.description}</p>
+                            <p className="text-[10px] text-muted-foreground leading-snug break-words">{blockDef.description}</p>
                           </div>
                         </div>
                       </Card>
