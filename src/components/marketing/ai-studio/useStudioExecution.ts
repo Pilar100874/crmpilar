@@ -749,6 +749,23 @@ export function useStudioExecution() {
             enrichedPrompt = `[CRITICAL FORMAT REQUIREMENT] Generate EXACTLY ONE image at ${iw}x${ih} pixels. ${formatNote}. Fill the ENTIRE canvas — no letterboxing, no black bars, no padding.\n\n${enrichedPrompt}`;
           }
         }
+        // 🔒 ABSOLUTE PRODUCT LOCK — applies whenever a product image is connected,
+        // regardless of influencer presence. Product packaging is INVIOLABLE.
+        if (hasProduct) {
+          enrichedPrompt = [
+            `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
+            `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
+            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: copie pixel a pixel cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos.`,
+            `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
+            `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
+            `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
+            `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
+            `   - É preferível mostrar o produto MENOR, em outro ângulo ou recortado, do que modificá-lo de qualquer forma.`,
+            ``,
+            enrichedPrompt,
+          ].join('\n');
+        }
+
         if (hasProduct && hasInfluencer && !hasPlacementHint) {
           enrichedPrompt = [
             `🎯 OBJETIVO PRINCIPAL DA IMAGEM: Criar uma foto publicitária profissional onde a pessoa/influencer está INTERAGINDO ATIVAMENTE com o produto, como em uma campanha real de marca.`,
