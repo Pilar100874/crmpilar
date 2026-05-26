@@ -620,7 +620,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         count += Math.max(1, sel);
       }
       else if (t === 'galleryInfluencer') count += 1;
-      else if (t === 'imageInput' || t === 'galleryImage') count += 1;
+      else if (t === 'imageInput') count += 1;
     });
     return count;
   }, [node.id, node.data.type, allNodes, allEdges]);
