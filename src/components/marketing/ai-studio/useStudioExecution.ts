@@ -931,9 +931,9 @@ export function useStudioExecution() {
         const compLangSuffix = getLanguagePromptSuffix(compDefaults.defaultLanguage || 'pt-BR');
         const modeDescriptions: Record<string, string> = {
           clothing: 'Vista esta roupa na pessoa da foto.',
-          holding: 'Coloque este produto na mão da pessoa da foto.',
+          holding: 'Insira o produto original na mão da pessoa sem redesenhar a embalagem; a mão deve apoiar pelas laterais/base e nunca cobrir ou alterar rótulo, logo, formato ou cores.',
           wearing: 'Coloque este acessório na pessoa da foto.',
-          scene: 'Insira este produto na cena com a pessoa.',
+          scene: 'Insira o produto original na cena com a pessoa, preservando a embalagem exatamente como na referência.',
         };
         const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
         const userPrompt = config.prompt || combinedInput || '';
@@ -944,11 +944,15 @@ export function useStudioExecution() {
             `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
             `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
             `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: copie pixel a pixel cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos.`,
+            `   - O produto deve ser tratado como RECORTE/COLAGEM da foto original dentro da nova cena, não como um produto novo gerado pela IA.`,
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
+            `   - NÃO deixe dedos, roupa, sombra, reflexo ou cenário deformarem, cobrirem ou reinterpretarem rótulo, logo e textos da embalagem.`,
+            `   - Se a pessoa estiver segurando, a mão deve apoiar apenas laterais/base/tampa, mantendo a frente da embalagem totalmente legível e fiel.`,
+            `   - Se segurar o produto exigir mudar a embalagem, NÃO segure: coloque o produto intacto sobre um objeto/pedestal/mesa em primeiro plano com a pessoa tocando, apontando ou apresentando ao lado.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
-            `   - É preferível mostrar o produto MENOR, em outro ângulo ou recortado, do que modificá-lo de qualquer forma.`,
+            `   - É preferível mostrar o produto menor, com a mão atrás ou apoiado em um objeto, do que modificar a embalagem de qualquer forma.`,
             ``,
             fullPrompt,
           ].join('\n');
