@@ -46,9 +46,9 @@ const LLM_MODELS: ModelInfo[] = [
 // Models that only generate from text prompts (no image input) or single-image-only cannot reliably compose two subjects.
 const IMAGE_MODELS: ModelInfo[] = [
   { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, qualidade básica', supportsMultiRef: false },
-  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico para imagens', supportsMultiRef: true },
-  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google', cost: '$$', quality: 5, tip: 'Nova geração, alta qualidade', supportsMultiRef: true },
-  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Máxima qualidade, mais caro', supportsMultiRef: true },
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico para imagens (até 3 refs)', supportsMultiRef: true, maxRefs: 3 },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google', cost: '$$', quality: 5, tip: 'Nova geração, alta qualidade (até 6 refs)', supportsMultiRef: true, maxRefs: 6 },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Máxima qualidade (até 2 refs)', supportsMultiRef: true, maxRefs: 2 },
   { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo moderado', supportsMultiRef: false },
   { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Rápido e barato', supportsMultiRef: false },
   { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI', cost: '$$', quality: 4, tip: 'Boa qualidade, open source', supportsMultiRef: false },
