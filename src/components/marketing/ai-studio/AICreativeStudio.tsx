@@ -1286,9 +1286,28 @@ const AICreativeStudioInner: React.FC = () => {
                 <Images className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                 Galeria
               </Button>
-              <Button onClick={() => setShowVisualIdentity(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm">
-                <Palette className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
+              <Button
+                onClick={() => setShowVisualIdentity(true)}
+                variant="outline"
+                className={cn(
+                  "px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium gap-1.5 sm:gap-2 text-[11px] sm:text-sm relative transition-all",
+                  viActive
+                    ? "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400 text-white border-transparent shadow-[0_0_20px_hsl(var(--primary)/0.45)] hover:opacity-90"
+                    : "border-primary/30 text-primary hover:bg-primary/10"
+                )}
+                title={viActive ? "Identidade Visual ATIVA — todas as gerações usarão a marca" : "Identidade Visual"}
+              >
+                <Palette className={cn("h-3.5 sm:h-4 w-3.5 sm:w-4", viActive && "animate-pulse")} />
                 Identidade Visual
+                {viActive && (
+                  <>
+                    <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full bg-white/25 text-[9px] font-bold uppercase tracking-wider">Ativa</span>
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-white" />
+                    </span>
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>
