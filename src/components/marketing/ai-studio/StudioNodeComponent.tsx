@@ -746,6 +746,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const isPaused = !!nodeData.config?._paused;
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
+  const viActive = useVisualIdentityActive();
+  const VI_AWARE_TYPES = new Set(['imageGen', 'imageEdit', 'productComposite', 'videoGen']);
+  const showVIBadge = viActive && VI_AWARE_TYPES.has(nodeData.type);
 
   const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
   const isGalleryType = GALLERY_TYPES.includes(nodeData.type);
