@@ -573,10 +573,7 @@ export default function OmnichannelBuilder() {
         <div className="h-14 p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
           <div className="flex items-center gap-2">
             <div className="hidden md:block">
-              <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight">WORKFLOW OMNICHANNEL</h2>
-              <p className="text-xs text-muted-foreground leading-tight">
-                Arraste blocos para criar seu fluxo
-              </p>
+              <h2 className="text-sm lg:text-base font-bold text-foreground leading-tight whitespace-nowrap">WORKFLOW OMNICHANNEL</h2>
             </div>
 
             <Input
