@@ -174,6 +174,7 @@ const App = () => (
         <Sonner />
         
         <BrowserRouter>
+          <UnsavedChangesProvider>
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
           <Routes>
