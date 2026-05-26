@@ -644,3 +644,29 @@ export async function getActiveVisualIdentityImages(estabelecimentoId: string): 
   const vi = await getActiveVisualIdentity(estabelecimentoId);
   return vi?.images || [];
 }
+
+// React hook to know if Visual Identity is currently active for the current establishment
+export function useVisualIdentityActive(): boolean {
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const estabId = localStorage.getItem('estabelecimentoId') || '';
+    let cancelled = false;
+    const check = async () => {
+      const vi = await getActiveVisualIdentity(estabId);
+      if (!cancelled) setActive(!!(vi && (vi.images.length > 0 || vi.prompt)));
+    };
+    check();
+    const onChange = () => check();
+    window.addEventListener('studio-vi-changed', onChange);
+    window.addEventListener('focus', onChange);
+    const interval = setInterval(check, 30000);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('studio-vi-changed', onChange);
+      window.removeEventListener('focus', onChange);
+      clearInterval(interval);
+    };
+  }, []);
+  return active;
+}
+
