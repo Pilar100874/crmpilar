@@ -1282,7 +1282,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
       if (entry.role === 'PRODUCT - DO NOT MODIFY') {
-        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). Copy this product EXACTLY into the scene as a literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. DO NOT redraw, redesign, recolor, simplify, stylize, rotate into an invented side/back view, or let hands/shadows/reflections alter any packaging detail.` });
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). Integrate this product naturally into the scene with the EXACT SAME packaging design: label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do NOT paste it as a flat sticker, redraw, redesign, recolor, simplify, stylize, rotate into an invented side/back view, or let hands/shadows/reflections alter any packaging detail.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
       } else if (strictRoles.includes(entry.role)) {
@@ -1303,12 +1303,12 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       sceneDesc = sceneDesc.substring(0, instrStart) + instrBlock;
     }
 
-    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The product is PRIORITY #1 and must be a literal cut-and-paste from its reference. The product PACKAGING must be IDENTICAL: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do not redraw/reconstruct/reinterpret the package. If holding it would hide, bend, deform or rewrite the packaging, place the unchanged product on a foreground object/pedestal/table and have the person point to or present it. The person's FACE must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
+    editContent.push({ type: "text", text: `TASK: Create a single realistic PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The product is PRIORITY #1 and must be naturally integrated in the scene while keeping the reference packaging IDENTICAL: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do not redraw/reconstruct/reinterpret the package and do not paste the original photo as a flat overlay. If holding it would hide, bend, deform or rewrite the packaging, place the unchanged product on a foreground object/pedestal/table and have the person point to or present it. The person's FACE must be IDENTICAL.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
 
     const data = await callGateway(LOVABLE_API_KEY, {
       model: "google/gemini-3-pro-image-preview",
       messages: [
-        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE #1 RULE is PRODUCT FIDELITY. The product must appear EXACTLY as in the reference photo as a literal cut-and-paste: same packaging, label, printed text, typography, colors, logo, proportions, material, cap/lid and shape. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product in any way. Hands, shadows, reflections, style references and brand identity are secondary and must not cover, deform or reinterpret the packaging. If holding the product would alter or hide the package, keep the product intact on a foreground table/pedestal/object and make the person point to or present it. The PERSON/INFLUENCER face must remain identical to the reference. Product fidelity beats hand interaction and artistic style." },
+        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE #1 RULE is PRODUCT FIDELITY. The product must be naturally integrated in the scene while preserving the exact reference packaging: label, printed text, typography, colors, logo, proportions, material, cap/lid and shape. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, paste as a flat sticker, or modify the product in any way. Hands, shadows, reflections, style references and brand identity are secondary and must not cover, deform or reinterpret the packaging. If holding the product would alter or hide the package, keep the product intact on a foreground table/pedestal/object and make the person point to or present it. The PERSON/INFLUENCER face must remain identical to the reference. Product fidelity beats hand interaction and artistic style." },
         { role: "user", content: editContent },
       ],
       modalities: ["image", "text"],
@@ -1340,16 +1340,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       }
       const productEntry = sortedEntries.find((entry) => entry.role === 'PRODUCT - DO NOT MODIFY');
       if (productEntry?.url) {
-        const lockedHeroUrl = await createLockedProductOverlay(
-          heroUrl,
-          productEntry.url,
-          params.imageSize,
-          sortedEntries.some((entry) => entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY'),
-        );
-        if (lockedHeroUrl) {
-          console.log(`[hero-frame] Locked product overlay applied to video start frame`);
-          return lockedHeroUrl;
-        }
+        console.log(`[hero-frame] Product reference preserved by model-guided composition (no flat overlay).`);
       }
       console.log(`[hero-frame] Hero frame generated (${heroUrl.substring(0, 50)}...)`);
       return heroUrl;
@@ -1640,107 +1631,9 @@ async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | nu
   }
 }
 
-async function uploadTextImageToStorage(content: string, mime: string = "image/svg+xml", ext: string = "svg"): Promise<string | null> {
-  try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !supabaseKey) return null;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const fileName = `studio/${crypto.randomUUID()}.${ext}`;
-    const bytes = new TextEncoder().encode(content);
-    const { error } = await supabase.storage
-      .from("marketing-images")
-      .upload(fileName, bytes, { contentType: mime, upsert: true });
-    if (error) {
-      console.error("[upload-text-image] Storage upload error:", error.message);
-      return null;
-    }
-    const { data: publicData } = supabase.storage.from("marketing-images").getPublicUrl(fileName);
-    return publicData.publicUrl;
-  } catch (err) {
-    console.error("[upload-text-image] Failed:", err);
-    return null;
-  }
-}
-
-function escapeSvgAttr(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-async function createLockedProductOverlay(
-  backgroundUrl: string,
-  productUrl: string,
-  imageSize?: string,
-  hasPerson: boolean = false,
-): Promise<string | null> {
-  if (!backgroundUrl || !productUrl) return null;
-  const toEmbeddedDataUrl = async (url: string): Promise<string> => {
-    if (url.startsWith("data:")) return url;
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) return url;
-      const mime = (resp.headers.get("content-type") || "image/png").split(";")[0].trim();
-      const bytes = await resp.arrayBuffer();
-      return `data:${mime};base64,${base64Encode(bytes)}`;
-    } catch (err) {
-      console.warn("[locked-product-overlay] Could not embed image:", err);
-      return url;
-    }
-  };
-  let bg = backgroundUrl;
-  let product = productUrl;
-  if (bg.startsWith("data:")) bg = await uploadBase64ToStorage(bg) || bg;
-  if (product.startsWith("data:")) product = await uploadBase64ToStorage(product) || product;
-  bg = await toEmbeddedDataUrl(bg);
-  product = await toEmbeddedDataUrl(product);
-
-  const [parsedW, parsedH] = (imageSize || "1080x1080").split("x").map((v) => Number(v));
-  const width = Number.isFinite(parsedW) && parsedW > 0 ? parsedW : 1080;
-  const height = Number.isFinite(parsedH) && parsedH > 0 ? parsedH : 1080;
-  const ratio = width / height;
-  const productBoxW = Math.round(width * (ratio > 1.25 ? 0.30 : ratio < 0.8 ? 0.50 : 0.38));
-  const productBoxH = Math.round(height * (ratio > 1.25 ? 0.58 : ratio < 0.8 ? 0.42 : 0.48));
-  const x = hasPerson ? Math.round(width - productBoxW - width * 0.055) : Math.round((width - productBoxW) / 2);
-  const y = Math.round(height - productBoxH - height * 0.055);
-  const pedestalY = Math.min(height - 18, y + productBoxH - Math.round(height * 0.02));
-  const pedestalW = Math.round(productBoxW * 1.18);
-  const pedestalH = Math.max(18, Math.round(height * 0.055));
-  const pedestalX = Math.round(x + productBoxW / 2 - pedestalW / 2);
-  const pedestalTop = Math.round(pedestalY - pedestalH * 0.45);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <image href="${escapeSvgAttr(bg)}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice"/>
-  <rect x="${pedestalX}" y="${pedestalTop}" width="${pedestalW}" height="${pedestalH}" rx="${Math.round(pedestalH * 0.35)}" fill="rgba(255,255,255,0.72)" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
-  <ellipse cx="${x + productBoxW / 2}" cy="${pedestalY}" rx="${Math.round(productBoxW * 0.46)}" ry="${Math.round(height * 0.022)}" fill="rgba(0,0,0,0.22)"/>
-  <image href="${escapeSvgAttr(product)}" x="${x}" y="${y}" width="${productBoxW}" height="${productBoxH}" preserveAspectRatio="xMidYMid meet"/>
-</svg>`;
-  return uploadTextImageToStorage(svg, "image/svg+xml", "svg");
-}
-
 function findLockedProductReference(imageUrls: string[] = [], imageRoles: string[] = []): string | null {
   const index = imageRoles.findIndex((role) => role === 'PRODUCT - DO NOT MODIFY');
   return index >= 0 ? imageUrls[index] || null : null;
-}
-
-async function applyLockedProductOverlayToResult(
-  result: { imageUrl?: string; text?: string } | null | undefined,
-  productUrl: string | null,
-  imageSize?: string,
-  hasPerson: boolean = false,
-): Promise<{ imageUrl?: string; text?: string; productLocked?: boolean } | null | undefined> {
-  if (!result?.imageUrl || !productUrl) return result;
-  const overlaidUrl = await createLockedProductOverlay(result.imageUrl, productUrl, imageSize, hasPerson);
-  if (!overlaidUrl) {
-    console.warn(`[locked-product-overlay] Failed, returning generated image`);
-    return result;
-  }
-  console.log(`[locked-product-overlay] Applied deterministic product lock: ${overlaidUrl.substring(0, 100)}`);
-  return {
-    ...result,
-    imageUrl: overlaidUrl,
-    text: `${result.text || ''}\n\n[Produto original preservado por sobreposição bloqueada.]`.trim(),
-    productLocked: true,
-  };
 }
 
 const corsHeaders = {
@@ -1837,7 +1730,7 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   
   let priorityPrefix = '';
   if (productEntries.length > 0) {
-    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Copy it EXACTLY into the scene as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
+    priorityPrefix += `\n\n⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO: The first image is the REAL product. Integrate it naturally into the scene with the exact same packaging design — label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do NOT paste as a flat sticker, redraw, reconstruct, recolor, simplify, stylize, rotate into an invented view, or let hands/shadows/reflections alter the package. If holding would hide or deform packaging, place the unchanged product on a foreground object/pedestal/table and have the person present it.`;
   }
   if (personEntries.length > 0) {
     priorityPrefix += `\n\n⚠️ PRIORITY #2 — PERSON: Reproduce the person's EXACT face, skin tone, hair, features identically.`;
@@ -2007,14 +1900,8 @@ Deno.serve(async (req) => {
             } else {
               result = await generateImageChatGPT(chatgptKey, params.prompt as string, model, imageSize);
             }
-            const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
-            if (lockedProductUrl) {
-              result = await applyLockedProductOverlayToResult(
-                result,
-                lockedProductUrl,
-                imageSize,
-                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-              ) || result;
+            if (findLockedProductReference(refImages, imageRoles)) {
+              console.log(`[chatgpt_image] Product lock handled by model-guided composition (no flat overlay).`);
             }
             return new Response(JSON.stringify({ result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           } catch (err: any) {
@@ -2119,7 +2006,7 @@ Deno.serve(async (req) => {
               for (const entry of slideEntries) {
                 editContent.push({ type: "image_url", image_url: { url: entry.url } });
                 editContent.push({ type: "text", text: entry.role === 'PRODUCT - DO NOT MODIFY'
-                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve as literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
+                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve the exact same packaging while integrating naturally in the slide: label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER paste as a flat sticker, redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact on a foreground surface/pedestal.`
                   : `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY in output.` });
               }
               editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
@@ -2130,7 +2017,7 @@ Deno.serve(async (req) => {
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model: slideModel,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be a literal cut-and-paste with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not redraw or reinterpret the product under any circumstance." + slideDimInstruction },
+                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be naturally integrated with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not paste as a flat sticker, redraw or reinterpret the product under any circumstance." + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
@@ -2171,15 +2058,8 @@ Deno.serve(async (req) => {
                 const publicUrl = await uploadBase64ToStorage(slideImageUrl);
                 if (publicUrl) slideImageUrl = publicUrl;
               }
-              const lockedProductUrl = findLockedProductReference(refImages, imageRoles);
-              if (lockedProductUrl) {
-                const overlaidSlideUrl = await createLockedProductOverlay(
-                  slideImageUrl,
-                  lockedProductUrl,
-                  `${slideW}x${slideH}`,
-                  imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-                );
-                if (overlaidSlideUrl) slideImageUrl = overlaidSlideUrl;
+              if (findLockedProductReference(refImages, imageRoles)) {
+                console.log(`[generate_image] Slide product lock handled by model-guided composition (no flat overlay).`);
               }
               slideImages.push(slideImageUrl);
               console.log(`[generate_image] Slide ${slideNum}/${totalSlides} generated OK`);
@@ -2249,7 +2129,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
-                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Copy EXACTLY as literal cut-and-paste into scene: same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT redesign/recolor/simplify/stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
+                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Integrate naturally into the scene with the exact same packaging: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT paste as flat sticker, redesign, recolor, simplify or stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact on a foreground surface/pedestal.` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (strictRolesPano.includes(role)) {
@@ -2264,7 +2144,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model: panoModel,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact on a foreground surface/pedestal. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear naturally integrated in the scene with the exact same packaging as the reference — label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER paste as a flat sticker, redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact on a foreground surface/pedestal. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
@@ -2342,15 +2222,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
              const publicUrl = await uploadBase64ToStorage(panoImageUrl);
              if (publicUrl) panoImageUrl = publicUrl;
            }
-            const lockedPanoProductUrl = findLockedProductReference(refImages, imageRoles);
-            if (panoImageUrl && lockedPanoProductUrl) {
-              const overlaidPanoUrl = await createLockedProductOverlay(
-                panoImageUrl,
-                lockedPanoProductUrl,
-                '1080x1080',
-                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
-              );
-              if (overlaidPanoUrl) panoImageUrl = overlaidPanoUrl;
+            if (panoImageUrl && findLockedProductReference(refImages, imageRoles)) {
+              console.log(`[generate_image] Panoramic product lock handled by model-guided composition (no flat overlay).`);
             }
            
            console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
@@ -2408,16 +2281,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
         let data: any;
         let lockedProductSourceUrl: string | null = null;
-        let shouldApplyLockedProductOverlay = false;
-        let hasPersonStrictForOverlay = false;
 
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
           const strictGatewayModel = hasProductStrict ? "google/gemini-3-pro-image-preview" : gatewayModel;
           lockedProductSourceUrl = strictImages.find(s => s.role === 'PRODUCT - DO NOT MODIFY')?.url || null;
-          shouldApplyLockedProductOverlay = !!lockedProductSourceUrl;
-          hasPersonStrictForOverlay = strictImages.some(s => s.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
           
           const editContent: any[] = [];
           
@@ -2434,7 +2303,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             const s = sortedStrict[i];
             editContent.push({ type: "image_url", image_url: { url: s.url } });
             if (s.role === 'PRODUCT - DO NOT MODIFY') {
-              editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). This is a REAL photograph of the REAL product. You MUST treat this image as SACRED and UNTOUCHABLE. RULES:\n- COPY the product EXACTLY as a cut-and-paste into the scene. Do NOT regenerate, redraw, or reinterpret it.\n- The PACKAGING must be IDENTICAL: same shape, same material, same colors, same label text, same typography, same logo placement, same proportions.\n- Do NOT change the label text, brand name, or any printed text on the packaging.\n- Do NOT simplify, stylize, blur, or artistically reinterpret any part of the product.\n- Do NOT add, remove, or modify any seal, stamp, barcode, or decorative element on the packaging.\n- Do NOT change the color of the cap, lid, wrapper, or any part of the container.\n- The product in the output must be INDISTINGUISHABLE from this reference photo.\n- If you cannot preserve the product exactly, it is better to show it smaller than to modify it.` });
+              editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). This is a REAL photograph of the REAL product. You MUST treat the PACKAGE DESIGN as SACRED and UNTOUCHABLE. RULES:\n- Integrate the product naturally into the scene using this exact packaging design. Do NOT paste the original photo as a flat sticker, and do NOT invent a new package.\n- The PACKAGING must be IDENTICAL: same shape, same material, same colors, same label text, same typography, same logo placement, same proportions.\n- You may adjust perspective, scale and lighting ONLY to make the product belong in the scene; these adjustments must not change the graphic design, text, logo, colors, cap/lid, shape or proportions.\n- Do NOT change the label text, brand name, or any printed text on the packaging.\n- Do NOT simplify, stylize, blur, or artistically reinterpret any part of the product.\n- Do NOT add, remove, or modify any seal, stamp, barcode, or decorative element on the packaging.\n- Do NOT change the color of the cap, lid, wrapper, or any part of the container.\n- The product in the output must be visually indistinguishable in packaging design from this reference photo.\n- If you cannot preserve the product exactly, it is better to show it smaller than to modify it.` });
             } else if (s.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
               editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON/INFLUENCER. This is a REAL person. Reproduce their EXACT face, skin tone, hair, features.\nCOMPOSITION RULES:\n- Prefer the person holding the product naturally ONLY if the product packaging remains 100% intact, legible and unchanged.\n- Fingers may support only sides/base/back and must NEVER cover, bend, rewrite, deform, recolor or reinterpret label, logo, text, cap/lid, shape or colors.\n- If holding would alter/hide packaging, DO NOT force holding: place the unchanged product on a foreground object/pedestal/table and make the person touch, point to, or present it beside them.\n- Interaction types (pick best fit): hold-and-show, demonstrate-use, present beside/on surface, point-to-product, offer with label fully visible.\n- Facial expression: confident smile, looking at camera or at the product.\n- The person and product must form a VISUAL UNIT — close together, never separated.\n- Product fidelity always beats hand interaction quality.` });
 
@@ -2452,12 +2321,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           const subjectDescriptions = sortedStrict.map((s, i) => `Priority ${i + 1}: ${s.role}`).join(', ');
           const hasProductAndInfluencer = sortedStrict.some(s => s.role === 'PRODUCT - DO NOT MODIFY') && sortedStrict.some(s => s.role === 'PERSON/INFLUENCER - DO NOT MODIFY');
           const interactionBlock = hasProductAndInfluencer
-            ? `\n\nCOMPOSITION & INTERACTION (MANDATORY when both product and person are present):\n- Generate the person, hands, setting and advertising scene, but leave a clean foreground area for the exact product overlay.\n- The final product will be composited from the original product photo after generation, so DO NOT invent or redraw product labels.\n- Preferred composition: person close to the product area, touching, pointing to, presenting, or standing beside the product.\n- If holding would require covering or deforming packaging, DO NOT force holding: use a table/pedestal/object in the foreground and make the person present it.\n- The product area must be in the FOREGROUND or CENTER, sharp and well-lit, with space for a 25-35% frame product.\n- Use RULE OF THIRDS: product area at one intersection point, person at another.\n- The product and person must be CLOSE TOGETHER forming a VISUAL UNIT — never separated in different scenes.\n- Lighting: professional soft light, clean blurred background, premium brand advertising photography.\n- Product fidelity beats hand interaction quality. The exact product reference will be pasted on top unchanged.`
+            ? `\n\nCOMPOSITION & INTERACTION (MANDATORY when both product and person are present):\n- Generate the product, person, hands, setting and advertising scene as one realistic photo, while preserving the exact package design from the product reference.\n- Do NOT paste the original product photo as a flat overlay and DO NOT invent/redraw product labels.\n- Preferred composition: person close to the product, touching, pointing to, presenting, or standing beside the product.\n- If holding would require covering or deforming packaging, DO NOT force holding: use a table/pedestal/object in the foreground and make the person present it.\n- The product must be in the FOREGROUND or CENTER, sharp and well-lit, occupying 25-35% of the frame when possible.\n- Use RULE OF THIRDS: product at one intersection point, person at another.\n- The product and person must be CLOSE TOGETHER forming a VISUAL UNIT — never separated in different scenes.\n- Lighting: professional soft light, clean blurred background, premium brand advertising photography.\n- Product fidelity beats hand interaction quality.`
             : '';
-          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image — professional advertising photography.\n\nPRIORITY ORDER (ABSOLUTE — NO EXCEPTIONS):\n1. PRODUCT — The product is SACRED. Do not redesign the product. The final system will paste the original product image over the generated scene, so you must create a natural foreground placement area for the exact product photo. If a product appears during generation, it must only be a placeholder for the exact overlay and must not contain invented labels.\n2. PERSON/INFLUENCER — must have the IDENTICAL face from the reference and must be actively presenting, pointing to, touching near, or standing beside the product placement area.\n3. Everything else (background, lighting, scene) is secondary and flexible.${interactionBlock}\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
+          const editPrompt = `TASK: Create a realistic PHOTOMONTAGE / COMPOSITE image — professional advertising photography.\n\nPRIORITY ORDER (ABSOLUTE — NO EXCEPTIONS):\n1. PRODUCT — The product is SACRED. Do not redesign the product and do not paste the original product photo as a flat sticker. Generate it naturally integrated in the scene while preserving the exact packaging design from the reference: label, logo, printed text, colors, cap/lid, shape, material and proportions.\n2. PERSON/INFLUENCER — must have the IDENTICAL face from the reference and must be actively presenting, pointing to, touching near, or standing beside the product.\n3. Everything else (background, lighting, scene) is secondary and flexible.${interactionBlock}\n\nSubjects: ${subjectDescriptions}\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
-          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. ABSOLUTE PRODUCT LOCK: do not recreate the product packaging. Create the advertising scene, person, background, hand gesture and pedestal/table area so the original product photo can be pasted on top unchanged after generation. If a product placeholder appears, keep it simple and unobtrusive; never invent labels, logos, colors or packaging text. Fidelity > artistic quality. Priority #2: Person's face identical to reference. When both product and person are present, prefer presentation/pointing/touching-near the product area instead of gripping over the front label. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
+          const editSystemPrompt = `You are a professional photo compositor specializing in premium brand advertising. ABSOLUTE PRODUCT LOCK: integrate the real product naturally into the scene while preserving the exact packaging design from the reference. Do not paste the original photo as a flat sticker and do not recreate a different package. You may adjust perspective, scale and lighting only for realism; never change labels, logos, colors, printed text, cap/lid, shape, material or proportions. Fidelity > artistic quality. Priority #2: Person's face identical to reference. When both product and person are present, prefer presentation/pointing/touching-near the product instead of gripping over the front label. Use rule-of-thirds composition, soft professional lighting, and clean blurred background.${dimensionInstruction}`;
 
           data = await callGateway(LOVABLE_API_KEY, {
             model: strictGatewayModel,
@@ -2538,20 +2407,8 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             const publicUrl = await uploadBase64ToStorage(imageUrl);
             if (publicUrl) imageUrl = publicUrl;
           }
-          if (shouldApplyLockedProductOverlay && lockedProductSourceUrl) {
-            const overlaidUrl = await createLockedProductOverlay(
-              imageUrl,
-              lockedProductSourceUrl,
-              imageSize,
-              hasPersonStrictForOverlay,
-            );
-            if (overlaidUrl) {
-              imageUrl = overlaidUrl;
-              text = `${text || ''}\n\n[Produto original preservado por sobreposição bloqueada.]`.trim();
-              console.log(`[generate_image] Locked product overlay applied: ${overlaidUrl.substring(0, 100)}`);
-            } else {
-              console.warn(`[generate_image] Locked product overlay failed, returning generated image`);
-            }
+          if (lockedProductSourceUrl) {
+            console.log(`[generate_image] Product reference preserved by model-guided composition (no flat overlay).`);
           }
         }
 
