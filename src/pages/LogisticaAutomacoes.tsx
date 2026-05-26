@@ -634,7 +634,7 @@ function EditorContent({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header - Estilo Bot Builder */}
       <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card h-14">
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
