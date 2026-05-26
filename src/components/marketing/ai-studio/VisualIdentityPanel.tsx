@@ -136,6 +136,7 @@ const VisualIdentityPanel: React.FC<Props> = ({ open, onClose }) => {
         if (inserted) newData.id = inserted.id;
       }
       setData(newData);
+      try { window.dispatchEvent(new CustomEvent('studio-vi-changed')); } catch {}
       toast.success('Identidade visual salva!');
     } catch (err: any) {
       console.error(err);
