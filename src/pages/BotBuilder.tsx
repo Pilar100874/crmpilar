@@ -791,6 +791,13 @@ function BotBuilderContent() {
     setHasUnsavedChanges(changed);
   }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature]);
 
+  useUnsavedChanges(
+    "bot-builder",
+    hasUnsavedChanges,
+    async () => (await handleSave(true)) !== false,
+    currentBotName || "Bot",
+  );
+
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
       .from("bot_flows")
