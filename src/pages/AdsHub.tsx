@@ -148,9 +148,10 @@ const AdsHub: React.FC = () => {
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
-          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
             <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            Painel de Anúncios
+            <span>Painel de Anúncios</span>
+            <span className="text-muted-foreground font-normal text-sm sm:text-base">/ Dashboard Geral</span>
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">
             Gestão unificada de campanhas e anúncios em múltiplas plataformas
