@@ -1999,8 +1999,11 @@ Deno.serve(async (req) => {
               }
               editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
               
+              const slideModel = slideEntries.some(e => e.role === 'PRODUCT - DO NOT MODIFY')
+                ? "google/gemini-3-pro-image-preview"
+                : model;
               slideData = await callGateway(LOVABLE_API_KEY, {
-                model,
+                model: slideModel,
                 messages: [
                   { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be a literal cut-and-paste with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not redraw or reinterpret the product under any circumstance." + slideDimInstruction },
                   { role: "user", content: editContent },
