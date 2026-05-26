@@ -1282,7 +1282,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
       if (entry.role === 'PRODUCT - DO NOT MODIFY') {
-        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT. Copy this product EXACTLY into the scene: same packaging, label, colors, logo, shape. This is a CUT-AND-PASTE — do NOT redesign.` });
+        editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT PHOTO (IMMUTABLE). Copy this product EXACTLY into the scene as a literal cut-and-paste: same packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. DO NOT redraw, redesign, recolor, simplify, stylize, rotate into an invented side/back view, or let hands/shadows/reflections alter any packaging detail.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
       } else if (strictRoles.includes(entry.role)) {
@@ -1303,12 +1303,12 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       sceneDesc = sceneDesc.substring(0, instrStart) + instrBlock;
     }
 
-    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The person's FACE must be IDENTICAL. The product PACKAGING must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
+    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The product is PRIORITY #1 and must be a literal cut-and-paste from its reference. The product PACKAGING must be IDENTICAL: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. Do not redraw/reconstruct/reinterpret the package. If holding it would hide, bend, deform or rewrite the packaging, place the unchanged product on a foreground object/pedestal/table and have the person point to or present it. The person's FACE must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
 
     const data = await callGateway(LOVABLE_API_KEY, {
       model: "google/gemini-3-pro-image-preview",
       messages: [
-        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE PRIORITY is the PRODUCT — it must appear EXACTLY as in the reference photo: same packaging, colors, label, logo, proportions, typography. NEVER redesign, recolor, or modify the product in any way. The PERSON/INFLUENCER must hold or interact with the product naturally — their face must remain identical to the reference. The person should be ACTIVELY DEMONSTRATING the product (holding it, showing it to camera, using it). NEVER separate the person and product — they must be together in the same scene interacting." },
+        { role: "system", content: "You are a professional photo compositor. Your ABSOLUTE #1 RULE is PRODUCT FIDELITY. The product must appear EXACTLY as in the reference photo as a literal cut-and-paste: same packaging, label, printed text, typography, colors, logo, proportions, material, cap/lid and shape. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product in any way. Hands, shadows, reflections, style references and brand identity are secondary and must not cover, deform or reinterpret the packaging. If holding the product would alter or hide the package, keep the product intact on a foreground table/pedestal/object and make the person point to or present it. The PERSON/INFLUENCER face must remain identical to the reference. Product fidelity beats hand interaction and artistic style." },
         { role: "user", content: editContent },
       ],
       modalities: ["image", "text"],
