@@ -269,6 +269,7 @@ All colors MUST be HSL.
     top: 0;
     bottom: 0;
     width: 400px;
+    max-width: 100vw;
     z-index: 500;
     transition: right 0.3s ease;
     background: hsl(var(--background));
@@ -278,6 +279,19 @@ All colors MUST be HSL.
 
   .chat-slide-menu.open {
     right: 0;
+  }
+
+  /* Mobile/tablet: painel ocupa tela inteira e aba some quando aberto */
+  @media (max-width: 1024px) {
+    .chat-slide-menu {
+      width: 100vw;
+      right: -100vw;
+    }
+    .chat-tab.chat-open {
+      right: -40px;
+      opacity: 0;
+      pointer-events: none;
+    }
   }
 }
 
