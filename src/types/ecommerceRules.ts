@@ -60,8 +60,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Sistema ────────────────────────────────────────────────
   {
     type: "inicio_regra",
-    label: "Iniciar Regra",
-    description: "Ponto inicial da regra de e-commerce",
+    label: "Início",
+    description: "Ponto de partida da regra — todo fluxo começa aqui",
     icon: "Play",
     color: "#10b981",
     category: "sistema",
@@ -70,8 +70,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Condições - Carrinho ───────────────────────────────────
   {
     type: "condicao_valor_carrinho",
-    label: "Valor do Carrinho",
-    description: "Verifica o valor total do carrinho",
+    label: "SE valor do carrinho",
+    description: "Dispara quando o subtotal atinge um valor mínimo, máximo ou intervalo",
     icon: "ShoppingCart",
     color: "#3b82f6",
     category: "condicao_carrinho",
@@ -79,8 +79,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_quantidade_itens",
-    label: "Quantidade de Itens",
-    description: "Verifica quantidade de itens no carrinho",
+    label: "SE quantidade de itens",
+    description: "Dispara conforme a quantidade total de produtos no carrinho",
     icon: "Hash",
     color: "#3b82f6",
     category: "condicao_carrinho",
@@ -88,8 +88,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_produto_especifico",
-    label: "Produto Específico",
-    description: "Verifica se um produto está no carrinho",
+    label: "SE contém produto",
+    description: "Dispara quando um produto específico está no carrinho",
     icon: "Package",
     color: "#3b82f6",
     category: "condicao_carrinho",
@@ -97,8 +97,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_categoria_produto",
-    label: "Categoria de Produto",
-    description: "Verifica se itens de uma categoria estão no carrinho",
+    label: "SE contém categoria",
+    description: "Dispara quando há itens de uma categoria específica no carrinho",
     icon: "Layers",
     color: "#3b82f6",
     category: "condicao_carrinho",
@@ -106,8 +106,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_grupo_produto",
-    label: "Grupo de Produto",
-    description: "Verifica se itens de um grupo estão no carrinho",
+    label: "SE contém grupo",
+    description: "Dispara quando há itens de um grupo de produtos no carrinho",
     icon: "FolderOpen",
     color: "#3b82f6",
     category: "condicao_carrinho",
@@ -117,8 +117,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Condições - Cliente ────────────────────────────────────
   {
     type: "condicao_tipo_cliente",
-    label: "Tipo de Cliente",
-    description: "Verifica se é B2B ou B2C",
+    label: "SE tipo de cliente",
+    description: "Aplica somente para clientes B2B (atacado) ou B2C (varejo)",
     icon: "Users",
     color: "#8b5cf6",
     category: "condicao_cliente",
@@ -126,8 +126,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_cliente_especifico",
-    label: "Cliente Específico",
-    description: "Aplica regra para um cliente selecionado",
+    label: "SE cliente é",
+    description: "Aplica apenas para um cliente específico selecionado",
     icon: "UserCheck",
     color: "#8b5cf6",
     category: "condicao_cliente",
@@ -135,16 +135,16 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_primeira_compra",
-    label: "Primeira Compra",
-    description: "Verifica se é a primeira compra do cliente",
+    label: "SE primeira compra",
+    description: "Aplica somente quando for a primeira compra do cliente",
     icon: "Star",
     color: "#8b5cf6",
     category: "condicao_cliente",
   },
   {
     type: "condicao_cliente_recorrente",
-    label: "Cliente Recorrente",
-    description: "Verifica se o cliente já comprou X vezes",
+    label: "SE cliente recorrente",
+    description: "Aplica quando o cliente já fez um número mínimo de compras",
     icon: "RefreshCw",
     color: "#8b5cf6",
     category: "condicao_cliente",
@@ -152,8 +152,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_regiao_entrega",
-    label: "Região de Entrega",
-    description: "Verifica a região/UF de entrega",
+    label: "SE região de entrega",
+    description: "Aplica conforme UF ou faixa de CEP do endereço de entrega",
     icon: "MapPin",
     color: "#8b5cf6",
     category: "condicao_cliente",
@@ -163,8 +163,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Condições - Temporal ───────────────────────────────────
   {
     type: "condicao_periodo",
-    label: "Período Específico",
-    description: "Ativa a regra em um período de datas",
+    label: "SE período (datas)",
+    description: "Ativa a regra somente entre uma data inicial e uma final",
     icon: "Calendar",
     color: "#ec4899",
     category: "condicao_temporal",
@@ -172,8 +172,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_dia_semana",
-    label: "Dia da Semana",
-    description: "Ativa em dias específicos da semana",
+    label: "SE dia da semana",
+    description: "Ativa apenas em dias selecionados da semana",
     icon: "CalendarDays",
     color: "#ec4899",
     category: "condicao_temporal",
@@ -181,8 +181,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "condicao_horario",
-    label: "Faixa de Horário",
-    description: "Ativa em um horário específico (Happy Hour, Flash Sale)",
+    label: "SE horário",
+    description: "Ativa em um intervalo de horas (ex.: Happy Hour, Flash Sale)",
     icon: "Clock",
     color: "#ec4899",
     category: "condicao_temporal",
@@ -192,8 +192,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Condição - Cupom ───────────────────────────────────────
   {
     type: "condicao_cupom",
-    label: "Cupom de Desconto",
-    description: "Verifica se um cupom válido foi aplicado",
+    label: "SE cupom aplicado",
+    description: "Dispara quando um cupom de desconto válido for inserido",
     icon: "Ticket",
     color: "#f59e0b",
     category: "condicao_cupom",
@@ -203,16 +203,16 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Lógica ─────────────────────────────────────────────────
   {
     type: "logica_e",
-    label: "Operador E (AND)",
-    description: "Todas as condições anteriores devem ser verdadeiras",
+    label: "E (todas verdadeiras)",
+    description: "Avança somente se TODAS as condições conectadas forem verdadeiras",
     icon: "Grid2x2",
     color: "#6366f1",
     category: "logica",
   },
   {
     type: "logica_ou",
-    label: "Operador OU (OR)",
-    description: "Pelo menos uma condição deve ser verdadeira",
+    label: "OU (qualquer uma)",
+    description: "Avança se PELO MENOS UMA das condições conectadas for verdadeira",
     icon: "Rows3",
     color: "#a855f7",
     category: "logica",
@@ -221,8 +221,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Ações - Desconto ───────────────────────────────────────
   {
     type: "acao_desconto_percentual",
-    label: "Desconto Percentual",
-    description: "Aplica desconto em % no carrinho ou itens",
+    label: "Aplicar desconto %",
+    description: "Aplica um desconto percentual sobre o carrinho ou itens selecionados",
     icon: "Percent",
     color: "#10b981",
     category: "acao_desconto",
@@ -230,8 +230,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_desconto_fixo",
-    label: "Desconto Fixo (R$)",
-    description: "Aplica desconto fixo em reais",
+    label: "Aplicar desconto R$",
+    description: "Desconta um valor fixo em reais do total do pedido",
     icon: "DollarSign",
     color: "#10b981",
     category: "acao_desconto",
@@ -239,8 +239,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_desconto_progressivo",
-    label: "Desconto Progressivo",
-    description: "Desconto aumenta com quantidade (1un=5%, 3un=10%, 5un=15%)",
+    label: "Desconto progressivo",
+    description: "Aumenta o desconto conforme a quantidade (ex.: 1un=5%, 3un=10%, 5un=15%)",
     icon: "TrendingUp",
     color: "#10b981",
     category: "acao_desconto",
@@ -254,8 +254,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_compre_x_leve_y",
-    label: "Compre X Leve Y",
-    description: "Compre X itens e leve Y (ex: Compre 2 Leve 3)",
+    label: "Compre X, leve Y",
+    description: "Promoção do tipo leve mais pagando menos (ex.: Compre 2, Leve 3)",
     icon: "Gift",
     color: "#10b981",
     category: "acao_desconto",
@@ -265,8 +265,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Ações - Frete ──────────────────────────────────────────
   {
     type: "acao_frete_gratis",
-    label: "Frete Grátis",
-    description: "Concede frete grátis ao pedido",
+    label: "Liberar frete grátis",
+    description: "Zera o valor do frete para o pedido",
     icon: "Truck",
     color: "#06b6d4",
     category: "acao_frete",
@@ -274,8 +274,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_desconto_frete",
-    label: "Desconto no Frete",
-    description: "Aplica desconto percentual no frete",
+    label: "Desconto no frete",
+    description: "Aplica um percentual de desconto sobre o valor do frete",
     icon: "BadgePercent",
     color: "#06b6d4",
     category: "acao_frete",
@@ -283,8 +283,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_frete_fixo",
-    label: "Frete Fixo",
-    description: "Define um valor fixo de frete",
+    label: "Frete com valor fixo",
+    description: "Define um valor fixo de frete, ignorando o cálculo padrão",
     icon: "Tag",
     color: "#06b6d4",
     category: "acao_frete",
@@ -294,8 +294,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Ações - Propaganda/Visual ──────────────────────────────
   {
     type: "acao_banner_promocional",
-    label: "Exibir Banner",
-    description: "Mostra um banner promocional na loja",
+    label: "Exibir banner",
+    description: "Mostra um banner promocional em uma posição da loja",
     icon: "Image",
     color: "#f59e0b",
     category: "acao_propaganda",
@@ -303,8 +303,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_popup_promocional",
-    label: "Popup Promocional",
-    description: "Exibe popup de promoção ao acessar a loja",
+    label: "Exibir popup",
+    description: "Abre um popup promocional ao acessar a loja",
     icon: "MessageSquare",
     color: "#f59e0b",
     category: "acao_propaganda",
@@ -312,8 +312,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_destaque_vitrine",
-    label: "Destaque na Vitrine",
-    description: "Destaca produtos específicos na home",
+    label: "Destacar na vitrine",
+    description: "Coloca produtos selecionados em destaque na home da loja",
     icon: "Sparkles",
     color: "#f59e0b",
     category: "acao_propaganda",
@@ -321,8 +321,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_mensagem_carrinho",
-    label: "Mensagem no Carrinho",
-    description: "Exibe mensagem persuasiva no carrinho",
+    label: "Mensagem no carrinho",
+    description: "Mostra uma mensagem persuasiva no carrinho (ex.: faltam R$ X para frete grátis)",
     icon: "MessageCircle",
     color: "#f59e0b",
     category: "acao_propaganda",
@@ -330,8 +330,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_brinde",
-    label: "Brinde / Amostra Grátis",
-    description: "Adiciona um brinde ao pedido",
+    label: "Adicionar brinde",
+    description: "Inclui um brinde ou amostra grátis automaticamente no pedido",
     icon: "Gift",
     color: "#f59e0b",
     category: "acao_propaganda",
@@ -341,8 +341,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Ações - Pagamento ──────────────────────────────────────
   {
     type: "acao_parcelas_extras",
-    label: "Parcelas Extras",
-    description: "Oferece parcelas extras sem juros",
+    label: "Parcelas sem juros",
+    description: "Libera mais parcelas sem juros no cartão de crédito",
     icon: "CreditCard",
     color: "#ef4444",
     category: "acao_pagamento",
@@ -351,7 +351,7 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   {
     type: "acao_desconto_pix",
     label: "Desconto no Pix",
-    description: "Desconto especial para pagamentos via Pix",
+    description: "Aplica desconto exclusivo para pagamentos via Pix",
     icon: "QrCode",
     color: "#ef4444",
     category: "acao_pagamento",
@@ -359,8 +359,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   },
   {
     type: "acao_desconto_boleto",
-    label: "Desconto no Boleto",
-    description: "Desconto especial para pagamentos via boleto",
+    label: "Desconto no boleto",
+    description: "Aplica desconto exclusivo para pagamentos via boleto",
     icon: "FileText",
     color: "#ef4444",
     category: "acao_pagamento",
@@ -369,8 +369,8 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
   // ─── Condicionais com múltiplas saídas ────────────────────────
   {
     type: "condicao_valor_pedido",
-    label: "Faixa de Valor do Pedido",
-    description: "Direciona fluxo conforme o valor do pedido — cada faixa gera uma saída",
+    label: "Dividir por faixa de valor",
+    description: "Cria várias saídas, uma para cada faixa de valor do pedido",
     icon: "GitBranch",
     color: "#8b5cf6",
     category: "condicao_carrinho",
@@ -381,6 +381,7 @@ export const ECOMMERCE_RULE_BLOCKS: EcommerceBlockDefinition[] = [
       ],
     },
   },
+
 ];
 
 export interface EcommerceRuleNode {
