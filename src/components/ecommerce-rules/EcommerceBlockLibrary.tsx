@@ -159,7 +159,9 @@ export const EcommerceBlockLibrary = ({ onDragStart, isExpanded, onToggleExpande
                         key={block.type}
                         draggable
                         onDragStart={(e) => onDragStart(e, block.type)}
-                        className={`flex items-center gap-3 p-2.5 rounded-lg cursor-grab active:cursor-grabbing bg-gradient-to-r ${cat.gradient} border ${cat.border} ${cat.borderHover} transition-all hover:shadow-sm`}
+                        onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
+                        title="Arraste ou clique 2x para adicionar"
+                        className={`flex items-center gap-3 p-2.5 rounded-lg cursor-grab active:cursor-grabbing bg-gradient-to-r ${cat.gradient} border ${cat.border} ${cat.borderHover} transition-all hover:shadow-sm select-none`}
                       >
                         <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: block.color + '20' }}>
                           {BlockIcon && <BlockIcon className="w-3.5 h-3.5" style={{ color: block.color }} />}

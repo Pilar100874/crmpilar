@@ -196,6 +196,44 @@ export default function OmnichannelBuilder() {
     [draggedType, setNodes]
   );
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type as OmnichannelBlockType;
+      if (!type || !reactFlowWrapper.current) return;
+      const blockLabels: Record<OmnichannelBlockType, string> = {
+        fila: "Fila de Atendimento",
+        atendente: "Atendente",
+        skill: "Skill Requerida",
+        regra_roteamento: "Regra de Roteamento",
+        horario: "Horário de Funcionamento",
+        webhook: "Webhook",
+        aguardar: "Aguardar",
+        analytics: "Analytics",
+        inicio: "Início"
+      };
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance
+        ? reactFlowInstance.screenToFlowPosition({
+            x: bounds.left + bounds.width / 2,
+            y: bounds.top + bounds.height / 2,
+          })
+        : { x: bounds.width / 2 - 100, y: bounds.height / 2 - 50 };
+      const newNode: OmnichannelNode = {
+        id: `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        type: "custom",
+        position,
+        data: {
+          type,
+          label: blockLabels[type] || type,
+          config: {},
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+    };
+    window.addEventListener("workflow:add-block", handler);
+    return () => window.removeEventListener("workflow:add-block", handler);
+  }, [reactFlowInstance, setNodes]);
+
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: any) => {
       setSelectedNode(node as OmnichannelNode);

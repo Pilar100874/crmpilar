@@ -472,6 +472,43 @@ function AdsAutomationContent() {
     [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]
   );
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type;
+      if (!type || !reactFlowWrapper.current || !reactFlowInstance) return;
+      const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === type);
+      if (!blockDef) return;
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: bounds.left + bounds.width / 2,
+        y: bounds.top + bounds.height / 2,
+      });
+      const newNode: Node = {
+        id: generateNodeId(),
+        type: "custom",
+        position,
+        data: {
+          label: blockDef.label,
+          type: blockDef.type,
+          config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+          onSetBreakpoint: handleSetBreakpoint,
+          onSetSkip: handleSetSkip,
+          onDuplicate: handleDuplicate,
+          onDelete: handleDeleteNode,
+          onClearDebug: handleClearDebug,
+          onAddNote: handleAddNote,
+          onToggleCollapse: handleToggleCollapse,
+        },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode);
+      setHasUnsavedChanges(true);
+      toast.success(`Bloco "${blockDef.label}" adicionado!`);
+    };
+    window.addEventListener("workflow:add-block", handler);
+    return () => window.removeEventListener("workflow:add-block", handler);
+  }, [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
+
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";

@@ -196,6 +196,36 @@ function EcommerceRulesEditorInner() {
     setNodes(nds => nds.concat(newNode));
   }, [reactFlowInstance, setNodes]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type as EcommerceRuleBlockType;
+      if (!type || !reactFlowWrapper.current || !reactFlowInstance) return;
+      const blockDef = ECOMMERCE_RULE_BLOCKS.find(b => b.type === type);
+      if (!blockDef) return;
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: bounds.left + bounds.width / 2,
+        y: bounds.top + bounds.height / 2,
+      });
+      const newNode: Node = {
+        id: getId(),
+        type: "custom",
+        position,
+        data: {
+          type,
+          label: blockDef.label,
+          config: blockDef.defaultData ? { ...blockDef.defaultData } : {},
+          onDelete: handleDeleteNode,
+          onDuplicate: handleDuplicateNode,
+          onAddNote: handleOpenNoteDialog,
+        },
+      };
+      setNodes(nds => nds.concat(newNode));
+    };
+    window.addEventListener("workflow:add-block", handler);
+    return () => window.removeEventListener("workflow:add-block", handler);
+  }, [reactFlowInstance, setNodes]);
+
   const handleDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
