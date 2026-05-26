@@ -322,11 +322,11 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleBackToList}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sticky bottom-0 bg-background py-3 -mx-1 px-1 border-t sm:border-0">
+            <Button variant="outline" onClick={handleBackToList} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
               {saving ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -335,6 +335,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
               Salvar Template
             </Button>
           </div>
+
         </div>
 
         {/* Delete confirmation dialog */}
