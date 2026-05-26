@@ -44,6 +44,7 @@ import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "@/lib/toast-config";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 
 const nodeTypes = {
   custom: FlowNode,
