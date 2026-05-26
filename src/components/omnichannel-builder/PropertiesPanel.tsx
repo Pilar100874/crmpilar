@@ -119,7 +119,7 @@ export const PropertiesPanel = ({ selectedNode, onUpdateNode }: PropertiesPanelP
   };
 
   return (
-    <Card className="h-full">
+    <Card className="workflow-props h-full overflow-x-hidden">
       <div className="p-4 border-b">
         <h3 className="font-semibold">Propriedades</h3>
         <p className="text-sm text-muted-foreground capitalize mt-1">
