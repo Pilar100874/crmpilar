@@ -887,32 +887,40 @@ export const PropertiesPanel = ({
   };
 
   return (
-    <div className="w-96 bg-background border-l border-border flex flex-col h-full">
+    <div className="fixed inset-y-0 right-0 z-40 w-full sm:w-96 lg:static lg:inset-auto lg:z-auto bg-background border-l border-border flex flex-col h-full shadow-2xl lg:shadow-none">
       {/* Header */}
       <div className="p-4 border-b border-border bg-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center shrink-0">
               <span className="text-xl">⚙️</span>
             </div>
-            <div>
-              <h3 className="font-semibold text-base text-foreground">Propriedades</h3>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-base text-foreground truncate">Propriedades</h3>
               {blockDef && (
-                <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary block"></span>
-                  {blockDef.label}
+                <div className="text-xs text-primary flex items-center gap-1.5 font-medium mt-0.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary block shrink-0"></span>
+                  <span className="truncate">{blockDef.label}</span>
                 </div>
               )}
             </div>
           </div>
-          {hasChanges && (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              <Check className="w-3 h-3 mr-1" />
-              Salvo
-            </Badge>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            {hasChanges && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <Check className="w-3 h-3 mr-1" />
+                Salvo
+              </Badge>
+            )}
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose} title="Fechar" className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
