@@ -286,6 +286,10 @@ function AdsAutomationContent() {
     }
   }, [selectedAutomation, nodes, edges, reactFlowInstance, updateAutomationMutation]);
 
+  useUnsavedChanges("ads-automation", hasUnsavedChanges, async () => { await handleSave(); return true; }, selectedAutomation?.name || "Automação");
+
+
+
   const handleSetBreakpoint = useCallback((nodeId: string) => {
     setNodes((nds) =>
       nds.map((node) =>
