@@ -2333,10 +2333,20 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
              }
            }
            
-           if (panoImageUrl && panoImageUrl.startsWith('data:')) {
+            if (panoImageUrl && panoImageUrl.startsWith('data:')) {
              const publicUrl = await uploadBase64ToStorage(panoImageUrl);
              if (publicUrl) panoImageUrl = publicUrl;
            }
+            const lockedPanoProductUrl = findLockedProductReference(refImages, imageRoles);
+            if (panoImageUrl && lockedPanoProductUrl) {
+              const overlaidPanoUrl = await createLockedProductOverlay(
+                panoImageUrl,
+                lockedPanoProductUrl,
+                '1080x1080',
+                imageRoles.includes('PERSON/INFLUENCER - DO NOT MODIFY'),
+              );
+              if (overlaidPanoUrl) panoImageUrl = overlaidPanoUrl;
+            }
            
            console.log(`[generate_image] Panoramic safe-zone image generated: ${!!panoImageUrl}`);
           
