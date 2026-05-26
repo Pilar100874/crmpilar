@@ -664,13 +664,20 @@ function AdsAutomationContent() {
       ) : (
         <div className="fixed inset-0 z-50 flex flex-col bg-background">
           {/* Editor Header - Estilo Bot Builder */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card h-14">
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
-                  Arraste blocos para criar seu fluxo
-                </p>
+          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card min-h-14 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <Zap className="h-4 w-4 text-primary shrink-0" />
+                <h1 className="text-sm sm:text-base font-bold truncate max-w-[180px] sm:max-w-xs">
+                  {selectedAutomation?.nome || 'Automação de Anúncios'}
+                </h1>
+                {hasUnsavedChanges && (
+                  <Badge variant="outline" className="text-orange-600 border-orange-600 text-[10px] shrink-0">
+                    Não salvo
+                  </Badge>
+                )}
               </div>
+              
               
               <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
                 <Button 
