@@ -975,9 +975,10 @@ export function useStudioExecution() {
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
             `   - NÃO deixe dedos, roupa, sombra, reflexo ou cenário deformarem, cobrirem ou reinterpretarem rótulo, logo e textos da embalagem.`,
             `   - Se a pessoa estiver segurando, a mão deve apoiar apenas laterais/base/tampa, mantendo a frente da embalagem totalmente legível e fiel.`,
-            `   - Se segurar o produto exigir mudar a embalagem, NÃO segure: coloque o produto intacto sobre um objeto/pedestal/mesa em primeiro plano com a pessoa tocando, apontando ou apresentando ao lado.`,
+            `   - Se segurar o produto exigir mudar a embalagem, NÃO segure: apoie o produto intacto sobre uma SUPERFÍCIE REAL EXISTENTE do cenário (bancada, mesa do ambiente, prateleira) com a pessoa tocando/apontando/apresentando ao lado.`,
+            `   - 🚫 PROIBIDO ABSOLUTAMENTE: NÃO insira o produto dentro de QUADRADO/CAIXA/CARD/MOLDURA/ADESIVO/STICKER nem sobre fundo branco/colorido artificial. NÃO desenhe pedestal flutuante. IGNORE o fundo branco da foto-referência — extraia somente o produto e funda-o à cena com sombra, perspectiva e iluminação coerentes.`,
             `   - Se houver conflito entre o prompt e a fidelidade do produto, a FIDELIDADE DO PRODUTO VENCE SEMPRE.`,
-            `   - É preferível mostrar o produto menor, com a mão atrás ou apoiado em um objeto, do que modificar a embalagem de qualquer forma.`,
+            `   - É preferível mostrar o produto menor ou em outro ângulo natural da cena do que modificar a embalagem ou colá-lo como sticker.`,
             ``,
             fullPrompt,
           ].join('\n');
