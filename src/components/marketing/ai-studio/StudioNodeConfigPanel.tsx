@@ -601,31 +601,37 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
-  // Detect if this node has multiple distinct subject references connected (works for videoGen and imageGen)
-  const hasMultipleSubjectRefs = useMemo(() => {
-    if (node.data.type !== 'videoGen' && node.data.type !== 'imageGen' && node.data.type !== 'productComposite') {
-      if (!allNodes || !allEdges) return false;
-      return false;
+  // Count incoming reference images connected to this node (produto + influencer + etc).
+  // Each connected source counts as one reference; multiProductSelect may contribute more.
+  const refCount = useMemo(() => {
+    if (node.data.type !== 'videoGen' && node.data.type !== 'imageGen' && node.data.type !== 'imageEdit' && node.data.type !== 'productComposite') {
+      return 0;
     }
-    if (!allNodes || !allEdges) return false;
+    if (!allNodes || !allEdges) return 0;
     const incomingNodeIds = allEdges.filter(e => e.target === node.id).map(e => e.source);
     const incomingNodes = allNodes.filter(n => incomingNodeIds.includes(n.id));
-    const subjectTypes = new Set<string>();
+    let count = 0;
     incomingNodes.forEach(n => {
       const t = (n.data as any)?.type as StudioNodeType;
-      if (t === 'productImageSelect' || t === 'multiProductSelect') subjectTypes.add('produto');
-      if (t === 'galleryInfluencer') subjectTypes.add('influencer');
+      const cfg = (n.data as any)?.config || {};
+      if (t === 'productImageSelect') count += 1;
+      else if (t === 'multiProductSelect') {
+        const sel = Array.isArray(cfg.selectedProducts) ? cfg.selectedProducts.length : (Array.isArray(cfg.products) ? cfg.products.length : 1);
+        count += Math.max(1, sel);
+      }
+      else if (t === 'galleryInfluencer') count += 1;
+      else if (t === 'imageInput' || t === 'galleryImage') count += 1;
     });
-    return subjectTypes.size >= 2;
+    return count;
   }, [node.id, node.data.type, allNodes, allEdges]);
 
-  // When multiple subject refs are connected, filter to only multi-ref capable models
+  const hasMultipleSubjectRefs = refCount >= 2;
+
+  // Filter image models by how many refs they accept relative to what's connected.
   const filteredImage = useMemo(() => {
-    if (hasMultipleSubjectRefs) {
-      return filteredImageBase.filter(m => m.supportsMultiRef);
-    }
-    return filteredImageBase;
-  }, [filteredImageBase, hasMultipleSubjectRefs]);
+    if (refCount <= 1) return filteredImageBase;
+    return filteredImageBase.filter(m => getModelMaxRefs(m) >= refCount);
+  }, [filteredImageBase, refCount]);
 
   // Video models handle multi-subject composition via enriched text prompts, so no filtering needed
   const filteredVideoFinal = filteredVideo;
