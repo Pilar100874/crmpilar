@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   ReactFlow,
   Background,
-  Controls,
+  BackgroundVariant,
   MiniMap,
   addEdge,
   useNodesState,
@@ -567,325 +567,354 @@ export default function OmnichannelBuilder() {
 
   return (
     <div className="workflow-shell fixed inset-0 z-50 flex flex-col bg-background">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header Unificado */}
-        <div className="h-14 p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
-          <div className="flex items-center gap-2">
-            <div className="hidden md:block">
-              <h2 className="text-sm lg:text-base font-bold text-foreground leading-tight whitespace-nowrap">WORKFLOW OMNICHANNEL</h2>
-            </div>
-
-            <Input
-              value={flowName}
-              onChange={(e) => setFlowName(e.target.value)}
-              className="w-[150px] sm:w-[200px] h-8 sm:h-9 text-xs sm:text-sm"
-              placeholder="Nome do fluxo"
-            />
-              
-              <div className="flex gap-1 border-l border-border pl-2 sm:pl-4">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setIsBlockLibraryExpanded(true)}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-                  title="Adicionar blocos"
-                >
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleZoomIn}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
-                  title="Aumentar zoom"
-                >
-                  <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleZoomOut}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
-                  title="Diminuir zoom"
-                >
-                  <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleFitView}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full"
-                  title="Centralizar"
-                >
-                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={handleToggleLock}
-                  className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
-                  title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
-                >
-                  {isLocked ? <Lock className="h-3 w-3 sm:h-4 sm:w-4" /> : <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />}
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex gap-1 sm:gap-2">
-              <WorkflowAIGenerator
-                workflowType="Omnichannel"
-                blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
-                onGenerated={(newNodes, newEdges) => {
-                  setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
-                  setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
-                }}
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowSimulator(!showSimulator)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">{showSimulator ? "Fechar" : "Testar"}</span>
-                <span className="sm:hidden">Test</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowValidator(!showValidator)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
-              >
-                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Validar
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden lg:flex"
-              >
-                <Activity className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Analytics
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowTemplates(true)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden xl:flex"
-              >
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Templates
-              </Button>
-
-              {id && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowVersions(true)}
-                    className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden xl:flex"
-                  >
-                    <History className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Versões
-                  </Button>
-
-                  <BotTriggerSelector 
-                    flowId={id} 
-                    currentBotId={currentBotId}
-                    onUpdate={(botId) => setCurrentBotId(botId)}
-                  />
-                </>
-              )}
-
-              <FlowExportImport
-                flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
-                flowName={flowName}
-                onImport={handleImportFlow}
-              />
-
-              {id && (
-                <div className="flex items-center gap-2 px-3 py-1 border rounded-full bg-card/50 backdrop-blur-sm">
-                  <Star className={`h-3 w-3 sm:h-4 sm:w-4 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
-                  <Label htmlFor="default-switch" className="text-xs cursor-pointer whitespace-nowrap">
-                    Padrão
-                  </Label>
-                  <Switch
-                    id="default-switch"
-                    checked={isDefault}
-                    onCheckedChange={setIsDefault}
-                  />
-                </div>
-              )}
-
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? "bg-green-50" : ""}`}
-              >
-                <Save className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
-                {isSaving ? "Salvando..." : "Salvar"}
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => navigate(originUrl)}
-                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Fechar
-              </Button>
-            </div>
+      <div className="min-h-14 px-2 sm:px-3 py-1.5 border-b border-border bg-card flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2 shadow-sm shrink-0">
+        {/* Left section */}
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <div className="hidden sm:block">
+            <h2 className="text-sm font-bold text-foreground whitespace-nowrap">OMNICHANNEL</h2>
           </div>
 
-          {/* Área de trabalho */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Validator (se ativo) */}
-            {showValidator && (
-              <div className="w-96 border-r p-4">
-                <FlowValidator
-                  nodes={nodes}
-                  edges={edges}
-                  onNodeClick={(nodeId) => {
-                    const node = nodes.find(n => n.id === nodeId);
-                    if (node) setSelectedNode(node);
-                  }}
-                />
-              </div>
-            )}
-
-          {/* Biblioteca de Blocos */}
-          <BlockLibrary 
-            onDragStart={onDragStart}
-            isExpanded={isBlockLibraryExpanded}
-            onToggleExpanded={setIsBlockLibraryExpanded}
-            nodes={nodes}
-            onNodeSelect={handleNodeSelect}
+          <Input
+            value={flowName}
+            onChange={(e) => setFlowName(e.target.value)}
+            className="w-[150px] sm:w-[200px] h-8 text-xs sm:text-sm"
+            placeholder="Nome do fluxo"
           />
 
-          {/* Canvas */}
-          <div className="flex-1" ref={reactFlowWrapper}>
-            <ReactFlow
-              nodes={nodes.map(node => ({
-                ...node,
-                data: {
-                  ...node.data,
-                  onSetBreakpoint: handleSetBreakpoint,
-                  onSetSkip: handleSetSkip,
-                  onDuplicate: handleDuplicateNode,
-                  onDelete: handleDeleteNode,
-                  onClearDebug: handleClearDebug,
-                  onAddNote: handleAddNote,
-                }
-              }))}
-              edges={edges.map((edge) => ({
-                ...edge,
-                style: {
-                  stroke: edge.selected ? '#ea580c' : '#f97316',
-                  strokeWidth: edge.selected ? 2.5 : 1.33,
-                },
-                markerEnd: {
-                  type: 'arrowclosed',
-                  width: 20,
-                  height: 20,
-                  color: edge.selected ? '#ea580c' : '#f97316',
-                },
-                type: 'smoothstep',
-              }))}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onEdgesDelete={onEdgesDelete}
-              onNodeClick={onNodeClick}
-              onPaneClick={onPaneClick}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onInit={setReactFlowInstance}
-              nodeTypes={nodeTypes}
-              nodesDraggable={!isLocked}
-              nodesConnectable={!isLocked}
-              nodesFocusable={!isLocked}
-              edgesFocusable={!isLocked}
-              deleteKeyCode={isLocked ? null : "Delete"}
-              className="bg-background"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsBlockLibraryExpanded(true)}
+              className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg"
+              title="Adicionar blocos"
             >
-              <Background />
-              <Controls />
-              <MiniMap />
-            </ReactFlow>
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8" title="Aumentar zoom">
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8" title="Diminuir zoom">
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleFitView} className="h-8 w-8" title="Centralizar">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleToggleLock}
+              className={`h-8 w-8 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
+              title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
+            >
+              {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+            </Button>
           </div>
 
-          {/* Painel de Propriedades e Simulador */}
-          <div className="w-80 border-l p-4 space-y-4 overflow-y-auto">
-            {showSimulator ? (
-              <FlowSimulator
-                nodes={nodes}
-                edges={edges}
-                onHighlightPath={(nodeIds) => {
-                  // Destacar visualmente o caminho percorrido
-                  setNodes(nds => nds.map(node => ({
-                    ...node,
-                    data: {
-                      ...node.data,
-                      isHighlighted: nodeIds.includes(node.id)
-                    }
-                  })));
-                }}
-              />
-            ) : (
-              <PropertiesPanel
-                selectedNode={selectedNode}
-                onUpdateNode={onUpdateNode}
-              />
-            )}
-
-            {showAnalytics && id && (
-              <FlowAnalytics flowId={id} nodes={nodes} />
-            )}
-          </div>
-        </div>
-
-        {/* Logs de Execução */}
-        {id && (
-          <FlowExecutionLogs
-            flowId={id}
-            nodes={nodes}
-            onHighlightNode={(nodeId) => {
-              const node = nodes.find(n => n.id === nodeId);
-              if (node) setSelectedNode(node);
+          <WorkflowAIGenerator
+            workflowType="Omnichannel"
+            blockDefinitions={OMNICHANNEL_BLOCK_DEFS}
+            onGenerated={(newNodes, newEdges) => {
+              setNodes(nds => [...nds, ...newNodes as OmnichannelNode[]]);
+              setEdges(eds => [...eds, ...newEdges as OmnichannelEdge[]]);
             }}
           />
-        )}
+        </div>
 
-        {/* Dialogs */}
-        <TemplateSelector
-          open={showTemplates}
-          onOpenChange={setShowTemplates}
-          onSelectTemplate={handleLoadTemplate}
-        />
+        {/* Right section - Action buttons */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowValidator(!showValidator)}
+            className="h-8 px-2 hidden lg:flex"
+          >
+            <AlertCircle className="h-4 w-4 mr-1.5" />
+            <span className="hidden xl:inline">Validar</span>
+          </Button>
 
-        {id && (
-          <FlowVersionHistory
-            flowId={id}
-            open={showVersions}
-            onOpenChange={setShowVersions}
-            onRestore={handleRestoreVersion}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className="h-8 px-2 hidden lg:flex"
+          >
+            <Activity className="h-4 w-4 mr-1.5" />
+            <span className="hidden xl:inline">Analytics</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTemplates(true)}
+            className="h-8 px-2 hidden xl:flex"
+          >
+            <FileText className="h-4 w-4 mr-1.5" />
+            Templates
+          </Button>
+
+          {id && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowVersions(true)}
+                className="h-8 px-2 hidden xl:flex"
+              >
+                <History className="h-4 w-4 mr-1.5" />
+                Versões
+              </Button>
+
+              <BotTriggerSelector
+                flowId={id}
+                currentBotId={currentBotId}
+                onUpdate={(botId) => setCurrentBotId(botId)}
+              />
+            </>
+          )}
+
+          <FlowExportImport
+            flowData={{ nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } }}
+            flowName={flowName}
+            onImport={handleImportFlow}
           />
+
+          {id && (
+            <div className="hidden md:flex items-center gap-2 px-3 h-8 border rounded-full bg-card/50 backdrop-blur-sm">
+              <Star className={`h-4 w-4 ${isDefault ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
+              <Label htmlFor="default-switch" className="text-xs cursor-pointer whitespace-nowrap">
+                Padrão
+              </Label>
+              <Switch
+                id="default-switch"
+                checked={isDefault}
+                onCheckedChange={setIsDefault}
+              />
+            </div>
+          )}
+
+          <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving} className="h-8 px-2">
+            <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
+            <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setShowSimulator(!showSimulator)}
+            className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90"
+          >
+            <Play className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => navigate(originUrl)} className="h-8 px-2">
+            <X className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Fechar</span>
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {showValidator && (
+          <div className="w-96 border-r p-4 overflow-y-auto">
+            <FlowValidator
+              nodes={nodes}
+              edges={edges}
+              onNodeClick={(nodeId) => {
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) setSelectedNode(node);
+              }}
+            />
+          </div>
         )}
 
-        <BlockNoteDialog
-          open={showNoteDialog}
-          onOpenChange={setShowNoteDialog}
-          currentNote={currentNoteNodeId ? (nodes.find(n => n.id === currentNoteNodeId)?.data.note || "") : ""}
-          onSave={handleSaveNote}
+        <BlockLibrary
+          onDragStart={onDragStart}
+          isExpanded={isBlockLibraryExpanded}
+          onToggleExpanded={setIsBlockLibraryExpanded}
+          nodes={nodes}
+          onNodeSelect={handleNodeSelect}
         />
+
+        <div
+          className={`${(showSimulator || selectedNode) ? "lg:mr-96" : ""} flex-1 relative`}
+          ref={reactFlowWrapper}
+          style={{ touchAction: 'none' }}
+        >
+          <ReactFlow
+            nodes={nodes.map(node => ({
+              ...node,
+              data: {
+                ...node.data,
+                onSetBreakpoint: handleSetBreakpoint,
+                onSetSkip: handleSetSkip,
+                onDuplicate: handleDuplicateNode,
+                onDelete: handleDeleteNode,
+                onClearDebug: handleClearDebug,
+                onAddNote: handleAddNote,
+              }
+            }))}
+            edges={edges.map((edge) => ({
+              ...edge,
+              style: {
+                stroke: edge.selected ? '#ea580c' : '#f97316',
+                strokeWidth: edge.selected ? 2.5 : 1.33,
+              },
+              markerEnd: {
+                type: 'arrowclosed',
+                width: 20,
+                height: 20,
+                color: edge.selected ? '#ea580c' : '#f97316',
+              },
+              type: 'smoothstep',
+            }))}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onEdgesDelete={onEdgesDelete}
+            onNodeClick={onNodeClick}
+            onPaneClick={onPaneClick}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onInit={setReactFlowInstance}
+            nodeTypes={nodeTypes}
+            nodesDraggable={!isLocked}
+            nodesConnectable={!isLocked}
+            nodesFocusable={!isLocked}
+            edgesFocusable={!isLocked}
+            deleteKeyCode={isLocked ? null : "Delete"}
+            className="bg-background"
+            defaultEdgeOptions={{
+              animated: true,
+              style: { stroke: '#f97316', strokeWidth: 2 },
+              markerEnd: {
+                type: 'arrowclosed',
+                width: 20,
+                height: 20,
+                color: '#f97316',
+              },
+              type: 'smoothstep',
+            }}
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1.5}
+              color="#cbd5e1"
+              className="opacity-40"
+            />
+            <MiniMap
+              className="bg-card border border-border rounded-lg shadow-lg"
+              maskColor="rgba(255, 255, 255, 0.8)"
+            />
+          </ReactFlow>
+        </div>
+
+        {showSimulator && (
+          <>
+            <div
+              className="fixed inset-0 top-14 bg-black/40 z-30 lg:hidden"
+              onClick={() => setShowSimulator(false)}
+            />
+            <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl">
+              <div className="flex items-center justify-between px-3 h-12 border-b shrink-0">
+                <span className="text-sm font-semibold">Simulador</span>
+                <button
+                  type="button"
+                  onClick={() => setShowSimulator(false)}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full hover:bg-muted"
+                  aria-label="Fechar simulador"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <FlowSimulator
+                  nodes={nodes}
+                  edges={edges}
+                  onHighlightPath={(nodeIds) => {
+                    setNodes(nds => nds.map(node => ({
+                      ...node,
+                      data: {
+                        ...node.data,
+                        isHighlighted: nodeIds.includes(node.id)
+                      }
+                    })));
+                  }}
+                />
+                {showAnalytics && id && (
+                  <FlowAnalytics flowId={id} nodes={nodes} />
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {!showSimulator && selectedNode && nodes.some(n => n.id === selectedNode.id) && (
+          <>
+            <div
+              className="fixed inset-0 top-14 bg-black/40 z-30 lg:hidden"
+              onClick={() => setSelectedNode(null)}
+            />
+            <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40 shadow-2xl workflow-props">
+              <div className="flex items-center justify-between px-3 h-12 border-b shrink-0">
+                <span className="text-sm font-semibold truncate">{(selectedNode.data as any)?.label || "Propriedades"}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNode(null)}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full hover:bg-muted"
+                  aria-label="Fechar propriedades"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+                <PropertiesPanel
+                  selectedNode={selectedNode}
+                  onUpdateNode={onUpdateNode}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {!showSimulator && !selectedNode && showAnalytics && id && (
+          <div className="fixed right-0 top-14 w-full sm:w-[420px] lg:w-96 h-[calc(100vh-3.5rem)] overflow-y-auto bg-card border-l border-border z-40 shadow-2xl p-4">
+            <FlowAnalytics flowId={id} nodes={nodes} />
+          </div>
+        )}
       </div>
+
+      {id && (
+        <FlowExecutionLogs
+          flowId={id}
+          nodes={nodes}
+          onHighlightNode={(nodeId) => {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) setSelectedNode(node);
+          }}
+        />
+      )}
+
+      <TemplateSelector
+        open={showTemplates}
+        onOpenChange={setShowTemplates}
+        onSelectTemplate={handleLoadTemplate}
+      />
+
+      {id && (
+        <FlowVersionHistory
+          flowId={id}
+          open={showVersions}
+          onOpenChange={setShowVersions}
+          onRestore={handleRestoreVersion}
+        />
+      )}
+
+      <BlockNoteDialog
+        open={showNoteDialog}
+        onOpenChange={setShowNoteDialog}
+        currentNote={currentNoteNodeId ? (nodes.find(n => n.id === currentNoteNodeId)?.data.note || "") : ""}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }
