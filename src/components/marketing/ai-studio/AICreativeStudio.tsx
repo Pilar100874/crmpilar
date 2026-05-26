@@ -617,17 +617,23 @@ const AICreativeStudioInner: React.FC = () => {
   }, [setNodes, setEdges]);
 
   const handleDeleteWorkflow = useCallback(async (id: string, nome: string) => {
-    const { error } = await supabase
+    setDeleteConfirm(null);
+    const { data, error } = await supabase
       .from('ai_studio_workflows')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
     if (error) {
-      toast.error('Erro ao excluir workflow');
-    } else {
-      toast.success(`"${nome}" excluído`);
-      fetchWorkflows();
+      toast.error(`Erro ao excluir: ${error.message}`);
+      return;
     }
-    setDeleteConfirm(null);
+    if (!data || data.length === 0) {
+      toast.error('Não foi possível excluir (sem permissão ou já removido)');
+      return;
+    }
+    setSavedWorkflows((prev) => prev.filter((w) => w.id !== id));
+    toast.success(`"${nome}" excluído`);
+    fetchWorkflows();
   }, [fetchWorkflows]);
 
   const handleRenameWorkflow = useCallback(async (id: string, newName: string) => {
