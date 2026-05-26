@@ -173,6 +173,7 @@ const App = () => (
         
         <BrowserRouter>
           <WatchRedirectWrapper />
+          <PWAInstallPrompt />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
