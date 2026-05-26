@@ -1072,11 +1072,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         <div className="flex items-center gap-1.5 shrink-0">
           {showVIBadge && (
             <div
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-primary/40 bg-primary/10 text-primary"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400 text-white shadow-[0_0_8px_rgba(236,72,153,0.5)] animate-pulse"
               title="Esta geração usará a Identidade Visual da marca (cores, estilo, prompt e referências)"
             >
               <Palette className="h-3 w-3" />
-              <span className="text-[9px] font-semibold tracking-wide uppercase">IV</span>
+              <span className="text-[9px] font-bold tracking-wide uppercase">IV Ativa</span>
             </div>
           )}
           {activeProcessing && (
