@@ -1712,6 +1712,32 @@ async function createLockedProductOverlay(
   return uploadTextImageToStorage(svg, "image/svg+xml", "svg");
 }
 
+function findLockedProductReference(imageUrls: string[] = [], imageRoles: string[] = []): string | null {
+  const index = imageRoles.findIndex((role) => role === 'PRODUCT - DO NOT MODIFY');
+  return index >= 0 ? imageUrls[index] || null : null;
+}
+
+async function applyLockedProductOverlayToResult(
+  result: { imageUrl?: string; text?: string } | null | undefined,
+  productUrl: string | null,
+  imageSize?: string,
+  hasPerson: boolean = false,
+): Promise<{ imageUrl?: string; text?: string; productLocked?: boolean } | null | undefined> {
+  if (!result?.imageUrl || !productUrl) return result;
+  const overlaidUrl = await createLockedProductOverlay(result.imageUrl, productUrl, imageSize, hasPerson);
+  if (!overlaidUrl) {
+    console.warn(`[locked-product-overlay] Failed, returning generated image`);
+    return result;
+  }
+  console.log(`[locked-product-overlay] Applied deterministic product lock: ${overlaidUrl.substring(0, 100)}`);
+  return {
+    ...result,
+    imageUrl: overlaidUrl,
+    text: `${result.text || ''}\n\n[Produto original preservado por sobreposição bloqueada.]`.trim(),
+    productLocked: true,
+  };
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
