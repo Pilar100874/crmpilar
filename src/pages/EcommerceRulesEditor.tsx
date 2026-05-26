@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
   ReactFlow,
@@ -164,6 +165,10 @@ function EcommerceRulesEditorInner() {
       setIsSaving(false);
     }
   };
+
+  useUnsavedChanges("ecommerce-rules", hasUnsavedChanges, async () => { await handleSave(); return !hasUnsavedChanges; }, flowName || "Regra");
+
+
 
   const onConnect = useCallback((params: Connection) => {
     setEdges(eds => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds));

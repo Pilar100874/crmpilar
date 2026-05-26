@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
@@ -550,6 +551,8 @@ function EditorRegrasContent() {
       setIsSaving(false);
     }
   };
+
+  useUnsavedChanges("editor-regras", hasUnsavedChanges, async () => { await handleSave(); return !hasUnsavedChanges; }, nomeRegra || "Regra");
 
   const handleBack = () => {
     if (hasUnsavedChanges) {

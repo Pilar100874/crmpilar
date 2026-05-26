@@ -44,6 +44,7 @@ import { FlowNodeData, BLOCK_DEFINITIONS } from "@/types/flow";
 import { toast } from "@/lib/toast-config";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 
 const nodeTypes = {
   custom: FlowNode,
@@ -790,6 +791,13 @@ function BotBuilderContent() {
     const changed = lastSavedSignatureRef.current !== currentSig;
     setHasUnsavedChanges(changed);
   }, [nodes, edges, flowVariables, currentBotName, currentBotDescription, getFlowSignature]);
+
+  useUnsavedChanges(
+    "bot-builder",
+    hasUnsavedChanges,
+    async () => (await handleSave(true)) !== false,
+    currentBotName || "Bot",
+  );
 
   const handleLoadBot = useCallback(async (botId: string) => {
     const { data, error } = await supabase
