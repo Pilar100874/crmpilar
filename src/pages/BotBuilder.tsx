@@ -1440,6 +1440,7 @@ function BotBuilderContent() {
               nodes={nodes}
               edges={edges}
               flowVariables={allVariables}
+              onClose={() => setSelectedNode(null)}
             />
           )}
         </div>
