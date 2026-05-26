@@ -1340,16 +1340,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       }
       const productEntry = sortedEntries.find((entry) => entry.role === 'PRODUCT - DO NOT MODIFY');
       if (productEntry?.url) {
-        const lockedHeroUrl = await createLockedProductOverlay(
-          heroUrl,
-          productEntry.url,
-          params.imageSize,
-          sortedEntries.some((entry) => entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY'),
-        );
-        if (lockedHeroUrl) {
-          console.log(`[hero-frame] Locked product overlay applied to video start frame`);
-          return lockedHeroUrl;
-        }
+        console.log(`[hero-frame] Product reference preserved by model-guided composition (no flat overlay).`);
       }
       console.log(`[hero-frame] Hero frame generated (${heroUrl.substring(0, 50)}...)`);
       return heroUrl;
