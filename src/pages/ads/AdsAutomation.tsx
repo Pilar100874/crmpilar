@@ -728,7 +728,8 @@ function AdsAutomationContent() {
                 
               </div>
             </div>
-            </div>
+            
+
             
             <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
               <WorkflowAIGenerator
