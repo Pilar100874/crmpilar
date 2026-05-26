@@ -713,7 +713,7 @@ export default function OmnichannelBuilder() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {showValidator && (
           <div className="w-96 border-r p-4 overflow-y-auto">
             <FlowValidator
