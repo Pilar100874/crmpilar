@@ -254,19 +254,20 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
   if (viewMode === 'form') {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBackToList}>
+        <div className="flex items-start gap-3 flex-wrap">
+          <Button variant="ghost" size="icon" onClick={handleBackToList} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h2 className="text-xl font-semibold">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-xl font-semibold truncate">
               {editingTemplate ? 'Editar Template' : 'Novo Template'}
             </h2>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Monte seu template com textos, mídias, catálogos e anexos.
             </p>
           </div>
         </div>
+
 
         <div className="space-y-6">
           <Card>
@@ -321,11 +322,11 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleBackToList}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sticky bottom-0 bg-background py-3 -mx-1 px-1 border-t sm:border-0">
+            <Button variant="outline" onClick={handleBackToList} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
               {saving ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -334,6 +335,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
               Salvar Template
             </Button>
           </div>
+
         </div>
 
         {/* Delete confirmation dialog */}
@@ -362,21 +364,22 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Templates de Mensagens
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <FileText className="h-5 w-5 shrink-0" />
+              <span className="truncate">Templates de Mensagens</span>
             </CardTitle>
-            <CardDescription>
-              Crie templates com textos, mídias, catálogos e anexos para usar no envio em massa. 
+            <CardDescription className="text-xs sm:text-sm">
+              Crie templates com textos, mídias, catálogos e anexos para usar no envio em massa.
             </CardDescription>
           </div>
-          <Button onClick={handleNewTemplate}>
+          <Button onClick={handleNewTemplate} className="w-full sm:w-auto shrink-0">
             <Plus className="h-4 w-4 mr-2" />
             Novo Template
           </Button>
         </CardHeader>
+
         <CardContent>
           {templates.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
