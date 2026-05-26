@@ -1231,10 +1231,12 @@ export function useStudioExecution() {
         }
 
         // Inject visual identity references for video generation
+        let viVideoModelOverride: string | null = null;
         {
           const viEstabId = localStorage.getItem('estabelecimentoId') || '';
           const viVideo = await getActiveVisualIdentity(viEstabId);
-          console.log('[Studio][VI] videoGen ativa?', !!(viVideo && (viVideo.images.length>0 || viVideo.prompt)));
+          const viVideoActive = !!(viVideo && (viVideo.images.length > 0 || viVideo.prompt));
+          console.log('[Studio][VI] videoGen ativa?', viVideoActive, { preferredModel: viVideo?.preferredModel });
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
             videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
@@ -1242,10 +1244,15 @@ export function useStudioExecution() {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
             }
+            if (viVideo.preferredModel) {
+              viVideoModelOverride = viVideo.preferredModel;
+            }
           }
         }
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
-        const effectiveVideoModel = videoModel === 'free/gif-animated' ? 'auto' : videoModel;
+        // VI preferred model takes priority over block-configured model
+        const baseVideoModel = viVideoModelOverride || videoModel;
+        const effectiveVideoModel = baseVideoModel === 'free/gif-animated' ? 'auto' : baseVideoModel;
         {
           nodeResultStore.setResult(node.id, { 
             text: `🎬 Gerando vídeo${effectiveVideoModel === 'auto' ? ' (detectando provedor disponível)' : ` com ${effectiveVideoModel.split('/').pop()}`}...${orderedImageInputs.length > 0 ? ` (${orderedImageInputs.length} imagem(ns) de referência)` : ''}`, 
