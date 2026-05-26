@@ -194,7 +194,9 @@ export const BlockLibrary = ({
                 key={block.type}
                 draggable
                 onDragStart={(e) => handleDragStart(e, block.type)}
-                className="flex items-start gap-3 p-3 border rounded-2xl cursor-grab active:cursor-grabbing hover:bg-accent hover:border-primary transition-all"
+                onDoubleClick={() => window.dispatchEvent(new CustomEvent("workflow:add-block", { detail: { type: block.type } }))}
+                title="Arraste ou clique 2x para adicionar"
+                className="flex items-start gap-3 p-3 border rounded-2xl cursor-grab active:cursor-grabbing hover:bg-accent hover:border-primary transition-all select-none"
               >
                 <div className={`flex-shrink-0 mt-0.5 ${block.color}`}>
                   {block.icon}
