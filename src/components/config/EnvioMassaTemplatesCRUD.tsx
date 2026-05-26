@@ -254,19 +254,20 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
   if (viewMode === 'form') {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBackToList}>
+        <div className="flex items-start gap-3 flex-wrap">
+          <Button variant="ghost" size="icon" onClick={handleBackToList} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h2 className="text-xl font-semibold">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-xl font-semibold truncate">
               {editingTemplate ? 'Editar Template' : 'Novo Template'}
             </h2>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Monte seu template com textos, mídias, catálogos e anexos.
             </p>
           </div>
         </div>
+
 
         <div className="space-y-6">
           <Card>
