@@ -548,9 +548,9 @@ export default function Layout({ children }: LayoutProps) {
                 onClick={handleTabClick}
               >
                 {menuOpen ? (
-                  <ChevronLeft className="w-3 h-3" />
+                  <ChevronLeft className="w-5 h-5 lg:w-5 lg:h-5" />
                 ) : (
-                  <ChevronRight className="w-3 h-3" />
+                  <ChevronRight className="w-5 h-5 lg:w-5 lg:h-5" />
                 )}
               </div>
             )}
