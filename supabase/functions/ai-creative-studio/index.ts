@@ -2123,8 +2123,11 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             }
             editContent.push({ type: "text", text: panoramicPrompt });
             
+            const panoModel = refImages.some((_, i) => (imageRoles[i] || '') === 'PRODUCT - DO NOT MODIFY')
+              ? "google/gemini-3-pro-image-preview"
+              : model;
             panoData = await callGateway(LOVABLE_API_KEY, {
-              model,
+              model: panoModel,
               messages: [
                 { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear EXACTLY as in the reference as a literal cut-and-paste — same packaging, label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact on a foreground surface/pedestal. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
