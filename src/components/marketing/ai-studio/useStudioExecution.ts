@@ -1373,7 +1373,7 @@ export function useStudioExecution() {
               parts.push(`Scene: ${sceneDescription}`);
             } else {
               parts.push(`Create a realistic PHOTOMONTAGE integrating the person and product from the provided photos into this scene: ${sceneDescription}`);
-              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: integrate it naturally while keeping packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. Do not paste the original photo as a flat overlay. If holding would hide or deform packaging, place the unchanged product directly on a real existing textured surface in the scene and have the person present it. Do not create a pedestal, white base, card, bar, label strip, or artificial support.`);
+              parts.push(`The person's face must be IDENTICAL to the photo. The product is absolute priority #1: integrate it naturally while keeping packaging IDENTICAL — label, printed text, typography, logo, colors, cap/lid, shape and proportions. EXACTLY ONE instance of the product in the frame: never a duplicate copy beside the person, showcase copy, mirrored copy, inset thumbnail, corner badge or side-by-side reference. Do not paste the original photo as a flat overlay. If holding would hide or deform packaging, place the unchanged product directly on a real existing textured surface in the scene and have the person present it. Do not create a pedestal, white base, card, bar, label strip, or artificial support.`);
             }
             parts.push(`Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}`);
             parts.push(`Animation sequence: Frame ${i + 1} of ${frameCount} — ${stage}`);
