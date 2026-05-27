@@ -1636,6 +1636,16 @@ function findLockedProductReference(imageUrls: string[] = [], imageRoles: string
   return index >= 0 ? imageUrls[index] || null : null;
 }
 
+const PRODUCT_PACKAGING_LOCK = [
+  "PRODUCT PACKAGING LOCK: the product reference is the authoritative visual source for the real package.",
+  "The final product must keep the exact same label artwork, printed text, typography, logo placement, colors, cap/lid, material, shape, proportions, seals and graphic elements from the reference.",
+  "Do not paste the reference photo as a flat sticker or separate object; also do not create an approximate, redesigned, simplified, stylized or rebranded package.",
+  "Only perspective, scale, shadow and lighting may change to fit the scene. These adjustments must not alter any package artwork, text, color, logo, cap/lid, material, shape or proportion.",
+  "If a hand, pose, scene style or brand identity would cover or distort the label/package, change the interaction instead: keep the package fully visible and intact.",
+  "Ignore red annotations, masks, boxes, arrows, circles, painted correction marks and the original background of the reference image; they are not part of the package.",
+  "Exactly one product appears in the final image, fully integrated as a real photographed object with packaging visually indistinguishable from the reference."
+].join(" ");
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
