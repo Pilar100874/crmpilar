@@ -756,9 +756,9 @@ export function useStudioExecution() {
           enrichedPrompt = [
             `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
             `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
-            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: mantenha o mesmo design gráfico, cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos visuais.`,
-            `   - NÃO cole a foto original como uma sobreposição plana. Gere o produto integrado naturalmente na cena, mas usando a embalagem da referência como guia rígido.`,
-            `   - A IA pode ajustar perspectiva, escala e iluminação SOMENTE para encaixar o produto na cena; esses ajustes não podem mudar o visual gráfico da embalagem.`,
+            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: o produto final deve ter o MESMO design gráfico da referência, com as mesmas cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos visuais.`,
+            `   - NÃO cole a foto original como uma sobreposição plana. Também NÃO crie uma embalagem nova “parecida”. Transfira fielmente a aparência real da embalagem de referência para o produto fotografado na cena.`,
+            `   - A IA pode ajustar SOMENTE perspectiva, escala, sombra e iluminação para encaixar o produto na cena; esses ajustes não podem trocar, redesenhar, simplificar ou reinterpretar nenhuma arte/texto/cor da embalagem.`,
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
@@ -818,7 +818,7 @@ export function useStudioExecution() {
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL', produto: 'PRODUTO/EMBALAGEM — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL',
+              logo: 'LOGO — FONTE VISUAL OBRIGATÓRIA, NÃO MOSTRAR A FOTO SEPARADA', produto: 'PRODUTO/EMBALAGEM — FONTE VISUAL OBRIGATÓRIA DA EMBALAGEM, NÃO MOSTRAR A FOTO SEPARADA',
               influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
               pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
               textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
@@ -837,8 +837,8 @@ export function useStudioExecution() {
             ``,
             `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real. A embalagem é SAGRADA e INTOCÁVEL.`,
             `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções, material, tampa, selo.`,
-            `   - Integre o produto naturalmente na nova cena sem colar a foto original por cima; preserve rigidamente o mesmo design gráfico da embalagem.`,
-            `   - Ajuste apenas perspectiva, escala e iluminação para encaixe realista. Esses ajustes não podem mudar rótulo, logo, textos, cores, formato ou proporções.`,
+            `   - Integre o produto naturalmente na nova cena sem colar a foto original por cima; ao mesmo tempo, a embalagem final deve ser visualmente igual à referência, não uma versão redesenhada ou aproximada.`,
+            `   - Ajuste apenas perspectiva, escala, sombra e iluminação para encaixe realista. Esses ajustes não podem mudar rótulo, logo, textos, cores, formato, tampa, materiais ou proporções.`,
             `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. NÃO invente elementos novos. É o MESMO produto.`,
             `   - NÃO adicione, remova ou modifique textos, rótulos, selos ou marcas que não existam na foto original.`,
             `   - NÃO mude a cor da tampa, rótulo, embalagem ou qualquer parte do produto.`,
