@@ -1682,7 +1682,7 @@ const SUPPORTED_LLM_MODELS = [
 ];
 
 const SUPPORTED_IMAGE_MODELS = [
-  "google/gemini-2.5-flash-image", "google/gemini-3-pro-image-preview",
+  "google/gemini-2.5-flash-image", "google/gemini-3-pro-image-preview", "google/gemini-3.1-flash-image-preview",
   "chatgpt_image/gpt-image-1", "chatgpt_image/dall-e-3",
 ];
 
