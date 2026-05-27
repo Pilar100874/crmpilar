@@ -1268,16 +1268,24 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       'CLOTHING - DO NOT MODIFY': 4,
     };
     
-    // Build sorted list: strict refs first (product > influencer > others), skip brand identity
+    // Build sorted list: strict refs first (product > influencer > others); BRAND IDENTITY appended at the end as style guide
     const sortedEntries: { url: string; role: string }[] = [];
+    const brandIdentityEntries: { url: string; role: string }[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       const role = imageRoles[i] || 'REFERENCE';
-      if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+      if (!url) continue;
       if (!(url.startsWith('http') || url.startsWith('data:'))) continue;
+      if (role === 'BRAND IDENTITY REFERENCE') {
+        brandIdentityEntries.push({ url, role });
+        continue;
+      }
       sortedEntries.push({ url, role });
     }
     sortedEntries.sort((a, b) => (priorityOrder[a.role] || 99) - (priorityOrder[b.role] || 99));
+    // Append brand identity at the end so it never overrides product/person but is always present
+    sortedEntries.push(...brandIdentityEntries);
+    console.log(`[hero-frame][VI] BRAND IDENTITY refs incluídas: ${brandIdentityEntries.length}`);
     
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
@@ -1285,6 +1293,8 @@ async function generateHeroFrame(params: any): Promise<string | null> {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT REFERENCE. ${PRODUCT_PACKAGING_LOCK} The output must NOT show this reference photo as a separate pasted layer, but the generated product package must match this reference exactly.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
+      } else if (entry.role === 'BRAND IDENTITY REFERENCE') {
+        editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for colors, lighting mood, atmosphere and overall style of the SCENE/BACKGROUND. NEVER overrides product, person, logo or clothing. NEVER copy subjects from this image into the output.` });
       } else if (strictRoles.includes(entry.role)) {
         editContent.push({ type: "text", text: `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY.` });
       } else {
