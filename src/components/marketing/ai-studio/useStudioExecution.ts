@@ -971,9 +971,9 @@ export function useStudioExecution() {
           fullPrompt = [
             `🔒 BLOQUEIO ABSOLUTO DO PRODUTO (PRIORIDADE MÁXIMA — NÃO NEGOCIÁVEL):`,
             `   - A imagem de PRODUTO conectada é a referência REAL. Trate-a como FOTOGRAFIA do produto físico.`,
-            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: copie pixel a pixel cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos.`,
-            `   - O produto deve ser integrado naturalmente na nova cena com o MESMO design gráfico da embalagem da referência, não como sobreposição plana e não como produto novo inventado pela IA.`,
-            `   - Ajustes de perspectiva, escala e luz são permitidos apenas para realismo; rótulo, logo, textos, cores, formato e proporções devem permanecer iguais.`,
+            `   - A EMBALAGEM é SAGRADA e INTOCÁVEL: o produto final deve manter exatamente as mesmas cores, rótulo, tipografia, logotipo, formato, proporções, material, tampa, selo, textos e elementos gráficos da referência.`,
+            `   - O produto deve ser integrado naturalmente na nova cena com a MESMA embalagem da referência: não pode ser sobreposição plana e também não pode virar produto novo inventado pela IA.`,
+            `   - Ajustes de perspectiva, escala, sombra e luz são permitidos apenas para realismo; rótulo, logo, textos, cores, formato, tampa, materiais e proporções devem permanecer iguais.`,
             `   - NÃO redesenhe, NÃO estilize, NÃO simplifique, NÃO reimagine, NÃO substitua o produto.`,
             `   - NÃO adicione nem remova textos, selos, rótulos, marcas ou elementos que não existam na referência.`,
             `   - NÃO altere cor, brilho, acabamento, formato ou proporções da embalagem.`,
