@@ -6,6 +6,33 @@ import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
+// Visual Identity emphasis directive — focus areas when VI is active
+const VI_FOCUS_DIRECTIVE = [
+  `\n\n🎨 [IDENTIDADE VISUAL — FOCO OBRIGATÓRIO]`,
+  `Quando a identidade visual da marca está ativa, aplique-a com PRIORIDADE MÁXIMA nestes quatro pilares (sempre respeitando que PRODUTO e PESSOA/INFLUENCER continuam intocáveis):`,
+  ``,
+  `1. ✍️ SISTEMA DE ESBOÇO FEITO À MÃO (HAND-DRAWN SKETCH SYSTEM) — PRIORIDADE #1 DA IDENTIDADE:`,
+  `   - Se as referências de identidade contiverem traços, rabiscos, contornos, anotações, setas, círculos, sublinhados, asteriscos, doodles, marcações tipo caneta/lápis/marca-texto, REPRODUZA esse mesmo estilo de mão na arte gerada.`,
+  `   - Use a mesma espessura, pressão, irregularidade orgânica, textura de papel/tinta, mesmo material (giz, marcador, nanquim, lápis 6B, caneta esferográfica, etc.).`,
+  `   - Aplique esses esboços como sobreposições gráficas reais ao redor/sobre o cenário — JAMAIS sobre o rótulo do produto e JAMAIS deformando o rosto da pessoa.`,
+  `   - Mantenha a coerência: se o sistema é monocromático preto, não invente cor; se é colorido, respeite a paleta exata da identidade.`,
+  ``,
+  `2. 🔤 SISTEMA TIPOGRÁFICO:`,
+  `   - Use EXATAMENTE as famílias tipográficas, pesos, espaçamentos, hierarquia (display/título/corpo), tracking e leading observados nas referências da identidade.`,
+  `   - Replique tratamentos especiais: caixa-alta/baixa, itálico manuscrito, lettering desenhado à mão, ligaduras, sublinhados orgânicos, destaques em marca-texto.`,
+  `   - Nunca substitua por uma fonte genérica do modelo.`,
+  ``,
+  `3. 💡 ESTILO DE ILUMINAÇÃO:`,
+  `   - Reproduza a temperatura de cor, direção de luz (lateral, contra-luz, zenital, etc.), dureza/suavidade das sombras, contraste, halos, godrays e qualidade de highlight observados nas imagens da identidade.`,
+  `   - Mantenha consistência absoluta: se a marca usa luz natural difusa de janela, não invente flash duro; se usa neon noturno, não invente sol de meio-dia.`,
+  ``,
+  `4. 🧭 ESTILO DE COMPOSIÇÃO:`,
+  `   - Replique enquadramento, regra de proporção, uso de negative space, alinhamento de grid, simetria/assimetria, camadas, profundidade, ângulo de câmera e crop característicos da marca.`,
+  `   - Mantenha a mesma densidade visual (minimalista vs. maximalista) e a mesma lógica de hierarquia de elementos.`,
+  ``,
+  `⚠️ Estes quatro pilares devem ser visivelmente reconhecíveis no resultado final. Se algum elemento gerado não refletir o sistema da marca (especialmente o sketch à mão e a tipografia), refaça internamente antes de entregar.`,
+].join('\n');
+
 export interface ExecutionLogEntry {
   nodeId: string;
   nodeLabel: string;
@@ -871,7 +898,7 @@ export function useStudioExecution() {
         const vi = viCheck;
         if (vi && (vi.images.length > 0 || vi.prompt)) {
           const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
-          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}`;
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of vi.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
@@ -941,7 +968,7 @@ export function useStudioExecution() {
         const editImageInputs = [...imageInputs];
         if (viEditActive && viEdit) {
           const viEText = viEdit.prompt ? `\n${viEdit.prompt}` : '';
-          editPromptWithLang = `${editPromptWithLang}\n\n[IDENTIDADE VISUAL] Use as referências e instruções da marca para manter consistência de cores, estilo, atmosfera e branding na edição.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua PRODUTO e INFLUENCER/PESSOA presentes na imagem editada. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viEText}`;
+          editPromptWithLang = `${editPromptWithLang}\n\n[IDENTIDADE VISUAL] Use as referências e instruções da marca para manter consistência de cores, estilo, atmosfera e branding na edição.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua PRODUTO e INFLUENCER/PESSOA presentes na imagem editada. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viEText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of viEdit.images) {
             if (!editImageInputs.includes(viUrl)) editImageInputs.push(viUrl);
           }
@@ -1016,7 +1043,7 @@ export function useStudioExecution() {
         console.log('[Studio][VI] productComposite ativa?', !!(viCompose && (viCompose.images.length>0 || viCompose.prompt)), { images: viCompose?.images?.length || 0, hasPrompt: !!viCompose?.prompt, preferredModel: viCompose?.preferredModel });
         if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
           const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
-          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}`;
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of viCompose.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
@@ -1243,7 +1270,7 @@ export function useStudioExecution() {
           console.log('[Studio][VI] videoGen ativa?', viVideoActive, { preferredModel: viVideo?.preferredModel });
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
-            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}${VI_FOCUS_DIRECTIVE}`;
             for (const viUrl of viVideo.images) {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
