@@ -1294,7 +1294,7 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
       } else if (entry.role === 'BRAND IDENTITY REFERENCE') {
-        editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for colors, lighting mood, atmosphere and overall style of the SCENE/BACKGROUND. NEVER overrides product, person, logo or clothing. NEVER copy subjects from this image into the output.` });
+        editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — extract and apply these four pillars to the OUTPUT: (1) HAND-DRAWN SKETCH SYSTEM — reproduce any sketches, doodles, contour lines, arrows, highlighter marks, handwritten annotations with the exact same medium, stroke weight and organic irregularity; (2) TYPOGRAPHIC SYSTEM — replicate exact font families, weights, hierarchy, lettering treatments and hand-lettering style; (3) LIGHTING STYLE — match color temperature, direction, hardness and contrast of light; (4) COMPOSITION STYLE — match framing, negative space, grid logic, symmetry and visual density. NEVER overrides product, person, logo or clothing. NEVER copy the subjects from this image into the output — only the stylistic system.` });
       } else if (strictRoles.includes(entry.role)) {
         editContent.push({ type: "text", text: `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY.` });
       } else {
@@ -2156,7 +2156,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (role === 'BRAND IDENTITY REFERENCE') {
-                editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for color palette, mood, atmosphere and overall style of background/scene. NEVER overrides product, person, logo or clothing. Do not copy subjects from this image.` });
+                editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — extract and apply these four pillars to the OUTPUT: (1) HAND-DRAWN SKETCH SYSTEM — reproduce any sketches, doodles, contour lines, arrows, highlighter marks, handwritten annotations with the exact same medium, stroke weight and organic irregularity; (2) TYPOGRAPHIC SYSTEM — replicate exact font families, weights, hierarchy, lettering treatments and hand-lettering style; (3) LIGHTING STYLE — match color temperature, direction, hardness and contrast of light; (4) COMPOSITION STYLE — match framing, negative space, grid logic, symmetry and visual density. NEVER overrides product, person, logo or clothing. NEVER copy the subjects from this image into the output — only the stylistic system.` });
               } else if (strictRolesPano.includes(role)) {
                 editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY within center strip.` });
               }
