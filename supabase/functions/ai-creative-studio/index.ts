@@ -2016,7 +2016,7 @@ Deno.serve(async (req) => {
               for (const entry of slideEntries) {
                 editContent.push({ type: "image_url", image_url: { url: entry.url } });
                 editContent.push({ type: "text", text: entry.role === 'PRODUCT - DO NOT MODIFY'
-                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Preserve the exact same packaging while integrating naturally in the slide: label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. NEVER paste as a flat sticker, redraw, restyle, recolor, simplify or modify. If hand interaction would alter/hide packaging, place product intact directly on a real existing textured surface in the scene, with no pedestal, white base, card, caption bar, grey pill, rounded rectangle, or artificial support.`
+                  ? `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. ${PRODUCT_PACKAGING_LOCK}`
                   : `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY in output.` });
               }
               editContent.push({ type: "text", text: `${slidePrompt}\n\nPRODUCT FIDELITY OVERRIDES EVERYTHING: any connected product reference must remain unchanged and must not be affected by slide style, layout, hand interaction, scene or lighting.` });
@@ -2027,7 +2027,7 @@ Deno.serve(async (req) => {
               slideData = await callGateway(LOVABLE_API_KEY, {
                 model: slideModel,
                 messages: [
-                  { role: "system", content: "You are a professional photo compositor. Preserve all reference subjects IDENTICALLY. Absolute #1 rule: any PRODUCT reference must be naturally integrated with identical packaging, label, printed text, typography, logo, colors, cap/lid, material, shape and proportions. Do not paste as a flat sticker, redraw or reinterpret the product under any circumstance." + slideDimInstruction },
+                  { role: "system", content: `You are a professional photo compositor. Preserve all strict reference subjects. Absolute #1 rule: ${PRODUCT_PACKAGING_LOCK}` + slideDimInstruction },
                   { role: "user", content: editContent },
                 ],
                 modalities: ["image", "text"],
@@ -2139,7 +2139,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               if (role === 'BRAND IDENTITY REFERENCE') continue;
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
-                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. Integrate naturally into the scene with the exact same packaging: label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. DO NOT paste as flat sticker, redesign, recolor, simplify or stylize. Place FULLY within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%). If interaction would hide/deform packaging, keep product intact in the person's open hand or directly on a REAL EXISTING textured surface already visible in the scene. NEVER place it inside a white square/card/frame/sticker, floating pedestal, white base, blank caption bar, grey pill, rounded rectangle, or artificial support — ignore the reference's white background and blend the product naturally.` });
+                editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. ${PRODUCT_PACKAGING_LOCK} Place fully within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (strictRolesPano.includes(role)) {
@@ -2154,7 +2154,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
             panoData = await callGateway(LOVABLE_API_KEY, {
               model: panoModel,
               messages: [
-                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: The PRODUCT must appear naturally integrated in the scene with the exact same packaging as the reference — label, printed text, typography, colors, logo, cap/lid, material, shape and proportions. NEVER paste as a flat sticker, redesign, recolor, simplify, stylize, rotate into an invented view, or modify the product. Hands, scene, lighting, style and brand identity must not alter or cover packaging. If holding would deform/hide it, keep product intact in the person's open hand or directly on a REAL EXISTING textured surface already visible in the scene. NEVER place it inside a white square/card/frame/sticker, floating pedestal, white base, blank caption bar, grey pill, rounded rectangle, or artificial support — ignore the reference's white background and integrate the product naturally. Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
+                { role: "system", content: `You are a professional photo compositor. Your #1 ABSOLUTE RULE: ${PRODUCT_PACKAGING_LOCK} Priority #2: Person's face must be identical. Generate a SQUARE 1080x1080 image. Place ALL content within the center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}% of height). Top/bottom = simple background only.` },
                 { role: "user", content: editContent },
               ],
               modalities: ["image", "text"],
