@@ -1268,16 +1268,24 @@ async function generateHeroFrame(params: any): Promise<string | null> {
       'CLOTHING - DO NOT MODIFY': 4,
     };
     
-    // Build sorted list: strict refs first (product > influencer > others), skip brand identity
+    // Build sorted list: strict refs first (product > influencer > others); BRAND IDENTITY appended at the end as style guide
     const sortedEntries: { url: string; role: string }[] = [];
+    const brandIdentityEntries: { url: string; role: string }[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       const role = imageRoles[i] || 'REFERENCE';
-      if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+      if (!url) continue;
       if (!(url.startsWith('http') || url.startsWith('data:'))) continue;
+      if (role === 'BRAND IDENTITY REFERENCE') {
+        brandIdentityEntries.push({ url, role });
+        continue;
+      }
       sortedEntries.push({ url, role });
     }
     sortedEntries.sort((a, b) => (priorityOrder[a.role] || 99) - (priorityOrder[b.role] || 99));
+    // Append brand identity at the end so it never overrides product/person but is always present
+    sortedEntries.push(...brandIdentityEntries);
+    console.log(`[hero-frame][VI] BRAND IDENTITY refs incluídas: ${brandIdentityEntries.length}`);
     
     for (const entry of sortedEntries) {
       editContent.push({ type: "image_url", image_url: { url: entry.url } });
@@ -1285,6 +1293,8 @@ async function generateHeroFrame(params: any): Promise<string | null> {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #1 — PRODUCT REFERENCE. ${PRODUCT_PACKAGING_LOCK} The output must NOT show this reference photo as a separate pasted layer, but the generated product package must match this reference exactly.` });
       } else if (entry.role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
         editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Reproduce this exact face, skin tone, hair, features.` });
+      } else if (entry.role === 'BRAND IDENTITY REFERENCE') {
+        editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for colors, lighting mood, atmosphere and overall style of the SCENE/BACKGROUND. NEVER overrides product, person, logo or clothing. NEVER copy subjects from this image into the output.` });
       } else if (strictRoles.includes(entry.role)) {
         editContent.push({ type: "text", text: `↑ SUBJECT (${entry.role}). Preserve IDENTICALLY.` });
       } else {
@@ -1722,11 +1732,14 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   for (let i = 0; i < imageUrls.length; i++) {
     const url = imageUrls[i];
     const role = imageRoles[i] || 'REFERENCE';
-    if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+    if (!url) continue;
     if (!url.startsWith('http')) continue;
-    entries.push({ url, role, priority: priorityOrder[role] || 99 });
+    // BRAND IDENTITY refs included as low-priority style guide (never skipped)
+    const priority = role === 'BRAND IDENTITY REFERENCE' ? 95 : (priorityOrder[role] || 90);
+    entries.push({ url, role, priority });
   }
   entries.sort((a, b) => a.priority - b.priority);
+  console.log(`[edit-openai][VI] BRAND IDENTITY refs incluídas: ${entries.filter(e=>e.role==='BRAND IDENTITY REFERENCE').length}`);
 
   // Build images array for OpenAI edit endpoint
   const images = entries.map(e => ({ type: "image_url" as const, image_url: e.url }));
@@ -2136,13 +2149,14 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
-              // Skip brand identity images — they confuse the model and override the product
-              if (role === 'BRAND IDENTITY REFERENCE') continue;
+              // BRAND IDENTITY: still inject but as low-priority style guide at the end (handled by ordering below)
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. ${PRODUCT_PACKAGING_LOCK} Place fully within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (role === 'BRAND IDENTITY REFERENCE') {
+                editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for color palette, mood, atmosphere and overall style of background/scene. NEVER overrides product, person, logo or clothing. Do not copy subjects from this image.` });
               } else if (strictRolesPano.includes(role)) {
                 editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY within center strip.` });
               }
