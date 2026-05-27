@@ -1181,7 +1181,7 @@ export function useStudioExecution() {
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO — COPIAR EXATAMENTE desta imagem', produto: 'PRODUTO/EMBALAGEM — COPIAR EXATAMENTE desta imagem',
+              logo: 'LOGO — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL', produto: 'PRODUTO/EMBALAGEM — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL',
               influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
               pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
               textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
