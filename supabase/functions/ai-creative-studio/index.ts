@@ -1732,11 +1732,14 @@ async function editImageChatGPT(apiKey: string, prompt: string, model: string, i
   for (let i = 0; i < imageUrls.length; i++) {
     const url = imageUrls[i];
     const role = imageRoles[i] || 'REFERENCE';
-    if (!url || role === 'BRAND IDENTITY REFERENCE') continue;
+    if (!url) continue;
     if (!url.startsWith('http')) continue;
-    entries.push({ url, role, priority: priorityOrder[role] || 99 });
+    // BRAND IDENTITY refs included as low-priority style guide (never skipped)
+    const priority = role === 'BRAND IDENTITY REFERENCE' ? 95 : (priorityOrder[role] || 90);
+    entries.push({ url, role, priority });
   }
   entries.sort((a, b) => a.priority - b.priority);
+  console.log(`[edit-openai][VI] BRAND IDENTITY refs incluídas: ${entries.filter(e=>e.role==='BRAND IDENTITY REFERENCE').length}`);
 
   // Build images array for OpenAI edit endpoint
   const images = entries.map(e => ({ type: "image_url" as const, image_url: e.url }));
