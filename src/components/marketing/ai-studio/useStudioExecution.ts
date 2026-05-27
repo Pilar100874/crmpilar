@@ -30,7 +30,14 @@ const VI_FOCUS_DIRECTIVE = [
   `   - Replique enquadramento, regra de proporção, uso de negative space, alinhamento de grid, simetria/assimetria, camadas, profundidade, ângulo de câmera e crop característicos da marca.`,
   `   - Mantenha a mesma densidade visual (minimalista vs. maximalista) e a mesma lógica de hierarquia de elementos.`,
   ``,
-  `⚠️ Estes quatro pilares devem ser visivelmente reconhecíveis no resultado final. Se algum elemento gerado não refletir o sistema da marca (especialmente o sketch à mão e a tipografia), refaça internamente antes de entregar.`,
+  `5. 📝 TEXTOS EM PORTUGUÊS (BRASIL) — TOLERÂNCIA ZERO A ERROS:`,
+  `   - TODO texto renderizado na imagem (títulos, subtítulos, chamadas, legendas, anotações manuscritas, selos, badges, CTAs) DEVE estar em português do Brasil, gramaticalmente correto, com ortografia perfeita, acentuação completa (á, â, ã, é, ê, í, ó, ô, õ, ú, ç) e pontuação adequada.`,
+  `   - PROIBIDO: palavras inventadas, letras trocadas, sílabas duplicadas/faltando, espaçamento errado, hífens errados, gírias em inglês quando não solicitado, gibberish ou "lorem ipsum" disfarçado.`,
+  `   - Concorde gênero e número corretamente (artigos, adjetivos, verbos). Use crase quando exigida. Respeite maiúsculas/minúsculas conforme o estilo da marca.`,
+  `   - Antes de renderizar, revise mentalmente cada palavra letra por letra. Se houver dúvida sobre a grafia de qualquer palavra, prefira uma palavra mais simples e seguramente correta.`,
+  `   - Mesmo em estilo manuscrito/sketch, a legibilidade e a correção ortográfica são obrigatórias.`,
+  ``,
+  `⚠️ Estes cinco pilares devem ser visivelmente reconhecíveis no resultado final. Se algum elemento gerado não refletir o sistema da marca (especialmente o sketch à mão, a tipografia e a correção dos textos em português), refaça internamente antes de entregar.`,
 ].join('\n');
 
 export interface ExecutionLogEntry {
