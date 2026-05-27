@@ -9,7 +9,7 @@ import { getActiveVisualIdentity } from './VisualIdentityPanel';
 // Visual Identity emphasis directive — focus areas when VI is active
 const VI_FOCUS_DIRECTIVE = [
   `\n\n🎨 [IDENTIDADE VISUAL — FOCO OBRIGATÓRIO]`,
-  `Quando a identidade visual da marca está ativa, aplique-a com PRIORIDADE MÁXIMA nestes quatro pilares (sempre respeitando que PRODUTO e PESSOA/INFLUENCER continuam intocáveis):`,
+  `Quando a identidade visual da marca está ativa, aplique-a com PRIORIDADE MÁXIMA nestes cinco pilares (sempre respeitando que PRODUTO e PESSOA/INFLUENCER continuam intocáveis):`,
   ``,
   `1. ✍️ SISTEMA DE ESBOÇO FEITO À MÃO (HAND-DRAWN SKETCH SYSTEM) — PRIORIDADE #1 DA IDENTIDADE:`,
   `   - Se as referências de identidade contiverem traços, rabiscos, contornos, anotações, setas, círculos, sublinhados, asteriscos, doodles, marcações tipo caneta/lápis/marca-texto, REPRODUZA esse mesmo estilo de mão na arte gerada.`,
