@@ -1641,6 +1641,7 @@ const PRODUCT_PACKAGING_LOCK = [
   "The final product must keep the exact same label artwork, printed text, typography, logo placement, colors, cap/lid, material, shape, proportions, seals and graphic elements from the reference.",
   "Do not paste the reference photo as a flat sticker or separate object; also do not create an approximate, redesigned, simplified, stylized or rebranded package.",
   "Only perspective, scale, shadow and lighting may change to fit the scene. These adjustments must not alter any package artwork, text, color, logo, cap/lid, material, shape or proportion.",
+  "If exact packaging fidelity conflicts with a new angle, keep the product in the same front-facing package orientation from the reference and adapt the person/scene around it.",
   "If a hand, pose, scene style or brand identity would cover or distort the label/package, change the interaction instead: keep the package fully visible and intact.",
   "Ignore red annotations, masks, boxes, arrows, circles, painted correction marks and the original background of the reference image; they are not part of the package.",
   "Exactly one product appears in the final image, fully integrated as a real photographed object with packaging visually indistinguishable from the reference."
