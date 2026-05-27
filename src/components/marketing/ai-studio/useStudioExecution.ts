@@ -6,6 +6,33 @@ import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
+// Visual Identity emphasis directive — focus areas when VI is active
+const VI_FOCUS_DIRECTIVE = [
+  `\n\n🎨 [IDENTIDADE VISUAL — FOCO OBRIGATÓRIO]`,
+  `Quando a identidade visual da marca está ativa, aplique-a com PRIORIDADE MÁXIMA nestes quatro pilares (sempre respeitando que PRODUTO e PESSOA/INFLUENCER continuam intocáveis):`,
+  ``,
+  `1. ✍️ SISTEMA DE ESBOÇO FEITO À MÃO (HAND-DRAWN SKETCH SYSTEM) — PRIORIDADE #1 DA IDENTIDADE:`,
+  `   - Se as referências de identidade contiverem traços, rabiscos, contornos, anotações, setas, círculos, sublinhados, asteriscos, doodles, marcações tipo caneta/lápis/marca-texto, REPRODUZA esse mesmo estilo de mão na arte gerada.`,
+  `   - Use a mesma espessura, pressão, irregularidade orgânica, textura de papel/tinta, mesmo material (giz, marcador, nanquim, lápis 6B, caneta esferográfica, etc.).`,
+  `   - Aplique esses esboços como sobreposições gráficas reais ao redor/sobre o cenário — JAMAIS sobre o rótulo do produto e JAMAIS deformando o rosto da pessoa.`,
+  `   - Mantenha a coerência: se o sistema é monocromático preto, não invente cor; se é colorido, respeite a paleta exata da identidade.`,
+  ``,
+  `2. 🔤 SISTEMA TIPOGRÁFICO:`,
+  `   - Use EXATAMENTE as famílias tipográficas, pesos, espaçamentos, hierarquia (display/título/corpo), tracking e leading observados nas referências da identidade.`,
+  `   - Replique tratamentos especiais: caixa-alta/baixa, itálico manuscrito, lettering desenhado à mão, ligaduras, sublinhados orgânicos, destaques em marca-texto.`,
+  `   - Nunca substitua por uma fonte genérica do modelo.`,
+  ``,
+  `3. 💡 ESTILO DE ILUMINAÇÃO:`,
+  `   - Reproduza a temperatura de cor, direção de luz (lateral, contra-luz, zenital, etc.), dureza/suavidade das sombras, contraste, halos, godrays e qualidade de highlight observados nas imagens da identidade.`,
+  `   - Mantenha consistência absoluta: se a marca usa luz natural difusa de janela, não invente flash duro; se usa neon noturno, não invente sol de meio-dia.`,
+  ``,
+  `4. 🧭 ESTILO DE COMPOSIÇÃO:`,
+  `   - Replique enquadramento, regra de proporção, uso de negative space, alinhamento de grid, simetria/assimetria, camadas, profundidade, ângulo de câmera e crop característicos da marca.`,
+  `   - Mantenha a mesma densidade visual (minimalista vs. maximalista) e a mesma lógica de hierarquia de elementos.`,
+  ``,
+  `⚠️ Estes quatro pilares devem ser visivelmente reconhecíveis no resultado final. Se algum elemento gerado não refletir o sistema da marca (especialmente o sketch à mão e a tipografia), refaça internamente antes de entregar.`,
+].join('\n');
+
 export interface ExecutionLogEntry {
   nodeId: string;
   nodeLabel: string;
