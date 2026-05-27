@@ -2149,13 +2149,14 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
               const safe = truncateImageUrl(refImages[i]);
               if (!safe) continue;
               const role = imageRoles[i] || 'REFERENCE';
-              // Skip brand identity images — they confuse the model and override the product
-              if (role === 'BRAND IDENTITY REFERENCE') continue;
+              // BRAND IDENTITY: still inject but as low-priority style guide at the end (handled by ordering below)
               editContent.push({ type: "image_url", image_url: { url: safe } });
               if (role === 'PRODUCT - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ ABSOLUTE PRIORITY #1 — PRODUCT PHOTO. ${PRODUCT_PACKAGING_LOCK} Place fully within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
               } else if (role === 'PERSON/INFLUENCER - DO NOT MODIFY') {
                 editContent.push({ type: "text", text: `↑ ⚠️ PRIORITY #2 — PERSON. Exact same face. Place within center strip (${safeZoneTopPct}%-${safeZoneTopPct + safeZoneHeightPct}%).` });
+              } else if (role === 'BRAND IDENTITY REFERENCE') {
+                editContent.push({ type: "text", text: `↑ BRAND IDENTITY REFERENCE — use ONLY for color palette, mood, atmosphere and overall style of background/scene. NEVER overrides product, person, logo or clothing. Do not copy subjects from this image.` });
               } else if (strictRolesPano.includes(role)) {
                 editContent.push({ type: "text", text: `↑ SUBJECT (${role}). Preserve IDENTICALLY within center strip.` });
               }
