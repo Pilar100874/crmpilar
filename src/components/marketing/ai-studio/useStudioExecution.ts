@@ -818,7 +818,7 @@ export function useStudioExecution() {
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO — COPIAR EXATAMENTE desta imagem', produto: 'PRODUTO/EMBALAGEM — COPIAR EXATAMENTE desta imagem',
+              logo: 'LOGO — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL', produto: 'PRODUTO/EMBALAGEM — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL',
               influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
               pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
               textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
@@ -1211,8 +1211,8 @@ export function useStudioExecution() {
             ``,
             `4. AMBIENTE/CENÁRIO: Este é o ÚNICO elemento que pode ser adaptado livremente.`,
             ``,
-            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS de sujeitos reais.`,
-            `Componha a cena INSERINDO esses sujeitos reais no cenário, como uma montagem fotográfica profissional.`,
+            `TÉCNICA: Trate as imagens de referência apenas como GUIAS VISUAIS dos sujeitos reais.`,
+            `Gere uma foto única e contínua; NUNCA renderize a foto de referência como imagem solta, cartão, miniatura, cópia lateral ou segundo produto.`,
             imagePositionHint,
             ``,
             referenceDescs.join('\n'),
