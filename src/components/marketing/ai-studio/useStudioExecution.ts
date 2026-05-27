@@ -1184,7 +1184,7 @@ export function useStudioExecution() {
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL', produto: 'PRODUTO/EMBALAGEM — GUIA DE DESIGN, NÃO INSERIR A FOTO ORIGINAL',
+              logo: 'LOGO — FONTE VISUAL OBRIGATÓRIA, NÃO INSERIR A FOTO ORIGINAL', produto: 'PRODUTO/EMBALAGEM — FONTE VISUAL OBRIGATÓRIA DA EMBALAGEM, NÃO INSERIR A FOTO ORIGINAL',
               influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
               pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
               textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
@@ -1205,8 +1205,9 @@ export function useStudioExecution() {
             `2. PRODUTO/EMBALAGEM: REGENERE o produto do zero como uma nova fotografia dentro da cena.`,
             `   - 🚫 PROIBIDO ABSOLUTAMENTE colar, sobrepor, recortar ou inserir a foto original do produto por cima da imagem gerada. NÃO faça composição "sticker", "cut-out", "paste-over" ou colagem.`,
             `   - 🚫 PROIBIDO mostrar o produto como uma figura flutuante, recortada, com borda visível, em uma camada separada ou com iluminação diferente do cenário.`,
-            `   - ✅ O produto deve ser RENDERIZADO novamente pelo modelo, do mesmo ângulo de câmera da cena, com a MESMA iluminação, sombras e perspectiva do cenário gerado, parecendo uma foto única e contínua.`,
-            `   - Use a foto de referência APENAS como guia de design (cores, rótulo, tipografia, logo, formato, proporções). Mantenha esses elementos fiéis, mas pinte-os novamente no contexto da cena.`,
+            `   - ✅ O produto deve parecer uma foto única e contínua na cena, mas a embalagem/rótulo deve continuar visualmente igual à referência.`,
+            `   - Se o novo ângulo/perspectiva mudar a arte da embalagem, mantenha o produto no mesmo ângulo frontal da referência e adapte a cena ao produto.`,
+            `   - Use a foto de referência como FONTE VISUAL OBRIGATÓRIA da embalagem (cores, rótulo, tipografia, logo, formato, proporções), não como inspiração aproximada.`,
             `   - NÃO redesenhe a marca/rótulo. NÃO invente textos. NÃO altere cores ou logotipo. NÃO crie embalagem similar — é o MESMO produto, mas REPINTADO na cena.`,
             `   - Mãos, sombras e reflexos podem interagir naturalmente desde que não distorçam rótulo, logo, textos, tampa, formato ou cores.`,
             ``,
