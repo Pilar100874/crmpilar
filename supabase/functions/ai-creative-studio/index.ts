@@ -2257,7 +2257,7 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
         if (strictImages.length > 0) {
           console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs, size=${imageSize}, preset=${imagePlatformPreset}`);
           const hasProductStrict = strictImages.some(s => s.role === 'PRODUCT - DO NOT MODIFY');
-          const strictGatewayModel = hasProductStrict ? "google/gemini-2.5-flash-image" : gatewayModel;
+          const strictGatewayModel = hasProductStrict ? "google/gemini-3.1-flash-image-preview" : gatewayModel;
           lockedProductSourceUrl = strictImages.find(s => s.role === 'PRODUCT - DO NOT MODIFY')?.url || null;
           
           const editContent: any[] = [];
