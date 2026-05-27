@@ -898,7 +898,7 @@ export function useStudioExecution() {
         const vi = viCheck;
         if (vi && (vi.images.length > 0 || vi.prompt)) {
           const viPromptText = vi.prompt ? `\n${vi.prompt}` : '';
-          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}`;
+          enrichedPrompt = `${enrichedPrompt}\n\n[IDENTIDADE VISUAL] As seguintes imagens e instruções representam a identidade visual da marca. Use para manter consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA e devem ser preservados EXATAMENTE como nas referências. A identidade visual serve apenas para guiar cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPromptText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of vi.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
@@ -968,7 +968,7 @@ export function useStudioExecution() {
         const editImageInputs = [...imageInputs];
         if (viEditActive && viEdit) {
           const viEText = viEdit.prompt ? `\n${viEdit.prompt}` : '';
-          editPromptWithLang = `${editPromptWithLang}\n\n[IDENTIDADE VISUAL] Use as referências e instruções da marca para manter consistência de cores, estilo, atmosfera e branding na edição.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua PRODUTO e INFLUENCER/PESSOA presentes na imagem editada. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viEText}`;
+          editPromptWithLang = `${editPromptWithLang}\n\n[IDENTIDADE VISUAL] Use as referências e instruções da marca para manter consistência de cores, estilo, atmosfera e branding na edição.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua PRODUTO e INFLUENCER/PESSOA presentes na imagem editada. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viEText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of viEdit.images) {
             if (!editImageInputs.includes(viUrl)) editImageInputs.push(viUrl);
           }
@@ -1043,7 +1043,7 @@ export function useStudioExecution() {
         console.log('[Studio][VI] productComposite ativa?', !!(viCompose && (viCompose.images.length>0 || viCompose.prompt)), { images: viCompose?.images?.length || 0, hasPrompt: !!viCompose?.prompt, preferredModel: viCompose?.preferredModel });
         if (viCompose && (viCompose.images.length > 0 || viCompose.prompt)) {
           const viPText = viCompose.prompt ? `\n${viCompose.prompt}` : '';
-          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}`;
+          fullPrompt = `${fullPrompt}\n\n[IDENTIDADE VISUAL] Use as referências visuais e instruções da marca para manter consistência de estilo.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viPText}${VI_FOCUS_DIRECTIVE}`;
           for (const viUrl of viCompose.images) {
             orderedImageInputs.push(viUrl);
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
@@ -1270,7 +1270,7 @@ export function useStudioExecution() {
           console.log('[Studio][VI] videoGen ativa?', viVideoActive, { preferredModel: viVideo?.preferredModel });
           if (viVideo && (viVideo.images.length > 0 || viVideo.prompt)) {
             const viVText = viVideo.prompt ? `\n${viVideo.prompt}` : '';
-            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}`;
+            videoPrompt = `${videoPrompt}\n\n[IDENTIDADE VISUAL] Referências e instruções da identidade visual da marca. Mantenha consistência visual, cores, estilo e branding.\n⚠️ PRIORIDADE: A identidade visual é SECUNDÁRIA. NUNCA sobreponha, altere ou substitua o PRODUTO e o INFLUENCER/PESSOA. Produto e Influencer têm prioridade ABSOLUTA. A identidade visual guia apenas cores, estilo e atmosfera do CENÁRIO/FUNDO.${viVText}${VI_FOCUS_DIRECTIVE}`;
             for (const viUrl of viVideo.images) {
               orderedImageInputs.push(viUrl);
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
