@@ -231,7 +231,15 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A',
           bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666',
           textAlign: 'center',
-        },
+      },
+      {
+        type: 'imageCaption',
+        label: 'Texto da Imagem (Título/Subtítulo)',
+        description: 'Define título e subtítulo OBRIGATÓRIOS que a IA deve renderizar na imagem/vídeo, sem alterar o texto',
+        icon: '🔠',
+        color: '#db2777',
+        defaultConfig: { title: '', subtitle: '', aiSuggest: false, suggestContext: '' },
+      },
       },
       {
         type: 'platformFormat',
