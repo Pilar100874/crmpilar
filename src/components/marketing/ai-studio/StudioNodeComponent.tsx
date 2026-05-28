@@ -46,6 +46,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   mediaGallery: FolderOpen,
   textStyle: TypeIcon,
   textContent: FileText,
+  imageCaption: Type,
   platformFormat: Monitor,
   llmProcess: Type,
   imageGen: ImageIcon,
