@@ -228,15 +228,9 @@ ESTRUTURA (framework PASCA):
 7. OFERTA (10-13min) — Stack de valor com valor individual de cada item. Total 10x+ o preço.
 8. BÔNUS (13-14min) — Cada bônus resolve um obstáculo específico à implementação.
 9. GARANTIA (14-15min) — Inversão total de risco tão forte que gere "qual é o truque?"
-10. ESCASSEZ (15-16min) — Urgência real e legítima.
-11. CTA (16-17min) — Claro, direto, repetido. Exatamente o que fazer e o que acontece depois.
-
-REGRAS:
-- O hook é 80% do sucesso — gaste energia desproporcional
-- Frases curtas, parágrafos de 1-2 linhas (ritmo de leitura para câmera)
-- Pelo menos 3 "loops abertos" nos primeiros 3 minutos
-- Inclua instruções [pausa], [ênfase], [tom mais baixo] entre colchetes
 - Deve funcionar em áudio apenas (podcast/story) sem perder impacto
+
+${AI_VIDEO_SCENE_RULES}
 
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
@@ -253,7 +247,13 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   "cta": {"texto": "", "duracao_estimada": "", "acao_especifica": ""},
   "duracao_total_estimada": "",
   "loops_abertos": ["descrição do loop 1", ...],
-  "instrucoes_gravacao": ""
+  "instrucoes_gravacao": "",
+  "cenas_ai_video": [
+    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+  ]
+}`
+  },
+
 }`
   },
   landing_page: {
