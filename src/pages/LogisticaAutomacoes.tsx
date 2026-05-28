@@ -52,6 +52,7 @@ import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
   custom: LogisticaFlowNode,
