@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
 import { StudioNode, StudioEdge, getNodeMeta, StudioNodeType } from './types';
 import { useNodeResult } from './useNodeResults';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
