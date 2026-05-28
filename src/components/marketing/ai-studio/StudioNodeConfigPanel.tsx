@@ -509,29 +509,67 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
     const toNum = (d: any) => {
       if (typeof d === 'number') return d;
       const m = String(d || '').match(/(\d+(?:\.\d+)?)/);
-      return m ? parseFloat(m[1]) : 2;
+      return m ? parseFloat(m[1]) : 5;
     };
+    // Modelos de vídeo IA só aceitam 5s ou 10s por clipe
+    const snapDuration = (n: number): number => (n <= 7 ? 5 : 10);
+
+    // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)
+    if (Array.isArray(content.cenas_ai_video) && content.cenas_ai_video.length > 0) {
+      return content.cenas_ai_video.map((s: any) => ({
+        description: s.descricao_visual || s.descricao || '',
+        duration: snapDuration(toNum(s.duracao_segundos ?? s.duracao ?? 5)),
+        narration: s.narracao_voz || s.narracao || s.naracao || '',
+        cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
+        overlay: s.texto_overlay || '',
+        transition: s.transicao_para_proxima || 'cut',
+      })).filter((s: any) => s.description || s.narration);
+    }
+
+    // 2) Reel: scripts[].cenas_ai_video — concatena cenas do primeiro script (ou todos)
+    if (Array.isArray(content.scripts)) {
+      const allScenes = content.scripts.flatMap((sc: any) => Array.isArray(sc.cenas_ai_video) ? sc.cenas_ai_video : []);
+      if (allScenes.length > 0) {
+        return allScenes.map((s: any) => ({
+          description: s.descricao_visual || s.descricao || '',
+          duration: snapDuration(toNum(s.duracao_segundos ?? 5)),
+          narration: s.narracao_voz || '',
+          cameraMovement: s.tipo_camera || 'static',
+          overlay: s.texto_overlay || '',
+          transition: s.transicao_para_proxima || 'cut',
+        })).filter((s: any) => s.description || s.narration);
+      }
+    }
+
+    // 3) Storyboard antigo (fallback)
     if (Array.isArray(content.storyboard)) {
       return content.storyboard.map((s: any) => ({
         description: s.descricao_visual || s.descricao || s.texto_overlay || s.cena || '',
-        duration: toNum(s.duracao || s.duracao_estimada || 3),
-        narration: s.naracao || s.texto || '',
-        cameraMovement: s.camera || s.movimento_camera || '',
+        duration: snapDuration(toNum(s.duracao_segundos || s.duracao || 5)),
+        narration: s.narracao_voz || s.naracao || s.texto || '',
+        cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
+        overlay: s.texto_overlay || '',
+        transition: s.transicao_para_proxima || s.transicao || 'cut',
       })).filter((s: any) => s.description || s.narration);
     }
+
+    // 4) VSL antigo por seções (fallback) — quebra em clipes de 5s
     if (content.hook) {
       const sections = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'bonus', 'garantia', 'escassez', 'cta'];
       return sections
         .filter((k) => content[k]?.texto)
         .map((k) => ({
           description: `${k.charAt(0).toUpperCase() + k.slice(1)} — ${String(content[k].texto).slice(0, 220)}`,
-          duration: toNum(content[k].duracao_estimada || 3),
-          narration: String(content[k].texto).slice(0, 220),
-          cameraMovement: '',
+          duration: 5,
+          narration: String(content[k].texto).slice(0, 120),
+          cameraMovement: 'medium shot',
+          overlay: '',
+          transition: 'cut',
         }));
     }
     return [];
   };
+
 
   const handleImport = (artifact: any) => {
     const scenes = extractScenes(artifact);
