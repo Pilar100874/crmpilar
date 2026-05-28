@@ -1042,6 +1042,22 @@ async function startVideoWavespeed(estabelecimentoId: string, params: any): Prom
   if (isWavespeedImageOnlyModel(subModel)) {
     return { error: `O modelo "${subModel}" é exclusivo para imagem e não pode ser usado em Gerar Vídeo. Selecione um modelo de vídeo como Seedance, Kling, Veo, Luma ou use Auto.` };
   }
+  // Pre-generate hero frame if strict refs or brand identity exist (image-to-video models support 1 starting image)
+  const _roles = (params.imageRoles || []) as string[];
+  const _hasStrict = _roles.some(r => r === 'PRODUCT - DO NOT MODIFY' || r === 'PERSON/INFLUENCER - DO NOT MODIFY');
+  const _hasVI = _roles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if ((_hasStrict || _hasVI) && !params._heroFrameUsed) {
+    try {
+      const hero = await generateHeroFrame(params);
+      if (hero) {
+        console.log(`[wavespeed-video] Using hero frame as starting image (VI=${_hasVI})`);
+        params.imageUrls = [hero];
+        params._heroFrameUsed = true;
+      }
+    } catch (e) {
+      console.warn(`[wavespeed-video] hero frame failed:`, (e as Error)?.message);
+    }
+  }
   const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
   if (!wsModelPath) {
     return { error: `Modelo "${subModel}" não está mapeado no WaveSpeed. Modelos suportados: ${Object.keys(WAVESPEED_VIDEO_MODEL_MAP).join(', ')}` };
