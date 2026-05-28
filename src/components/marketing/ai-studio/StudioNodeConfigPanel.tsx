@@ -2034,6 +2034,83 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'imageCaption': {
+        const handleSuggest = async () => {
+          try {
+            update('_suggesting', true);
+            const ctx = (config.suggestContext || '').trim();
+            const vi = await getActiveVisualIdentity(localStorage.getItem('estabelecimentoId') || '');
+            const viPrompt = vi?.prompt ? `\n\nIdentidade visual da marca:\n${vi.prompt}` : '';
+            const systemPrompt = `Você é um copywriter especialista em marketing visual brasileiro. Gere TÍTULO (máx 6 palavras, impacto) e SUBTÍTULO (máx 12 palavras, complemento) em Português do Brasil PERFEITO (acentuação e gramática corretas). Responda APENAS em JSON válido: {"title":"...","subtitle":"..."}. Sem markdown, sem explicação.`;
+            const userPrompt = `Contexto / tema da peça: ${ctx || 'peça publicitária genérica de produto'}.${viPrompt}`;
+            const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
+              body: { action: 'generate_text', params: { prompt: userPrompt, systemPrompt, model: 'google/gemini-2.5-flash' } },
+            });
+            if (error) throw error;
+            const raw = (typeof data === 'string' ? data : data?.text || data?.result || '').toString();
+            const match = raw.match(/\{[\s\S]*\}/);
+            const parsed = match ? JSON.parse(match[0]) : null;
+            if (parsed?.title) update('title', parsed.title);
+            if (parsed?.subtitle) update('subtitle', parsed.subtitle);
+          } catch (e: any) {
+            console.error('[imageCaption] suggest error', e);
+          } finally {
+            update('_suggesting', false);
+          }
+        };
+
+        return (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-pink-500/30 bg-pink-500/5 p-2.5">
+              <p className="text-[11px] text-pink-300 leading-snug">
+                🔒 <strong>Texto travado:</strong> a IA é OBRIGADA a renderizar exatamente o título e subtítulo abaixo na imagem/vídeo gerado, sem reformular nem alterar.
+              </p>
+            </div>
+
+            <ConfigField label="Título">
+              <Input
+                value={config.title || ''}
+                onChange={(e) => update('title', e.target.value)}
+                placeholder="Ex: PROMOÇÃO RELÂMPAGO"
+                className="mt-1"
+              />
+            </ConfigField>
+
+            <ConfigField label="Subtítulo">
+              <Input
+                value={config.subtitle || ''}
+                onChange={(e) => update('subtitle', e.target.value)}
+                placeholder="Ex: Só hoje, 50% OFF em toda a loja"
+                className="mt-1"
+              />
+            </ConfigField>
+
+            <Separator />
+
+            <SectionTitle icon={<Sparkles className="h-3 w-3" />}>Sugerir com IA</SectionTitle>
+            <ConfigField label="Contexto / Tema" hint="Descreva o tema da peça para a IA sugerir título e subtítulo.">
+              <Textarea
+                value={config.suggestContext || ''}
+                onChange={(e) => update('suggestContext', e.target.value)}
+                placeholder="Ex: lançamento de hambúrguer artesanal, foco em sabor e ingredientes premium"
+                rows={3}
+                className="mt-1"
+              />
+            </ConfigField>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSuggest}
+              disabled={!!config._suggesting}
+              className="w-full gap-2"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {config._suggesting ? 'Gerando sugestão...' : 'Sugerir título e subtítulo com IA'}
+            </Button>
+          </div>
+        );
+      }
+
       case 'textContent': {
         const TEXT_STYLE_TEMPLATES = [
           { id: 'heading-bold', name: 'Título Grande', titleFont: 'Montserrat', titleSize: 72, titleWeight: 'bold', titleColor: '#000000', subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A', bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'center' },

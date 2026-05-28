@@ -317,6 +317,12 @@ export function useStudioExecution() {
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
+    // Collect TEXT LOCK directives from imageCaption nodes — these MUST be rendered exactly as provided
+    const textLockDirective = inputs
+      .filter((i) => i?._textLockDirective)
+      .map((i) => i._textLockDirective)
+      .join('\n');
+
     // Collect all image URLs from inputs, bucketed by role for priority ordering
     const imageInputs: string[] = [];
     const referenceDescs: string[] = [];
@@ -563,6 +569,20 @@ export function useStudioExecution() {
             textAlign: config.textAlign || 'center',
           },
         };
+
+      case 'imageCaption': {
+        const capTitle = (config.title || '').trim();
+        const capSubtitle = (config.subtitle || '').trim();
+        const parts = [capTitle && `Título: "${capTitle}"`, capSubtitle && `Subtítulo: "${capSubtitle}"`].filter(Boolean).join(' | ');
+        const lockText = `\n\n[TEXT LOCK — TEXTO OBRIGATÓRIO NA IMAGEM]\nA imagem/vídeo gerada DEVE conter EXATAMENTE estes textos, sem alterar uma única letra, sem traduzir, sem reformular, sem adicionar texto extra:\n${capTitle ? `• TÍTULO: "${capTitle}"` : ''}\n${capSubtitle ? `• SUBTÍTULO: "${capSubtitle}"` : ''}\nProibido inventar palavras, abreviar, trocar acentos ou criar variações. Português (Brasil) correto. NÃO renderize nenhum outro texto além destes.`;
+        return {
+          text: parts,
+          _isImageCaption: true,
+          _textLockDirective: lockText,
+          _referenceDesc: lockText,
+          imageCaption: { title: capTitle, subtitle: capSubtitle },
+        };
+      }
 
       case 'platformFormat': {
         const platformNames: Record<string, string> = {
@@ -912,6 +932,11 @@ export function useStudioExecution() {
           }
         }
 
+        if (textLockDirective) {
+          enrichedPrompt = `${enrichedPrompt}${textLockDirective}`;
+        }
+
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: viModelOverride || config.model,
@@ -980,6 +1005,12 @@ export function useStudioExecution() {
             if (!editImageInputs.includes(viUrl)) editImageInputs.push(viUrl);
           }
         }
+
+        if (textLockDirective) {
+          editPromptWithLang = `${editPromptWithLang}${textLockDirective}`;
+        }
+
+
 
         const result = await callStudio('edit_image', {
           prompt: editPromptWithLang,
@@ -1056,6 +1087,12 @@ export function useStudioExecution() {
             orderedImageRoles.push('BRAND IDENTITY REFERENCE');
           }
         }
+
+        if (textLockDirective) {
+          fullPrompt = `${fullPrompt}${textLockDirective}`;
+        }
+
+
 
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
@@ -1287,6 +1324,11 @@ export function useStudioExecution() {
             }
           }
         }
+
+        if (textLockDirective) {
+          videoPrompt = `${videoPrompt}${textLockDirective}`;
+        }
+
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
         // VI preferred model takes priority over block-configured model
         const baseVideoModel = viVideoModelOverride || videoModel;
