@@ -459,8 +459,9 @@ Retorne EXCLUSIVAMENTE um JSON válido:
     "melhor_horario": "",
     "legenda_sugerida": "",
     "cenas_ai_video": [
-      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
-    ]
+      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "" }
+    ],
+    "audio_global": { "estilo_musical": "", "referencia_trilha": "", "bpm_alvo": 0, "tom_voz_padrao": "", "idioma": "pt-BR", "mix_notes": "" }
   }],
   "calendario_publicacao": [{"dia": "", "script_titulo": "", "plataforma": ""}],
   "estrategia_crescimento": ""
