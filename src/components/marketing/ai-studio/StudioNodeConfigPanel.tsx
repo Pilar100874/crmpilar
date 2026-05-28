@@ -741,6 +741,12 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       { key: 'desenvolvimento', data: script.desenvolvimento },
       { key: 'cta', data: script.cta },
     ];
+    // Áudio herdado do roteiro / audio_global quando não vier por cena
+    const ms = script.musica_sugerida || {};
+    const ag = script.audio_global || {};
+    const inheritedSoundtrack = ag.estilo_musical || ms.tipo || ms.mood || '';
+    const inheritedVoiceTone = ag.tom_voz_padrao || '';
+    const inheritedAmbient = ag.mix_notes || '';
     const out: any[] = [];
     for (const { data } of sections) {
       if (!data) continue;
@@ -748,11 +754,9 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       const visuals = typeof data === 'object' ? (data.instrucoes_visuais || data.texto_na_tela || '') : '';
       if (!texto && !visuals) continue;
       const dur = typeof data === 'object' ? toNum(data.duracao ?? data.duracao_segundos ?? 5) : 5;
-      // Quebra desenvolvimento longo (>10s) em múltiplos clipes de 10s
       const totalDur = Math.max(5, dur);
       const chunks = Math.max(1, Math.ceil(totalDur / 10));
       const perChunk = snapDuration(totalDur / chunks);
-      // Quebra visuals por "Cena N:" se existir
       const visualParts = String(visuals)
         .split(/Cena\s*\d+\s*[:\-–]\s*/i)
         .map((v) => v.trim())
@@ -766,11 +770,11 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
           cameraMovement: 'medium shot',
           overlay: typeof data === 'object' ? (data.texto_na_tela || '') : '',
           transition: 'cut',
-          soundtrack: script.musica_sugerida || '',
+          soundtrack: inheritedSoundtrack,
           soundtrackIntensity: 'média',
           sfx: [],
-          ambientSound: '',
-          voiceTone: '',
+          ambientSound: inheritedAmbient,
+          voiceTone: inheritedVoiceTone,
         });
       }
     }

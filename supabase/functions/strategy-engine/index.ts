@@ -439,6 +439,7 @@ REGRAS:
 - Instruções visuais detalhadas (ângulo, texto na tela, transições)
 - 3-5 hashtags estratégicas por script (mix volume alto + nicho)
 - Scripts devem funcionar com e sem som (texto na tela)
+- OBRIGATÓRIO: cada script DEVE ter "cenas_ai_video" PREENCHIDO (não vazio) com TODAS as cenas quebradas em clipes de 5s/10s e TODOS os campos de áudio (trilha_sonora, intensidade_trilha, sfx, ambiente_sonoro, tom_voz) preenchidos por cena. Também é OBRIGATÓRIO retornar "audio_global" preenchido em cada script. Esses dados alimentam diretamente o bloco "Roteiro de Reels" do AI Creative Studio.
 
 ${AI_VIDEO_SCENE_RULES}
 
