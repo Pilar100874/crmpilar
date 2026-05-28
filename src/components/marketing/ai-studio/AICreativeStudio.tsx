@@ -1960,6 +1960,8 @@ const AICreativeStudioInner: React.FC = () => {
             onNodesChange={(changes) => { onNodesChange(changes); setHasUnsavedChanges(true); }}
             onEdgesChange={(changes) => { onEdgesChange(changes); setHasUnsavedChanges(true); }}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onDragOver={onDragOver}
             onDrop={onDrop}
             onNodeClick={onNodeClick}
