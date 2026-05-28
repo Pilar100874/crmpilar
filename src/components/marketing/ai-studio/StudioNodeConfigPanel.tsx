@@ -515,12 +515,19 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
     // Modelos de vídeo IA só aceitam 5s ou 10s por clipe
     const snapDuration = (n: number): number => (n <= 7 ? 5 : 10);
 
+    // Áudio global do roteiro / fallback p/ cenas sem áudio próprio
+    const ag = content.audio_global || {};
+    const audioFallback = content.audio || {};
+    const globalSoundtrack = ag.estilo_musical || ag.referencia_trilha || audioFallback?.trilha_sonora?.genero || '';
+    const globalVoiceTone = ag.tom_voz_padrao || '';
+    const globalSfx: string[] = Array.isArray(audioFallback?.efeitos_sonoros) ? audioFallback.efeitos_sonoros.filter(Boolean) : [];
+
     const mapAudio = (s: any) => ({
-      soundtrack: s.trilha_sonora || s.trilha || '',
+      soundtrack: s.trilha_sonora || s.trilha || globalSoundtrack,
       soundtrackIntensity: s.intensidade_trilha || 'média',
-      sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
+      sfx: Array.isArray(s.sfx) && s.sfx.length ? s.sfx : (s.sfx ? [String(s.sfx)] : globalSfx),
       ambientSound: s.ambiente_sonoro || s.ambiente || '',
-      voiceTone: s.tom_voz || '',
+      voiceTone: s.tom_voz || globalVoiceTone,
     });
 
     // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)

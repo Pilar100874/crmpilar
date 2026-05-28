@@ -600,7 +600,9 @@ Mínimo 8 cenas com descrições visuais, narração sincronizada, adaptação p
 
 ${AI_VIDEO_SCENE_RULES}
 
-IMPORTANTE: cada item de "storyboard" DEVE respeitar as regras de cena para vídeo IA (duração 5s ou 10s, tipo de câmera real, narração com palavras dentro do orçamento). Use o campo "duracao" como número de segundos (5 ou 10) e "movimento_camera" usando o vocabulário definido acima.
+IMPORTANTE: cada item de "storyboard" DEVE respeitar as regras de cena para vídeo IA (duração 5s ou 10s, tipo de câmera real, narração com palavras dentro do orçamento). Use o campo "duracao_segundos" (5 ou 10) e "tipo_camera" usando o vocabulário definido acima.
+
+OBRIGATÓRIO: o array "cenas_ai_video" DEVE estar PREENCHIDO (não vazio) com TODAS as cenas quebradas em clipes de 5s/10s e TODOS os campos de áudio (trilha_sonora, intensidade_trilha, sfx, ambiente_sonoro, tom_voz) preenchidos por cena. Também é OBRIGATÓRIO retornar "audio_global" preenchido. Esses dados alimentam diretamente o bloco "Roteiro de Vídeo (Quadro a Quadro)" do AI Creative Studio — sem eles o bloco fica sem áudio/som.
 
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
@@ -613,7 +615,6 @@ Retorne EXCLUSIVAMENTE um JSON válido:
     { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "" }
   ],
   "audio_global": { "estilo_musical": "", "referencia_trilha": "", "bpm_alvo": 0, "tom_voz_padrao": "", "idioma": "pt-BR", "mix_notes": "" }
-  ]
 }`
 
   },
