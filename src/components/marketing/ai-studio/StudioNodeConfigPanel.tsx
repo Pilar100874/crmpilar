@@ -596,7 +596,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
   return (
     <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-2.5 space-y-2">
       <p className="text-[11px] text-purple-300 leading-snug">
-        🧠 <strong>Importar roteiro do Motor de Estratégia</strong> — use roteiros gerados pelos agentes Produtor de Vídeo, Roteirista de Reels ou VSL.
+        🧠 <strong>Importar roteiro do agente Produtor de Vídeo</strong> — use roteiros gerados no Motor de Estratégia.
       </p>
       {!open && (
         <Button size="sm" variant="outline" className="w-full h-7 text-[11px]" onClick={() => { setOpen(true); loadProjects(); }}>
