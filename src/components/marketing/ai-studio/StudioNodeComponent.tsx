@@ -1348,7 +1348,34 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 {nodeData.config.subtitle && <p style={{ fontFamily: nodeData.config.subtitleFont || 'Montserrat', fontSize: Math.min(nodeData.config.subtitleSize || 42, 13), fontWeight: nodeData.config.subtitleWeight || '600', color: nodeData.config.subtitleColor || '#4A4A4A' }} className="leading-tight truncate mt-0.5">{nodeData.config.subtitle}</p>}
                 {nodeData.config.body && <p style={{ fontFamily: nodeData.config.bodyFont || 'Inter', fontSize: Math.min(nodeData.config.bodySize || 24, 10), fontWeight: nodeData.config.bodyWeight || 'normal', color: nodeData.config.bodyColor || '#666' }} className="leading-snug mt-1 line-clamp-2">{nodeData.config.body}</p>}
               </div>
-            )}
+        )}
+
+        {/* Image Caption inline editor (locked text for image/video) */}
+        {nodeData.type === 'imageCaption' && (
+          <div className="px-3 pb-3 pt-1 space-y-1.5">
+            <input
+              value={nodeData.config.title || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('title', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              placeholder="Título obrigatório..."
+              className="nodrag nowheel w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-pink-500/40 focus:outline-none focus:ring-1 focus:ring-pink-500/40"
+            />
+            <input
+              value={nodeData.config.subtitle || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('subtitle', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              placeholder="Subtítulo..."
+              className="nodrag nowheel w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-pink-500/40 focus:outline-none focus:ring-1 focus:ring-pink-500/40"
+            />
+            <p className="text-[9px] text-pink-400/80">🔒 Texto travado — IA não pode alterar</p>
+          </div>
+        )}
+
+
             <p className="text-[9px] text-muted-foreground">📝 {nodeData.config.templateId || 'heading-bold'}</p>
           </div>
         )}
