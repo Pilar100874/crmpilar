@@ -939,6 +939,15 @@ function EditorContent({
               </div>
             )}
           </ReactFlow>
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              blocks={smartBlockOptions}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
         </div>
 
         {/* Simulator Panel */}
