@@ -816,6 +816,8 @@ export default function OmnichannelBuilder() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onEdgesDelete={onEdgesDelete}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
