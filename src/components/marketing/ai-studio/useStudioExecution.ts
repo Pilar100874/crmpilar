@@ -573,8 +573,8 @@ export function useStudioExecution() {
       case 'imageCaption': {
         const capTitle = (config.title || '').trim();
         const capSubtitle = (config.subtitle || '').trim();
-        const parts = [capTitle && `Título: "${capTitle}"`, capSubtitle && `Subtítulo: "${capSubtitle}"`].filter(Boolean).join(' | ');
-        const lockText = `\n\n[TEXT LOCK — TEXTO OBRIGATÓRIO NA IMAGEM]\nA imagem/vídeo gerada DEVE conter EXATAMENTE estes textos, sem alterar uma única letra, sem traduzir, sem reformular, sem adicionar texto extra:\n${capTitle ? `• TÍTULO: "${capTitle}"` : ''}\n${capSubtitle ? `• SUBTÍTULO: "${capSubtitle}"` : ''}\nProibido inventar palavras, abreviar, trocar acentos ou criar variações. Português (Brasil) correto. NÃO renderize nenhum outro texto além destes.`;
+        const parts = [capTitle && `"${capTitle}"`, capSubtitle && `"${capSubtitle}"`].filter(Boolean).join(' | ');
+        const lockText = `\n\n[TEXT LOCK — TEXTO OBRIGATÓRIO NA IMAGEM]\nA imagem/vídeo gerada DEVE conter EXATAMENTE estes textos literais, sem alterar uma única letra, sem traduzir, sem reformular, sem adicionar texto extra:\n${capTitle ? `• Texto principal (maior destaque visual): "${capTitle}"` : ''}\n${capSubtitle ? `• Texto secundário (menor destaque, abaixo do principal): "${capSubtitle}"` : ''}\n\n⚠️ PROIBIDO ABSOLUTO: NÃO renderize as palavras "Título", "Subtítulo", "Title", "Subtitle" nem qualquer rótulo/label/prefixo na imagem. Renderize APENAS o conteúdo entre aspas acima, sem rótulos descritivos antes deles. Proibido inventar palavras, abreviar, trocar acentos ou criar variações. Português (Brasil) correto. NÃO renderize nenhum outro texto além do conteúdo literal entre aspas.`;
         return {
           text: parts,
           _isImageCaption: true,
