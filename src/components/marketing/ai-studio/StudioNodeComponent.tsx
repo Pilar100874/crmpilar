@@ -1412,6 +1412,38 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           );
         })()}
 
+        {/* Reel Script inline preview */}
+        {nodeData.type === 'reelScript' && (() => {
+          const scenes = Array.isArray(nodeData.config.scenes) ? nodeData.config.scenes : [];
+          const valid = scenes.filter((s: any) => (s?.description || '').trim());
+          const total = valid.reduce((a: number, s: any) => a + (Number(s?.duration) || 0), 0);
+          const importedFrom = nodeData.config.importedFrom || '';
+          return (
+            <div className="px-3 pb-3 pt-1 space-y-1.5">
+              <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 px-2 py-1.5 text-[10px] text-rose-300">
+                📱 <strong>Reels</strong> · {valid.length} cena{valid.length === 1 ? '' : 's'}
+                {total > 0 && <> · ~{total}s</>}
+              </div>
+              {importedFrom && (
+                <p className="text-[9px] text-muted-foreground/80 italic line-clamp-1">📥 {importedFrom}</p>
+              )}
+              {valid.slice(0, 3).map((s: any, i: number) => (
+                <div key={i} className="text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                  <span className="text-rose-400 font-semibold">CENA {i + 1}:</span> {s.description}
+                </div>
+              ))}
+              {valid.length > 3 && (
+                <p className="text-[9px] text-muted-foreground/70">+{valid.length - 3} cena(s)…</p>
+              )}
+              {valid.length === 0 && (
+                <p className="text-[10px] text-muted-foreground/70">Abra as propriedades e importe um roteiro do agente Roteirista de Reels.</p>
+              )}
+            </div>
+          );
+        })()}
+
+
+
 
         {/* Platform Format inline selector */}
         {nodeData.type === 'platformFormat' && (() => {
