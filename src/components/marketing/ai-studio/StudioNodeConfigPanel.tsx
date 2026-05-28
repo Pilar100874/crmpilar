@@ -604,7 +604,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
   return (
     <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-2.5 space-y-2">
       <p className="text-[11px] text-purple-300 leading-snug">
-        🧠 <strong>Importar roteiro do agente Produtor de Vídeo</strong> — use roteiros gerados no Motor de Estratégia.
+        🧠 <strong>Importar do agente Roteiro de Vídeo (Roteiro + Produção)</strong> — roteiro narrativo + storyboard + áudio gerados no Motor de Estratégia.
       </p>
       {!open && (
         <Button size="sm" variant="outline" className="w-full h-7 text-[11px]" onClick={() => { setOpen(true); loadProjects(); }}>
@@ -636,7 +636,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
           {!loading && selectedProjectId && (
             <>
               {artifacts.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground italic">Este projeto ainda não tem roteiros do Produtor de Vídeo. Execute o agente Produtor de Vídeo.</p>
+                <p className="text-[10px] text-muted-foreground italic">Este projeto ainda não tem roteiros. Execute o agente "Roteiro de Vídeo (Roteiro + Produção)" no Motor de Estratégia.</p>
               ) : (
                 <div className="space-y-1">
                   {artifacts.map((a) => (
@@ -645,7 +645,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
                       onClick={() => handleImport(a)}
                       className="w-full text-left text-[11px] px-2 py-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/40"
                     >
-                      🎬 Produtor de Vídeo
+                      🎬 Roteiro de Vídeo (Roteiro + Produção)
                     </button>
                   ))}
                 </div>
