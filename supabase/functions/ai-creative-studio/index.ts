@@ -1466,10 +1466,11 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     console.warn(`[generate_video] Bridge mode requested with OpenAI, but Google key not found. Proceeding with OpenAI fallback.`);
   }
 
-  // Check if there are strict references (product/influencer) that need preservation
+  // Check if there are strict references (product/influencer) or brand identity that need preservation
   const imageRoles = (params.imageRoles || []) as string[];
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY'];
   const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
+  const hasBrandIdentityVideo = imageRoles.some(r => r === 'BRAND IDENTITY REFERENCE');
 
   // AUTO-ROUTING: When strict references exist and provider is text-only (Sora),
   // automatically switch to Google Veo (image-to-video) if available
