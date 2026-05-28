@@ -2643,6 +2643,105 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         );
       }
 
+      case 'reelScript': {
+        const scenes: any[] = Array.isArray(config.scenes) ? config.scenes : [];
+        const total = scenes.reduce((a, s) => a + (Number(s?.duration) || 0), 0);
+        const updateScene = (idx: number, patch: any) => {
+          update('scenes', scenes.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+        };
+        const removeScene = (idx: number) => update('scenes', scenes.filter((_, i) => i !== idx));
+        return (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-2.5">
+              <p className="text-[11px] text-rose-300 leading-snug">
+                📱 <strong>Roteiro de Reels:</strong> importe um roteiro do agente <em>Roteirista de Reels</em> e conecte ao bloco <em>Gerar Vídeo</em>. As cenas seguem o padrão 5s/10s exigido pelos modelos de vídeo IA.
+              </p>
+            </div>
+
+            <ReelScriptStrategyImporter
+              onImport={(importedScenes, label) => {
+                update('scenes', importedScenes);
+                update('importedFrom', label);
+              }}
+            />
+
+            {config.importedFrom && (
+              <div className="text-[10px] text-rose-300/90 italic">📥 Importado: {config.importedFrom}</div>
+            )}
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Cenas ({scenes.length}{total ? ` · ~${total}s` : ''})</Label>
+            </div>
+
+            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+              {scenes.length === 0 && (
+                <p className="text-[11px] text-muted-foreground italic">Nenhuma cena ainda. Importe um roteiro do Motor de Estratégia acima.</p>
+              )}
+              {scenes.map((s, idx) => (
+                <div key={idx} className="rounded-lg border border-rose-500/20 bg-muted/30 p-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-bold text-rose-400">CENA {idx + 1}</span>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => removeScene(idx)}>×</Button>
+                  </div>
+                  <Textarea
+                    value={s.description || ''}
+                    onChange={(e) => updateScene(idx, { description: e.target.value })}
+                    placeholder="Descrição visual da cena"
+                    rows={2}
+                    className="text-[11px]"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Duração (s)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={10}
+                        step={1}
+                        value={s.duration ?? 5}
+                        onChange={(e) => updateScene(idx, { duration: parseFloat(e.target.value) || 0 })}
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Câmera</Label>
+                      <Input
+                        value={s.cameraMovement || ''}
+                        onChange={(e) => updateScene(idx, { cameraMovement: e.target.value })}
+                        placeholder="static, push-in..."
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <Input
+                    value={s.narration || ''}
+                    onChange={(e) => updateScene(idx, { narration: e.target.value })}
+                    placeholder="Narração / voz off"
+                    className="h-7 text-[11px]"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <Separator />
+
+            <ConfigField label="Observações gerais" hint="Estilo, tom, restrições aplicadas ao Reel inteiro.">
+              <Textarea
+                value={config.globalNotes || ''}
+                onChange={(e) => update('globalNotes', e.target.value)}
+                placeholder="Ex: trilha empolgante, identidade visual da marca, ritmo dinâmico..."
+                rows={2}
+                className="mt-1 text-[11px]"
+              />
+            </ConfigField>
+          </div>
+        );
+      }
+
+
+
       case 'textContent': {
         const TEXT_STYLE_TEMPLATES = [
           { id: 'heading-bold', name: 'Título Grande', titleFont: 'Montserrat', titleSize: 72, titleWeight: 'bold', titleColor: '#000000', subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A', bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'center' },
