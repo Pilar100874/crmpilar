@@ -2111,6 +2111,172 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         );
       }
 
+      case 'videoScript': {
+        const scenes: any[] = Array.isArray(config.scenes) ? config.scenes : [];
+        const updateScene = (idx: number, patch: any) => {
+          const next = scenes.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+          update('scenes', next);
+        };
+        const addScene = () => {
+          update('scenes', [...scenes, { description: '', duration: 2, narration: '', cameraMovement: '' }]);
+        };
+        const removeScene = (idx: number) => {
+          update('scenes', scenes.filter((_, i) => i !== idx));
+        };
+        const moveScene = (idx: number, dir: -1 | 1) => {
+          const target = idx + dir;
+          if (target < 0 || target >= scenes.length) return;
+          const next = [...scenes];
+          [next[idx], next[target]] = [next[target], next[idx]];
+          update('scenes', next);
+        };
+
+        const handleSuggestScript = async () => {
+          try {
+            update('_suggesting', true);
+            const ctx = (config.suggestContext || '').trim();
+            const vi = await getActiveVisualIdentity(localStorage.getItem('estabelecimentoId') || '');
+            const viPrompt = vi?.prompt ? `\n\nIdentidade visual da marca:\n${vi.prompt}` : '';
+            const systemPrompt = `Você é um roteirista de vídeo publicitário. Gere um roteiro QUADRO A QUADRO em Português do Brasil. Responda APENAS em JSON válido, sem markdown: {"scenes":[{"description":"...","duration":3,"narration":"...","cameraMovement":"..."}]}. Cada cena com descrição visual detalhada, duração em segundos (1-5), narração curta (opcional) e movimento de câmera (opcional). Total de 3 a 6 cenas, somando no máximo 15s.`;
+            const userPrompt = `Tema do vídeo: ${ctx || 'vídeo curto promocional de produto para redes sociais'}.${viPrompt}`;
+            const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
+              body: { action: 'generate_text', params: { prompt: userPrompt, systemPrompt, model: 'google/gemini-2.5-flash' } },
+            });
+            if (error) throw error;
+            const raw = (typeof data === 'string' ? data : data?.text || data?.result || '').toString();
+            const match = raw.match(/\{[\s\S]*\}/);
+            const parsed = match ? JSON.parse(match[0]) : null;
+            if (parsed?.scenes && Array.isArray(parsed.scenes)) {
+              update('scenes', parsed.scenes.map((s: any) => ({
+                description: s.description || '',
+                duration: Number(s.duration) || 2,
+                narration: s.narration || '',
+                cameraMovement: s.cameraMovement || '',
+              })));
+            }
+          } catch (e: any) {
+            console.error('[videoScript] suggest error', e);
+          } finally {
+            update('_suggesting', false);
+          }
+        };
+
+        return (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-2.5">
+              <p className="text-[11px] text-sky-300 leading-snug">
+                🎞️ <strong>Roteiro quadro a quadro:</strong> conecte este bloco no <em>Gerar Vídeo</em>. A IA seguirá cada cena na ordem, com a duração e movimento de câmera definidos.
+              </p>
+            </div>
+
+            <VideoScriptStrategyImporter
+              onImport={(importedScenes) => {
+                update('scenes', importedScenes);
+                update('globalNotes', config.globalNotes || '');
+              }}
+            />
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Cenas do roteiro</Label>
+              <Button size="sm" variant="outline" onClick={addScene} className="h-7 gap-1 text-[11px]">
+                + Cena
+              </Button>
+            </div>
+
+            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+              {scenes.length === 0 && (
+                <p className="text-[11px] text-muted-foreground italic">Adicione cenas manualmente, importe do Motor de Estratégia ou peça uma sugestão para a IA.</p>
+              )}
+              {scenes.map((s, idx) => (
+                <div key={idx} className="rounded-lg border border-sky-500/20 bg-muted/30 p-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-bold text-sky-400">CENA {idx + 1}</span>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-[11px]" onClick={() => moveScene(idx, -1)} disabled={idx === 0}>↑</Button>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-[11px]" onClick={() => moveScene(idx, 1)} disabled={idx === scenes.length - 1}>↓</Button>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => removeScene(idx)}>×</Button>
+                    </div>
+                  </div>
+                  <Textarea
+                    value={s.description || ''}
+                    onChange={(e) => updateScene(idx, { description: e.target.value })}
+                    placeholder="Descrição visual da cena (o que aparece, ângulo, ação, ambiente, iluminação...)"
+                    rows={2}
+                    className="text-[11px]"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Duração (s)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={10}
+                        step={0.5}
+                        value={s.duration ?? 2}
+                        onChange={(e) => updateScene(idx, { duration: parseFloat(e.target.value) || 0 })}
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Câmera</Label>
+                      <Input
+                        value={s.cameraMovement || ''}
+                        onChange={(e) => updateScene(idx, { cameraMovement: e.target.value })}
+                        placeholder="zoom in, pan, fixa..."
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <Input
+                    value={s.narration || ''}
+                    onChange={(e) => updateScene(idx, { narration: e.target.value })}
+                    placeholder="Narração / áudio (opcional)"
+                    className="h-7 text-[11px]"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <Separator />
+
+            <ConfigField label="Observações gerais" hint="Estilo, tom, marca, restrições aplicadas a todo o vídeo.">
+              <Textarea
+                value={config.globalNotes || ''}
+                onChange={(e) => update('globalNotes', e.target.value)}
+                placeholder="Ex: estilo cinematográfico, trilha empolgante, manter identidade visual da marca..."
+                rows={2}
+                className="mt-1 text-[11px]"
+              />
+            </ConfigField>
+
+            <Separator />
+
+            <SectionTitle icon={<Sparkles className="h-3 w-3" />}>Sugerir roteiro com IA</SectionTitle>
+            <ConfigField label="Tema / contexto">
+              <Textarea
+                value={config.suggestContext || ''}
+                onChange={(e) => update('suggestContext', e.target.value)}
+                placeholder="Ex: lançamento de tênis esportivo, 15s para Reels"
+                rows={2}
+                className="mt-1 text-[11px]"
+              />
+            </ConfigField>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSuggestScript}
+              disabled={!!config._suggesting}
+              className="w-full gap-2"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {config._suggesting ? 'Gerando roteiro...' : 'Sugerir roteiro com IA'}
+            </Button>
+          </div>
+        );
+      }
+
       case 'textContent': {
         const TEXT_STYLE_TEMPLATES = [
           { id: 'heading-bold', name: 'Título Grande', titleFont: 'Montserrat', titleSize: 72, titleWeight: 'bold', titleColor: '#000000', subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A', bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'center' },
