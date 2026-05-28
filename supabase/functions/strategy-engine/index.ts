@@ -457,10 +457,10 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   "calendario_publicacao": [{"dia": "", "script_titulo": "", "plataforma": ""}],
   "estrategia_crescimento": ""
 }`
-  },
-
+}`
   },
   seo: {
+
     name: 'SEO & Conteúdo',
     type: 'specialist',
     systemPrompt: `Você é o SEO STRATEGIST — especialista em SEO on-page/off-page e marketing de conteúdo orgânico.
