@@ -1529,10 +1529,10 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
 
   // Pre-generate hero frame only for providers that support image-to-video
   const imageToVideoProviders = ["google", "runway", "luma", "stability", "apiframe"];
-  if (hasStrictRefs && imageToVideoProviders.includes(provider)) {
+  if ((hasStrictRefs || hasBrandIdentityVideo) && imageToVideoProviders.includes(provider)) {
     const heroFrameUrl = await generateHeroFrame(params);
     if (heroFrameUrl) {
-      console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
+      console.log(`[generate_video] Using hero frame as starting image for ${provider} (VI=${hasBrandIdentityVideo})`);
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
