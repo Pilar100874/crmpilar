@@ -821,6 +821,9 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       )}
     </div>
   );
+}
+
+
 
 const ToggleField = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
   <div className="flex items-center justify-between rounded-xl bg-background/60 border border-border/30 px-3 py-2.5 hover:border-border/50 transition-all duration-200 hover:shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.06)]">
