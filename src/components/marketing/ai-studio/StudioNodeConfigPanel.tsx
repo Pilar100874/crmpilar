@@ -459,6 +459,153 @@ const ConfigField = ({ label, children, hint }: { label: string; children: React
   </div>
 );
 
+// ──────────────────────────────────────────────────────────────
+// Video Script ⇆ Strategy Engine importer
+// Loads strategy_projects + their video roteiro artifacts and
+// converts the storyboard / VSL sections into the videoScript scenes shape.
+// ──────────────────────────────────────────────────────────────
+function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  const loadProjects = async () => {
+    setLoading(true);
+    setSelectedProjectId(null);
+    setArtifacts([]);
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) { setLoading(false); return; }
+    const { data } = await supabase
+      .from('strategy_projects')
+      .select('id, nome, created_at')
+      .eq('estabelecimento_id', estabId)
+      .order('created_at', { ascending: false });
+    setProjects(data || []);
+    setLoading(false);
+  };
+
+  const loadArtifacts = async (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setLoading(true);
+    const { data } = await supabase
+      .from('strategy_artifacts')
+      .select('*')
+      .eq('project_id', projectId)
+      .in('tipo', ['video_producer', 'vsl', 'reel'])
+      .order('created_at', { ascending: false });
+    const latest = new Map<string, any>();
+    for (const art of data || []) {
+      if (!latest.has(art.tipo)) latest.set(art.tipo, art);
+    }
+    setArtifacts(Array.from(latest.values()));
+    setLoading(false);
+  };
+
+  const extractScenes = (artifact: any): any[] => {
+    const content = artifact?.conteudo as any;
+    if (!content) return [];
+    const toNum = (d: any) => {
+      if (typeof d === 'number') return d;
+      const m = String(d || '').match(/(\d+(?:\.\d+)?)/);
+      return m ? parseFloat(m[1]) : 2;
+    };
+    if (Array.isArray(content.storyboard)) {
+      return content.storyboard.map((s: any) => ({
+        description: s.descricao_visual || s.descricao || s.texto_overlay || s.cena || '',
+        duration: toNum(s.duracao || s.duracao_estimada || 3),
+        narration: s.naracao || s.texto || '',
+        cameraMovement: s.camera || s.movimento_camera || '',
+      })).filter((s: any) => s.description || s.narration);
+    }
+    if (content.hook) {
+      const sections = ['hook', 'problema', 'agitacao', 'descoberta', 'mecanismo', 'prova', 'oferta', 'bonus', 'garantia', 'escassez', 'cta'];
+      return sections
+        .filter((k) => content[k]?.texto)
+        .map((k) => ({
+          description: `${k.charAt(0).toUpperCase() + k.slice(1)} — ${String(content[k].texto).slice(0, 220)}`,
+          duration: toNum(content[k].duracao_estimada || 3),
+          narration: String(content[k].texto).slice(0, 220),
+          cameraMovement: '',
+        }));
+    }
+    return [];
+  };
+
+  const handleImport = (artifact: any) => {
+    const scenes = extractScenes(artifact);
+    if (scenes.length === 0) {
+      console.warn('[videoScript] artefato sem cenas');
+      return;
+    }
+    onImport(scenes);
+    setOpen(false);
+  };
+
+  return (
+    <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-2.5 space-y-2">
+      <p className="text-[11px] text-purple-300 leading-snug">
+        🧠 <strong>Importar roteiro do Motor de Estratégia</strong> — use roteiros gerados pelos agentes Produtor de Vídeo, Roteirista de Reels ou VSL.
+      </p>
+      {!open && (
+        <Button size="sm" variant="outline" className="w-full h-7 text-[11px]" onClick={() => { setOpen(true); loadProjects(); }}>
+          Selecionar roteiro
+        </Button>
+      )}
+      {open && (
+        <div className="space-y-2">
+          {loading && <p className="text-[10px] text-muted-foreground">Carregando…</p>}
+          {!loading && !selectedProjectId && (
+            <>
+              {projects.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground italic">Nenhum projeto encontrado no Motor de Estratégia.</p>
+              ) : (
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {projects.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => loadArtifacts(p.id)}
+                      className="w-full text-left text-[11px] px-2 py-1.5 rounded-md bg-muted/40 hover:bg-muted border border-border/40"
+                    >
+                      {p.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {!loading && selectedProjectId && (
+            <>
+              {artifacts.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground italic">Este projeto ainda não tem roteiros. Execute Produtor de Vídeo, Roteirista de Reels ou VSL.</p>
+              ) : (
+                <div className="space-y-1">
+                  {artifacts.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => handleImport(a)}
+                      className="w-full text-left text-[11px] px-2 py-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/40"
+                    >
+                      🎬 {a.tipo === 'vsl' ? 'VSL' : a.tipo === 'reel' ? 'Reel' : 'Produtor de Vídeo'}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => { setSelectedProjectId(null); setArtifacts([]); }}>
+                ← voltar
+              </Button>
+            </>
+          )}
+          <Button size="sm" variant="ghost" className="h-6 text-[10px] w-full" onClick={() => setOpen(false)}>
+            Fechar
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ToggleField = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
   <div className="flex items-center justify-between rounded-xl bg-background/60 border border-border/30 px-3 py-2.5 hover:border-border/50 transition-all duration-200 hover:shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.06)]">
     <Label className="text-[11px] font-medium text-foreground/70 tracking-wide">{label}</Label>
