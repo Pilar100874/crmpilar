@@ -76,8 +76,11 @@ export function useStrategyProjects(estabelecimentoId: string | undefined) {
     const { error } = await supabase.from('strategy_projects').delete().eq('id', id);
     if (error) {
       toast.error('Erro ao excluir projeto');
+      return false;
     } else {
       await fetchProjects();
+      toast.success('Projeto excluído com sucesso!');
+      return true;
     }
   };
 

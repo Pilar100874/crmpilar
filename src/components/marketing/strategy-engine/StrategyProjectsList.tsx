@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { useStrategyProjects } from './hooks/useStrategyProjects';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,22 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
   const [creating, setCreating] = useState(false);
   const [cloning, setCloning] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
+
+  const resetRadixPointerLock = useCallback(() => {
+    const unlock = () => {
+      document.body.style.pointerEvents = '';
+      document.body.removeAttribute('data-scroll-locked');
+    };
+    requestAnimationFrame(unlock);
+    window.setTimeout(unlock, 120);
+    window.setTimeout(unlock, 360);
+  }, []);
+
+  useEffect(() => {
+    resetRadixPointerLock();
+    return resetRadixPointerLock;
+  }, [resetRadixPointerLock]);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
@@ -59,8 +75,9 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
       if (!data.success) throw new Error(data.error);
       toast.success('Projeto clonado com sucesso!');
       refetch();
-    } catch (err: any) {
-      toast.error(`Erro ao clonar: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error(`Erro ao clonar: ${message}`);
     } finally {
       setCloning(null);
     }
@@ -226,21 +243,24 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !deletingProject) {
             setDeleteTarget(null);
-            setTimeout(() => {
-              if (document.body.style.pointerEvents === 'none') {
-                document.body.style.pointerEvents = '';
-              }
-            }, 100);
+            resetRadixPointerLock();
           }
         }}
-        onConfirm={() => {
-          if (deleteTarget) deleteProject(deleteTarget.id);
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          const projectId = deleteTarget.id;
+          setDeletingProject(true);
           setDeleteTarget(null);
+          resetRadixPointerLock();
+          await deleteProject(projectId);
+          setDeletingProject(false);
+          resetRadixPointerLock();
         }}
         title="Excluir projeto"
         itemName={deleteTarget?.name}
+        isLoading={deletingProject}
       />
     </div>
   );
