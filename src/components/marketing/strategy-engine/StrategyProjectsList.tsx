@@ -40,7 +40,10 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
     });
   }, []);
 
-  useEffect(() => resetRadixPointerLock, [resetRadixPointerLock]);
+  useEffect(() => {
+    resetRadixPointerLock();
+    return resetRadixPointerLock;
+  }, [resetRadixPointerLock]);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
