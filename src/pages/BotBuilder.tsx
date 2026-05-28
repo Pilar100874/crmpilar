@@ -45,6 +45,7 @@ import { toast } from "@/lib/toast-config";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
   custom: FlowNode,
