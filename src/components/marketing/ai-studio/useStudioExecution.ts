@@ -1319,7 +1319,6 @@ export function useStudioExecution() {
               viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
             ].filter(Boolean).join('\n');
 
-            ].filter(Boolean).join('\n');
 
             try {
               const sceneParams = {
