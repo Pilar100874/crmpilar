@@ -75,7 +75,7 @@ const EDGE_STYLE = { stroke: 'hsl(var(--primary) / 0.5)', strokeWidth: 1.5, curs
 const QUICK_TOOLS = [
   { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
   { id: 'image-to-video', icon: Film, label: 'Imagem p/ Vídeo', desc: 'Anime imagens em vídeos', nodeType: 'videoGen' as const },
-  { id: 'image-gen', icon: Image, label: 'Gerar Imagem', desc: 'Crie imagens com IA', nodeType: 'imageGen' as const },
+  { id: 'image-gen', icon: Image, label: 'Gerar Imagem', desc: 'Crie imagens com IA', nodeType: 'productComposite' as const },
   { id: 'music-gen', icon: Music, label: 'Criar Música', desc: 'Compose músicas originais', nodeType: 'musicGen' as const },
   { id: 'audio-gen', icon: Mic, label: 'Gerar Áudio', desc: 'Narração e efeitos sonoros', nodeType: 'audioGen' as const },
   { id: 'text-gen', icon: Type, label: 'Texto com IA', desc: 'Processar com LLM', nodeType: 'llmProcess' as const },
@@ -1056,7 +1056,7 @@ const AICreativeStudioInner: React.FC = () => {
         id: `productComposite_${ts}`,
         type: 'studioNode',
         position: { x: 500, y: 250 },
-        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: finalConfig },
+        data: { label: meta?.label || 'Gerar Imagem', type: 'productComposite', config: finalConfig },
       };
       newNodes.push(personNode, productNode, promptNode, compositeNode);
       newEdges.push(

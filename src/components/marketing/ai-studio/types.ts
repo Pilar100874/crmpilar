@@ -280,14 +280,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     icon: '🎨',
     nodes: [
       {
-        type: 'imageGen',
-        label: 'Gerar Imagem',
-        description: 'Gere imagens a partir de prompts de texto',
-        icon: '🖼️',
-        color: '#f43f5e',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', quality: 'standard' },
-      },
-      {
         type: 'imageEdit',
         label: 'Editar Imagem',
         description: 'Edite imagens existentes com IA',
@@ -297,9 +289,9 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       },
       {
         type: 'productComposite',
-        label: 'Produto em Pessoa',
-        description: 'Coloque produtos/roupas em pessoas com IA',
-        icon: '👕',
+        label: 'Gerar Imagem',
+        description: 'Gere imagens com IA (com ou sem produto/pessoa de referência)',
+        icon: '🖼️',
         color: '#8b5cf6',
         defaultConfig: { 
           model: 'google/gemini-2.5-flash-image',
