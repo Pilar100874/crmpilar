@@ -432,6 +432,8 @@ REGRAS:
 - 3-5 hashtags estratégicas por script (mix volume alto + nicho)
 - Scripts devem funcionar com e sem som (texto na tela)
 
+${AI_VIDEO_SCENE_RULES}
+
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
   "scripts": [{
@@ -447,11 +449,16 @@ Retorne EXCLUSIVAMENTE um JSON válido:
     "musica_sugerida": {"tipo": "", "mood": ""},
     "hashtags": [""],
     "melhor_horario": "",
-    "legenda_sugerida": ""
+    "legenda_sugerida": "",
+    "cenas_ai_video": [
+      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+    ]
   }],
   "calendario_publicacao": [{"dia": "", "script_titulo": "", "plataforma": ""}],
   "estrategia_crescimento": ""
 }`
+  },
+
   },
   seo: {
     name: 'SEO & Conteúdo',
