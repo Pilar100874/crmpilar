@@ -903,12 +903,14 @@ function normalizeVideoArtifact(agentType: string, parsed: any): any {
     const ag = defaultAudioGlobal(parsed.audio_global || {});
     let cenas = Array.isArray(parsed.cenas_ai_video) ? parsed.cenas_ai_video : [];
     if (cenas.length === 0 && Array.isArray(parsed.storyboard)) cenas = parsed.storyboard;
-    if (cenas.length === 0 && parsed.hook) {
+    // Fallback: extrair de roteiro_narrativo (novo formato unificado) ou seções soltas (formato VSL legado)
+    const narrativeSource = parsed.roteiro_narrativo || parsed;
+    if (cenas.length === 0 && (narrativeSource.hook || narrativeSource.problema)) {
       const sections = ['hook','problema','agitacao','descoberta','mecanismo','prova','oferta','bonus','garantia','escassez','cta'];
       cenas = sections
-        .filter((k) => parsed[k]?.texto || typeof parsed[k] === 'string')
+        .filter((k) => narrativeSource[k]?.texto || typeof narrativeSource[k] === 'string')
         .map((k) => {
-          const txt = typeof parsed[k] === 'string' ? parsed[k] : parsed[k].texto;
+          const txt = typeof narrativeSource[k] === 'string' ? narrativeSource[k] : narrativeSource[k].texto;
           return { descricao_visual: `${k}: ${String(txt).slice(0, 180)}`, narracao_voz: String(txt).slice(0, 120), duracao_segundos: 5 };
         });
     }
