@@ -21,6 +21,7 @@ export type StudioNodeType =
   | 'gallerySalvas'
   | 'textStyle'
   | 'textContent'
+  | 'imageCaption'
   | 'platformFormat'
   | 'llmProcess'
   | 'imageGen'
