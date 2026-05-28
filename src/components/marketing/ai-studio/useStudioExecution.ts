@@ -1262,7 +1262,9 @@ export function useStudioExecution() {
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
+            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string;
           }>;
+
           const globalNotes = (videoScriptInput.videoScript.globalNotes || '').trim();
           const aspectRatioMS = config.aspectRatio || '16:9';
           const baseVideoModelMS = isValidVideoGenerationModel(config.videoModel)
