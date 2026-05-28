@@ -743,6 +743,8 @@ function EditorRegrasContent() {
           onNodesChange={isLocked ? undefined : onNodesChange}
           onEdgesChange={isLocked ? undefined : onEdgesChange}
           onConnect={isLocked ? undefined : onConnect}
+          onConnectStart={isLocked ? undefined : onConnectStart}
+          onConnectEnd={isLocked ? undefined : onConnectEnd}
           onEdgesDelete={isLocked ? undefined : onEdgesDelete}
           onInit={setReactFlowInstance}
           onDrop={isLocked ? undefined : onDrop}
