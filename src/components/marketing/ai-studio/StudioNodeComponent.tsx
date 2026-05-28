@@ -48,6 +48,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   textContent: FileText,
   imageCaption: Type,
   videoScript: Film,
+  reelScript: Film,
   platformFormat: Monitor,
   llmProcess: Type,
   imageGen: ImageIcon,
