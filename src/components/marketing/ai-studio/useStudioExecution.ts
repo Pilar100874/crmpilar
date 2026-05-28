@@ -1782,7 +1782,7 @@ export function useStudioExecution() {
             imageUrl: p.foto_url,
             imageUrls: [p.foto_url],
             _referenceRole: 'produto',
-            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${p.nome}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo e proporções. NÃO modifique, substitua ou reimagine o produto de forma alguma.`,
+            _referenceDesc: `[PRODUTO - PROIBIDO MODIFICAR] Este é o produto "${p.nome}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo, tipografia e proporções. NÃO modifique, substitua, redesenhe ou reimagine o produto de forma alguma. NÃO invente elementos novos que não existem na foto original. Trate a imagem do produto como uma FOTOGRAFIA REAL que deve ser inserida na cena sem alterações. PROIBIDO renderizar uma segunda cópia, duplicata, miniatura ou versão de vitrine do produto — aparece UMA ÚNICA VEZ na cena. PROIBIDO faixa, barra, tarja, rótulo extra, placa, retângulo arredondado, quadrado branco ou moldura artificial em volta do produto.`,
           })),
         };
       }
@@ -2053,9 +2053,14 @@ export function useStudioExecution() {
               });
 
               // Override multiProductSelect result with single product for this iteration
+              // Mirror EXACTLY the shape produced by productImageSelect so the generation
+              // block applies all product-lock / VI / anti-duplicate rules the same way
+              // as the single "Gerar Imagem" flow.
               const singleProductResult = {
                 imageUrl: product.foto_url,
                 imageUrls: [product.foto_url],
+                productId: product.id,
+                productName: product.nome,
                 _referenceRole: 'produto',
                 _referenceDesc: product._referenceDesc,
               };
