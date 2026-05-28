@@ -287,6 +287,71 @@ function BotBuilderContent() {
     [setEdges, isDroppingNode]
   );
 
+  // ===== Smart connect (make.com style) =====
+  const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: 'source' | 'target' } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | { x: number; y: number; flowX: number; flowY: number; fromNodeId: string; handleType: 'source' | 'target' }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = {
+      nodeId: params.nodeId,
+      handleId: params.handleId,
+      handleType: params.handleType,
+    };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId || !reactFlowInstance) return;
+    const target = event.target as HTMLElement;
+    const droppedOnPane = target?.classList?.contains('react-flow__pane');
+    if (!droppedOnPane) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({
+      x: clientX, y: clientY,
+      flowX: flowPos.x, flowY: flowPos.y,
+      fromNodeId: start.nodeId,
+      handleType: start.handleType,
+    });
+  }, [reactFlowInstance]);
+
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const blockDef = BLOCK_DEFINITIONS.find((b) => b.type === type);
+    if (!blockDef) return;
+    const newNode: Node = {
+      id: getId(),
+      type: 'custom',
+      position: { x: connectMenu.flowX - 120, y: connectMenu.flowY - 40 },
+      data: {
+        label: blockDef.label,
+        type: blockDef.type,
+        config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => addEdge(
+      connectMenu.handleType === 'source'
+        ? { source: connectMenu.fromNodeId, target: newNode.id }
+        : { source: newNode.id, target: connectMenu.fromNodeId },
+      eds
+    ));
+    setSelectedNode(newNode);
+    toast.success(`Bloco "${blockDef.label}" adicionado!`);
+  }, [connectMenu, setNodes, setEdges]);
+
+  const smartBlockOptions: SmartBlockOption[] = useMemo(() =>
+    BLOCK_DEFINITIONS.filter(b => b.type !== 'start').map(b => ({
+      type: b.type,
+      label: b.label,
+      description: b.description,
+      icon: '▫️',
+    })),
+  []);
+
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       setEdges((els) => {
