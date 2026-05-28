@@ -1231,11 +1231,23 @@ export function useStudioExecution() {
         // ============================================================
         // 🎞️ ROTEIRO MULTI-CENA: gera um vídeo por cena e une no final
         // ============================================================
+        const anyScriptInput = inputs.find((i) => i?._isVideoScript);
         const videoScriptInput = inputs.find(
-          (i) => i?._isVideoScript && Array.isArray(i?.videoScript?.scenes) && i.videoScript.scenes.length >= 2,
+          (i) => i?._isVideoScript && Array.isArray(i?.videoScript?.scenes) && i.videoScript.scenes.length >= 1,
         );
         const isCorrectionForMultiScene = inputs.some((i) => i?._isCorrection);
+        console.log('[Studio][videoGen] script detection', {
+          totalInputs: inputs.length,
+          inputKinds: inputs.map((i) => ({ isScript: !!i?._isVideoScript, scenes: i?.videoScript?.scenes?.length ?? 0 })),
+          hasAnyScript: !!anyScriptInput,
+          hasValidScript: !!videoScriptInput,
+          isCorrection: isCorrectionForMultiScene,
+        });
+        if (anyScriptInput && !videoScriptInput) {
+          toast.error('Roteiro do Vídeo conectado, mas sem cenas válidas. Adicione pelo menos uma cena com descrição.', { duration: 7000 });
+        }
         if (videoScriptInput && !isCorrectionForMultiScene) {
+
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
           }>;
