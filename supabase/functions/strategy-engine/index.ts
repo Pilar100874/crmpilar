@@ -7,6 +7,29 @@ const corsHeaders = {
 
 const COLLABORATION_DIRECTIVE_SENTENCE = 'Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
 
+// ─── AI VIDEO SCENE RULES (compatível com AI Creative Studio) ─────────────────
+// Modelos de vídeo IA suportados (Veo, Wavespeed, etc.) geram clipes de
+// 5s ou 10s por chamada. O roteiro precisa ser quebrado em micro-cenas dentro
+// desse envelope, com câmera e narração com palavras suficientes para caber
+// no tempo. Cadência de leitura: ~2,5 palavras por segundo em PT-BR.
+const AI_VIDEO_SCENE_RULES = `
+REGRAS OBRIGATÓRIAS DE CENA PARA VÍDEO IA (use para alimentar o AI Creative Studio):
+- Cada cena DEVE ter duração de 5s ou 10s (limite dos modelos Google Veo / Wavespeed). NUNCA use 3s, 7s, 15s, etc.
+- Cada cena tem UM tipo de câmera. Use vocabulário de direção real:
+  "static" (parado), "slow push-in" (aproximação lenta), "pull-out" (afastamento), "pan left/right", "tilt up/down", "tracking shot" (acompanha sujeito), "handheld" (mão livre), "orbit" (gira em volta), "crane up/down", "dolly", "POV" (primeira pessoa), "close-up", "medium shot", "wide shot", "macro", "drone aerial".
+- Cada cena tem UMA narração (voz) com número de palavras compatível com o tempo:
+  5s → MÁX 12 palavras (PT-BR, cadência natural com pausa).
+  10s → MÁX 25 palavras.
+  Se a cena for visual sem narração, use string vazia.
+- A descrição visual deve ser autossuficiente, cinematográfica e UMA cena só (sem cortes internos). Inclua sujeito, ação, ambiente, iluminação, mood.
+- Sempre inclua o array "cenas_ai_video" com o formato EXATO:
+  [{ "ordem": 1, "duracao_segundos": 5|10, "tipo_camera": "", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut|fade|whip|match-cut|none" }]
+- A soma das durações deve bater com a duração total declarada do vídeo.
+- Escreva narração em PT-BR natural, sem erros gramaticais, com acentuação correta.
+`.trim();
+
+
+
 // ─── AGENT DEPENDENCY GRAPH ────────────────────────────────────────────────────
 const AGENT_DEPENDENCIES: Record<string, string[]> = {
   vox: [],
@@ -215,6 +238,8 @@ REGRAS:
 - Inclua instruções [pausa], [ênfase], [tom mais baixo] entre colchetes
 - Deve funcionar em áudio apenas (podcast/story) sem perder impacto
 
+${AI_VIDEO_SCENE_RULES}
+
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
   "hook": {"texto": "", "duracao_estimada": "", "tipo_hook": "promessa|pergunta|contraintuitivo|historia|dado_chocante", "taxa_retencao_alvo": ""},
@@ -230,9 +255,13 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   "cta": {"texto": "", "duracao_estimada": "", "acao_especifica": ""},
   "duracao_total_estimada": "",
   "loops_abertos": ["descrição do loop 1", ...],
-  "instrucoes_gravacao": ""
+  "instrucoes_gravacao": "",
+  "cenas_ai_video": [
+    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+  ]
 }`
   },
+
   landing_page: {
     name: 'Landing Page',
     type: 'specialist',
@@ -403,6 +432,8 @@ REGRAS:
 - 3-5 hashtags estratégicas por script (mix volume alto + nicho)
 - Scripts devem funcionar com e sem som (texto na tela)
 
+${AI_VIDEO_SCENE_RULES}
+
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
   "scripts": [{
@@ -418,7 +449,10 @@ Retorne EXCLUSIVAMENTE um JSON válido:
     "musica_sugerida": {"tipo": "", "mood": ""},
     "hashtags": [""],
     "melhor_horario": "",
-    "legenda_sugerida": ""
+    "legenda_sugerida": "",
+    "cenas_ai_video": [
+      { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "handheld", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+    ]
   }],
   "calendario_publicacao": [{"dia": "", "script_titulo": "", "plataforma": ""}],
   "estrategia_crescimento": ""
@@ -426,6 +460,7 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   },
   seo: {
     name: 'SEO & Conteúdo',
+
     type: 'specialist',
     systemPrompt: `Você é o SEO STRATEGIST — especialista em SEO on-page/off-page e marketing de conteúdo orgânico.
 
@@ -553,15 +588,23 @@ INSTRUÇÃO CRÍTICA — DEPENDÊNCIAS:
 
 Mínimo 8 cenas com descrições visuais, narração sincronizada, adaptação para 2+ plataformas.
 
+${AI_VIDEO_SCENE_RULES}
+
+IMPORTANTE: cada item de "storyboard" DEVE respeitar as regras de cena para vídeo IA (duração 5s ou 10s, tipo de câmera real, narração com palavras dentro do orçamento). Use o campo "duracao" como número de segundos (5 ou 10) e "movimento_camera" usando o vocabulário definido acima.
+
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
   "conceito_criativo": {"tema_visual": "", "estilo": "", "tom_emocional": ""},
-  "storyboard": [{"cena": "", "duracao": "", "descricao_visual": "", "naracao": "", "movimento_camera": "", "enquadramento": "", "texto_overlay": "", "transicao": ""}],
+  "storyboard": [{"ordem": 1, "cena": "", "duracao_segundos": 5, "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "tipo_camera": "static", "enquadramento": "medium shot", "texto_overlay": "", "transicao_para_proxima": "cut"}],
   "direcao_arte": {"paleta_cores": [""], "tipografia_overlay": "", "iluminacao": "", "cenario": ""},
   "audio": {"trilha_sonora": {"genero": "", "mood": ""}, "efeitos_sonoros": [""], "ritmo_edicao": ""},
-  "formatos": [{"plataforma": "", "aspecto": "", "duracao_total": "", "adaptacoes": ""}],
-  "briefing_producao": {"equipamento_minimo": [""], "locacoes_sugeridas": [""], "tempo_producao_estimado": ""}
+  "formatos": [{"plataforma": "", "aspecto": "", "duracao_total_segundos": 0, "adaptacoes": ""}],
+  "briefing_producao": {"equipamento_minimo": [""], "locacoes_sugeridas": [""], "tempo_producao_estimado": ""},
+  "cenas_ai_video": [
+    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+  ]
 }`
+
   },
   influencer_content: {
     name: 'Influencer & Imagens',
