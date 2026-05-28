@@ -128,7 +128,9 @@ const StudioNodeLibrary: React.FC = () => {
                         <div className="flex-1 h-px bg-border/40" />
                       </div>
 
+                      <div className="space-y-1">
                         {cat.nodes.map((node) => {
+
                           const help = getConnectionHelp(node.type);
                           return (
                           <motion.div
