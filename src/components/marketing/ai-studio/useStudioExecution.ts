@@ -317,6 +317,12 @@ export function useStudioExecution() {
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
+    // Collect TEXT LOCK directives from imageCaption nodes — these MUST be rendered exactly as provided
+    const textLockDirective = inputs
+      .filter((i) => i?._textLockDirective)
+      .map((i) => i._textLockDirective)
+      .join('\n');
+
     // Collect all image URLs from inputs, bucketed by role for priority ordering
     const imageInputs: string[] = [];
     const referenceDescs: string[] = [];
