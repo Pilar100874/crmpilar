@@ -366,6 +366,135 @@ const AICreativeStudioInner: React.FC = () => {
       return;
     }
 
+    // ── Preflight: compatibilidade de blocos, modelos e referências ────
+    try {
+      const REF_SOURCE_TYPES = new Set([
+        'productImageSelect', 'imageInput', 'productComposite', 'imageGen',
+        'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta',
+        'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas',
+      ]);
+      const SCRIPT_SOURCE_TYPES = new Set(['videoScript', 'reelScript']);
+      // Modelos de imagem/vídeo que NÃO aceitam imagem de referência (apenas texto→imagem/vídeo).
+      // Lista derivada de StudioNodeConfigPanel (supportsMultiRef=false e single-ref limitado).
+      const NO_REF_MODELS = new Set<string>([
+        'google/imagefx', 'openai/dall-e-3', 'chatgpt_image/dall-e-3',
+        'stability/sd3.5-turbo', 'stability/sd3', 'stability/sdxl',
+        'midjourney/v7', 'midjourney/v6.1',
+        'flux/1.1-pro', 'flux/schnell', 'ideogram/v3', 'adobe/firefly-3',
+        'apiframe/midjourney', 'apiframe/flux-schnell', 'apiframe/flux-pro', 'apiframe/flux-dev',
+        'apiframe/ideogram', 'apiframe/nano-banana', 'apiframe/seedream', 'apiframe/reve',
+        'apiframe/kling-image',
+        'wavespeed/flux-dev', 'wavespeed/flux-schnell', 'wavespeed/flux-pro',
+        'wavespeed/gpt-image-2', 'wavespeed/nano-banana-2', 'wavespeed/seedream-3',
+        'wavespeed/recraft-v3', 'wavespeed/sd3.5-turbo', 'wavespeed/ideogram-v3', 'wavespeed/kolors',
+        'kling/v1.6', 'minimax/video-01', 'stability/stable-video', 'bytedance/seedvideo',
+        'replicate/ltx-video',
+      ]);
+      // Quantidade máxima de refs por modelo (caso não suporte multi, default 1; sem refs = 0).
+      const MODEL_MAX_REFS: Record<string, number> = {
+        'google/gemini-2.5-flash-image': 3,
+        'google/gemini-3-pro-image-preview': 6,
+        'google/gemini-3.1-flash-image-preview': 6,
+        'openai/dall-e-4': 2,
+        'apiframe/gpt-image': 10,
+        'chatgpt_image/gpt-image-1': 10,
+      };
+
+      const nodeById = new Map(nodes.map((n) => [n.id, n]));
+      const incoming = new Map<string, string[]>();
+      for (const e of edges) {
+        if (!incoming.has(e.target)) incoming.set(e.target, []);
+        incoming.get(e.target)!.push(e.source);
+      }
+
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      for (const n of nodes) {
+        const nd = n.data as StudioNodeData;
+        if (nd.config?._paused) continue;
+        const label = nd.label || nd.type;
+        const sourceIds = incoming.get(n.id) || [];
+        const sources = sourceIds.map((id) => nodeById.get(id)).filter(Boolean) as typeof nodes;
+
+        // (1) videoScript/reelScript sem cenas preenchidas
+        if (SCRIPT_SOURCE_TYPES.has(nd.type)) {
+          const scenes = (nd.config?.scenes || nd.config?.videoScript?.scenes || []) as any[];
+          const filled = scenes.filter((s) => (s?.description || s?.descricao || s?.prompt || '').trim().length > 0);
+          if (scenes.length === 0 || filled.length === 0) {
+            errors.push(`"${label}": roteiro sem cenas preenchidas. Adicione descrições ou importe do Motor de Estratégia.`);
+          }
+        }
+
+        // (2) Geração de imagem/vídeo: validar modelo vs quantidade de refs e suporte a imagem
+        const isGen = (['imageGen', 'imageComposite', 'productComposite', 'videoGen'] as string[]).includes(nd.type);
+        if (!isGen) continue;
+
+        const model = nd.type === 'videoGen'
+          ? (nd.config?.videoModel || 'free/gif-animated')
+          : (nd.config?.model || '');
+
+        // refs vindas de fontes de imagem
+        const refSources = sources.filter((s) => REF_SOURCE_TYPES.has((s.data as StudioNodeData).type));
+        const refCount = refSources.length + (viActive ? 1 : 0); // VI contribui 1 ref extra
+
+        if (model && model !== 'auto') {
+          const supportsImageRef = !NO_REF_MODELS.has(model);
+          if (refSources.length > 0 && !supportsImageRef) {
+            errors.push(`"${label}": o modelo selecionado (${model}) não aceita imagens de referência, mas o bloco está conectado a ${refSources.length} fonte(s) de imagem. Troque para um modelo com suporte a referência (ex: Gemini Flash Image, GPT Image, DALL·E 4).`);
+          } else {
+            const maxRefs = MODEL_MAX_REFS[model] ?? (supportsImageRef ? 2 : 0);
+            if (refCount > maxRefs && supportsImageRef) {
+              warnings.push(`"${label}": ${refCount} referência(s) conectadas, mas o modelo (${model}) suporta no máximo ${maxRefs}. As extras serão ignoradas.`);
+            }
+          }
+
+          // (3) Identidade Visual ativa + modelo sem suporte a imagem
+          if (viActive && !supportsImageRef) {
+            warnings.push(`"${label}": Identidade Visual está ativa, mas o modelo (${model}) não aceita imagens de referência — a marca não será aplicada visualmente, apenas o texto/diretrizes.`);
+          }
+        }
+
+        // (4) videoGen: aspect 1:1 com Veo é remapeado automaticamente
+        if (nd.type === 'videoGen' && model.startsWith('google/veo')) {
+          const ar = nd.config?.aspectRatio || nd.config?.aspect_ratio;
+          if (ar === '1:1') {
+            warnings.push(`"${label}": Veo não suporta 1:1 — será gerado em 16:9 automaticamente.`);
+          }
+        }
+
+        // (5) videoGen com script conectado mas modelo single-ref → segmentos individuais usam img2img
+        if (nd.type === 'videoGen') {
+          const scriptInput = sources.find((s) => SCRIPT_SOURCE_TYPES.has((s.data as StudioNodeData).type));
+          if (scriptInput && refSources.length > 1 && model && !NO_REF_MODELS.has(model)) {
+            const maxRefs = MODEL_MAX_REFS[model] ?? 1;
+            if (maxRefs < 2) {
+              warnings.push(`"${label}": vídeo multi-cena com mais de 1 referência — o modelo (${model}) compõe 1 ref por cena. Considere Veo 3.1, Runway Gen-4 ou Kling 2.6 para composições complexas.`);
+            }
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        toast.error(
+          `Não é possível executar:\n• ${errors.join('\n• ')}`,
+          { duration: 12000 }
+        );
+        return;
+      }
+
+      if (warnings.length > 0) {
+        const proceed = window.confirm(
+          `Atenção — alguns blocos podem não funcionar como esperado:\n\n• ${warnings.join('\n\n• ')}\n\nDeseja continuar mesmo assim?`
+        );
+        if (!proceed) return;
+      }
+    } catch (e) {
+      console.warn('[Studio] Preflight validation error:', e);
+      // não bloqueia execução em caso de erro no validador
+    }
+
+
     // ── Validate AI model providers are active ──────────────────────────
     try {
       const estabId = localStorage.getItem('estabelecimentoId');
