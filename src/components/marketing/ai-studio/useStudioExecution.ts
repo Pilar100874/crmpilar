@@ -193,9 +193,33 @@ export function useStudioExecution() {
     globalSignal?.addEventListener('abort', handleAbort, { once: true });
   });
 
+  const isValidVideoGenerationModel = (modelValue?: string | null): boolean => {
+    const model = (modelValue || '').toLowerCase().trim();
+    if (!model) return false;
+    if (model === 'auto' || model === 'free/gif-animated') return true;
+
+    const imageOnlyMarkers = [
+      'gpt-image', 'dall-e', 'flux', 'seedream', 'nano-banana', 'imagefx',
+      'ideogram', 'recraft', 'kolors', 'sd3', 'sdxl', 'firefly', 'faceswap', 'kling-image',
+    ];
+    if (imageOnlyMarkers.some((marker) => model.includes(marker))) return false;
+
+    const videoMarkers = [
+      'veo', 'sora', 'seedance', 'seedvideo', 'runway', 'gen3', 'gen4', 'kling',
+      'luma', 'ray-2', 'wan-', 'minimax', 'hunyuan', 'cogvideo', 'ltx', 'pika',
+      'stable-video', 'video-01', 'midjourney-video',
+    ];
+    return videoMarkers.some((marker) => model.includes(marker));
+  };
+
   const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
     // Detect provider from model prefix
-    const model = params.model || '';
+    const requestedModel = params.model || '';
+    const model = isValidVideoGenerationModel(requestedModel) ? requestedModel : 'auto';
+    if (model !== requestedModel) {
+      console.warn('[Studio] Modelo incompatível ignorado para vídeo:', requestedModel);
+      params = { ...params, model };
+    }
     const isWavespeed = model.startsWith('wavespeed/');
     const startAction = isWavespeed ? 'start_wavespeed_video' : 'start_apiframe_video';
     const fetchAction = isWavespeed ? 'fetch_wavespeed_video' : 'fetch_apiframe_video';
