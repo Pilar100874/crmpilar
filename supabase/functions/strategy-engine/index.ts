@@ -461,7 +461,6 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   seo: {
     name: 'SEO & Conteúdo',
 
-    name: 'SEO & Conteúdo',
     type: 'specialist',
     systemPrompt: `Você é o SEO STRATEGIST — especialista em SEO on-page/off-page e marketing de conteúdo orgânico.
 
