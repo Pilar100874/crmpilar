@@ -514,6 +514,14 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
     // Modelos de vídeo IA só aceitam 5s ou 10s por clipe
     const snapDuration = (n: number): number => (n <= 7 ? 5 : 10);
 
+    const mapAudio = (s: any) => ({
+      soundtrack: s.trilha_sonora || s.trilha || '',
+      soundtrackIntensity: s.intensidade_trilha || 'média',
+      sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
+      ambientSound: s.ambiente_sonoro || s.ambiente || '',
+      voiceTone: s.tom_voz || '',
+    });
+
     // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)
     if (Array.isArray(content.cenas_ai_video) && content.cenas_ai_video.length > 0) {
       return content.cenas_ai_video.map((s: any) => ({
@@ -523,6 +531,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
         cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
         overlay: s.texto_overlay || '',
         transition: s.transicao_para_proxima || 'cut',
+        ...mapAudio(s),
       })).filter((s: any) => s.description || s.narration);
     }
 
@@ -537,6 +546,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
           cameraMovement: s.tipo_camera || 'static',
           overlay: s.texto_overlay || '',
           transition: s.transicao_para_proxima || 'cut',
+          ...mapAudio(s),
         })).filter((s: any) => s.description || s.narration);
       }
     }
@@ -550,8 +560,10 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
         cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
         overlay: s.texto_overlay || '',
         transition: s.transicao_para_proxima || s.transicao || 'cut',
+        ...mapAudio(s),
       })).filter((s: any) => s.description || s.narration);
     }
+
 
     // 4) VSL antigo por seções (fallback) — quebra em clipes de 5s
     if (content.hook) {
@@ -702,7 +714,13 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       cameraMovement: s.tipo_camera || s.camera || 'static',
       overlay: s.texto_overlay || '',
       transition: s.transicao_para_proxima || 'cut',
+      soundtrack: s.trilha_sonora || '',
+      soundtrackIntensity: s.intensidade_trilha || 'média',
+      sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
+      ambientSound: s.ambiente_sonoro || '',
+      voiceTone: s.tom_voz || '',
     })).filter((s: any) => s.description || s.narration);
+
 
   const getScripts = (artifact: any): any[] => {
     const c = artifact?.conteudo as any;
@@ -2598,11 +2616,47 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <Input
                     value={s.narration || ''}
                     onChange={(e) => updateScene(idx, { narration: e.target.value })}
-                    placeholder="Narração / áudio (opcional)"
+                    placeholder="Narração / voz off (opcional)"
                     className="h-7 text-[11px]"
                   />
+                  <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-1.5">
+                    <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+                    <Input
+                      value={s.soundtrack || ''}
+                      onChange={(e) => updateScene(idx, { soundtrack: e.target.value })}
+                      placeholder="Trilha (ex: lo-fi calmo, épico orquestral, house 120bpm)"
+                      className="h-7 text-[11px]"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={s.soundtrackIntensity || ''}
+                        onChange={(e) => updateScene(idx, { soundtrackIntensity: e.target.value })}
+                        placeholder="Intensidade"
+                        className="h-7 text-[11px]"
+                      />
+                      <Input
+                        value={s.voiceTone || ''}
+                        onChange={(e) => updateScene(idx, { voiceTone: e.target.value })}
+                        placeholder="Tom de voz"
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                    <Input
+                      value={s.ambientSound || ''}
+                      onChange={(e) => updateScene(idx, { ambientSound: e.target.value })}
+                      placeholder="Ambiente sonoro (café, vento, rua...)"
+                      className="h-7 text-[11px]"
+                    />
+                    <Input
+                      value={Array.isArray(s.sfx) ? s.sfx.join(', ') : (s.sfx || '')}
+                      onChange={(e) => updateScene(idx, { sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) })}
+                      placeholder="SFX separados por vírgula (whoosh, click, passos...)"
+                      className="h-7 text-[11px]"
+                    />
+                  </div>
                 </div>
               ))}
+
             </div>
 
             <Separator />
@@ -2721,7 +2775,43 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     placeholder="Narração / voz off"
                     className="h-7 text-[11px]"
                   />
+                  <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-1.5">
+                    <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+                    <Input
+                      value={s.soundtrack || ''}
+                      onChange={(e) => updateScene(idx, { soundtrack: e.target.value })}
+                      placeholder="Trilha (estilo musical)"
+                      className="h-7 text-[11px]"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={s.soundtrackIntensity || ''}
+                        onChange={(e) => updateScene(idx, { soundtrackIntensity: e.target.value })}
+                        placeholder="Intensidade"
+                        className="h-7 text-[11px]"
+                      />
+                      <Input
+                        value={s.voiceTone || ''}
+                        onChange={(e) => updateScene(idx, { voiceTone: e.target.value })}
+                        placeholder="Tom de voz"
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                    <Input
+                      value={s.ambientSound || ''}
+                      onChange={(e) => updateScene(idx, { ambientSound: e.target.value })}
+                      placeholder="Ambiente sonoro"
+                      className="h-7 text-[11px]"
+                    />
+                    <Input
+                      value={Array.isArray(s.sfx) ? s.sfx.join(', ') : (s.sfx || '')}
+                      onChange={(e) => updateScene(idx, { sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) })}
+                      placeholder="SFX (vírgula): whoosh, click..."
+                      className="h-7 text-[11px]"
+                    />
+                  </div>
                 </div>
+
               ))}
             </div>
 

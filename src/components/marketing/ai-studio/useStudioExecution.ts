@@ -625,6 +625,11 @@ export function useStudioExecution() {
             duration: Number(s?.duration) || 0,
             narration: (s?.narration || '').trim(),
             cameraMovement: (s?.cameraMovement || '').trim(),
+            soundtrack: (s?.soundtrack || '').trim(),
+            soundtrackIntensity: (s?.soundtrackIntensity || '').trim(),
+            sfx: Array.isArray(s?.sfx) ? s.sfx : (s?.sfx ? [String(s.sfx)] : []),
+            ambientSound: (s?.ambientSound || '').trim(),
+            voiceTone: (s?.voiceTone || '').trim(),
           }))
           .filter((s) => s.description || s.narration);
         const globalNotes = (config.globalNotes || '').trim();
@@ -636,16 +641,21 @@ export function useStudioExecution() {
           .map((s) => {
             const parts = [`CENA ${s.n}${s.duration ? ` (${s.duration}s)` : ''}: ${s.description}`];
             if (s.cameraMovement) parts.push(`  • Câmera: ${s.cameraMovement}`);
-            if (s.narration) parts.push(`  • Narração/Áudio: ${s.narration}`);
+            if (s.narration) parts.push(`  • Narração: ${s.narration}`);
+            if (s.voiceTone) parts.push(`  • Tom de voz: ${s.voiceTone}`);
+            if (s.soundtrack) parts.push(`  • Trilha: ${s.soundtrack}${s.soundtrackIntensity ? ` (intensidade ${s.soundtrackIntensity})` : ''}`);
+            if (s.ambientSound) parts.push(`  • Ambiente sonoro: ${s.ambientSound}`);
+            if (s.sfx && s.sfx.length) parts.push(`  • SFX: ${s.sfx.join(', ')}`);
             return parts.join('\n');
           })
           .join('\n');
         const directive = [
           `\n\n[ROTEIRO DO VÍDEO — QUADRO A QUADRO — OBRIGATÓRIO SEGUIR]`,
-          `Você DEVE gerar o vídeo seguindo EXATAMENTE este roteiro cena por cena, na ordem indicada, respeitando as descrições visuais, movimentos de câmera e durações.`,
+          `Você DEVE gerar o vídeo seguindo EXATAMENTE este roteiro cena por cena, na ordem indicada, respeitando descrições visuais, câmera, narração, trilha, SFX, ambiente sonoro e durações.`,
           globalNotes ? `\nObservações gerais: ${globalNotes}` : '',
           `\n${sceneLines}`,
           totalDuration > 0 ? `\nDuração total alvo: ~${totalDuration}s.` : '',
+          `\n🎵 ÁUDIO: aplique a trilha, SFX e ambiente sonoro descritos em cada cena. Mantenha coerência sonora ao longo do vídeo. Locução em PT-BR natural com o tom indicado.`,
           `\n⚠️ Não invente cenas extras, não troque a ordem das cenas, não pule cenas. Cada cena deve aparecer no vídeo final.`,
           `Se a duração configurada do bloco de vídeo for menor que a soma das cenas, comprima proporcionalmente mantendo a ordem.`,
         ].filter(Boolean).join('\n');
@@ -658,6 +668,7 @@ export function useStudioExecution() {
           videoScript: { scenes: cleanScenes, globalNotes, totalDuration },
         };
       }
+
 
       case 'platformFormat': {
         const platformNames: Record<string, string> = {
@@ -1251,7 +1262,9 @@ export function useStudioExecution() {
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
+            soundtrack?: string; soundtrackIntensity?: string; sfx?: string[]; ambientSound?: string; voiceTone?: string;
           }>;
+
           const globalNotes = (videoScriptInput.videoScript.globalNotes || '').trim();
           const aspectRatioMS = config.aspectRatio || '16:9';
           const baseVideoModelMS = isValidVideoGenerationModel(config.videoModel)
@@ -1295,14 +1308,17 @@ export function useStudioExecution() {
             const scenePromptParts = [
               `🎬 CENA ${scene.n} de ${scenes.length} (parte de um roteiro maior — esta cena é INDEPENDENTE e será unida às outras na pós-produção).`,
               ``,
-              `📋 DESCRIÇÃO VISUAL DESTA CENA:`,
-              scene.description,
               scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
-              scene.narration ? `\n🔊 NARRAÇÃO/ÁUDIO: ${scene.narration}` : '',
+              scene.narration ? `\n🔊 NARRAÇÃO: ${scene.narration}` : '',
+              scene.voiceTone ? `\n🎙️ TOM DE VOZ: ${scene.voiceTone}` : '',
+              scene.soundtrack ? `\n🎵 TRILHA SONORA: ${scene.soundtrack}${scene.soundtrackIntensity ? ` (intensidade ${scene.soundtrackIntensity})` : ''}` : '',
+              scene.ambientSound ? `\n🌬️ AMBIENTE SONORO: ${scene.ambientSound}` : '',
+              (scene.sfx && scene.sfx.length) ? `\n💥 SFX: ${scene.sfx.join(', ')}` : '',
               globalNotes ? `\n📝 OBSERVAÇÕES GERAIS DO ROTEIRO: ${globalNotes}` : '',
               `\n⏱️ Duração: ${sceneDuration}s. Gere APENAS esta cena, não o roteiro inteiro.`,
               viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
             ].filter(Boolean).join('\n');
+
 
             try {
               const sceneParams = {
