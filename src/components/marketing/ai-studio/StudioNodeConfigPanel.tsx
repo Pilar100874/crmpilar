@@ -714,7 +714,13 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
       cameraMovement: s.tipo_camera || s.camera || 'static',
       overlay: s.texto_overlay || '',
       transition: s.transicao_para_proxima || 'cut',
+      soundtrack: s.trilha_sonora || '',
+      soundtrackIntensity: s.intensidade_trilha || 'média',
+      sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
+      ambientSound: s.ambiente_sonoro || '',
+      voiceTone: s.tom_voz || '',
     })).filter((s: any) => s.description || s.narration);
+
 
   const getScripts = (artifact: any): any[] => {
     const c = artifact?.conteudo as any;
