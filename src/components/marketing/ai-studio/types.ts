@@ -231,6 +231,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A',
           bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666',
           textAlign: 'center',
+        },
       },
       {
         type: 'imageCaption',
@@ -239,7 +240,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🔠',
         color: '#db2777',
         defaultConfig: { title: '', subtitle: '', aiSuggest: false, suggestContext: '' },
-      },
       },
       {
         type: 'platformFormat',
