@@ -34,10 +34,13 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
   const [deletingProject, setDeletingProject] = useState(false);
 
   const resetRadixPointerLock = useCallback(() => {
-    requestAnimationFrame(() => {
+    const unlock = () => {
       document.body.style.pointerEvents = '';
       document.body.removeAttribute('data-scroll-locked');
-    });
+    };
+    requestAnimationFrame(unlock);
+    window.setTimeout(unlock, 120);
+    window.setTimeout(unlock, 360);
   }, []);
 
   useEffect(() => {
