@@ -901,6 +901,8 @@ function AdsAutomationContent() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onConnectStart={onConnectStart}
+                onConnectEnd={onConnectEnd}
                 onEdgesDelete={onEdgesDelete}
                 onInit={(instance) => {
                   setReactFlowInstance(instance);
