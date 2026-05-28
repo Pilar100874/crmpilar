@@ -628,7 +628,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
           {!loading && selectedProjectId && (
             <>
               {artifacts.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground italic">Este projeto ainda não tem roteiros. Execute Produtor de Vídeo, Roteirista de Reels ou VSL.</p>
+                <p className="text-[10px] text-muted-foreground italic">Este projeto ainda não tem roteiros do Produtor de Vídeo. Execute o agente Produtor de Vídeo.</p>
               ) : (
                 <div className="space-y-1">
                   {artifacts.map((a) => (
