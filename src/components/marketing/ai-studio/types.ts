@@ -22,6 +22,7 @@ export type StudioNodeType =
   | 'textStyle'
   | 'textContent'
   | 'imageCaption'
+  | 'videoScript'
   | 'platformFormat'
   | 'llmProcess'
   | 'imageGen'
@@ -240,6 +241,20 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🔠',
         color: '#db2777',
         defaultConfig: { title: '', subtitle: '', aiSuggest: false, suggestContext: '' },
+      },
+      {
+        type: 'videoScript',
+        label: 'Roteiro do Vídeo (Quadro a Quadro)',
+        description: 'Descreva cena a cena o que a IA deve gerar. Pode importar roteiros do Motor de Estratégia.',
+        icon: '🎞️',
+        color: '#0ea5e9',
+        defaultConfig: {
+          scenes: [
+            { description: '', duration: 2, narration: '', cameraMovement: '' },
+          ],
+          globalNotes: '',
+          suggestContext: '',
+        },
       },
       {
         type: 'platformFormat',

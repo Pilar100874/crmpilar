@@ -326,7 +326,7 @@ export function useStudioExecution() {
     const { type, config } = node.data;
 
     const textInputs = inputs
-      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl && !i?._isPlatformFormat)
+      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl && !i?._isPlatformFormat && !i?._isVideoScript)
       .map((i) => (typeof i === 'string' ? i : i?.text || ''))
       .filter(Boolean);
     const combinedInput = textInputs.join('\n\n');
@@ -346,6 +346,12 @@ export function useStudioExecution() {
     const textLockDirective = inputs
       .filter((i) => i?._textLockDirective)
       .map((i) => i._textLockDirective)
+      .join('\n');
+
+    // Collect VIDEO SCRIPT directives (frame-by-frame storyboard) — MUST be followed scene by scene
+    const videoScriptDirective = inputs
+      .filter((i) => i?._videoScriptDirective)
+      .map((i) => i._videoScriptDirective)
       .join('\n');
 
     // Collect all image URLs from inputs, bucketed by role for priority ordering
@@ -606,6 +612,49 @@ export function useStudioExecution() {
           _textLockDirective: lockText,
           _referenceDesc: lockText,
           imageCaption: { title: capTitle, subtitle: capSubtitle },
+        };
+      }
+
+      case 'videoScript': {
+        const rawScenes: any[] = Array.isArray(config.scenes) ? config.scenes : [];
+        const cleanScenes = rawScenes
+          .map((s, i) => ({
+            n: i + 1,
+            description: (s?.description || '').trim(),
+            duration: Number(s?.duration) || 0,
+            narration: (s?.narration || '').trim(),
+            cameraMovement: (s?.cameraMovement || '').trim(),
+          }))
+          .filter((s) => s.description || s.narration);
+        const globalNotes = (config.globalNotes || '').trim();
+        if (cleanScenes.length === 0 && !globalNotes) {
+          return { text: '', _isVideoScript: true, _videoScriptDirective: '' };
+        }
+        const totalDuration = cleanScenes.reduce((a, s) => a + (s.duration || 0), 0);
+        const sceneLines = cleanScenes
+          .map((s) => {
+            const parts = [`CENA ${s.n}${s.duration ? ` (${s.duration}s)` : ''}: ${s.description}`];
+            if (s.cameraMovement) parts.push(`  • Câmera: ${s.cameraMovement}`);
+            if (s.narration) parts.push(`  • Narração/Áudio: ${s.narration}`);
+            return parts.join('\n');
+          })
+          .join('\n');
+        const directive = [
+          `\n\n[ROTEIRO DO VÍDEO — QUADRO A QUADRO — OBRIGATÓRIO SEGUIR]`,
+          `Você DEVE gerar o vídeo seguindo EXATAMENTE este roteiro cena por cena, na ordem indicada, respeitando as descrições visuais, movimentos de câmera e durações.`,
+          globalNotes ? `\nObservações gerais: ${globalNotes}` : '',
+          `\n${sceneLines}`,
+          totalDuration > 0 ? `\nDuração total alvo: ~${totalDuration}s.` : '',
+          `\n⚠️ Não invente cenas extras, não troque a ordem das cenas, não pule cenas. Cada cena deve aparecer no vídeo final.`,
+          `Se a duração configurada do bloco de vídeo for menor que a soma das cenas, comprima proporcionalmente mantendo a ordem.`,
+        ].filter(Boolean).join('\n');
+        const summaryText = `🎞️ Roteiro: ${cleanScenes.length} cena(s)${totalDuration ? ` ~${totalDuration}s` : ''}`;
+        return {
+          text: summaryText,
+          _isVideoScript: true,
+          _videoScriptDirective: directive,
+          _referenceDesc: directive,
+          videoScript: { scenes: cleanScenes, globalNotes, totalDuration },
         };
       }
 
@@ -1194,6 +1243,9 @@ export function useStudioExecution() {
         const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
+        if (videoScriptDirective) {
+          videoPrompt = `${videoScriptDirective}\n\n${videoPrompt}`;
+        }
         const aspectRatio = config.aspectRatio || '16:9';
 
         // Inject videoStyle into the prompt
