@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { useStrategyProjects } from './hooks/useStrategyProjects';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,16 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
   const [creating, setCreating] = useState(false);
   const [cloning, setCloning] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
+
+  const resetRadixPointerLock = useCallback(() => {
+    requestAnimationFrame(() => {
+      document.body.style.pointerEvents = '';
+      document.body.removeAttribute('data-scroll-locked');
+    });
+  }, []);
+
+  useEffect(() => resetRadixPointerLock, [resetRadixPointerLock]);
 
   const handleCreate = async () => {
     if (!nome.trim() || !descricao.trim()) {
@@ -226,21 +236,24 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !deletingProject) {
             setDeleteTarget(null);
-            setTimeout(() => {
-              if (document.body.style.pointerEvents === 'none') {
-                document.body.style.pointerEvents = '';
-              }
-            }, 100);
+            resetRadixPointerLock();
           }
         }}
-        onConfirm={() => {
-          if (deleteTarget) deleteProject(deleteTarget.id);
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          const projectId = deleteTarget.id;
+          setDeletingProject(true);
           setDeleteTarget(null);
+          resetRadixPointerLock();
+          await deleteProject(projectId);
+          setDeletingProject(false);
+          resetRadixPointerLock();
         }}
         title="Excluir projeto"
         itemName={deleteTarget?.name}
+        isLoading={deletingProject}
       />
     </div>
   );
