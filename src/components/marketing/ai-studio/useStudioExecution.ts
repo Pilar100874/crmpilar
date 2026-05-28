@@ -1321,7 +1321,31 @@ export function useStudioExecution() {
               orderedImageRoles.push('BRAND IDENTITY REFERENCE');
             }
             if (viVideo.preferredModel) {
-              viVideoModelOverride = viVideo.preferredModel;
+              // Only override if the preferred model is actually a VIDEO model.
+              // VI's "Modelo Preferido" is configured against image models, so
+              // applying it to video generation would send an image model (e.g.
+              // gpt-image-2) to a video provider and fail with "model not mapped".
+              const pm = viVideo.preferredModel.toLowerCase();
+              const isVideoModel =
+                pm.startsWith('wavespeed/') ||
+                pm.startsWith('apiframe/') ||
+                pm.startsWith('aimlapi/') ||
+                pm.startsWith('polloai/') ||
+                pm.startsWith('runway/') ||
+                pm.startsWith('kling/') ||
+                pm.startsWith('luma/') ||
+                pm.startsWith('stability/') ||
+                pm.includes('veo') ||
+                pm.includes('sora') ||
+                pm.includes('seedance') ||
+                pm.includes('hunyuan') ||
+                pm.includes('cogvideo') ||
+                pm.includes('ltx');
+              if (isVideoModel) {
+                viVideoModelOverride = viVideo.preferredModel;
+              } else {
+                console.warn('[Studio][VI] preferredModel ignorado para vídeo (é modelo de imagem):', viVideo.preferredModel);
+              }
             }
           }
         }
