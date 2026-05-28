@@ -2053,9 +2053,14 @@ export function useStudioExecution() {
               });
 
               // Override multiProductSelect result with single product for this iteration
+              // Mirror EXACTLY the shape produced by productImageSelect so the generation
+              // block applies all product-lock / VI / anti-duplicate rules the same way
+              // as the single "Gerar Imagem" flow.
               const singleProductResult = {
                 imageUrl: product.foto_url,
                 imageUrls: [product.foto_url],
+                productId: product.id,
+                productName: product.nome,
                 _referenceRole: 'produto',
                 _referenceDesc: product._referenceDesc,
               };
