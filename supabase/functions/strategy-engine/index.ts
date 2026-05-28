@@ -53,7 +53,7 @@ const AGENT_DEPENDENCIES: Record<string, string[]> = {
   paid_media: ['creative', 'funnel'],
   social_media: ['positioning', 'reel'],
   site_builder: ['landing_page', 'creative'],
-  video_producer: ['vsl', 'creative'],
+  video_producer: ['positioning', 'creative'],
   influencer_content: ['positioning', 'creative'],
 };
 
