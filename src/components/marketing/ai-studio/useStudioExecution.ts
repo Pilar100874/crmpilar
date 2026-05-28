@@ -1324,6 +1324,11 @@ export function useStudioExecution() {
             }
           }
         }
+
+        if (textLockDirective) {
+          videoPrompt = `${videoPrompt}${textLockDirective}`;
+        }
+
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
         // VI preferred model takes priority over block-configured model
         const baseVideoModel = viVideoModelOverride || videoModel;
