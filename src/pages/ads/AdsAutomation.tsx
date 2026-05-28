@@ -949,6 +949,15 @@ function AdsAutomationContent() {
                   maskColor="rgba(255, 255, 255, 0.8)"
                 />
               </ReactFlow>
+              {connectMenu && (
+                <SmartConnectMenu
+                  x={connectMenu.x}
+                  y={connectMenu.y}
+                  blocks={smartBlockOptions}
+                  onPick={handleSmartPick}
+                  onClose={() => setConnectMenu(null)}
+                />
+              )}
             </div>
 
             {/* Properties Panel */}
