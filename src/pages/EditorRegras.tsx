@@ -788,6 +788,15 @@ function EditorRegrasContent() {
             maskColor="rgba(0, 0, 0, 0.1)"
           />
         </ReactFlow>
+        {connectMenu && (
+          <SmartConnectMenu
+            x={connectMenu.x}
+            y={connectMenu.y}
+            blocks={smartBlockOptions}
+            onPick={handleSmartPick}
+            onClose={() => setConnectMenu(null)}
+          />
+        )}
       </div>
 
       {/* Properties Panel */}
