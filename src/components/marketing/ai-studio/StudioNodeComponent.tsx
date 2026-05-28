@@ -1348,6 +1348,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 {nodeData.config.subtitle && <p style={{ fontFamily: nodeData.config.subtitleFont || 'Montserrat', fontSize: Math.min(nodeData.config.subtitleSize || 42, 13), fontWeight: nodeData.config.subtitleWeight || '600', color: nodeData.config.subtitleColor || '#4A4A4A' }} className="leading-tight truncate mt-0.5">{nodeData.config.subtitle}</p>}
                 {nodeData.config.body && <p style={{ fontFamily: nodeData.config.bodyFont || 'Inter', fontSize: Math.min(nodeData.config.bodySize || 24, 10), fontWeight: nodeData.config.bodyWeight || 'normal', color: nodeData.config.bodyColor || '#666' }} className="leading-snug mt-1 line-clamp-2">{nodeData.config.body}</p>}
               </div>
+            )}
+            <p className="text-[9px] text-muted-foreground">📝 {nodeData.config.templateId || 'heading-bold'}</p>
+          </div>
         )}
 
         {/* Image Caption inline editor (locked text for image/video) */}
@@ -1375,10 +1378,6 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           </div>
         )}
 
-
-            <p className="text-[9px] text-muted-foreground">📝 {nodeData.config.templateId || 'heading-bold'}</p>
-          </div>
-        )}
 
         {/* Platform Format inline selector */}
         {nodeData.type === 'platformFormat' && (() => {
