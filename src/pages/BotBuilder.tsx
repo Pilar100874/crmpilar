@@ -1446,6 +1446,8 @@ function BotBuilderContent() {
               onNodesDelete={handleNodesDelete}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onConnectStart={onConnectStart}
+              onConnectEnd={onConnectEnd}
               onReconnect={onReconnect}
               onEdgesDelete={onEdgesDelete}
               onInit={(instance) => {
