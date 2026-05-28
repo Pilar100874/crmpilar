@@ -7,6 +7,29 @@ const corsHeaders = {
 
 const COLLABORATION_DIRECTIVE_SENTENCE = 'Improve collaboration between squads and ensure all agents read the shared strategic memory before executing tasks.';
 
+// ─── AI VIDEO SCENE RULES (compatível com AI Creative Studio) ─────────────────
+// Modelos de vídeo IA suportados (Veo, Wavespeed, etc.) geram clipes de
+// 5s ou 10s por chamada. O roteiro precisa ser quebrado em micro-cenas dentro
+// desse envelope, com câmera e narração com palavras suficientes para caber
+// no tempo. Cadência de leitura: ~2,5 palavras por segundo em PT-BR.
+const AI_VIDEO_SCENE_RULES = `
+REGRAS OBRIGATÓRIAS DE CENA PARA VÍDEO IA (use para alimentar o AI Creative Studio):
+- Cada cena DEVE ter duração de 5s ou 10s (limite dos modelos Google Veo / Wavespeed). NUNCA use 3s, 7s, 15s, etc.
+- Cada cena tem UM tipo de câmera. Use vocabulário de direção real:
+  "static" (parado), "slow push-in" (aproximação lenta), "pull-out" (afastamento), "pan left/right", "tilt up/down", "tracking shot" (acompanha sujeito), "handheld" (mão livre), "orbit" (gira em volta), "crane up/down", "dolly", "POV" (primeira pessoa), "close-up", "medium shot", "wide shot", "macro", "drone aerial".
+- Cada cena tem UMA narração (voz) com número de palavras compatível com o tempo:
+  5s → MÁX 12 palavras (PT-BR, cadência natural com pausa).
+  10s → MÁX 25 palavras.
+  Se a cena for visual sem narração, use string vazia.
+- A descrição visual deve ser autossuficiente, cinematográfica e UMA cena só (sem cortes internos). Inclua sujeito, ação, ambiente, iluminação, mood.
+- Sempre inclua o array "cenas_ai_video" com o formato EXATO:
+  [{ "ordem": 1, "duracao_segundos": 5|10, "tipo_camera": "", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut|fade|whip|match-cut|none" }]
+- A soma das durações deve bater com a duração total declarada do vídeo.
+- Escreva narração em PT-BR natural, sem erros gramaticais, com acentuação correta.
+`.trim();
+
+
+
 // ─── AGENT DEPENDENCY GRAPH ────────────────────────────────────────────────────
 const AGENT_DEPENDENCIES: Record<string, string[]> = {
   vox: [],
