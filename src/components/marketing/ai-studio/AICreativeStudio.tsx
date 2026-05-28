@@ -473,7 +473,71 @@ const AICreativeStudioInner: React.FC = () => {
             }
           }
         }
+
+        // (6) Múltiplos roteiros conectados ao mesmo bloco (videoScript + reelScript ou 2 do mesmo tipo)
+        const scriptSources = sources.filter((s) => SCRIPT_SOURCE_TYPES.has((s.data as StudioNodeData).type));
+        if (scriptSources.length > 1) {
+          const types = scriptSources.map((s) => (s.data as StudioNodeData).type);
+          const hasVideo = types.includes('videoScript');
+          const hasReel = types.includes('reelScript');
+          if (hasVideo && hasReel) {
+            errors.push(`"${label}": não é possível combinar "Roteiro de Vídeo" e "Roteiro de Reels" na mesma saída — eles seguem formatos, durações e proporções diferentes. Conecte apenas um.`);
+          } else {
+            errors.push(`"${label}": ${scriptSources.length} roteiros conectados — apenas 1 roteiro por bloco de geração. Remova as conexões extras.`);
+          }
+        }
+
+        // (7) Roteiro conectado em bloco de imagem (scripts só fazem sentido em vídeo)
+        if (scriptSources.length > 0 && nd.type !== 'videoGen') {
+          errors.push(`"${label}": roteiros (vídeo/reels) só podem alimentar o bloco "Gerar Vídeo". Remova a conexão ou troque por um bloco de vídeo.`);
+        }
+
+        // (8) Múltiplas fontes do mesmo "papel" (ex: 2 produtos, 2 influencers) → conflito de identidade
+        const countByType = new Map<string, number>();
+        for (const s of refSources) {
+          const t = (s.data as StudioNodeData).type;
+          countByType.set(t, (countByType.get(t) || 0) + 1);
+        }
+        const roleLabels: Record<string, string> = {
+          productImageSelect: 'Produto',
+          galleryInfluencer: 'Influencer',
+          galleryLogo: 'Logo',
+          galleryPaleta: 'Paleta',
+        };
+        for (const [t, c] of countByType.entries()) {
+          if (c > 1 && roleLabels[t]) {
+            errors.push(`"${label}": ${c} blocos de "${roleLabels[t]}" conectados — use apenas 1 por geração para manter a identidade consistente.`);
+          }
+        }
+
+        // (9) Caption/Texto: só faz sentido em geração de imagem
+        const captionSources = sources.filter((s) => (s.data as StudioNodeData).type === 'imageCaption');
+        if (captionSources.length > 0 && nd.type === 'videoGen') {
+          warnings.push(`"${label}": "Título/Subtítulo" foi projetado para imagens. Em vídeos, prefira incluir o texto no roteiro (narração/legenda).`);
+        }
+        if (captionSources.length > 1) {
+          errors.push(`"${label}": ${captionSources.length} blocos de "Título/Subtítulo" conectados — use apenas 1.`);
+        }
+
+        // (10) Bloco de geração sem nenhuma entrada e sem prompt próprio
+        if (sources.length === 0) {
+          const hasPrompt = (nd.config?.prompt || nd.config?.userPrompt || '').toString().trim().length > 0;
+          if (!hasPrompt && !viActive) {
+            warnings.push(`"${label}": nenhuma referência, roteiro ou prompt configurado. O resultado será genérico.`);
+          }
+        }
       }
+
+      // (11) Validação global: cada roteiro deve estar conectado a algum videoGen
+      for (const n of nodes) {
+        const nd = n.data as StudioNodeData;
+        if (!SCRIPT_SOURCE_TYPES.has(nd.type)) continue;
+        const consumers = edges.filter((e) => e.source === n.id);
+        if (consumers.length === 0) {
+          warnings.push(`"${nd.label || nd.type}": roteiro não está conectado a nenhum bloco "Gerar Vídeo" — não será executado.`);
+        }
+      }
+
 
       if (errors.length > 0) {
         toast.error(
