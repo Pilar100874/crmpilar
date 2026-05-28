@@ -88,6 +88,7 @@ const nodeGradientMap: Record<string, string> = {
   textContent: 'from-violet-500/20 to-purple-500/20',
   imageCaption: 'from-pink-500/20 to-rose-500/20',
   videoScript: 'from-sky-500/20 to-cyan-500/20',
+  reelScript: 'from-rose-500/20 to-pink-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
