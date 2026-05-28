@@ -402,6 +402,15 @@ function EcommerceRulesEditorInner() {
             <Controls className="!bg-card !border-border !shadow-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-accent" />
             <MiniMap zoomable pannable className="!bg-card !border-border !shadow-lg" />
           </ReactFlow>
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              blocks={smartBlockOptions}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
         </div>
 
         {/* Properties Panel - Right */}
