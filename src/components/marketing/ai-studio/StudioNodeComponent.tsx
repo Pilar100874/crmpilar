@@ -48,6 +48,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   textContent: FileText,
   imageCaption: Type,
   videoScript: Film,
+  reelScript: Film,
   platformFormat: Monitor,
   llmProcess: Type,
   imageGen: ImageIcon,
@@ -87,6 +88,7 @@ const nodeGradientMap: Record<string, string> = {
   textContent: 'from-violet-500/20 to-purple-500/20',
   imageCaption: 'from-pink-500/20 to-rose-500/20',
   videoScript: 'from-sky-500/20 to-cyan-500/20',
+  reelScript: 'from-rose-500/20 to-pink-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -125,6 +127,7 @@ const nodeIconColorMap: Record<string, string> = {
   textContent: 'text-violet-400',
   imageCaption: 'text-pink-400',
   videoScript: 'text-sky-400',
+  reelScript: 'text-rose-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -163,6 +166,7 @@ const nodeAccentMap: Record<string, string> = {
   textContent: '#7c3aed',
   imageCaption: '#db2777',
   videoScript: '#0ea5e9',
+  reelScript: '#f43f5e',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -765,7 +769,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'videoScript', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'videoScript', 'reelScript', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -1407,6 +1411,38 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             </div>
           );
         })()}
+
+        {/* Reel Script inline preview */}
+        {nodeData.type === 'reelScript' && (() => {
+          const scenes = Array.isArray(nodeData.config.scenes) ? nodeData.config.scenes : [];
+          const valid = scenes.filter((s: any) => (s?.description || '').trim());
+          const total = valid.reduce((a: number, s: any) => a + (Number(s?.duration) || 0), 0);
+          const importedFrom = nodeData.config.importedFrom || '';
+          return (
+            <div className="px-3 pb-3 pt-1 space-y-1.5">
+              <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 px-2 py-1.5 text-[10px] text-rose-300">
+                📱 <strong>Reels</strong> · {valid.length} cena{valid.length === 1 ? '' : 's'}
+                {total > 0 && <> · ~{total}s</>}
+              </div>
+              {importedFrom && (
+                <p className="text-[9px] text-muted-foreground/80 italic line-clamp-1">📥 {importedFrom}</p>
+              )}
+              {valid.slice(0, 3).map((s: any, i: number) => (
+                <div key={i} className="text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                  <span className="text-rose-400 font-semibold">CENA {i + 1}:</span> {s.description}
+                </div>
+              ))}
+              {valid.length > 3 && (
+                <p className="text-[9px] text-muted-foreground/70">+{valid.length - 3} cena(s)…</p>
+              )}
+              {valid.length === 0 && (
+                <p className="text-[10px] text-muted-foreground/70">Abra as propriedades e importe um roteiro do agente Roteirista de Reels.</p>
+              )}
+            </div>
+          );
+        })()}
+
+
 
 
         {/* Platform Format inline selector */}

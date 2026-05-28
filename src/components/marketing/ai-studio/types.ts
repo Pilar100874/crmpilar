@@ -23,6 +23,7 @@ export type StudioNodeType =
   | 'textContent'
   | 'imageCaption'
   | 'videoScript'
+  | 'reelScript'
   | 'platformFormat'
   | 'llmProcess'
   | 'imageGen'
@@ -254,6 +255,19 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           ],
           globalNotes: '',
           suggestContext: '',
+        },
+      },
+      {
+        type: 'reelScript',
+        label: 'Roteiro de Reels (Motor de Estratégia)',
+        description: 'Importe roteiros do agente Roteirista de Reels e escolha qual variação usar para gerar o vídeo.',
+        icon: '📱',
+        color: '#f43f5e',
+        defaultConfig: {
+          scenes: [],
+          globalNotes: '',
+          selectedScriptIndex: 0,
+          importedFrom: '',
         },
       },
       {
