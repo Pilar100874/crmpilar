@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { NODE_CATEGORIES } from './types';
+import { getConnectionHelp } from './nodeConnections';
 import { Button } from '@/components/ui/button';
-import { Plus, X, Search, GripVertical } from 'lucide-react';
+import { Plus, X, Search, GripVertical, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string }> = {
   input: { bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.15)', dot: '#6366f1' },
@@ -126,43 +128,103 @@ const StudioNodeLibrary: React.FC = () => {
                         <div className="flex-1 h-px bg-border/40" />
                       </div>
 
-                      {/* Nodes - always visible */}
                       <div className="space-y-1">
-                        {cat.nodes.map((node) => (
+                        {cat.nodes.map((node) => {
+
+                          const help = getConnectionHelp(node.type);
+                          return (
                           <motion.div
                             key={node.type}
-                            draggable
-                            onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
-                            onClick={() => handleAddNode(node.type)}
                             whileHover={{ x: 3 }}
                             whileTap={{ scale: 0.97 }}
-                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer md:cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all group/node hover:shadow-sm"
                             style={{
                               background: colors.bg,
                               border: `1px solid ${colors.border}`,
                             }}
                           >
                             <div
-                              className="h-7 w-7 rounded-md flex items-center justify-center text-sm shrink-0"
-                              style={{
-                                background: `${node.color}18`,
-                                border: `1px solid ${node.color}30`,
-                              }}
+                              draggable
+                              onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
+                              onClick={() => handleAddNode(node.type)}
+                              className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer md:cursor-grab active:cursor-grabbing"
                             >
-                              {node.icon}
+                              <div
+                                className="h-7 w-7 rounded-md flex items-center justify-center text-sm shrink-0"
+                                style={{
+                                  background: `${node.color}18`,
+                                  border: `1px solid ${node.color}30`,
+                                }}
+                              >
+                                {node.icon}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-[11px] truncate text-foreground/80 group-hover/node:text-foreground leading-tight">
+                                  {node.label}
+                                </p>
+                                <p className="text-[9px] text-muted-foreground truncate leading-tight">
+                                  {node.description}
+                                </p>
+                              </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-[11px] truncate text-foreground/80 group-hover/node:text-foreground leading-tight">
-                                {node.label}
-                              </p>
-                              <p className="text-[9px] text-muted-foreground truncate leading-tight">
-                                {node.description}
-                              </p>
-                            </div>
-                            <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/node:text-primary md:hidden shrink-0" />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                                  aria-label="Ver conexões compatíveis"
+                                >
+                                  <HelpCircle className="h-3.5 w-3.5" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent side="right" align="start" className="w-72 p-3 z-[10000]">
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                    <span className="text-base">{node.icon}</span>
+                                    <p className="font-semibold text-xs text-foreground">{node.label}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                                      ➡️ Pode conectar EM ({help.downstream.length})
+                                    </p>
+                                    {help.downstream.length === 0 ? (
+                                      <p className="text-[11px] text-muted-foreground italic">Bloco final – não conecta em outros.</p>
+                                    ) : (
+                                      <div className="flex flex-wrap gap-1">
+                                        {help.downstream.map((d) => (
+                                          <span key={d.type} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-foreground border border-primary/20">
+                                            {d.icon} {d.label}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                                      ⬅️ Recebe DE ({help.upstream.length})
+                                    </p>
+                                    {help.upstream.length === 0 ? (
+                                      <p className="text-[11px] text-muted-foreground italic">Bloco de entrada – não recebe conexões.</p>
+                                    ) : (
+                                      <div className="flex flex-wrap gap-1">
+                                        {help.upstream.map((u) => (
+                                          <span key={u.type} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground border border-border/50">
+                                            {u.icon} {u.label}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                             <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors hidden md:block" />
                           </motion.div>
-                        ))}
+                          );
+                        })}
+
+
                       </div>
                     </div>
                   );
