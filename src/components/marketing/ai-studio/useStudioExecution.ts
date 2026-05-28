@@ -564,6 +564,20 @@ export function useStudioExecution() {
           },
         };
 
+      case 'imageCaption': {
+        const capTitle = (config.title || '').trim();
+        const capSubtitle = (config.subtitle || '').trim();
+        const parts = [capTitle && `Título: "${capTitle}"`, capSubtitle && `Subtítulo: "${capSubtitle}"`].filter(Boolean).join(' | ');
+        const lockText = `\n\n[TEXT LOCK — TEXTO OBRIGATÓRIO NA IMAGEM]\nA imagem/vídeo gerada DEVE conter EXATAMENTE estes textos, sem alterar uma única letra, sem traduzir, sem reformular, sem adicionar texto extra:\n${capTitle ? `• TÍTULO: "${capTitle}"` : ''}\n${capSubtitle ? `• SUBTÍTULO: "${capSubtitle}"` : ''}\nProibido inventar palavras, abreviar, trocar acentos ou criar variações. Português (Brasil) correto. NÃO renderize nenhum outro texto além destes.`;
+        return {
+          text: parts,
+          _isImageCaption: true,
+          _textLockDirective: lockText,
+          _referenceDesc: lockText,
+          imageCaption: { title: capTitle, subtitle: capSubtitle },
+        };
+      }
+
       case 'platformFormat': {
         const platformNames: Record<string, string> = {
           instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp', telegram: 'Telegram', custom: 'Personalizado',
