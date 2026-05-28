@@ -23,6 +23,7 @@ export type StudioNodeType =
   | 'textContent'
   | 'imageCaption'
   | 'videoScript'
+  | 'reelScript'
   | 'platformFormat'
   | 'llmProcess'
   | 'imageGen'
