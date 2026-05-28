@@ -669,7 +669,6 @@ export function useStudioExecution() {
         };
       }
 
-      }
 
       case 'platformFormat': {
         const platformNames: Record<string, string> = {
