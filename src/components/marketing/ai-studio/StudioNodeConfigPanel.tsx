@@ -645,7 +645,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
                       onClick={() => handleImport(a)}
                       className="w-full text-left text-[11px] px-2 py-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/40"
                     >
-                      🎬 Produtor de Vídeo
+                      🎬 Roteiro de Vídeo (Roteiro + Produção)
                     </button>
                   ))}
                 </div>
