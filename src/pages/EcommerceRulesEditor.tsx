@@ -33,6 +33,7 @@ import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayo
 import { toast } from "@/hooks/use-toast";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = { custom: EcommerceFlowNode };
 
