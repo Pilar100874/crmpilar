@@ -222,8 +222,7 @@ const StudioNodeLibrary: React.FC = () => {
                           );
                         })}
 
-                          </motion.div>
-                        ))}
+
                       </div>
                     </div>
                   );
