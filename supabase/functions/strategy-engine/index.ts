@@ -1571,7 +1571,8 @@ REGRAS:
           const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory, deps);
 
           const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
-          const parsedResult = extractJSON(rawResult);
+          const parsedResult = normalizeVideoArtifact(exec.key, extractJSON(rawResult));
+
           const duration = Date.now() - startTime;
 
           // Update execution record
