@@ -166,6 +166,7 @@ const nodeAccentMap: Record<string, string> = {
   textContent: '#7c3aed',
   imageCaption: '#db2777',
   videoScript: '#0ea5e9',
+  reelScript: '#f43f5e',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
