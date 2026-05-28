@@ -193,9 +193,33 @@ export function useStudioExecution() {
     globalSignal?.addEventListener('abort', handleAbort, { once: true });
   });
 
+  const isValidVideoGenerationModel = (modelValue?: string | null): boolean => {
+    const model = (modelValue || '').toLowerCase().trim();
+    if (!model) return false;
+    if (model === 'auto' || model === 'free/gif-animated') return true;
+
+    const imageOnlyMarkers = [
+      'gpt-image', 'dall-e', 'flux', 'seedream', 'nano-banana', 'imagefx',
+      'ideogram', 'recraft', 'kolors', 'sd3', 'sdxl', 'firefly', 'faceswap', 'kling-image',
+    ];
+    if (imageOnlyMarkers.some((marker) => model.includes(marker))) return false;
+
+    const videoMarkers = [
+      'veo', 'sora', 'seedance', 'seedvideo', 'runway', 'gen3', 'gen4', 'kling',
+      'luma', 'ray-2', 'wan-', 'minimax', 'hunyuan', 'cogvideo', 'ltx', 'pika',
+      'stable-video', 'video-01', 'midjourney-video',
+    ];
+    return videoMarkers.some((marker) => model.includes(marker));
+  };
+
   const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
     // Detect provider from model prefix
-    const model = params.model || '';
+    const requestedModel = params.model || '';
+    const model = isValidVideoGenerationModel(requestedModel) ? requestedModel : 'auto';
+    if (model !== requestedModel) {
+      console.warn('[Studio] Modelo incompatível ignorado para vídeo:', requestedModel);
+      params = { ...params, model };
+    }
     const isWavespeed = model.startsWith('wavespeed/');
     const startAction = isWavespeed ? 'start_wavespeed_video' : 'start_apiframe_video';
     const fetchAction = isWavespeed ? 'fetch_wavespeed_video' : 'fetch_apiframe_video';
@@ -1325,23 +1349,7 @@ export function useStudioExecution() {
               // VI's "Modelo Preferido" is configured against image models, so
               // applying it to video generation would send an image model (e.g.
               // gpt-image-2) to a video provider and fail with "model not mapped".
-              const pm = viVideo.preferredModel.toLowerCase();
-              const isVideoModel =
-                pm.startsWith('wavespeed/') ||
-                pm.startsWith('apiframe/') ||
-                pm.startsWith('aimlapi/') ||
-                pm.startsWith('polloai/') ||
-                pm.startsWith('runway/') ||
-                pm.startsWith('kling/') ||
-                pm.startsWith('luma/') ||
-                pm.startsWith('stability/') ||
-                pm.includes('veo') ||
-                pm.includes('sora') ||
-                pm.includes('seedance') ||
-                pm.includes('hunyuan') ||
-                pm.includes('cogvideo') ||
-                pm.includes('ltx');
-              if (isVideoModel) {
+              if (isValidVideoGenerationModel(viVideo.preferredModel)) {
                 viVideoModelOverride = viVideo.preferredModel;
               } else {
                 console.warn('[Studio][VI] preferredModel ignorado para vídeo (é modelo de imagem):', viVideo.preferredModel);
@@ -1356,7 +1364,9 @@ export function useStudioExecution() {
 
         // When model is free/gif-animated (default), try auto-detecting a paid provider first
         // VI preferred model takes priority over block-configured model
-        const baseVideoModel = viVideoModelOverride || videoModel;
+        const baseVideoModel = isValidVideoGenerationModel(viVideoModelOverride || videoModel)
+          ? (viVideoModelOverride || videoModel)
+          : 'auto';
         const effectiveVideoModel = baseVideoModel === 'free/gif-animated' ? 'auto' : baseVideoModel;
         {
           nodeResultStore.setResult(node.id, { 
