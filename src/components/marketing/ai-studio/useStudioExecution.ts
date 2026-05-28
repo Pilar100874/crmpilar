@@ -615,6 +615,49 @@ export function useStudioExecution() {
         };
       }
 
+      case 'videoScript': {
+        const rawScenes: any[] = Array.isArray(config.scenes) ? config.scenes : [];
+        const cleanScenes = rawScenes
+          .map((s, i) => ({
+            n: i + 1,
+            description: (s?.description || '').trim(),
+            duration: Number(s?.duration) || 0,
+            narration: (s?.narration || '').trim(),
+            cameraMovement: (s?.cameraMovement || '').trim(),
+          }))
+          .filter((s) => s.description || s.narration);
+        const globalNotes = (config.globalNotes || '').trim();
+        if (cleanScenes.length === 0 && !globalNotes) {
+          return { text: '', _isVideoScript: true, _videoScriptDirective: '' };
+        }
+        const totalDuration = cleanScenes.reduce((a, s) => a + (s.duration || 0), 0);
+        const sceneLines = cleanScenes
+          .map((s) => {
+            const parts = [`CENA ${s.n}${s.duration ? ` (${s.duration}s)` : ''}: ${s.description}`];
+            if (s.cameraMovement) parts.push(`  • Câmera: ${s.cameraMovement}`);
+            if (s.narration) parts.push(`  • Narração/Áudio: ${s.narration}`);
+            return parts.join('\n');
+          })
+          .join('\n');
+        const directive = [
+          `\n\n[ROTEIRO DO VÍDEO — QUADRO A QUADRO — OBRIGATÓRIO SEGUIR]`,
+          `Você DEVE gerar o vídeo seguindo EXATAMENTE este roteiro cena por cena, na ordem indicada, respeitando as descrições visuais, movimentos de câmera e durações.`,
+          globalNotes ? `\nObservações gerais: ${globalNotes}` : '',
+          `\n${sceneLines}`,
+          totalDuration > 0 ? `\nDuração total alvo: ~${totalDuration}s.` : '',
+          `\n⚠️ Não invente cenas extras, não troque a ordem das cenas, não pule cenas. Cada cena deve aparecer no vídeo final.`,
+          `Se a duração configurada do bloco de vídeo for menor que a soma das cenas, comprima proporcionalmente mantendo a ordem.`,
+        ].filter(Boolean).join('\n');
+        const summaryText = `🎞️ Roteiro: ${cleanScenes.length} cena(s)${totalDuration ? ` ~${totalDuration}s` : ''}`;
+        return {
+          text: summaryText,
+          _isVideoScript: true,
+          _videoScriptDirective: directive,
+          _referenceDesc: directive,
+          videoScript: { scenes: cleanScenes, globalNotes, totalDuration },
+        };
+      }
+
       case 'platformFormat': {
         const platformNames: Record<string, string> = {
           instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp', telegram: 'Telegram', custom: 'Personalizado',
