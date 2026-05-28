@@ -589,15 +589,23 @@ INSTRUÇÃO CRÍTICA — DEPENDÊNCIAS:
 
 Mínimo 8 cenas com descrições visuais, narração sincronizada, adaptação para 2+ plataformas.
 
+${AI_VIDEO_SCENE_RULES}
+
+IMPORTANTE: cada item de "storyboard" DEVE respeitar as regras de cena para vídeo IA (duração 5s ou 10s, tipo de câmera real, narração com palavras dentro do orçamento). Use o campo "duracao" como número de segundos (5 ou 10) e "movimento_camera" usando o vocabulário definido acima.
+
 Retorne EXCLUSIVAMENTE um JSON válido:
 {
   "conceito_criativo": {"tema_visual": "", "estilo": "", "tom_emocional": ""},
-  "storyboard": [{"cena": "", "duracao": "", "descricao_visual": "", "naracao": "", "movimento_camera": "", "enquadramento": "", "texto_overlay": "", "transicao": ""}],
+  "storyboard": [{"ordem": 1, "cena": "", "duracao_segundos": 5, "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "tipo_camera": "static", "enquadramento": "medium shot", "texto_overlay": "", "transicao_para_proxima": "cut"}],
   "direcao_arte": {"paleta_cores": [""], "tipografia_overlay": "", "iluminacao": "", "cenario": ""},
   "audio": {"trilha_sonora": {"genero": "", "mood": ""}, "efeitos_sonoros": [""], "ritmo_edicao": ""},
-  "formatos": [{"plataforma": "", "aspecto": "", "duracao_total": "", "adaptacoes": ""}],
-  "briefing_producao": {"equipamento_minimo": [""], "locacoes_sugeridas": [""], "tempo_producao_estimado": ""}
+  "formatos": [{"plataforma": "", "aspecto": "", "duracao_total_segundos": 0, "adaptacoes": ""}],
+  "briefing_producao": {"equipamento_minimo": [""], "locacoes_sugeridas": [""], "tempo_producao_estimado": ""},
+  "cenas_ai_video": [
+    { "ordem": 1, "duracao_segundos": 5, "tipo_camera": "slow push-in", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut" }
+  ]
 }`
+
   },
   influencer_content: {
     name: 'Influencer & Imagens',
