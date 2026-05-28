@@ -1006,6 +1006,12 @@ export function useStudioExecution() {
           }
         }
 
+        if (textLockDirective) {
+          editPromptWithLang = `${editPromptWithLang}${textLockDirective}`;
+        }
+
+
+
         const result = await callStudio('edit_image', {
           prompt: editPromptWithLang,
           imageUrls: editImageInputs,
