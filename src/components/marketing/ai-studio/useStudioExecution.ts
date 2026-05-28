@@ -1088,6 +1088,12 @@ export function useStudioExecution() {
           }
         }
 
+        if (textLockDirective) {
+          fullPrompt = `${fullPrompt}${textLockDirective}`;
+        }
+
+
+
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: (viCompose?.preferredModel) || config.model || 'google/gemini-2.5-flash-image',
