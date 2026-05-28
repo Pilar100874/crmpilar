@@ -200,6 +200,63 @@ const AICreativeStudioInner: React.FC = () => {
     setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'studioEdge' }, eds));
   }, [setEdges]);
 
+  // Smart connection menu (make.com-style) — opens when dragging an edge into empty canvas
+  const [connectMenu, setConnectMenu] = useState<{
+    x: number; y: number; flowX: number; flowY: number;
+    fromNodeId: string; fromHandleId: string | null;
+    fromType: any; handleType: 'source' | 'target';
+  } | null>(null);
+  const connectStartRef = useRef<{ nodeId: string; handleId: string | null; handleType: 'source' | 'target' } | null>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    if (!params?.nodeId) { connectStartRef.current = null; return; }
+    connectStartRef.current = {
+      nodeId: params.nodeId,
+      handleId: params.handleId ?? null,
+      handleType: (params.handleType || 'source') as 'source' | 'target',
+    };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start) return;
+    const target = event?.target as HTMLElement | null;
+    const droppedOnPane = !!target && (target.classList?.contains('react-flow__pane') || !!target.closest?.('.react-flow__pane'));
+    if (!droppedOnPane) return;
+    const fromNode = nodesRef.current.find(n => n.id === start.nodeId);
+    if (!fromNode) return;
+    const clientX = (event as MouseEvent).clientX ?? (event as TouchEvent)?.changedTouches?.[0]?.clientX ?? 0;
+    const clientY = (event as MouseEvent).clientY ?? (event as TouchEvent)?.changedTouches?.[0]?.clientY ?? 0;
+    const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({
+      x: clientX, y: clientY,
+      flowX: flowPos.x, flowY: flowPos.y,
+      fromNodeId: start.nodeId, fromHandleId: start.handleId,
+      fromType: (fromNode as any).data?.type,
+      handleType: start.handleType,
+    });
+  }, [screenToFlowPosition]);
+
+  const handleSmartPick = useCallback((newType: string) => {
+    if (!connectMenu) return;
+    const meta = getNodeMeta(newType as any);
+    if (!meta) return;
+    const newId = `${newType}_${Date.now()}`;
+    const newNode: StudioNode = {
+      id: newId,
+      type: 'studioNode',
+      position: { x: connectMenu.flowX - 120, y: connectMenu.flowY - 40 },
+      data: { label: meta.label, type: newType as any, config: applyNegativeDefaults(newType, { ...meta.defaultConfig }) },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    const edge = connectMenu.handleType === 'source'
+      ? { source: connectMenu.fromNodeId, target: newId, sourceHandle: connectMenu.fromHandleId, targetHandle: null }
+      : { source: newId, target: connectMenu.fromNodeId, sourceHandle: null, targetHandle: connectMenu.fromHandleId };
+    setEdges((eds) => addEdge({ ...edge, animated: true, style: EDGE_STYLE, type: 'studioEdge' } as any, eds));
+    setHasUnsavedChanges(true);
+  }, [connectMenu, applyNegativeDefaults, setNodes, setEdges]);
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
