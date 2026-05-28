@@ -47,6 +47,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   textStyle: TypeIcon,
   textContent: FileText,
   imageCaption: Type,
+  videoScript: Film,
   platformFormat: Monitor,
   llmProcess: Type,
   imageGen: ImageIcon,
@@ -85,6 +86,7 @@ const nodeGradientMap: Record<string, string> = {
   textStyle: 'from-rose-500/20 to-pink-500/20',
   textContent: 'from-violet-500/20 to-purple-500/20',
   imageCaption: 'from-pink-500/20 to-rose-500/20',
+  videoScript: 'from-sky-500/20 to-cyan-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -122,6 +124,7 @@ const nodeIconColorMap: Record<string, string> = {
   textStyle: 'text-rose-400',
   textContent: 'text-violet-400',
   imageCaption: 'text-pink-400',
+  videoScript: 'text-sky-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -159,6 +162,7 @@ const nodeAccentMap: Record<string, string> = {
   textStyle: '#e11d48',
   textContent: '#7c3aed',
   imageCaption: '#db2777',
+  videoScript: '#0ea5e9',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -761,7 +765,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'videoScript', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
