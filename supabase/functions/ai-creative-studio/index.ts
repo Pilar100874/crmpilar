@@ -1034,9 +1034,14 @@ const WAVESPEED_IMAGE_MODEL_MAP: Record<string, string> = {
   "kolors": "kwai/kolors/text-to-image",
 };
 
+const isWavespeedImageOnlyModel = (subModel: string): boolean => Boolean(WAVESPEED_IMAGE_MODEL_MAP[subModel]);
+
 async function startVideoWavespeed(estabelecimentoId: string, params: any): Promise<{ taskId?: string; videoUrl?: string; error?: string }> {
   const model = (params.model as string) || "";
   const subModel = model.replace("wavespeed/", "");
+  if (isWavespeedImageOnlyModel(subModel)) {
+    return { error: `O modelo "${subModel}" é exclusivo para imagem e não pode ser usado em Gerar Vídeo. Selecione um modelo de vídeo como Seedance, Kling, Veo, Luma ou use Auto.` };
+  }
   const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
   if (!wsModelPath) {
     return { error: `Modelo "${subModel}" não está mapeado no WaveSpeed. Modelos suportados: ${Object.keys(WAVESPEED_VIDEO_MODEL_MAP).join(', ')}` };
