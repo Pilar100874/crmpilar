@@ -932,6 +932,11 @@ export function useStudioExecution() {
           }
         }
 
+        if (textLockDirective) {
+          enrichedPrompt = `${enrichedPrompt}${textLockDirective}`;
+        }
+
+
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: viModelOverride || config.model,
