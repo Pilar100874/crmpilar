@@ -615,6 +615,7 @@ export function useStudioExecution() {
         };
       }
 
+      case 'reelScript':
       case 'videoScript': {
         const rawScenes: any[] = Array.isArray(config.scenes) ? config.scenes : [];
         const cleanScenes = rawScenes
