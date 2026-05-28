@@ -769,7 +769,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'videoScript', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'multiImageRef', 'videoInput', 'multiVideoRef', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'imageCaption', 'videoScript', 'reelScript', 'platformFormat', 'mediaGallery', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
