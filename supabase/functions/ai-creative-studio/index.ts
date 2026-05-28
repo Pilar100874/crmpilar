@@ -818,6 +818,23 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { error: `Modelo "${subModel}" não está disponível no Apiframe. Modelos suportados: Runway, Kling 2.6/2.5, Luma.` };
   }
 
+  // Pre-generate hero frame if strict refs or brand identity exist
+  const _roles = (params.imageRoles || []) as string[];
+  const _hasStrict = _roles.some(r => r === 'PRODUCT - DO NOT MODIFY' || r === 'PERSON/INFLUENCER - DO NOT MODIFY');
+  const _hasVI = _roles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if ((_hasStrict || _hasVI) && !params._heroFrameUsed) {
+    try {
+      const hero = await generateHeroFrame(params);
+      if (hero) {
+        console.log(`[apiframe-video] Using hero frame as starting image (VI=${_hasVI})`);
+        params.imageUrls = [hero];
+        params._heroFrameUsed = true;
+      }
+    } catch (e) {
+      console.warn(`[apiframe-video] hero frame failed:`, (e as Error)?.message);
+    }
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !supabaseKey) {
