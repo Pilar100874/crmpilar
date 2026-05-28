@@ -1282,7 +1282,8 @@ ESTILO OBRIGATÓRIO: ${styleInstruction}
 - O resultado deve ser válido e de alta qualidade, mas IMPOSSÍVEL de confundir com o original`;
 
       const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, variationPrompt);
-      const parsedResult = extractJSON(rawResult);
+      const parsedResult = normalizeVideoArtifact(agentType, extractJSON(rawResult));
+
 
       return new Response(JSON.stringify({ success: true, result: parsedResult }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
