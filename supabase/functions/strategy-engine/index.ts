@@ -1193,7 +1193,9 @@ ${kbContent}
           }
         }
         if (lastError) throw lastError;
+        parsedResult = normalizeVideoArtifact(agentType, parsedResult);
         const duration = Date.now() - startTime;
+
 
         // Update execution
         await supabase
