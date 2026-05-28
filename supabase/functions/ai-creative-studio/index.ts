@@ -818,6 +818,23 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
     return { error: `Modelo "${subModel}" não está disponível no Apiframe. Modelos suportados: Runway, Kling 2.6/2.5, Luma.` };
   }
 
+  // Pre-generate hero frame if strict refs or brand identity exist
+  const _roles = (params.imageRoles || []) as string[];
+  const _hasStrict = _roles.some(r => r === 'PRODUCT - DO NOT MODIFY' || r === 'PERSON/INFLUENCER - DO NOT MODIFY');
+  const _hasVI = _roles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if ((_hasStrict || _hasVI) && !params._heroFrameUsed) {
+    try {
+      const hero = await generateHeroFrame(params);
+      if (hero) {
+        console.log(`[apiframe-video] Using hero frame as starting image (VI=${_hasVI})`);
+        params.imageUrls = [hero];
+        params._heroFrameUsed = true;
+      }
+    } catch (e) {
+      console.warn(`[apiframe-video] hero frame failed:`, (e as Error)?.message);
+    }
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !supabaseKey) {
@@ -1042,6 +1059,22 @@ async function startVideoWavespeed(estabelecimentoId: string, params: any): Prom
   if (isWavespeedImageOnlyModel(subModel)) {
     return { error: `O modelo "${subModel}" é exclusivo para imagem e não pode ser usado em Gerar Vídeo. Selecione um modelo de vídeo como Seedance, Kling, Veo, Luma ou use Auto.` };
   }
+  // Pre-generate hero frame if strict refs or brand identity exist (image-to-video models support 1 starting image)
+  const _roles = (params.imageRoles || []) as string[];
+  const _hasStrict = _roles.some(r => r === 'PRODUCT - DO NOT MODIFY' || r === 'PERSON/INFLUENCER - DO NOT MODIFY');
+  const _hasVI = _roles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if ((_hasStrict || _hasVI) && !params._heroFrameUsed) {
+    try {
+      const hero = await generateHeroFrame(params);
+      if (hero) {
+        console.log(`[wavespeed-video] Using hero frame as starting image (VI=${_hasVI})`);
+        params.imageUrls = [hero];
+        params._heroFrameUsed = true;
+      }
+    } catch (e) {
+      console.warn(`[wavespeed-video] hero frame failed:`, (e as Error)?.message);
+    }
+  }
   const wsModelPath = WAVESPEED_VIDEO_MODEL_MAP[subModel];
   if (!wsModelPath) {
     return { error: `Modelo "${subModel}" não está mapeado no WaveSpeed. Modelos suportados: ${Object.keys(WAVESPEED_VIDEO_MODEL_MAP).join(', ')}` };
@@ -1251,10 +1284,11 @@ async function generateHeroFrame(params: any): Promise<string | null> {
   const imageRoles = (params.imageRoles || []) as string[];
   if (imageUrls.length === 0) return null;
 
-  // Check if there are strict references (product/influencer) that need preservation
+  // Check if there are strict references (product/influencer) OR brand identity that need preservation/styling
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
   const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
-  if (!hasStrictRefs) return null;
+  const hasBrandIdentity = imageRoles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if (!hasStrictRefs && !hasBrandIdentity) return null;
 
   console.log(`[hero-frame] Generating composed hero frame with ${imageUrls.length} references...`);
 
@@ -1465,10 +1499,11 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
     console.warn(`[generate_video] Bridge mode requested with OpenAI, but Google key not found. Proceeding with OpenAI fallback.`);
   }
 
-  // Check if there are strict references (product/influencer) that need preservation
+  // Check if there are strict references (product/influencer) or brand identity that need preservation
   const imageRoles = (params.imageRoles || []) as string[];
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY'];
   const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
+  const hasBrandIdentityVideo = imageRoles.some(r => r === 'BRAND IDENTITY REFERENCE');
 
   // AUTO-ROUTING: When strict references exist and provider is text-only (Sora),
   // automatically switch to Google Veo (image-to-video) if available
@@ -1527,10 +1562,10 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
 
   // Pre-generate hero frame only for providers that support image-to-video
   const imageToVideoProviders = ["google", "runway", "luma", "stability", "apiframe"];
-  if (hasStrictRefs && imageToVideoProviders.includes(provider)) {
+  if ((hasStrictRefs || hasBrandIdentityVideo) && imageToVideoProviders.includes(provider)) {
     const heroFrameUrl = await generateHeroFrame(params);
     if (heroFrameUrl) {
-      console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
+      console.log(`[generate_video] Using hero frame as starting image for ${provider} (VI=${hasBrandIdentityVideo})`);
       params.imageUrls = [heroFrameUrl];
       params._heroFrameUsed = true;
     } else {
