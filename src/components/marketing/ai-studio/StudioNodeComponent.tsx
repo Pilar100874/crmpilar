@@ -127,6 +127,7 @@ const nodeIconColorMap: Record<string, string> = {
   textContent: 'text-violet-400',
   imageCaption: 'text-pink-400',
   videoScript: 'text-sky-400',
+  reelScript: 'text-rose-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
