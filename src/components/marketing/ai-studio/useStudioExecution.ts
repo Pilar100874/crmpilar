@@ -1308,13 +1308,17 @@ export function useStudioExecution() {
             const scenePromptParts = [
               `🎬 CENA ${scene.n} de ${scenes.length} (parte de um roteiro maior — esta cena é INDEPENDENTE e será unida às outras na pós-produção).`,
               ``,
-              `📋 DESCRIÇÃO VISUAL DESTA CENA:`,
-              scene.description,
               scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
-              scene.narration ? `\n🔊 NARRAÇÃO/ÁUDIO: ${scene.narration}` : '',
+              scene.narration ? `\n🔊 NARRAÇÃO: ${scene.narration}` : '',
+              scene.voiceTone ? `\n🎙️ TOM DE VOZ: ${scene.voiceTone}` : '',
+              scene.soundtrack ? `\n🎵 TRILHA SONORA: ${scene.soundtrack}${scene.soundtrackIntensity ? ` (intensidade ${scene.soundtrackIntensity})` : ''}` : '',
+              scene.ambientSound ? `\n🌬️ AMBIENTE SONORO: ${scene.ambientSound}` : '',
+              (scene.sfx && scene.sfx.length) ? `\n💥 SFX: ${scene.sfx.join(', ')}` : '',
               globalNotes ? `\n📝 OBSERVAÇÕES GERAIS DO ROTEIRO: ${globalNotes}` : '',
               `\n⏱️ Duração: ${sceneDuration}s. Gere APENAS esta cena, não o roteiro inteiro.`,
               viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
+            ].filter(Boolean).join('\n');
+
             ].filter(Boolean).join('\n');
 
             try {
