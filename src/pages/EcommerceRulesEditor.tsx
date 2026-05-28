@@ -33,6 +33,7 @@ import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayo
 import { toast } from "@/hooks/use-toast";
 import type { EcommerceRuleBlockType } from "@/types/ecommerceRules";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = { custom: EcommerceFlowNode };
 
@@ -173,6 +174,57 @@ function EcommerceRulesEditorInner() {
   const onConnect = useCallback((params: Connection) => {
     setEdges(eds => addEdge({ ...params, animated: true, style: { strokeWidth: 2 } }, eds));
   }, [setEdges]);
+
+  // ===== Smart connect =====
+  const connectStartRef = useRef<{ nodeId: string | null; handleId: string | null; handleType: 'source' | 'target' } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | { x: number; y: number; flowX: number; flowY: number; fromNodeId: string; handleType: 'source' | 'target' }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = { nodeId: params.nodeId, handleId: params.handleId, handleType: params.handleType };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId || !reactFlowInstance) return;
+    const target = event.target as HTMLElement;
+    if (!target?.classList?.contains('react-flow__pane')) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
+  }, [reactFlowInstance]);
+
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const blockDef = ECOMMERCE_RULE_BLOCKS.find(b => b.type === type);
+    if (!blockDef) return;
+    const newNode: Node = {
+      id: getId(),
+      type: 'custom',
+      position: { x: connectMenu.flowX - 100, y: connectMenu.flowY - 40 },
+      data: {
+        type,
+        label: blockDef.label,
+        config: blockDef.defaultData ? { ...blockDef.defaultData } : {},
+        onDelete: handleDeleteNode,
+        onDuplicate: handleDuplicateNode,
+        onAddNote: handleOpenNoteDialog,
+      },
+    };
+    setNodes(nds => nds.concat(newNode));
+    setEdges(eds => addEdge(
+      connectMenu.handleType === 'source'
+        ? { source: connectMenu.fromNodeId, target: newNode.id, animated: true, style: { strokeWidth: 2 } }
+        : { source: newNode.id, target: connectMenu.fromNodeId, animated: true, style: { strokeWidth: 2 } },
+      eds
+    ));
+  }, [connectMenu, setNodes, setEdges]);
+
+  const smartBlockOptions: SmartBlockOption[] = ECOMMERCE_RULE_BLOCKS
+    .filter((b: any) => b.type !== 'inicio_regra')
+    .map((b: any) => ({ type: b.type, label: b.label, description: b.description, category: b.category }));
 
   const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
 
@@ -334,6 +386,8 @@ function EcommerceRulesEditorInner() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -348,6 +402,15 @@ function EcommerceRulesEditorInner() {
             <Controls className="!bg-card !border-border !shadow-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-accent" />
             <MiniMap zoomable pannable className="!bg-card !border-border !shadow-lg" />
           </ReactFlow>
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              blocks={smartBlockOptions}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
         </div>
 
         {/* Properties Panel - Right */}

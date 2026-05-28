@@ -38,6 +38,7 @@ import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPan
 import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
 import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
   custom: AdsFlowNode,
@@ -222,6 +223,27 @@ function AdsAutomationContent() {
     },
     [setEdges]
   );
+
+  // ===== Smart connect =====
+  const connectStartRef = useRef<{ nodeId: string | null; handleType: 'source' | 'target' } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | { x: number; y: number; flowX: number; flowY: number; fromNodeId: string; handleType: 'source' | 'target' }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId || !reactFlowInstance) return;
+    const target = event.target as HTMLElement;
+    if (!target?.classList?.contains('react-flow__pane')) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
+  }, [reactFlowInstance]);
 
   const onEdgesDelete = useCallback(() => {
     setHasUnsavedChanges(true);
@@ -476,6 +498,43 @@ function AdsAutomationContent() {
     },
     [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]
   );
+
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === type);
+    if (!blockDef) return;
+    const newNode: Node = {
+      id: generateNodeId(),
+      type: 'custom',
+      position: { x: connectMenu.flowX - 100, y: connectMenu.flowY - 40 },
+      data: {
+        label: blockDef.label,
+        type: blockDef.type,
+        config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+        onSetBreakpoint: handleSetBreakpoint,
+        onSetSkip: handleSetSkip,
+        onDuplicate: handleDuplicate,
+        onDelete: handleDeleteNode,
+        onClearDebug: handleClearDebug,
+        onAddNote: handleAddNote,
+        onToggleCollapse: handleToggleCollapse,
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => addEdge(
+      connectMenu.handleType === 'source'
+        ? { source: connectMenu.fromNodeId, target: newNode.id }
+        : { source: newNode.id, target: connectMenu.fromNodeId },
+      eds
+    ));
+    setHasUnsavedChanges(true);
+    toast.success(`Bloco "${blockDef.label}" adicionado!`);
+  }, [connectMenu, setNodes, setEdges, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
+
+  const smartBlockOptions: SmartBlockOption[] = ADS_BLOCK_DEFINITIONS
+    .filter((b: any) => b.type !== 'campaign_trigger' && b.type !== 'trigger')
+    .map((b: any) => ({ type: b.type, label: b.label, description: b.description, category: b.category }));
+
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -842,6 +901,8 @@ function AdsAutomationContent() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onConnectStart={onConnectStart}
+                onConnectEnd={onConnectEnd}
                 onEdgesDelete={onEdgesDelete}
                 onInit={(instance) => {
                   setReactFlowInstance(instance);
@@ -888,6 +949,15 @@ function AdsAutomationContent() {
                   maskColor="rgba(255, 255, 255, 0.8)"
                 />
               </ReactFlow>
+              {connectMenu && (
+                <SmartConnectMenu
+                  x={connectMenu.x}
+                  y={connectMenu.y}
+                  blocks={smartBlockOptions}
+                  onPick={handleSmartPick}
+                  onClose={() => setConnectMenu(null)}
+                />
+              )}
             </div>
 
             {/* Properties Panel */}

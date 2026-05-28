@@ -52,6 +52,7 @@ import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const nodeTypes = {
   custom: LogisticaFlowNode,
@@ -417,6 +418,62 @@ function EditorContent({
     },
     []
   );
+
+  // ===== Smart connect =====
+  const connectStartRef = useRef<{ nodeId: string | null; handleType: 'source' | 'target' } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | { x: number; y: number; flowX: number; flowY: number; fromNodeId: string; handleType: 'source' | 'target' }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId || !reactFlowInstance) return;
+    const target = event.target as HTMLElement;
+    if (!target?.classList?.contains('react-flow__pane')) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
+  }, [reactFlowInstance]);
+
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const blockDef = LOGISTICA_BLOCKS.find((b) => b.type === type);
+    if (!blockDef) return;
+    const newNode: Node = {
+      id: getId(),
+      type: 'custom',
+      position: { x: connectMenu.flowX - 100, y: connectMenu.flowY - 40 },
+      data: {
+        label: blockDef.label,
+        type: blockDef.type,
+        config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+        onDuplicate: handleDuplicateNode,
+        onDelete: handleDeleteNode,
+        onAddNote: handleAddNote,
+        onSetBreakpoint: handleSetBreakpoint,
+        onSetSkip: handleSetSkip,
+        onClearDebug: handleClearDebug,
+        onToggleCollapse: handleToggleCollapse,
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => addEdge(
+      connectMenu.handleType === 'source'
+        ? { ...defaultEdgeOptions, source: connectMenu.fromNodeId, target: newNode.id }
+        : { ...defaultEdgeOptions, source: newNode.id, target: connectMenu.fromNodeId },
+      eds
+    ));
+    setHasUnsavedChanges(true);
+  }, [connectMenu, setNodes, setEdges, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug, handleToggleCollapse]);
+
+  const smartBlockOptions: SmartBlockOption[] = LOGISTICA_BLOCKS
+    .filter((b: any) => b.type !== 'inicio')
+    .map((b: any) => ({ type: b.type, label: b.label, description: b.description, category: b.category }));
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -820,6 +877,8 @@ function EditorContent({
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onReconnect={onReconnect}
             onEdgesDelete={onEdgesDelete}
             onInit={(instance) => {
@@ -880,6 +939,15 @@ function EditorContent({
               </div>
             )}
           </ReactFlow>
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              blocks={smartBlockOptions}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
         </div>
 
         {/* Simulator Panel */}
