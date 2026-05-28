@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import type { OmnichannelBlockType, OmnichannelNode, OmnichannelEdge, OmnichannelFlowData } from "@/types/omnichannelFlow";
 import { WorkflowAIGenerator } from "@/components/workflow/WorkflowAIGenerator";
+import SmartConnectMenu, { SmartBlockOption } from "@/components/flow/SmartConnectMenu";
 
 const OMNICHANNEL_BLOCK_DEFS = [
   { type: "inicio", label: "Início do Fluxo", description: "Ponto inicial do fluxo omnichannel" },
