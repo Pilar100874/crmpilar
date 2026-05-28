@@ -733,16 +733,65 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
     return [];
   };
 
+  // Constrói cenas a partir de hook/desenvolvimento/cta quando o agente não gerou cenas_ai_video
+  const buildScenesFromSections = (script: any): any[] => {
+    const sections: { key: string; data: any }[] = [
+      { key: 'hook', data: script.hook },
+      { key: 'desenvolvimento', data: script.desenvolvimento },
+      { key: 'cta', data: script.cta },
+    ];
+    const out: any[] = [];
+    for (const { data } of sections) {
+      if (!data) continue;
+      const texto = typeof data === 'string' ? data : (data.texto || data.descricao || '');
+      const visuals = typeof data === 'object' ? (data.instrucoes_visuais || data.texto_na_tela || '') : '';
+      if (!texto && !visuals) continue;
+      const dur = typeof data === 'object' ? toNum(data.duracao ?? data.duracao_segundos ?? 5) : 5;
+      // Quebra desenvolvimento longo (>10s) em múltiplos clipes de 10s
+      const totalDur = Math.max(5, dur);
+      const chunks = Math.max(1, Math.ceil(totalDur / 10));
+      const perChunk = snapDuration(totalDur / chunks);
+      // Quebra visuals por "Cena N:" se existir
+      const visualParts = String(visuals)
+        .split(/Cena\s*\d+\s*[:\-–]\s*/i)
+        .map((v) => v.trim())
+        .filter(Boolean);
+      const narrParts = String(texto).split(/(?<=[.!?])\s+/).filter(Boolean);
+      for (let i = 0; i < chunks; i++) {
+        out.push({
+          description: visualParts[i] || visualParts[0] || texto.slice(0, 200),
+          duration: perChunk,
+          narration: narrParts.slice(i * Math.ceil(narrParts.length / chunks), (i + 1) * Math.ceil(narrParts.length / chunks)).join(' ') || texto.slice(0, 120),
+          cameraMovement: 'medium shot',
+          overlay: typeof data === 'object' ? (data.texto_na_tela || '') : '',
+          transition: 'cut',
+          soundtrack: script.musica_sugerida || '',
+          soundtrackIntensity: 'média',
+          sfx: [],
+          ambientSound: '',
+          voiceTone: '',
+        });
+      }
+    }
+    return out;
+  };
+
   const handlePickScript = (artifact: any, scriptIdx: number) => {
     const scripts = getScripts(artifact);
     const script = scripts[scriptIdx];
     if (!script) return;
-    const scenes = mapScenes(script.cenas_ai_video || script.storyboard || []);
+    let scenes = mapScenes(script.cenas_ai_video || script.storyboard || []);
     if (scenes.length === 0) {
-      console.warn('[reelScript] script sem cenas_ai_video');
+      // Fallback: sintetiza cenas a partir de hook/desenvolvimento/cta
+      scenes = buildScenesFromSections(script);
+    }
+    if (scenes.length === 0) {
+      toast.error('Este roteiro de Reels não tem cenas utilizáveis.');
+      console.warn('[reelScript] script sem cenas', script);
       return;
     }
-    const label = script.titulo || script.hook || `Reel #${scriptIdx + 1}`;
+    const rawLabel = script.titulo || script.hook;
+    const label = typeof rawLabel === 'string' ? rawLabel : (rawLabel?.texto || rawLabel?.titulo || `Reel #${scriptIdx + 1}`);
     onImport(scenes, label);
     setOpen(false);
   };
