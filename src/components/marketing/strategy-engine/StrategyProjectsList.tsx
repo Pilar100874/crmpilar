@@ -189,7 +189,12 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => setDeleteTarget({ id: project.id, name: project.nome })}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            // Aguarda o DropdownMenu desmontar antes de abrir o dialog,
+                            // evitando pointer-events: none travado no body do Radix.
+                            setTimeout(() => setDeleteTarget({ id: project.id, name: project.nome }), 50);
+                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                           Excluir
