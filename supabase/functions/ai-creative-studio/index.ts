@@ -1251,10 +1251,11 @@ async function generateHeroFrame(params: any): Promise<string | null> {
   const imageRoles = (params.imageRoles || []) as string[];
   if (imageUrls.length === 0) return null;
 
-  // Check if there are strict references (product/influencer) that need preservation
+  // Check if there are strict references (product/influencer) OR brand identity that need preservation/styling
   const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
   const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
-  if (!hasStrictRefs) return null;
+  const hasBrandIdentity = imageRoles.some(r => r === 'BRAND IDENTITY REFERENCE');
+  if (!hasStrictRefs && !hasBrandIdentity) return null;
 
   console.log(`[hero-frame] Generating composed hero frame with ${imageUrls.length} references...`);
 
