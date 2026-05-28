@@ -218,12 +218,16 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
                   </div>
                 </CardContent>
               </Card>
+            );
+          })}
+        </div>
+      )}
+
       <DeleteConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
           if (!open) {
             setDeleteTarget(null);
-            // Garante que o body não fique com pointer-events travado pelo Radix
             setTimeout(() => {
               if (document.body.style.pointerEvents === 'none') {
                 document.body.style.pointerEvents = '';
@@ -238,11 +242,7 @@ export function StrategyProjectsList({ onSelectProject }: Props) {
         title="Excluir projeto"
         itemName={deleteTarget?.name}
       />
-          setDeleteTarget(null);
-        }}
-        title="Excluir projeto"
-        itemName={deleteTarget?.name}
-      />
     </div>
   );
 }
+
