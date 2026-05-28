@@ -326,7 +326,7 @@ export function useStudioExecution() {
     const { type, config } = node.data;
 
     const textInputs = inputs
-      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl && !i?._isPlatformFormat)
+      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl && !i?._isPlatformFormat && !i?._isVideoScript)
       .map((i) => (typeof i === 'string' ? i : i?.text || ''))
       .filter(Boolean);
     const combinedInput = textInputs.join('\n\n');
@@ -346,6 +346,12 @@ export function useStudioExecution() {
     const textLockDirective = inputs
       .filter((i) => i?._textLockDirective)
       .map((i) => i._textLockDirective)
+      .join('\n');
+
+    // Collect VIDEO SCRIPT directives (frame-by-frame storyboard) — MUST be followed scene by scene
+    const videoScriptDirective = inputs
+      .filter((i) => i?._videoScriptDirective)
+      .map((i) => i._videoScriptDirective)
       .join('\n');
 
     // Collect all image URLs from inputs, bucketed by role for priority ordering
