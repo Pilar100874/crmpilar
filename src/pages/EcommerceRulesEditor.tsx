@@ -386,6 +386,8 @@ function EcommerceRulesEditorInner() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
