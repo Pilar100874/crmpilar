@@ -877,6 +877,8 @@ function EditorContent({
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             onReconnect={onReconnect}
             onEdgesDelete={onEdgesDelete}
             onInit={(instance) => {
