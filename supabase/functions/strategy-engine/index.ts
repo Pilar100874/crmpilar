@@ -795,6 +795,93 @@ function extractJSON(text: string): any {
   }
 }
 
+// ─── VIDEO ARTIFACT NORMALIZER ──────────────────────────────────────────────
+// Garante que video_producer / reel / vsl sempre devolvam cenas_ai_video + audio_global
+// preenchidos (com áudio/som por cena), mesmo se o modelo esquecer.
+function snapDur(n: any): number {
+  const x = typeof n === 'number' ? n : parseFloat(String(n || '').match(/(\d+(?:\.\d+)?)/)?.[1] || '5');
+  return x <= 7 ? 5 : 10;
+}
+function defaultAudioGlobal(prev: any = {}) {
+  return {
+    estilo_musical: prev.estilo_musical || 'pop cinematográfico moderno',
+    referencia_trilha: prev.referencia_trilha || '',
+    bpm_alvo: prev.bpm_alvo || 110,
+    tom_voz_padrao: prev.tom_voz_padrao || 'confiante e próximo',
+    idioma: prev.idioma || 'pt-BR',
+    mix_notes: prev.mix_notes || 'voz à frente, trilha -12dB, sidechain leve nos picos',
+  };
+}
+function enrichScene(s: any, ag: any, audioFallback: any, idx: number) {
+  const desc = s.descricao_visual || s.descricao || s.cena || '';
+  const narr = s.narracao_voz || s.narracao || s.naracao || s.texto || '';
+  const dur = snapDur(s.duracao_segundos ?? s.duracao ?? 5);
+  return {
+    ordem: s.ordem || idx + 1,
+    duracao_segundos: dur,
+    tipo_camera: s.tipo_camera || s.camera || s.movimento_camera || (idx % 2 === 0 ? 'slow push-in' : 'static'),
+    descricao_visual: desc,
+    narracao_voz: narr,
+    palavras_narracao: s.palavras_narracao || narr.split(/\s+/).filter(Boolean).length,
+    texto_overlay: s.texto_overlay || '',
+    transicao_para_proxima: s.transicao_para_proxima || s.transicao || 'cut',
+    trilha_sonora: s.trilha_sonora || s.trilha || ag.estilo_musical || audioFallback?.trilha_sonora?.genero || 'pop cinematográfico moderno',
+    intensidade_trilha: s.intensidade_trilha || (idx === 0 ? 'baixa' : 'média'),
+    sfx: Array.isArray(s.sfx) && s.sfx.length ? s.sfx : (Array.isArray(audioFallback?.efeitos_sonoros) ? audioFallback.efeitos_sonoros.slice(0, 2) : ['whoosh sutil']),
+    ambiente_sonoro: s.ambiente_sonoro || s.ambiente || 'ambiente natural sutil',
+    tom_voz: s.tom_voz || ag.tom_voz_padrao || 'confiante e próximo',
+  };
+}
+function normalizeVideoArtifact(agentType: string, parsed: any): any {
+  if (!parsed || typeof parsed !== 'object') return parsed;
+  const isVideo = agentType === 'video_producer' || agentType === 'vsl';
+  const isReel = agentType === 'reel';
+  if (!isVideo && !isReel) return parsed;
+
+  if (isReel && Array.isArray(parsed.scripts)) {
+    parsed.scripts = parsed.scripts.map((sc: any) => {
+      const ag = defaultAudioGlobal(sc.audio_global || parsed.audio_global || {});
+      let cenas = Array.isArray(sc.cenas_ai_video) ? sc.cenas_ai_video : [];
+      if (cenas.length === 0) {
+        // Construir a partir de hook/desenvolvimento/cta
+        const fontes: any[] = [];
+        const push = (t: string, txt: string) => {
+          if (!txt) return;
+          fontes.push({ descricao_visual: `${t}: ${String(txt).slice(0, 160)}`, narracao_voz: String(txt).slice(0, 100), duracao_segundos: 5 });
+        };
+        push('Hook', typeof sc.hook === 'string' ? sc.hook : sc.hook?.texto);
+        if (Array.isArray(sc.desenvolvimento)) sc.desenvolvimento.forEach((d: any) => push('Cena', typeof d === 'string' ? d : d?.texto || d?.descricao));
+        else if (sc.desenvolvimento) push('Cena', typeof sc.desenvolvimento === 'string' ? sc.desenvolvimento : sc.desenvolvimento?.texto);
+        push('CTA', typeof sc.cta === 'string' ? sc.cta : sc.cta?.texto || sc.cta?.acao);
+        cenas = fontes;
+      }
+      sc.cenas_ai_video = cenas.map((s: any, i: number) => enrichScene(s, ag, sc.audio || {}, i));
+      sc.audio_global = ag;
+      return sc;
+    });
+    parsed.audio_global = defaultAudioGlobal(parsed.audio_global || (parsed.scripts[0]?.audio_global) || {});
+  }
+
+  if (isVideo) {
+    const ag = defaultAudioGlobal(parsed.audio_global || {});
+    let cenas = Array.isArray(parsed.cenas_ai_video) ? parsed.cenas_ai_video : [];
+    if (cenas.length === 0 && Array.isArray(parsed.storyboard)) cenas = parsed.storyboard;
+    if (cenas.length === 0 && parsed.hook) {
+      const sections = ['hook','problema','agitacao','descoberta','mecanismo','prova','oferta','bonus','garantia','escassez','cta'];
+      cenas = sections
+        .filter((k) => parsed[k]?.texto || typeof parsed[k] === 'string')
+        .map((k) => {
+          const txt = typeof parsed[k] === 'string' ? parsed[k] : parsed[k].texto;
+          return { descricao_visual: `${k}: ${String(txt).slice(0, 180)}`, narracao_voz: String(txt).slice(0, 120), duracao_segundos: 5 };
+        });
+    }
+    parsed.cenas_ai_video = cenas.map((s: any, i: number) => enrichScene(s, ag, parsed.audio || {}, i));
+    parsed.audio_global = ag;
+  }
+  return parsed;
+}
+
+
 /**
  * Build a context-rich prompt that injects only the relevant upstream agent outputs.
  * This ensures every agent reads the shared strategic memory before executing.
@@ -1106,7 +1193,9 @@ ${kbContent}
           }
         }
         if (lastError) throw lastError;
+        parsedResult = normalizeVideoArtifact(agentType, parsedResult);
         const duration = Date.now() - startTime;
+
 
         // Update execution
         await supabase
@@ -1193,7 +1282,8 @@ ESTILO OBRIGATÓRIO: ${styleInstruction}
 - O resultado deve ser válido e de alta qualidade, mas IMPOSSÍVEL de confundir com o original`;
 
       const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, variationPrompt);
-      const parsedResult = extractJSON(rawResult);
+      const parsedResult = normalizeVideoArtifact(agentType, extractJSON(rawResult));
+
 
       return new Response(JSON.stringify({ success: true, result: parsedResult }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1301,7 +1391,8 @@ INSTRUÇÃO DE REVISÃO:
 4. Retorne o resultado COMPLETO revisado no mesmo formato JSON`;
 
         const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, revisionPrompt);
-        const parsedResult = extractJSON(rawResult);
+        const parsedResult = normalizeVideoArtifact(agentType, extractJSON(rawResult));
+
         const duration = Date.now() - startTime;
 
         await supabase
@@ -1480,7 +1571,8 @@ REGRAS:
           const userPrompt = buildAgentPrompt(exec.key, project.descricao_negocio, latestMemory, deps);
 
           const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, userPrompt);
-          const parsedResult = extractJSON(rawResult);
+          const parsedResult = normalizeVideoArtifact(exec.key, extractJSON(rawResult));
+
           const duration = Date.now() - startTime;
 
           // Update execution record
