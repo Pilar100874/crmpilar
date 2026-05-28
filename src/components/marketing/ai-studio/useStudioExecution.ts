@@ -1243,6 +1243,9 @@ export function useStudioExecution() {
         const correctionSourceProviderVideoId = correctionInputVideo?._providerVideoId;
 
         let videoPrompt = combinedInput || 'Uma cena cinematográfica';
+        if (videoScriptDirective) {
+          videoPrompt = `${videoScriptDirective}\n\n${videoPrompt}`;
+        }
         const aspectRatio = config.aspectRatio || '16:9';
 
         // Inject videoStyle into the prompt
