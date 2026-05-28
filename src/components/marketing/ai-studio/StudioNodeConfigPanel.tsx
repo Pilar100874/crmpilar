@@ -514,6 +514,14 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
     // Modelos de vídeo IA só aceitam 5s ou 10s por clipe
     const snapDuration = (n: number): number => (n <= 7 ? 5 : 10);
 
+    const mapAudio = (s: any) => ({
+      soundtrack: s.trilha_sonora || s.trilha || '',
+      soundtrackIntensity: s.intensidade_trilha || 'média',
+      sfx: Array.isArray(s.sfx) ? s.sfx : (s.sfx ? [String(s.sfx)] : []),
+      ambientSound: s.ambiente_sonoro || s.ambiente || '',
+      voiceTone: s.tom_voz || '',
+    });
+
     // 1) Formato novo: cenas_ai_video (preferido — já pronto p/ AI Studio)
     if (Array.isArray(content.cenas_ai_video) && content.cenas_ai_video.length > 0) {
       return content.cenas_ai_video.map((s: any) => ({
@@ -523,6 +531,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
         cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
         overlay: s.texto_overlay || '',
         transition: s.transicao_para_proxima || 'cut',
+        ...mapAudio(s),
       })).filter((s: any) => s.description || s.narration);
     }
 
@@ -537,6 +546,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
           cameraMovement: s.tipo_camera || 'static',
           overlay: s.texto_overlay || '',
           transition: s.transicao_para_proxima || 'cut',
+          ...mapAudio(s),
         })).filter((s: any) => s.description || s.narration);
       }
     }
@@ -550,8 +560,10 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
         cameraMovement: s.tipo_camera || s.camera || s.movimento_camera || 'static',
         overlay: s.texto_overlay || '',
         transition: s.transicao_para_proxima || s.transicao || 'cut',
+        ...mapAudio(s),
       })).filter((s: any) => s.description || s.narration);
     }
+
 
     // 4) VSL antigo por seções (fallback) — quebra em clipes de 5s
     if (content.hook) {
