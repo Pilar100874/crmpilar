@@ -6,7 +6,7 @@ import { StudioNodeType, NODE_CATEGORIES, getNodeMeta } from './types';
  */
 export const NODE_CONNECTIONS: Record<StudioNodeType, StudioNodeType[]> = {
   // ===== Entradas de texto =====
-  textInput: ['llmProcess', 'imageEdit', 'productComposite', 'videoGen', 'audioGen', 'musicGen', 'imageCaption', 'videoScript', 'reelScript', 'loopOutput'],
+  textInput: ['llmProcess', 'imageEdit', 'productComposite', 'videoGen', 'audioGen', 'musicGen', 'loopOutput'],
   systemPrompt: ['llmProcess', 'imageAnalyze', 'productComposite', 'videoGen'],
 
   // ===== Imagens de referência =====
