@@ -1382,6 +1382,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           </div>
         )}
 
+        {/* Video Script inline preview (frame-by-frame storyboard) */}
+        {nodeData.type === 'videoScript' && (() => {
+          const scenes = Array.isArray(nodeData.config.scenes) ? nodeData.config.scenes : [];
+          const valid = scenes.filter((s: any) => (s?.description || '').trim());
+          const total = valid.reduce((a: number, s: any) => a + (Number(s?.duration) || 0), 0);
+          return (
+            <div className="px-3 pb-3 pt-1 space-y-1.5">
+              <div className="rounded-lg bg-sky-500/10 border border-sky-500/30 px-2 py-1.5 text-[10px] text-sky-300">
+                🎞️ <strong>{valid.length}</strong> cena{valid.length === 1 ? '' : 's'}
+                {total > 0 && <> · ~{total}s</>}
+              </div>
+              {valid.slice(0, 3).map((s: any, i: number) => (
+                <div key={i} className="text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                  <span className="text-sky-400 font-semibold">CENA {i + 1}:</span> {s.description}
+                </div>
+              ))}
+              {valid.length > 3 && (
+                <p className="text-[9px] text-muted-foreground/70">+{valid.length - 3} cena(s)…</p>
+              )}
+              {valid.length === 0 && (
+                <p className="text-[10px] text-muted-foreground/70">Abra as propriedades para escrever o roteiro ou importar do Motor de Estratégia.</p>
+              )}
+            </div>
+          );
+        })()}
+
 
         {/* Platform Format inline selector */}
         {nodeData.type === 'platformFormat' && (() => {
