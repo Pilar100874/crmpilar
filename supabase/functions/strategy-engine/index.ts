@@ -1391,7 +1391,8 @@ INSTRUÇÃO DE REVISÃO:
 4. Retorne o resultado COMPLETO revisado no mesmo formato JSON`;
 
         const rawResult = await callAI(LOVABLE_API_KEY, agent.systemPrompt, revisionPrompt);
-        const parsedResult = extractJSON(rawResult);
+        const parsedResult = normalizeVideoArtifact(agentType, extractJSON(rawResult));
+
         const duration = Date.now() - startTime;
 
         await supabase
