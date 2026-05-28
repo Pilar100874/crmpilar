@@ -258,6 +258,19 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         },
       },
       {
+        type: 'reelScript',
+        label: 'Roteiro de Reels (Motor de Estratégia)',
+        description: 'Importe roteiros do agente Roteirista de Reels e escolha qual variação usar para gerar o vídeo.',
+        icon: '📱',
+        color: '#f43f5e',
+        defaultConfig: {
+          scenes: [],
+          globalNotes: '',
+          selectedScriptIndex: 0,
+          importedFrom: '',
+        },
+      },
+      {
         type: 'platformFormat',
         label: 'Formato / Plataforma',
         description: 'Defina tamanho e formato por plataforma (Instagram, Facebook, WhatsApp...)',
