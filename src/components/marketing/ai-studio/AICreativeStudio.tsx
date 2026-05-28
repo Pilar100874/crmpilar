@@ -2001,6 +2001,19 @@ const AICreativeStudioInner: React.FC = () => {
             )}
           </ReactFlow>
 
+          {connectMenu && (
+            <SmartConnectMenu
+              x={connectMenu.x}
+              y={connectMenu.y}
+              fromType={connectMenu.fromType}
+              handleType={connectMenu.handleType}
+              onPick={handleSmartPick}
+              onClose={() => setConnectMenu(null)}
+            />
+          )}
+
+
+
           <AnimatePresence>
             {showPresets && (
               <PresetsGallery onSelectPreset={handlePresetSelectWithCheck} onClose={() => { setShowPresets(false); setPresetInitialSelections(undefined); setReloadingPresetNodeId(null); }} estabelecimentoId={estabelecimentoId} initialSelections={presetInitialSelections} />
