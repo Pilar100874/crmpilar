@@ -536,6 +536,7 @@ const AICreativeStudioInner: React.FC = () => {
         if (consumers.length === 0) {
           warnings.push(`"${nd.label || nd.type}": roteiro não está conectado a nenhum bloco "Gerar Vídeo" — não será executado.`);
         }
+      }
 
 
       if (errors.length > 0) {
