@@ -224,6 +224,27 @@ function AdsAutomationContent() {
     [setEdges]
   );
 
+  // ===== Smart connect =====
+  const connectStartRef = useRef<{ nodeId: string | null; handleType: 'source' | 'target' } | null>(null);
+  const [connectMenu, setConnectMenu] = useState<null | { x: number; y: number; flowX: number; flowY: number; fromNodeId: string; handleType: 'source' | 'target' }>(null);
+
+  const onConnectStart = useCallback((_: any, params: any) => {
+    connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType };
+  }, []);
+
+  const onConnectEnd = useCallback((event: any) => {
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || !start.nodeId || !reactFlowInstance) return;
+    const target = event.target as HTMLElement;
+    if (!target?.classList?.contains('react-flow__pane')) return;
+    const clientX = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const clientY = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (clientX == null) return;
+    const flowPos = reactFlowInstance.screenToFlowPosition({ x: clientX, y: clientY });
+    setConnectMenu({ x: clientX, y: clientY, flowX: flowPos.x, flowY: flowPos.y, fromNodeId: start.nodeId, handleType: start.handleType });
+  }, [reactFlowInstance]);
+
   const onEdgesDelete = useCallback(() => {
     setHasUnsavedChanges(true);
   }, []);
