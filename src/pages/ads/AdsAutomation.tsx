@@ -499,6 +499,43 @@ function AdsAutomationContent() {
     [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]
   );
 
+  const handleSmartPick = useCallback((type: string) => {
+    if (!connectMenu) return;
+    const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === type);
+    if (!blockDef) return;
+    const newNode: Node = {
+      id: generateNodeId(),
+      type: 'custom',
+      position: { x: connectMenu.flowX - 100, y: connectMenu.flowY - 40 },
+      data: {
+        label: blockDef.label,
+        type: blockDef.type,
+        config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+        onSetBreakpoint: handleSetBreakpoint,
+        onSetSkip: handleSetSkip,
+        onDuplicate: handleDuplicate,
+        onDelete: handleDeleteNode,
+        onClearDebug: handleClearDebug,
+        onAddNote: handleAddNote,
+        onToggleCollapse: handleToggleCollapse,
+      },
+    };
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => addEdge(
+      connectMenu.handleType === 'source'
+        ? { source: connectMenu.fromNodeId, target: newNode.id }
+        : { source: newNode.id, target: connectMenu.fromNodeId },
+      eds
+    ));
+    setHasUnsavedChanges(true);
+    toast.success(`Bloco "${blockDef.label}" adicionado!`);
+  }, [connectMenu, setNodes, setEdges, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
+
+  const smartBlockOptions: SmartBlockOption[] = ADS_BLOCK_DEFINITIONS
+    .filter((b: any) => b.type !== 'campaign_trigger' && b.type !== 'trigger')
+    .map((b: any) => ({ type: b.type, label: b.label, description: b.description, category: b.category }));
+
+
   useEffect(() => {
     const handler = (e: Event) => {
       const type = (e as CustomEvent).detail?.type;
