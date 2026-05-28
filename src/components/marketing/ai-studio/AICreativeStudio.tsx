@@ -427,7 +427,7 @@ const AICreativeStudioInner: React.FC = () => {
         }
 
         // (2) Geração de imagem/vídeo: validar modelo vs quantidade de refs e suporte a imagem
-        const isGen = nd.type === 'imageGen' || nd.type === 'imageComposite' || nd.type === 'productComposite' || nd.type === 'videoGen';
+        const isGen = (['imageGen', 'imageComposite', 'productComposite', 'videoGen'] as string[]).includes(nd.type);
         if (!isGen) continue;
 
         const model = nd.type === 'videoGen'
