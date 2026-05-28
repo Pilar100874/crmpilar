@@ -1228,6 +1228,153 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
+        // ============================================================
+        // 🎞️ ROTEIRO MULTI-CENA: gera um vídeo por cena e une no final
+        // ============================================================
+        const videoScriptInput = inputs.find(
+          (i) => i?._isVideoScript && Array.isArray(i?.videoScript?.scenes) && i.videoScript.scenes.length >= 2,
+        );
+        const isCorrectionForMultiScene = inputs.some((i) => i?._isCorrection);
+        if (videoScriptInput && !isCorrectionForMultiScene) {
+          const scenes = videoScriptInput.videoScript.scenes as Array<{
+            n: number; description: string; duration: number; narration: string; cameraMovement: string;
+          }>;
+          const globalNotes = (videoScriptInput.videoScript.globalNotes || '').trim();
+          const aspectRatioMS = config.aspectRatio || '16:9';
+          const baseVideoModelMS = isValidVideoGenerationModel(config.videoModel)
+            ? config.videoModel
+            : 'auto';
+          const estabIdMS = localStorage.getItem('estabelecimentoId');
+
+          // VI references (one fetch)
+          let viImagesMS: string[] = [];
+          let viPromptMS = '';
+          let viPreferredModelMS: string | null = null;
+          try {
+            const vi = await getActiveVisualIdentity(estabIdMS || '');
+            if (vi && (vi.images.length > 0 || vi.prompt)) {
+              viImagesMS = vi.images || [];
+              viPromptMS = vi.prompt || '';
+              if (vi.preferredModel && isValidVideoGenerationModel(vi.preferredModel)) {
+                viPreferredModelMS = vi.preferredModel;
+              }
+            }
+          } catch {}
+
+          const effectiveModelMS = viPreferredModelMS || (baseVideoModelMS === 'free/gif-animated' ? 'auto' : baseVideoModelMS);
+          const orderedImageInputsMS = orderedImageInputs.length > 0 ? [...orderedImageInputs, ...viImagesMS] : [...imageInputs, ...viImagesMS];
+          const orderedImageRolesMS = orderedImageRoles.length > 0
+            ? [...orderedImageRoles, ...viImagesMS.map(() => 'BRAND IDENTITY REFERENCE')]
+            : [...imageInputs.map(() => 'REFERENCE'), ...viImagesMS.map(() => 'BRAND IDENTITY REFERENCE')];
+
+          const sceneVideoUrls: string[] = [];
+
+          for (let s = 0; s < scenes.length; s++) {
+            const scene = scenes[s];
+            if (abortRef.current?.signal.aborted) throw new Error('Cancelado pelo usuário');
+
+            nodeResultStore.setResult(node.id, {
+              text: `🎬 Gerando cena ${s + 1}/${scenes.length}: ${scene.description.substring(0, 60)}...`,
+              _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+            });
+
+            const sceneDuration = Math.min(10, Math.max(5, Number(scene.duration) || 5));
+            const scenePromptParts = [
+              `🎬 CENA ${scene.n} de ${scenes.length} (parte de um roteiro maior — esta cena é INDEPENDENTE e será unida às outras na pós-produção).`,
+              ``,
+              `📋 DESCRIÇÃO VISUAL DESTA CENA:`,
+              scene.description,
+              scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
+              scene.narration ? `\n🔊 NARRAÇÃO/ÁUDIO: ${scene.narration}` : '',
+              globalNotes ? `\n📝 OBSERVAÇÕES GERAIS DO ROTEIRO: ${globalNotes}` : '',
+              `\n⏱️ Duração: ${sceneDuration}s. Gere APENAS esta cena, não o roteiro inteiro.`,
+              viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
+            ].filter(Boolean).join('\n');
+
+            try {
+              const sceneParams = {
+                prompt: scenePromptParts,
+                model: effectiveModelMS,
+                aspectRatio: aspectRatioMS,
+                resolution: config.resolution || '1080p',
+                duration: sceneDuration,
+                style: config.videoStyle || 'realistic',
+                cameraMovement: scene.cameraMovement || config.cameraMovement || 'none',
+                cameraSpeed: config.cameraSpeed ?? 1,
+                fps: config.fps || '24',
+                loop: false,
+                withAudio: config.withAudio ?? true,
+                withMusic: s === 0 ? (config.withMusic ?? true) : false, // música só na primeira cena
+                negativePrompt: config.videoNegativePrompt || '',
+                seed: config.videoSeed,
+                cfgScale: config.cfgScale ?? 7,
+                imageUrls: orderedImageInputsMS.length > 0 ? orderedImageInputsMS : undefined,
+                imageRoles: orderedImageRolesMS.length > 0 ? orderedImageRolesMS : undefined,
+                estabelecimentoId: estabIdMS,
+              };
+
+              const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/');
+              const sceneResult = usesAsync
+                ? await generateAsyncStudioVideo(sceneParams)
+                : await callStudio('generate_video', sceneParams, 300000);
+
+              if (!sceneResult?.videoUrl) {
+                throw new Error(sceneResult?.error || `Cena ${s + 1} não retornou vídeo`);
+              }
+              sceneVideoUrls.push(sceneResult.videoUrl);
+            } catch (sceneErr: any) {
+              console.error(`[Studio] Cena ${s + 1} falhou:`, sceneErr);
+              throw new Error(`❌ Falha ao gerar a cena ${s + 1}/${scenes.length}: ${sceneErr.message || 'erro desconhecido'}`);
+            }
+          }
+
+          // Unir todos os vídeos em um único MP4
+          if (sceneVideoUrls.length === 1) {
+            return {
+              videoUrl: sceneVideoUrls[0],
+              text: `🎬 Vídeo gerado (1 cena)`,
+              _isVideo: true,
+              _sceneUrls: sceneVideoUrls,
+            };
+          }
+
+          try {
+            nodeResultStore.setResult(node.id, {
+              text: `🎞️ Unindo ${sceneVideoUrls.length} cenas em vídeo único...`,
+              _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
+            });
+            const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
+            const unifiedBlob = await concatVideos(sceneVideoUrls, (p) => {
+              nodeResultStore.setResult(node.id, {
+                text: `🎞️ ${p.message || 'Unindo cenas...'}`,
+                _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
+              });
+            });
+            const unifiedUrl = await uploadConcatVideo(unifiedBlob, estabIdMS || '', supabase);
+            return {
+              videoUrl: unifiedUrl,
+              text: `🎬 Vídeo unificado gerado a partir de ${sceneVideoUrls.length} cenas`,
+              _isVideo: true,
+              _sceneUrls: sceneVideoUrls,
+              _unified: true,
+            };
+          } catch (concatErr: any) {
+            console.error('[Studio] Falha ao unir vídeos:', concatErr);
+            // Fallback: retorna o primeiro vídeo e lista as URLs para download manual
+            toast.error(`Falha ao unir cenas: ${concatErr.message}. As cenas ficaram disponíveis individualmente.`, { duration: 8000 });
+            return {
+              videoUrl: sceneVideoUrls[0],
+              text: `⚠️ ${sceneVideoUrls.length} cenas geradas, mas a união falhou. URLs individuais salvas.`,
+              _isVideo: true,
+              _sceneUrls: sceneVideoUrls,
+              _unified: false,
+            };
+          }
+        }
+
+        // ============================================================
+        // 🎬 GERAÇÃO PADRÃO (uma cena única / sem roteiro multi-cena)
+        // ============================================================
         // Multi-ref: product + influencer are handled via enriched text prompt, no blocking needed
         const hasProductRef = inputs.some((i) => i?._referenceRole === 'produto');
         const hasInfluencerRef = inputs.some((i) => i?._referenceRole === 'influencer');
