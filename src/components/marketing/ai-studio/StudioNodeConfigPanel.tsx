@@ -2657,7 +2657,6 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </div>
               ))}
 
-              ))}
             </div>
 
             <Separator />
