@@ -457,9 +457,9 @@ Retorne EXCLUSIVAMENTE um JSON válido:
   "calendario_publicacao": [{"dia": "", "script_titulo": "", "plataforma": ""}],
   "estrategia_crescimento": ""
 }`
-}`
   },
   seo: {
+    name: 'SEO & Conteúdo',
 
     name: 'SEO & Conteúdo',
     type: 'specialist',
