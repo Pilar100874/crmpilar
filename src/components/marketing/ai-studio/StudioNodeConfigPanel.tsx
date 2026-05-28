@@ -493,7 +493,7 @@ function VideoScriptStrategyImporter({ onImport }: { onImport: (scenes: any[]) =
       .from('strategy_artifacts')
       .select('*')
       .eq('project_id', projectId)
-      .in('tipo', ['video_producer', 'vsl', 'reel'])
+      .eq('tipo', 'video_producer')
       .order('created_at', { ascending: false });
     const latest = new Map<string, any>();
     for (const art of data || []) {
