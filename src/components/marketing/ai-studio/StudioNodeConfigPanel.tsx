@@ -811,7 +811,9 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
                 {getScripts(selectedArtifact).map((sc: any, idx: number) => {
                   const cenas = sc.cenas_ai_video || sc.storyboard || [];
                   const total = cenas.reduce((a: number, c: any) => a + toNum(c.duracao_segundos ?? c.duracao ?? 5), 0);
-                  const title = sc.titulo || sc.hook || `Reel #${idx + 1}`;
+                  const rawTitle = sc.titulo || sc.hook;
+                  const title = typeof rawTitle === 'string' ? rawTitle : (rawTitle?.texto || rawTitle?.titulo || `Reel #${idx + 1}`);
+                  const ctaText = typeof sc.cta === 'string' ? sc.cta : (sc.cta?.texto || sc.cta?.acao || '');
                   return (
                     <button
                       key={idx}
@@ -822,7 +824,7 @@ function ReelScriptStrategyImporter({ onImport }: { onImport: (scenes: any[], la
                       <div className="text-[10px] text-muted-foreground">
                         {cenas.length} cena(s) · ~{Math.round(total)}s
                       </div>
-                      {sc.cta && <div className="text-[10px] text-muted-foreground/80 italic line-clamp-1">CTA: {sc.cta}</div>}
+                      {ctaText && <div className="text-[10px] text-muted-foreground/80 italic line-clamp-1">CTA: {ctaText}</div>}
                     </button>
                   );
                 })}
