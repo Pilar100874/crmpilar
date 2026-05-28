@@ -16,6 +16,7 @@ const VI_FOCUS_DIRECTIVE = [
   `   - Use a mesma espessura, pressão, irregularidade orgânica, textura de papel/tinta, mesmo material (giz, marcador, nanquim, lápis 6B, caneta esferográfica, etc.).`,
   `   - Aplique esses esboços como sobreposições gráficas reais ao redor/sobre o cenário — JAMAIS sobre o rótulo do produto e JAMAIS deformando o rosto da pessoa.`,
   `   - Mantenha a coerência: se o sistema é monocromático preto, não invente cor; se é colorido, respeite a paleta exata da identidade.`,
+  `   - ⚠️ TEXTO DENTRO DOS RABISCOS/ANOTAÇÕES MANUSCRITAS: TODA palavra escrita à mão (anotações, setas com legenda, círculos com texto, asteriscos, badges desenhadas, marca-texto sobre palavra) DEVE ser uma palavra REAL em PORTUGUÊS DO BRASIL, gramaticalmente correta, com acentuação completa e ortografia perfeita. PROIBIDO ABSOLUTO: gibberish, palavras inventadas, letras soltas sem sentido, "lorem ipsum", frases em inglês, frases sem nexo, símbolos aleatórios que pareçam letras. Se não houver texto explícito definido pelo usuário, prefira rabiscos PURAMENTE GRÁFICOS (setas, círculos, traços, asteriscos) SEM nenhuma palavra escrita, em vez de inventar texto. Quando precisar escrever, use palavras curtas, simples e seguras em português ("novo", "veja", "agora", "top", "feito à mão", "exclusivo", etc.) — sempre coerentes com o conceito do anúncio.`,
   ``,
   `2. 🔤 SISTEMA TIPOGRÁFICO:`,
   `   - Use EXATAMENTE as famílias tipográficas, pesos, espaçamentos, hierarquia (display/título/corpo), tracking e leading observados nas referências da identidade.`,
