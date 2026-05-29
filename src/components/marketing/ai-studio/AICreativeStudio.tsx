@@ -403,7 +403,7 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [selectedNode, setNodes, setEdges]);
 
-  const handleExecute = useCallback(async (startFromNodeId?: string) => {
+  const handleExecute = useCallback(async (startFromNodeId?: string, skipPreflight: boolean = false) => {
     // Validate blocks before execution
     const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
     const missingBlocks: string[] = [];
