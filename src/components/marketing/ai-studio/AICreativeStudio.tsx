@@ -143,7 +143,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
-  const [preflightDialog, setPreflightDialog] = useState<{ errors: string[]; warnings: string[]; startFromNodeId?: string } | null>(null);
+  const [preflightDialog, setPreflightDialog] = useState<{ errors: string[]; warnings: string[]; startFromNodeId?: string; etaSeconds?: number; etaBreakdown?: Array<{ label: string; seconds: number }>; suggestions?: string[] } | null>(null);
   const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
