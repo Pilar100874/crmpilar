@@ -2520,12 +2520,12 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
           if (afKey) {
             videoParams.model = "apiframe/kling-2.6";
           } else {
-            // Check google
+            // Check google — start async (no internal long-poll)
             const googleKey = await fetchApiKey(estabId, "google");
             if (googleKey) {
-              // For google, use the full generate_video flow instead
-              const fullResult = await handleVideoGeneration(videoParams);
-              return new Response(JSON.stringify({ result: fullResult }), {
+              videoParams.model = "google/veo-3.1";
+              const started = await startVideoGoogle(googleKey, videoParams);
+              return new Response(JSON.stringify({ result: { ...started, _googleProvider: true } }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
               });
             }
@@ -2542,6 +2542,34 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
       case "fetch_apiframe_video": {
         const result = await fetchVideoApiframe(params.estabelecimentoId, params.taskId);
+        return new Response(JSON.stringify({ result }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "start_google_video": {
+        const estabId = params.estabelecimentoId;
+        const googleKey = await fetchApiKey(estabId, "google");
+        if (!googleKey) {
+          return new Response(JSON.stringify({ result: { error: "Chave da API Google não configurada. Configure em Configurações → APIs Pagas." } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const started = await startVideoGoogle(googleKey, params);
+        return new Response(JSON.stringify({ result: started }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "fetch_google_video": {
+        const estabId = params.estabelecimentoId;
+        const googleKey = await fetchApiKey(estabId, "google");
+        if (!googleKey) {
+          return new Response(JSON.stringify({ result: { done: true, error: "Chave da API Google não configurada." } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const result = await fetchVideoGoogleOnce(googleKey, params.taskId);
         return new Response(JSON.stringify({ result }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
