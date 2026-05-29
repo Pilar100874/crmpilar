@@ -694,7 +694,7 @@ const AICreativeStudioInner: React.FC = () => {
 
     // ── Inicia job em background (continua mesmo se o usuário trocar de tela) ──
     const jobId = `studio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const wfName = activeWorkflow?.nome || 'Workflow sem nome';
+    const wfName = currentWorkflowName || 'Workflow sem nome';
     const totalNodes = nodes.filter((n) => !(n.data as StudioNodeData).config?._paused).length;
     studioBackgroundJobs.start({
       id: jobId,
