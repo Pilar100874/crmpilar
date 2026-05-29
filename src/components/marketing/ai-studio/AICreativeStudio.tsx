@@ -143,6 +143,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [preflightDialog, setPreflightDialog] = useState<{ errors: string[]; warnings: string[]; startFromNodeId?: string } | null>(null);
   const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
@@ -402,7 +403,7 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [selectedNode, setNodes, setEdges]);
 
-  const handleExecute = useCallback(async (startFromNodeId?: string) => {
+  const handleExecute = useCallback(async (startFromNodeId?: string, skipPreflight: boolean = false) => {
     // Validate blocks before execution
     const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
     const missingBlocks: string[] = [];
@@ -425,7 +426,7 @@ const AICreativeStudioInner: React.FC = () => {
     }
 
     // ── Preflight: compatibilidade de blocos, modelos e referências ────
-    try {
+    if (!skipPreflight) try {
       const REF_SOURCE_TYPES = new Set([
         'productImageSelect', 'imageInput', 'productComposite', 'imageGen',
         'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta',
@@ -597,19 +598,9 @@ const AICreativeStudioInner: React.FC = () => {
       }
 
 
-      if (errors.length > 0) {
-        toast.error(
-          `Não é possível executar:\n• ${errors.join('\n• ')}`,
-          { duration: 12000 }
-        );
+      if (errors.length > 0 || warnings.length > 0) {
+        setPreflightDialog({ errors, warnings, startFromNodeId });
         return;
-      }
-
-      if (warnings.length > 0) {
-        const proceed = window.confirm(
-          `Atenção — alguns blocos podem não funcionar como esperado:\n\n• ${warnings.join('\n\n• ')}\n\nDeseja continuar mesmo assim?`
-        );
-        if (!proceed) return;
       }
     } catch (e) {
       console.warn('[Studio] Preflight validation error:', e);
@@ -2209,6 +2200,69 @@ const AICreativeStudioInner: React.FC = () => {
             >
               Excluir
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Preflight validation dialog */}
+      <AlertDialog open={!!preflightDialog} onOpenChange={(open) => !open && setPreflightDialog(null)}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {preflightDialog?.errors.length ? (
+                <><span className="text-destructive">⛔</span> Não é possível executar</>
+              ) : (
+                <><span className="text-yellow-500">⚠️</span> Atenção antes de executar</>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {preflightDialog?.errors.length ? (
+                  <div className="space-y-2">
+                    <p className="font-medium text-destructive">Corrija os erros abaixo para continuar:</p>
+                    <ul className="space-y-2">
+                      {preflightDialog.errors.map((err, i) => (
+                        <li key={`err-${i}`} className="flex gap-2 text-sm bg-destructive/10 border border-destructive/30 rounded-md p-3">
+                          <span className="text-destructive shrink-0">•</span>
+                          <span className="text-foreground">{err}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {preflightDialog?.warnings.length ? (
+                  <div className="space-y-2">
+                    <p className="font-medium text-yellow-600 dark:text-yellow-400">
+                      {preflightDialog.errors.length ? 'Avisos adicionais:' : 'Alguns blocos podem não funcionar como esperado:'}
+                    </p>
+                    <ul className="space-y-2">
+                      {preflightDialog.warnings.map((w, i) => (
+                        <li key={`warn-${i}`} className="flex gap-2 text-sm bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3">
+                          <span className="text-yellow-600 dark:text-yellow-400 shrink-0">•</span>
+                          <span className="text-foreground">{w}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {preflightDialog?.errors.length ? 'Fechar' : 'Cancelar'}
+            </AlertDialogCancel>
+            {!preflightDialog?.errors.length && (
+              <AlertDialogAction
+                onClick={() => {
+                  const startId = preflightDialog?.startFromNodeId;
+                  setPreflightDialog(null);
+                  setTimeout(() => handleExecute(startId, true), 50);
+                }}
+              >
+                Continuar mesmo assim
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
