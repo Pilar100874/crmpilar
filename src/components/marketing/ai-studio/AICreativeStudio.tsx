@@ -426,7 +426,7 @@ const AICreativeStudioInner: React.FC = () => {
     }
 
     // ── Preflight: compatibilidade de blocos, modelos e referências ────
-    try {
+    if (!skipPreflight) try {
       const REF_SOURCE_TYPES = new Set([
         'productImageSelect', 'imageInput', 'productComposite', 'imageGen',
         'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta',
