@@ -100,7 +100,9 @@ Deno.serve(async (req) => {
 
       let normalized: any = { status };
 
-      if (status === "completed") {
+      const normalizedStatus = String(status || "").toLowerCase();
+      if (["completed", "succeeded", "success", "finished"].includes(normalizedStatus)) {
+        normalized.status = "completed";
         // Outputs can be image URLs or video URLs
         if (outputs.length > 0) {
           const firstOutput = outputs[0];
@@ -112,7 +114,8 @@ Deno.serve(async (req) => {
           }
           normalized.outputs = outputs;
         }
-      } else if (status === "failed") {
+      } else if (["failed", "error", "cancelled", "canceled"].includes(normalizedStatus)) {
+        normalized.status = "failed";
         normalized.error = wsData.error || "Geração falhou no WaveSpeed";
       }
 
@@ -163,7 +166,8 @@ Deno.serve(async (req) => {
       const wsData = data.data || data;
 
       // If task completed immediately (sync response)
-      if (wsData.status === "completed" && wsData.outputs?.length > 0) {
+      const initialStatus = String(wsData.status || "").toLowerCase();
+      if (["completed", "succeeded", "success", "finished"].includes(initialStatus) && wsData.outputs?.length > 0) {
         const firstOutput = wsData.outputs[0];
         const isVideo = typeof firstOutput === 'string' && (firstOutput.includes('.mp4') || firstOutput.includes('video'));
         return new Response(JSON.stringify({

@@ -795,6 +795,18 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     ? activeResult
     : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames || activeResult?.slideImages?.length);
+  const multiSceneProgress = activeResult?._multiSceneProgress as { current?: number; total?: number; urls?: string[] } | undefined;
+  const videoProgress = activeResult?._videoProgress as {
+    attempt?: number; totalPolls?: number; elapsedSeconds?: number; estimatedRemainingSeconds?: number;
+    provider?: string; status?: string; stalled?: boolean; scene?: number; totalScenes?: number;
+  } | undefined;
+  const pollPercent = videoProgress?.totalPolls
+    ? Math.min(96, Math.round(((videoProgress.attempt || 0) / videoProgress.totalPolls) * 100))
+    : undefined;
+  const scenePercent = multiSceneProgress?.total
+    ? Math.round((((multiSceneProgress.urls?.length || 0) + ((pollPercent || 0) / 100)) / multiSceneProgress.total) * 100)
+    : undefined;
+  const processingPercent = Math.max(3, Math.min(100, scenePercent ?? pollPercent ?? 12));
 
   // Stabilize frames reference to avoid flickering re-renders
   const stableFramesRef = useRef<string[]>([]);
@@ -2193,12 +2205,57 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
         {/* Processing overlay */}
         {activeProcessing && (
-          <div className="absolute inset-0 bg-card/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 rounded-b-2xl">
+          <div className="absolute inset-0 bg-card/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 z-10 rounded-b-2xl px-4 py-4 text-center">
             <div className="relative">
               <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: accent, width: 32, height: 32, margin: 'auto' }} />
               <Loader2 className="h-7 w-7 animate-spin" style={{ color: accent }} />
             </div>
-            <p className="text-[11px] font-medium text-muted-foreground">Processando...</p>
+            <div className="w-full max-w-[260px] space-y-2">
+              <p className="text-[11px] font-semibold text-foreground/80 leading-snug line-clamp-3">
+                {resultText || 'Processando...'}
+              </p>
+              {(multiSceneProgress?.total || videoProgress?.attempt) && (
+                <div className="space-y-1.5">
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${processingPercent}%`, background: accent }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground">
+                    {multiSceneProgress?.total && <span>Cena {multiSceneProgress.current || 1}/{multiSceneProgress.total}</span>}
+                    {typeof videoProgress?.attempt === 'number' && videoProgress.totalPolls && <span>Consulta {videoProgress.attempt}/{videoProgress.totalPolls}</span>}
+                    {typeof videoProgress?.elapsedSeconds === 'number' && <span>{formatTimestamp(videoProgress.elapsedSeconds)}</span>}
+                    {videoProgress?.provider && <span>{videoProgress.provider}</span>}
+                  </div>
+                  {videoProgress?.stalled && (
+                    <p className="text-[9px] text-amber-500 leading-tight">
+                      O provedor ainda está renderizando; a tarefa não foi reiniciada.
+                    </p>
+                  )}
+                  {(multiSceneProgress?.urls?.length || 0) > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-emerald-500 leading-tight">
+                        {multiSceneProgress?.urls?.length} cena(s) já pronta(s).
+                      </p>
+                      <div className="flex justify-center gap-1">
+                        {Array.from({ length: multiSceneProgress?.total || 0 }).map((_, idx) => {
+                          const done = idx < (multiSceneProgress?.urls?.length || 0);
+                          const current = idx + 1 === (multiSceneProgress?.current || 1) && !done;
+                          return (
+                            <span
+                              key={idx}
+                              className="h-1.5 w-5 rounded-full"
+                              style={{ background: done ? '#22c55e' : current ? accent : 'hsl(var(--muted))' }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

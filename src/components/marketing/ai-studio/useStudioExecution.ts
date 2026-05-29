@@ -58,6 +58,18 @@ export interface BatchReviewItem {
   productId?: string;
 }
 
+type VideoProgressUpdate = {
+  message: string;
+  provider?: string;
+  taskId?: string;
+  attempt?: number;
+  totalPolls?: number;
+  elapsedSeconds?: number;
+  estimatedRemainingSeconds?: number;
+  status?: string;
+  stalled?: boolean;
+};
+
 export function useStudioExecution() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionLog, setExecutionLog] = useState<ExecutionLogEntry[]>([]);
@@ -212,7 +224,11 @@ export function useStudioExecution() {
     return videoMarkers.some((marker) => model.includes(marker));
   };
 
-  const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
+  const generateAsyncStudioVideo = async (
+    params: Record<string, any>,
+    maxWaitMs: number = 600000,
+    onProgress?: (progress: VideoProgressUpdate) => void,
+  ) => {
     // Detect provider from model prefix
     const requestedModel = params.model || '';
     const model = isValidVideoGenerationModel(requestedModel) ? requestedModel : 'auto';
@@ -239,6 +255,7 @@ export function useStudioExecution() {
       providerName = 'apiframe';
     }
 
+    onProgress?.({ message: 'Enviando pedido para o provedor de vídeo...', provider: providerName });
     const started = await callStudio(startAction, params, 60000);
 
     if (started?.error) {
@@ -259,6 +276,17 @@ export function useStudioExecution() {
     }
 
     const totalPolls = Math.max(1, Math.ceil(maxWaitMs / 5000));
+    const startedAt = Date.now();
+    onProgress?.({
+      message: `Tarefa iniciada no ${effectiveProvider}. Aguardando renderização...`,
+      provider: effectiveProvider,
+      taskId,
+      attempt: 0,
+      totalPolls,
+      elapsedSeconds: 0,
+      estimatedRemainingSeconds: Math.ceil(maxWaitMs / 1000),
+      status: started?.status || 'processing',
+    });
 
     for (let attempt = 0; attempt < totalPolls; attempt += 1) {
       await waitForStudioDelay(5000);
@@ -272,7 +300,32 @@ export function useStudioExecution() {
         throw new Error(pollResult.error);
       }
 
+      const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000);
+      const remainingSeconds = Math.max(0, Math.ceil(maxWaitMs / 1000) - elapsedSeconds);
+      const status = pollResult?.status || (pollResult?.done ? 'completed' : 'processing');
+      onProgress?.({
+        message: pollResult?.message || `Renderizando no ${effectiveProvider} — consulta ${attempt + 1}/${totalPolls}`,
+        provider: pollResult?.provider || started?.provider || effectiveProvider,
+        taskId,
+        attempt: attempt + 1,
+        totalPolls,
+        elapsedSeconds,
+        estimatedRemainingSeconds: remainingSeconds,
+        status,
+        stalled: attempt + 1 >= 24 && !pollResult?.done,
+      });
+
       if (pollResult?.done && pollResult?.videoUrl) {
+        onProgress?.({
+          message: 'Vídeo pronto. Salvando arquivo...',
+          provider: pollResult.provider || started?.provider || effectiveProvider,
+          taskId,
+          attempt: attempt + 1,
+          totalPolls,
+          elapsedSeconds,
+          estimatedRemainingSeconds: 0,
+          status: 'completed',
+        });
         return {
           videoUrl: pollResult.videoUrl,
           thumbnailUrl: pollResult.thumbnailUrl || started?.thumbnailUrl,
@@ -1320,6 +1373,7 @@ export function useStudioExecution() {
             nodeResultStore.setResult(node.id, {
               text: `🎬 Gerando cena ${s + 1}/${scenes.length}: ${scene.description.substring(0, 60)}...`,
               _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+              _videoProgress: { scene: s + 1, totalScenes: scenes.length, status: 'starting' },
             });
 
             const sceneDuration = Math.min(10, Math.max(5, Number(scene.duration) || 5));
@@ -1362,13 +1416,26 @@ export function useStudioExecution() {
 
               const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/') || effectiveModelMS.startsWith('google/');
               const sceneResult = usesAsync
-                ? await generateAsyncStudioVideo(sceneParams)
+                ? await generateAsyncStudioVideo(sceneParams, 600000, (progress) => {
+                    const elapsed = progress.elapsedSeconds ? ` • ${Math.floor(progress.elapsedSeconds / 60)}m${progress.elapsedSeconds % 60}s` : '';
+                    const stallText = progress.stalled ? ' • ainda processando no provedor' : '';
+                    nodeResultStore.setResult(node.id, {
+                      text: `🎬 Cena ${s + 1}/${scenes.length}: ${progress.message}${elapsed}${stallText}`,
+                      _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+                      _videoProgress: { ...progress, scene: s + 1, totalScenes: scenes.length },
+                    });
+                  })
                 : await callStudio('generate_video', sceneParams, 300000);
 
               if (!sceneResult?.videoUrl) {
                 throw new Error(sceneResult?.error || `Cena ${s + 1} não retornou vídeo`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
+              nodeResultStore.setResult(node.id, {
+                text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
+                _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+                _videoProgress: { scene: s + 1, totalScenes: scenes.length, status: 'completed' },
+              });
             } catch (sceneErr: any) {
               console.error(`[Studio] Cena ${s + 1} falhou:`, sceneErr);
               throw new Error(`❌ Falha ao gerar a cena ${s + 1}/${scenes.length}: ${sceneErr.message || 'erro desconhecido'}`);
@@ -1651,7 +1718,14 @@ export function useStudioExecution() {
 
             const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/') || effectiveVideoModel.startsWith('google/');
             const result = usesAsyncVideoTask
-              ? await generateAsyncStudioVideo(videoRequestParams)
+              ? await generateAsyncStudioVideo(videoRequestParams, 600000, (progress) => {
+                  const elapsed = progress.elapsedSeconds ? ` • ${Math.floor(progress.elapsedSeconds / 60)}m${progress.elapsedSeconds % 60}s` : '';
+                  const stallText = progress.stalled ? ' • ainda processando no provedor' : '';
+                  nodeResultStore.setResult(node.id, {
+                    text: `🎬 ${progress.message}${elapsed}${stallText}`,
+                    _videoProgress: progress,
+                  });
+                })
               : await callStudio('generate_video', videoRequestParams, 300000);
             
             if (result?.videoUrl) {
