@@ -1373,6 +1373,7 @@ export function useStudioExecution() {
             nodeResultStore.setResult(node.id, {
               text: `🎬 Gerando cena ${s + 1}/${scenes.length}: ${scene.description.substring(0, 60)}...`,
               _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+              _videoProgress: { scene: s + 1, totalScenes: scenes.length, status: 'starting' },
             });
 
             const sceneDuration = Math.min(10, Math.max(5, Number(scene.duration) || 5));
@@ -1415,13 +1416,26 @@ export function useStudioExecution() {
 
               const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/') || effectiveModelMS.startsWith('google/');
               const sceneResult = usesAsync
-                ? await generateAsyncStudioVideo(sceneParams)
+                ? await generateAsyncStudioVideo(sceneParams, 600000, (progress) => {
+                    const elapsed = progress.elapsedSeconds ? ` • ${Math.floor(progress.elapsedSeconds / 60)}m${progress.elapsedSeconds % 60}s` : '';
+                    const stallText = progress.stalled ? ' • ainda processando no provedor' : '';
+                    nodeResultStore.setResult(node.id, {
+                      text: `🎬 Cena ${s + 1}/${scenes.length}: ${progress.message}${elapsed}${stallText}`,
+                      _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+                      _videoProgress: { ...progress, scene: s + 1, totalScenes: scenes.length },
+                    });
+                  })
                 : await callStudio('generate_video', sceneParams, 300000);
 
               if (!sceneResult?.videoUrl) {
                 throw new Error(sceneResult?.error || `Cena ${s + 1} não retornou vídeo`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
+              nodeResultStore.setResult(node.id, {
+                text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
+                _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
+                _videoProgress: { scene: s + 1, totalScenes: scenes.length, status: 'completed' },
+              });
             } catch (sceneErr: any) {
               console.error(`[Studio] Cena ${s + 1} falhou:`, sceneErr);
               throw new Error(`❌ Falha ao gerar a cena ${s + 1}/${scenes.length}: ${sceneErr.message || 'erro desconhecido'}`);
