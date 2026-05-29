@@ -58,6 +58,18 @@ export interface BatchReviewItem {
   productId?: string;
 }
 
+type VideoProgressUpdate = {
+  message: string;
+  provider?: string;
+  taskId?: string;
+  attempt?: number;
+  totalPolls?: number;
+  elapsedSeconds?: number;
+  estimatedRemainingSeconds?: number;
+  status?: string;
+  stalled?: boolean;
+};
+
 export function useStudioExecution() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionLog, setExecutionLog] = useState<ExecutionLogEntry[]>([]);
@@ -212,7 +224,11 @@ export function useStudioExecution() {
     return videoMarkers.some((marker) => model.includes(marker));
   };
 
-  const generateAsyncStudioVideo = async (params: Record<string, any>, maxWaitMs: number = 600000) => {
+  const generateAsyncStudioVideo = async (
+    params: Record<string, any>,
+    maxWaitMs: number = 600000,
+    onProgress?: (progress: VideoProgressUpdate) => void,
+  ) => {
     // Detect provider from model prefix
     const requestedModel = params.model || '';
     const model = isValidVideoGenerationModel(requestedModel) ? requestedModel : 'auto';
@@ -239,6 +255,7 @@ export function useStudioExecution() {
       providerName = 'apiframe';
     }
 
+    onProgress?.({ message: 'Enviando pedido para o provedor de vídeo...', provider: providerName });
     const started = await callStudio(startAction, params, 60000);
 
     if (started?.error) {
@@ -259,6 +276,17 @@ export function useStudioExecution() {
     }
 
     const totalPolls = Math.max(1, Math.ceil(maxWaitMs / 5000));
+    const startedAt = Date.now();
+    onProgress?.({
+      message: `Tarefa iniciada no ${effectiveProvider}. Aguardando renderização...`,
+      provider: effectiveProvider,
+      taskId,
+      attempt: 0,
+      totalPolls,
+      elapsedSeconds: 0,
+      estimatedRemainingSeconds: Math.ceil(maxWaitMs / 1000),
+      status: started?.status || 'processing',
+    });
 
     for (let attempt = 0; attempt < totalPolls; attempt += 1) {
       await waitForStudioDelay(5000);
@@ -272,7 +300,32 @@ export function useStudioExecution() {
         throw new Error(pollResult.error);
       }
 
+      const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000);
+      const remainingSeconds = Math.max(0, Math.ceil(maxWaitMs / 1000) - elapsedSeconds);
+      const status = pollResult?.status || (pollResult?.done ? 'completed' : 'processing');
+      onProgress?.({
+        message: pollResult?.message || `Renderizando no ${effectiveProvider} — consulta ${attempt + 1}/${totalPolls}`,
+        provider: pollResult?.provider || started?.provider || effectiveProvider,
+        taskId,
+        attempt: attempt + 1,
+        totalPolls,
+        elapsedSeconds,
+        estimatedRemainingSeconds: remainingSeconds,
+        status,
+        stalled: attempt + 1 >= 24 && !pollResult?.done,
+      });
+
       if (pollResult?.done && pollResult?.videoUrl) {
+        onProgress?.({
+          message: 'Vídeo pronto. Salvando arquivo...',
+          provider: pollResult.provider || started?.provider || effectiveProvider,
+          taskId,
+          attempt: attempt + 1,
+          totalPolls,
+          elapsedSeconds,
+          estimatedRemainingSeconds: 0,
+          status: 'completed',
+        });
         return {
           videoUrl: pollResult.videoUrl,
           thumbnailUrl: pollResult.thumbnailUrl || started?.thumbnailUrl,
