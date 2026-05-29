@@ -1718,7 +1718,14 @@ export function useStudioExecution() {
 
             const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/') || effectiveVideoModel.startsWith('google/');
             const result = usesAsyncVideoTask
-              ? await generateAsyncStudioVideo(videoRequestParams)
+              ? await generateAsyncStudioVideo(videoRequestParams, 600000, (progress) => {
+                  const elapsed = progress.elapsedSeconds ? ` • ${Math.floor(progress.elapsedSeconds / 60)}m${progress.elapsedSeconds % 60}s` : '';
+                  const stallText = progress.stalled ? ' • ainda processando no provedor' : '';
+                  nodeResultStore.setResult(node.id, {
+                    text: `🎬 ${progress.message}${elapsed}${stallText}`,
+                    _videoProgress: progress,
+                  });
+                })
               : await callStudio('generate_video', videoRequestParams, 300000);
             
             if (result?.videoUrl) {
