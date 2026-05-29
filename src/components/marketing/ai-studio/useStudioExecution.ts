@@ -1360,7 +1360,7 @@ export function useStudioExecution() {
                 estabelecimentoId: estabIdMS,
               };
 
-              const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/');
+              const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/') || effectiveModelMS.startsWith('google/');
               const sceneResult = usesAsync
                 ? await generateAsyncStudioVideo(sceneParams)
                 : await callStudio('generate_video', sceneParams, 300000);
