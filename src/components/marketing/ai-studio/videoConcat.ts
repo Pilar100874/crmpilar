@@ -77,7 +77,7 @@ export async function concatVideos(
   }
 
   onProgress?.({ stage: 'loading', message: 'Carregando ffmpeg…' });
-  const ffmpeg = await getFFmpeg();
+  const ffmpeg = await getFFmpeg(onProgress);
 
   // 1) Baixar e gravar cada vídeo no FS virtual
   for (let i = 0; i < urls.length; i++) {
