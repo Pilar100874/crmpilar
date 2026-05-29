@@ -179,6 +179,7 @@ const App = () => (
           <UnsavedChangesProvider>
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
+          <StudioBackgroundIndicator />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
