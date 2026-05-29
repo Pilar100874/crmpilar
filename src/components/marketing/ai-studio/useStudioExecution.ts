@@ -1415,10 +1415,12 @@ export function useStudioExecution() {
               };
 
               const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/') || effectiveModelMS.startsWith('google/');
+              const isSlowModel = effectiveModelMS.includes('seedance') || effectiveModelMS.includes('image-to-video');
+              const sceneTimeoutMs = isSlowModel ? 900000 : 600000;
               const sceneResult = usesAsync
-                ? await generateAsyncStudioVideo(sceneParams, 600000, (progress) => {
+                ? await generateAsyncStudioVideo(sceneParams, sceneTimeoutMs, (progress) => {
                     const elapsed = progress.elapsedSeconds ? ` • ${Math.floor(progress.elapsedSeconds / 60)}m${progress.elapsedSeconds % 60}s` : '';
-                    const stallText = progress.stalled ? ' • ainda processando no provedor' : '';
+                    const stallText = progress.stalled ? ' • provedor ainda renderizando (image-to-video pode levar 5-15min/cena)' : '';
                     nodeResultStore.setResult(node.id, {
                       text: `🎬 Cena ${s + 1}/${scenes.length}: ${progress.message}${elapsed}${stallText}`,
                       _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
