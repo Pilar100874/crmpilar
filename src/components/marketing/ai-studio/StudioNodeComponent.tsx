@@ -2234,9 +2234,24 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     </p>
                   )}
                   {(multiSceneProgress?.urls?.length || 0) > 0 && (
-                    <p className="text-[9px] text-emerald-500 leading-tight">
-                      {multiSceneProgress?.urls?.length} cena(s) já pronta(s).
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-emerald-500 leading-tight">
+                        {multiSceneProgress?.urls?.length} cena(s) já pronta(s).
+                      </p>
+                      <div className="flex justify-center gap-1">
+                        {Array.from({ length: multiSceneProgress?.total || 0 }).map((_, idx) => {
+                          const done = idx < (multiSceneProgress?.urls?.length || 0);
+                          const current = idx + 1 === (multiSceneProgress?.current || 1) && !done;
+                          return (
+                            <span
+                              key={idx}
+                              className="h-1.5 w-5 rounded-full"
+                              style={{ background: done ? '#22c55e' : current ? accent : 'hsl(var(--muted))' }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
