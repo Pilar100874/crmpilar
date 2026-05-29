@@ -80,7 +80,9 @@ async function pollUntilDone<T>(
 }
 
 // --- Google Veo (Vertex AI / AI Studio) ---
-async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGenerationResult> {
+// Starts a Google Veo long-running operation and returns the operation name immediately.
+// Polling is done client-side via fetch_google_video to avoid edge function wall-clock limits.
+async function startVideoGoogle(apiKey: string, params: any): Promise<{ taskId: string; provider: string }> {
   const modelMap: Record<string, string> = {
     "google/veo-3.1": "veo-3.1-generate-preview",
     "google/veo-3.1-fast": "veo-3.1-fast-generate-preview",
@@ -88,14 +90,12 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     "google/veo-2": "veo-2.0-generate-001",
   };
   const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
-  
+
   // Prepare image reference for image-to-video mode
   let imagePayload: any = {};
   const allImageUrls = (params.imageUrls || []) as string[];
   const bestImageUrl = allImageUrls[0];
-  
-  // In bridgeMode with 2 images, Veo only accepts ONE image.
-  // Compose a single side-by-side SVG reference so the model can see both the exact start and end frames.
+
   if (params.bridgeMode && allImageUrls.length >= 2 && allImageUrls[0]?.startsWith("http") && allImageUrls[1]?.startsWith("http")) {
     try {
       console.log(`[generate_video] Google Veo bridge mode: composing side-by-side reference from both frames`);
@@ -121,7 +121,6 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         `;
         const svgBytes = new TextEncoder().encode(svg);
         imagePayload = { image: { bytesBase64Encoded: base64Encode(svgBytes), mimeType: "image/svg+xml" } };
-        console.log(`[generate_video] Google Veo bridge: side-by-side start/end reference attached (${(svgBytes.byteLength / 1024).toFixed(0)}KB SVG)`);
       }
     } catch (imgErr) {
       console.warn(`[generate_video] Google Veo bridge: failed to compose frames:`, imgErr);
@@ -135,26 +134,21 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         const imgBuf = await imgResp.arrayBuffer();
         const b64 = base64Encode(imgBuf);
         imagePayload = { image: { bytesBase64Encoded: b64, mimeType } };
-        console.log(`[generate_video] Google Veo: image attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB, ${mimeType})`);
       }
     } catch (imgErr) {
       console.warn(`[generate_video] Google Veo: failed to attach image:`, imgErr);
     }
   }
-  
-  // Clean prompt for Veo
+
   let cleanPrompt = params.prompt || "";
-  
-  // For bridge mode, use a simplified prompt that focuses on the transition
+
   if (params.bridgeMode) {
     const directionMatch = cleanPrompt.match(/TRANSITION DIRECTION:\s*([\s\S]*?)(?:\n\nCRITICAL:|$)/);
     const userDirection = directionMatch?.[1]?.trim() || cleanPrompt;
     cleanPrompt = `The attached reference image contains two exact frames side by side: LEFT is the starting frame and RIGHT is the ending frame. Create a smooth cinematic transition from the LEFT frame to the RIGHT frame. ${userDirection}. The first moment must match the left frame and the last moment must match the right frame.`;
-    console.log(`[generate_video] Veo bridge mode: simplified prompt: ${cleanPrompt.substring(0, 200)}`);
   } else {
-    // Normal mode: remove fidelity/preservation instructions
     const fidelityMarkers = [
-      '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
+      '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM',
       'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
       'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
       'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
@@ -172,13 +166,11 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
     cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
   }
-  
-  // If prompt is too short after cleaning, use a generic scene description
+
   if (cleanPrompt.length < 20) {
     cleanPrompt = "A cinematic product showcase video with smooth camera movement, professional lighting, and elegant composition.";
   }
 
-  // Re-append audio directive after cleaning (it gets stripped by fidelity markers)
   const withAudio = params.withAudio !== false;
   const withMusic = withAudio ? (params.withMusic !== false) : false;
   if (!withAudio) {
@@ -187,22 +179,17 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     cleanPrompt += "\n\nDo NOT add any background music or soundtrack. Keep only natural non-musical audio.";
   }
 
-  console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars), audio=${withAudio}, music=${withMusic}: ${cleanPrompt.substring(0, 200)}`);
+  console.log(`[start_google_video] Veo prompt (${cleanPrompt.length} chars), model=${modelId}`);
 
-  // Submit generation request
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        instances: [{
-          prompt: cleanPrompt,
-          ...imagePayload,
-        }],
+        instances: [{ prompt: cleanPrompt, ...imagePayload }],
         parameters: {
           aspectRatio: (["16:9","9:16"].includes(params.aspectRatio) ? params.aspectRatio : "16:9"),
-          // Veo 3 has fixed duration (do NOT send durationSeconds); Veo 2 supports 4-8s
           ...(modelId.startsWith("veo-3")
             ? {}
             : { durationSeconds: Math.min(8, Math.max(4, Math.round(Number(params.duration) || 6))) }),
@@ -217,89 +204,83 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     const err = await response.text();
     throw new Error(`Google Veo API error ${response.status}: ${err.substring(0, 200)}`);
   }
-  
+
   const opData = await response.json();
   const operationName = opData.name;
   if (!operationName) throw new Error("No operation returned from Veo API");
 
-  console.log(`[generate_video] Google Veo operation: ${operationName}`);
+  console.log(`[start_google_video] operation: ${operationName}`);
+  return { taskId: operationName, provider: "google" };
+}
 
-  // Poll for completion
-  const result = await pollUntilDone<string>(async () => {
-    const pollResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
-    );
-    const pollData = await pollResp.json();
-    const isDone = pollData.done === true;
-    const hasError = pollData.error != null;
-    console.log(`[generate_video] Poll response done=${isDone}, hasError=${hasError}, keys=${JSON.stringify(Object.keys(pollData.response || {}))}`);
-    
-    // If the operation errored out
-    if (hasError) {
-      const errMsg = typeof pollData.error === 'object' ? (pollData.error.message || JSON.stringify(pollData.error)) : String(pollData.error);
-      console.log(`[generate_video] Operation error: ${errMsg}`);
-      return { done: true, error: `Google Veo error: ${errMsg.substring(0, 200)}` };
+// Single poll of a Google Veo operation. Returns { done, videoUrl?, error? }.
+async function fetchVideoGoogleOnce(apiKey: string, operationName: string): Promise<{ done: boolean; videoUrl?: string; error?: string; provider?: string }> {
+  const pollResp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
+  );
+  const pollData = await pollResp.json();
+  const isDone = pollData.done === true;
+  const hasError = pollData.error != null;
+
+  if (hasError) {
+    const errMsg = typeof pollData.error === 'object' ? (pollData.error.message || JSON.stringify(pollData.error)) : String(pollData.error);
+    return { done: true, error: `Google Veo error: ${errMsg.substring(0, 200)}` };
+  }
+
+  if (!isDone) return { done: false };
+
+  const resp = pollData.response || pollData.result || pollData;
+  const genResp = resp?.generateVideoResponse;
+  if (genResp?.raiMediaFilteredCount > 0 || genResp?.raiMediaFilteredReasons?.length > 0) {
+    const reasons = genResp.raiMediaFilteredReasons?.join("; ") || "Conteúdo bloqueado pela moderação";
+    return { done: true, error: `blocked:${reasons}` };
+  }
+
+  const downloadAndStore = async (uri: string) => {
+    const downloadUrl = uri.includes("?") ? `${uri}&key=${apiKey}` : `${uri}?key=${apiKey}`;
+    const dlResp = await fetch(downloadUrl);
+    if (!dlResp.ok) return { done: true, error: `Failed to download video: ${dlResp.status}` };
+    const videoBytes = new Uint8Array(await dlResp.arrayBuffer());
+    const storedUrl = await uploadVideoToStorage(videoBytes);
+    return { done: true, videoUrl: storedUrl || undefined, provider: "google" };
+  };
+
+  const genSamples = genResp?.generatedSamples;
+  if (genSamples?.[0]?.video?.uri) return await downloadAndStore(genSamples[0].video.uri);
+  if (genSamples?.[0]?.video?.bytesBase64Encoded) {
+    const bytes = base64Decode(genSamples[0].video.bytesBase64Encoded);
+    const url = await uploadVideoToStorage(new Uint8Array(bytes));
+    return { done: true, videoUrl: url || undefined, provider: "google" };
+  }
+
+  const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
+  const video = samples?.[0]?.video || samples?.[0];
+  if (video?.uri) return await downloadAndStore(video.uri);
+  if (video?.bytesBase64Encoded) {
+    const bytes = base64Decode(video.bytesBase64Encoded);
+    const url = await uploadVideoToStorage(new Uint8Array(bytes));
+    return { done: true, videoUrl: url || undefined, provider: "google" };
+  }
+  if (typeof video === "string" && video.startsWith("http")) return await downloadAndStore(video);
+
+  return { done: true, error: `No video in response: ${JSON.stringify(resp).substring(0, 300)}` };
+}
+
+// Back-compat sync wrapper (used by internal auto-routing). Polls a short number of times,
+// then surfaces a friendly timeout so the caller can fall back / retry.
+async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const { taskId } = await startVideoGoogle(apiKey, params);
+  // Poll up to ~110s within the edge function (leaves room before wall-clock timeout)
+  for (let i = 0; i < 22; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    const tick = await fetchVideoGoogleOnce(apiKey, taskId);
+    if (tick.done) {
+      if (tick.error) throw new Error(tick.error);
+      return { videoUrl: tick.videoUrl, provider: "google" };
     }
-    
-    if (isDone) {
-      const resp = pollData.response || pollData.result || pollData;
-      console.log(`[generate_video] Response structure: ${JSON.stringify(resp).substring(0, 500)}`);
-      
-      // Check for safety/moderation filter
-      const genResp = resp?.generateVideoResponse;
-      if (genResp?.raiMediaFilteredCount > 0 || genResp?.raiMediaFilteredReasons?.length > 0) {
-        const reasons = genResp.raiMediaFilteredReasons?.join("; ") || "Conteúdo bloqueado pela moderação";
-        return { done: true, error: `blocked:${reasons}` };
-      }
-      
-      // Helper to download from Google API and upload to our storage
-      const downloadAndStore = async (uri: string): Promise<{ done: true; result?: string; error?: string }> => {
-        try {
-          const downloadUrl = uri.includes("?") ? `${uri}&key=${apiKey}` : `${uri}?key=${apiKey}`;
-          console.log(`[generate_video] Downloading video from Google API...`);
-          const dlResp = await fetch(downloadUrl);
-          if (!dlResp.ok) {
-            console.log(`[generate_video] Download failed: ${dlResp.status}`);
-            return { done: true, error: `Failed to download video: ${dlResp.status}` };
-          }
-          const videoBytes = new Uint8Array(await dlResp.arrayBuffer());
-          console.log(`[generate_video] Downloaded ${videoBytes.length} bytes, uploading to storage...`);
-          const storedUrl = await uploadVideoToStorage(videoBytes);
-          return { done: true, result: storedUrl || undefined };
-        } catch (e) {
-          console.log(`[generate_video] Download error: ${e.message}`);
-          return { done: true, error: `Download error: ${e.message}` };
-        }
-      };
-
-      // Try generateVideoResponse.generatedSamples first (confirmed structure)
-      const genSamples = genResp?.generatedSamples;
-      if (genSamples?.[0]?.video?.uri) {
-        return await downloadAndStore(genSamples[0].video.uri);
-      }
-      if (genSamples?.[0]?.video?.bytesBase64Encoded) {
-        const bytes = base64Decode(genSamples[0].video.bytesBase64Encoded);
-        const url = await uploadVideoToStorage(new Uint8Array(bytes));
-        return { done: true, result: url || undefined };
-      }
-      
-      // Fallback: try top-level structures
-      const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
-      const video = samples?.[0]?.video || samples?.[0];
-      if (video?.uri) return await downloadAndStore(video.uri);
-      if (video?.bytesBase64Encoded) {
-        const bytes = base64Decode(video.bytesBase64Encoded);
-        const url = await uploadVideoToStorage(new Uint8Array(bytes));
-        return { done: true, result: url || undefined };
-      }
-      if (typeof video === "string" && video.startsWith("http")) return await downloadAndStore(video);
-      
-      return { done: true, error: `No video in response: ${JSON.stringify(resp).substring(0, 300)}` };
-    }
-    return { done: false };
-  }, 5000, 120);
-
-  return { videoUrl: result };
+  }
+  // Surface taskId so the client can keep polling via fetch_google_video without restarting generation
+  throw new Error(`async_pending:${taskId}`);
 }
 
 // --- OpenAI Sora ---
