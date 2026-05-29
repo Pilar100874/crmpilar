@@ -2204,6 +2204,69 @@ const AICreativeStudioInner: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Preflight validation dialog */}
+      <AlertDialog open={!!preflightDialog} onOpenChange={(open) => !open && setPreflightDialog(null)}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {preflightDialog?.errors.length ? (
+                <><span className="text-destructive">⛔</span> Não é possível executar</>
+              ) : (
+                <><span className="text-yellow-500">⚠️</span> Atenção antes de executar</>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {preflightDialog?.errors.length ? (
+                  <div className="space-y-2">
+                    <p className="font-medium text-destructive">Corrija os erros abaixo para continuar:</p>
+                    <ul className="space-y-2">
+                      {preflightDialog.errors.map((err, i) => (
+                        <li key={`err-${i}`} className="flex gap-2 text-sm bg-destructive/10 border border-destructive/30 rounded-md p-3">
+                          <span className="text-destructive shrink-0">•</span>
+                          <span className="text-foreground">{err}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {preflightDialog?.warnings.length ? (
+                  <div className="space-y-2">
+                    <p className="font-medium text-yellow-600 dark:text-yellow-400">
+                      {preflightDialog.errors.length ? 'Avisos adicionais:' : 'Alguns blocos podem não funcionar como esperado:'}
+                    </p>
+                    <ul className="space-y-2">
+                      {preflightDialog.warnings.map((w, i) => (
+                        <li key={`warn-${i}`} className="flex gap-2 text-sm bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3">
+                          <span className="text-yellow-600 dark:text-yellow-400 shrink-0">•</span>
+                          <span className="text-foreground">{w}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {preflightDialog?.errors.length ? 'Fechar' : 'Cancelar'}
+            </AlertDialogCancel>
+            {!preflightDialog?.errors.length && (
+              <AlertDialogAction
+                onClick={() => {
+                  const startId = preflightDialog?.startFromNodeId;
+                  setPreflightDialog(null);
+                  setTimeout(() => handleExecute(startId, true), 50);
+                }}
+              >
+                Continuar mesmo assim
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Rename workflow dialog */}
       <Dialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
         <DialogContent>
