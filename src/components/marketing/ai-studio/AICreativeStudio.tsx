@@ -720,7 +720,7 @@ const AICreativeStudioInner: React.FC = () => {
             studioBackgroundJobs.update(jobId, {
               nodesDone: done,
               progress: totalNodes > 0 ? Math.round((done / totalNodes) * 100) : undefined,
-              message: text,
+              message: String(text || 'Processando…'),
               sceneDone: vp?.scene,
               sceneTotal: vp?.totalScenes,
             });
