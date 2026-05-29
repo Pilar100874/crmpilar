@@ -926,7 +926,7 @@ async function startVideoApiframe(estabelecimentoId: string, params: any): Promi
   return { error: "Apiframe não retornou task_id nem video_url." };
 }
 
-async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string }> {
+async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string; provider?: string; status?: string; message?: string }> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !supabaseKey) {
@@ -985,7 +985,12 @@ async function fetchVideoApiframe(estabelecimentoId: string, taskId: string): Pr
     return { done: true, error: failureReason || "Geração falhou no Apiframe." };
   }
 
-  return { done: false };
+  return {
+    done: false,
+    provider: "apiframe",
+    status: status || "processing",
+    message: status ? `Apiframe retornou status: ${status}` : "Apiframe está renderizando o vídeo",
+  };
 }
 
 async function generateVideoApiframe(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
@@ -1117,7 +1122,7 @@ async function startVideoWavespeed(estabelecimentoId: string, params: any): Prom
   return { error: "WaveSpeed não retornou taskId nem videoUrl." };
 }
 
-async function fetchVideoWavespeed(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string }> {
+async function fetchVideoWavespeed(estabelecimentoId: string, taskId: string): Promise<{ done: boolean; videoUrl?: string; error?: string; provider?: string; status?: string; message?: string }> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !supabaseKey) {
@@ -1154,7 +1159,12 @@ async function fetchVideoWavespeed(estabelecimentoId: string, taskId: string): P
     return { done: true, error: data.error || "Geração falhou no WaveSpeed." };
   }
 
-  return { done: false };
+  return {
+    done: false,
+    provider: "wavespeed",
+    status: data.status || "processing",
+    message: data.status ? `WaveSpeed retornou status: ${data.status}` : "WaveSpeed está renderizando o vídeo",
+  };
 }
 
 async function generateVideoWavespeed(estabelecimentoId: string, params: any): Promise<VideoGenerationResult> {
