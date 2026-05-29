@@ -221,9 +221,23 @@ export function useStudioExecution() {
       params = { ...params, model };
     }
     const isWavespeed = model.startsWith('wavespeed/');
-    const startAction = isWavespeed ? 'start_wavespeed_video' : 'start_apiframe_video';
-    const fetchAction = isWavespeed ? 'fetch_wavespeed_video' : 'fetch_apiframe_video';
-    const providerName = isWavespeed ? 'wavespeed' : 'apiframe';
+    const isGoogle = model.startsWith('google/');
+    let startAction: string;
+    let fetchAction: string;
+    let providerName: string;
+    if (isWavespeed) {
+      startAction = 'start_wavespeed_video';
+      fetchAction = 'fetch_wavespeed_video';
+      providerName = 'wavespeed';
+    } else if (isGoogle) {
+      startAction = 'start_google_video';
+      fetchAction = 'fetch_google_video';
+      providerName = 'google';
+    } else {
+      startAction = 'start_apiframe_video';
+      fetchAction = 'fetch_apiframe_video';
+      providerName = 'apiframe';
+    }
 
     const started = await callStudio(startAction, params, 60000);
 
@@ -235,6 +249,10 @@ export function useStudioExecution() {
       return started;
     }
 
+    // start_apiframe_video may auto-route to google async — switch fetch action accordingly
+    const effectiveFetchAction = started?._googleProvider ? 'fetch_google_video' : fetchAction;
+    const effectiveProvider = started?._googleProvider ? 'google' : providerName;
+
     const taskId = started?.taskId;
     if (!taskId) {
       throw new Error('O provedor de vídeo não retornou o identificador da tarefa.');
@@ -245,7 +263,7 @@ export function useStudioExecution() {
     for (let attempt = 0; attempt < totalPolls; attempt += 1) {
       await waitForStudioDelay(5000);
 
-      const pollResult = await callStudio(fetchAction, {
+      const pollResult = await callStudio(effectiveFetchAction, {
         estabelecimentoId: params.estabelecimentoId,
         taskId,
       }, 60000);
@@ -258,7 +276,7 @@ export function useStudioExecution() {
         return {
           videoUrl: pollResult.videoUrl,
           thumbnailUrl: pollResult.thumbnailUrl || started?.thumbnailUrl,
-          provider: pollResult.provider || started?.provider || providerName,
+          provider: pollResult.provider || started?.provider || effectiveProvider,
           providerVideoId: pollResult.providerVideoId || started?.providerVideoId,
         };
       }
@@ -1342,7 +1360,7 @@ export function useStudioExecution() {
                 estabelecimentoId: estabIdMS,
               };
 
-              const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/');
+              const usesAsync = effectiveModelMS === 'auto' || effectiveModelMS.startsWith('apiframe/') || effectiveModelMS.startsWith('wavespeed/') || effectiveModelMS.startsWith('google/');
               const sceneResult = usesAsync
                 ? await generateAsyncStudioVideo(sceneParams)
                 : await callStudio('generate_video', sceneParams, 300000);
@@ -1631,7 +1649,7 @@ export function useStudioExecution() {
               estabelecimentoId: estabId,
             };
 
-            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/');
+            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/') || effectiveVideoModel.startsWith('google/');
             const result = usesAsyncVideoTask
               ? await generateAsyncStudioVideo(videoRequestParams)
               : await callStudio('generate_video', videoRequestParams, 300000);
