@@ -1649,7 +1649,7 @@ export function useStudioExecution() {
               estabelecimentoId: estabId,
             };
 
-            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/');
+            const usesAsyncVideoTask = effectiveVideoModel === 'auto' || effectiveVideoModel.startsWith('apiframe/') || effectiveVideoModel.startsWith('wavespeed/') || effectiveVideoModel.startsWith('google/');
             const result = usesAsyncVideoTask
               ? await generateAsyncStudioVideo(videoRequestParams)
               : await callStudio('generate_video', videoRequestParams, 300000);
