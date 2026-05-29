@@ -2353,7 +2353,7 @@ const AICreativeStudioInner: React.FC = () => {
                   setTimeout(() => handleExecute(startId, true), 50);
                 }}
               >
-                Continuar mesmo assim
+                {preflightDialog?.warnings.length || preflightDialog?.errors.length ? 'Continuar mesmo assim' : '▶ Rodar em background'}
               </AlertDialogAction>
             )}
           </AlertDialogFooter>
