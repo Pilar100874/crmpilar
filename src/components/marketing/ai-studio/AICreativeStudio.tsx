@@ -692,6 +692,18 @@ const AICreativeStudioInner: React.FC = () => {
       // Don't block execution on validation error
     }
 
+    // ── Inicia job em background (continua mesmo se o usuário trocar de tela) ──
+    const jobId = `studio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const wfName = activeWorkflow?.nome || 'Workflow sem nome';
+    const totalNodes = nodes.filter((n) => !(n.data as StudioNodeData).config?._paused).length;
+    studioBackgroundJobs.start({
+      id: jobId,
+      workflowName: wfName,
+      message: 'Iniciando…',
+      nodesTotal: totalNodes,
+      returnTo: '/marketing-ai-studio',
+    });
+
     try {
       const updatedNodes = await executeWorkflow(
         nodes as StudioNode[],
@@ -699,14 +711,37 @@ const AICreativeStudioInner: React.FC = () => {
         startFromNodeId,
         (realtimeNodes) => {
           setNodes(() => realtimeNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
+          // Reporta progresso ao job
+          try {
+            const done = realtimeNodes.filter((n: any) => n.data?.status === 'success' || n.data?.status === 'error').length;
+            const running = realtimeNodes.find((n: any) => n.data?.status === 'running');
+            const text = running?.data?.text || running?.data?.label || 'Processando…';
+            const vp = (running?.data as any)?._videoProgress;
+            studioBackgroundJobs.update(jobId, {
+              nodesDone: done,
+              progress: totalNodes > 0 ? Math.round((done / totalNodes) * 100) : undefined,
+              message: text,
+              sceneDone: vp?.scene,
+              sceneTotal: vp?.totalScenes,
+            });
+          } catch {}
         }
       );
       setNodes(() => updatedNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
+      // Última URL gerada (se houver)
+      const lastUrl = (updatedNodes as any[]).reverse().find((n) => n.data?.outputUrl || n.data?.imageUrl || n.data?.videoUrl)?.data;
+      studioBackgroundJobs.finish(jobId, 'success', {
+        message: startFromNodeId ? 'Execução parcial concluída!' : 'Workflow concluído com sucesso!',
+        progress: 100,
+        nodesDone: totalNodes,
+        lastResultUrl: lastUrl?.outputUrl || lastUrl?.imageUrl || lastUrl?.videoUrl,
+      });
       toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
+      studioBackgroundJobs.finish(jobId, 'error', { message: err?.message || 'Erro ao executar workflow', error: err?.message });
       toast.error(err.message || 'Erro ao executar workflow');
     }
-  }, [nodes, edges, executeWorkflow, setNodes]);
+  }, [nodes, edges, executeWorkflow, setNodes, activeWorkflow]);
 
   const handleExecuteFromNode = useCallback(() => {
     if (selectedNode) {
