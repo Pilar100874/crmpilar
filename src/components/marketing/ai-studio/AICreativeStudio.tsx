@@ -599,8 +599,24 @@ const AICreativeStudioInner: React.FC = () => {
       }
 
 
-      if (errors.length > 0 || warnings.length > 0) {
-        setPreflightDialog({ errors, warnings, startFromNodeId });
+      // Calcular ETA + sugestões de modelo para mostrar no diálogo
+      const etaInputs = nodes.map((n) => {
+        const nd = n.data as StudioNodeData;
+        const model = nd.type === 'videoGen' ? (nd.config?.videoModel || '') : (nd.config?.model || '');
+        const scriptSrc = (edges.filter((e) => e.target === n.id).map((e) => nodes.find((x) => x.id === e.source)).filter(Boolean) as any[])
+          .find((s) => ['videoScript', 'reelScript'].includes((s.data as StudioNodeData).type));
+        const scenes = scriptSrc ? ((scriptSrc.data as StudioNodeData).config?.scenes || (scriptSrc.data as StudioNodeData).config?.videoScript?.scenes || []).length || 1 : 1;
+        return { type: nd.type, model, scenes, paused: !!nd.config?._paused };
+      });
+      const eta = estimateWorkflowSeconds(etaInputs);
+      const suggestions = modelSuggestions(etaInputs);
+
+      // Sempre mostrar o diálogo se houver erros/avisos OU se tiver vídeo demorado (>= 3 min)
+      const hasVideo = etaInputs.some((n) => n.type === 'videoGen' && !n.paused);
+      const shouldShowDialog = errors.length > 0 || warnings.length > 0 || (hasVideo && eta.total >= 180);
+
+      if (shouldShowDialog) {
+        setPreflightDialog({ errors, warnings, startFromNodeId, etaSeconds: eta.total, etaBreakdown: eta.breakdown, suggestions });
         return;
       }
     } catch (e) {
