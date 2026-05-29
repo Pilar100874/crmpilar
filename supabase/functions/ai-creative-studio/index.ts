@@ -214,7 +214,7 @@ async function startVideoGoogle(apiKey: string, params: any): Promise<{ taskId: 
 }
 
 // Single poll of a Google Veo operation. Returns { done, videoUrl?, error? }.
-async function fetchVideoGoogleOnce(apiKey: string, operationName: string): Promise<{ done: boolean; videoUrl?: string; error?: string; provider?: string }> {
+async function fetchVideoGoogleOnce(apiKey: string, operationName: string): Promise<{ done: boolean; videoUrl?: string; error?: string; provider?: string; status?: string; message?: string }> {
   const pollResp = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
   );
@@ -227,7 +227,7 @@ async function fetchVideoGoogleOnce(apiKey: string, operationName: string): Prom
     return { done: true, error: `Google Veo error: ${errMsg.substring(0, 200)}` };
   }
 
-  if (!isDone) return { done: false };
+  if (!isDone) return { done: false, provider: "google", status: "processing", message: "Google Veo está renderizando o vídeo" };
 
   const resp = pollData.response || pollData.result || pollData;
   const genResp = resp?.generateVideoResponse;
