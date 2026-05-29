@@ -40,6 +40,7 @@ import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
 import BatchReviewDialog from './BatchReviewDialog';
 import SmartConnectMenu from './SmartConnectMenu';
+import { studioBackgroundJobs, estimateWorkflowSeconds, modelSuggestions, formatSeconds } from './backgroundJobsStore';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { format } from 'date-fns';
 
