@@ -598,19 +598,9 @@ const AICreativeStudioInner: React.FC = () => {
       }
 
 
-      if (errors.length > 0) {
-        toast.error(
-          `Não é possível executar:\n• ${errors.join('\n• ')}`,
-          { duration: 12000 }
-        );
+      if (errors.length > 0 || warnings.length > 0) {
+        setPreflightDialog({ errors, warnings, startFromNodeId });
         return;
-      }
-
-      if (warnings.length > 0) {
-        const proceed = window.confirm(
-          `Atenção — alguns blocos podem não funcionar como esperado:\n\n• ${warnings.join('\n\n• ')}\n\nDeseja continuar mesmo assim?`
-        );
-        if (!proceed) return;
       }
     } catch (e) {
       console.warn('[Studio] Preflight validation error:', e);
