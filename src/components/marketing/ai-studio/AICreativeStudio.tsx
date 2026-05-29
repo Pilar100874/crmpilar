@@ -2269,6 +2269,41 @@ const AICreativeStudioInner: React.FC = () => {
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Tempo estimado */}
+                {preflightDialog?.etaSeconds && preflightDialog.etaSeconds > 0 ? (
+                  <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-sm text-foreground">⏱ Tempo estimado total</span>
+                      <span className="font-mono font-semibold text-primary">~{formatSeconds(preflightDialog.etaSeconds)}</span>
+                    </div>
+                    {preflightDialog.etaBreakdown && preflightDialog.etaBreakdown.length > 0 && (
+                      <ul className="text-[11px] text-muted-foreground space-y-0.5 pl-1">
+                        {preflightDialog.etaBreakdown.map((b, i) => (
+                          <li key={i} className="flex justify-between gap-2">
+                            <span className="truncate">{b.label}</span>
+                            <span className="font-mono shrink-0">~{formatSeconds(b.seconds)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="text-[10px] text-muted-foreground italic pt-1">
+                      Estimativa baseada nos modelos selecionados. Vídeos podem variar conforme carga do provedor.
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Sugestões de troca de modelo */}
+                {preflightDialog?.suggestions && preflightDialog.suggestions.length > 0 ? (
+                  <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 space-y-1.5">
+                    <p className="font-medium text-sm text-blue-600 dark:text-blue-400">💡 Sugestões para acelerar</p>
+                    <ul className="space-y-1">
+                      {preflightDialog.suggestions.map((s, i) => (
+                        <li key={i} className="text-[12px] text-foreground/90 leading-snug">• {s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
                 {preflightDialog?.errors.length ? (
                   <div className="space-y-2">
                     <p className="font-medium text-destructive">Corrija os erros abaixo para continuar:</p>
@@ -2297,6 +2332,12 @@ const AICreativeStudioInner: React.FC = () => {
                     </ul>
                   </div>
                 ) : null}
+
+                {!preflightDialog?.errors.length && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Dica: clique em <strong>Rodar em background</strong> para usar o resto do sistema enquanto a IA trabalha. Um ícone no canto inferior direito mostrará o progresso.
+                  </p>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
