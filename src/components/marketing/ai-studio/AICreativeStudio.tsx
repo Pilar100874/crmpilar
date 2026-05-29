@@ -40,6 +40,7 @@ import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
 import BatchReviewDialog from './BatchReviewDialog';
 import SmartConnectMenu from './SmartConnectMenu';
+import { studioBackgroundJobs, estimateWorkflowSeconds, modelSuggestions, formatSeconds } from './backgroundJobsStore';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { format } from 'date-fns';
 
@@ -143,7 +144,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
-  const [preflightDialog, setPreflightDialog] = useState<{ errors: string[]; warnings: string[]; startFromNodeId?: string } | null>(null);
+  const [preflightDialog, setPreflightDialog] = useState<{ errors: string[]; warnings: string[]; startFromNodeId?: string; etaSeconds?: number; etaBreakdown?: Array<{ label: string; seconds: number }>; suggestions?: string[] } | null>(null);
   const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
@@ -598,8 +599,24 @@ const AICreativeStudioInner: React.FC = () => {
       }
 
 
-      if (errors.length > 0 || warnings.length > 0) {
-        setPreflightDialog({ errors, warnings, startFromNodeId });
+      // Calcular ETA + sugestões de modelo para mostrar no diálogo
+      const etaInputs = nodes.map((n) => {
+        const nd = n.data as StudioNodeData;
+        const model = nd.type === 'videoGen' ? (nd.config?.videoModel || '') : (nd.config?.model || '');
+        const scriptSrc = (edges.filter((e) => e.target === n.id).map((e) => nodes.find((x) => x.id === e.source)).filter(Boolean) as any[])
+          .find((s) => ['videoScript', 'reelScript'].includes((s.data as StudioNodeData).type));
+        const scenes = scriptSrc ? ((scriptSrc.data as StudioNodeData).config?.scenes || (scriptSrc.data as StudioNodeData).config?.videoScript?.scenes || []).length || 1 : 1;
+        return { type: nd.type, model, scenes, paused: !!nd.config?._paused };
+      });
+      const eta = estimateWorkflowSeconds(etaInputs);
+      const suggestions = modelSuggestions(etaInputs);
+
+      // Sempre mostrar o diálogo se houver erros/avisos OU se tiver vídeo demorado (>= 3 min)
+      const hasVideo = etaInputs.some((n) => n.type === 'videoGen' && !n.paused);
+      const shouldShowDialog = errors.length > 0 || warnings.length > 0 || (hasVideo && eta.total >= 180);
+
+      if (shouldShowDialog) {
+        setPreflightDialog({ errors, warnings, startFromNodeId, etaSeconds: eta.total, etaBreakdown: eta.breakdown, suggestions });
         return;
       }
     } catch (e) {
@@ -675,6 +692,18 @@ const AICreativeStudioInner: React.FC = () => {
       // Don't block execution on validation error
     }
 
+    // ── Inicia job em background (continua mesmo se o usuário trocar de tela) ──
+    const jobId = `studio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const wfName = currentWorkflowName || 'Workflow sem nome';
+    const totalNodes = nodes.filter((n) => !(n.data as StudioNodeData).config?._paused).length;
+    studioBackgroundJobs.start({
+      id: jobId,
+      workflowName: wfName,
+      message: 'Iniciando…',
+      nodesTotal: totalNodes,
+      returnTo: '/marketing-ai-studio',
+    });
+
     try {
       const updatedNodes = await executeWorkflow(
         nodes as StudioNode[],
@@ -682,14 +711,37 @@ const AICreativeStudioInner: React.FC = () => {
         startFromNodeId,
         (realtimeNodes) => {
           setNodes(() => realtimeNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
+          // Reporta progresso ao job
+          try {
+            const done = realtimeNodes.filter((n: any) => n.data?.status === 'success' || n.data?.status === 'error').length;
+            const running = realtimeNodes.find((n: any) => n.data?.status === 'running');
+            const text = running?.data?.text || running?.data?.label || 'Processando…';
+            const vp = (running?.data as any)?._videoProgress;
+            studioBackgroundJobs.update(jobId, {
+              nodesDone: done,
+              progress: totalNodes > 0 ? Math.round((done / totalNodes) * 100) : undefined,
+              message: String(text || 'Processando…'),
+              sceneDone: vp?.scene,
+              sceneTotal: vp?.totalScenes,
+            });
+          } catch {}
         }
       );
       setNodes(() => updatedNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
+      // Última URL gerada (se houver)
+      const lastUrl = (updatedNodes as any[]).reverse().find((n) => n.data?.outputUrl || n.data?.imageUrl || n.data?.videoUrl)?.data;
+      studioBackgroundJobs.finish(jobId, 'success', {
+        message: startFromNodeId ? 'Execução parcial concluída!' : 'Workflow concluído com sucesso!',
+        progress: 100,
+        nodesDone: totalNodes,
+        lastResultUrl: lastUrl?.outputUrl || lastUrl?.imageUrl || lastUrl?.videoUrl,
+      });
       toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
+      studioBackgroundJobs.finish(jobId, 'error', { message: err?.message || 'Erro ao executar workflow', error: err?.message });
       toast.error(err.message || 'Erro ao executar workflow');
     }
-  }, [nodes, edges, executeWorkflow, setNodes]);
+  }, [nodes, edges, executeWorkflow, setNodes, currentWorkflowName, viActive]);
 
   const handleExecuteFromNode = useCallback(() => {
     if (selectedNode) {
@@ -2217,6 +2269,41 @@ const AICreativeStudioInner: React.FC = () => {
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {/* Tempo estimado */}
+                {preflightDialog?.etaSeconds && preflightDialog.etaSeconds > 0 ? (
+                  <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-sm text-foreground">⏱ Tempo estimado total</span>
+                      <span className="font-mono font-semibold text-primary">~{formatSeconds(preflightDialog.etaSeconds)}</span>
+                    </div>
+                    {preflightDialog.etaBreakdown && preflightDialog.etaBreakdown.length > 0 && (
+                      <ul className="text-[11px] text-muted-foreground space-y-0.5 pl-1">
+                        {preflightDialog.etaBreakdown.map((b, i) => (
+                          <li key={i} className="flex justify-between gap-2">
+                            <span className="truncate">{b.label}</span>
+                            <span className="font-mono shrink-0">~{formatSeconds(b.seconds)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="text-[10px] text-muted-foreground italic pt-1">
+                      Estimativa baseada nos modelos selecionados. Vídeos podem variar conforme carga do provedor.
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Sugestões de troca de modelo */}
+                {preflightDialog?.suggestions && preflightDialog.suggestions.length > 0 ? (
+                  <div className="rounded-md border border-blue-500/30 bg-blue-500/5 p-3 space-y-1.5">
+                    <p className="font-medium text-sm text-blue-600 dark:text-blue-400">💡 Sugestões para acelerar</p>
+                    <ul className="space-y-1">
+                      {preflightDialog.suggestions.map((s, i) => (
+                        <li key={i} className="text-[12px] text-foreground/90 leading-snug">• {s}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
                 {preflightDialog?.errors.length ? (
                   <div className="space-y-2">
                     <p className="font-medium text-destructive">Corrija os erros abaixo para continuar:</p>
@@ -2245,6 +2332,12 @@ const AICreativeStudioInner: React.FC = () => {
                     </ul>
                   </div>
                 ) : null}
+
+                {!preflightDialog?.errors.length && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Dica: clique em <strong>Rodar em background</strong> para usar o resto do sistema enquanto a IA trabalha. Um ícone no canto inferior direito mostrará o progresso.
+                  </p>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -2260,7 +2353,7 @@ const AICreativeStudioInner: React.FC = () => {
                   setTimeout(() => handleExecute(startId, true), 50);
                 }}
               >
-                Continuar mesmo assim
+                {preflightDialog?.warnings.length || preflightDialog?.errors.length ? 'Continuar mesmo assim' : '▶ Rodar em background'}
               </AlertDialogAction>
             )}
           </AlertDialogFooter>

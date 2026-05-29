@@ -155,6 +155,7 @@ import { MacroProvider } from "./contexts/MacroContext";
 import { UnsavedChangesProvider } from "./contexts/UnsavedChangesContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import StudioBackgroundIndicator from "./components/marketing/StudioBackgroundIndicator";
 import SplashScreen from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
@@ -178,6 +179,7 @@ const App = () => (
           <UnsavedChangesProvider>
           <WatchRedirectWrapper />
           <PWAInstallPrompt />
+          <StudioBackgroundIndicator />
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
