@@ -741,7 +741,7 @@ const AICreativeStudioInner: React.FC = () => {
       studioBackgroundJobs.finish(jobId, 'error', { message: err?.message || 'Erro ao executar workflow', error: err?.message });
       toast.error(err.message || 'Erro ao executar workflow');
     }
-  }, [nodes, edges, executeWorkflow, setNodes, activeWorkflow]);
+  }, [nodes, edges, executeWorkflow, setNodes, currentWorkflowName, viActive]);
 
   const handleExecuteFromNode = useCallback(() => {
     if (selectedNode) {
