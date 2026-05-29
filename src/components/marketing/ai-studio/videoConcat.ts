@@ -8,19 +8,47 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 let _ffmpegInstance: FFmpeg | null = null;
 let _loadingPromise: Promise<FFmpeg> | null = null;
 
-async function getFFmpeg(): Promise<FFmpeg> {
+const CDN_BASES = [
+  'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
+  'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd',
+  'https://fastly.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
+];
+
+async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return await Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`Timeout (${ms / 1000}s) ao carregar ${label}. Verifique sua conexão ou bloqueador de scripts.`)), ms)),
+  ]);
+}
+
+async function loadFromBase(baseURL: string, onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
+  const ffmpeg = new FFmpeg();
+  onProgress?.({ stage: 'loading', message: `Carregando ffmpeg (${new URL(baseURL).hostname})…` });
+  const coreURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'), 30000, 'ffmpeg-core.js');
+  const wasmURL = await withTimeout(toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'), 60000, 'ffmpeg-core.wasm');
+  await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'inicialização do ffmpeg');
+  return ffmpeg;
+}
+
+async function getFFmpeg(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
   if (_ffmpegInstance) return _ffmpegInstance;
   if (_loadingPromise) return _loadingPromise;
 
   _loadingPromise = (async () => {
-    const ffmpeg = new FFmpeg();
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    _ffmpegInstance = ffmpeg;
-    return ffmpeg;
+    let lastErr: any;
+    for (const base of CDN_BASES) {
+      try {
+        const ff = await loadFromBase(base, onProgress);
+        _ffmpegInstance = ff;
+        return ff;
+      } catch (err) {
+        lastErr = err;
+        console.warn('[videoConcat] Falha em', base, err);
+        onProgress?.({ stage: 'loading', message: `CDN ${new URL(base).hostname} indisponível, tentando próximo…` });
+      }
+    }
+    _loadingPromise = null; // permite re-tentar depois
+    throw new Error(`Não foi possível carregar o ffmpeg em nenhuma CDN. ${lastErr?.message || ''}`);
   })();
 
   return _loadingPromise;
