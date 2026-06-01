@@ -1470,7 +1470,7 @@ export function useStudioExecution() {
               });
             } catch (sceneErr: any) {
               console.error(`[Studio] Cena ${s + 1} falhou:`, sceneErr);
-              throw new Error(`❌ Falha ao gerar a cena ${s + 1}/${scenes.length}: ${sceneErr.message || 'erro desconhecido'}`);
+              throw new Error(`🎬 Falha na cena ${s + 1} de ${scenes.length} — ${humanizeProviderError(sceneErr?.message || '')}`);
             }
           }
 
