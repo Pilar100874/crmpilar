@@ -1163,9 +1163,27 @@ async function fetchVideoWavespeed(estabelecimentoId: string, taskId: string): P
   if (data.status === "completed") {
     const url = data.videoUrl || data.imageUrl || data.outputs?.[0];
     if (url) {
-      const videoResp = await fetch(url);
-      const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
-      const storedUrl = await uploadVideoToStorage(videoBytes);
+      // Try to mirror to our storage, but be resilient: provider CDN may drop the connection.
+      // If download fails after retries, fall back to the original URL so the user still gets the video.
+      let storedUrl: string | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 45000);
+          const videoResp = await fetch(url, { signal: ctrl.signal });
+          if (!videoResp.ok) {
+            clearTimeout(timer);
+            throw new Error(`HTTP ${videoResp.status}`);
+          }
+          const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+          clearTimeout(timer);
+          storedUrl = await uploadVideoToStorage(videoBytes);
+          break;
+        } catch (e) {
+          console.warn(`[fetchVideoWavespeed] download attempt ${attempt + 1} failed:`, (e as Error)?.message);
+          if (attempt < 2) await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+        }
+      }
       return { done: true, videoUrl: storedUrl || url };
     }
     return { done: true, error: "WaveSpeed concluiu mas não retornou URL." };
