@@ -1360,6 +1360,10 @@ export function useStudioExecution() {
           toast.error('Roteiro do Vídeo conectado, mas sem cenas válidas. Adicione pelo menos uma cena com descrição.', { duration: 7000 });
         }
         if (videoScriptInput && !isCorrectionForMultiScene) {
+          const scenesPreview = videoScriptInput.videoScript.scenes as any[];
+          if (scenesPreview.length === 1) {
+            toast.warning('Roteiro com apenas 1 cena detectado. Para gerar um vídeo com várias cenas e transições, adicione mais cenas no bloco de Roteiro/Reels.', { duration: 8000 });
+          }
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
@@ -1395,6 +1399,7 @@ export function useStudioExecution() {
             : [...imageInputs.map(() => 'REFERENCE'), ...viImagesMS.map(() => 'BRAND IDENTITY REFERENCE')];
 
           const sceneVideoUrls: string[] = [];
+          const sceneDurationsApplied: number[] = [];
 
           for (let s = 0; s < scenes.length; s++) {
             const scene = scenes[s];
@@ -1463,6 +1468,7 @@ export function useStudioExecution() {
                 throw new Error(sceneResult?.error || `O provedor terminou a cena ${s + 1} mas não devolveu o vídeo. Tente novamente.`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
+              sceneDurationsApplied.push(sceneDuration);
               nodeResultStore.setResult(node.id, {
                 text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
                 _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
@@ -1490,12 +1496,22 @@ export function useStudioExecution() {
               _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
             });
             const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
-            const unifiedBlob = await concatVideos(sceneVideoUrls, (p) => {
-              nodeResultStore.setResult(node.id, {
-                text: `🎞️ ${p.message || 'Unindo cenas...'}`,
-                _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
-              });
-            });
+            const sceneTransition = (config.sceneTransition || 'fade') as any;
+            const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
+            const unifiedBlob = await concatVideos(
+              sceneVideoUrls,
+              (p) => {
+                nodeResultStore.setResult(node.id, {
+                  text: `🎞️ ${p.message || 'Unindo cenas...'}`,
+                  _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
+                });
+              },
+              {
+                transition: sceneTransition,
+                transitionDurationSec: sceneTransitionDuration,
+                sceneDurationsSec: sceneDurationsApplied,
+              },
+            );
             const unifiedUrl = await uploadConcatVideo(unifiedBlob, estabIdMS || '', supabase);
             return {
               videoUrl: unifiedUrl,

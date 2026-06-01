@@ -1992,6 +1992,53 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1"
               />
             </ConfigField>
+            <SectionTitle>Transição entre cenas</SectionTitle>
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 mb-1">
+              <p className="text-[10px] text-amber-300/90 leading-snug">
+                ✨ Aplicado automaticamente quando há 2+ cenas no roteiro. Suaviza o corte entre cada cena.
+              </p>
+            </div>
+            <ConfigField label="Tipo de transição">
+              <Select
+                value={config.sceneTransition || 'fade'}
+                onValueChange={(v) => update('sceneTransition', v)}
+              >
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem transição (corte seco)</SelectItem>
+                  <SelectItem value="fade">Fade (suave)</SelectItem>
+                  <SelectItem value="fadeblack">Fade preto (cinema)</SelectItem>
+                  <SelectItem value="fadewhite">Fade branco</SelectItem>
+                  <SelectItem value="dissolve">Dissolve</SelectItem>
+                  <SelectItem value="wipeleft">Wipe ← esquerda</SelectItem>
+                  <SelectItem value="wiperight">Wipe → direita</SelectItem>
+                  <SelectItem value="wipeup">Wipe ↑ cima</SelectItem>
+                  <SelectItem value="wipedown">Wipe ↓ baixo</SelectItem>
+                  <SelectItem value="slideleft">Slide ← esquerda</SelectItem>
+                  <SelectItem value="slideright">Slide → direita</SelectItem>
+                  <SelectItem value="slideup">Slide ↑ cima</SelectItem>
+                  <SelectItem value="slidedown">Slide ↓ baixo</SelectItem>
+                  <SelectItem value="circleopen">Círculo abrindo</SelectItem>
+                  <SelectItem value="circleclose">Círculo fechando</SelectItem>
+                  <SelectItem value="radial">Radial</SelectItem>
+                  <SelectItem value="pixelize">Pixelizar</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+            <ConfigField label={`Duração da transição (${(config.sceneTransitionDuration ?? 0.5).toFixed(2)}s)`}>
+              <Slider
+                value={[config.sceneTransitionDuration ?? 0.5]}
+                onValueChange={([v]) => update('sceneTransitionDuration', v)}
+                min={0.2} max={1.5} step={0.1}
+                className="mt-1"
+                disabled={(config.sceneTransition || 'fade') === 'none'}
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>0.2s</span>
+                <span>1.5s</span>
+              </div>
+            </ConfigField>
+
             <SectionTitle>Opções</SectionTitle>
             <ToggleField label="Loop Infinito" checked={config.loop ?? false} onChange={(v) => update('loop', v)} />
             <ToggleField label="Gerar com Áudio" checked={config.withAudio ?? true} onChange={(v) => update('withAudio', v)} />
