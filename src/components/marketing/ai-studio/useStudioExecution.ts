@@ -302,7 +302,7 @@ export function useStudioExecution() {
 
     const taskId = started?.taskId;
     if (!taskId) {
-      throw new Error('O provedor de vídeo não retornou o identificador da tarefa.');
+      throw new Error('📭 O provedor de vídeo aceitou o pedido mas não devolveu o identificador da tarefa. Tente novamente em alguns instantes.');
     }
 
     const totalPolls = Math.max(1, Math.ceil(maxWaitMs / 5000));
