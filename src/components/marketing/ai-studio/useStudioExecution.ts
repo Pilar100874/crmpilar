@@ -1395,6 +1395,7 @@ export function useStudioExecution() {
             : [...imageInputs.map(() => 'REFERENCE'), ...viImagesMS.map(() => 'BRAND IDENTITY REFERENCE')];
 
           const sceneVideoUrls: string[] = [];
+          const sceneDurationsApplied: number[] = [];
 
           for (let s = 0; s < scenes.length; s++) {
             const scene = scenes[s];
