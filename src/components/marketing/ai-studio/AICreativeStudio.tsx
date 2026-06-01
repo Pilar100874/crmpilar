@@ -701,7 +701,7 @@ const AICreativeStudioInner: React.FC = () => {
       workflowName: wfName,
       message: 'Iniciando…',
       nodesTotal: totalNodes,
-      returnTo: '/marketing-ai-studio',
+      returnTo: '/marketing',
     });
 
     try {
