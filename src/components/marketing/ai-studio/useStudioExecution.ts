@@ -289,7 +289,7 @@ export function useStudioExecution() {
     const started = await callStudio(startAction, params, 60000);
 
     if (started?.error) {
-      throw new Error(started.error);
+      throw new Error(humanizeProviderError(started.error));
     }
 
     if (started?.videoUrl) {
