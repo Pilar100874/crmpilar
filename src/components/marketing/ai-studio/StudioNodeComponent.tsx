@@ -1578,30 +1578,59 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             <span className="text-[10px] text-muted-foreground/60">T:{nodeData.config.temperature ?? 0.7}</span>
           </div>
         )}
-        {!hasResult && nodeData.type === 'videoGen' && (
-          <div className="px-3.5 py-2.5 flex items-center gap-1.5 flex-wrap">
-            <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
-              (nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated'
-                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-            }`}>
-              <Film className="h-2.5 w-2.5" />
-              {(nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated' ? 'GIF Animado' : (nodeData.config.videoModel || '').split('/').pop()}
-            </span>
-            {(nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated' ? (
-              <>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.frameCount || 4} frames</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.fps || 2} fps</span>
-              </>
-            ) : (
-              <>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.duration || 5}s</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.resolution || '1080p'}</span>
-              </>
-            )}
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.aspectRatio || '16:9'}</span>
-          </div>
-        )}
+        {!hasResult && nodeData.type === 'videoGen' && (() => {
+          const vm = nodeData.config.videoModel || 'free/gif-animated';
+          const isGif = vm === 'free/gif-animated';
+          const modelName = isGif ? 'GIF Animado' : (vm.split('/').pop() || vm);
+          const transition = nodeData.config.sceneTransition;
+          return (
+            <div className="px-3.5 py-2.5 space-y-1.5">
+              {/* Linha 1: modelo (com truncate) */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium max-w-full min-w-0 ${
+                  isGif
+                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                }`}>
+                  <Film className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{modelName}</span>
+                </span>
+              </div>
+              {/* Linha 2: specs principais em chips compactas */}
+              <div className="flex items-center gap-1 flex-wrap">
+                {isGif ? (
+                  <>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.frameCount || 4} frames</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.fps || 2}fps</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.duration || 5}s</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.resolution || '1080p'}</span>
+                  </>
+                )}
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.aspectRatio || '16:9'}</span>
+                {!isGif && nodeData.config.fps && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted/70 text-muted-foreground">{nodeData.config.fps}fps</span>
+                )}
+              </div>
+              {/* Linha 3: indicadores de áudio/música/transição */}
+              {(nodeData.config.withAudio !== false || nodeData.config.withMusic !== false || (transition && transition !== 'none')) && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  {nodeData.config.withAudio !== false && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">🔊 Áudio</span>
+                  )}
+                  {nodeData.config.withMusic !== false && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-400 border border-violet-500/20">🎵 Música</span>
+                  )}
+                  {transition && transition !== 'none' && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20">✨ {transition}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {!hasResult && (nodeData.type === 'imageGen' || nodeData.type === 'imageEdit' || nodeData.type === 'productComposite') && (
           <div className="px-3.5 py-2.5 flex items-center gap-1.5 flex-wrap">
             <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
