@@ -1460,7 +1460,7 @@ export function useStudioExecution() {
                 : await callStudio('generate_video', sceneParams, 300000);
 
               if (!sceneResult?.videoUrl) {
-                throw new Error(sceneResult?.error || `Cena ${s + 1} não retornou vídeo`);
+                throw new Error(sceneResult?.error || `O provedor terminou a cena ${s + 1} mas não devolveu o vídeo. Tente novamente.`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
               nodeResultStore.setResult(node.id, {
