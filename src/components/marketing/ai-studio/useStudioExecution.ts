@@ -365,11 +365,11 @@ export function useStudioExecution() {
       }
 
       if (pollResult?.done) {
-        throw new Error('A geração foi concluída, mas o vídeo não foi retornado.');
+        throw new Error('📭 A geração terminou mas o vídeo final não chegou. Tente gerar novamente.');
       }
     }
 
-    throw new Error('timeout:A geração de vídeo demorou mais de 10 minutos. Tente novamente.');
+    throw new Error('timeout:⏱️ A geração de vídeo passou de 10 minutos. Modelos image-to-video (Seedance, Kling) são mais lentos — tente um modelo mais rápido (Google Veo ou Luma Ray) ou rode novamente.');
   };
 
   const getExecutionOrder = (nodes: StudioNode[], edges: StudioEdge[]): string[] => {
