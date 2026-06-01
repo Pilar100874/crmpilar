@@ -327,7 +327,7 @@ export function useStudioExecution() {
       }, 60000);
 
       if (pollResult?.error) {
-        throw new Error(pollResult.error);
+        throw new Error(humanizeProviderError(pollResult.error));
       }
 
       const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000);
