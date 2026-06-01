@@ -2204,17 +2204,34 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         )}
 
         {/* Processing overlay */}
-        {activeProcessing && (
-          <div className="absolute inset-0 bg-card/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 z-10 rounded-b-2xl px-4 py-4 text-center">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: accent, width: 32, height: 32, margin: 'auto' }} />
-              <Loader2 className="h-7 w-7 animate-spin" style={{ color: accent }} />
+        {activeProcessing && (() => {
+          // Sanitiza mensagens técnicas para algo amigável ao usuário
+          const humanizeStatus = (raw?: string): string => {
+            if (!raw) return 'Processando...';
+            const t = raw.toLowerCase();
+            if (t.includes('ffmpeg') || t.includes('unpkg')) return 'Preparando ferramentas de vídeo...';
+            if (t.includes('wavespeed') || t.includes('apiframe') || t.includes('retornou status') || t.includes('processing')) return 'Gerando vídeo... isso pode levar alguns minutos';
+            if (t.includes('polling') || t.includes('consulta')) return 'Aguardando o provedor finalizar...';
+            if (t.includes('upload')) return 'Enviando arquivos...';
+            if (t.includes('download') || t.includes('baixando')) return 'Recebendo resultado...';
+            if (t.includes('concat') || t.includes('mesclando') || t.includes('merging')) return 'Unindo as cenas...';
+            if (t.includes('queue') || t.includes('fila')) return 'Na fila do provedor...';
+            // Limita tamanho para não estourar
+            return raw.length > 80 ? raw.slice(0, 80) + '…' : raw;
+          };
+          const friendlyText = humanizeStatus(resultText);
+          const hasProgress = multiSceneProgress?.total || videoProgress?.attempt;
+          return (
+          <div className="absolute inset-0 bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-b-2xl px-4 py-4 text-center overflow-hidden">
+            <div className="relative flex items-center justify-center" style={{ width: 36, height: 36 }}>
+              <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: accent }} />
+              <Loader2 className="h-7 w-7 animate-spin relative" style={{ color: accent }} />
             </div>
-            <div className="w-full max-w-[260px] space-y-2">
-              <p className="text-[11px] font-semibold text-foreground/80 leading-snug line-clamp-3">
-                {resultText || 'Processando...'}
+            <div className="w-full max-w-[240px] space-y-2">
+              <p className="text-[11px] font-semibold text-foreground/85 leading-snug line-clamp-2 break-words">
+                {friendlyText}
               </p>
-              {(multiSceneProgress?.total || videoProgress?.attempt) && (
+              {hasProgress && (
                 <div className="space-y-1.5">
                   <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                     <div
@@ -2222,22 +2239,22 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                       style={{ width: `${processingPercent}%`, background: accent }}
                     />
                   </div>
-                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground">
-                    {multiSceneProgress?.total && <span>Cena {multiSceneProgress.current || 1}/{multiSceneProgress.total}</span>}
-                    {typeof videoProgress?.attempt === 'number' && videoProgress.totalPolls && <span>Consulta {videoProgress.attempt}/{videoProgress.totalPolls}</span>}
-                    {typeof videoProgress?.elapsedSeconds === 'number' && <span>{formatTimestamp(videoProgress.elapsedSeconds)}</span>}
-                    {videoProgress?.provider && <span>{videoProgress.provider}</span>}
+                  <div className="flex items-center justify-center gap-2 text-[9px] text-muted-foreground/80">
+                    {multiSceneProgress?.total && <span>Cena {multiSceneProgress.current || 1} de {multiSceneProgress.total}</span>}
+                    {typeof videoProgress?.elapsedSeconds === 'number' && (
+                      <>
+                        {multiSceneProgress?.total && <span className="opacity-40">•</span>}
+                        <span>{formatTimestamp(videoProgress.elapsedSeconds)}</span>
+                      </>
+                    )}
                   </div>
                   {videoProgress?.stalled && (
                     <p className="text-[9px] text-amber-500 leading-tight">
-                      O provedor ainda está renderizando; a tarefa não foi reiniciada.
+                      Ainda processando... só um pouco mais.
                     </p>
                   )}
                   {(multiSceneProgress?.urls?.length || 0) > 0 && (
-                    <div className="space-y-1">
-                      <p className="text-[9px] text-emerald-500 leading-tight">
-                        {multiSceneProgress?.urls?.length} cena(s) já pronta(s).
-                      </p>
+                    <div className="space-y-1 pt-0.5">
                       <div className="flex justify-center gap-1">
                         {Array.from({ length: multiSceneProgress?.total || 0 }).map((_, idx) => {
                           const done = idx < (multiSceneProgress?.urls?.length || 0);
@@ -2245,19 +2262,23 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           return (
                             <span
                               key={idx}
-                              className="h-1.5 w-5 rounded-full"
+                              className="h-1.5 w-5 rounded-full transition-colors"
                               style={{ background: done ? '#22c55e' : current ? accent : 'hsl(var(--muted))' }}
                             />
                           );
                         })}
                       </div>
+                      <p className="text-[9px] text-emerald-500 leading-tight font-medium">
+                        {multiSceneProgress?.urls?.length} de {multiSceneProgress?.total} pronta(s)
+                      </p>
                     </div>
                   )}
                 </div>
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Handles - refined minimal style */}
