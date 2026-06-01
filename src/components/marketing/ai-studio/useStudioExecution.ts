@@ -1492,12 +1492,22 @@ export function useStudioExecution() {
               _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
             });
             const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
-            const unifiedBlob = await concatVideos(sceneVideoUrls, (p) => {
-              nodeResultStore.setResult(node.id, {
-                text: `🎞️ ${p.message || 'Unindo cenas...'}`,
-                _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
-              });
-            });
+            const sceneTransition = (config.sceneTransition || 'fade') as any;
+            const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
+            const unifiedBlob = await concatVideos(
+              sceneVideoUrls,
+              (p) => {
+                nodeResultStore.setResult(node.id, {
+                  text: `🎞️ ${p.message || 'Unindo cenas...'}`,
+                  _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
+                });
+              },
+              {
+                transition: sceneTransition,
+                transitionDurationSec: sceneTransitionDuration,
+                sceneDurationsSec: sceneDurationsApplied,
+              },
+            );
             const unifiedUrl = await uploadConcatVideo(unifiedBlob, estabIdMS || '', supabase);
             return {
               videoUrl: unifiedUrl,
