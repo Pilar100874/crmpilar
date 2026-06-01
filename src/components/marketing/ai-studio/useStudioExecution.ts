@@ -1314,13 +1314,13 @@ export function useStudioExecution() {
             if (pollData.status === 'completed') {
               const url = pollData.imageUrl || pollData.outputs?.[0];
               if (url) return { imageUrl: url, text: '' };
-              throw new Error('WaveSpeed completou sem URL da imagem.');
+              throw new Error('📭 O provedor terminou a geração mas não devolveu a imagem. Tente novamente.');
             }
             if (pollData.status === 'failed') {
-              throw new Error(pollData.error || 'Geração falhou no WaveSpeed.');
+              throw new Error(humanizeProviderError(pollData.error || 'Geração falhou no provedor.'));
             }
           }
-          throw new Error('WaveSpeed excedeu o tempo limite (6 min). Tente novamente.');
+          throw new Error('⏱️ A geração da imagem passou de 6 minutos sem resposta. Tente novamente ou troque para um modelo mais rápido.');
         }
 
         return result;
