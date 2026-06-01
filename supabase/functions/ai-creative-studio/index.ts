@@ -1011,16 +1011,32 @@ async function generateVideoApiframe(estabelecimentoId: string, params: any): Pr
 
 // --- WaveSpeed video generation ---
 // Model mapping: wavespeed/model-name → WaveSpeed API path
+// Mapping based on official WaveSpeed model registry (https://wavespeed.ai/models)
 const WAVESPEED_VIDEO_MODEL_MAP: Record<string, string> = {
   "seedance-2.0": "bytedance/seedance-2.0/image-to-video",
-  "kling-2.1": "kuaishou/kling/v2.1/image-to-video",
-  "wan-2.1": "alibaba/wan-2.1/image-to-video",
-  "veo-3": "google/veo-3/text-to-video",
-  "luma-ray-2": "luma/ray-2/image-to-video",
-  "minimax-video": "minimax/video-01/image-to-video",
-  "hunyuan-video": "tencent/hunyuan-video/image-to-video",
-  "cogvideox": "zhipu/cogvideox/image-to-video",
-  "ltx-video": "lightricks/ltx-video/image-to-video",
+  // Kling — kwaivgi namespace on WaveSpeed (NOT kuaishou)
+  "kling-2.1": "kwaivgi/kling-v2.1-i2v-pro",
+  "kling-2.6": "kwaivgi/kling-v2.6-pro/image-to-video",
+  "kling-2.6-std": "kwaivgi/kling-v2.6-std/image-to-video",
+  "kling-3.0": "kwaivgi/kling-v3.0-pro/image-to-video",
+  "kling-3.0-std": "kwaivgi/kling-v3.0-std/image-to-video",
+  // WAN — wavespeed-ai or alibaba namespace
+  "wan-2.1": "wavespeed-ai/wan-2.2/image-to-video",
+  "wan-2.2": "wavespeed-ai/wan-2.2/image-to-video",
+  "wan-2.5": "alibaba/wan-2.5/image-to-video",
+  "wan-2.6": "alibaba/wan-2.6/image-to-video",
+  "wan-2.7": "alibaba/wan-2.7/image-to-video",
+  // Google Veo (sob WaveSpeed — alternativa ao Google nativo)
+  "veo-2": "google/veo2/image-to-video",
+  "veo-3": "google/veo3/image-to-video",
+  "veo-3-fast": "google/veo3-fast/image-to-video",
+  "veo-3.1": "google/veo3.1/image-to-video",
+  // Outros
+  "ltx-video": "wavespeed-ai/ltx-2.3/image-to-video",
+  "ltx-2-pro": "lightricks/ltx-2-pro/image-to-video",
+  "sora-2": "openai/sora-2/image-to-video",
+  "vidu-q3": "vidu/q3/image-to-video",
+  "pixverse-v6": "pixverse/pixverse-v6/image-to-video",
 };
 
 // Image model mapping for wavespeed
