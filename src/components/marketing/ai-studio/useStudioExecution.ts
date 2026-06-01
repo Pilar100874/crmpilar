@@ -1401,6 +1401,17 @@ export function useStudioExecution() {
           const sceneVideoUrls: string[] = [];
           const sceneDurationsApplied: number[] = [];
 
+          // 🔒 TRAVA DE FIDELIDADE — aplicada em TODAS as cenas quando há referências visuais
+          const hasProductRefMS = orderedImageRolesMS.some(r => /produto/i.test(r));
+          const hasInfluencerRefMS = orderedImageRolesMS.some(r => /influencer|pessoa/i.test(r));
+          const fidelityLockMS = (orderedImageInputsMS.length > 0) ? [
+            ``,
+            `⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE (VIOLAÇÃO = ERRO) — válidas para TODAS as cenas:`,
+            hasProductRefMS ? `📦 PRODUTO/EMBALAGEM: É PROIBIDO modificar, redesenhar, traduzir, reinterpretar ou recriar a embalagem. Mantenha EXATAMENTE as mesmas cores, rótulo, tipografia, logotipo, formato, proporções e textos da imagem de referência. NÃO invente novos elementos gráficos. NÃO altere o idioma do rótulo. NÃO crie variações da arte. Trate a embalagem como uma fotografia real preservada na cena — apenas ângulo e iluminação podem variar de forma sutil, sem distorcer rótulo, logo ou textos. O produto deve aparecer IDÊNTICO em todas as cenas.` : '',
+            hasInfluencerRefMS ? `👤 PESSOA/INFLUENCER: Mesmo rosto, tom de pele, cabelo e traços faciais da referência. NÃO gere uma pessoa parecida — é a MESMA pessoa, consistente em todas as cenas.` : '',
+            `🎨 Apenas o CENÁRIO/AMBIENTE pode ser livremente adaptado.`,
+          ].filter(Boolean).join('\n') : '';
+
           for (let s = 0; s < scenes.length; s++) {
             const scene = scenes[s];
             if (abortRef.current?.signal.aborted) throw new Error('Cancelado pelo usuário');
@@ -1415,6 +1426,7 @@ export function useStudioExecution() {
             const scenePromptParts = [
               `🎬 CENA ${scene.n} de ${scenes.length} (parte de um roteiro maior — esta cena é INDEPENDENTE e será unida às outras na pós-produção).`,
               ``,
+              `📝 DESCRIÇÃO DA CENA: ${scene.description}`,
               scene.cameraMovement ? `\n🎥 MOVIMENTO DE CÂMERA: ${scene.cameraMovement}` : '',
               scene.narration ? `\n🔊 NARRAÇÃO: ${scene.narration}` : '',
               scene.voiceTone ? `\n🎙️ TOM DE VOZ: ${scene.voiceTone}` : '',
@@ -1423,6 +1435,7 @@ export function useStudioExecution() {
               (scene.sfx && scene.sfx.length) ? `\n💥 SFX: ${scene.sfx.join(', ')}` : '',
               globalNotes ? `\n📝 OBSERVAÇÕES GERAIS DO ROTEIRO: ${globalNotes}` : '',
               `\n⏱️ Duração: ${sceneDuration}s. Gere APENAS esta cena, não o roteiro inteiro.`,
+              fidelityLockMS,
               viPromptMS ? `\n\n🎨 [IDENTIDADE VISUAL DA MARCA]\n${viPromptMS}${VI_FOCUS_DIRECTIVE}` : '',
             ].filter(Boolean).join('\n');
 
