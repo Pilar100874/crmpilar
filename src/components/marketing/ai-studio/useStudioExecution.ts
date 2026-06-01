@@ -6,6 +6,52 @@ import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
+// Converte erros técnicos dos provedores (WaveSpeed, Google, Apiframe, etc.) em mensagens claras para o usuário.
+function humanizeProviderError(raw: string, httpStatus?: number): string {
+  const msg = String(raw || '').trim();
+  const low = msg.toLowerCase();
+
+  if (low.includes('model not found') || low.includes('model_not_found') || low.includes('not mapped') || low.includes('não está mapeado') || low.includes('modelo não disponível') || low.includes('não disponível no wavespeed')) {
+    return '🧩 Este modelo de IA não está disponível no provedor selecionado. Troque para outro modelo (ex.: Seedance, Kling, Luma, Google Veo) ou use a opção "Auto".';
+  }
+  if (httpStatus === 401 || low.includes('401') || low.includes('unauthorized') || low.includes('incorrect api key') || low.includes('invalid api key') || low.includes('api key not configured') || low.includes('chave da api') || low.includes('not configured')) {
+    return '🔑 Chave de API ausente ou inválida. Configure/atualize a chave do provedor em Configurações → APIs Pagas.';
+  }
+  if (httpStatus === 402 || low.includes('402') || low.includes('payment') || low.includes('insufficient') || low.includes('billing') || low.includes('quota') || low.includes('credits exhausted') || low.includes('exclusively available')) {
+    return '💳 Créditos insuficientes na conta do provedor. Adicione saldo ou troque para um modelo gratuito.';
+  }
+  if (httpStatus === 429 || low.includes('429') || low.includes('rate limit') || low.includes('too many')) {
+    return '⏳ Muitas requisições em pouco tempo. Aguarde 20–30 segundos e tente novamente.';
+  }
+  if (httpStatus === 403 || low.includes('403') || low.includes('forbidden')) {
+    return '🚫 Sua conta não tem permissão para usar este modelo. Habilite o acesso no painel do provedor ou escolha outro modelo.';
+  }
+  if (low.includes('safety') || low.includes('content policy') || low.includes('blocked') || low.includes('moderation')) {
+    return '⚠️ O conteúdo foi bloqueado por política de segurança do provedor. Reescreva o prompt com termos mais neutros e tente novamente.';
+  }
+  if (httpStatus === 400 || low.includes('bad request') || low.includes('(400)')) {
+    const m = msg.match(/"message"\s*:\s*"([^"]+)"/);
+    const detail = m ? m[1] : '';
+    if (detail) return `🛠️ O provedor recusou esta requisição: ${detail}. Ajuste o modelo, o prompt ou as referências e tente novamente.`;
+    return '🛠️ O provedor recusou esta requisição. Verifique o modelo escolhido e o prompt e tente novamente.';
+  }
+  if (low.includes('timeout') || low.includes('timed out') || low.includes('excedeu o tempo')) {
+    return '⏱️ O provedor não respondeu a tempo. Isso costuma ser temporário — tente novamente em alguns instantes.';
+  }
+  if ((httpStatus && httpStatus >= 500) || low.includes(' 500') || low.includes(' 502') || low.includes(' 503') || low.includes(' 504') || low.includes('internal server error') || low.includes('service unavailable')) {
+    return '🌐 O servidor do provedor está instável no momento. Tente novamente em alguns minutos.';
+  }
+  if (low.includes('não retornou') || low.includes('did not return') || low.includes('no url')) {
+    return '📭 O provedor terminou a tarefa mas não devolveu o arquivo. Tente gerar novamente.';
+  }
+  if (low.includes('failed to fetch') || low.includes('network') || low.includes('econn')) {
+    return '🌐 Falha de conexão com o provedor. Verifique sua internet e tente novamente.';
+  }
+  if (!msg) return '❌ Ocorreu um erro inesperado ao gerar. Tente novamente.';
+  return `❌ ${msg.substring(0, 240)}`;
+}
+export { humanizeProviderError };
+
 // Visual Identity emphasis directive — focus areas when VI is active
 const VI_FOCUS_DIRECTIVE = [
   `\n\n🎨 [IDENTIDADE VISUAL — FOCO OBRIGATÓRIO]`,
@@ -136,30 +182,14 @@ export function useStudioExecution() {
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
       console.error(`[Studio] Edge function error ${response.status}:`, errText);
-      
-      // Parse friendly error message from JSON response
-      let friendlyMsg = errText.substring(0, 200);
+
+      let rawError = errText.substring(0, 400);
       try {
         const errJson = JSON.parse(errText);
-        const rawError = errJson?.error || '';
-        
-        // Extract specific API error patterns
-        if (rawError.includes('401') || rawError.includes('Incorrect API key') || rawError.includes('Unauthorized')) {
-          friendlyMsg = '🔑 Chave de API inválida ou expirada. Verifique sua chave em Configurações → APIs Pagas.';
-        } else if (rawError.includes('402') || rawError.includes('Payment') || rawError.includes('insufficient') || rawError.includes('billing') || rawError.includes('quota') || rawError.includes('exclusively available') || rawError.includes('Credits exhausted')) {
-          friendlyMsg = '💳 Créditos insuficientes no provedor. Adicione saldo na sua conta do provedor.';
-        } else if (rawError.includes('429') || rawError.includes('Rate limit') || rawError.includes('too many')) {
-          friendlyMsg = '⏳ Limite de requisições excedido. Aguarde alguns segundos e tente novamente.';
-        } else if (rawError.includes('403') || rawError.includes('Forbidden') || rawError.includes('access')) {
-          friendlyMsg = '🚫 Sem permissão para este recurso. Verifique se sua conta tem acesso a este modelo/serviço.';
-        } else if (rawError.includes('not configured')) {
-          friendlyMsg = '⚙️ ' + rawError;
-        } else if (rawError) {
-          friendlyMsg = rawError.substring(0, 200);
-        }
+        rawError = errJson?.error || errJson?.message || rawError;
       } catch {}
-      
-      throw new Error(friendlyMsg);
+
+      throw new Error(humanizeProviderError(rawError, response.status));
     }
     // Read as text first to handle large payloads safely
     const rawText = await response.text();
@@ -259,7 +289,7 @@ export function useStudioExecution() {
     const started = await callStudio(startAction, params, 60000);
 
     if (started?.error) {
-      throw new Error(started.error);
+      throw new Error(humanizeProviderError(started.error));
     }
 
     if (started?.videoUrl) {
@@ -272,7 +302,7 @@ export function useStudioExecution() {
 
     const taskId = started?.taskId;
     if (!taskId) {
-      throw new Error('O provedor de vídeo não retornou o identificador da tarefa.');
+      throw new Error('📭 O provedor de vídeo aceitou o pedido mas não devolveu o identificador da tarefa. Tente novamente em alguns instantes.');
     }
 
     const totalPolls = Math.max(1, Math.ceil(maxWaitMs / 5000));
@@ -297,7 +327,7 @@ export function useStudioExecution() {
       }, 60000);
 
       if (pollResult?.error) {
-        throw new Error(pollResult.error);
+        throw new Error(humanizeProviderError(pollResult.error));
       }
 
       const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000);
@@ -335,11 +365,11 @@ export function useStudioExecution() {
       }
 
       if (pollResult?.done) {
-        throw new Error('A geração foi concluída, mas o vídeo não foi retornado.');
+        throw new Error('📭 A geração terminou mas o vídeo final não chegou. Tente gerar novamente.');
       }
     }
 
-    throw new Error('timeout:A geração de vídeo demorou mais de 10 minutos. Tente novamente.');
+    throw new Error('timeout:⏱️ A geração de vídeo passou de 10 minutos. Modelos image-to-video (Seedance, Kling) são mais lentos — tente um modelo mais rápido (Google Veo ou Luma Ray) ou rode novamente.');
   };
 
   const getExecutionOrder = (nodes: StudioNode[], edges: StudioEdge[]): string[] => {
@@ -1130,14 +1160,14 @@ export function useStudioExecution() {
             if (pollData.status === 'completed') {
               const url = pollData.imageUrl || pollData.outputs?.[0];
               if (url) return { imageUrl: url, text: '' };
-              throw new Error('WaveSpeed completou sem URL da imagem.');
+              throw new Error('📭 O provedor terminou a geração mas não devolveu a imagem. Tente novamente.');
             }
             if (pollData.status === 'failed') {
-              throw new Error(pollData.error || 'Geração falhou no WaveSpeed.');
+              throw new Error(humanizeProviderError(pollData.error || 'Geração falhou no provedor.'));
             }
             console.log(`[Studio] WaveSpeed poll ${i + 1}/${maxPolls}: status=${pollData.status}`);
           }
-          throw new Error('WaveSpeed excedeu o tempo limite (6 min). Tente novamente.');
+          throw new Error('⏱️ A geração da imagem passou de 6 minutos sem resposta. Tente novamente ou troque para um modelo mais rápido.');
         }
 
         return result;
@@ -1284,13 +1314,13 @@ export function useStudioExecution() {
             if (pollData.status === 'completed') {
               const url = pollData.imageUrl || pollData.outputs?.[0];
               if (url) return { imageUrl: url, text: '' };
-              throw new Error('WaveSpeed completou sem URL da imagem.');
+              throw new Error('📭 O provedor terminou a geração mas não devolveu a imagem. Tente novamente.');
             }
             if (pollData.status === 'failed') {
-              throw new Error(pollData.error || 'Geração falhou no WaveSpeed.');
+              throw new Error(humanizeProviderError(pollData.error || 'Geração falhou no provedor.'));
             }
           }
-          throw new Error('WaveSpeed excedeu o tempo limite (6 min). Tente novamente.');
+          throw new Error('⏱️ A geração da imagem passou de 6 minutos sem resposta. Tente novamente ou troque para um modelo mais rápido.');
         }
 
         return result;
@@ -1430,7 +1460,7 @@ export function useStudioExecution() {
                 : await callStudio('generate_video', sceneParams, 300000);
 
               if (!sceneResult?.videoUrl) {
-                throw new Error(sceneResult?.error || `Cena ${s + 1} não retornou vídeo`);
+                throw new Error(sceneResult?.error || `O provedor terminou a cena ${s + 1} mas não devolveu o vídeo. Tente novamente.`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
               nodeResultStore.setResult(node.id, {
@@ -1440,7 +1470,7 @@ export function useStudioExecution() {
               });
             } catch (sceneErr: any) {
               console.error(`[Studio] Cena ${s + 1} falhou:`, sceneErr);
-              throw new Error(`❌ Falha ao gerar a cena ${s + 1}/${scenes.length}: ${sceneErr.message || 'erro desconhecido'}`);
+              throw new Error(`🎬 Falha na cena ${s + 1} de ${scenes.length} — ${humanizeProviderError(sceneErr?.message || '')}`);
             }
           }
 
