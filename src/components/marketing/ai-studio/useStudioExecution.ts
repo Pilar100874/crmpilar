@@ -1360,6 +1360,10 @@ export function useStudioExecution() {
           toast.error('Roteiro do Vídeo conectado, mas sem cenas válidas. Adicione pelo menos uma cena com descrição.', { duration: 7000 });
         }
         if (videoScriptInput && !isCorrectionForMultiScene) {
+          const scenesPreview = videoScriptInput.videoScript.scenes as any[];
+          if (scenesPreview.length === 1) {
+            toast.warning('Roteiro com apenas 1 cena detectado. Para gerar um vídeo com várias cenas e transições, adicione mais cenas no bloco de Roteiro/Reels.', { duration: 8000 });
+          }
 
           const scenes = videoScriptInput.videoScript.scenes as Array<{
             n: number; description: string; duration: number; narration: string; cameraMovement: string;
