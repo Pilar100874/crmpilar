@@ -2587,6 +2587,23 @@ REFERENCE IMAGE PRESERVATION: Any reference images provided (product, influencer
 
       case "start_wavespeed_video": {
         const estabId = params.estabelecimentoId;
+        // WaveSpeed does NOT host Google Veo models — auto-route to Google native
+        const _model = (params.model as string) || "";
+        const _sub = _model.replace("wavespeed/", "");
+        if (_sub.startsWith("veo")) {
+          const googleKey = await fetchApiKey(estabId, "google");
+          if (!googleKey) {
+            return new Response(JSON.stringify({ result: { error: "Veo é um modelo Google. Configure a chave Google em Configurações → APIs Pagas, ou escolha outro modelo (Seedance, Kling, Luma, etc)." } }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          const googleParams = { ...params, model: _sub === "veo-3" ? "google/veo-3" : `google/${_sub}` };
+          console.log(`[start_wavespeed_video] Re-routing to Google native: ${googleParams.model}`);
+          const started = await startVideoGoogle(googleKey, googleParams);
+          return new Response(JSON.stringify({ result: { ...started, _googleProvider: true } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         const started = await startVideoWavespeed(estabId, params);
         return new Response(JSON.stringify({ result: started }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
