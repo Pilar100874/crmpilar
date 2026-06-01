@@ -6,6 +6,52 @@ import { toast } from 'sonner';
 import { getStudioDefaults, getLanguagePromptSuffix } from './AISettingsPanel';
 import { getActiveVisualIdentity } from './VisualIdentityPanel';
 
+// Converte erros técnicos dos provedores (WaveSpeed, Google, Apiframe, etc.) em mensagens claras para o usuário.
+function humanizeProviderError(raw: string, httpStatus?: number): string {
+  const msg = String(raw || '').trim();
+  const low = msg.toLowerCase();
+
+  if (low.includes('model not found') || low.includes('model_not_found') || low.includes('not mapped') || low.includes('não está mapeado') || low.includes('modelo não disponível') || low.includes('não disponível no wavespeed')) {
+    return '🧩 Este modelo de IA não está disponível no provedor selecionado. Troque para outro modelo (ex.: Seedance, Kling, Luma, Google Veo) ou use a opção "Auto".';
+  }
+  if (httpStatus === 401 || low.includes('401') || low.includes('unauthorized') || low.includes('incorrect api key') || low.includes('invalid api key') || low.includes('api key not configured') || low.includes('chave da api') || low.includes('not configured')) {
+    return '🔑 Chave de API ausente ou inválida. Configure/atualize a chave do provedor em Configurações → APIs Pagas.';
+  }
+  if (httpStatus === 402 || low.includes('402') || low.includes('payment') || low.includes('insufficient') || low.includes('billing') || low.includes('quota') || low.includes('credits exhausted') || low.includes('exclusively available')) {
+    return '💳 Créditos insuficientes na conta do provedor. Adicione saldo ou troque para um modelo gratuito.';
+  }
+  if (httpStatus === 429 || low.includes('429') || low.includes('rate limit') || low.includes('too many')) {
+    return '⏳ Muitas requisições em pouco tempo. Aguarde 20–30 segundos e tente novamente.';
+  }
+  if (httpStatus === 403 || low.includes('403') || low.includes('forbidden')) {
+    return '🚫 Sua conta não tem permissão para usar este modelo. Habilite o acesso no painel do provedor ou escolha outro modelo.';
+  }
+  if (low.includes('safety') || low.includes('content policy') || low.includes('blocked') || low.includes('moderation')) {
+    return '⚠️ O conteúdo foi bloqueado por política de segurança do provedor. Reescreva o prompt com termos mais neutros e tente novamente.';
+  }
+  if (httpStatus === 400 || low.includes('bad request') || low.includes('(400)')) {
+    const m = msg.match(/"message"\s*:\s*"([^"]+)"/);
+    const detail = m ? m[1] : '';
+    if (detail) return `🛠️ O provedor recusou esta requisição: ${detail}. Ajuste o modelo, o prompt ou as referências e tente novamente.`;
+    return '🛠️ O provedor recusou esta requisição. Verifique o modelo escolhido e o prompt e tente novamente.';
+  }
+  if (low.includes('timeout') || low.includes('timed out') || low.includes('excedeu o tempo')) {
+    return '⏱️ O provedor não respondeu a tempo. Isso costuma ser temporário — tente novamente em alguns instantes.';
+  }
+  if ((httpStatus && httpStatus >= 500) || low.includes(' 500') || low.includes(' 502') || low.includes(' 503') || low.includes(' 504') || low.includes('internal server error') || low.includes('service unavailable')) {
+    return '🌐 O servidor do provedor está instável no momento. Tente novamente em alguns minutos.';
+  }
+  if (low.includes('não retornou') || low.includes('did not return') || low.includes('no url')) {
+    return '📭 O provedor terminou a tarefa mas não devolveu o arquivo. Tente gerar novamente.';
+  }
+  if (low.includes('failed to fetch') || low.includes('network') || low.includes('econn')) {
+    return '🌐 Falha de conexão com o provedor. Verifique sua internet e tente novamente.';
+  }
+  if (!msg) return '❌ Ocorreu um erro inesperado ao gerar. Tente novamente.';
+  return `❌ ${msg.substring(0, 240)}`;
+}
+export { humanizeProviderError };
+
 // Visual Identity emphasis directive — focus areas when VI is active
 const VI_FOCUS_DIRECTIVE = [
   `\n\n🎨 [IDENTIDADE VISUAL — FOCO OBRIGATÓRIO]`,
