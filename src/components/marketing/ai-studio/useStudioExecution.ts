@@ -1464,6 +1464,7 @@ export function useStudioExecution() {
                 throw new Error(sceneResult?.error || `O provedor terminou a cena ${s + 1} mas não devolveu o vídeo. Tente novamente.`);
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
+              sceneDurationsApplied.push(sceneDuration);
               nodeResultStore.setResult(node.id, {
                 text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
                 _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
