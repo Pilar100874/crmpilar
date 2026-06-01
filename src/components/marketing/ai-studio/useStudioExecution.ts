@@ -136,30 +136,14 @@ export function useStudioExecution() {
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
       console.error(`[Studio] Edge function error ${response.status}:`, errText);
-      
-      // Parse friendly error message from JSON response
-      let friendlyMsg = errText.substring(0, 200);
+
+      let rawError = errText.substring(0, 400);
       try {
         const errJson = JSON.parse(errText);
-        const rawError = errJson?.error || '';
-        
-        // Extract specific API error patterns
-        if (rawError.includes('401') || rawError.includes('Incorrect API key') || rawError.includes('Unauthorized')) {
-          friendlyMsg = '🔑 Chave de API inválida ou expirada. Verifique sua chave em Configurações → APIs Pagas.';
-        } else if (rawError.includes('402') || rawError.includes('Payment') || rawError.includes('insufficient') || rawError.includes('billing') || rawError.includes('quota') || rawError.includes('exclusively available') || rawError.includes('Credits exhausted')) {
-          friendlyMsg = '💳 Créditos insuficientes no provedor. Adicione saldo na sua conta do provedor.';
-        } else if (rawError.includes('429') || rawError.includes('Rate limit') || rawError.includes('too many')) {
-          friendlyMsg = '⏳ Limite de requisições excedido. Aguarde alguns segundos e tente novamente.';
-        } else if (rawError.includes('403') || rawError.includes('Forbidden') || rawError.includes('access')) {
-          friendlyMsg = '🚫 Sem permissão para este recurso. Verifique se sua conta tem acesso a este modelo/serviço.';
-        } else if (rawError.includes('not configured')) {
-          friendlyMsg = '⚙️ ' + rawError;
-        } else if (rawError) {
-          friendlyMsg = rawError.substring(0, 200);
-        }
+        rawError = errJson?.error || errJson?.message || rawError;
       } catch {}
-      
-      throw new Error(friendlyMsg);
+
+      throw new Error(humanizeProviderError(rawError, response.status));
     }
     // Read as text first to handle large payloads safely
     const rawText = await response.text();
