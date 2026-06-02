@@ -1483,6 +1483,7 @@ export function useStudioExecution() {
               }
               sceneVideoUrls.push(sceneResult.videoUrl);
               sceneDurationsApplied.push(sceneDuration);
+              sceneRegenParams.push(sceneParams);
               nodeResultStore.setResult(node.id, {
                 text: `✅ Cena ${s + 1}/${scenes.length} pronta. ${s + 1 < scenes.length ? 'Iniciando próxima cena...' : 'Preparando união final...'}`,
                 _multiSceneProgress: { current: s + 1, total: scenes.length, urls: [...sceneVideoUrls] },
