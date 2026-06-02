@@ -39,11 +39,12 @@ async function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise
 }
 
 async function loadLocal(onProgress?: (p: ConcatProgress) => void): Promise<FFmpeg> {
+  const urls = await tryLoadLocalUrls();
+  if (!urls) throw new Error('Bundle local indisponível');
   const ffmpeg = new FFmpeg();
   onProgress?.({ stage: 'loading', message: 'Preparando ferramentas de vídeo (local)…' });
-  // Converte para blob URL para satisfazer requisito same-origin do worker
-  const coreURL = await withTimeout(toBlobURL(localCoreURL as string, 'text/javascript'), 30000, 'componentes de vídeo locais');
-  const wasmURL = await withTimeout(toBlobURL(localWasmURL as string, 'application/wasm'), 60000, 'componentes de vídeo locais');
+  const coreURL = await withTimeout(toBlobURL(urls.coreURL, 'text/javascript'), 30000, 'componentes de vídeo locais');
+  const wasmURL = await withTimeout(toBlobURL(urls.wasmURL, 'application/wasm'), 60000, 'componentes de vídeo locais');
   await withTimeout(ffmpeg.load({ coreURL, wasmURL }), 30000, 'componentes de vídeo locais');
   return ffmpeg;
 }
