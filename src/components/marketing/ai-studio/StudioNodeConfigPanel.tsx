@@ -105,6 +105,162 @@ function PresetPickerButton({
   );
 }
 
+// Bloco completo "🎵 Áudio & Sound Design" reutilizado pelos roteiros (vídeo/reels).
+// Inclui texto do áudio + presets selecionáveis (trilha, intensidade, voz, ambiente, SFX).
+function AudioSoundDesignSection({
+  scene,
+  onChange,
+}: {
+  scene: any;
+  onChange: (patch: any) => void;
+}) {
+  const sfxValue = Array.isArray(scene.sfx) ? scene.sfx.join(', ') : (scene.sfx || '');
+  const Row = ({
+    label,
+    hint,
+    children,
+    picker,
+  }: {
+    label: string;
+    hint?: string;
+    children: React.ReactNode;
+    picker: React.ReactNode;
+  }) => (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-[10px] text-amber-200/80">{label}</Label>
+        {picker}
+      </div>
+      {children}
+      {hint && <p className="text-[9px] text-muted-foreground italic leading-tight">{hint}</p>}
+    </div>
+  );
+  return (
+    <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 space-y-2">
+      <div className="text-[10px] font-bold text-amber-400">🎵 Áudio & Sound Design</div>
+
+      <Row
+        label="📝 Texto do áudio"
+        hint="O que será falado ou cantado nesta cena (substitui a antiga narração)."
+        picker={null}
+      >
+        <Textarea
+          value={scene.audioText || ''}
+          onChange={(e) => onChange({ audioText: e.target.value })}
+          placeholder="Ex: Descubra o tênis que acompanha seu ritmo."
+          rows={2}
+          className="text-[11px]"
+        />
+      </Row>
+
+      <Row
+        label="Trilha sonora"
+        picker={
+          <PresetPickerButton
+            title="Trilha sonora"
+            presets={SOUNDTRACK_PRESETS}
+            value={scene.soundtrack || ''}
+            onChange={(v) => onChange({ soundtrack: v })}
+          />
+        }
+      >
+        <Input
+          value={scene.soundtrack || ''}
+          onChange={(e) => onChange({ soundtrack: e.target.value })}
+          placeholder="Ex: lo-fi calmo (ou clique em Opções)"
+          className="h-7 text-[11px]"
+        />
+      </Row>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Row
+          label="Intensidade"
+          picker={
+            <PresetPickerButton
+              title="Intensidade da trilha"
+              presets={SOUNDTRACK_INTENSITIES}
+              value={scene.soundtrackIntensity || ''}
+              onChange={(v) => onChange({ soundtrackIntensity: v })}
+            />
+          }
+        >
+          <Input
+            value={scene.soundtrackIntensity || ''}
+            onChange={(e) => onChange({ soundtrackIntensity: e.target.value })}
+            placeholder="baixa, média, alta..."
+            className="h-7 text-[11px]"
+          />
+        </Row>
+        <Row
+          label="Tom de voz"
+          picker={
+            <PresetPickerButton
+              title="Tom de voz"
+              presets={VOICE_TONES}
+              value={scene.voiceTone || ''}
+              onChange={(v) => onChange({ voiceTone: v })}
+            />
+          }
+        >
+          <Input
+            value={scene.voiceTone || ''}
+            onChange={(e) => onChange({ voiceTone: e.target.value })}
+            placeholder="Ex: feminina jovem confiante"
+            className="h-7 text-[11px]"
+          />
+        </Row>
+      </div>
+
+      <Row
+        label="Ambiente sonoro"
+        picker={
+          <PresetPickerButton
+            title="Ambiente sonoro"
+            presets={AMBIENT_SOUNDS}
+            value={scene.ambientSound || ''}
+            onChange={(v) => onChange({ ambientSound: v })}
+          />
+        }
+      >
+        <Input
+          value={scene.ambientSound || ''}
+          onChange={(e) => onChange({ ambientSound: e.target.value })}
+          placeholder="Ex: café movimentado, vento suave, rua..."
+          className="h-7 text-[11px]"
+        />
+      </Row>
+
+      <Row
+        label="Efeitos sonoros (SFX)"
+        hint="Você pode selecionar vários efeitos no botão Opções."
+        picker={
+          <PresetPickerButton
+            title="Efeitos sonoros (SFX)"
+            presets={SFX_PRESETS}
+            value={sfxValue}
+            onChange={(v) =>
+              onChange({
+                sfx: v.split(',').map((x) => x.trim()).filter(Boolean),
+              })
+            }
+            multi
+          />
+        }
+      >
+        <Input
+          value={sfxValue}
+          onChange={(e) =>
+            onChange({
+              sfx: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean),
+            })
+          }
+          placeholder="whoosh, click, aplausos... (separe por vírgula)"
+          className="h-7 text-[11px]"
+        />
+      </Row>
+    </div>
+  );
+
 interface Props {
   node: StudioNode;
   onUpdateConfig: (nodeId: string, config: Record<string, any>) => void;
