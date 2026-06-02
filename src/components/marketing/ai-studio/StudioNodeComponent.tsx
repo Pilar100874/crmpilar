@@ -2251,13 +2251,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           const friendlyText = humanizeStatus(resultText);
           const hasProgress = multiSceneProgress?.total || videoProgress?.attempt;
           return (
-          <div className="absolute inset-0 bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-b-2xl px-4 py-4 text-center overflow-hidden">
-            <div className="relative flex items-center justify-center" style={{ width: 36, height: 36 }}>
-              <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: accent }} />
+          <div className="absolute inset-0 bg-card/95 backdrop-blur-sm flex flex-col items-center justify-start gap-3 z-10 rounded-b-2xl px-4 py-5 text-center overflow-y-auto min-h-[180px]">
+            <div className="relative flex items-center justify-center shrink-0 mt-1" style={{ width: 40, height: 40 }}>
+              <div className="absolute inset-1 rounded-full animate-ping opacity-30" style={{ background: accent }} />
               <Loader2 className="h-7 w-7 animate-spin relative" style={{ color: accent }} />
             </div>
-            <div className="w-full max-w-[240px] space-y-2">
-              <p className="text-[11px] font-semibold text-foreground/85 leading-snug line-clamp-2 break-words">
+            <div className="w-full max-w-[260px] space-y-2">
+              <p className="text-[11px] font-semibold text-foreground/85 leading-snug break-words whitespace-pre-wrap">
                 {friendlyText}
               </p>
               {hasProgress && (
