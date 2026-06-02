@@ -1109,7 +1109,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       setIsReprocessingFinal(false);
       setReprocessProgress('');
     }
-  }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrls]);
+  }, [activeResult, id, nodeData.config?.sceneTransitionDuration, sceneJoinTransition, sceneUrlsKey]);
 
   return (
     <>
