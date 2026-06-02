@@ -49,9 +49,15 @@ const GallerySelectInline: React.FC<GallerySelectInlineProps> = ({ categoria, co
     setLoading(false);
   }, [categoria]);
 
+  // Refetch sempre que a categoria mudar (e na primeira abertura)
   useEffect(() => {
-    if (showList && images.length === 0) fetchImages();
-  }, [showList, fetchImages, images.length]);
+    if (!showList) return;
+    setImages([]);
+    setSearch('');
+    fetchImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoria, showList]);
+
 
   const filtered = images.filter(img =>
     !search || img.nome?.toLowerCase().includes(search.toLowerCase())
