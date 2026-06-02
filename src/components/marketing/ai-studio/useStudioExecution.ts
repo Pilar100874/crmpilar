@@ -440,7 +440,10 @@ export function useStudioExecution() {
     const formatPlatform = formatInput?._formatPlatform;
     const formatContentType = formatInput?._formatContentType;
 
-    const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
+    const systemPrompts = inputs
+      .filter((i) => i?._isSystemPrompt || i?._systemPrompt)
+      .map((i) => i._isSystemPrompt ? i.text : i._systemPrompt)
+      .filter(Boolean);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
     // Collect TEXT LOCK directives from imageCaption nodes — these MUST be rendered exactly as provided
@@ -502,8 +505,11 @@ export function useStudioExecution() {
     const orderedImageRoles = bucketedImages.flatMap((b) => b.urls.map(() => roleLabelsMap[b.role] || 'REFERENCE'));
 
     switch (type) {
-      case 'textInput':
+      case 'textInput': {
+        const sp = (config.systemPrompt || '').trim();
+        if (sp) return { text: config.text || '', _systemPrompt: sp };
         return config.text || '';
+      }
 
       case 'systemPrompt':
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };

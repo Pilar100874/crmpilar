@@ -1361,6 +1361,27 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 className="mt-1 text-sm"
               />
             </ConfigField>
+            <details className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2 group">
+              <summary className="text-xs font-medium text-foreground/80 cursor-pointer select-none flex items-center gap-2">
+                <span className="text-primary">⚙️</span>
+                Instruções do Sistema (avançado)
+                {(config.systemPrompt || '').trim() && (
+                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary">ativo</span>
+                )}
+              </summary>
+              <div className="mt-2">
+                <p className="text-[10px] text-muted-foreground mb-1.5">
+                  Define a persona/comportamento do LLM (ex: "Você é um diretor criativo..."). Usado apenas por blocos de IA de texto.
+                </p>
+                <Textarea
+                  value={config.systemPrompt || ''}
+                  onChange={(e) => update('systemPrompt', e.target.value)}
+                  placeholder="Você é um diretor criativo especializado em marketing visual..."
+                  rows={4}
+                  className="text-xs"
+                />
+              </div>
+            </details>
             {config.presetLayerSelections && (
               <div className="pt-1">
                 <Button

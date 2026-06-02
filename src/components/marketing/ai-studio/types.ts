@@ -77,18 +77,10 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       {
         type: 'textInput',
         label: 'Texto / Prompt',
-        description: 'Entrada de texto ou prompt do usuário',
+        description: 'Entrada de texto/prompt do usuário. Inclui campo opcional de Instruções do Sistema (persona/comportamento para o LLM).',
         icon: '✏️',
         color: '#6366f1',
-        defaultConfig: { text: 'Foto profissional de produto em fundo branco, iluminação de estúdio, alta resolução, detalhes nítidos' },
-      },
-      {
-        type: 'systemPrompt',
-        label: 'Mensagem do Sistema',
-        description: 'Instruções para o modelo de IA',
-        icon: '⚙️',
-        color: '#8b5cf6',
-        defaultConfig: { systemPrompt: 'Você é um diretor criativo especializado em marketing visual. Gere descrições detalhadas e prompts otimizados para geração de imagens publicitárias.' },
+        defaultConfig: { text: 'Foto profissional de produto em fundo branco, iluminação de estúdio, alta resolução, detalhes nítidos', systemPrompt: '' },
       },
       {
         type: 'imageInput',
