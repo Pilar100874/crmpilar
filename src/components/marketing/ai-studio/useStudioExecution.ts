@@ -1538,6 +1538,7 @@ export function useStudioExecution() {
               _isVideo: true,
               _sceneUrls: sceneVideoUrls,
               _sceneDurations: sceneDurationsApplied,
+              _sceneRegenParams: sceneRegenParams,
               _sceneTransition: sceneTransition,
               _sceneTransitionDuration: sceneTransitionDuration,
               _unified: true,
