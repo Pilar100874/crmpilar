@@ -15,6 +15,31 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  SOUNDTRACK_PRESETS,
+  SOUNDTRACK_INTENSITIES,
+  VOICE_TONES,
+  AMBIENT_SOUNDS,
+  SFX_PRESETS,
+} from './audioPresets';
+
+// Helper para renderizar <datalist> reutilizáveis para os campos de áudio
+const AudioDatalists = () => (
+  <>
+    <datalist id="audio-preset-soundtrack">
+      {SOUNDTRACK_PRESETS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-voice">
+      {VOICE_TONES.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-ambient">
+      {AMBIENT_SOUNDS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+    <datalist id="audio-preset-sfx">
+      {SFX_PRESETS.map((v) => <option key={v} value={v} />)}
+    </datalist>
+  </>
+);
 
 interface Props {
   node: StudioNode;
