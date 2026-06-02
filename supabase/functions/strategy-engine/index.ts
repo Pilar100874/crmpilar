@@ -21,15 +21,16 @@ REGRAS OBRIGATÓRIAS DE CENA PARA VÍDEO IA (use para alimentar o AI Creative St
   5s → MÁX 12 palavras (PT-BR, cadência natural com pausa).
   10s → MÁX 25 palavras.
   Se a cena for visual sem narração, use string vazia.
-- ÁUDIO / SOUND DESIGN (OBRIGATÓRIO em cada cena):
-  - "trilha_sonora": estilo/gênero musical da trilha (ex: "lo-fi calmo", "épico orquestral cinematográfico", "house energético 120bpm", "ambient minimalista", "indie folk acústico"). Para coerência, mantenha o MESMO estilo em todas as cenas, variando apenas intensidade.
-  - "intensidade_trilha": "baixa" | "média" | "alta" | "crescente" | "decrescente".
-  - "sfx": array de efeitos sonoros pontuais que ocorrem na cena (ex: ["whoosh na transição", "click suave", "passos no asfalto", "tilintar de copo"]). Use [] se nenhum.
-  - "ambiente_sonoro": ruído de fundo / room tone (ex: "café movimentado", "vento suave", "estúdio silencioso", "rua urbana de noite").
-  - "tom_voz": estilo da locução (ex: "feminina jovem confiante", "masculina grave e calma", "entusiasmada PT-BR", "sussurro íntimo"). Mantenha o mesmo locutor em todas as cenas, salvo justificativa.
+- ÁUDIO / SOUND DESIGN (OBRIGATÓRIO em cada cena — sempre que possível, escolha valores das listas abaixo para alinhar com os presets do AI Creative Studio. Se nenhum encaixar, pode usar texto livre coerente.):
+  - "trilha_sonora": estilo/gênero musical. PRESETS: "lo-fi calmo" | "épico orquestral cinematográfico" | "house energético 120bpm" | "ambient minimalista" | "indie folk acústico" | "pop cinematográfico moderno" | "corporate inspirador" | "trap / hip-hop urbano" | "synthwave retro" | "jazz suave" | "eletrônica progressiva" | "rock motivacional" | "piano emocional" | "reggae descontraído" | "percussão tribal". Mantenha o MESMO estilo em todas as cenas, variando apenas a intensidade.
+  - "intensidade_trilha": SOMENTE um destes valores: "baixa" | "média" | "alta" | "crescente" | "decrescente".
+  - "sfx": array de efeitos sonoros pontuais. PRESETS: "whoosh na transição" | "click suave" | "passos no asfalto" | "tilintar de copo" | "notificação digital" | "risers crescentes" | "impact / boom cinematográfico" | "glitch eletrônico" | "aplausos" | "cash register" | "teclado digitando" | "porta fechando". Use [] se nenhum se aplicar.
+  - "ambiente_sonoro": ruído de fundo / room tone. PRESETS: "estúdio silencioso" | "café movimentado" | "rua urbana de dia" | "rua urbana de noite" | "natureza / floresta" | "praia / ondas" | "escritório corporativo" | "sala residencial" | "academia / esporte" | "vento suave" | "chuva leve" | "ambiente industrial".
+  - "tom_voz": estilo da locução. PRESETS: "feminina jovem confiante" | "feminina madura acolhedora" | "masculina grave e calma" | "masculina jovem entusiasmada" | "entusiasmada PT-BR" | "sussurro íntimo" | "narrador documentário" | "locutor comercial energético" | "tom institucional sério" | "amigável e próximo" | "autoritário e firme" | "inspiradora e motivacional". Mantenha o mesmo locutor em todas as cenas, salvo justificativa.
+  - "texto_audio": texto exato que deve ser falado/cantado na cena (PT-BR, sem placeholders). Quando a cena tem narração, repita aqui o texto da locução. Quando a cena tem música cantada/jingle, escreva a letra. Quando for SFX puro/silêncio, use "".
 - A descrição visual deve ser autossuficiente, cinematográfica e UMA cena só (sem cortes internos). Inclua sujeito, ação, ambiente, iluminação, mood.
 - Sempre inclua o array "cenas_ai_video" com o formato EXATO:
-  [{ "ordem": 1, "duracao_segundos": 5|10, "tipo_camera": "", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut|fade|whip|match-cut|none", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "" }]
+  [{ "ordem": 1, "duracao_segundos": 5|10, "tipo_camera": "", "descricao_visual": "", "narracao_voz": "", "palavras_narracao": 0, "texto_overlay": "", "transicao_para_proxima": "cut|fade|whip|match-cut|none", "trilha_sonora": "", "intensidade_trilha": "média", "sfx": [], "ambiente_sonoro": "", "tom_voz": "", "texto_audio": "" }]
 - Também inclua um objeto "audio_global" no roteiro com: { "estilo_musical": "", "referencia_trilha": "", "bpm_alvo": 0, "tom_voz_padrao": "", "idioma": "pt-BR", "mix_notes": "" }
 - A soma das durações deve bater com a duração total declarada do vídeo.
 - Escreva narração em PT-BR natural, sem erros gramaticais, com acentuação correta.
