@@ -1504,14 +1504,15 @@ export function useStudioExecution() {
             };
           }
 
+          const sceneTransition = (config.sceneTransition || 'fade') as any;
+          const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
+
           try {
             nodeResultStore.setResult(node.id, {
               text: `🎞️ Unindo ${sceneVideoUrls.length} cenas em vídeo único...`,
               _multiSceneProgress: { current: scenes.length, total: scenes.length, urls: sceneVideoUrls },
             });
             const { concatVideos, uploadConcatVideo } = await import('./videoConcat');
-            const sceneTransition = (config.sceneTransition || 'fade') as any;
-            const sceneTransitionDuration = Number(config.sceneTransitionDuration) || 0.5;
             const unifiedBlob = await concatVideos(
               sceneVideoUrls,
               (p) => {
