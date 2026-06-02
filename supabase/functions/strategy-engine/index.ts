@@ -868,6 +868,7 @@ function enrichScene(s: any, ag: any, audioFallback: any, idx: number) {
     sfx: Array.isArray(s.sfx) && s.sfx.length ? s.sfx : (Array.isArray(audioFallback?.efeitos_sonoros) ? audioFallback.efeitos_sonoros.slice(0, 2) : ['whoosh sutil']),
     ambiente_sonoro: s.ambiente_sonoro || s.ambiente || 'ambiente natural sutil',
     tom_voz: s.tom_voz || ag.tom_voz_padrao || 'confiante e próximo',
+    texto_audio: s.texto_audio || s.audio_texto || narr || '',
   };
 }
 function normalizeVideoArtifact(agentType: string, parsed: any): any {
