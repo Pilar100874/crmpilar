@@ -815,6 +815,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const sceneUrls: string[] = Array.isArray(activeResult?._sceneUrls) ? activeResult._sceneUrls : [];
   const hasMultiSceneResult = nodeData.type === 'videoGen' && sceneUrls.length > 1;
   const sceneUrlsKey = sceneUrls.join('|');
+  const hasFinalJoinedVideo = hasMultiSceneResult && !!resultVideo && activeResult?._unified !== false;
   const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames || activeResult?.slideImages?.length);
   const multiSceneProgress = activeResult?._multiSceneProgress as { current?: number; total?: number; urls?: string[] } | undefined;
   const videoProgress = activeResult?._videoProgress as {
