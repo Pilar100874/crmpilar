@@ -731,6 +731,7 @@ export function useStudioExecution() {
             sfx: Array.isArray(s?.sfx) ? s.sfx : (s?.sfx ? [String(s.sfx)] : []),
             ambientSound: (s?.ambientSound || '').trim(),
             voiceTone: (s?.voiceTone || '').trim(),
+            audioText: (s?.audioText || '').trim(),
           }))
           .filter((s) => s.description || s.narration);
         const globalNotes = (config.globalNotes || '').trim();
