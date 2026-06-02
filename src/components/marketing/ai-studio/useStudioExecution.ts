@@ -1400,6 +1400,7 @@ export function useStudioExecution() {
 
           const sceneVideoUrls: string[] = [];
           const sceneDurationsApplied: number[] = [];
+          const sceneRegenParams: Record<string, any>[] = [];
 
           // 🔒 TRAVA DE FIDELIDADE — aplicada em TODAS as cenas quando há referências visuais
           const hasProductRefMS = orderedImageRolesMS.some(r => /produto/i.test(r));
