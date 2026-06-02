@@ -145,8 +145,8 @@ function AudioSoundDesignSection({
         picker={null}
       >
         <Textarea
-          value={scene.audioText || ''}
-          onChange={(e) => onChange({ audioText: e.target.value })}
+          value={scene.audioText ?? scene.narration ?? ''}
+          onChange={(e) => onChange({ audioText: e.target.value, narration: e.target.value })}
           placeholder="Ex: Descubra o tênis que acompanha seu ritmo."
           rows={2}
           className="text-[11px]"
