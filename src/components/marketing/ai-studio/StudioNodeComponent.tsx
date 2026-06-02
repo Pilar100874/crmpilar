@@ -1388,7 +1388,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {/* Gallery select inline display */}
         {isGalleryType && (
           <GallerySelectInline
-            categoria={galleryCategoryMap[nodeData.type]}
+            categoria={(nodeData.config?.categoria as GalleryCategoryId) || galleryCategoryMap[nodeData.type] || 'salvas'}
             config={nodeData.config}
             onUpdate={handleInlineUpdate}
           />
