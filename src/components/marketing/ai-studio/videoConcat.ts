@@ -149,6 +149,8 @@ export async function concatVideos(
   const transition = options?.transition && options.transition !== 'none' ? options.transition : null;
   const transitionDur = Math.min(1.5, Math.max(0.2, options?.transitionDurationSec ?? 0.5));
   const durations = options?.sceneDurationsSec;
+  let filesForConcat = normalizedFiles;
+  const filesToDelete = new Set<string>(normalizedFiles);
 
   // 3a) Caminho com TRANSIÇÕES (xfade)
   if (transition && durations && durations.length === urls.length) {
@@ -204,13 +206,46 @@ export async function concatVideos(
       return blob;
     } catch (xfadeErr: any) {
       console.warn('[videoConcat] Falha ao aplicar transições, caindo para concat simples:', xfadeErr);
-      onProgress?.({ stage: 'encoding', message: 'Transição indisponível, unindo cenas de forma simples…' });
+      onProgress?.({ stage: 'encoding', message: 'Transição avançada indisponível, aplicando fade seguro…' });
+      try {
+        const fadedFiles: string[] = [];
+        for (let i = 0; i < normalizedFiles.length; i++) {
+          const out = `fade${i}.mp4`;
+          const fadeOutAt = Math.max(0, (durations[i] || 5) - transitionDur);
+          const vf = [
+            i > 0 ? `fade=t=in:st=0:d=${transitionDur.toFixed(2)}` : null,
+            i < normalizedFiles.length - 1 ? `fade=t=out:st=${fadeOutAt.toFixed(2)}:d=${transitionDur.toFixed(2)}` : null,
+          ].filter(Boolean).join(',') || 'null';
+          const af = [
+            i > 0 ? `afade=t=in:st=0:d=${transitionDur.toFixed(2)}` : null,
+            i < normalizedFiles.length - 1 ? `afade=t=out:st=${fadeOutAt.toFixed(2)}:d=${transitionDur.toFixed(2)}` : null,
+          ].filter(Boolean).join(',') || 'anull';
+          await ffmpeg.exec([
+            '-i', normalizedFiles[i],
+            '-vf', vf,
+            '-af', af,
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-crf', '23',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-pix_fmt', 'yuv420p',
+            out,
+          ]);
+          fadedFiles.push(out);
+          filesToDelete.add(out);
+        }
+        filesForConcat = fadedFiles;
+      } catch (fadeErr) {
+        console.warn('[videoConcat] Falha no fade seguro, unindo cenas normalizadas:', fadeErr);
+        onProgress?.({ stage: 'encoding', message: 'Fade indisponível, unindo cenas normalizadas…' });
+      }
       // Continua para o caminho 3b
     }
   }
 
   // 3b) Concat simples via demuxer (sem transição)
-  const listContent = normalizedFiles.map((f) => `file '${f}'`).join('\n');
+  const listContent = filesForConcat.map((f) => `file '${f}'`).join('\n');
   await ffmpeg.writeFile('concat.txt', new TextEncoder().encode(listContent));
 
   onProgress?.({ stage: 'encoding', message: 'Unindo cenas em vídeo único…' });
@@ -227,7 +262,7 @@ export async function concatVideos(
   const ab = u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
   const blob = new Blob([ab], { type: 'video/mp4' });
 
-  for (const f of normalizedFiles) { try { await ffmpeg.deleteFile(f); } catch {} }
+  for (const f of filesToDelete) { try { await ffmpeg.deleteFile(f); } catch {} }
   try { await ffmpeg.deleteFile('concat.txt'); } catch {}
   try { await ffmpeg.deleteFile('output.mp4'); } catch {}
 
