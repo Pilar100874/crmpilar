@@ -2205,12 +2205,21 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                         <span className="text-[10px] font-semibold text-foreground/80">Cena {idx + 1}</span>
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleRegenerateScene(idx); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (regenPromptOpenIdx === idx) {
+                                setRegenPromptOpenIdx(null);
+                                setRegenAdjustText('');
+                              } else {
+                                setRegenPromptOpenIdx(idx);
+                                setRegenAdjustText('');
+                              }
+                            }}
                             onMouseDown={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
                             disabled={isRegenerating || regenSceneIdx !== null || !hasRegenParams}
                             className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/15 hover:bg-primary/25 text-primary text-[10px] font-semibold transition-colors disabled:opacity-50"
-                            title={hasRegenParams ? 'Refazer apenas esta cena' : 'Re-execute o bloco para habilitar a refação individual'}
+                            title={hasRegenParams ? 'Refazer esta cena (com ajustes opcionais)' : 'Re-execute o bloco para habilitar a refação individual'}
                           >
                             {isRegenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Repeat className="h-3 w-3" />}
                             Refazer
@@ -2238,6 +2247,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                         className="w-full object-cover studio-video-no-fullscreen"
                         style={{ maxHeight: 180 }}
                       />
+                      {regenPromptOpenIdx === idx && !isRegenerating && (
+                        <div className="px-2.5 py-2 border-t border-border/30 bg-muted/30 space-y-1.5">
+                          <label className="text-[10px] font-semibold text-foreground/70">
+                            O que ajustar nesta cena? <span className="text-muted-foreground font-normal">(opcional)</span>
+                          </label>
+                          <textarea
+                            value={regenAdjustText}
+                            onChange={(e) => setRegenAdjustText(e.target.value)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Ex: deixe a iluminação mais quente, câmera mais lenta, troque o ângulo..."
+                            className="w-full text-[11px] rounded-md border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40"
+                            rows={2}
+                          />
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setRegenPromptOpenIdx(null); setRegenAdjustText(''); }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRegenerateScene(idx, regenAdjustText); }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              disabled={regenSceneIdx !== null}
+                              className="px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                            >
+                              {regenAdjustText.trim() ? 'Gerar com ajustes' : 'Gerar novamente'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {isRegenerating && (
                         <p className="px-2.5 py-1.5 text-[10px] text-muted-foreground border-t border-border/30 break-words">{regenSceneProgress}</p>
                       )}
