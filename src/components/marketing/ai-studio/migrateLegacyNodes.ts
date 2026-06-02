@@ -31,16 +31,22 @@ export function migrateLegacyNodes(nodes: StudioNode[]): StudioNode[] {
     if (t && t.startsWith('gallery')) {
       const categoria = GALLERY_TYPE_TO_CATEGORIA[t] || 'salvas';
       if (t === 'gallerySalvas' && cfg.categoria) return node; // já migrado
+      const catLabels: Record<string, string> = {
+        influencer: '👤 Influencer', logo: '🏷️ Logo', roupa: '👗 Roupa',
+        pose: '🤸 Pose', ambiente: '🏔️ Ambiente', estilo: '🎨 Estilo',
+        textura: '🧱 Textura', paleta: '🎨 Paleta', salvas: '🖼️ Salvas',
+      };
       return {
         ...node,
         data: {
           ...node.data,
           type: 'gallerySalvas',
-          label: 'Galeria de Referência',
+          label: `Galeria · ${catLabels[categoria] || categoria}`,
           config: { ...cfg, categoria },
         },
       };
     }
+
 
     // 2) imageInput → multiImageRef (config compatível)
     if (t === 'imageInput') {
@@ -117,7 +123,10 @@ export function resolveReferenceBlockSpec(blockId: string): {
   }
   if (blockId && blockId.startsWith('gallery')) {
     const categoria = GALLERY_TYPE_TO_CATEGORIA[blockId] || 'salvas';
-    const labels: Record<string, string> = {
+    // Label sempre identifica o bloco UNIFICADO ("Galeria de Referência")
+    // seguido da categoria escolhida, para que fique visualmente claro no
+    // canvas que NÃO se trata mais de blocos legados separados.
+    const catLabel: Record<string, string> = {
       influencer: '👤 Influencer',
       logo: '🏷️ Logo',
       roupa: '👗 Roupa',
@@ -126,14 +135,15 @@ export function resolveReferenceBlockSpec(blockId: string): {
       estilo: '🎨 Estilo',
       textura: '🧱 Textura',
       paleta: '🎨 Paleta',
-      salvas: '🖼️ Galeria',
+      salvas: '🖼️ Salvas',
     };
     return {
       type: 'gallerySalvas',
-      label: labels[categoria] || '🖼️ Galeria',
+      label: `Galeria · ${catLabel[categoria] || categoria}`,
       config: { categoria, selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
     };
   }
   return null;
 }
+
 
