@@ -867,7 +867,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       const t3 = setTimeout(() => updateNodeInternals(id), 500);
       return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }
-  }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
+  }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, hasMultiSceneResult, hasFinalJoinedVideo, id, updateNodeInternals]);
 
   const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'multiImageRef' && nodeData.config?.images?.length > 0) || (nodeData.type === 'videoInput' && nodeData.config?.videos?.length > 0) || (nodeData.type === 'multiVideoRef' && nodeData.config?.videos?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl) || (nodeData.type === 'mediaGallery' && nodeData.config?.selectedUrl)) ? 340 : 280;
 
@@ -2170,7 +2170,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   ))}
                 </div>
 
-                {resultVideo && (
+                {hasFinalJoinedVideo && (
                   <div className="rounded-xl overflow-hidden border border-primary/40 bg-primary/5 relative" style={{ boxShadow: `0 8px 24px -8px ${accent}30` }}>
                     <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-primary/20">
                       <span className="text-[10px] font-bold text-primary">Vídeo final unido</span>
