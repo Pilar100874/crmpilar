@@ -25,7 +25,7 @@ import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Spark
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
-import { migrateLegacyNodes } from './migrateLegacyNodes';
+import { migrateLegacyNodes, resolveReferenceBlockSpec } from './migrateLegacyNodes';
 import StudioNodeComponent from './StudioNodeComponent';
 import StudioCustomEdge from './StudioCustomEdge';
 import StudioNodeLibrary from './StudioNodeLibrary';
@@ -1125,17 +1125,37 @@ const AICreativeStudioInner: React.FC = () => {
     if (reloadingPresetNodeId) {
       const newRefBlocks = preset.referenceBlocks || [];
 
-      const BLOCK_META: Record<string, { labelPrefix: string; type: string }> = {
-        'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-        'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-        'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-        'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-        'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-        'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-        'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-        'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-        'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-        'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
+      // Resolve cada ID semântico do preset para o tipo de bloco unificado real
+      // que será criado no canvas (multiProductSelect, multiImageRef, multiVideoRef
+      // ou gallerySalvas com categoria). Para galerias, a "identidade" do bloco
+      // passa a ser `gallerySalvas:<categoria>` em vez do tipo puro.
+      type RefSpec = { id: string; type: string; label: string; config: Record<string, any>; key: string };
+      const resolvedNewRefs: RefSpec[] = newRefBlocks
+        .map((id) => {
+          const spec = resolveReferenceBlockSpec(id);
+          if (!spec) return null;
+          const key =
+            spec.type === 'gallerySalvas'
+              ? `gallerySalvas:${spec.config.categoria}`
+              : spec.type;
+          return { id, ...spec, key };
+        })
+        .filter(Boolean) as RefSpec[];
+      const newRefKeys = new Set(resolvedNewRefs.map((r) => r.key));
+
+      // Identifica um nó já existente como bloco de referência e devolve a sua "key"
+      const getRefKeyOfNode = (n: any): string | null => {
+        const t = (n.data as any).type as string;
+        const cfg = (n.data as any).config || {};
+        if (t === 'multiProductSelect' || t === 'productImageSelect') return 'multiProductSelect';
+        if (t === 'multiImageRef' || t === 'imageInput') return 'multiImageRef';
+        if (t === 'multiVideoRef' || t === 'videoInput') return 'multiVideoRef';
+        if (t === 'gallerySalvas') return `gallerySalvas:${cfg.categoria || 'salvas'}`;
+        if (t && t.startsWith('gallery')) {
+          const cat = t.replace('gallery', '').toLowerCase();
+          return `gallerySalvas:${cat || 'salvas'}`;
+        }
+        return null;
       };
 
       // Find the process node connected to this textInput (use ref for fresh state)
@@ -1145,18 +1165,18 @@ const AICreativeStudioInner: React.FC = () => {
       const processNodeId = connectedEdge?.target;
 
       setNodes((nds) => {
-        // Get existing ref block types connected to the same process node
+        // Get existing ref block keys connected to the same process node
         const existingRefNodeIds = new Set<string>();
-        const existingRefTypes = new Set<string>();
+        const existingRefKeys = new Set<string>();
         if (processNodeId) {
           const refEdges = currentEdges.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
           for (const re of refEdges) {
             const refNode = nds.find(n => n.id === re.source);
             if (refNode) {
-              const nodeType = (refNode.data as any).type;
-              if (BLOCK_META[nodeType]) {
+              const k = getRefKeyOfNode(refNode);
+              if (k) {
                 existingRefNodeIds.add(refNode.id);
-                existingRefTypes.add(nodeType);
+                existingRefKeys.add(k);
               }
             }
           }
@@ -1167,15 +1187,16 @@ const AICreativeStudioInner: React.FC = () => {
         for (const nodeId of existingRefNodeIds) {
           const node = nds.find(n => n.id === nodeId);
           if (node) {
-            const nodeType = (node.data as any).type;
-            if (!newRefBlocks.includes(nodeType)) {
+            const k = getRefKeyOfNode(node);
+            if (k && !newRefKeys.has(k)) {
               blocksToRemove.add(nodeId);
             }
           }
         }
 
         // Blocks to add (not already present)
-        const blocksToAdd = newRefBlocks.filter(bt => !existingRefTypes.has(bt));
+        const specsToAdd = resolvedNewRefs.filter((r) => !existingRefKeys.has(r.key));
+
 
         let updatedNodes = nds
           .filter(n => !blocksToRemove.has(n.id))
@@ -1241,15 +1262,12 @@ const AICreativeStudioInner: React.FC = () => {
         // Add new ref blocks
         const ts = Date.now();
         const addedNodes: StudioNode[] = [];
-        blocksToAdd.forEach((blockType, idx) => {
-          const bm = BLOCK_META[blockType];
-          if (!bm) return;
-          const nodeMeta = getNodeMeta(bm.type as any);
+        specsToAdd.forEach((spec, idx) => {
           const refNode: StudioNode = {
-            id: `${bm.type}_${ts}_${idx}`,
+            id: `${spec.type}_${ts}_${idx}`,
             type: 'studioNode',
             position: { x: 100, y: 400 + (existingRefNodeIds.size + idx) * 200 },
-            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
           };
           addedNodes.push(refNode);
         });
@@ -1265,8 +1283,8 @@ const AICreativeStudioInner: React.FC = () => {
           for (const re of refEdges) {
             const refNode = currentNodes.find(n => n.id === re.source);
             if (refNode) {
-              const nodeType = (refNode.data as any).type;
-              if (BLOCK_META[nodeType] && !newRefBlocks.includes(nodeType)) {
+              const k = getRefKeyOfNode(refNode);
+              if (k && !newRefKeys.has(k)) {
                 existingRefNodeIds.add(refNode.id);
               }
             }
@@ -1275,21 +1293,23 @@ const AICreativeStudioInner: React.FC = () => {
 
         let updatedEdges = eds.filter(e => !existingRefNodeIds.has(e.source));
 
-        // Add edges for new blocks
+        // Add edges for new blocks — match exactly the IDs gerados acima
         const ts = Date.now();
-        const blocksToAdd = newRefBlocks.filter(bt => {
-          if (!processNodeId) return false;
+        const presentKeys = new Set<string>();
+        if (processNodeId) {
           const refEdges = eds.filter(e => e.target === processNodeId && e.source !== reloadingPresetNodeId);
-          return !refEdges.some(re => {
+          for (const re of refEdges) {
             const refNode = currentNodes.find(n => n.id === re.source);
-            return refNode && (refNode.data as any).type === bt;
-          });
-        });
-
-        blocksToAdd.forEach((blockType, idx) => {
-          const bm = BLOCK_META[blockType];
-          if (!bm || !processNodeId) return;
-          const newNodeId = `${bm.type}_${ts}_${idx}`;
+            if (refNode) {
+              const k = getRefKeyOfNode(refNode);
+              if (k) presentKeys.add(k);
+            }
+          }
+        }
+        const specsToConnect = resolvedNewRefs.filter((r) => !presentKeys.has(r.key));
+        specsToConnect.forEach((spec, idx) => {
+          if (!processNodeId) return;
+          const newNodeId = `${spec.type}_${ts}_${idx}`;
           updatedEdges.push({
             id: `e_${newNodeId}_${processNodeId}`,
             source: newNodeId,
@@ -1302,6 +1322,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         return updatedEdges;
       });
+
 
       setReloadingPresetNodeId(null);
       setPresetInitialSelections(undefined);
@@ -1345,16 +1366,16 @@ const AICreativeStudioInner: React.FC = () => {
 
     if (targetType === 'productComposite') {
       const personNode: StudioNode = {
-        id: `imageInput_person_${ts}`,
+        id: `multiImageRef_person_${ts}`,
         type: 'studioNode',
         position: { x: 50, y: 100 },
-        data: { label: '📷 Foto da Pessoa', type: 'imageInput', config: {} },
+        data: { label: '📷 Foto da Pessoa', type: 'multiImageRef', config: { images: [], referenceRole: 'pessoa' } },
       };
       const productNode: StudioNode = {
-        id: `imageInput_product_${ts}`,
+        id: `multiProductSelect_${ts}`,
         type: 'studioNode',
         position: { x: 50, y: 350 },
-        data: { label: '🛍️ Foto do Produto', type: 'imageInput', config: {} },
+        data: { label: '🛍️ Produtos', type: 'multiProductSelect', config: { products: [] } },
       };
       const promptNode: StudioNode = {
         id: `textInput_${ts}`,
@@ -1399,30 +1420,17 @@ const AICreativeStudioInner: React.FC = () => {
           { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'studioEdge' },
         );
 
-        // Add reference blocks for each variation
+        // Add reference blocks for each variation (usa blocos UNIFICADOS)
         if (targetType === 'imageGen' || targetType === 'videoGen') {
           const refBlocks = preset.referenceBlocks || [];
-          const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
-            'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-            'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-            'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-            'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-            'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-            'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-            'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-            'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-            'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-            'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
-          };
-          refBlocks.forEach((blockType, idx) => {
-            const bm = blockMeta[blockType];
-            if (!bm) return;
-            const nodeMeta = getNodeMeta(bm.type as any);
+          refBlocks.forEach((blockId, idx) => {
+            const spec = resolveReferenceBlockSpec(blockId);
+            if (!spec) return;
             const refNode: StudioNode = {
-              id: `${bm.type}_v${vIdx}_${ts}_${idx}`,
+              id: `${spec.type}_v${vIdx}_${ts}_${idx}`,
               type: 'studioNode',
               position: { x: 100, y: yPos + 120 + idx * 100 },
-              data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+              data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
             };
             newNodes.push(refNode);
             newEdges.push(
@@ -1451,29 +1459,14 @@ const AICreativeStudioInner: React.FC = () => {
 
       if (targetType === 'imageGen' || targetType === 'videoGen') {
         const refBlocks = preset.referenceBlocks || [];
-        
-        const blockMeta: Record<string, { labelPrefix: string; type: string }> = {
-          'productImageSelect': { labelPrefix: '📦 Produto', type: 'productImageSelect' },
-          'galleryInfluencer': { labelPrefix: '👤 Influencer', type: 'galleryInfluencer' },
-          'galleryLogo': { labelPrefix: '🏷️ Logo', type: 'galleryLogo' },
-          'galleryRoupa': { labelPrefix: '👗 Roupa', type: 'galleryRoupa' },
-          'galleryPose': { labelPrefix: '🤸 Pose', type: 'galleryPose' },
-          'galleryAmbiente': { labelPrefix: '🏔️ Ambiente', type: 'galleryAmbiente' },
-          'galleryEstilo': { labelPrefix: '🎨 Estilo', type: 'galleryEstilo' },
-          'galleryTextura': { labelPrefix: '🧱 Textura', type: 'galleryTextura' },
-          'galleryPaleta': { labelPrefix: '🎨 Paleta', type: 'galleryPaleta' },
-          'imageInput': { labelPrefix: '🖼️ Referência', type: 'imageInput' },
-        };
-
-        refBlocks.forEach((blockType, idx) => {
-          const bm = blockMeta[blockType];
-          if (!bm) return;
-          const nodeMeta = getNodeMeta(bm.type as any);
+        refBlocks.forEach((blockId, idx) => {
+          const spec = resolveReferenceBlockSpec(blockId);
+          if (!spec) return;
           const refNode: StudioNode = {
-            id: `${bm.type}_${ts}_${idx}`,
+            id: `${spec.type}_${ts}_${idx}`,
             type: 'studioNode',
             position: { x: 100, y: 400 + idx * 200 },
-            data: { label: bm.labelPrefix, type: bm.type as any, config: nodeMeta?.defaultConfig ? { ...nodeMeta.defaultConfig } : {} },
+            data: { label: spec.label, type: spec.type as any, config: { ...spec.config } },
           };
           newNodes.push(refNode);
           newEdges.push(
@@ -1482,6 +1475,7 @@ const AICreativeStudioInner: React.FC = () => {
         });
       }
     }
+
 
     applyPresetToCanvas(newNodes, newEdges, preset.name, false);
   }, [setNodes, setEdges, reloadingPresetNodeId]);

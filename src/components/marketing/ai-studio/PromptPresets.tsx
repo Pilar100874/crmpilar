@@ -71,6 +71,12 @@ import imgSalesSmoke from '@/assets/presets/preset-sales-smoke-podium.jpg';
 
 
 // ─── Reference Block Definitions ─────────────────────────────────────
+// Os IDs abaixo são CATEGORIAS SEMÂNTICAS de referência ("que tipo de imagem
+// o prompt precisa"). Quando aplicados ao canvas, são resolvidos para os
+// blocos UNIFICADOS reais (multiProductSelect, multiImageRef, multiVideoRef
+// ou gallerySalvas com `categoria`) via `resolveReferenceBlockSpec`.
+// Mantemos os nomes antigos para preservar compatibilidade com presets
+// salvos e com a configuração dos blocos de bot (Gerar Mídia IA).
 
 export const ALL_REF_BLOCKS = [
   { id: 'productImageSelect', label: 'Produto', emoji: '📦' },
@@ -84,6 +90,7 @@ export const ALL_REF_BLOCKS = [
   { id: 'galleryPaleta', label: 'Paleta de Cores', emoji: '🎨' },
   { id: 'imageInput', label: 'Imagem de Referência', emoji: '🖼️' },
 ];
+
 
 
 // ─── Preset types ────────────────────────────────────────────────────
